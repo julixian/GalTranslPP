@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/GPPGUI">
+        <file>Resource/Image/crass.png</file>
+        <file>Resource/Image/gar.png</file>
+        <file>Resource/Image/github.png</file>
+        <file>Resource/Image/Home_Background.jpg</file>
+        <file>Resource/Image/homebackground.png</file>
+        <file>Resource/Image/IARC_7+.svg.png</file>
+        <file>Resource/Image/julixian_s.jpeg</file>
+        <file>Resource/Image/revn.png</file>
+        <file>Resource/Image/satan53x.jpg</file>
+        <file>Resource/Image/sublime.png</file>
+        <file>Resource/Image/vnt.png</file>
+        <file>Resource/Image/webIcon.jpeg</file>
+        <file>Resource/sampleProject.zip</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,102 @@
+[backendSpecific.OpenAI-Compatible]
+apiStrategy = "random" # 令牌策略，random随机轮询，fallback优先第一个，出现[请求错误]时使用下一个
+apiTimeout = 60 # 请求超时时间，单位秒
+
+  [[backendSpecific.OpenAI-Compatible.apis]]
+  apikey = "sk-example-key"
+  apiurl = "https://openai-example.com" # 请求地址，加不加/v1都行
+  modelName = "modelName"
+
+[plugins]
+filePlugin = "NormalJson" # 用于支持更多格式: NormalJson, Epub, MtoolJson(尚未实现)...
+
+transEngine = "ForGalJson"
+# ForGalJson: 向AI输入json格式的对话并要求AI以json格式回复，使用 FORGALJSON_SYSTEM 和 FORGALJSON_TRANS_PROMPT_EN 作为提示词
+# ForGalTsv: 向AI输入TSV格式的对话并要求AI以TSV格式回复，使用 FORGALTSV_SYSTEM 和 FORGALTSV_TRANS_PROMPT_EN 作为提示词
+# ForNovelTsv: 和 ForGalTsv 的区别是输入不带name，使用 FORNOVELTSV_SYSTEM 和 FORNOVELTSV_TRANS_PROMPT_EN 作为提示词
+# DeepseekJson: 基本上是将 ForGalJson 的提示词翻译成了中文，使用 DEEPSEEKJSON_SYSTEM_PROMPT 和 DEEPSEEKJSON_TRANS_PROMPT 作为提示词
+# Sakura: 使用 SAKURA_SYSTEM_PROMPT 和 SAKURA_TRANS_PROMPT 作为提示词
+# DumpName: 生成 人名替换表.toml 以供替换人名
+# GenDict: 借助AI自动生成术语表，使用 GENDIC_SYSTEM 和 GENDIC_PROMPT 作为提示词
+# Rebuild: 即使problem或pre_jp中包含retranslKey也不会重翻，只根据缓存翻译重建结果
+# PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去程序根目录寻找
+
+textPostPlugins = [ 
+  #"TextLinebreakFix"
+  # 其它什么的插件，谁知道会不会有呢
+] # 文本处理插件列表，可以设置多个，按顺序执行 TextLinebreakFix, ...
+
+  [plugins.NormalJson]
+  output_with_src = true
+
+  [plugins.Epub]
+  "双语显示" = true
+
+  [plugins.TextLinebreakFix]
+  "换行模式" = "优先标点"
+
+[common]
+numPerRequestTranslate = 8 # 单次请求翻译句子数量，推荐值 < 15
+threadsNum = 5             # 最大线程数
+sortMethod = "size"         # 翻译顺序，name为文件名，size为大文件优先，多线程时大文件优先可以提高整体速度[name/size]
+targetLang = "zh-cn"        # 翻译到的目标语言，包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr]
+splitFile = "No"            # 是否启用单文件分割。Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割。[No/Num/Equal]
+splitFileNum = 10            # Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分。
+saveCacheInterval = 1       # 每翻译n次保存一次缓存
+linebreakSymbol = "auto"    # 这个项目在json中使用的换行符
+logLevel = "info"
+saveLog = true
+
+# 分词器所用的词典的路径
+dictDir = "BaseConfig/DictGenerator/mecab-ipadic-utf8" # 也可以用 mecab-ipadic-neologd 或 unidic(均需从网上下载字典)
+
+#"重翻在缓存的problem或pre_jp中包含对应**关键字**的句子，去掉下面列表中的#号注释来使用，也可添加自定义的关键字。",
+retranslKeys = [
+  "翻译失败",
+  #"残留日文",
+]
+
+
+[problemAnalyze]
+# 要发现的问题清单
+problemList = [
+  "词频过高",
+  "标点错漏",
+
+  "丢失换行",
+  "多加换行",
+  #"比原文长",
+  #"比原文长严格",
+  "字典未使用",
+
+  "残留日文",
+  #"引入拉丁字母",
+  #"引入韩文",
+  "语言不通",
+]
+
+#规定标点错漏要查哪些标点
+punctSet = """（()）：:*[]{}<>『』「」“”;；'"""
+langProbability = 0.85 # 语言不通检测的语言置信度，设置越高则检测越精准，但可能遗漏，反之亦然
+
+[dictionary]
+defaultDictFolder = "BaseConfig/Dict" # 如果出现同名字典文件，则只读取项目文件夹中的
+usePreDictInName = false   # 将译前字典用在name字段，可用于翻译name字段，会发送给翻译引擎替换后的name[true/false]
+usePostDictInName = false  # 将译后字典用在name字段，可用于翻译name字段[true/false]
+usePreDictInMsg = true   # 将译前字典用在message字段，可用于翻译message字段，会发送给翻译引擎替换后的message[true/false]
+usePostDictInMsg = true  # 将译后字典用在message字段，可用于翻译message字段[true/false]
+
+useGPTDictToReplaceName = false   # 将GPT字典用在name字段，可用于翻译name字段(直接搜索替换)[true/false]
+# name 字段在翻译后的处理顺序是 执行GPT字典替换 -> 执行人名表替换 -> 执行译后字典替换
+# msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
+
+preDict = [
+  "项目字典_译前.toml"
+]
+gptDict = [
+  "项目GPT字典.toml",
+  "项目GPT字典-生成.toml"
+]
+postDict = [
+  "项目字典_译后.toml"
+]

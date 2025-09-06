@@ -1,0 +1,339 @@
+module;
+
+#include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
+#include <toml++/toml.hpp>
+#include <zip.h>
+#include <gumbo.h>
+
+import std;
+import Tool;
+import NormalJsonTranslator;
+export module EpubTranslator;
+namespace fs = std::filesystem;
+using json = nlohmann::json;
+
+export {
+
+    struct EpubTextNodeInfo {
+        size_t offset; // 节点在原始文件中的字节偏移量
+        size_t length; // 节点内容的字节长度
+    };
+
+    class EpubTranslator : public NormalJsonTranslator {
+
+    private:
+
+        fs::path m_epubInputDir;
+        fs::path m_epubOutputDir;
+        fs::path m_tempUnpackDir;
+        fs::path m_tempRebuildDir;
+
+        // EPUB 处理相关的配置
+        bool m_bilingualOutput = true;
+        std::string m_originalTextColor = "#808080";
+        std::string m_originalTextScale = "0.8";
+
+        // 存储每个 HTML 文件及其包含的句子元数据
+        // Key: 唯一的扁平化文件名 (e.g., "book1_OEBPS_Text_chapter1.html")
+        // Value: 元数据
+        std::map<std::string, std::vector<EpubTextNodeInfo>> m_htmlMetadata;
+
+        // 存储扁平化文件名到原始相对路径的映射
+        std::map<std::string, fs::path> m_flatToOriginalPathMap;
+
+    public:
+
+        virtual void run() override;
+
+        EpubTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller);
+
+        virtual ~EpubTranslator() {}
+    };
+}
+
+
+
+module :private;
+
+// 递归遍历 Gumbo 树以提取文本节点
+void extractTextNodes(GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
+    if (node->type == GUMBO_NODE_TEXT) {
+        std::string text = node->v.text.text;
+        if (text.empty() || text.find_first_not_of(" \t\n\r") == std::string::npos) {
+            return;
+        }
+        EpubTextNodeInfo info;
+        info.offset = node->v.text.start_pos.offset;
+        info.length = text.length();
+        sentences.push_back({ text, info });
+        return;
+    }
+
+    if (node->type != GUMBO_NODE_ELEMENT || node->v.element.tag == GUMBO_TAG_SCRIPT || node->v.element.tag == GUMBO_TAG_STYLE) {
+        return;
+    }
+
+    GumboVector* children = &node->v.element.children;
+    for (unsigned int i = 0; i < children->length; ++i) {
+        extractTextNodes(static_cast<GumboNode*>(children->data[i]), sentences);
+    }
+}
+
+EpubTranslator::EpubTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller) :
+    NormalJsonTranslator(projectDir, transEngine, controller,
+        // m_inputDir                                                m_inputCacheDir
+        // m_outputDir                                               m_outputCacheDir
+        L"cache" / projectDir.filename() / L"epub_json_input", L"cache" / projectDir.filename() / L"gt_input_cache",
+        L"cache" / projectDir.filename() / L"epub_json_output", L"cache" / projectDir.filename() / L"gt_output_cache")
+{
+    m_epubInputDir = m_projectDir / L"gt_input";
+    m_epubOutputDir = m_projectDir / L"gt_output";
+    m_tempUnpackDir = L"cache" / m_projectDir.filename() / L"epub_unpacked";
+    m_tempRebuildDir = L"cache" / m_projectDir.filename() / L"epub_rebuild";
+
+    std::ifstream ifs;
+
+    try {
+        ifs.open(m_projectDir / L"config.toml");
+        auto projectConfig = toml::parse(ifs);
+        ifs.close();
+
+        ifs.open(pluginConfigsPath / "filePlugins/Epub.toml");
+        auto pluginConfig = toml::parse(ifs);
+        ifs.close();
+
+        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.双语显示");
+        m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.原文颜色");
+        m_originalTextScale = std::to_string(parseToml<double>(projectConfig, pluginConfig, "plugins.Epub.缩小比例"));
+
+    }
+    catch (const toml::parse_error& e) {
+        m_logger->critical("项目配置文件解析失败, 错误位置: {}, 错误信息: {}", stream2String(e.source().begin), e.description());
+        throw std::runtime_error(e.what());
+    }
+}
+
+
+void EpubTranslator::run()
+{
+    m_logger->info("GalTranslPP EpubTranlator 启动...");
+
+    for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
+        if (!fs::exists(dir)) {
+            fs::create_directories(dir);
+            m_logger->info("已创建目录: {}", wide2Ascii(dir));
+        }
+    }
+
+    for (const auto& dir : { m_tempUnpackDir, m_tempRebuildDir, m_inputDir, m_outputDir }) {
+        fs::remove_all(dir);
+        fs::create_directories(dir);
+    }
+
+    std::vector<fs::path> epubFiles;
+    for (const auto& entry : fs::directory_iterator(m_epubInputDir)) {
+        if (entry.is_regular_file() && isSameExtension(entry.path(), L".epub")) {
+            epubFiles.push_back(entry.path());
+        }
+    }
+    if (epubFiles.empty()) {
+        throw std::runtime_error("未找到 EPUB 文件");
+    }
+
+    for (const auto& epubPath : epubFiles) {
+        fs::path bookUnpackDir = m_tempUnpackDir / epubPath.stem();
+        m_logger->info("解压 {} 到 {}", wide2Ascii(epubPath.filename()), wide2Ascii(bookUnpackDir));
+        fs::create_directories(bookUnpackDir);
+
+        int error = 0;
+        zip* za = zip_open(wide2Ascii(epubPath).c_str(), 0, &error);
+        if (!za) { 
+            throw std::runtime_error("无法打开 EPUB 文件: " + wide2Ascii(epubPath));
+        }
+        zip_int64_t num_entries = zip_get_num_entries(za, 0);
+        for (zip_int64_t i = 0; i < num_entries; i++) {
+            zip_stat_t zs;
+            zip_stat_index(za, i, 0, &zs);
+            fs::path outpath = bookUnpackDir / ascii2Wide(zs.name);
+            if (zs.name[strlen(zs.name) - 1] == '/') {
+                fs::create_directories(outpath);
+            }
+            else {
+                zip_file* zf = zip_fopen_index(za, i, 0);
+                if (!zf) continue;
+                std::vector<char> buffer(zs.size);
+                zip_fread(zf, buffer.data(), zs.size);
+                zip_fclose(zf);
+                fs::create_directories(outpath.parent_path());
+                std::ofstream ofs(outpath, std::ios::binary);
+                ofs.write(buffer.data(), buffer.size());
+            }
+        }
+        zip_close(za);
+    }
+
+    for (const auto& bookDirEntry : fs::directory_iterator(m_tempUnpackDir)) {
+        if (!bookDirEntry.is_directory()) continue;
+
+        std::string bookName = wide2Ascii(bookDirEntry.path().filename());
+        for (const auto& htmlEntry : fs::recursive_directory_iterator(bookDirEntry.path())) {
+            if (htmlEntry.is_regular_file() && (isSameExtension(htmlEntry.path(), L".html") || isSameExtension(htmlEntry.path(), L".xhtml"))) {
+
+                std::ifstream ifs(htmlEntry.path(), std::ios::binary);
+                std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+                GumboOutput* output = gumbo_parse(content.c_str());
+                std::vector<std::pair<std::string, EpubTextNodeInfo>> sentences;
+                extractTextNodes(output->root, sentences);
+                gumbo_destroy_output(&kGumboDefaultOptions, output);
+
+                if (sentences.empty()) continue;
+
+                // *** 创建扁平化、唯一的文件名 ***
+                fs::path relativePath = fs::relative(htmlEntry.path(), bookDirEntry.path());
+                std::string flatFileNameStr = bookName + "_" + wide2Ascii(relativePath);
+                std::replace(flatFileNameStr.begin(), flatFileNameStr.end(), '/', '_');
+                std::replace(flatFileNameStr.begin(), flatFileNameStr.end(), '\\', '_');
+                fs::path flatJsonFileName = fs::path(ascii2Wide(flatFileNameStr)).replace_extension(".json");
+
+                // 存储映射关系
+                m_flatToOriginalPathMap[wide2Ascii(flatJsonFileName)] = htmlEntry.path();
+
+                // 存储元数据
+                std::vector<EpubTextNodeInfo> metadata;
+                json j = json::array();
+                for (const auto& p : sentences) {
+                    j.push_back({ {"name", ""}, {"message", p.first} });
+                    metadata.push_back(p.second);
+                }
+                m_htmlMetadata[wide2Ascii(flatJsonFileName)] = metadata;
+
+                std::ofstream ofs(m_inputDir / flatJsonFileName);
+                ofs << j.dump(2);
+            }
+        }
+    }
+
+    NormalJsonTranslator::run();
+
+    for (const auto& bookDirEntry : fs::directory_iterator(m_tempUnpackDir)) {
+        if (bookDirEntry.is_directory()) {
+            fs::copy(bookDirEntry.path(), m_tempRebuildDir / bookDirEntry.path().filename(), fs::copy_options::recursive);
+        }
+    }
+
+    for (const auto& translatedJsonEntry : fs::directory_iterator(m_outputDir)) {
+        std::string flatName = wide2Ascii(translatedJsonEntry.path().filename());
+        if (!m_flatToOriginalPathMap.count(flatName)) continue;
+
+        fs::path originalHtmlPath = m_flatToOriginalPathMap[flatName];
+        fs::path rebuiltHtmlPath = m_tempRebuildDir / fs::relative(originalHtmlPath, m_tempUnpackDir);
+        const auto& metadata = m_htmlMetadata[flatName];
+
+        // 从后向前替换 HTML 内容的逻辑
+        std::ifstream ifs(rebuiltHtmlPath, std::ios::binary);
+        std::string originalContent((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        ifs.close();
+
+        ifs.open(translatedJsonEntry.path());
+        json translatedData = json::parse(ifs);
+        ifs.close();
+
+        if (metadata.size() != translatedData.size()) {
+            throw std::runtime_error(std::format("元数据和翻译数据数量不匹配，无法重组: {}", wide2Ascii(rebuiltHtmlPath)));
+        }
+
+        for (int i = (int)metadata.size() - 1; i >= 0; --i) {
+            const auto& meta = metadata[i];
+            std::string translatedText = translatedData[i].value("message", "");
+            /*if (originalContent.substr(meta.offset, meta.length) != meta.original_text) {
+                m_logger->warn("文件 {} 在偏移 {} 处的原始文本不匹配，跳过此句替换。原本: {}, 翻译: {}， 子串: {}",
+                    wide2Ascii(rebuiltHtmlPath), meta.offset, meta.original_text, translatedText, originalContent.substr(meta.offset, meta.length));
+                continue;
+            }*/
+            std::string replacement = m_bilingualOutput ? 
+                (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale + "em;\">" + originalContent.substr(meta.offset, meta.length) + "</span>") 
+                : translatedText;
+            originalContent.replace(meta.offset, meta.length, replacement);
+        }
+
+        std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
+        ofs << originalContent;
+    }
+
+
+    fs::create_directories(m_epubOutputDir);
+    for (const auto& bookDirEntry : fs::directory_iterator(m_tempRebuildDir)) {
+        if (!bookDirEntry.is_directory()) continue;
+
+        fs::path outputEpubPath = m_epubOutputDir / bookDirEntry.path().filename().replace_extension(".epub");
+        m_logger->info("正在打包 {}", wide2Ascii(outputEpubPath));
+
+        int error = 0;
+        zip* za = zip_open(wide2Ascii(outputEpubPath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &error);
+        if (!za) {
+            throw std::runtime_error("无法创建 EPUB (zip) 文件: " + std::to_string(error));
+        }
+
+        const fs::path& sourceDir = bookDirEntry.path();
+
+        // --- 步骤一：优先处理 mimetype 文件，且不压缩 ---
+        fs::path mimetypePath = sourceDir / "mimetype";
+        if (fs::exists(mimetypePath)) {
+            zip_source_t* s = zip_source_file(za, wide2Ascii(mimetypePath).c_str(), 0, 0);
+            if (!s) {
+                zip_close(za);
+                throw std::runtime_error("无法为 mimetype 创建 zip_source_file");
+            }
+
+            zip_int64_t idx = zip_file_add(za, "mimetype", s, ZIP_FL_ENC_UTF_8);
+            if (idx < 0) {
+                zip_source_free(s);
+                zip_close(za);
+                throw std::runtime_error("无法将 mimetype 添加到 zip");
+            }
+
+            if (zip_set_file_compression(za, idx, ZIP_CM_STORE, 0) < 0) {
+                throw std::runtime_error("无法将 mimetype 设置为不压缩模式。");
+            }
+        }
+        else {
+            m_logger->warn("在源目录 {} 中未找到 mimetype 文件，生成的 EPUB 可能无效。", wide2Ascii(sourceDir));
+        }
+
+        // --- 步骤二：处理其他所有文件和目录 ---
+        for (const auto& entry : fs::recursive_directory_iterator(sourceDir)) {
+            fs::path relativePath = fs::relative(entry.path(), sourceDir);
+            std::string entryName = wide2Ascii(relativePath);
+            std::replace(entryName.begin(), entryName.end(), '\\', '/');
+
+            if (entryName == "mimetype") {
+                continue;
+            }
+
+            if (fs::is_directory(entry.path())) {
+                zip_dir_add(za, entryName.c_str(), ZIP_FL_ENC_UTF_8);
+            }
+            else {
+                zip_source_t* s = zip_source_file(za, wide2Ascii(entry.path()).c_str(), 0, 0);
+                if (!s) {
+                    throw std::runtime_error(std::format("无法为文件 {} 创建 zip_source_file", entryName));
+                }
+                if (zip_file_add(za, entryName.c_str(), s, ZIP_FL_ENC_UTF_8) < 0) {
+                    zip_source_free(s);
+                    throw std::runtime_error(std::format("无法将文件 {} 添加到 zip", entryName));
+                }
+            }
+        }
+
+        // 所有 source 都在 zip_close 中被 libzip 自动管理和释放
+        if (zip_close(za) < 0) {
+            throw std::runtime_error("关闭 zip 存档时出错: " + std::string(zip_strerror(za)));
+        }
+        else {
+            m_logger->info("已重建 EPUB 文件: {}", wide2Ascii(outputEpubPath));
+        }
+    }
+
+    m_logger->info("所有任务已完成！EpubTranlator结束。");
+}

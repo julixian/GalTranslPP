@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7F42B0EF-D5DE-4830-A393-CEB8CB3050A4}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>6.9.2_msvc2022_64</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>6.9.2_msvc2022_64</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutDir>$(SolutionDir)Release\GPPGUI\</OutDir>
+    <TargetName>GalTranslPP_GUI</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
+      <AdditionalIncludeDirectories>ElaWidgetTools/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="AboutDialog.cpp" />
+    <ClCompile Include="APISettingsPage.cpp" />
+    <ClCompile Include="BasePage.cpp" />
+    <ClCompile Include="CommonDictPage.cpp" />
+    <ClCompile Include="CommonSettingsPage.cpp" />
+    <ClCompile Include="DefaultPromptPage.cpp" />
+    <ClCompile Include="DictionaryModel.cpp" />
+    <ClCompile Include="DictSettingsPage.cpp" />
+    <ClCompile Include="ElaInputDialog.cpp" />
+    <ClCompile Include="EpubCfgDialog.cpp" />
+    <ClCompile Include="HomePage.cpp" />
+    <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="NameTableModel.cpp" />
+    <ClCompile Include="NameTableSettingsPage.cpp" />
+    <ClCompile Include="NJCfgDialog.cpp" />
+    <ClCompile Include="NormalDictModel.cpp" />
+    <ClCompile Include="OtherSettingsPage.cpp" />
+    <ClCompile Include="PASettingsPage.cpp" />
+    <ClCompile Include="PluginItemWidget.cpp" />
+    <ClCompile Include="PluginSettingsPage.cpp" />
+    <ClCompile Include="SettingPage.cpp" />
+    <ClCompile Include="StartSettingsPage.cpp" />
+    <ClCompile Include="TranslatorWorker.cpp" />
+    <ClCompile Include="UpdateWidget.cpp" />
+    <ClCompile Include="ValueSliderWidget.cpp" />
+    <QtMoc Include="PluginSettingsPage.h" />
+    <ClCompile Include="TLFCfgDialog.cpp" />
+    <ClCompile Include="ProjectSettingsPage.cpp" />
+    <QtRcc Include="GPPGUI.qrc" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="mainwindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ProjectSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="APISettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PluginItemWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="TLFCfgDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PASettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ValueSliderWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="DictSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="DictionaryModel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="NormalDictModel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="StartSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="NJCfgDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="EpubCfgDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="NameTableSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="NameTableModel.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ElaInputDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
+      <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="CommonSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="TranslatorWorker.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="OtherSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="CommonDictPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="DefaultPromptPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="BasePage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="AboutDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="HomePage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="SettingPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="UpdateWidget.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

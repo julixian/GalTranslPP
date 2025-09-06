@@ -1,0 +1,10 @@
+[[normalDict]]
+# 译后字典会搜索并替换 pre_translated_text 以供 translated_preview 最终输出
+# 含义是如果 orig_text 中含有 人妻 或 ひとづま，则将 pre_translated_text 中的 有夫之妇 替换为 人妻
+conditionTarget = "orig_text" # name, orig_text, preproc_text, pretrans_text
+conditionReg = "人妻|ひとづま"
+searchStr = '''有夫之妇'''
+replaceStr = '''人妻'''
+isReg = false #为true则将searchStr和replaceStr作为正则表达式带入
+priority = 50
+

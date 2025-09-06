@@ -1,0 +1,4 @@
+[[normalDict]]
+searchStr = '''滅茶苦茶'''
+replaceStr = "めちゃくちゃ"
+priority = 50

@@ -1,0 +1,324 @@
+module;
+
+#include <mecab/mecab.h>
+#include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
+#include <ctpl_stl.h>
+#include <boost/regex.hpp>
+#include <toml++/toml.hpp>
+#include <cpr/cpr.h>
+
+import std;
+import Tool;
+import APIPool;
+import Dictionary;
+export module DictionaryGenerator;
+namespace fs = std::filesystem;
+using json = nlohmann::json;
+
+export {
+    class DictionaryGenerator {
+    private:
+        APIPool& m_apiPool;
+        std::string m_systemPrompt;
+        std::string m_userPrompt;
+        int m_threadsNum;
+        int m_apiTimeoutMs;
+        std::shared_ptr<spdlog::logger> m_logger;
+
+        // 阶段一和二的结果
+        std::vector<std::string> m_segments;
+        std::vector<std::set<std::string>> m_segmentWords;
+        std::map<std::string, int> m_wordCounter;
+        std::set<std::string> m_nameSet;
+
+        // 阶段四的结果 (线程安全)
+        std::vector<std::tuple<std::string, std::string, std::string>> m_finalDict;
+        std::map<std::string, int> m_finalCounter;
+        std::mutex m_resultMutex;
+
+        // MeCab 解析器
+        std::unique_ptr<MeCab::Tagger> m_tagger;
+
+        void preprocessAndTokenize(const std::vector<fs::path>& jsonFiles, NormalDictionary& preDict, bool usePreDictInName);
+        std::vector<int> solveSentenceSelection();
+        ApiResponse performApiRequest(const json& payload, const TranslationAPI& api);
+        void callLLMToGenerate(int segmentIndex);
+
+    public:
+        void setLogger(std::shared_ptr<spdlog::logger> logger) { m_logger = logger; }
+        DictionaryGenerator(APIPool& apiPool, const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs);
+        void generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName);
+    };
+}
+
+
+module :private;
+
+DictionaryGenerator::DictionaryGenerator(APIPool& apiPool, const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs)
+    : m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs) {
+    m_tagger.reset(
+        MeCab::createTagger(("-r BaseConfig/DictGenerator/mecabrc -d " + wide2Ascii(dictDir, 0)).c_str())
+    );
+    if (!m_tagger) {
+        throw std::runtime_error("无法初始化 MeCab Tagger。请确保 BaseConfig/DictGenerator/mecabrc 和 " + wide2Ascii(dictDir) + " 存在");
+    }
+}
+
+void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jsonFiles, NormalDictionary& preDict, bool usePreDictInName) {
+    m_logger->info("阶段一：预处理和分词...");
+    std::string currentSegment;
+    const size_t MAX_SEGMENT_LEN = 512;
+
+    Sentence se;
+    for (const auto& filePath : jsonFiles) {
+        std::ifstream f(filePath);
+        json data = json::parse(f);
+        for (const auto& item : data) {
+            se.name = item.value("name", "");
+            se.original_text = item.value("message", "");
+            if (usePreDictInName) {
+                se.name = preDict.doReplace(&se, ConditionTarget::Name);
+            }
+            se.original_text = preDict.doReplace(&se, ConditionTarget::OrigText);
+            if (!se.name.empty()) {
+                m_nameSet.insert(se.name);
+                m_wordCounter[se.name] += 2;
+            }
+            currentSegment += se.name + se.original_text + "\n";
+
+            if (currentSegment.length() > MAX_SEGMENT_LEN) {
+                m_segments.push_back(currentSegment);
+                currentSegment.clear();
+            }
+        }
+    }
+    if (!currentSegment.empty()) {
+        m_segments.push_back(currentSegment);
+    }
+
+    m_logger->info("共分割成 {} 个文本块，开始使用 MeCab 分词...", m_segments.size());
+    m_segmentWords.reserve(m_segments.size());
+    for (const auto& segment : m_segments) {
+        std::set<std::string> wordsInSegment;
+        const MeCab::Node* node = m_tagger->parseToNode(segment.c_str());
+        for (; node; node = node->next) {
+            if (node->stat == MECAB_BOS_NODE || node->stat == MECAB_EOS_NODE) continue;
+
+            std::string surface(node->surface, node->length);
+            std::string feature = node->feature;
+
+            m_logger->trace("分词结果：{} ({})", surface, feature);
+
+            if (surface.length() <= 1) continue;
+
+            if (feature.find("固有名詞") != std::string::npos || containsKatakana(surface)) {
+                wordsInSegment.insert(surface);
+                m_wordCounter[surface]++;
+            }
+        }
+        m_segmentWords.push_back(wordsInSegment);
+    }
+}
+
+std::vector<int> DictionaryGenerator::solveSentenceSelection() {
+    m_logger->info("阶段二：搜索并选择信息量最大的文本块...");
+
+    // 剔除出现次数小于2的词语，人名除外
+    std::set<std::string> allWords;
+    for (const auto& [word, count] : m_wordCounter) {
+        if (count >= 2 || m_nameSet.count(word)) {
+            allWords.insert(word);
+        }
+    }
+
+    // 过滤每个 segment 中的词，只保留在 allWords 中的
+    std::vector<std::set<std::string>> filteredSegmentWords;
+    for (const auto& segment : m_segmentWords) {
+        std::set<std::string> filteredSet;
+        std::set_intersection(segment.begin(), segment.end(),
+            allWords.begin(), allWords.end(),
+            std::inserter(filteredSet, filteredSet.begin()));
+        filteredSegmentWords.push_back(filteredSet);
+    }
+
+    std::set<std::string> coveredWords;
+    std::vector<int> selectedIndices;
+    std::vector<int> remainingIndices(filteredSegmentWords.size());
+    std::iota(remainingIndices.begin(), remainingIndices.end(), 0);
+
+    while (coveredWords.size() < allWords.size() && !remainingIndices.empty()) {
+        int bestIndex = -1;
+        size_t maxNewCoverage = 0;
+
+        for (int index : remainingIndices) {
+            std::set<std::string> tempSet;
+            std::set_difference(
+                filteredSegmentWords[index].begin(), filteredSegmentWords[index].end(),
+                coveredWords.begin(), coveredWords.end(),
+                std::inserter(tempSet, tempSet.begin())
+            );
+            size_t newCoverage = tempSet.size();
+
+            if (newCoverage > maxNewCoverage) {
+                maxNewCoverage = newCoverage;
+                bestIndex = index;
+            }
+        }
+
+        if (bestIndex != -1) {
+            coveredWords.insert(filteredSegmentWords[bestIndex].begin(), filteredSegmentWords[bestIndex].end());
+            selectedIndices.push_back(bestIndex);
+            remainingIndices.erase(std::remove(remainingIndices.begin(), remainingIndices.end(), bestIndex), remainingIndices.end());
+        }
+        else {
+            break;
+        }
+    }
+    return selectedIndices;
+}
+
+ApiResponse DictionaryGenerator::performApiRequest(const json& payload, const TranslationAPI& api) {
+    ApiResponse apiResponse;
+    cpr::Response response = cpr::Post(
+        cpr::Url{ api.apiurl }, cpr::Body{ payload.dump() },
+        cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
+        cpr::Timeout{ m_apiTimeoutMs }
+    );
+    apiResponse.statusCode = response.status_code;
+    apiResponse.content = response.text;
+    if (response.status_code == 200) {
+        try {
+            apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
+            apiResponse.success = true;
+        }
+        catch (...) { apiResponse.success = false; }
+    }
+    else { apiResponse.success = false; }
+    return apiResponse;
+}
+
+void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
+    std::string text = m_segments[segmentIndex];
+    std::string hint = "无";
+    std::string nameHit;
+    for (const auto& name : m_nameSet) {
+        if (text.find(name) != std::string::npos) {
+            nameHit += name + "\n";
+        }
+    }
+    if (!nameHit.empty()) {
+        hint = "输入文本中的这些词语是一定要加入术语表的: \n" + nameHit;
+    }
+
+    std::string prompt = m_userPrompt;
+    prompt = boost::regex_replace(prompt, boost::regex(R"(\{input\})"), text);
+    prompt = boost::regex_replace(prompt, boost::regex(R"(\{hint\})"), hint);
+
+    json messages = json::array({
+        {{"role", "system"}, {"content", m_systemPrompt}},
+        {{"role", "user"}, {"content", prompt}}
+        });
+
+    auto optApi = m_apiPool.getAPI();
+    if (!optApi) {
+        throw std::runtime_error("没有可用的API Key了");
+    }
+    TranslationAPI api = optApi.value();
+    json payload = { {"model", api.modelName}, {"messages", messages}, /*{"temperature", 0.6}*/ };
+
+    m_logger->info("开始从段落中生成术语表\ninputBlock: \n{}", text);
+    ApiResponse response = performApiRequest(payload, api);
+
+    if (response.success) {
+        m_logger->info("AI 字典生成成功:\n {}", response.content);
+        auto lines = splitString(response.content, '\n');
+        for (const auto& line : lines) {
+            auto parts = splitString(line, '\t');
+            if (parts.size() < 3 || parts[0].starts_with("日文原词") || parts[0].starts_with("NULL")) continue;
+
+            std::lock_guard<std::mutex> lock(m_resultMutex);
+            m_finalCounter[parts[0]]++;
+            if (m_finalCounter[parts[0]] == 2) {
+                m_logger->trace("发现重复术语: {}\t{}\t{}", parts[0], parts[1], parts[2]);
+            }
+            m_finalDict.emplace_back(parts[0], parts[1], parts[2]);
+        }
+    }
+    else {
+        m_logger->warn("AI 字典生成请求失败: {}", response.content);
+    }
+}
+
+void DictionaryGenerator::generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName) {
+    std::vector<fs::path> jsonFiles;
+    for (const auto& entry : fs::directory_iterator(inputDir)) {
+        if (entry.is_regular_file() && isSameExtension(entry.path(), L".json")) {
+            jsonFiles.push_back(entry.path());
+        }
+    }
+    if (jsonFiles.empty()) {
+        m_logger->warn("输入目录 {} 为空，无法生成字典。", inputDir.string());
+        return;
+    }
+
+    preprocessAndTokenize(jsonFiles, preDict, usePreDictInName);
+
+    auto selectedIndices = solveSentenceSelection();
+    if (selectedIndices.size() > 128) {
+        selectedIndices.resize(128);
+    }
+
+    int threadsNum = std::min(m_threadsNum, (int)selectedIndices.size());
+    m_logger->info("阶段三：启动 {} 个线程，向 AI 发送 {} 个任务...", threadsNum, selectedIndices.size());
+    ctpl::thread_pool pool(threadsNum);
+    std::vector<std::future<void>> results;
+    for (int idx : selectedIndices) {
+        results.emplace_back(pool.push([this, idx](int) {
+            this->callLLMToGenerate(idx);
+            }));
+    }
+    for (auto& res : results) {
+        res.get();
+    }
+
+    m_logger->info("阶段四：整理并保存结果...");
+    std::vector<std::tuple<std::string, std::string, std::string>> finalList;
+
+    // 按出现次数排序
+    std::sort(m_finalDict.begin(), m_finalDict.end(), [&](const auto& a, const auto& b) {
+        return m_finalCounter[std::get<0>(a)] > m_finalCounter[std::get<0>(b)];
+        });
+
+    // 过滤
+    for (const auto& item : m_finalDict) {
+        const auto& src = std::get<0>(item);
+        const auto& note = std::get<2>(item);
+        if (m_finalCounter[src] > 1 || note.find("人名") != std::string::npos || note.find("地名") != std::string::npos || m_wordCounter.count(src) || m_nameSet.count(src)) {
+            finalList.push_back(item);
+        }
+    }
+
+    // 去重
+    std::set<std::string> seen;
+    finalList.erase(std::remove_if(finalList.begin(), finalList.end(), [&](const auto& item) {
+        if (seen.count(std::get<0>(item))) {
+            return true;
+        }
+        seen.insert(std::get<0>(item));
+        return false;
+        }), finalList.end());
+
+
+    std::ofstream ofs(outputFilePath);
+    ofs << "gptDict = [" << std::endl;
+    
+    for (const auto& item : finalList) {
+        auto tbl = toml::table{ { "org", std::get<0>(item) }, { "rep", std::get<1>(item) }, { "note", std::get<2>(item) } };
+        ofs << std::format("    {{ org = {}, rep = {}, note = {} }},",
+            stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) << std::endl;
+    }
+    
+    ofs << "]" << std::endl;
+    m_logger->info("字典生成完成，共 {} 个词语，已保存到 {}", finalList.size(), wide2Ascii(outputFilePath));
+}

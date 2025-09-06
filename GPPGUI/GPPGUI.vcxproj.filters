@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="Header Files\PageHeaders">
+      <UniqueIdentifier>{b4856f0e-1787-4d2d-96dc-3880b2d0805c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PageImp">
+      <UniqueIdentifier>{f8e1e25c-50f4-4a0c-adc5-e01453cf4f42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ProjectSettingH">
+      <UniqueIdentifier>{c347c69f-850f-4547-9bb1-60f38f699e23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ProjectSettingImp">
+      <UniqueIdentifier>{b18139d6-33e8-442d-a827-9cd4c7d38f89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ToolWidgetsImp">
+      <UniqueIdentifier>{43549198-a569-445c-8fbc-7c20e18cd79f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ToolWidgetsH">
+      <UniqueIdentifier>{c366b391-d4f9-4631-84a6-e5b34b3f4238}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="GPPGUI.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mainwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="APISettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="PASettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginItemWidget.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="ValueSliderWidget.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="DictSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryModel.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalDictModel.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="StartSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="TLFCfgDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="NJCfgDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="EpubCfgDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="NameTableSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="NameTableModel.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="ElaInputDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="TranslatorWorker.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="OtherSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonDictPage.cpp">
+      <Filter>Source Files\PageImp</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultPromptPage.cpp">
+      <Filter>Source Files\PageImp</Filter>
+    </ClCompile>
+    <ClCompile Include="BasePage.cpp">
+      <Filter>Source Files\PageImp</Filter>
+    </ClCompile>
+    <ClCompile Include="AboutDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="HomePage.cpp">
+      <Filter>Source Files\PageImp</Filter>
+    </ClCompile>
+    <ClCompile Include="SettingPage.cpp">
+      <Filter>Source Files\PageImp</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateWidget.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="PluginSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="APISettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="ProjectSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="PASettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="PluginItemWidget.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="ValueSliderWidget.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="DictSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="DictionaryModel.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="NormalDictModel.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="StartSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="TLFCfgDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="NJCfgDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="EpubCfgDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="NameTableSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="NameTableModel.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="ElaInputDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="CommonSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="TranslatorWorker.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="OtherSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="CommonDictPage.h">
+      <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="DefaultPromptPage.h">
+      <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="BasePage.h">
+      <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="AboutDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="HomePage.h">
+      <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="SettingPage.h">
+      <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="UpdateWidget.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+  </ItemGroup>
+</Project>

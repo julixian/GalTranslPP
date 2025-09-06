@@ -70,7 +70,7 @@ private Q_SLOTS:
     void _onNavigationButtonToggled(bool checked);
     // 槽函数，用于响应开始翻译按钮的点击
     void _onStartTranslating();
-    void _onFinishTranslating(const QString& filePlugin);
+    void _onFinishTranslating(const QString& transEngine, int exitCode);
 };
 
 #endif // PROJECTSETTINGSPAGE_H

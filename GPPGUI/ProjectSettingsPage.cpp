@@ -9,6 +9,7 @@
 
 #include "ElaToggleButton.h"
 #include "ElaIcon.h"
+#include "ElaMessageBar.h"
 #include "ElaScrollPageArea.h"
 
 #include "APISettingsPage.h"
@@ -29,7 +30,12 @@ ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::pa
     setTitleVisible(false);
 
     std::ifstream ifs(_projectDir / L"config.toml");
-    _projectConfig = toml::parse(ifs);
+    try {
+        _projectConfig = toml::parse(ifs);
+    }
+    catch (...) {
+        ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "项目配置文件不符合规范", 3000);
+    }
     ifs.close();
 
     _setupUI();
@@ -220,11 +226,12 @@ void ProjectSettingsPage::_onStartTranslating()
     _isRunning = true;
 }
 
-void ProjectSettingsPage::_onFinishTranslating(const QString& filePlugin)
+void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int exitCode)
 {
     _isRunning = false;
     if (
-        (filePlugin == "DumpName" || filePlugin == "GenDict") &&
+        exitCode == 0 &&
+        (transEngine == "DumpName" || transEngine == "GenDict") &&
         _globalConfig["autoRefreshAfterTranslate"].value_or(true)
         ) {
         _nameTableSettingsPage->refreshTable();

@@ -31,6 +31,11 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     update8->setIsWrapAnywhere(true);
     ElaText* update9 = new ElaText("9、将控制刷新的全局设置更改为『DumpName/GenDict任务完成后自动刷新人名表和字典』，并默认开启", 13, this);
     update9->setIsWrapAnywhere(true);
+    ElaText* update10 = new ElaText("10、追加了日志输出文本框多加换行的修复", 13, this);
+    update10->setIsWrapAnywhere(true);
+    ElaText* update11 = new ElaText("11、修复了当使用纯文本模式且字典格式不正确时使用DumpName/GenDict程序会崩溃的问题，"
+        "并新增非法提示", 13, this);
+    update11->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -42,6 +47,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update7);
     mainLayout->addWidget(update8);
     mainLayout->addWidget(update9);
+    mainLayout->addWidget(update10);
+    mainLayout->addWidget(update11);
     mainLayout->addStretch();
 }
 

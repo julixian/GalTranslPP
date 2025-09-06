@@ -170,11 +170,12 @@ void StartSettingsPage::_setupUI()
 			_progressBar->setRange(0, totalSentences);
 			_progressBar->setValue(0);
 			_progressBar->setFormat("%v/%m lines [%p%]");
-			logOutput->clear();
 		});
 	connect(_worker, &TranslatorWorker::writeLogSignal, this, [=](QString log)
 		{
-			logOutput->appendPlainText(log);
+			logOutput->moveCursor(QTextCursor::End);
+			logOutput->insertPlainText(log);
+			logOutput->moveCursor(QTextCursor::End);
 		});
 	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
 		{
@@ -201,7 +202,7 @@ void StartSettingsPage::_onStartTranslatingClicked()
 	_progressBar->setValue(0);
 
 	Q_EMIT startWork();
-	_filePlugin = QString::fromStdString(_projectConfig["plugins"]["filePlugin"].value_or(std::string{}));
+	_transEngine = QString::fromStdString(_projectConfig["plugins"]["transEngine"].value_or(std::string{}));
 	_stopTranslateButton->setEnabled(true);
 }
 
@@ -231,7 +232,8 @@ void StartSettingsPage::_workFinished(int exitCode)
 	default:
 		break;
 	}
-	Q_EMIT finishTranslating(_filePlugin);
+
+	Q_EMIT finishTranslating(_transEngine, exitCode);
 	_startTranslateButton->setEnabled(true);
 	_stopTranslateButton->setEnabled(false);
 }

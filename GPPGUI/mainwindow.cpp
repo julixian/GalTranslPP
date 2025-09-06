@@ -36,7 +36,12 @@ MainWindow::MainWindow(QWidget* parent)
     : ElaWindow(parent)
 {
     if (fs::exists("BaseConfig/globalConfig.toml")) {
-        _globalConfig = toml::parse_file("BaseConfig/globalConfig.toml");
+        try {
+            _globalConfig = toml::parse_file("BaseConfig/globalConfig.toml");
+        }
+        catch (...) {
+            MessageBoxW(NULL, L"解析失败", L"基本配置文件不符合规范", MB_OK | MB_ICONERROR);
+        }
     }
 
     setIsAllowPageOpenInNewWindow(false);

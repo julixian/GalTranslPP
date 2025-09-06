@@ -25,7 +25,7 @@ public:
 
 Q_SIGNALS:
     void startTranslating();  // 让projectSettings去保存配置
-    void finishTranslating(const QString& filePlugin); // 这两个向projectSettings页发送
+    void finishTranslating(const QString& transEngine, int exitCode); // 这两个向projectSettings页发送
     void startWork();
     void stopWork();  // 这两个向worker发送
 
@@ -42,7 +42,7 @@ private:
     ElaPushButton* _stopTranslateButton;
     ElaProgressBar* _progressBar;
 
-    QString _filePlugin;
+    QString _transEngine;
 
 private Q_SLOTS:
 

@@ -153,7 +153,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     // 任务完成后自动刷新人名表和字典
     ElaScrollPageArea* autoRefreshArea = new ElaScrollPageArea(this);
     QHBoxLayout* autoRefreshLayout = new QHBoxLayout(autoRefreshArea);
-    ElaText* autoRefreshText = new ElaText("DumpName/GenDict任务完成后自动刷新人名表和字典", autoRefreshArea);
+    ElaText* autoRefreshText = new ElaText("DumpName/GenDict任务成功后自动刷新人名表和字典", autoRefreshArea);
     autoRefreshText->setWordWrap(false);
     autoRefreshText->setTextPixelSize(15);
     autoRefreshLayout->addWidget(autoRefreshText);

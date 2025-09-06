@@ -12,6 +12,7 @@
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
+#include "ElaMessageBar.h"
 #include "ElaPivot.h"
 #include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
@@ -54,7 +55,15 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 	auto readDict = [&](const fs::path& dictPath)
 		{
 			std::ifstream ifs(dictPath);
-			toml::table tbl = toml::parse(ifs);
+			toml::table tbl;
+			try {
+				tbl = toml::parse(ifs);
+			}
+			catch (...) {
+				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+					QString(dictPath.filename().wstring()) + "不符合规范", 3000);
+				return;
+			}
 			ifs.close();
 			auto dictArr = tbl["gptDict"].as_array();
 			if (!dictArr) {
@@ -86,7 +95,15 @@ QString DictSettingsPage::readGptDictsStr()
 	auto readDict = [&](const fs::path& dictPath)
 		{
 			std::ifstream ifs(dictPath);
-			toml::table tbl = toml::parse(ifs);
+			toml::table tbl;
+			try {
+				tbl = toml::parse(ifs);
+			}
+			catch (...) {
+				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+					QString(dictPath.filename().wstring()) + "不符合规范", 3000);
+				return;
+			}
 			ifs.close();
 			auto dictArr = tbl["gptDict"].as_array();
 			if (!dictArr) {
@@ -120,7 +137,15 @@ QList<NormalDictEntry> DictSettingsPage::readNormalDicts(const fs::path& dictPat
 		return result;
 	}
 	std::ifstream ifs(dictPath);
-	toml::table tbl = toml::parse(ifs);
+	toml::table tbl;
+	try {
+		tbl = toml::parse(ifs);
+	}
+	catch (...) {
+		ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+			QString(dictPath.filename().wstring()) + "不符合规范", 3000);
+		return result;
+	}
 	ifs.close();
 	auto dictArr = tbl["normalDict"].as_array();
 	if (!dictArr) {

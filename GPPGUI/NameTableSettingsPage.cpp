@@ -48,7 +48,13 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 		return result;
 	}
 	std::ifstream ifs(nameTablePath);
-	toml::table tbl = toml::parse(ifs);
+	toml::table tbl;
+	try {
+		tbl = toml::parse(ifs);
+	}
+	catch (...) {
+		return result;
+	}
 	ifs.close();
 	for (const auto& [key, value] : tbl) {
 		NameTableEntry entry;

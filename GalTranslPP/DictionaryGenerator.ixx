@@ -12,6 +12,7 @@ import std;
 import Tool;
 import APIPool;
 import Dictionary;
+import ITranslator;
 export module DictionaryGenerator;
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -20,6 +21,7 @@ export {
     class DictionaryGenerator {
     private:
         APIPool& m_apiPool;
+        std::shared_ptr<IController> m_controller;
         std::string m_systemPrompt;
         std::string m_userPrompt;
         int m_threadsNum;
@@ -47,7 +49,8 @@ export {
 
     public:
         void setLogger(std::shared_ptr<spdlog::logger> logger) { m_logger = logger; }
-        DictionaryGenerator(APIPool& apiPool, const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs);
+        DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool, const fs::path& dictDir,
+            const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs);
         void generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName);
     };
 }
@@ -55,8 +58,11 @@ export {
 
 module :private;
 
-DictionaryGenerator::DictionaryGenerator(APIPool& apiPool, const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs)
-    : m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs) {
+DictionaryGenerator::DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool,
+    const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs)
+    : m_controller(controller), m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
+    m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs) 
+{
     m_tagger.reset(
         MeCab::createTagger(("-r BaseConfig/DictGenerator/mecabrc -d " + wide2Ascii(dictDir, 0)).c_str())
     );
@@ -199,7 +205,9 @@ ApiResponse DictionaryGenerator::performApiRequest(const json& payload, const Tr
 }
 
 void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
-
+    if (m_controller->shouldStop()) {
+        return;
+    }
     std::string text = m_segments[segmentIndex];
     std::string hint = "无";
     std::string nameHit;
@@ -253,7 +261,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
 
 void DictionaryGenerator::generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName) {
     std::vector<fs::path> jsonFiles;
-    for (const auto& entry : fs::directory_iterator(inputDir)) {
+    for (const auto& entry : fs::recursive_directory_iterator(inputDir)) {
         if (entry.is_regular_file() && isSameExtension(entry.path(), L".json")) {
             jsonFiles.push_back(entry.path());
         }

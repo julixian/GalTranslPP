@@ -80,15 +80,9 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 }
 QString DictSettingsPage::readGptDictsStr()
 {
-	std::string result;
+	std::string result= "gptDict = [\n";
 	fs::path gptDictPath = _projectDir / L"项目GPT字典.toml";
 	fs::path genDictPath = _projectDir / L"项目GPT字典-生成.toml";
-	toml::table tbl;
-	tbl.insert("gptDict", toml::array{});
-	auto totalArr = tbl["gptDict"].as_array();
-	if (!totalArr) {
-		return {};
-	}
 	auto readDict = [&](const fs::path& dictPath)
 		{
 			std::ifstream ifs(dictPath);
@@ -104,7 +98,9 @@ QString DictSettingsPage::readGptDictsStr()
 				std::string translation = dict.as_table()->contains("rep") ? (*dict.as_table())["rep"].value_or("") :
 					(*dict.as_table())["replaceStr"].value_or("");
 				std::string description = dict.as_table()->contains("note") ? (*dict.as_table())["note"].value_or("") : "";
-				totalArr->push_back(toml::table{ {"searchStr", original }, { "replaceStr", translation }, { "note", description } });
+				toml::table tbl{ {"org", original }, { "rep", translation }, { "note", description } };
+				result += std::format("    {{ org = {}, rep = {}, note = {} }},",
+					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) + "\n";
 			}
 		};
 	if (fs::exists(gptDictPath)) {
@@ -113,7 +109,7 @@ QString DictSettingsPage::readGptDictsStr()
 	if (fs::exists(genDictPath)) {
 		readDict(genDictPath);
 	}
-	result = stream2String(tbl);
+	result += "]\n";
 	return QString::fromStdString(result);
 }
 
@@ -469,10 +465,8 @@ void DictSettingsPage::_setupUI()
 		{
 			std::ofstream ofs;
 
-			fs::path genDictPath = _projectDir / L"项目GPT字典-生成.toml";
-			if (fs::exists(genDictPath)) {
-				fs::remove(genDictPath);
-			}
+			fs::remove(_projectDir / L"项目GPT字典-生成.toml");
+
 			if (gptStackedWidget->currentIndex() == 0) {
 				ofs.open(_projectDir / L"项目GPT字典.toml");
 				ofs << gptPlainTextEdit->toPlainText().toStdString();
@@ -563,7 +557,7 @@ void DictSettingsPage::_setupUI()
 			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.3", postDictTableView->columnWidth(3));
 			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.4", postDictTableView->columnWidth(4));
 			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.5", postDictTableView->columnWidth(5));
-
+			insertToml(_projectConfig, "dictionary.gptDict", toml::array{ "项目GPT字典.toml" });
 		};
 
 

@@ -13,6 +13,7 @@
 #include "ElaToolTip.h"
 #include "ElaSlider.h"
 #include "ElaDoubleSpinBox.h"
+#include "ElaPlainTextEdit.h"
 #include "ElaToggleButton.h"
 #include "ValueSliderWidget.h"
 #include "ElaFlowLayout.h"
@@ -109,6 +110,37 @@ void PASettingsPage::_setupUI()
 			insertToml(_projectConfig, "problemAnalyze.langProbability", value);
 		});
 	mainLayout->addWidget(languageProbabilityArea);
+
+	mainLayout->addSpacing(20);
+
+	// 重翻在缓存的problem或pre_jp中包含对应**关键字**的句子，去掉下面列表中的#号注释来使用，也可添加自定义的关键字。
+	QStringList retranslKeyList;
+	auto retranslKeys = _projectConfig["common"]["retranslKeys"].as_array();
+	if (retranslKeys) {
+		for (auto& key : *retranslKeys) {
+			if (auto str = key.value<std::string>()) {
+				if ((*str).empty()) continue;
+				retranslKeyList.append(QString::fromStdString(*str));
+			}
+		}
+	}
+	ElaText* retranslKeyHelperText = new ElaText("重翻关键字设定(一行一个)", mainWidget);
+	ElaToolTip* retranslKeyHelperTip = new ElaToolTip(retranslKeyHelperText);
+	retranslKeyHelperTip->setToolTip("重翻在缓存的problem或pre_jp中包含对应 **关键字** 的句子");
+	retranslKeyHelperText->setTextPixelSize(18);
+	retranslKeyHelperText->setWordWrap(false);
+	mainLayout->addWidget(retranslKeyHelperText);
+	ElaPlainTextEdit* retranslKeyEdit = new ElaPlainTextEdit(mainWidget);
+	QFont font = retranslKeyEdit->font();
+	font.setPixelSize(14);
+	retranslKeyEdit->setFont(font);
+
+	for (auto& key : retranslKeyList) {
+		retranslKeyEdit->moveCursor(QTextCursor::End);
+		retranslKeyEdit->insertPlainText(key + "\n");
+	}
+	retranslKeyEdit->moveCursor(QTextCursor::End);
+	mainLayout->addWidget(retranslKeyEdit);
 	
 	mainLayout->addStretch();
 
@@ -123,6 +155,17 @@ void PASettingsPage::_setupUI()
 			}
 			insertToml(_projectConfig, "problemAnalyze.problemList", problemListArray);
 			insertToml(_projectConfig, "problemAnalyze.punctSet", punctuationList->text().toStdString());
+
+
+			std::stringstream ss(retranslKeyEdit->toPlainText().toStdString());
+			std::string key;
+			toml::array retranslKeysArr;
+			while (std::getline(ss, key)) {
+				if (!key.empty()) {
+					retranslKeysArr.push_back(key);
+				}
+			}
+			insertToml(_projectConfig, "common.retranslKeys", retranslKeysArr);
 		};
 
 	addCentralWidget(mainWidget, true, true, 0);

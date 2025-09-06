@@ -95,10 +95,12 @@ void MainWindow::initWindow()
     updateDockWidget->setWidget(new UpdateWidget(this));
     this->addDockWidget(Qt::RightDockWidgetArea, updateDockWidget);
     resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
-    updateDockWidget->setVisible(_globalConfig["showDockWidget"].value_or(true));
+    std::string gppversion = GPPVERSION;
+    std::erase_if(gppversion, [](char ch) { return ch == '.'; });
+    updateDockWidget->setVisible(_globalConfig["showDockWidget" + gppversion].value_or(true));
     connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
         {
-            insertToml(_globalConfig, "showDockWidget", visible);
+            insertToml(_globalConfig, "showDockWidget" + gppversion, visible);
         });
 
     ElaMenu* appBarMenu = new ElaMenu(this);

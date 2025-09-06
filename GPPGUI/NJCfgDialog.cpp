@@ -24,7 +24,7 @@ NJCfgDialog::NJCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaConte
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出带原文
-	bool outputWithSrc = _projectConfig["plugins"]["NormalJson"].value_or(true);
+	bool outputWithSrc = _projectConfig["plugins"]["NormalJson"]["output_with_src"].value_or(true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText("输出带原文", outputArea);

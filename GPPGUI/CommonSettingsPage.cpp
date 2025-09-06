@@ -291,34 +291,7 @@ void CommonSettingsPage::_setupUI()
 		});
 	mainLayout->addWidget(dictArea);
 
-	mainLayout->addSpacing(20);
-
-	// 重翻在缓存的problem或pre_jp中包含对应**关键字**的句子，去掉下面列表中的#号注释来使用，也可添加自定义的关键字。
-	QStringList retranslKeyList;
-	auto retranslKeys = _projectConfig["common"]["retranslKeys"].as_array();
-	if (retranslKeys) {
-		for (auto& key : *retranslKeys) {
-			if (auto str = key.value<std::string>()) {
-				if((*str).empty()) continue;
-				retranslKeyList.append(QString::fromStdString(*str));
-			}
-		}
-	}
-	ElaText* retranslKeyHelperText = new ElaText("重翻关键字设定(一行一个)", mainWidget);
-	ElaToolTip* retranslKeyHelperTip = new ElaToolTip(retranslKeyHelperText);
-	retranslKeyHelperTip->setToolTip("重翻在缓存的problem或pre_jp中包含对应 **关键字** 的句子");
-	retranslKeyHelperText->setTextPixelSize(18);
-	retranslKeyHelperText->setWordWrap(false);
-	mainLayout->addWidget(retranslKeyHelperText);
-	ElaPlainTextEdit* retranslKeyEdit = new ElaPlainTextEdit(mainWidget);
-	QFont font = retranslKeyEdit->font();
-	font.setPixelSize(14);
-	retranslKeyEdit->setFont(font);
 	
-	for (auto& key : retranslKeyList) {
-		retranslKeyEdit->appendPlainText(key + "\n");
-	}
-	mainLayout->addWidget(retranslKeyEdit);
 
 	mainLayout->addStretch();
 
@@ -326,17 +299,6 @@ void CommonSettingsPage::_setupUI()
 		{
 			insertToml(_projectConfig, "common.targetLang", targetLineEdit->text().toStdString());
 			insertToml(_projectConfig, "common.dictDir", dictLineEdit->text().toStdString());
-			std::stringstream ss(retranslKeyEdit->toPlainText().toStdString());
-			std::vector<std::string> keys;
-			std::string key;
-			while (std::getline(ss, key)) {
-				keys.push_back(key);
-			}
-			toml::array retranslKeysArr;
-			for (auto& key : keys) {
-				retranslKeysArr.push_back(key);
-			}
-			insertToml(_projectConfig, "common.retranslKeys", retranslKeysArr);
 		};
 	addCentralWidget(mainWidget, true, true, 0);
 }

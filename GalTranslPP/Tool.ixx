@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 export {
 
-    std::string GPPVERSION = "0.0.7";
+    std::string GPPVERSION = "0.0.8";
 
     fs::path pluginConfigsPath = L"BaseConfig/pluginConfigs";
 
@@ -45,6 +45,18 @@ export {
 
     std::string ascii2Ascii(const std::string& ascii, UINT src, UINT dst, LPBOOL usedDefaultChar = nullptr) {
         return wide2Ascii(ascii2Wide(ascii, src), dst, usedDefaultChar);
+    }
+
+    void createParent(const fs::path& file) {
+        if (file.has_parent_path()) {
+            fs::create_directories(file.parent_path());
+        }
+    }
+
+    std::wstring wstr2Lower(const std::wstring& wstr) {
+        std::wstring result = wstr;
+        std::transform(result.begin(), result.end(), result.begin(), [](wchar_t wc) { return std::tolower(wc); });
+        return result;
     }
 
     std::vector<std::string> splitString(const std::string& s, char delimiter) {

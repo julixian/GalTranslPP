@@ -51,6 +51,9 @@ void ProjectSettingsPage::apply2Config()
     _startSettingsPage->apply2Config();
     _otherSettingsPage->apply2Config();
 
+    _nameTableSettingsPage->refreshTable();
+    _dictSettingsPage->refreshDicts();
+
     std::ofstream ofs(_projectDir / L"config.toml");
     ofs << _projectConfig;
     ofs.close();
@@ -217,10 +220,13 @@ void ProjectSettingsPage::_onStartTranslating()
     _isRunning = true;
 }
 
-void ProjectSettingsPage::_onFinishTranslating()
+void ProjectSettingsPage::_onFinishTranslating(const QString& filePlugin)
 {
     _isRunning = false;
-    if (_globalConfig["autoRefreshAfterTranslate"].value_or(false)) {
+    if (
+        (filePlugin == "DumpName" || filePlugin == "GenDict") &&
+        _globalConfig["autoRefreshAfterTranslate"].value_or(true)
+        ) {
         _nameTableSettingsPage->refreshTable();
         _dictSettingsPage->refreshDicts();
     }

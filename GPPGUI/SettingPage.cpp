@@ -150,16 +150,16 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     helperText->setWordWrap(false);
     helperText->setTextPixelSize(18);
 
-    // 翻译任务完成后自动刷新人名表和字典
+    // 任务完成后自动刷新人名表和字典
     ElaScrollPageArea* autoRefreshArea = new ElaScrollPageArea(this);
     QHBoxLayout* autoRefreshLayout = new QHBoxLayout(autoRefreshArea);
-    ElaText* autoRefreshText = new ElaText("翻译任务完成后自动刷新人名表和字典", autoRefreshArea);
+    ElaText* autoRefreshText = new ElaText("DumpName/GenDict任务完成后自动刷新人名表和字典", autoRefreshArea);
     autoRefreshText->setWordWrap(false);
     autoRefreshText->setTextPixelSize(15);
     autoRefreshLayout->addWidget(autoRefreshText);
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
-    autoRefreshSwitch->setIsToggled(_globalConfig["autoRefreshAfterTranslate"].value_or(false));
+    autoRefreshSwitch->setIsToggled(_globalConfig["autoRefreshAfterTranslate"].value_or(true));
     connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
         {
             insertToml(_globalConfig, "autoRefreshAfterTranslate", checked);

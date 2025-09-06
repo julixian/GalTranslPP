@@ -201,6 +201,7 @@ void StartSettingsPage::_onStartTranslatingClicked()
 	_progressBar->setValue(0);
 
 	Q_EMIT startWork();
+	_filePlugin = QString::fromStdString(_projectConfig["plugins"]["filePlugin"].value_or(std::string{}));
 	_stopTranslateButton->setEnabled(true);
 }
 
@@ -230,7 +231,7 @@ void StartSettingsPage::_workFinished(int exitCode)
 	default:
 		break;
 	}
-	Q_EMIT finishTranslating();
+	Q_EMIT finishTranslating(_filePlugin);
 	_startTranslateButton->setEnabled(true);
 	_stopTranslateButton->setEnabled(false);
 }

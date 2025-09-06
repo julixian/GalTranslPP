@@ -121,7 +121,7 @@ void EpubTranslator::run()
 
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
-            fs::create_directories(dir);
+            fs::create_directory(dir);
             m_logger->info("已创建目录: {}", wide2Ascii(dir));
         }
     }
@@ -132,7 +132,7 @@ void EpubTranslator::run()
     }
 
     std::vector<fs::path> epubFiles;
-    for (const auto& entry : fs::directory_iterator(m_epubInputDir)) {
+    for (const auto& entry : fs::recursive_directory_iterator(m_epubInputDir)) {
         if (entry.is_regular_file() && isSameExtension(entry.path(), L".epub")) {
             epubFiles.push_back(entry.path());
         }
@@ -142,8 +142,9 @@ void EpubTranslator::run()
     }
 
     for (const auto& epubPath : epubFiles) {
-        fs::path bookUnpackDir = m_tempUnpackDir / epubPath.stem();
-        m_logger->info("解压 {} 到 {}", wide2Ascii(epubPath.filename()), wide2Ascii(bookUnpackDir));
+        fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
+        fs::path bookUnpackDir = m_tempUnpackDir / relEpubPath.parent_path() / relEpubPath.stem();
+        m_logger->info("解压 {} 到 {}", wide2Ascii(epubPath), wide2Ascii(bookUnpackDir));
         fs::create_directories(bookUnpackDir);
 
         int error = 0;
@@ -161,7 +162,9 @@ void EpubTranslator::run()
             }
             else {
                 zip_file* zf = zip_fopen_index(za, i, 0);
-                if (!zf) continue;
+                if (!zf) {
+                    throw std::runtime_error("Epub 文件解压失败: " + wide2Ascii(epubPath));
+                }
                 std::vector<char> buffer(zs.size);
                 zip_fread(zf, buffer.data(), zs.size);
                 zip_fclose(zf);
@@ -173,11 +176,12 @@ void EpubTranslator::run()
         zip_close(za);
     }
 
-    for (const auto& bookDirEntry : fs::directory_iterator(m_tempUnpackDir)) {
-        if (!bookDirEntry.is_directory()) continue;
+    for (const auto& epubPath : epubFiles) {
+        fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
+        fs::path bookDirPath = m_tempUnpackDir / relEpubPath.parent_path() / relEpubPath.stem();
 
-        std::string bookName = wide2Ascii(bookDirEntry.path().filename());
-        for (const auto& htmlEntry : fs::recursive_directory_iterator(bookDirEntry.path())) {
+        std::string bookName = wide2Ascii(relEpubPath.parent_path() / relEpubPath.stem());
+        for (const auto& htmlEntry : fs::recursive_directory_iterator(bookDirPath)) {
             if (htmlEntry.is_regular_file() && (isSameExtension(htmlEntry.path(), L".html") || isSameExtension(htmlEntry.path(), L".xhtml"))) {
 
                 std::ifstream ifs(htmlEntry.path(), std::ios::binary);
@@ -189,8 +193,7 @@ void EpubTranslator::run()
 
                 if (sentences.empty()) continue;
 
-                // *** 创建扁平化、唯一的文件名 ***
-                fs::path relativePath = fs::relative(htmlEntry.path(), bookDirEntry.path());
+                fs::path relativePath = fs::relative(htmlEntry.path(), bookDirPath);
                 std::string flatFileNameStr = bookName + "_" + wide2Ascii(relativePath);
                 std::replace(flatFileNameStr.begin(), flatFileNameStr.end(), '/', '_');
                 std::replace(flatFileNameStr.begin(), flatFileNameStr.end(), '\\', '_');
@@ -216,10 +219,12 @@ void EpubTranslator::run()
 
     NormalJsonTranslator::run();
 
-    for (const auto& bookDirEntry : fs::directory_iterator(m_tempUnpackDir)) {
-        if (bookDirEntry.is_directory()) {
-            fs::copy(bookDirEntry.path(), m_tempRebuildDir / bookDirEntry.path().filename(), fs::copy_options::recursive);
-        }
+    for (const auto& epubPath : epubFiles) {
+        fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
+        fs::path bookDirPath = m_tempUnpackDir / relEpubPath.parent_path() / relEpubPath.stem();
+        fs::path bookRebuildPath = m_tempRebuildDir / relEpubPath.parent_path() / relEpubPath.stem();
+        createParent(bookRebuildPath);
+        fs::copy(bookDirPath, bookRebuildPath, fs::copy_options::recursive);
     }
 
     for (const auto& translatedJsonEntry : fs::directory_iterator(m_outputDir)) {
@@ -263,10 +268,12 @@ void EpubTranslator::run()
 
 
     fs::create_directories(m_epubOutputDir);
-    for (const auto& bookDirEntry : fs::directory_iterator(m_tempRebuildDir)) {
-        if (!bookDirEntry.is_directory()) continue;
+    for (const auto& epubPath : epubFiles) {
+        fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
+        fs::path bookDirPath = m_tempRebuildDir / relEpubPath.parent_path() / relEpubPath.stem();
 
-        fs::path outputEpubPath = m_epubOutputDir / bookDirEntry.path().filename().replace_extension(".epub");
+        fs::path outputEpubPath = m_epubOutputDir / relEpubPath;
+        createParent(outputEpubPath);
         m_logger->info("正在打包 {}", wide2Ascii(outputEpubPath));
 
         int error = 0;
@@ -275,7 +282,7 @@ void EpubTranslator::run()
             throw std::runtime_error("无法创建 EPUB (zip) 文件: " + std::to_string(error));
         }
 
-        const fs::path& sourceDir = bookDirEntry.path();
+        const fs::path& sourceDir = bookDirPath;
 
         // --- 步骤一：优先处理 mimetype 文件，且不压缩 ---
         fs::path mimetypePath = sourceDir / "mimetype";

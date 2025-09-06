@@ -199,6 +199,7 @@ ApiResponse DictionaryGenerator::performApiRequest(const json& payload, const Tr
 }
 
 void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
+
     std::string text = m_segments[segmentIndex];
     std::string hint = "无";
     std::string nameHit;

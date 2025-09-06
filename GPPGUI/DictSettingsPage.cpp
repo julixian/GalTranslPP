@@ -49,8 +49,8 @@ void DictSettingsPage::refreshDicts()
 QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 {
 	QList<DictionaryEntry> result;
-	fs::path gptDictPath = _projectDir / "项目GPT字典.toml";
-	fs::path genDictPath = _projectDir / "项目GPT字典-生成.toml";
+	fs::path gptDictPath = _projectDir / L"项目GPT字典.toml";
+	fs::path genDictPath = _projectDir / L"项目GPT字典-生成.toml";
 	auto readDict = [&](const fs::path& dictPath)
 		{
 			std::ifstream ifs(dictPath);
@@ -81,8 +81,8 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 QString DictSettingsPage::readGptDictsStr()
 {
 	std::string result;
-	fs::path gptDictPath = _projectDir / "项目GPT字典.toml";
-	fs::path genDictPath = _projectDir / "项目GPT字典-生成.toml";
+	fs::path gptDictPath = _projectDir / L"项目GPT字典.toml";
+	fs::path genDictPath = _projectDir / L"项目GPT字典-生成.toml";
 	toml::table tbl;
 	tbl.insert("gptDict", toml::array{});
 	auto totalArr = tbl["gptDict"].as_array();

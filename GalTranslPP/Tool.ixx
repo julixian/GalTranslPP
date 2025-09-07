@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 export {
 
-    std::string GPPVERSION = "0.0.9";
+    std::string GPPVERSION = "0.1.0";
 
     fs::path pluginConfigsPath = L"BaseConfig/pluginConfigs";
 
@@ -47,9 +47,9 @@ export {
         return wide2Ascii(ascii2Wide(ascii, src), dst, usedDefaultChar);
     }
 
-    void createParent(const fs::path& file) {
-        if (file.has_parent_path()) {
-            fs::create_directories(file.parent_path());
+    void createParent(const fs::path& path) {
+        if (path.has_parent_path()) {
+            fs::create_directories(path.parent_path());
         }
     }
 
@@ -103,6 +103,8 @@ export {
         std::string apikey;
         std::string apiurl;
         std::string modelName;
+        std::chrono::steady_clock::time_point lastReportTime;
+        int reportCount = 0;
     };
 
     enum  class TransEngine

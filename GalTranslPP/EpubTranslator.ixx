@@ -121,7 +121,7 @@ void EpubTranslator::run()
 
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
-            fs::create_directory(dir);
+            fs::create_directories(dir);
             m_logger->info("已创建目录: {}", wide2Ascii(dir));
         }
     }

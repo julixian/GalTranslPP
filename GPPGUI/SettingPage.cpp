@@ -214,6 +214,22 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
         }
     });
 
+    // 允许在项目仍在运行的情况下关闭程序(危险)
+    ElaScrollPageArea* allowCloseWhenRunningArea = new ElaScrollPageArea(this);
+    QHBoxLayout* allowCloseWhenRunningLayout = new QHBoxLayout(allowCloseWhenRunningArea);
+    ElaText* allowCloseWhenRunningText = new ElaText("允许在项目仍在运行的情况下关闭程序(危险)", allowCloseWhenRunningArea);
+    allowCloseWhenRunningText->setWordWrap(false);
+    allowCloseWhenRunningText->setTextPixelSize(15);
+    ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
+    allowCloseWhenRunningSwitch->setIsToggled(_globalConfig["allowCloseWhenRunning"].value_or(false));
+    connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
+        {
+            insertToml(_globalConfig, "allowCloseWhenRunning", checked);
+        });
+    allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningText);
+    allowCloseWhenRunningLayout->addStretch();
+    allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningSwitch);
+
     QWidget* centralWidget = new QWidget(this);
     centralWidget->setWindowTitle("Setting");
     QVBoxLayout* centerLayout = new QVBoxLayout(centralWidget);
@@ -229,6 +245,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     centerLayout->addWidget(autoRefreshArea);
     centerLayout->addWidget(nameTableOpenModeArea);
     centerLayout->addWidget(dictOpenModeArea);
+    centerLayout->addWidget(allowCloseWhenRunningArea);
     centerLayout->addStretch();
     centerLayout->setContentsMargins(0, 0, 0, 0);
     addCentralWidget(centralWidget, true, true, 0);

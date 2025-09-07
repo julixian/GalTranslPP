@@ -217,6 +217,80 @@ void CommonSettingsPage::_setupUI()
 		});
 	mainLayout->addWidget(cacheArea);
 
+	// 最大重试次数
+	int maxRetries = _projectConfig["common"]["maxRetries"].value_or(5);
+	ElaScrollPageArea* retryArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* retryLayout = new QHBoxLayout(retryArea);
+	ElaText* retryText = new ElaText("最大重试次数", retryArea);
+	retryText->setTextPixelSize(16);
+	retryLayout->addWidget(retryText);
+	retryLayout->addStretch();
+	ElaSpinBox* retrySpinBox = new ElaSpinBox(retryArea);
+	retrySpinBox->setRange(1, 100);
+	retrySpinBox->setValue(maxRetries);
+	retryLayout->addWidget(retrySpinBox);
+	connect(retrySpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
+		{
+			insertToml(_projectConfig, "common.maxRetries", value);
+		});
+	mainLayout->addWidget(retryArea);
+
+	// 携带上文数量
+	int contextNum = _projectConfig["common"]["contextHistorySize"].value_or(8);
+	ElaScrollPageArea* contextArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* contextLayout = new QHBoxLayout(contextArea);
+	ElaText* contextText = new ElaText("携带上文数量", contextArea);
+	contextText->setTextPixelSize(16);
+	contextLayout->addWidget(contextText);
+	contextLayout->addStretch();
+	ElaSpinBox* contextSpinBox = new ElaSpinBox(contextArea);
+	contextSpinBox->setRange(1, 100);
+	contextSpinBox->setValue(contextNum);
+	contextLayout->addWidget(contextSpinBox);
+	connect(contextSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
+		{
+			insertToml(_projectConfig, "common.contextHistorySize", value);
+		});
+	mainLayout->addWidget(contextArea);
+
+	// 智能重试  # 解析结果失败时尝试折半重翻与清空上下文，避免无效重试。
+	bool smartRetry = _projectConfig["common"]["smartRetry"].value_or(true);
+	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
+	ElaText* smartRetryText = new ElaText("智能重试", smartRetryArea);
+	smartRetryText->setTextPixelSize(16);
+	ElaToolTip* smartRetryTip = new ElaToolTip(smartRetryText);
+	smartRetryTip->setToolTip("解析结果失败时尝试折半重翻与清空上下文，避免无效重试。");
+	smartRetryLayout->addWidget(smartRetryText);
+	smartRetryLayout->addStretch();
+	ElaToggleSwitch* smartRetryToggle = new ElaToggleSwitch(smartRetryArea);
+	smartRetryToggle->setIsToggled(smartRetry);
+	smartRetryLayout->addWidget(smartRetryToggle);
+	connect(smartRetryToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
+		{
+			insertToml(_projectConfig, "common.smartRetry", checked);
+		});
+	mainLayout->addWidget(smartRetryArea);
+
+	// 额度检测 # 运行时动态检测key额度
+	bool checkQuota = _projectConfig["common"]["checkQuota"].value_or(true);
+	ElaScrollPageArea* checkQuotaArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* checkQuotaLayout = new QHBoxLayout(checkQuotaArea);
+	ElaText* checkQuotaText = new ElaText("额度检测", checkQuotaArea);
+	checkQuotaText->setTextPixelSize(16);
+	ElaToolTip* checkQuotaTip = new ElaToolTip(checkQuotaText);
+	checkQuotaTip->setToolTip("运行时动态检测key额度");
+	checkQuotaLayout->addWidget(checkQuotaText);
+	checkQuotaLayout->addStretch();
+	ElaToggleSwitch* checkQuotaToggle = new ElaToggleSwitch(checkQuotaArea);
+	checkQuotaToggle->setIsToggled(checkQuota);
+	checkQuotaLayout->addWidget(checkQuotaToggle);
+	connect(checkQuotaToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
+		{
+			insertToml(_projectConfig, "common.checkQuota", checked);
+		});
+	mainLayout->addWidget(checkQuotaArea);
+
 	// 项目日志级别
 	std::string logLevel = _projectConfig["common"]["logLevel"].value_or("info");
 	QString logLevelStr = QString::fromStdString(logLevel);
@@ -275,7 +349,7 @@ void CommonSettingsPage::_setupUI()
 	dictLayout->addWidget(dictText);
 	dictLayout->addStretch();
 	ElaLineEdit* dictLineEdit = new ElaLineEdit(dictArea);
-	dictLineEdit->setFixedWidth(500);
+	dictLineEdit->setFixedWidth(400);
 	dictLineEdit->setText(dictPathStr);
 	dictLayout->addWidget(dictLineEdit);
 	ElaPushButton* dictButton = new ElaPushButton("浏览", dictArea);

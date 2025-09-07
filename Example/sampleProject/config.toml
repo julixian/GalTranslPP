@@ -44,6 +44,10 @@ splitFile = "No"            # 是否启用单文件分割。Num: 每n条分割�
 splitFileNum = 10            # Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分。
 saveCacheInterval = 1       # 每翻译n次保存一次缓存
 linebreakSymbol = "auto"    # 这个项目在json中使用的换行符
+maxRetries = 5              # 最大重试次数
+contextHistorySize = 8      # 携带上文数量
+smartRetry = true           # 解析结果失败时尝试折半重翻与清空上下文，避免无效重试。
+checkQuota = true           # 运行时动态检测key额度
 logLevel = "info"
 saveLog = true
 

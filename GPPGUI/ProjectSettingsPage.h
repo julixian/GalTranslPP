@@ -6,6 +6,7 @@
 #include <QList>
 #include <toml++/toml.hpp>
 #include <filesystem>
+#include <atomic>
 #include "BasePage.h"
 
 namespace fs = std::filesystem;
@@ -59,7 +60,7 @@ private:
     StartSettingsPage* _startSettingsPage;
     OtherSettingsPage* _otherSettingsPage;
 
-    bool _isRunning = false;
+    std::atomic<bool> _isRunning = false;
 
     void _setupUI();
     void _createNavigation();

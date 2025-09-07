@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QButtonGroup>
 #include <QFileDialog>
+#include <QScrollBar>
 
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
@@ -56,6 +57,7 @@ void StartSettingsPage::_setupUI()
 	QFont font = logOutput->font();
 	font.setPixelSize(14);
 	logOutput->setFont(font);
+	logOutput->setMaximumBlockCount(3000);
 	logOutput->setPlaceholderText("日志输出");
 	topLayout->addWidget(logOutput);
 
@@ -173,9 +175,20 @@ void StartSettingsPage::_setupUI()
 		});
 	connect(_worker, &TranslatorWorker::writeLogSignal, this, [=](QString log)
 		{
-			logOutput->moveCursor(QTextCursor::End);
-			logOutput->insertPlainText(log);
-			logOutput->moveCursor(QTextCursor::End);
+			if (!logOutput || !logOutput->document()) { // 增加对 document 的检查
+				return;
+			}
+			// 1. 滚动条判断
+			QScrollBar* scrollBar = logOutput->verticalScrollBar();
+			bool scrollIsAtBottom = (scrollBar->value() == scrollBar->maximum());
+			// 2. 使用一个临时的“影子”光标在后台进行操作
+			QTextCursor tempCursor(logOutput->document());
+			tempCursor.movePosition(QTextCursor::End); // 移动到文档末尾
+			tempCursor.insertText(log);               // 在末尾插入文本
+			// 3. 智能滚动 (和之前一样)
+			if (scrollIsAtBottom) {
+				scrollBar->setValue(scrollBar->maximum());
+			}
 		});
 	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
 		{

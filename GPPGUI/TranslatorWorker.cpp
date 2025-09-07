@@ -1,5 +1,6 @@
 #include "TranslatorWorker.h"
 #include <QThread>
+#include <QTimer>
 
 import std;
 import ITranslator;
@@ -17,7 +18,7 @@ public:
     virtual void writeLog(const std::string& log) override
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        _writeLogCallback(log);
+        _log += log;
     }
 
     virtual void addThreadNum() override
@@ -35,12 +36,25 @@ public:
     virtual void updateBar(int ticks) override
     {
         std::lock_guard<std::mutex> lock(_mutex);
-        _updateBarCallback(ticks);
+        _progress += ticks;
     }
 
     virtual bool shouldStop() override
     {
         return _shouldStopCallback();
+    }
+
+    void flush()
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (!_log.empty()) {
+            _writeLogCallback(_log);
+            _log.clear();
+        }
+        if (_progress > 0) {
+            _updateBarCallback(_progress);
+            _progress = 0;
+        }
     }
 
     GUIController(std::function<void(int, int)> makeBarCallback, std::function<void(const std::string&)> writeLogCallback,
@@ -49,10 +63,23 @@ public:
         _makeBarCallback{ makeBarCallback }, _writeLogCallback{ writeLogCallback }, _addThreadNumCallback{ addThreadNumCallback },
         _reduceThreadNumCallback{ reduceThreadNumCallback }, _updateBarCallback{ updateBarCallback }, _shouldStopCallback{ shouldStopCallback }
     {
-
+        _log.reserve(1024 * 1024);
+        _flushThread = std::thread([this]()
+            {
+                while (_controlling.load()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    flush();
+                }
+            });
     }
 
-    virtual ~GUIController() override = default;
+    virtual ~GUIController() override
+    {
+        _controlling = false;
+        if (_flushThread.joinable()) {
+            _flushThread.join();
+        }
+    }
 
 private:
     std::function<void(int, int)> _makeBarCallback;
@@ -61,7 +88,11 @@ private:
     std::function<void()> _reduceThreadNumCallback;
     std::function<void(int)> _updateBarCallback;
     std::function<bool()> _shouldStopCallback;
+    std::thread _flushThread;
+    std::atomic<bool> _controlling = true;
     std::mutex _mutex;
+    int _progress = 0;
+    std::string _log;
 };
 
 TranslatorWorker::TranslatorWorker(const fs::path& projectDir, QObject* parent)
@@ -112,32 +143,38 @@ void TranslatorWorker::doTranslation()
 
     }
     catch (const std::system_error& e) {
+        controller->flush();
         Q_EMIT writeLogSignal("[系统错误] " + QString::fromStdString(e.what()));
         Q_EMIT translationFinished(-2);
         return;
     }
     catch (const std::invalid_argument& e) {
+        controller->flush();
         Q_EMIT writeLogSignal("[参数错误] " + QString::fromStdString(e.what()));
         Q_EMIT translationFinished(-2);
         return;
     }
     catch (const std::runtime_error& e) {
+        controller->flush();
         Q_EMIT writeLogSignal("[运行时错误] " + QString::fromStdString(e.what()));
         Q_EMIT translationFinished(-2);
         return;
     }
     catch (const std::exception& e) {
+        controller->flush();
         Q_EMIT writeLogSignal("[标准错误] " + QString::fromStdString(e.what()));
         Q_EMIT translationFinished(-2);
         return;
     }
     catch (...) {
+        controller->flush();
         Q_EMIT writeLogSignal("[未知错误]");
         Q_EMIT translationFinished(-2);
         return;
     }
 
-    Q_EMIT writeLogSignal("翻译任务结束");
+    controller->writeLog(std::string("翻译任务") + (_shouldStop ? "已停止" : "已完成") + "。");
+    controller->flush();
     Q_EMIT translationFinished(_shouldStop ? 1 : 0);
 }
 

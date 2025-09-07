@@ -1,5 +1,5 @@
 # searchStr 可缩写为 org, replaceStr 可缩写为 rep (译前和译后字典同样适用)
 gptDict = [
 	#{org = "大家さん", rep = "房东"},
-	{searchStr = "大家さん", replaceStr = "房东"},
+	{searchStr = "大家さん", replaceStr = "房东", note = "固有名词" },
 ]

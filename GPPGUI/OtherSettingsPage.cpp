@@ -56,7 +56,7 @@ void OtherSettingsPage::_setupUI()
 	ElaLineEdit* pathEdit = new ElaLineEdit(pathArea);
 	pathEdit->setReadOnly(true);
 	pathEdit->setText(QString(_projectDir.wstring()));
-	pathEdit->setFixedWidth(600);
+	pathEdit->setFixedWidth(400);
 	pathLayout->addWidget(pathEdit);
 	ElaPushButton* openButton = new ElaPushButton(pathArea);
 	openButton->setText("打开文件夹");

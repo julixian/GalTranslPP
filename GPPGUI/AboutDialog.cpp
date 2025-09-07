@@ -11,14 +11,14 @@ AboutDialog::AboutDialog(QWidget* parent)
     : ElaDialog(parent)
 {
     setWindowTitle("关于..");
-    setWindowIcon(QIcon(":/Resource/Image/webIcon.jpeg"));
+    setWindowIcon(QIcon(":/GPPGUI/Resource/Image/webIcon.jpeg"));
     this->setIsFixedSize(true);
     setWindowModality(Qt::ApplicationModal);
     setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
     ElaImageCard* pixCard = new ElaImageCard(this);
     pixCard->setFixedSize(60, 60);
     pixCard->setIsPreserveAspectCrop(false);
-    pixCard->setCardImage(QImage(":/Resource/Image/webIcon.jpeg"));
+    pixCard->setCardImage(QImage(":/GPPGUI/Resource/Image/webIcon.jpeg"));
 
     QVBoxLayout* pixCardLayout = new QVBoxLayout();
     pixCardLayout->addWidget(pixCard);

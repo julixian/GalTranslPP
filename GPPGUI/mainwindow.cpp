@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QMessageBox>
 
 #include "ElaContentDialog.h"
 #include "ElaDockWidget.h"
@@ -26,6 +27,7 @@
 
 #include "HomePage.h"
 #include "CommonDictPage.h"
+#include "DefaultPromptPage.h"
 #include "ProjectSettingsPage.h"
 #include "SettingPage.h"
 
@@ -40,7 +42,7 @@ MainWindow::MainWindow(QWidget* parent)
             _globalConfig = toml::parse_file("BaseConfig/globalConfig.toml");
         }
         catch (...) {
-            MessageBoxW(NULL, L"解析失败", L"基本配置文件不符合规范", MB_OK | MB_ICONERROR);
+            QMessageBox::critical(this, "解析错误", "基本配置文件不符合规范！", QMessageBox::Ok);
         }
     }
 
@@ -62,8 +64,24 @@ MainWindow::MainWindow(QWidget* parent)
         showMinimized();
         });
     this->setIsDefaultClosed(false);
-    connect(this, &MainWindow::closeButtonClicked, this, [=]() {
-        _closeDialog->exec();
+    connect(this, &MainWindow::closeButtonClicked, this, [=]()
+        {
+            if (
+                !(_globalConfig["allowCloseWhenRunning"].value_or(false)) &&
+                std::any_of(_projectPages.begin(), _projectPages.end(), [](const auto& page)
+                    {
+                        if (page->getIsRunning()) {
+                            ElaMessageBar::warning(ElaMessageBarType::TopRight, "警告",
+                                "项目 " + page->getProjectName() + " 仍在运行，请先停止运行！", 3000);
+                            return true;
+                        }
+                        return false;
+                    })
+                )
+            {
+                return;
+            }
+            _closeDialog->exec();
         });
 
     // 初始化提示
@@ -160,11 +178,14 @@ void MainWindow::initContent()
 {
     _homePage = new HomePage(this);
     _commonDictPage = new CommonDictPage(this);
+    _defaultPromptPage = new DefaultPromptPage(this);
     _settingPage = new SettingPage(_globalConfig, this);
 
     addPageNode("主页", _homePage, ElaIconType::House);
 
     addPageNode("通用字典管理", _commonDictPage, ElaIconType::FontCase);
+
+    addPageNode("默认提示词管理", _defaultPromptPage, ElaIconType::Text);
 
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();
@@ -178,7 +199,7 @@ void MainWindow::initContent()
                 QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir));
                 connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
                     {
-                        setNodeKeyPoints(nodeKey, 1);
+                        setNodeKeyPoints(nodeKey, getNodeKeyPoints(nodeKey) + 1);
                     });
                 _projectPages.push_back(newPage);
                 addPageNode(QString(projectDir.filename().wstring()), newPage.get(), _projectExpanderKey, ElaIconType::Projector);

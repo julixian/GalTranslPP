@@ -85,15 +85,26 @@ void APIPool::resortTokens() {
 void APIPool::reportProblem(const TranslationAPI& badAPI) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    std::erase_if(m_apis, [&](const TranslationAPI& api)
+    auto it = std::find_if(m_apis.begin(), m_apis.end(), [&](const TranslationAPI& api)
         {
-            // 通过 apikey 来唯一标识一个 api
-            if (api.apikey == badAPI.apikey) {
-                m_logger->warn("API Key [{}] 已被标记为不可用。", api.apikey);
-                return true;
-            }
-            return false;
+            return api.apikey == badAPI.apikey;
         });
+    if (it == m_apis.end()) {
+        throw std::runtime_error("不存在的 API Key");
+    }
+    auto durationInSec = std::chrono::duration_cast<std::chrono::seconds>
+        (std::chrono::steady_clock::now() - it->lastReportTime).count();
+    if (durationInSec < 10) {
+        it->reportCount++;
+    }
+    else {
+        it->reportCount = 1;
+    }
+    it->lastReportTime = std::chrono::steady_clock::now();
+    if (it->reportCount >= 10) {
+        m_logger->warn("API Key [{}] 已被标记为不可用。", it->apikey);
+        m_apis.erase(it);
+    }
 }
 
 bool APIPool::isEmpty() {

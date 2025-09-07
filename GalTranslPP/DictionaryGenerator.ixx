@@ -208,6 +208,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
     if (m_controller->shouldStop()) {
         return;
     }
+    m_controller->addThreadNum();
     std::string text = m_segments[segmentIndex];
     std::string hint = "无";
     std::string nameHit;
@@ -257,6 +258,8 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
     else {
         m_logger->warn("AI 字典生成请求失败: {}", response.content);
     }
+    m_controller->updateBar();
+    m_controller->reduceThreadNum();
 }
 
 void DictionaryGenerator::generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName) {
@@ -280,6 +283,7 @@ void DictionaryGenerator::generate(const fs::path& inputDir, const fs::path& out
 
     int threadsNum = std::min(m_threadsNum, (int)selectedIndices.size());
     m_logger->info("阶段三：启动 {} 个线程，向 AI 发送 {} 个任务...", threadsNum, selectedIndices.size());
+    m_controller->makeBar((int)selectedIndices.size(), threadsNum);
     ctpl::thread_pool pool(threadsNum);
     std::vector<std::future<void>> results;
     for (int idx : selectedIndices) {

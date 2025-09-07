@@ -222,13 +222,12 @@ void ProjectSettingsPage::_onNavigationButtonToggled(bool checked)
 
 void ProjectSettingsPage::_onStartTranslating()
 {
-    apply2Config();
     _isRunning = true;
+    apply2Config();
 }
 
 void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int exitCode)
 {
-    _isRunning = false;
     if (
         exitCode == 0 &&
         (transEngine == "DumpName" || transEngine == "GenDict") &&
@@ -238,9 +237,10 @@ void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int e
         _dictSettingsPage->refreshDicts();
     }
     Q_EMIT finishedTranslating(this->property("ElaPageKey").toString());
+    _isRunning = false;
 }
 
 bool ProjectSettingsPage::getIsRunning()
 {
-    return _isRunning;
+    return _isRunning.load();
 }

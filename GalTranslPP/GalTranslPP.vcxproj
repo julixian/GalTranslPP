@@ -149,6 +149,7 @@
     <ClCompile Include="ITranslator.ixx" />
     <ClCompile Include="NormalJsonTranslator.ixx" />
     <ClCompile Include="ProblemAnalyzer.ixx" />
+    <ClCompile Include="TextFull2Half.ixx" />
     <ClCompile Include="TextLinebreakFix.ixx" />
     <ClCompile Include="Tool.ixx" />
   </ItemGroup>

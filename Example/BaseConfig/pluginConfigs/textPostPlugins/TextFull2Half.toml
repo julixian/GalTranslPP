@@ -1,0 +1,4 @@
+[plugins.TextFull2Half]
+"替换时机" = "before_dst_processed"  # [before_src_processed/after_src_processed/before_dst_processed]
+"是否替换标点" = true
+"反向替换" = false  # false=全角->半角，true=半角->全角

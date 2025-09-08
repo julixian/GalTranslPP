@@ -94,6 +94,7 @@ int main(int argc, char* argv[])
     }
 
     w.show();
+    w.afterShow();
     int result = a.exec();
 
     // 程序退出前，确保服务器关闭

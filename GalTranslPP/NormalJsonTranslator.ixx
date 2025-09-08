@@ -97,6 +97,7 @@ export {
         bool m_needsCombining = false;
         std::map<std::wstring, int> m_splitFilePartsCount;
         std::map<std::string, std::string> m_nameMap;
+        std::mutex m_cacheMutex;
         std::mutex m_outputCacheFileMutex;
 
         APIPool m_apiPool;
@@ -1066,40 +1067,49 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
     }
 
     std::multimap<std::string, json> cacheMap;
-    std::vector<fs::path> cachePaths;
-    if (m_needsCombining) {
-        size_t pos = relInputPath.filename().wstring().rfind(L"_part_");
-        std::wstring orgStem = relInputPath.filename().wstring().substr(0, pos);
-        std::wstring cacheSpec = orgStem + L"_part_*.json";
-        for (const auto& entry : fs::directory_iterator(m_cacheDir / relInputPath.parent_path())) {
-            if (!entry.is_regular_file()) {
-                continue;
-            }
-            if (PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())) {
-                cachePaths.push_back(entry.path());
+
+    {
+        std::vector<fs::path> cachePaths;
+        if (m_needsCombining) {
+            size_t pos = relInputPath.filename().wstring().rfind(L"_part_");
+            std::wstring orgStem = relInputPath.filename().wstring().substr(0, pos);
+            std::wstring cacheSpec = orgStem + L"_part_*.json";
+            for (const auto& entry : fs::directory_iterator(m_cacheDir / relInputPath.parent_path())) {
+                if (!entry.is_regular_file()) {
+                    continue;
+                }
+                if (PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())) {
+                    cachePaths.push_back(entry.path());
+                }
             }
         }
-    }
-    else if (fs::exists(cachePath)) {
-        cachePaths.push_back(cachePath);
-    }
-    for (const auto& cp : cachePaths) {
-        try {
-            ifs.open(cp);
-            json cacheJsonList = json::parse(ifs);
-            ifs.close();
-            for (size_t i = 0; i < cacheJsonList.size(); ++i) {
-                const auto& item = cacheJsonList[i];
-                std::string prevText = "None", currentText, nextText = "None";
-                currentText = item.value("name", "") + item.value("pre_processed_text", "");
-                if (i > 0) prevText = cacheJsonList[i - 1].value("name", "") + cacheJsonList[i - 1].value("pre_processed_text", "");
-                if (i < cacheJsonList.size() - 1) nextText = cacheJsonList[i + 1].value("name", "") + cacheJsonList[i + 1].value("pre_processed_text", "");
-                cacheMap.insert(std::make_pair(prevText + currentText + nextText, item));
-            }
-            m_logger->debug("[线程 {}] 从 {} 加载了 {} 条缓存记录。", threadId, wide2Ascii(cp), cacheMap.size());
+        else if (fs::exists(cachePath)) {
+            cachePaths.push_back(cachePath);
         }
-        catch (const json::exception& e) {
-            throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cp), e.what()));
+        std::ranges::sort(cachePaths);
+
+        json totalCacheJsonList = json::array();
+        for (const auto& cp : cachePaths) {
+            std::lock_guard<std::mutex> lock(m_cacheMutex);
+            try {
+                ifs.open(cp);
+                json cacheJsonList = json::parse(ifs);
+                ifs.close();
+                totalCacheJsonList.insert(totalCacheJsonList.end(), cacheJsonList.begin(), cacheJsonList.end());
+                m_logger->debug("[线程 {}] 从 {} 加载了 {} 条缓存记录。", threadId, wide2Ascii(cp), cacheMap.size());
+            }
+            catch (const json::exception& e) {
+                throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cp), e.what()));
+            }
+        }
+
+        for (size_t i = 0; i < totalCacheJsonList.size(); ++i) {
+            const auto& item = totalCacheJsonList[i];
+            std::string prevText = "None", currentText, nextText = "None";
+            currentText = item.value("name", "") + item.value("pre_processed_text", "");
+            if (i > 0) prevText = totalCacheJsonList[i - 1].value("name", "") + totalCacheJsonList[i - 1].value("pre_processed_text", "");
+            if (i < totalCacheJsonList.size() - 1) nextText = totalCacheJsonList[i + 1].value("name", "") + totalCacheJsonList[i + 1].value("pre_processed_text", "");
+            cacheMap.insert(std::make_pair(prevText + currentText + nextText, item));
         }
     }
 
@@ -1164,13 +1174,17 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
         }
         batchCount++;
         if (batchCount % m_saveCacheInterval == 0) {
-            m_logger->debug("[线程 {}] 文件 {} 达到保存间隔，正在更新缓存文件...", threadId, wide2Ascii(inputPath.filename()));
+            m_logger->debug("[线程 {}] 文件 {} 达到保存间隔，正在更新缓存文件...", threadId, wide2Ascii(inputPath));
+            std::lock_guard<std::mutex> lock(m_cacheMutex);
             saveCache(sentences, cachePath);
         }
     }
 
-    m_logger->debug("[线程 {}] 文件 {} 翻译完成，正在进行最终保存...", threadId, wide2Ascii(inputPath.filename()));
-    saveCache(sentences, cachePath);
+    {
+        std::lock_guard<std::mutex> lock(m_cacheMutex);
+        m_logger->debug("[线程 {}] 文件 {} 翻译完成，正在进行最终保存...", threadId, wide2Ascii(inputPath.filename()));
+        saveCache(sentences, cachePath);
+    }
 
     json outputJson = json::array();
     for (auto& se : sentences) {
@@ -1195,7 +1209,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
         outputJson.push_back(item);
     }
 
-    std::unique_lock<std::mutex> lock(m_outputCacheFileMutex);
+    std::lock_guard<std::mutex> lock(m_outputCacheFileMutex);
     std::ofstream ofs(outputPath);
     ofs << outputJson.dump(2);
     ofs.close();

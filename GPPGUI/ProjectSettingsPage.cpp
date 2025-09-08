@@ -20,6 +20,7 @@
 #include "StartSettingsPage.h"
 #include "NameTableSettingsPage.h"
 #include "OtherSettingsPage.h"
+#include "PromptSettingsPage.h"
 
 import std;
 
@@ -56,6 +57,7 @@ void ProjectSettingsPage::apply2Config()
     _dictSettingsPage->apply2Config();
     _startSettingsPage->apply2Config();
     _otherSettingsPage->apply2Config();
+    _promptSettingsPage->apply2Config();
 
     _nameTableSettingsPage->refreshTable();
     _dictSettingsPage->refreshDicts();
@@ -87,7 +89,7 @@ void ProjectSettingsPage::_setupUI()
 
     ElaScrollPageArea* buttonsArea = new ElaScrollPageArea(navigationWidget);
     buttonsArea->setFixedWidth(100);
-    buttonsArea->setFixedHeight(400);
+    buttonsArea->setFixedHeight(430);
     _buttonsLayout = new QVBoxLayout(buttonsArea);
 
     _navigationLayout->addWidget(buttonsArea);
@@ -135,6 +137,8 @@ void ProjectSettingsPage::_createNavigation()
     startButton->setFixedHeight(35);
     ElaToggleButton* otherButton = new ElaToggleButton("其他设置", this);
     otherButton->setFixedHeight(35);
+    ElaToggleButton* promptButton = new ElaToggleButton("提示词", this);
+    promptButton->setFixedHeight(35);
 
     // 将按钮添加到 QList 和布局中
     _navigationButtons.append(apiButton);
@@ -145,6 +149,7 @@ void ProjectSettingsPage::_createNavigation()
     _navigationButtons.append(dictButton);
     _navigationButtons.append(startButton);
     _navigationButtons.append(otherButton);
+    _navigationButtons.append(promptButton);
 
     for (ElaToggleButton* button : _navigationButtons)
     {
@@ -164,6 +169,7 @@ void ProjectSettingsPage::_createPages()
     _dictSettingsPage = new DictSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _startSettingsPage = new StartSettingsPage(_projectDir, _projectConfig, this);
     _otherSettingsPage = new OtherSettingsPage(_projectDir, _projectConfig, this);
+    _promptSettingsPage = new PromptSettingsPage(_projectDir,_projectConfig, this);
     _stackedWidget->addWidget(_apiSettingsPage);
     _stackedWidget->addWidget(_pluginSettingsPage);
     _stackedWidget->addWidget(_commonSettingsPage);
@@ -172,6 +178,7 @@ void ProjectSettingsPage::_createPages()
     _stackedWidget->addWidget(_dictSettingsPage);
     _stackedWidget->addWidget(_startSettingsPage);
     _stackedWidget->addWidget(_otherSettingsPage);
+    _stackedWidget->addWidget(_promptSettingsPage);
 
     connect(_startSettingsPage, &StartSettingsPage::startTranslating, this, &ProjectSettingsPage::_onStartTranslating);
     connect(_startSettingsPage, &StartSettingsPage::finishTranslating, this, &ProjectSettingsPage::_onFinishTranslating);

@@ -20,6 +20,7 @@ class MainWindow : public ElaWindow
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+    void afterShow();
 
 protected:
     virtual void mouseReleaseEvent(QMouseEvent* event);

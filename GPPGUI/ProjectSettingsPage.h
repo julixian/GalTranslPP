@@ -22,6 +22,7 @@ class NameTableSettingsPage;
 class DictSettingsPage;
 class StartSettingsPage;
 class OtherSettingsPage;
+class PromptSettingsPage;
 
 class ProjectSettingsPage : public BasePage
 {
@@ -59,6 +60,7 @@ private:
     DictSettingsPage* _dictSettingsPage;
     StartSettingsPage* _startSettingsPage;
     OtherSettingsPage* _otherSettingsPage;
+    PromptSettingsPage* _promptSettingsPage;
 
     std::atomic<bool> _isRunning = false;
 

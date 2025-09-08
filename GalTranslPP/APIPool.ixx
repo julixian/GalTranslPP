@@ -101,7 +101,7 @@ void APIPool::reportProblem(const TranslationAPI& badAPI) {
         it->reportCount = 1;
     }
     it->lastReportTime = std::chrono::steady_clock::now();
-    if (it->reportCount >= 10) {
+    if (it->reportCount >= 30) {
         m_logger->warn("API Key [{}] 已被标记为不可用。", it->apikey);
         m_apis.erase(it);
     }

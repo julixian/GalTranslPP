@@ -129,9 +129,12 @@
     <ClCompile Include="PASettingsPage.cpp" />
     <ClCompile Include="PluginItemWidget.cpp" />
     <ClCompile Include="PluginSettingsPage.cpp" />
+    <ClCompile Include="PromptSettingsPage.cpp" />
     <ClCompile Include="SettingPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
     <ClCompile Include="TranslatorWorker.cpp" />
+    <ClCompile Include="UpdateChecker.cpp" />
+    <QtMoc Include="UpdateChecker.h" />
     <ClCompile Include="UpdateWidget.cpp" />
     <ClCompile Include="ValueSliderWidget.cpp" />
     <QtMoc Include="PluginSettingsPage.h" />
@@ -222,6 +225,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="UpdateWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PromptSettingsPage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

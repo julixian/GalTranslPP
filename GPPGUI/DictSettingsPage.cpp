@@ -90,9 +90,10 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 QString DictSettingsPage::readGptDictsStr()
 {
 	std::string result= "gptDict = [\n";
+	bool gptOk = true;
 	fs::path gptDictPath = _projectDir / L"项目GPT字典.toml";
 	fs::path genDictPath = _projectDir / L"项目GPT字典-生成.toml";
-	auto readDict = [&](const fs::path& dictPath)
+	auto readDict = [&](const fs::path& dictPath) -> bool
 		{
 			std::ifstream ifs(dictPath);
 			toml::table tbl;
@@ -102,12 +103,12 @@ QString DictSettingsPage::readGptDictsStr()
 			catch (...) {
 				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
 					QString(dictPath.filename().wstring()) + "不符合规范", 3000);
-				return;
+				return false;
 			}
 			ifs.close();
 			auto dictArr = tbl["gptDict"].as_array();
 			if (!dictArr) {
-				return;
+				return false;
 			}
 			for (const auto& dict : *dictArr) {
 				std::string original = dict.as_table()->contains("org") ? (*dict.as_table())["org"].value_or("") :
@@ -121,12 +122,19 @@ QString DictSettingsPage::readGptDictsStr()
 			}
 		};
 	if (fs::exists(gptDictPath)) {
-		readDict(gptDictPath);
+		gptOk = readDict(gptDictPath);
 	}
 	if (fs::exists(genDictPath)) {
 		readDict(genDictPath);
 	}
-	result += "]\n";
+	if (gptOk) {
+		result += "]\n";
+	}
+	else {
+		std::ifstream ifs(gptDictPath);
+		result = std::string((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+		ifs.close();
+	}
 	return QString::fromStdString(result);
 }
 

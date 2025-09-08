@@ -130,6 +130,12 @@
     <ClCompile Include="UpdateWidget.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
+    <ClCompile Include="PromptSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdateChecker.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -211,6 +217,12 @@
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="UpdateWidget.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="PromptSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="UpdateChecker.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
   </ItemGroup>

@@ -24,6 +24,7 @@
 #include "ElaInputDialog.h"
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
+#include "UpdateChecker.h"
 
 #include "HomePage.h"
 #include "CommonDictPage.h"
@@ -459,6 +460,21 @@ void MainWindow::_on_closeWindow_clicked()
     ofs << _globalConfig;
     ofs.close();
     MainWindow::closeWindow();
+}
+
+void MainWindow::afterShow()
+{
+    int windowDisplayMode = _globalConfig["windowDisplayMode"].value_or(0);
+    eApp->setWindowDisplayMode((ElaApplicationType::WindowDisplayMode)windowDisplayMode);
+
+    UpdateChecker* updateChecker = new UpdateChecker(this);
+    connect(updateChecker, &UpdateChecker::checkFinished, this, [=](bool hasNewVersion, QString newVersion)
+        {
+            if (hasNewVersion) {
+                ElaMessageBar::information(ElaMessageBarType::TopLeft, "检测到新版本", "最新版本: " + newVersion, 3000);
+            }
+        });
+    updateChecker->check();
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)

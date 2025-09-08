@@ -362,6 +362,7 @@ void PromptSettingsPage::_setupUI()
 
 	_applyFunc = [=]()
 		{
+			insertToml(_promptConfig, "FORGALJSON_TRANS_PROMPT_EN", forgalJsonUserModeEdit->toPlainText().toStdString());
 			insertToml(_promptConfig, "FORGALJSON_SYSTEM", forgalJsonSystemModeEdit->toPlainText().toStdString());
 			insertToml(_promptConfig, "FORGALTSV_TRANS_PROMPT_EN", forgalTsvUserModeEdit->toPlainText().toStdString());
 			insertToml(_promptConfig, "FORGALTSV_SYSTEM", forgalTsvSystemModeEdit->toPlainText().toStdString());

@@ -231,6 +231,9 @@
     <QtMoc Include="PromptSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="GPPGUI.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <QtMoc Include="CommonPreDictPage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -109,9 +109,6 @@
     <ClCompile Include="OtherSettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImp</Filter>
     </ClCompile>
-    <ClCompile Include="CommonDictPage.cpp">
-      <Filter>Source Files\PageImp</Filter>
-    </ClCompile>
     <ClCompile Include="DefaultPromptPage.cpp">
       <Filter>Source Files\PageImp</Filter>
     </ClCompile>
@@ -135,6 +132,9 @@
     </ClCompile>
     <ClCompile Include="UpdateChecker.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonPreDictPage.cpp">
+      <Filter>Source Files\PageImp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,9 +198,6 @@
     <QtMoc Include="OtherSettingsPage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
-    <QtMoc Include="CommonDictPage.h">
-      <Filter>Header Files\PageHeaders</Filter>
-    </QtMoc>
     <QtMoc Include="DefaultPromptPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
@@ -224,6 +221,9 @@
     </QtMoc>
     <QtMoc Include="UpdateChecker.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="CommonPreDictPage.h">
+      <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
   </ItemGroup>
 </Project>

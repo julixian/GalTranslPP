@@ -387,7 +387,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         // 加载提示词
         fs::path promptPath = m_projectDir / L"Prompt.toml";
         if (!fs::exists(promptPath)) {
-            promptPath = L"Prompt.toml";
+            promptPath = L"BaseConfig/Prompt.toml";
             if (!fs::exists(promptPath)) {
                 throw std::runtime_error("找不到 Prompt.toml 文件");
             }
@@ -880,14 +880,17 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                 auto parts = splitString(line, '\t');
                 if (parts.size() < 3) { 
                     parseError = true;
-                    break;
+                    continue;
                 }
                 try {
                     int id = std::stoi(parts[2]);
                     if (id2SentenceMap.count(id)) {
+                        if (parts[1].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
                         id2SentenceMap[id]->pre_translated_text = parts[1];
                         id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->problem = "";
                         id2SentenceMap[id]->complete = true;
                         m_completedSentences++;
                         m_controller->updateBar(); // ForGalTsv
@@ -896,7 +899,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                 }
                 catch (...) { 
                     parseError = true;
-                    break; 
+                    continue; 
                 }
             }
             
@@ -920,14 +923,17 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                 auto parts = splitString(line, '\t');
                 if (parts.size() < 2) { 
                     parseError = true; 
-                    break;
+                    continue;
                 }
                 try {
                     int id = std::stoi(parts[1]);
                     if (id2SentenceMap.count(id)) {
+                        if (parts[0].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
                         id2SentenceMap[id]->pre_translated_text = parts[0];
                         id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->problem = "";
                         id2SentenceMap[id]->complete = true;
                         m_completedSentences++;
                         m_controller->updateBar(); // ForNovelTsv
@@ -936,7 +942,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                 }
                 catch (...) { 
                     parseError = true;
-                    break;
+                    continue;
                 }
             }
         }
@@ -959,9 +965,12 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                     json item = json::parse(line);
                     int id = item.at("id");
                     if (id2SentenceMap.count(id)) {
+                        if (item.at("dst").empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
                         id2SentenceMap[id]->pre_translated_text = item.at("dst");
                         id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->problem = "";
                         id2SentenceMap[id]->complete = true;
                         m_completedSentences++;
                         m_controller->updateBar(); // ForGalJson/DeepseekJson
@@ -970,7 +979,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
                 }
                 catch (...) { 
                     parseError = true; 
-                    break;
+                    continue;
                 }
             }
         }
@@ -997,7 +1006,6 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
 
                 currentSentence->pre_translated_text = translatedLine;
                 currentSentence->translated_by = currentAPI.modelName;
-                currentSentence->problem = "";
                 currentSentence->complete = true;
                 m_completedSentences++;
                 m_controller->updateBar(); // Sakura
@@ -1070,7 +1078,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
 
     {
         std::vector<fs::path> cachePaths;
-        if (m_needsCombining) {
+        if (m_needsCombining && m_transEngine != TransEngine::Rebuild) {
             size_t pos = relInputPath.filename().wstring().rfind(L"_part_");
             std::wstring orgStem = relInputPath.filename().wstring().substr(0, pos);
             std::wstring cacheSpec = orgStem + L"_part_*.json";

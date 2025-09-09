@@ -27,7 +27,6 @@
 #include "UpdateChecker.h"
 
 #include "HomePage.h"
-#include "CommonDictPage.h"
 #include "DefaultPromptPage.h"
 #include "ProjectSettingsPage.h"
 #include "SettingPage.h"
@@ -178,15 +177,17 @@ void MainWindow::initEdgeLayout()
 void MainWindow::initContent()
 {
     _homePage = new HomePage(this);
-    _commonDictPage = new CommonDictPage(this);
     _defaultPromptPage = new DefaultPromptPage(this);
+
+
+    
     _settingPage = new SettingPage(_globalConfig, this);
 
     addPageNode("主页", _homePage, ElaIconType::House);
 
-    addPageNode("通用字典管理", _commonDictPage, ElaIconType::FontCase);
-
     addPageNode("默认提示词管理", _defaultPromptPage, ElaIconType::Text);
+
+    addExpanderNode("通用字典管理", _commonDictExpanderKey, ElaIconType::FontCase);
 
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();
@@ -266,7 +267,6 @@ void MainWindow::_on_newProject_triggered()
     }
 
     fs::create_directories(newProjectDir);
-    fs::create_directory(newProjectDir / L"gt_input");
 
     QFile file(":/GPPGUI/Resource/sampleProject.zip");
     if (file.open(QIODevice::ReadOnly)) {
@@ -291,6 +291,10 @@ void MainWindow::_on_newProject_triggered()
     }
     else {
         fs::remove(newProjectDir / L"sampleProject.zip");
+    }
+
+    if (fs::exists(L"BaseConfig/Prompt.toml")) {
+        fs::copy(L"BaseConfig/Prompt.toml", newProjectDir / L"Prompt.toml", fs::copy_options::overwrite_existing);
     }
 
     QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, newProjectDir));
@@ -449,6 +453,7 @@ void MainWindow::_on_closeWindow_clicked()
         projects.push_back(wide2Ascii(page->getProjectDir()));
     }
     _globalConfig.insert_or_assign("projects", projects);
+    _defaultPromptPage->apply2Config();
     QRect rect = frameGeometry();
     _globalConfig.insert_or_assign("windowWidth", rect.width());
     _globalConfig.insert_or_assign("windowHeight", rect.height());
@@ -464,9 +469,6 @@ void MainWindow::_on_closeWindow_clicked()
 
 void MainWindow::afterShow()
 {
-    int windowDisplayMode = _globalConfig["windowDisplayMode"].value_or(0);
-    eApp->setWindowDisplayMode((ElaApplicationType::WindowDisplayMode)windowDisplayMode);
-
     UpdateChecker* updateChecker = new UpdateChecker(this);
     connect(updateChecker, &UpdateChecker::checkFinished, this, [=](bool hasNewVersion, QString newVersion)
         {

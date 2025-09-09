@@ -112,7 +112,7 @@
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="APISettingsPage.cpp" />
     <ClCompile Include="BasePage.cpp" />
-    <ClCompile Include="CommonDictPage.cpp" />
+    <ClCompile Include="CommonPreDictPage.cpp" />
     <ClCompile Include="CommonSettingsPage.cpp" />
     <ClCompile Include="DefaultPromptPage.cpp" />
     <ClCompile Include="DictionaryModel.cpp" />
@@ -206,9 +206,6 @@
     <QtMoc Include="OtherSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="CommonDictPage.h" />
-  </ItemGroup>
-  <ItemGroup>
     <QtMoc Include="DefaultPromptPage.h" />
   </ItemGroup>
   <ItemGroup>
@@ -228,6 +225,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PromptSettingsPage.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="CommonPreDictPage.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

@@ -13,18 +13,16 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->setContentsMargins(5, 10, 5, 5);
     mainLayout->setSpacing(4);
     ElaText* updateTitle = new ElaText("2025-09-08更新", 15, this);
-    ElaText* update1 = new ElaText("1、继续优化额度检测", 13, this);
+    ElaText* update1 = new ElaText("1、修复GPT字典保存的一个小bug", 13, this);
     update1->setIsWrapAnywhere(true);
-    ElaText* update2 = new ElaText("2、继续优化缓存读取逻辑", 13, this);
+    ElaText* update2 = new ElaText("2、修复优化单文件分割时引出的Rebuild无法命中缓存bug", 13, this);
     update2->setIsWrapAnywhere(true);
-    ElaText* update3 = new ElaText("3、优化GPT字典保存解析逻辑", 13, this);
+    ElaText* update3 = new ElaText("3、新增默认提示词管理功能", 13, this);
     update3->setIsWrapAnywhere(true);
-    ElaText* update4 = new ElaText("4、新增项目提示词设置", 13, this);
+    ElaText* update4 = new ElaText("4、给两个任务的log输出间增加了两个换行", 13, this);
     update4->setIsWrapAnywhere(true);
-    ElaText* update5 = new ElaText("5、新增更新检测(仅GUI)", 13, this);
+    ElaText* update5 = new ElaText("5、优化了翻译解析，新增智能空行检测", 13, this);
     update5->setIsWrapAnywhere(true);
-    ElaText* update6 = new ElaText("6、修复主题切换保存的bug", 13, this);
-    update6->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -32,7 +30,6 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update3);
     mainLayout->addWidget(update4);
     mainLayout->addWidget(update5);
-    mainLayout->addWidget(update6);
     mainLayout->addStretch();
 }
 

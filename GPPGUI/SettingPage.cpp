@@ -81,6 +81,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     displayButtonGroup->addButton(_dwmBlurnormalButton, 5);
     int windowDisplayMode = _globalConfig["windowDisplayMode"].value_or(0); // 不知道为什么3及以上的值会失效
     displayButtonGroup->button((int)windowDisplayMode)->setChecked(true);
+    eApp->setWindowDisplayMode((ElaApplicationType::WindowDisplayMode)windowDisplayMode);
 
     connect(displayButtonGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) {
         if (isToggled)

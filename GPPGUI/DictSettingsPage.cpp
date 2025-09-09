@@ -120,6 +120,7 @@ QString DictSettingsPage::readGptDictsStr()
 				result += std::format("    {{ org = {}, rep = {}, note = {} }},",
 					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) + "\n";
 			}
+			return true;
 		};
 	if (fs::exists(gptDictPath)) {
 		gptOk = readDict(gptDictPath);

@@ -51,7 +51,8 @@ export {
 module :private;
 
 void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const std::string& targetLang) {
-    if (sentence->translated_preview.empty()) {
+    if (sentence->translated_preview.empty() && !sentence->pre_processed_text.empty()) {
+        sentence->problem = "翻译为空";
         return;
     }
     if (sentence->translated_preview.starts_with("(Failed to translate)")) {

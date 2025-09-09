@@ -133,12 +133,12 @@ void ProjectSettingsPage::_createNavigation()
     nameTableButton->setFixedHeight(35);
     ElaToggleButton* dictButton = new ElaToggleButton("项目字典", this);
     dictButton->setFixedHeight(35);
+    ElaToggleButton* promptButton = new ElaToggleButton("提示词", this);
+    promptButton->setFixedHeight(35);
     ElaToggleButton* startButton = new ElaToggleButton("开始翻译", this);
     startButton->setFixedHeight(35);
     ElaToggleButton* otherButton = new ElaToggleButton("其他设置", this);
     otherButton->setFixedHeight(35);
-    ElaToggleButton* promptButton = new ElaToggleButton("提示词", this);
-    promptButton->setFixedHeight(35);
 
     // 将按钮添加到 QList 和布局中
     _navigationButtons.append(apiButton);
@@ -167,18 +167,18 @@ void ProjectSettingsPage::_createPages()
     _paSettingsPage = new PASettingsPage(_projectConfig, this);
     _nameTableSettingsPage = new NameTableSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _dictSettingsPage = new DictSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
+    _promptSettingsPage = new PromptSettingsPage(_projectDir, _projectConfig, this);
     _startSettingsPage = new StartSettingsPage(_projectDir, _projectConfig, this);
     _otherSettingsPage = new OtherSettingsPage(_projectDir, _projectConfig, this);
-    _promptSettingsPage = new PromptSettingsPage(_projectDir,_projectConfig, this);
     _stackedWidget->addWidget(_apiSettingsPage);
     _stackedWidget->addWidget(_pluginSettingsPage);
     _stackedWidget->addWidget(_commonSettingsPage);
     _stackedWidget->addWidget(_paSettingsPage);
     _stackedWidget->addWidget(_nameTableSettingsPage);
     _stackedWidget->addWidget(_dictSettingsPage);
+    _stackedWidget->addWidget(_promptSettingsPage);
     _stackedWidget->addWidget(_startSettingsPage);
     _stackedWidget->addWidget(_otherSettingsPage);
-    _stackedWidget->addWidget(_promptSettingsPage);
 
     connect(_startSettingsPage, &StartSettingsPage::startTranslating, this, &ProjectSettingsPage::_onStartTranslating);
     connect(_startSettingsPage, &StartSettingsPage::finishTranslating, this, &ProjectSettingsPage::_onFinishTranslating);

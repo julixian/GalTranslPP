@@ -139,6 +139,17 @@ void StartSettingsPage::_setupUI()
 	_startTranslateButton = new ElaPushButton(buttonArea);
 	_startTranslateButton->setText("开始翻译");
 	connect(_startTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::_onStartTranslatingClicked);
+	connect(_startTranslateButton, &ElaPushButton::clicked, this, [=]()
+		{
+			QScrollBar* scrollBar = logOutput->verticalScrollBar();
+			bool scrollIsAtBottom = (scrollBar->value() == scrollBar->maximum());
+			QTextCursor tempCursor(logOutput->document());
+			tempCursor.movePosition(QTextCursor::End);
+			tempCursor.insertText("\n\n");
+			if (scrollIsAtBottom) {
+				scrollBar->setValue(scrollBar->maximum());
+			}
+		});
 	buttonLayout->addWidget(_startTranslateButton);
 
 	// 停止翻译
@@ -175,9 +186,6 @@ void StartSettingsPage::_setupUI()
 		});
 	connect(_worker, &TranslatorWorker::writeLogSignal, this, [=](QString log)
 		{
-			if (!logOutput || !logOutput->document()) { // 增加对 document 的检查
-				return;
-			}
 			// 1. 滚动条判断
 			QScrollBar* scrollBar = logOutput->verticalScrollBar();
 			bool scrollIsAtBottom = (scrollBar->value() == scrollBar->maximum());

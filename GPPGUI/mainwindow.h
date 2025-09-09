@@ -7,7 +7,6 @@
 #include <toml++/toml.hpp>
 class HomePage;
 class AboutDialog;
-class CommonDictPage;
 class DefaultPromptPage;
 class SettingPage;
 class ProjectSettingsPage;
@@ -41,10 +40,10 @@ private:
 
     HomePage* _homePage{nullptr};
     AboutDialog* _aboutPage{nullptr};
-    CommonDictPage* _commonDictPage{nullptr};
     DefaultPromptPage* _defaultPromptPage{nullptr};
     SettingPage* _settingPage{nullptr};
 
+    QString _commonDictExpanderKey{""};
     QString _projectExpanderKey{""};
 
     QString _aboutKey{""};

@@ -289,14 +289,12 @@ void DictSettingsPage::_setupUI()
 	connect(delGptDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList selectedRows = gptDictTableView->selectionModel()->selectedRows();
-			if (!selectedRows.isEmpty()) {
-				std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
-					{
-						return a.row() > b.row();
-					});
-				for (const QModelIndex& index : selectedRows) {
-					gptDictModel->removeRow(index.row());
-				}
+			std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
+				{
+					return a.row() > b.row();
+				});
+			for (const QModelIndex& index : selectedRows) {
+				gptDictModel->removeRow(index.row());
 			}
 		});
 	_pivot->appendPivot("项目GPT字典");
@@ -386,10 +384,8 @@ void DictSettingsPage::_setupUI()
 				{
 					return a.row() > b.row();
 				});
-			if (!selectedRows.isEmpty()) {
-				for (const QModelIndex& index : selectedRows) {
-					preDictModel->removeRow(index.row());
-				}
+			for (const QModelIndex& index : selectedRows) {
+				preDictModel->removeRow(index.row());
 			}
 		});
 	_pivot->appendPivot("项目译前字典");

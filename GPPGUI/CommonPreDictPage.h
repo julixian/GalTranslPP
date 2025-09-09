@@ -13,12 +13,14 @@
 namespace fs = std::filesystem;
 
 class ElaPlainTextEdit;
-class NormalDictModel;
+class ElaTableView;
 
 struct PreTabEntry {
     QStackedWidget* stackedWidget;
     ElaPlainTextEdit* plainTextEdit;
+    ElaTableView* tableView;
     NormalDictModel* normalDictModel;
+    fs::path dictPath;
 };
 
 class CommonPreDictPage : public BasePage

@@ -1,0 +1,3 @@
+[plugins.TextPostFull2Half]
+"是否替换标点" = true
+"反向替换" = false  # false=全角->半角，true=半角->全角

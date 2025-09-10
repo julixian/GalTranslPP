@@ -1,0 +1,4 @@
+#include "windows.h"
+
+// 应用程序图标
+IDI_ICON1               ICON        DISCARDABLE     "Resource\\Image\\julixian_s.ico"

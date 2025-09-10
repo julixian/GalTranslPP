@@ -51,6 +51,9 @@
     <ClCompile Include="IPlugin.cpp">
       <Filter>源文件\Plugins</Filter>
     </ClCompile>
+    <ClCompile Include="TextPostFull2Half.ixx" />
+      <Filter>源文件\Plugins</Filter>
+    </ClCompile>
     <ClCompile Include="TextLinebreakFix.ixx">
       <Filter>源文件\Plugins</Filter>
     </ClCompile>

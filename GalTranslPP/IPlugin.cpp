@@ -6,6 +6,7 @@ module IPlugin;
 
 import std;
 import Tool;
+import TextPostFull2Half;
 import TextLinebreakFix;
 namespace fs = std::filesystem;
 
@@ -24,7 +25,10 @@ std::vector<std::shared_ptr<IPlugin>> registerPlugins(const std::vector<std::str
 	std::vector<std::shared_ptr<IPlugin>> plugins;
 
 	for (const auto& pluginName : pluginNames) {
-		if (pluginName == "TextLinebreakFix") {
+		if (pluginName == "TextPostFull2Half") {
+			plugins.push_back(std::make_shared<TextPostFull2Half>(projectDir, logger));
+		}
+		else if (pluginName == "TextLinebreakFix") {
 			plugins.push_back(std::make_shared<TextLinebreakFix>(projectDir, logger));
 		}
 	}

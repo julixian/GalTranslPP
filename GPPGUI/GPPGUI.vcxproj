@@ -138,7 +138,7 @@
     <ClCompile Include="UpdateWidget.cpp" />
     <ClCompile Include="ValueSliderWidget.cpp" />
     <QtMoc Include="PluginSettingsPage.h" />
-    <ClCompile Include="Full2HalfCfgDialog.cpp" />
+    <ClCompile Include="PostFull2HalfCfgDialog.cpp" />
     <ClCompile Include="TLFCfgDialog.cpp" />
     <ClCompile Include="ProjectSettingsPage.cpp" />
     <QtRcc Include="GPPGUI.qrc" />
@@ -157,7 +157,7 @@
     <QtMoc Include="PluginItemWidget.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="Full2HalfCfgDialog.h" />
+    <QtMoc Include="PostFull2HalfCfgDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="TLFCfgDialog.h" />

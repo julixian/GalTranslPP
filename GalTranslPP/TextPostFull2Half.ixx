@@ -8,15 +8,14 @@ module;
 import std;
 import Tool;
 import IPlugin;
-export module TextFull2Half;
+export module TextPostFull2Half;
 namespace fs = std::filesystem;
 
 export {
-    class TextFull2Half : public IPlugin {
+    class TextPostFull2Half : public IPlugin {
     private:
-        std::string m_timing;
         bool m_replacePunctuation;
-        bool m_reverseConversion; 
+        bool m_reverseConversion;
         std::unordered_map<std::string, std::string> m_customMap;
         std::unordered_map<char32_t, char32_t> m_conversionMap;
 
@@ -24,35 +23,34 @@ export {
         std::string convertText(const std::string& text);
 
     public:
-        TextFull2Half(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger);
+        TextPostFull2Half(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger);
         virtual void run(Sentence* se) override;
-        virtual ~TextFull2Half() = default;
+        virtual ~TextPostFull2Half() = default;
     };
 }
 
 module :private;
 
-TextFull2Half::TextFull2Half(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger)
+TextPostFull2Half::TextPostFull2Half(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger)
     : IPlugin(projectDir, logger)
 {
     try {
         auto projectConfig = toml::parse_file((projectDir / "config.toml").string());
-        auto pluginConfig = toml::parse_file((pluginConfigsPath / "textPostPlugins/TextFull2Half.toml").string());
+        auto pluginConfig = toml::parse_file((pluginConfigsPath / "textPostPlugins/TextPostFull2Half.toml").string());
 
-        m_timing = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextFull2Half.替换时机");
-        m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.是否替换标点");
-        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.反向替换");
+        m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.是否替换标点");
+        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.反向替换");
 
         createConversionMap();
-        m_logger->info("全角半角转换插件已加载 - 替换时机: {}, 替换标点: {}, 反向替换: {}",
-                      m_timing, m_replacePunctuation, m_reverseConversion);
+        m_logger->info("译后全角半角转换插件已加载 - 替换标点: {}, 反向替换: {}",
+                      m_replacePunctuation, m_reverseConversion);
     } catch (const toml::parse_error& e) {
         m_logger->critical("配置文件解析错误: {}", e.description());
         throw;
     }
 }
 
-void TextFull2Half::createConversionMap() {
+void TextPostFull2Half::createConversionMap() {
     // 数字转换
     for (char32_t i = 0; i < 10; ++i) {
         m_conversionMap[U'０' + i] = U'0' + i;
@@ -147,7 +145,7 @@ void TextFull2Half::createConversionMap() {
     }
 }
 
-std::string TextFull2Half::convertText(const std::string& text) {
+std::string TextPostFull2Half::convertText(const std::string& text) {
     std::string result;
     icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(text);
     for (int32_t i = 0; i < ustr.length();) {
@@ -165,12 +163,6 @@ std::string TextFull2Half::convertText(const std::string& text) {
     return result;
 }
 
-void TextFull2Half::run(Sentence* se) {
-    if (m_timing == "before_src_processed") {
-        se->original_text = convertText(se->original_text);
-    } else if (m_timing == "after_src_processed") {
-        se->pre_processed_text = convertText(se->pre_processed_text);
-    } else if (m_timing == "before_dst_processed") {
-        se->pre_translated_text = convertText(se->pre_translated_text);
-    }
+void TextPostFull2Half::run(Sentence* se) {
+    se->pre_translated_text = convertText(se->pre_translated_text);
 }

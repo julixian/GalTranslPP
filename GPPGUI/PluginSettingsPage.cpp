@@ -10,7 +10,7 @@
 #include "ElaScrollPageArea.h"
 #include "ElaContentDialog.h"
 #include "TLFCfgDialog.h"
-#include "Full2HalfCfgDialog.h"
+#include "PostFull2HalfCfgDialog.h"
 
 import Tool;
 
@@ -55,7 +55,7 @@ void PluginSettingsPage::_setupUI()
     _pluginListLayout->setContentsMargins(5, 5, 5, 5);
 
     // 插件名称列表
-    QStringList pluginNames = { "TextFull2Half", "TextLinebreakFix" };
+    QStringList pluginNames = { "TextPostFull2Half", "TextLinebreakFix" };
 
     // 遍历名称列表，创建并添加 PluginItemWidget
     for (const QString& name : pluginNames)
@@ -133,8 +133,8 @@ void PluginSettingsPage::_onSettings(PluginItemWidget* item)
     }
     QString pluginName = item->getPluginName();
 
-    if (pluginName == "TextFull2Half") {
-        Full2HalfCfgDialog dlg(_projectConfig, this);
+    if (pluginName == "TextPostFull2Half") {
+        PostFull2HalfCfgDialog dlg(_projectConfig, this);
         dlg.exec();
     }
     else if (pluginName == "TextLinebreakFix") {

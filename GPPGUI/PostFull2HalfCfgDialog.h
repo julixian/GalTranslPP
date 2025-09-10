@@ -11,13 +11,13 @@
 
 import Tool;
 
-class Full2HalfCfgDialog : public ElaContentDialog
+class PostFull2HalfCfgDialog : public ElaContentDialog
 {
     Q_OBJECT
 
 public:
-    explicit Full2HalfCfgDialog(toml::table& projectConfig, QWidget* parent = nullptr);
-    ~Full2HalfCfgDialog();
+    explicit PostFull2HalfCfgDialog(toml::table& projectConfig, QWidget* parent = nullptr);
+    ~PostFull2HalfCfgDialog();
 
 private slots:
     void onRightButtonClicked();
@@ -32,10 +32,4 @@ private:
     // UI控件
     ElaToggleSwitch* _punctuationSwitch;
     ElaToggleSwitch* _reverseSwitch;
-    ElaComboBox* _timingCombo;
-    QStringList _timingOptions{
-        "before_src_processed", 
-        "after_src_processed",
-        "before_dst_processed"
-    };
 };

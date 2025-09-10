@@ -147,9 +147,9 @@ void ProjectSettingsPage::_createNavigation()
     _navigationButtons.append(paButton);
     _navigationButtons.append(nameTableButton);
     _navigationButtons.append(dictButton);
+    _navigationButtons.append(promptButton);
     _navigationButtons.append(startButton);
     _navigationButtons.append(otherButton);
-    _navigationButtons.append(promptButton);
 
     for (ElaToggleButton* button : _navigationButtons)
     {

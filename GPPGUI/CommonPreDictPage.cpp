@@ -191,7 +191,7 @@ void CommonPreDictPage::_setupUI()
 			}
 		});
 
-	connect(saveAllButton, &ElaPushButton::clicked, this, CommonPreDictPage::apply2Config);
+	connect(saveAllButton, &ElaPushButton::clicked, this, &CommonPreDictPage::apply2Config);
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			int index = tabWidget->currentIndex();

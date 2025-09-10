@@ -235,7 +235,7 @@ void EpubTranslator::run()
         fs::path rebuiltHtmlPath = m_tempRebuildDir / fs::relative(originalHtmlPath, m_tempUnpackDir);
         const auto& metadata = m_htmlMetadata[flatName];
 
-        // 从后向前替换 HTML 内容的逻辑
+        // 替换 HTML 内容的逻辑
         std::ifstream ifs(rebuiltHtmlPath, std::ios::binary);
         std::string originalContent((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         ifs.close();
@@ -248,22 +248,43 @@ void EpubTranslator::run()
             throw std::runtime_error(std::format("元数据和翻译数据数量不匹配，无法重组: {}", wide2Ascii(rebuiltHtmlPath)));
         }
 
-        for (int i = (int)metadata.size() - 1; i >= 0; --i) {
-            const auto& meta = metadata[i];
+        //for (int i = (int)metadata.size() - 1; i >= 0; --i) {
+        //    const auto& meta = metadata[i];
+        //    std::string translatedText = translatedData[i].value("message", "");
+        //    /*if (originalContent.substr(meta.offset, meta.length) != meta.original_text) {
+        //        m_logger->warn("文件 {} 在偏移 {} 处的原始文本不匹配，跳过此句替换。原本: {}, 翻译: {}， 子串: {}",
+        //            wide2Ascii(rebuiltHtmlPath), meta.offset, meta.original_text, translatedText, originalContent.substr(meta.offset, meta.length));
+        //        continue;
+        //    }*/
+        //    std::string replacement = m_bilingualOutput ? 
+        //        (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale + "em;\">" + originalContent.substr(meta.offset, meta.length) + "</span>") 
+        //        : translatedText;
+        //    originalContent.replace(meta.offset, meta.length, replacement);
+        //}
+
+        //std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
+        //ofs << originalContent;
+
+        std::string newContent;
+        newContent.reserve(originalContent.length() * 2);
+        size_t lastPos = 0;
+
+        for (size_t i = 0; i < metadata.size(); ++i) {
             std::string translatedText = translatedData[i].value("message", "");
-            /*if (originalContent.substr(meta.offset, meta.length) != meta.original_text) {
-                m_logger->warn("文件 {} 在偏移 {} 处的原始文本不匹配，跳过此句替换。原本: {}, 翻译: {}， 子串: {}",
-                    wide2Ascii(rebuiltHtmlPath), meta.offset, meta.original_text, translatedText, originalContent.substr(meta.offset, meta.length));
-                continue;
-            }*/
             std::string replacement = m_bilingualOutput ? 
-                (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale + "em;\">" + originalContent.substr(meta.offset, meta.length) + "</span>") 
+                (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale +
+                    "em;\">" + originalContent.substr(metadata[i].offset, metadata[i].length) + "</span>") 
                 : translatedText;
-            originalContent.replace(meta.offset, meta.length, replacement);
+            newContent.append(originalContent.substr(lastPos, metadata[i].offset - lastPos));
+            newContent.append(replacement);
+            lastPos = metadata[i].offset + metadata[i].length;
+        }
+        if (lastPos < originalContent.length()) {
+            newContent.append(originalContent.substr(lastPos));
         }
 
         std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
-        ofs << originalContent;
+        ofs << newContent;
     }
 
 

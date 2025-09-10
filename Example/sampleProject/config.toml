@@ -84,7 +84,7 @@ punctSet = """（()）：:*[]{}<>『』「」“”;；'"""
 langProbability = 0.85 # 语言不通检测的语言置信度，设置越高则检测越精准，但可能遗漏，反之亦然
 
 [dictionary]
-defaultDictFolder = "BaseConfig/Dict" # 如果出现同名字典文件，则只读取项目文件夹中的
+defaultDictFolder = "BaseConfig/Dict" # 如果出现同名字典文件，则只读取项目文件夹中的，否则读取对应pre/gpt/post文件夹下的
 usePreDictInName = false   # 将译前字典用在name字段，可用于翻译name字段，会发送给翻译引擎替换后的name[true/false]
 usePostDictInName = false  # 将译后字典用在name字段，可用于翻译name字段[true/false]
 usePreDictInMsg = true   # 将译前字典用在message字段，可用于翻译message字段，会发送给翻译引擎替换后的message[true/false]

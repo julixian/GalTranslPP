@@ -136,6 +136,9 @@
     <ClCompile Include="CommonPreDictPage.cpp">
       <Filter>Source Files\PageImp</Filter>
     </ClCompile>
+    <ClCompile Include="PostFull2HalfCfgDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -225,5 +228,13 @@
     <QtMoc Include="CommonPreDictPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
+    <QtMoc Include="PostFull2HalfCfgDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GPPGUI.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

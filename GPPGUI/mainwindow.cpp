@@ -28,6 +28,7 @@
 
 #include "HomePage.h"
 #include "DefaultPromptPage.h"
+#include "CommonPreDictPage.h"
 #include "ProjectSettingsPage.h"
 #include "SettingPage.h"
 
@@ -179,7 +180,7 @@ void MainWindow::initContent()
     _homePage = new HomePage(this);
     _defaultPromptPage = new DefaultPromptPage(this);
 
-
+    _commonPreDictPage = new CommonPreDictPage(_globalConfig, this);
     
     _settingPage = new SettingPage(_globalConfig, this);
 
@@ -188,6 +189,7 @@ void MainWindow::initContent()
     addPageNode("默认提示词管理", _defaultPromptPage, ElaIconType::Text);
 
     addExpanderNode("通用字典管理", _commonDictExpanderKey, ElaIconType::FontCase);
+    addPageNode("通用译前字典", _commonPreDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
 
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();
@@ -454,6 +456,7 @@ void MainWindow::_on_closeWindow_clicked()
     }
     _globalConfig.insert_or_assign("projects", projects);
     _defaultPromptPage->apply2Config();
+    _commonPreDictPage->apply2Config();
     QRect rect = frameGeometry();
     _globalConfig.insert_or_assign("windowWidth", rect.width());
     _globalConfig.insert_or_assign("windowHeight", rect.height());

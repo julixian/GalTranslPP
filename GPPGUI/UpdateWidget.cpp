@@ -12,7 +12,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->setSizeConstraint(QLayout::SetMaximumSize);
     mainLayout->setContentsMargins(5, 10, 5, 5);
     mainLayout->setSpacing(4);
-    ElaText* updateTitle = new ElaText("2025-09-08更新", 15, this);
+    ElaText* updateTitle = new ElaText("2025-09-10更新", 15, this);
     ElaText* update1 = new ElaText("1、修复GPT字典保存的一个小bug", 13, this);
     update1->setIsWrapAnywhere(true);
     ElaText* update2 = new ElaText("2、修复优化单文件分割时引出的Rebuild无法命中缓存bug", 13, this);
@@ -23,6 +23,12 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     update4->setIsWrapAnywhere(true);
     ElaText* update5 = new ElaText("5、优化了翻译解析，新增智能空行检测", 13, this);
     update5->setIsWrapAnywhere(true);
+    ElaText* update6 = new ElaText("6、优化了Epub重建的代码", 13, this);
+    update6->setIsWrapAnywhere(true);
+    ElaText* update7 = new ElaText("7、新增全角半角转化插件(by natsumerinchan)", 13, this);
+    update7->setIsWrapAnywhere(true);
+    ElaText* update8 = new ElaText("8、新增默认字典管理", 13, this);
+    update8->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -30,6 +36,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update3);
     mainLayout->addWidget(update4);
     mainLayout->addWidget(update5);
+    mainLayout->addWidget(update6);
+    mainLayout->addWidget(update7);
+    mainLayout->addWidget(update8);
     mainLayout->addStretch();
 }
 

@@ -1,7 +1,7 @@
 module;
+
 #include <spdlog/spdlog.h>
 #include <toml++/toml.hpp>
-#include <unordered_map>
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
 

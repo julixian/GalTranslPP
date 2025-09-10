@@ -64,7 +64,7 @@ void StartSettingsPage::_setupUI()
 
 	ElaScrollPageArea* buttonArea = new ElaScrollPageArea(mainWidget);
 	buttonArea->setFixedWidth(200);
-	buttonArea->setFixedHeight(620);
+	buttonArea->setFixedHeight(520);
 	QVBoxLayout* buttonLayout = new QVBoxLayout(buttonArea);
 
 	// 文件格式

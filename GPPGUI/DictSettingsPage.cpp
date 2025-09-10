@@ -531,7 +531,7 @@ void DictSettingsPage::_setupUI()
 	preDictNamesLayout->addWidget(preDictNamesText);
 	preDictNamesLayout->addStretch();
 	ElaMultiSelectComboBox* preDictNamesComboBox = new ElaMultiSelectComboBox(preDictNamesArea);
-	preDictNamesComboBox->setMaximumWidth(500);
+	preDictNamesComboBox->setFixedWidth(500);
 	auto preDictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
 	if (preDictNames) {
 		for (const auto& elem : *preDictNames) {
@@ -567,6 +567,7 @@ void DictSettingsPage::_setupUI()
 	gptDictNamesLayout->addWidget(gptDictNamesText);
 	gptDictNamesLayout->addStretch();
 	ElaMultiSelectComboBox* gptDictNamesComboBox = new ElaMultiSelectComboBox(gptDictNamesArea);
+	gptDictNamesComboBox->setFixedWidth(500);
 	auto gptDictNames = _globalConfig["commonGptDicts"]["dictNames"].as_array();
 	if (gptDictNames) {
 		for (const auto& elem : *gptDictNames) {
@@ -602,6 +603,7 @@ void DictSettingsPage::_setupUI()
 	postDictNamesLayout->addWidget(postDictNamesText);
 	postDictNamesLayout->addStretch();
 	ElaMultiSelectComboBox* postDictNamesComboBox = new ElaMultiSelectComboBox(postDictNamesArea);
+	postDictNamesComboBox->setFixedWidth(500);
 	auto postDictNames = _globalConfig["commonPostDicts"]["dictNames"].as_array();
 	if (postDictNames) {
 		for (const auto& elem : *postDictNames) {

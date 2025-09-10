@@ -12,7 +12,7 @@ class ELA_EXPORT ElaTabBar : public QTabBar
     Q_Q_CREATE(ElaTabBar)
 public:
     explicit ElaTabBar(QWidget* parent = nullptr);
-    ~ElaTabBar();
+    ~ElaTabBar() override;
 Q_SIGNALS:
     Q_SIGNAL void tabBarPress(int index);
     Q_SIGNAL void tabDragCreate(QDrag* drag);
@@ -23,6 +23,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* event) override;
     virtual void dragEnterEvent(QDragEnterEvent* event) override;
     virtual void dropEvent(QDropEvent* event) override;
+    virtual void wheelEvent(QWheelEvent* event) override;
 };
 
 #endif // ELATABBAR_H

@@ -36,6 +36,7 @@ public:
     fs::path getProjectDir();
 
     void apply2Config();
+    void refreshCommonDicts();
 
     bool getIsRunning();
 

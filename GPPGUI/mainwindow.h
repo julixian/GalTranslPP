@@ -9,6 +9,8 @@ class HomePage;
 class AboutDialog;
 class DefaultPromptPage;
 class CommonPreDictPage;
+class CommonGptDictPage;
+class CommonPostDictPage;
 class SettingPage;
 class ProjectSettingsPage;
 class ElaContentDialog;
@@ -43,6 +45,8 @@ private:
     AboutDialog* _aboutPage{nullptr};
     DefaultPromptPage* _defaultPromptPage{nullptr};
     CommonPreDictPage* _commonPreDictPage{nullptr};
+    CommonGptDictPage* _commonGptDictPage{nullptr};
+    CommonPostDictPage* _commonPostDictPage{nullptr};
     SettingPage* _settingPage{nullptr};
 
     QString _commonDictExpanderKey{""};

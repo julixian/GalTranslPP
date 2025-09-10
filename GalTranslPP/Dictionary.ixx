@@ -14,7 +14,7 @@ export {
 
     enum class ConditionTarget { Name, OrigText, PreproText, PretransText, TransPreview };
 
-    struct GptDictEntry {
+    struct GptTabEntry {
         int priority = 0;
         std::string searchStr;
         std::string replaceStr;
@@ -23,7 +23,7 @@ export {
 
     class GptDictionary {
     private:
-        std::vector<GptDictEntry> m_entries;
+        std::vector<GptTabEntry> m_entries;
 
         std::unique_ptr<MeCab::Model> m_model;
         std::unique_ptr<MeCab::Tagger> m_tagger;
@@ -107,7 +107,7 @@ std::string chooseString(const Sentence* sentence, ConditionTarget tar) {
 }
 
 void GptDictionary::sort() {
-    std::ranges::sort(m_entries, [](const GptDictEntry& a, const GptDictEntry& b)
+    std::ranges::sort(m_entries, [](const GptTabEntry& a, const GptTabEntry& b)
         {
             if (a.priority != b.priority) {
                 return a.priority > b.priority;
@@ -214,7 +214,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         }
         dicts->for_each([&](auto&& el)
             {
-                GptDictEntry entry;
+                GptTabEntry entry;
                 if constexpr (toml::is_table<decltype(el)>) {
                     if (!el.contains("searchStr") && !el.contains("org")) {
                         throw std::invalid_argument(std::format("GPT 字典文件格式错误(未找到searchStr|org): {}", wide2Ascii(filePath)));

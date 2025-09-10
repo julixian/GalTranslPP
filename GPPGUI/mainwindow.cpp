@@ -29,6 +29,8 @@
 #include "HomePage.h"
 #include "DefaultPromptPage.h"
 #include "CommonPreDictPage.h"
+#include "CommonGptDictPage.h"
+#include "CommonPostDictPage.h"
 #include "ProjectSettingsPage.h"
 #include "SettingPage.h"
 
@@ -121,10 +123,11 @@ void MainWindow::initWindow()
     resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
     std::string gppversion = GPPVERSION;
     std::erase_if(gppversion, [](char ch) { return ch == '.'; });
-    updateDockWidget->setVisible(_globalConfig["showDockWidget" + gppversion].value_or(true));
+    updateDockWidget->setVisible(_globalConfig["showDockWidget"][gppversion].value_or(true));
     connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
         {
-            insertToml(_globalConfig, "showDockWidget" + gppversion, visible);
+            insertToml(_globalConfig, "showDockWidget", toml::table{});
+            insertToml(_globalConfig, "showDockWidget." + gppversion, visible);
         });
 
     ElaMenu* appBarMenu = new ElaMenu(this);
@@ -181,6 +184,8 @@ void MainWindow::initContent()
     _defaultPromptPage = new DefaultPromptPage(this);
 
     _commonPreDictPage = new CommonPreDictPage(_globalConfig, this);
+    _commonGptDictPage = new CommonGptDictPage(_globalConfig, this);
+    _commonPostDictPage = new CommonPostDictPage(_globalConfig, this);
     
     _settingPage = new SettingPage(_globalConfig, this);
 
@@ -189,7 +194,18 @@ void MainWindow::initContent()
     addPageNode("默认提示词管理", _defaultPromptPage, ElaIconType::Text);
 
     addExpanderNode("通用字典管理", _commonDictExpanderKey, ElaIconType::FontCase);
+    auto refreshCommonDicts = [=]()
+        {
+            for (auto& page : _projectPages) {
+                page->refreshCommonDicts();
+            }
+        };
     addPageNode("通用译前字典", _commonPreDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(_commonPreDictPage, &CommonPreDictPage::commonDictsChanged, this, refreshCommonDicts);
+    addPageNode("通用GPT字典", _commonGptDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(_commonGptDictPage, &CommonGptDictPage::commonDictsChanged, this, refreshCommonDicts);
+    addPageNode("通用译后字典", _commonPostDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(_commonPostDictPage, &CommonPostDictPage::commonDictsChanged, this, refreshCommonDicts);
 
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();
@@ -457,6 +473,8 @@ void MainWindow::_on_closeWindow_clicked()
     _globalConfig.insert_or_assign("projects", projects);
     _defaultPromptPage->apply2Config();
     _commonPreDictPage->apply2Config();
+    _commonGptDictPage->apply2Config();
+    _commonPostDictPage->apply2Config();
     QRect rect = frameGeometry();
     _globalConfig.insert_or_assign("windowWidth", rect.width());
     _globalConfig.insert_or_assign("windowHeight", rect.height());

@@ -29,6 +29,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     update7->setIsWrapAnywhere(true);
     ElaText* update8 = new ElaText("8、新增默认字典管理", 13, this);
     update8->setIsWrapAnywhere(true);
+    ElaText* update9 = new ElaText("9、更新ElaWidgetTool版本", 13, this);
+    update9->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -39,6 +41,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update6);
     mainLayout->addWidget(update7);
     mainLayout->addWidget(update8);
+    mainLayout->addWidget(update9);
     mainLayout->addStretch();
 }
 

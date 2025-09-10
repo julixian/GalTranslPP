@@ -1,4 +1,4 @@
-#include "CommonPreDictPage.h"
+#include "CommonPostDictPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -21,28 +21,28 @@
 import Tool;
 namespace fs = std::filesystem;
 
-CommonPreDictPage::CommonPreDictPage(toml::table& globalConfig, QWidget* parent) :
+CommonPostDictPage::CommonPostDictPage(toml::table& globalConfig, QWidget* parent) :
 	BasePage(parent), _globalConfig(globalConfig)
 {
-	setWindowTitle("默认译前字典设置");
+	setWindowTitle("默认译后字典设置");
 	setTitleVisible(false);
 
 	_setupUI();
 }
 
-CommonPreDictPage::~CommonPreDictPage()
+CommonPostDictPage::~CommonPostDictPage()
 {
 
 }
 
-void CommonPreDictPage::apply2Config()
+void CommonPostDictPage::apply2Config()
 {
 	if (_applyFunc) {
 		_applyFunc();
 	}
 }
 
-QList<NormalDictEntry> CommonPreDictPage::readNormalDicts(const fs::path& dictPath)
+QList<NormalDictEntry> CommonPostDictPage::readNormalDicts(const fs::path& dictPath)
 {
 	QList<NormalDictEntry> result;
 	if (!fs::exists(dictPath)) {
@@ -78,7 +78,7 @@ QList<NormalDictEntry> CommonPreDictPage::readNormalDicts(const fs::path& dictPa
 	return result;
 }
 
-QString CommonPreDictPage::readNormalDictsStr(const fs::path& dictPath)
+QString CommonPostDictPage::readNormalDictsStr(const fs::path& dictPath)
 {
 	if (!fs::exists(dictPath)) {
 		return {};
@@ -89,7 +89,7 @@ QString CommonPreDictPage::readNormalDictsStr(const fs::path& dictPath)
 	return QString::fromStdString(result);
 }
 
-void CommonPreDictPage::_setupUI()
+void CommonPostDictPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -130,12 +130,12 @@ void CommonPreDictPage::_setupUI()
 	ElaTabWidget* tabWidget = new ElaTabWidget(mainButtonWidget);
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
-	auto commonPreDicts = _globalConfig["commonPreDicts"]["dictNames"].as_array();
-	if (commonPreDicts) {
-		toml::array newPreDicts;
-		for (const auto& elem : *commonPreDicts) {
+	auto commonPostDicts = _globalConfig["commonPostDicts"]["dictNames"].as_array();
+	if (commonPostDicts) {
+		toml::array newDictNames;
+		for (const auto& elem : *commonPostDicts) {
 			if (auto dictNameOpt = elem.value<std::string>()) {
-				fs::path dictPath = L"BaseConfig/Dict/pre/" + ascii2Wide(*dictNameOpt) + L".toml";
+				fs::path dictPath = L"BaseConfig/Dict/post/" + ascii2Wide(*dictNameOpt) + L".toml";
 				if (!fs::exists(dictPath)) {
 					continue;
 				}
@@ -161,13 +161,13 @@ void CommonPreDictPage::_setupUI()
 					model->loadData(normalData);
 					tableView->setModel(model);
 					stackedWidget->addWidget(tableView);
-					stackedWidget->setCurrentIndex(_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
-					tableView->setColumnWidth(0, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(200));
-					tableView->setColumnWidth(1, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(150));
-					tableView->setColumnWidth(2, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(100));
-					tableView->setColumnWidth(3, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["3"].value_or(172));
-					tableView->setColumnWidth(4, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["4"].value_or(75));
-					tableView->setColumnWidth(5, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["5"].value_or(60));
+					stackedWidget->setCurrentIndex(_globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
+					tableView->setColumnWidth(0, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(200));
+					tableView->setColumnWidth(1, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(150));
+					tableView->setColumnWidth(2, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(100));
+					tableView->setColumnWidth(3, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["3"].value_or(172));
+					tableView->setColumnWidth(4, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["4"].value_or(75));
+					tableView->setColumnWidth(5, _globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["columnWidth"]["5"].value_or(60));
 
 					normalTabEntry.stackedWidget = stackedWidget;
 					normalTabEntry.plainTextEdit = plainTextEdit;
@@ -175,7 +175,7 @@ void CommonPreDictPage::_setupUI()
 					normalTabEntry.normalDictModel = model;
 					normalTabEntry.dictPath = dictPath;
 					_normalTabEntries.push_back(normalTabEntry);
-					newPreDicts.push_back(*dictNameOpt);
+					newDictNames.push_back(*dictNameOpt);
 					tabWidget->addTab(stackedWidget, QString(dictPath.stem().wstring()));
 				}
 				catch (...) {
@@ -185,7 +185,7 @@ void CommonPreDictPage::_setupUI()
 				}
 			}
 		}
-		insertToml(_globalConfig, "commonPreDicts.dictNames", newPreDicts);
+		insertToml(_globalConfig, "commonPostDicts.dictNames", newDictNames);
 	}
 
 	tabWidget->setCurrentIndex(0);
@@ -201,7 +201,7 @@ void CommonPreDictPage::_setupUI()
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 			tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 			defaultOnButton->setEnabled(true);
-			defaultOnButton->setIsToggled(_globalConfig["commonPreDicts"]["spec"][dictName]["defaultOn"].value_or(true));
+			defaultOnButton->setIsToggled(_globalConfig["commonPostDicts"]["spec"][dictName]["defaultOn"].value_or(true));
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeTabButton->setEnabled(true);
@@ -250,7 +250,7 @@ void CommonPreDictPage::_setupUI()
 			tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 			defaultOnButton->setEnabled(true);
 			defaultOnButton->setIsToggled(
-				_globalConfig["commonPreDicts"]["spec"][wide2Ascii(it->dictPath.stem().wstring())]["defaultOn"].value_or(true));
+				_globalConfig["commonPostDicts"]["spec"][wide2Ascii(it->dictPath.stem().wstring())]["defaultOn"].value_or(true));
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeTabButton->setEnabled(true);
@@ -304,11 +304,11 @@ void CommonPreDictPage::_setupUI()
 			if (!stackedWidget || it == _normalTabEntries.end()) {
 				return;
 			}
-			insertToml(_globalConfig, "commonPreDicts.spec." + wide2Ascii(it->dictPath.stem().wstring())
+			insertToml(_globalConfig, "commonPostDicts.spec." + wide2Ascii(it->dictPath.stem().wstring())
 				+ ".defaultOn", checked);
 		});
 
-	connect(saveAllButton, &ElaPushButton::clicked, this, &CommonPreDictPage::apply2Config);
+	connect(saveAllButton, &ElaPushButton::clicked, this, &CommonPostDictPage::apply2Config);
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			int index = tabWidget->currentIndex();
@@ -355,9 +355,9 @@ void CommonPreDictPage::_setupUI()
 			QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
 			it->normalDictModel->loadData(newDictEntries);
 			it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
-			auto newDictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+			auto newDictNames = _globalConfig["commonPostDicts"]["dictNames"].as_array();
 			if (!newDictNames) {
-				insertToml(_globalConfig, "commonPreDicts.dictNames", toml::array{ dictName });
+				insertToml(_globalConfig, "commonPostDicts.dictNames", toml::array{ dictName });
 			}
 			else {
 				auto it = std::find_if(newDictNames->begin(), newDictNames->end(), [=](const auto& elem)
@@ -384,12 +384,12 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			if (dictName.isEmpty() || dictName.contains('/') || dictName.contains('\\') || dictName.contains('.')) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, 
+				ElaMessageBar::error(ElaMessageBarType::TopRight,
 					"新建失败", "字典名称不能为空，且不能包含点号、斜杠或反斜杠！", 3000);
 				return;
 			}
 
-			fs::path newDictPath = L"BaseConfig/Dict/pre/" + dictName.toStdWString() + L".toml";
+			fs::path newDictPath = L"BaseConfig/Dict/post/" + dictName.toStdWString() + L".toml";
 			if (fs::exists(newDictPath)) {
 				ElaMessageBar::error(ElaMessageBarType::TopRight, "新建失败", "字典 " +
 					QString(newDictPath.filename().wstring()) + " 已存在", 3000);
@@ -475,7 +475,7 @@ void CommonPreDictPage::_setupUI()
 					tabWidget->removeTab(index);
 					fs::remove(it->dictPath);
 					_normalTabEntries.erase(it);
-					auto dictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+					auto dictNames = _globalConfig["commonPostDicts"]["dictNames"].as_array();
 					if (dictNames) {
 						auto it = std::find_if(dictNames->begin(), dictNames->end(), [=](const auto& elem)
 							{
@@ -548,7 +548,7 @@ void CommonPreDictPage::_setupUI()
 				if (!stackedWidget || it == _normalTabEntries.end()) {
 					continue;
 				}
-				
+
 				std::ofstream ofs(it->dictPath);
 				if (!ofs.is_open()) {
 					ElaMessageBar::error(ElaMessageBarType::TopRight, "保存失败", "无法打开 " +
@@ -585,17 +585,17 @@ void CommonPreDictPage::_setupUI()
 				it->normalDictModel->loadData(newDictEntries);
 				it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
 
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".openMode", stackedWidget->currentIndex());
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.0", it->tableView->columnWidth(0));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.1", it->tableView->columnWidth(1));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.2", it->tableView->columnWidth(2));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.3", it->tableView->columnWidth(3));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.4", it->tableView->columnWidth(4));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.5", it->tableView->columnWidth(5));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".openMode", stackedWidget->currentIndex());
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.0", it->tableView->columnWidth(0));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.1", it->tableView->columnWidth(1));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.2", it->tableView->columnWidth(2));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.3", it->tableView->columnWidth(3));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.4", it->tableView->columnWidth(4));
+				insertToml(_globalConfig, "commonPostDicts.spec." + dictName + ".columnWidth.5", it->tableView->columnWidth(5));
 			}
-			insertToml(_globalConfig, "commonPreDicts.dictNames", dictNamesArr);
+			insertToml(_globalConfig, "commonPostDicts.dictNames", dictNamesArr);
 
-			auto spec = _globalConfig["commonPreDicts"]["spec"].as_table();
+			auto spec = _globalConfig["commonPostDicts"]["spec"].as_table();
 			if (spec) {
 				std::vector<std::string_view> keysToRemove;
 				for (const auto& [key, value] : *spec) {

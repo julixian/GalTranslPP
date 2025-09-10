@@ -1,4 +1,4 @@
-#include "CommonPreDictPage.h"
+#include "CommonGptDictPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -21,33 +21,30 @@
 import Tool;
 namespace fs = std::filesystem;
 
-CommonPreDictPage::CommonPreDictPage(toml::table& globalConfig, QWidget* parent) :
+CommonGptDictPage::CommonGptDictPage(toml::table& globalConfig, QWidget* parent) :
 	BasePage(parent), _globalConfig(globalConfig)
 {
-	setWindowTitle("默认译前字典设置");
+	setWindowTitle("默认GPT字典设置");
 	setTitleVisible(false);
 
 	_setupUI();
 }
 
-CommonPreDictPage::~CommonPreDictPage()
+CommonGptDictPage::~CommonGptDictPage()
 {
 
 }
 
-void CommonPreDictPage::apply2Config()
+void CommonGptDictPage::apply2Config()
 {
 	if (_applyFunc) {
 		_applyFunc();
 	}
 }
 
-QList<NormalDictEntry> CommonPreDictPage::readNormalDicts(const fs::path& dictPath)
+QList<DictionaryEntry> CommonGptDictPage::readGptDicts(const fs::path& dictPath)
 {
-	QList<NormalDictEntry> result;
-	if (!fs::exists(dictPath)) {
-		return result;
-	}
+	QList<DictionaryEntry> result;
 	std::ifstream ifs(dictPath);
 	toml::table tbl;
 	try {
@@ -59,37 +56,68 @@ QList<NormalDictEntry> CommonPreDictPage::readNormalDicts(const fs::path& dictPa
 		return result;
 	}
 	ifs.close();
-	auto dictArr = tbl["normalDict"].as_array();
+	auto dictArr = tbl["gptDict"].as_array();
 	if (!dictArr) {
 		return result;
 	}
 	for (const auto& dict : *dictArr) {
-		NormalDictEntry entry;
+		DictionaryEntry entry;
 		entry.original = dict.as_table()->contains("org") ? QString::fromStdString((*dict.as_table())["org"].value_or("")) :
 			QString::fromStdString((*dict.as_table())["searchStr"].value_or(""));
 		entry.translation = dict.as_table()->contains("rep") ? QString::fromStdString((*dict.as_table())["rep"].value_or("")) :
 			QString::fromStdString((*dict.as_table())["replaceStr"].value_or(""));
-		entry.conditionTar = (*dict.as_table())["conditionTarget"].value_or("");
-		entry.conditionReg = (*dict.as_table())["conditionReg"].value_or("");
-		entry.isReg = (*dict.as_table())["isReg"].value_or(false);
-		entry.priority = (*dict.as_table())["priority"].value_or(0);
+		entry.description = dict.as_table()->contains("note") ? QString::fromStdString((*dict.as_table())["note"].value_or("")) : "";
 		result.push_back(entry);
 	}
 	return result;
 }
 
-QString CommonPreDictPage::readNormalDictsStr(const fs::path& dictPath)
+QString CommonGptDictPage::readGptDictsStr(const fs::path& dictPath)
 {
-	if (!fs::exists(dictPath)) {
-		return {};
+	std::string result = "gptDict = [\n";
+	auto readDict = [&]() -> bool
+		{
+			std::ifstream ifs(dictPath);
+			toml::table tbl;
+			try {
+				tbl = toml::parse(ifs);
+			}
+			catch (...) {
+				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+					QString(dictPath.filename().wstring()) + " 不符合规范", 3000);
+				return false;
+			}
+			ifs.close();
+			auto dictArr = tbl["gptDict"].as_array();
+			if (!dictArr) {
+				return false;
+			}
+			for (const auto& dict : *dictArr) {
+				std::string original = dict.as_table()->contains("org") ? (*dict.as_table())["org"].value_or("") :
+					(*dict.as_table())["searchStr"].value_or("");
+				std::string translation = dict.as_table()->contains("rep") ? (*dict.as_table())["rep"].value_or("") :
+					(*dict.as_table())["replaceStr"].value_or("");
+				std::string description = dict.as_table()->contains("note") ? (*dict.as_table())["note"].value_or("") : "";
+				toml::table tbl{ {"org", original }, { "rep", translation }, { "note", description } };
+				result += std::format("    {{ org = {}, rep = {}, note = {} }},",
+					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) + "\n";
+			}
+			return true;
+		};
+
+	bool gptOk = readDict();
+	if (gptOk) {
+		result += "]\n";
 	}
-	std::ifstream ifs(dictPath);
-	std::string result((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-	ifs.close();
+	else {
+		std::ifstream ifs(dictPath);
+		result = std::string((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+		ifs.close();
+	}
 	return QString::fromStdString(result);
 }
 
-void CommonPreDictPage::_setupUI()
+void CommonGptDictPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -130,24 +158,24 @@ void CommonPreDictPage::_setupUI()
 	ElaTabWidget* tabWidget = new ElaTabWidget(mainButtonWidget);
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
-	auto commonPreDicts = _globalConfig["commonPreDicts"]["dictNames"].as_array();
-	if (commonPreDicts) {
-		toml::array newPreDicts;
-		for (const auto& elem : *commonPreDicts) {
+	auto commonGptDicts = _globalConfig["commonGptDicts"]["dictNames"].as_array();
+	if (commonGptDicts) {
+		toml::array newGptDicts;
+		for (const auto& elem : *commonGptDicts) {
 			if (auto dictNameOpt = elem.value<std::string>()) {
-				fs::path dictPath = L"BaseConfig/Dict/pre/" + ascii2Wide(*dictNameOpt) + L".toml";
+				fs::path dictPath = L"BaseConfig/Dict/gpt/" + ascii2Wide(*dictNameOpt) + L".toml";
 				if (!fs::exists(dictPath)) {
 					continue;
 				}
 				try {
-					NormalTabEntry normalTabEntry;
+					GptTabEntry gptTabEntry;
 
 					QStackedWidget* stackedWidget = new QStackedWidget(tabWidget);
 					ElaPlainTextEdit* plainTextEdit = new ElaPlainTextEdit(stackedWidget);
 					QFont plainTextFont = plainTextEdit->font();
 					plainTextFont.setPixelSize(15);
 					plainTextEdit->setFont(plainTextFont);
-					plainTextEdit->setPlainText(readNormalDictsStr(dictPath));
+					plainTextEdit->setPlainText(readGptDictsStr(dictPath));
 					stackedWidget->addWidget(plainTextEdit);
 					ElaTableView* tableView = new ElaTableView(stackedWidget);
 					QFont tableHeaderFont = tableView->horizontalHeader()->font();
@@ -156,26 +184,23 @@ void CommonPreDictPage::_setupUI()
 					tableView->verticalHeader()->setHidden(true);
 					tableView->setAlternatingRowColors(true);
 					tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-					NormalDictModel* model = new NormalDictModel(tableView);
-					QList<NormalDictEntry> normalData = readNormalDicts(dictPath);
-					model->loadData(normalData);
+					DictionaryModel* model = new DictionaryModel(tableView);
+					QList<DictionaryEntry> gptData = readGptDicts(dictPath);
+					model->loadData(gptData);
 					tableView->setModel(model);
 					stackedWidget->addWidget(tableView);
-					stackedWidget->setCurrentIndex(_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
-					tableView->setColumnWidth(0, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(200));
-					tableView->setColumnWidth(1, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(150));
-					tableView->setColumnWidth(2, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(100));
-					tableView->setColumnWidth(3, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["3"].value_or(172));
-					tableView->setColumnWidth(4, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["4"].value_or(75));
-					tableView->setColumnWidth(5, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["5"].value_or(60));
+					stackedWidget->setCurrentIndex(_globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
+					tableView->setColumnWidth(0, _globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(175));
+					tableView->setColumnWidth(1, _globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(175));
+					tableView->setColumnWidth(2, _globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(425));
 
-					normalTabEntry.stackedWidget = stackedWidget;
-					normalTabEntry.plainTextEdit = plainTextEdit;
-					normalTabEntry.tableView = tableView;
-					normalTabEntry.normalDictModel = model;
-					normalTabEntry.dictPath = dictPath;
-					_normalTabEntries.push_back(normalTabEntry);
-					newPreDicts.push_back(*dictNameOpt);
+					gptTabEntry.stackedWidget = stackedWidget;
+					gptTabEntry.plainTextEdit = plainTextEdit;
+					gptTabEntry.tableView = tableView;
+					gptTabEntry.normalDictModel = model;
+					gptTabEntry.dictPath = dictPath;
+					_gptTabEntries.push_back(gptTabEntry);
+					newGptDicts.push_back(*dictNameOpt);
 					tabWidget->addTab(stackedWidget, QString(dictPath.stem().wstring()));
 				}
 				catch (...) {
@@ -185,23 +210,23 @@ void CommonPreDictPage::_setupUI()
 				}
 			}
 		}
-		insertToml(_globalConfig, "commonPreDicts.dictNames", newPreDicts);
+		insertToml(_globalConfig, "commonGptDicts.dictNames", newGptDicts);
 	}
 
 	tabWidget->setCurrentIndex(0);
 	int curIdx = tabWidget->currentIndex();
 	if (curIdx >= 0) {
 		QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-		auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+		auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 			{
 				return entry.stackedWidget == stackedWidget;
 			});
-		if (stackedWidget && it != _normalTabEntries.end()) {
+		if (stackedWidget && it != _gptTabEntries.end()) {
 			std::string dictName = wide2Ascii(it->dictPath.stem().wstring());
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 			tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 			defaultOnButton->setEnabled(true);
-			defaultOnButton->setIsToggled(_globalConfig["commonPreDicts"]["spec"][dictName]["defaultOn"].value_or(true));
+			defaultOnButton->setIsToggled(_globalConfig["commonGptDicts"]["spec"][dictName]["defaultOn"].value_or(true));
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeTabButton->setEnabled(true);
@@ -237,12 +262,12 @@ void CommonPreDictPage::_setupUI()
 			}
 
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
 
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
 
@@ -250,7 +275,7 @@ void CommonPreDictPage::_setupUI()
 			tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 			defaultOnButton->setEnabled(true);
 			defaultOnButton->setIsToggled(
-				_globalConfig["commonPreDicts"]["spec"][wide2Ascii(it->dictPath.stem().wstring())]["defaultOn"].value_or(true));
+				_globalConfig["commonGptDicts"]["spec"][wide2Ascii(it->dictPath.stem().wstring())]["defaultOn"].value_or(true));
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeTabButton->setEnabled(true);
@@ -297,18 +322,18 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
-			insertToml(_globalConfig, "commonPreDicts.spec." + wide2Ascii(it->dictPath.stem().wstring())
+			insertToml(_globalConfig, "commonGptDicts.spec." + wide2Ascii(it->dictPath.stem().wstring())
 				+ ".defaultOn", checked);
 		});
 
-	connect(saveAllButton, &ElaPushButton::clicked, this, &CommonPreDictPage::apply2Config);
+	connect(saveAllButton, &ElaPushButton::clicked, this, &CommonGptDictPage::apply2Config);
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			int index = tabWidget->currentIndex();
@@ -316,11 +341,11 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
 
@@ -337,27 +362,24 @@ void CommonPreDictPage::_setupUI()
 				ofs << it->plainTextEdit->toPlainText().toStdString();
 			}
 			else if (stackedWidget->currentIndex() == 1) {
-				QList<NormalDictEntry> dictEntries = it->normalDictModel->getEntries();
+				QList<DictionaryEntry> dictEntries = it->normalDictModel->getEntries();
 				toml::array dictArr;
 				for (const auto& entry : dictEntries) {
 					toml::table dictTable;
 					dictTable.insert("searchStr", entry.original.toStdString());
 					dictTable.insert("replaceStr", entry.translation.toStdString());
-					dictTable.insert("conditionTarget", entry.conditionTar.toStdString());
-					dictTable.insert("conditionReg", entry.conditionReg.toStdString());
-					dictTable.insert("isReg", entry.isReg);
-					dictTable.insert("priority", entry.priority);
+					dictTable.insert("note", entry.description.toStdString());
 					dictArr.push_back(dictTable);
 				}
-				ofs << toml::table{ {"normalDict", dictArr} };
+				ofs << toml::table{ {"gptDict", dictArr} };
 			}
 			ofs.close();
-			QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
+			QList<DictionaryEntry> newDictEntries = readGptDicts(it->dictPath);
 			it->normalDictModel->loadData(newDictEntries);
-			it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
-			auto newDictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+			it->plainTextEdit->setPlainText(readGptDictsStr(it->dictPath));
+			auto newDictNames = _globalConfig["commonGptDicts"]["dictNames"].as_array();
 			if (!newDictNames) {
-				insertToml(_globalConfig, "commonPreDicts.dictNames", toml::array{ dictName });
+				insertToml(_globalConfig, "commonGptDicts.dictNames", toml::array{ dictName });
 			}
 			else {
 				auto it = std::find_if(newDictNames->begin(), newDictNames->end(), [=](const auto& elem)
@@ -384,12 +406,12 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			if (dictName.isEmpty() || dictName.contains('/') || dictName.contains('\\') || dictName.contains('.')) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, 
+				ElaMessageBar::error(ElaMessageBarType::TopRight,
 					"新建失败", "字典名称不能为空，且不能包含点号、斜杠或反斜杠！", 3000);
 				return;
 			}
 
-			fs::path newDictPath = L"BaseConfig/Dict/pre/" + dictName.toStdWString() + L".toml";
+			fs::path newDictPath = L"BaseConfig/Dict/gpt/" + dictName.toStdWString() + L".toml";
 			if (fs::exists(newDictPath)) {
 				ElaMessageBar::error(ElaMessageBarType::TopRight, "新建失败", "字典 " +
 					QString(newDictPath.filename().wstring()) + " 已存在", 3000);
@@ -404,7 +426,7 @@ void CommonPreDictPage::_setupUI()
 			}
 			ofs.close();
 
-			NormalTabEntry normalTabEntry;
+			GptTabEntry gptTabEntry;
 
 			QStackedWidget* stackedWidget = new QStackedWidget(tabWidget);
 			ElaPlainTextEdit* plainTextEdit = new ElaPlainTextEdit(stackedWidget);
@@ -419,17 +441,17 @@ void CommonPreDictPage::_setupUI()
 			tableView->verticalHeader()->setHidden(true);
 			tableView->setAlternatingRowColors(true);
 			tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-			NormalDictModel* model = new NormalDictModel(tableView);
+			DictionaryModel* model = new DictionaryModel(tableView);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
 			stackedWidget->setCurrentIndex(1);
 
-			normalTabEntry.stackedWidget = stackedWidget;
-			normalTabEntry.plainTextEdit = plainTextEdit;
-			normalTabEntry.tableView = tableView;
-			normalTabEntry.normalDictModel = model;
-			normalTabEntry.dictPath = newDictPath;
-			_normalTabEntries.push_back(normalTabEntry);
+			gptTabEntry.stackedWidget = stackedWidget;
+			gptTabEntry.plainTextEdit = plainTextEdit;
+			gptTabEntry.tableView = tableView;
+			gptTabEntry.normalDictModel = model;
+			gptTabEntry.dictPath = newDictPath;
+			_gptTabEntries.push_back(gptTabEntry);
 			tabWidget->addTab(stackedWidget, dictName);
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 		});
@@ -442,12 +464,12 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
 
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
 
@@ -474,8 +496,8 @@ void CommonPreDictPage::_setupUI()
 					stackedWidget->deleteLater();
 					tabWidget->removeTab(index);
 					fs::remove(it->dictPath);
-					_normalTabEntries.erase(it);
-					auto dictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+					_gptTabEntries.erase(it);
+					auto dictNames = _globalConfig["commonGptDicts"]["dictNames"].as_array();
 					if (dictNames) {
 						auto it = std::find_if(dictNames->begin(), dictNames->end(), [=](const auto& elem)
 							{
@@ -499,11 +521,11 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
 			it->normalDictModel->insertRow(it->normalDictModel->rowCount());
@@ -516,11 +538,11 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
-			auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+			auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 				{
 					return entry.stackedWidget == stackedWidget;
 				});
-			if (!stackedWidget || it == _normalTabEntries.end()) {
+			if (!stackedWidget || it == _gptTabEntries.end()) {
 				return;
 			}
 			QModelIndexList selectedRows = it->tableView->selectionModel()->selectedRows();
@@ -541,14 +563,14 @@ void CommonPreDictPage::_setupUI()
 			toml::array dictNamesArr;
 			for (int i = 0; i < tabCount; i++) {
 				QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->widget(i));
-				auto it = std::find_if(_normalTabEntries.begin(), _normalTabEntries.end(), [=](const NormalTabEntry& entry)
+				auto it = std::find_if(_gptTabEntries.begin(), _gptTabEntries.end(), [=](const GptTabEntry& entry)
 					{
 						return entry.stackedWidget == stackedWidget;
 					});
-				if (!stackedWidget || it == _normalTabEntries.end()) {
+				if (!stackedWidget || it == _gptTabEntries.end()) {
 					continue;
 				}
-				
+
 				std::ofstream ofs(it->dictPath);
 				if (!ofs.is_open()) {
 					ElaMessageBar::error(ElaMessageBarType::TopRight, "保存失败", "无法打开 " +
@@ -563,7 +585,7 @@ void CommonPreDictPage::_setupUI()
 					ofs << it->plainTextEdit->toPlainText().toStdString();
 				}
 				else if (stackedWidget->currentIndex() == 1) {
-					QList<NormalDictEntry> dictEntries = it->normalDictModel->getEntries();
+					QList<DictionaryEntry> dictEntries = it->normalDictModel->getEntries();
 					toml::array dictArr;
 					for (const auto& entry : dictEntries) {
 						if (entry.original.isEmpty()) {
@@ -572,30 +594,24 @@ void CommonPreDictPage::_setupUI()
 						toml::table dictTable;
 						dictTable.insert("searchStr", entry.original.toStdString());
 						dictTable.insert("replaceStr", entry.translation.toStdString());
-						dictTable.insert("conditionTarget", entry.conditionTar.toStdString());
-						dictTable.insert("conditionReg", entry.conditionReg.toStdString());
-						dictTable.insert("isReg", entry.isReg);
-						dictTable.insert("priority", entry.priority);
+						dictTable.insert("note", entry.description.toStdString());
 						dictArr.push_back(dictTable);
 					}
-					ofs << toml::table{ {"normalDict", dictArr} };
+					ofs << toml::table{ {"gptDict", dictArr} };
 				}
 				ofs.close();
-				QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
+				QList<DictionaryEntry> newDictEntries = readGptDicts(it->dictPath);
 				it->normalDictModel->loadData(newDictEntries);
-				it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
+				it->plainTextEdit->setPlainText(readGptDictsStr(it->dictPath));
 
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".openMode", stackedWidget->currentIndex());
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.0", it->tableView->columnWidth(0));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.1", it->tableView->columnWidth(1));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.2", it->tableView->columnWidth(2));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.3", it->tableView->columnWidth(3));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.4", it->tableView->columnWidth(4));
-				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.5", it->tableView->columnWidth(5));
+				insertToml(_globalConfig, "commonGptDicts.spec." + dictName + ".openMode", stackedWidget->currentIndex());
+				insertToml(_globalConfig, "commonGptDicts.spec." + dictName + ".columnWidth.0", it->tableView->columnWidth(0));
+				insertToml(_globalConfig, "commonGptDicts.spec." + dictName + ".columnWidth.1", it->tableView->columnWidth(1));
+				insertToml(_globalConfig, "commonGptDicts.spec." + dictName + ".columnWidth.2", it->tableView->columnWidth(2));
 			}
-			insertToml(_globalConfig, "commonPreDicts.dictNames", dictNamesArr);
+			insertToml(_globalConfig, "commonGptDicts.dictNames", dictNamesArr);
 
-			auto spec = _globalConfig["commonPreDicts"]["spec"].as_table();
+			auto spec = _globalConfig["commonGptDicts"]["spec"].as_table();
 			if (spec) {
 				std::vector<std::string_view> keysToRemove;
 				for (const auto& [key, value] : *spec) {

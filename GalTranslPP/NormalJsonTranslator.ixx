@@ -334,7 +334,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
                     if constexpr (toml::is_string<decltype(el)>) {
                         fs::path dictPath = m_projectDir / ascii2Wide(*el);
                         if (!fs::exists(dictPath)) {
-                            dictPath = defaultDictFolderPath / ascii2Wide(*el);
+                            dictPath = defaultDictFolderPath / L"gpt" / ascii2Wide(*el);
                         }
                         if (fs::exists(dictPath)) {
                             m_gptDictionary.loadFromFile(dictPath);
@@ -350,7 +350,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
                     if constexpr (toml::is_string<decltype(el)>) {
                         fs::path dictPath = m_projectDir / ascii2Wide(*el);
                         if (!fs::exists(dictPath)) {
-                            dictPath = defaultDictFolderPath / ascii2Wide(*el);
+                            dictPath = defaultDictFolderPath / L"pre" / ascii2Wide(*el);
                         }
                         if (fs::exists(dictPath)) {
                             m_preDictionary.loadFromFile(dictPath);
@@ -366,7 +366,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
                     if constexpr (toml::is_string<decltype(el)>) {
                         fs::path dictPath = m_projectDir / ascii2Wide(*el);
                         if (!fs::exists(dictPath)) {
-                            dictPath = defaultDictFolderPath / ascii2Wide(*el);
+                            dictPath = defaultDictFolderPath / L"post" / ascii2Wide(*el);
                         }
                         if (fs::exists(dictPath)) {
                             m_postDictionary.loadFromFile(dictPath);

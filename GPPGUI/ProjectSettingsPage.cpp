@@ -67,6 +67,11 @@ void ProjectSettingsPage::apply2Config()
     ofs.close();
 }
 
+void ProjectSettingsPage::refreshCommonDicts()
+{
+    _dictSettingsPage->refreshCommonDictsList();
+}
+
 QString ProjectSettingsPage::getProjectName()
 {
     return QString(_projectDir.filename().wstring());

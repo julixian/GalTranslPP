@@ -12,6 +12,7 @@
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
+#include "ElaMultiSelectComboBox.h"
 #include "ElaMessageBar.h"
 #include "ElaPivot.h"
 #include "ElaToggleSwitch.h"
@@ -44,6 +45,13 @@ void DictSettingsPage::refreshDicts()
 {
 	if (_refreshFunc) {
 		_refreshFunc();
+	}
+}
+
+void DictSettingsPage::refreshCommonDictsList()
+{
+	if (_refreshCommonDictsListFunc) {
+		_refreshCommonDictsListFunc();
 	}
 }
 
@@ -258,6 +266,8 @@ void DictSettingsPage::_setupUI()
 	gptStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["gptDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
 	insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", gptStackedWidget->currentIndex());
 
+	gptPlainTextModeButtom->setEnabled(gptStackedWidget->currentIndex() != 0);
+	gptTableModeButtom->setEnabled(gptStackedWidget->currentIndex() != 1);
 	addGptDictButton->setEnabled(gptStackedWidget->currentIndex() == 1);
 	delGptDictButton->setEnabled(gptStackedWidget->currentIndex() == 1);
 
@@ -272,6 +282,8 @@ void DictSettingsPage::_setupUI()
 			gptStackedWidget->setCurrentIndex(0);
 			addGptDictButton->setEnabled(false);
 			delGptDictButton->setEnabled(false);
+			gptPlainTextModeButtom->setEnabled(false);
+			gptTableModeButtom->setEnabled(true);
 			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 0);
 		});
 	connect(gptTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -279,6 +291,8 @@ void DictSettingsPage::_setupUI()
 			gptStackedWidget->setCurrentIndex(1);
 			addGptDictButton->setEnabled(true);
 			delGptDictButton->setEnabled(true);
+			gptPlainTextModeButtom->setEnabled(true);
+			gptTableModeButtom->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 1);
 		});
 	connect(refreshGptDictButton, &ElaPushButton::clicked, this, refreshGptDictFunc);
@@ -349,6 +363,8 @@ void DictSettingsPage::_setupUI()
 	preStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["preDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
 	insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", preStackedWidget->currentIndex());
 
+	prePlainTextModeButtom->setEnabled(preStackedWidget->currentIndex() != 0);
+	preTableModeButtom->setEnabled(preStackedWidget->currentIndex() != 1);
 	addPreDictButton->setEnabled(preStackedWidget->currentIndex() == 1);
 	delPreDictButton->setEnabled(preStackedWidget->currentIndex() == 1);
 
@@ -363,6 +379,8 @@ void DictSettingsPage::_setupUI()
 			preStackedWidget->setCurrentIndex(0);
 			addPreDictButton->setEnabled(false);
 			delPreDictButton->setEnabled(false);
+			prePlainTextModeButtom->setEnabled(false);
+			preTableModeButtom->setEnabled(true);
 			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 0);
 		});
 	connect(preTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -370,6 +388,8 @@ void DictSettingsPage::_setupUI()
 			preStackedWidget->setCurrentIndex(1);
 			addPreDictButton->setEnabled(true);
 			delPreDictButton->setEnabled(true);
+			prePlainTextModeButtom->setEnabled(true);
+			preTableModeButtom->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 1);
 		});
 	connect(refreshPreDictButton, &ElaPushButton::clicked, this, refreshPreDictFunc);
@@ -440,6 +460,8 @@ void DictSettingsPage::_setupUI()
 	postStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["postDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
 	insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", postStackedWidget->currentIndex());
 
+	postPlainTextModeButtom->setEnabled(postStackedWidget->currentIndex() != 0);
+	postTableModeButtom->setEnabled(postStackedWidget->currentIndex() != 1);
 	addPostDictButton->setEnabled(postStackedWidget->currentIndex() == 1);
 	delPostDictButton->setEnabled(postStackedWidget->currentIndex() == 1);
 
@@ -454,6 +476,8 @@ void DictSettingsPage::_setupUI()
 			postStackedWidget->setCurrentIndex(0);
 			addPostDictButton->setEnabled(false);
 			delPostDictButton->setEnabled(false);
+			postPlainTextModeButtom->setEnabled(false);
+			postTableModeButtom->setEnabled(true);
 			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 0);
 		});
 	connect(postTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -461,6 +485,8 @@ void DictSettingsPage::_setupUI()
 			postStackedWidget->setCurrentIndex(1);
 			addPostDictButton->setEnabled(true);
 			delPostDictButton->setEnabled(true);
+			postPlainTextModeButtom->setEnabled(true);
+			postTableModeButtom->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 1);
 		});
 	connect(refreshPostDictButton, &ElaPushButton::clicked, this, refreshPostDictFunc);
@@ -491,110 +517,116 @@ void DictSettingsPage::_setupUI()
 			refreshPostDictFunc();
 		};
 
-	_applyFunc = [=]()
-		{
-			std::ofstream ofs;
-
-			fs::remove(_projectDir / L"项目GPT字典-生成.toml");
-
-			if (gptStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目GPT字典.toml");
-				ofs << gptPlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-			}
-			else if (gptStackedWidget->currentIndex() == 1) {
-				toml::array gptDictArr;
-				QList<DictionaryEntry> gptEntries = gptDictModel->getEntries();
-				for (const auto& entry : gptEntries) {
-					if (entry.original.isEmpty() || entry.translation.isEmpty()) {
-						continue;
-					}
-					toml::table gptDictTbl;
-					gptDictTbl.insert("searchStr", entry.original.toStdString());
-					gptDictTbl.insert("replaceStr", entry.translation.toStdString());
-					gptDictTbl.insert("note", entry.description.toStdString());
-					gptDictArr.push_back(gptDictTbl);
-				}
-				ofs.open(_projectDir / L"项目GPT字典.toml");
-				ofs << toml::table{ {"gptDict", gptDictArr} };
-				ofs.close();
-			}
-			
-			if (preStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目字典_译前.toml");
-				ofs << prePlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-			}
-			else if (preStackedWidget->currentIndex() == 1) {
-				toml::array preDictArr;
-				QList<NormalDictEntry> preEntries = preDictModel->getEntries();
-				for (const auto& entry : preEntries) {
-					if (entry.original.isEmpty()) {
-						continue;
-					}
-					toml::table preDictTbl;
-					preDictTbl.insert("searchStr", entry.original.toStdString());
-					preDictTbl.insert("replaceStr", entry.translation.toStdString());
-					preDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
-					preDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
-					preDictTbl.insert("isReg", entry.isReg);
-					preDictTbl.insert("priority", entry.priority);
-					preDictArr.push_back(preDictTbl);
-				}
-				ofs.open(_projectDir / L"项目字典_译前.toml");
-				ofs << toml::table{ {"normalDict", preDictArr} };
-				ofs.close();
-			}
-			
-			if (postStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目字典_译后.toml");
-				ofs << postPlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-			}
-			else if (postStackedWidget->currentIndex() == 1) {
-				toml::array postDictArr;
-				QList<NormalDictEntry> postEntries = postDictModel->getEntries();
-				for (const auto& entry : postEntries) {
-					if (entry.original.isEmpty()) {
-						continue;
-					}
-					toml::table postDictTbl;
-					postDictTbl.insert("searchStr", entry.original.toStdString());
-					postDictTbl.insert("replaceStr", entry.translation.toStdString());
-					postDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
-					postDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
-					postDictTbl.insert("isReg", entry.isReg);
-					postDictTbl.insert("priority", entry.priority);
-					postDictArr.push_back(postDictTbl);
-				}
-				ofs.open(_projectDir / L"项目字典_译后.toml");
-				ofs << toml::table{ {"normalDict", postDictArr} };
-				ofs.close();
-			}
-
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", gptDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", gptDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", gptDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.0", preDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.1", preDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.2", preDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.3", preDictTableView->columnWidth(3));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.4", preDictTableView->columnWidth(4));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.5", preDictTableView->columnWidth(5));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.0", postDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.1", postDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.2", postDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.3", postDictTableView->columnWidth(3));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.4", postDictTableView->columnWidth(4));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.5", postDictTableView->columnWidth(5));
-			insertToml(_projectConfig, "dictionary.gptDict", toml::array{ "项目GPT字典.toml" });
-		};
-
-
 
 	// 设置页
 	QWidget* settingWidget = new QWidget(mainWidget);
 	QVBoxLayout* settingLayout = new QVBoxLayout(settingWidget);
+
+	ElaScrollPageArea* preDictNamesArea = new ElaScrollPageArea(settingWidget);
+	QHBoxLayout* preDictNamesLayout = new QHBoxLayout(preDictNamesArea);
+	ElaText* preDictNamesText = new ElaText(preDictNamesArea);
+	preDictNamesText->setText("选择要启用的译前字典");
+	preDictNamesText->setWordWrap(false);
+	preDictNamesText->setTextPixelSize(16);
+	preDictNamesLayout->addWidget(preDictNamesText);
+	preDictNamesLayout->addStretch();
+	ElaMultiSelectComboBox* preDictNamesComboBox = new ElaMultiSelectComboBox(preDictNamesArea);
+	preDictNamesComboBox->setMaximumWidth(500);
+	auto preDictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+	if (preDictNames) {
+		for (const auto& elem : *preDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				preDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+			}
+		}
+	}
+	preDictNamesComboBox->addItem("项目字典_译前");
+	preDictNames = _projectConfig["dictionary"]["preDict"].as_array();
+	if (preDictNames) {
+		QList<int> indexesToSelect;
+		for (const auto& elem : *preDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				int index = preDictNamesComboBox->findText(QString(fs::path(ascii2Wide(*dictNameOpt)).stem().wstring()));
+				if (index < 0) {
+					continue;
+				}
+				indexesToSelect.append(index);
+			}
+		}
+		preDictNamesComboBox->setCurrentSelection(indexesToSelect);
+	}
+	preDictNamesLayout->addWidget(preDictNamesComboBox);
+	settingLayout->addWidget(preDictNamesArea);
+
+	ElaScrollPageArea* gptDictNamesArea = new ElaScrollPageArea(settingWidget);
+	QHBoxLayout* gptDictNamesLayout = new QHBoxLayout(gptDictNamesArea);
+	ElaText* gptDictNamesText = new ElaText(gptDictNamesArea);
+	gptDictNamesText->setText("选择要启用的GPT字典");
+	gptDictNamesText->setWordWrap(false);
+	gptDictNamesText->setTextPixelSize(16);
+	gptDictNamesLayout->addWidget(gptDictNamesText);
+	gptDictNamesLayout->addStretch();
+	ElaMultiSelectComboBox* gptDictNamesComboBox = new ElaMultiSelectComboBox(gptDictNamesArea);
+	auto gptDictNames = _globalConfig["commonGptDicts"]["dictNames"].as_array();
+	if (gptDictNames) {
+		for (const auto& elem : *gptDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				gptDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+			}
+		}
+	}
+	gptDictNamesComboBox->addItem("项目GPT字典");
+	gptDictNames = _projectConfig["dictionary"]["gptDict"].as_array();
+	if (gptDictNames) {
+		QList<int> indexesToSelect;
+		for (const auto& elem : *gptDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				int index = gptDictNamesComboBox->findText(QString(fs::path(ascii2Wide(*dictNameOpt)).stem().wstring()));
+				if (index < 0) {
+					continue;
+				}
+				indexesToSelect.append(index);
+			}
+		}
+		gptDictNamesComboBox->setCurrentSelection(indexesToSelect);
+	}
+	gptDictNamesLayout->addWidget(gptDictNamesComboBox);
+	settingLayout->addWidget(gptDictNamesArea);
+
+	ElaScrollPageArea* postDictNamesArea = new ElaScrollPageArea(settingWidget);
+	QHBoxLayout* postDictNamesLayout = new QHBoxLayout(postDictNamesArea);
+	ElaText* postDictNamesText = new ElaText(postDictNamesArea);
+	postDictNamesText->setText("选择要启用的译后字典");
+	postDictNamesText->setWordWrap(false);
+	postDictNamesText->setTextPixelSize(16);
+	postDictNamesLayout->addWidget(postDictNamesText);
+	postDictNamesLayout->addStretch();
+	ElaMultiSelectComboBox* postDictNamesComboBox = new ElaMultiSelectComboBox(postDictNamesArea);
+	auto postDictNames = _globalConfig["commonPostDicts"]["dictNames"].as_array();
+	if (postDictNames) {
+		for (const auto& elem : *postDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				postDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+			}
+		}
+	}
+	postDictNamesComboBox->addItem("项目字典_译后");
+	postDictNames = _projectConfig["dictionary"]["postDict"].as_array();
+	if (postDictNames) {
+		QList<int> indexesToSelect;
+		for (const auto& elem : *postDictNames) {
+			if (auto dictNameOpt = elem.value<std::string>()) {
+				int index = postDictNamesComboBox->findText(QString(fs::path(ascii2Wide(*dictNameOpt)).stem().wstring()));
+				if (index < 0) {
+					continue;
+				}
+				indexesToSelect.append(index);
+			}
+		}
+		postDictNamesComboBox->setCurrentSelection(indexesToSelect);
+	}
+	postDictNamesLayout->addWidget(postDictNamesComboBox);
+	settingLayout->addWidget(postDictNamesArea);
 
 	bool usePreDictInName = _projectConfig["dictionary"]["usePreDictInName"].value_or(false);
 	ElaScrollPageArea* usePreDictInNameArea = new ElaScrollPageArea(settingWidget);
@@ -721,6 +753,227 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 	_pivot->appendPivot("说明");
 	_stackedWidget->addWidget(descScrollArea);
 
+
+	_refreshCommonDictsListFunc = [=]()
+		{
+			toml::array* commonPreDictsArrPtr = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+			toml::array* commonGptDictsArrPtr = _globalConfig["commonGptDicts"]["dictNames"].as_array();
+			toml::array* commonPostDictsArrPtr = _globalConfig["commonPostDicts"]["dictNames"].as_array();
+			toml::array commonPreDictsArr = commonPreDictsArrPtr ? *commonPreDictsArrPtr : toml::array{};
+			toml::array commonGptDictsArr = commonGptDictsArrPtr ? *commonGptDictsArrPtr : toml::array{};
+			toml::array commonPostDictsArr = commonPostDictsArrPtr ? *commonPostDictsArrPtr : toml::array{};
+
+			QList<int> preDictIndexesToRemove;
+			for (int i = 0; i < preDictNamesComboBox->count(); i++) {
+				if (
+					preDictNamesComboBox->itemText(i) != "项目字典_译前" &&
+					std::find_if(commonPreDictsArr.begin(), commonPreDictsArr.end(), [=](const auto& elem)
+					{
+						return elem.value_or(std::string{}) == preDictNamesComboBox->itemText(i).toStdString();
+					}) == commonPreDictsArr.end()
+						)
+				{
+					preDictIndexesToRemove.append(i);
+				}
+			}
+			std::ranges::sort(preDictIndexesToRemove, [](int a, int b) { return a > b; });
+			for (int index : preDictIndexesToRemove) {
+				preDictNamesComboBox->removeItem(index);
+			}
+			QStringList commonPreDictsChosen = preDictNamesComboBox->getCurrentSelection();
+			for (auto& elem : commonPreDictsArr) {
+				if (auto dictNameOpt = elem.value<std::string>()) {
+					int index = preDictNamesComboBox->findText(QString::fromStdString(*dictNameOpt));
+					if (index >= 0) {
+						continue;
+					}
+					preDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					if (_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
+						commonPreDictsChosen.append(QString::fromStdString(*dictNameOpt));
+					}
+				}
+			}
+			preDictNamesComboBox->setCurrentSelection(commonPreDictsChosen);
+
+			QList<int> gptDictIndexesToRemove;
+			for (int i = 0; i < gptDictNamesComboBox->count(); i++) {
+				if (
+					gptDictNamesComboBox->itemText(i) != "项目GPT字典" &&
+					std::find_if(commonGptDictsArr.begin(), commonGptDictsArr.end(), [=](const auto& elem)
+					{
+						return elem.value_or(std::string{}) == gptDictNamesComboBox->itemText(i).toStdString();
+					}) == commonGptDictsArr.end()
+						)
+				{
+					gptDictIndexesToRemove.append(i);
+				}
+			}
+			std::ranges::sort(gptDictIndexesToRemove, [](int a, int b) { return a > b; });
+			for (int index : gptDictIndexesToRemove) {
+				gptDictNamesComboBox->removeItem(index);
+			}
+			QStringList commonGptDictsChosen = gptDictNamesComboBox->getCurrentSelection();
+			for (auto& elem : commonGptDictsArr) {
+				if (auto dictNameOpt = elem.value<std::string>()) {
+					int index = gptDictNamesComboBox->findText(QString::fromStdString(*dictNameOpt));
+					if (index >= 0) {
+						continue;
+					}
+					gptDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					if (_globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
+						commonGptDictsChosen.append(QString::fromStdString(*dictNameOpt));
+					}
+				}
+			}
+			gptDictNamesComboBox->setCurrentSelection(commonGptDictsChosen);
+
+			QList<int> postDictIndexesToRemove;
+			for (int i = 0; i < postDictNamesComboBox->count(); i++) {
+				if (
+					postDictNamesComboBox->itemText(i) != "项目字典_译后" &&
+					std::find_if(commonPostDictsArr.begin(), commonPostDictsArr.end(), [=](const auto& elem)
+					{
+						return elem.value_or(std::string{}) == postDictNamesComboBox->itemText(i).toStdString();
+					}) == commonPostDictsArr.end()
+						)
+				{
+					postDictIndexesToRemove.append(i);
+				}
+			}
+			std::ranges::sort(postDictIndexesToRemove, [](int a, int b) { return a > b; });
+			for (int index : postDictIndexesToRemove) {
+				postDictNamesComboBox->removeItem(index);
+			}
+			QStringList commonPostDictsChosen = postDictNamesComboBox->getCurrentSelection();
+			for (auto& elem : commonPostDictsArr) {
+				if (auto dictNameOpt = elem.value<std::string>()) {
+					int index = postDictNamesComboBox->findText(QString::fromStdString(*dictNameOpt));
+					if (index >= 0) {
+						continue;
+					}
+					postDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					if (_globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
+						commonPostDictsChosen.append(QString::fromStdString(*dictNameOpt));
+					}
+				}
+			}
+			postDictNamesComboBox->setCurrentSelection(commonPostDictsChosen);
+		};
+
+	_applyFunc = [=]()
+		{
+			std::ofstream ofs;
+
+			fs::remove(_projectDir / L"项目GPT字典-生成.toml");
+
+			if (gptStackedWidget->currentIndex() == 0) {
+				ofs.open(_projectDir / L"项目GPT字典.toml");
+				ofs << gptPlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+			}
+			else if (gptStackedWidget->currentIndex() == 1) {
+				toml::array gptDictArr;
+				QList<DictionaryEntry> gptEntries = gptDictModel->getEntries();
+				for (const auto& entry : gptEntries) {
+					if (entry.original.isEmpty() || entry.translation.isEmpty()) {
+						continue;
+					}
+					toml::table gptDictTbl;
+					gptDictTbl.insert("searchStr", entry.original.toStdString());
+					gptDictTbl.insert("replaceStr", entry.translation.toStdString());
+					gptDictTbl.insert("note", entry.description.toStdString());
+					gptDictArr.push_back(gptDictTbl);
+				}
+				ofs.open(_projectDir / L"项目GPT字典.toml");
+				ofs << toml::table{ {"gptDict", gptDictArr} };
+				ofs.close();
+			}
+
+			if (preStackedWidget->currentIndex() == 0) {
+				ofs.open(_projectDir / L"项目字典_译前.toml");
+				ofs << prePlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+			}
+			else if (preStackedWidget->currentIndex() == 1) {
+				toml::array preDictArr;
+				QList<NormalDictEntry> preEntries = preDictModel->getEntries();
+				for (const auto& entry : preEntries) {
+					if (entry.original.isEmpty()) {
+						continue;
+					}
+					toml::table preDictTbl;
+					preDictTbl.insert("searchStr", entry.original.toStdString());
+					preDictTbl.insert("replaceStr", entry.translation.toStdString());
+					preDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
+					preDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
+					preDictTbl.insert("isReg", entry.isReg);
+					preDictTbl.insert("priority", entry.priority);
+					preDictArr.push_back(preDictTbl);
+				}
+				ofs.open(_projectDir / L"项目字典_译前.toml");
+				ofs << toml::table{ {"normalDict", preDictArr} };
+				ofs.close();
+			}
+
+			if (postStackedWidget->currentIndex() == 0) {
+				ofs.open(_projectDir / L"项目字典_译后.toml");
+				ofs << postPlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+			}
+			else if (postStackedWidget->currentIndex() == 1) {
+				toml::array postDictArr;
+				QList<NormalDictEntry> postEntries = postDictModel->getEntries();
+				for (const auto& entry : postEntries) {
+					if (entry.original.isEmpty()) {
+						continue;
+					}
+					toml::table postDictTbl;
+					postDictTbl.insert("searchStr", entry.original.toStdString());
+					postDictTbl.insert("replaceStr", entry.translation.toStdString());
+					postDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
+					postDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
+					postDictTbl.insert("isReg", entry.isReg);
+					postDictTbl.insert("priority", entry.priority);
+					postDictArr.push_back(postDictTbl);
+				}
+				ofs.open(_projectDir / L"项目字典_译后.toml");
+				ofs << toml::table{ {"normalDict", postDictArr} };
+				ofs.close();
+			}
+
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", gptDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", gptDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", gptDictTableView->columnWidth(2));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.0", preDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.1", preDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.2", preDictTableView->columnWidth(2));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.3", preDictTableView->columnWidth(3));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.4", preDictTableView->columnWidth(4));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.5", preDictTableView->columnWidth(5));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.0", postDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.1", postDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.2", postDictTableView->columnWidth(2));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.3", postDictTableView->columnWidth(3));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.4", postDictTableView->columnWidth(4));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.5", postDictTableView->columnWidth(5));
+
+			toml::array preDictNamesArr, gptDictNamesArr, postDictNamesArr;
+			QStringList preDictNamesStr = preDictNamesComboBox->getCurrentSelection(),
+				gptDictNames = gptDictNamesComboBox->getCurrentSelection(),
+				postDictNames = postDictNamesComboBox->getCurrentSelection();
+			for (const auto& name : preDictNamesStr) {
+				preDictNamesArr.push_back(name.toStdString() + ".toml");
+			}
+			for (const auto& name : gptDictNames) {
+				gptDictNamesArr.push_back(name.toStdString() + ".toml");
+			}
+			for (const auto& name : postDictNames) {
+				postDictNamesArr.push_back(name.toStdString() + ".toml");
+			}
+			insertToml(_projectConfig, "dictionary.preDict", preDictNamesArr);
+			insertToml(_projectConfig, "dictionary.gptDict", gptDictNamesArr);
+			insertToml(_projectConfig, "dictionary.postDict", postDictNamesArr);
+		};
 
 	mainLayout->addWidget(pivotScrollArea, 0, Qt::AlignTop);
 	mainLayout->addWidget(_stackedWidget, 1);

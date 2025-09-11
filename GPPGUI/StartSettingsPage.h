@@ -13,13 +13,14 @@ namespace fs = std::filesystem;
 
 class ElaPushButton;
 class ElaProgressBar;
+class ElaComboBox;
 
 class StartSettingsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit StartSettingsPage(fs::path& projectDir, toml::table& projectConfig, QWidget* parent = nullptr);
+    explicit StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::table& projectConfig, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
     void apply2Config();
 
@@ -37,10 +38,13 @@ private:
 
     void _setupUI();
     toml::table& _projectConfig;
+    QWidget* _mainWindow;
 
     ElaPushButton* _startTranslateButton;
     ElaPushButton* _stopTranslateButton;
     ElaProgressBar* _progressBar;
+
+    ElaComboBox* _fileFormatComboBox;
 
     QString _transEngine;
 
@@ -50,6 +54,8 @@ private Q_SLOTS:
     void _onStopTranslatingClicked();
 
     void _workFinished(int exitCode); // worker结束了的信号
+
+    void _onOutputSettingClicked();
 };
 
 #endif // STARTSETTINGSPAGE_H

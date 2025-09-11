@@ -1,4 +1,6 @@
-[[normalDict]]
-searchStr = '''滅茶苦茶'''
-replaceStr = "めちゃくちゃ"
-priority = 50
+# 示例: 
+# [[normalDict]]
+# searchStr = '''滅茶苦茶'''
+# replaceStr = "めちゃくちゃ"
+# priority = 50
+# 详细语法规范请参考通用字典

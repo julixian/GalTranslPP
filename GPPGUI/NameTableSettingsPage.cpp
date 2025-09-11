@@ -8,6 +8,7 @@
 
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
+#include "ElaMessageBar.h"
 #include "ElaPlainTextEdit.h"
 
 import Tool;
@@ -53,6 +54,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 		tbl = toml::parse(ifs);
 	}
 	catch (...) {
+		ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "人名替换表 不符合规范", 3000);
 		return result;
 	}
 	ifs.close();
@@ -157,7 +159,8 @@ void NameTableSettingsPage::_setupUI()
 		});
 	connect(refreshButtom, &ElaPushButton::clicked, this, [=]()
 		{
-			refreshTable();
+			nameTableModel->loadData(readNameTable());
+			plainTextEdit->setPlainText(readNameTableStr());
 		});
 	connect(addNameButtom, &ElaPushButton::clicked, this, [=]()
 		{
@@ -188,20 +191,20 @@ void NameTableSettingsPage::_setupUI()
 			if (index == 0) {
 				std::string str = plainTextEdit->toPlainText().toStdString();
 				ofs << str;
+				ofs.close();
+				nameTableModel->loadData(readNameTable());
 			}
 			else if (index == 1) {
 				ofs << "# '原名' = [ '译名', 出现次数 ]\n";
 				QList<NameTableEntry> entries = nameTableModel->getEntries();
 				for (const NameTableEntry& entry : entries) {
-					if (entry.original.isEmpty()) {
-						continue;
-					}
 					toml::table tbl;
 					tbl.insert(entry.original.toStdString(), toml::array{ entry.translation.toStdString(), entry.count });
 					ofs << tbl << "\n";
 				}
+				ofs.close();
+				plainTextEdit->setPlainText(readNameTableStr());
 			}
-			ofs.close();
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.0", nameTableView->columnWidth(0));
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.1", nameTableView->columnWidth(1));
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.2", nameTableView->columnWidth(2));

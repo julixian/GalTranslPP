@@ -309,7 +309,7 @@ void CommonSettingsPage::_setupUI()
 	logComboBox->addItem("critical");
 	if (!logLevelStr.isEmpty()) {
 		int index = logComboBox->findText(logLevelStr);
-		if (index != -1) {
+		if (index >= 0) {
 			logComboBox->setCurrentIndex(index);
 		}
 	}

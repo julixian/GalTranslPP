@@ -31,6 +31,14 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     update8->setIsWrapAnywhere(true);
     ElaText* update9 = new ElaText("9、更新ElaWidgetTool版本", 13, this);
     update9->setIsWrapAnywhere(true);
+    ElaText* update10 = new ElaText("10、修复插件开启状态和顺序未保存的bug", 13, this);
+    update10->setIsWrapAnywhere(true);
+    ElaText* update11 = new ElaText("11、将字典的正则实现从boost换成icu，实现字符级别的匹配", 13, this);
+    update11->setIsWrapAnywhere(true);
+    ElaText* update12 = new ElaText("12、现在保存时会保留创建了但未填写的空词条", 13, this);
+    update12->setIsWrapAnywhere(true);
+    ElaText* update13 = new ElaText("13、将插件设置和文件输出设置时的阴影效果作用到主窗口上", 13, this);
+    update13->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -42,6 +50,10 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update7);
     mainLayout->addWidget(update8);
     mainLayout->addWidget(update9);
+    mainLayout->addWidget(update10);
+    mainLayout->addWidget(update11);
+    mainLayout->addWidget(update12);
+    mainLayout->addWidget(update13);
     mainLayout->addStretch();
 }
 

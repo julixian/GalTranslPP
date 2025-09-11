@@ -54,7 +54,7 @@ QList<NormalDictEntry> CommonPreDictPage::readNormalDicts(const fs::path& dictPa
 		tbl = toml::parse(ifs);
 	}
 	catch (...) {
-		ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+		ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败",
 			QString(dictPath.filename().wstring()) + " 不符合规范", 3000);
 		return result;
 	}
@@ -101,8 +101,7 @@ void CommonPreDictPage::_setupUI()
 	ElaPushButton* tableModeButton = new ElaPushButton(mainButtonWidget);
 	tableModeButton->setText("切换至表模式");
 	ElaToggleButton* defaultOnButton = new ElaToggleButton(mainButtonWidget);
-	defaultOnButton->setText("新建项目默认启用");
-	defaultOnButton->setFixedWidth(150);
+	defaultOnButton->setText("默认启用");
 	ElaPushButton* saveAllButton = new ElaPushButton(mainButtonWidget);
 	saveAllButton->setText("保存全部");
 	ElaPushButton* saveButton = new ElaPushButton(mainButtonWidget);
@@ -134,55 +133,57 @@ void CommonPreDictPage::_setupUI()
 	if (commonPreDicts) {
 		toml::array newPreDicts;
 		for (const auto& elem : *commonPreDicts) {
-			if (auto dictNameOpt = elem.value<std::string>()) {
-				fs::path dictPath = L"BaseConfig/Dict/pre/" + ascii2Wide(*dictNameOpt) + L".toml";
-				if (!fs::exists(dictPath)) {
-					continue;
-				}
-				try {
-					NormalTabEntry normalTabEntry;
+			auto dictNameOpt = elem.value<std::string>();
+			if (!dictNameOpt.has_value()) {
+				continue;
+			}
+			fs::path dictPath = L"BaseConfig/Dict/pre/" + ascii2Wide(*dictNameOpt) + L".toml";
+			if (!fs::exists(dictPath)) {
+				continue;
+			}
+			try {
+				NormalTabEntry normalTabEntry;
 
-					QStackedWidget* stackedWidget = new QStackedWidget(tabWidget);
-					ElaPlainTextEdit* plainTextEdit = new ElaPlainTextEdit(stackedWidget);
-					QFont plainTextFont = plainTextEdit->font();
-					plainTextFont.setPixelSize(15);
-					plainTextEdit->setFont(plainTextFont);
-					plainTextEdit->setPlainText(readNormalDictsStr(dictPath));
-					stackedWidget->addWidget(plainTextEdit);
-					ElaTableView* tableView = new ElaTableView(stackedWidget);
-					QFont tableHeaderFont = tableView->horizontalHeader()->font();
-					tableHeaderFont.setPixelSize(16);
-					tableView->horizontalHeader()->setFont(tableHeaderFont);
-					tableView->verticalHeader()->setHidden(true);
-					tableView->setAlternatingRowColors(true);
-					tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-					NormalDictModel* model = new NormalDictModel(tableView);
-					QList<NormalDictEntry> normalData = readNormalDicts(dictPath);
-					model->loadData(normalData);
-					tableView->setModel(model);
-					stackedWidget->addWidget(tableView);
-					stackedWidget->setCurrentIndex(_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
-					tableView->setColumnWidth(0, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(200));
-					tableView->setColumnWidth(1, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(150));
-					tableView->setColumnWidth(2, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(100));
-					tableView->setColumnWidth(3, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["3"].value_or(172));
-					tableView->setColumnWidth(4, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["4"].value_or(75));
-					tableView->setColumnWidth(5, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["5"].value_or(60));
+				QStackedWidget* stackedWidget = new QStackedWidget(tabWidget);
+				ElaPlainTextEdit* plainTextEdit = new ElaPlainTextEdit(stackedWidget);
+				QFont plainTextFont = plainTextEdit->font();
+				plainTextFont.setPixelSize(15);
+				plainTextEdit->setFont(plainTextFont);
+				plainTextEdit->setPlainText(readNormalDictsStr(dictPath));
+				stackedWidget->addWidget(plainTextEdit);
+				ElaTableView* tableView = new ElaTableView(stackedWidget);
+				QFont tableHeaderFont = tableView->horizontalHeader()->font();
+				tableHeaderFont.setPixelSize(16);
+				tableView->horizontalHeader()->setFont(tableHeaderFont);
+				tableView->verticalHeader()->setHidden(true);
+				tableView->setAlternatingRowColors(true);
+				tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+				NormalDictModel* model = new NormalDictModel(tableView);
+				QList<NormalDictEntry> normalData = readNormalDicts(dictPath);
+				model->loadData(normalData);
+				tableView->setModel(model);
+				stackedWidget->addWidget(tableView);
+				stackedWidget->setCurrentIndex(_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["openMode"].value_or(1));
+				tableView->setColumnWidth(0, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["0"].value_or(200));
+				tableView->setColumnWidth(1, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["1"].value_or(150));
+				tableView->setColumnWidth(2, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["2"].value_or(100));
+				tableView->setColumnWidth(3, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["3"].value_or(172));
+				tableView->setColumnWidth(4, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["4"].value_or(75));
+				tableView->setColumnWidth(5, _globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["columnWidth"]["5"].value_or(60));
 
-					normalTabEntry.stackedWidget = stackedWidget;
-					normalTabEntry.plainTextEdit = plainTextEdit;
-					normalTabEntry.tableView = tableView;
-					normalTabEntry.normalDictModel = model;
-					normalTabEntry.dictPath = dictPath;
-					_normalTabEntries.push_back(normalTabEntry);
-					newPreDicts.push_back(*dictNameOpt);
-					tabWidget->addTab(stackedWidget, QString(dictPath.stem().wstring()));
-				}
-				catch (...) {
-					ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "默认译前字典 " +
-						QString::fromStdString(*dictNameOpt) + " 不符合规范", 3000);
-					continue;
-				}
+				normalTabEntry.stackedWidget = stackedWidget;
+				normalTabEntry.plainTextEdit = plainTextEdit;
+				normalTabEntry.tableView = tableView;
+				normalTabEntry.normalDictModel = model;
+				normalTabEntry.dictPath = dictPath;
+				_normalTabEntries.push_back(normalTabEntry);
+				newPreDicts.push_back(*dictNameOpt);
+				tabWidget->addTab(stackedWidget, QString(dictPath.stem().wstring()));
+			}
+			catch (...) {
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "默认译前字典 " +
+					QString::fromStdString(*dictNameOpt) + " 不符合规范", 3000);
+				continue;
 			}
 		}
 		insertToml(_globalConfig, "commonPreDicts.dictNames", newPreDicts);
@@ -326,7 +327,7 @@ void CommonPreDictPage::_setupUI()
 
 			std::ofstream ofs(it->dictPath);
 			if (!ofs.is_open()) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "保存失败", "无法打开 " +
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "保存失败", "无法打开 " +
 					QString(it->dictPath.wstring()) + " 字典", 3000);
 				return;
 			}
@@ -335,6 +336,9 @@ void CommonPreDictPage::_setupUI()
 
 			if (stackedWidget->currentIndex() == 0) {
 				ofs << it->plainTextEdit->toPlainText().toStdString();
+				ofs.close();
+				QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
+				it->normalDictModel->loadData(newDictEntries);
 			}
 			else if (stackedWidget->currentIndex() == 1) {
 				QList<NormalDictEntry> dictEntries = it->normalDictModel->getEntries();
@@ -350,11 +354,10 @@ void CommonPreDictPage::_setupUI()
 					dictArr.push_back(dictTable);
 				}
 				ofs << toml::table{ {"normalDict", dictArr} };
+				ofs.close();
+				it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
 			}
-			ofs.close();
-			QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
-			it->normalDictModel->loadData(newDictEntries);
-			it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
+
 			auto newDictNames = _globalConfig["commonPreDicts"]["dictNames"].as_array();
 			if (!newDictNames) {
 				insertToml(_globalConfig, "commonPreDicts.dictNames", toml::array{ dictName });
@@ -369,7 +372,7 @@ void CommonPreDictPage::_setupUI()
 				}
 			}
 			Q_EMIT commonDictsChanged();
-			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "字典 " +
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "字典 " +
 				QString(it->dictPath.stem().wstring()) + " 已保存", 3000);
 		});
 
@@ -384,21 +387,21 @@ void CommonPreDictPage::_setupUI()
 				return;
 			}
 			if (dictName.isEmpty() || dictName.contains('/') || dictName.contains('\\') || dictName.contains('.')) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, 
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, 
 					"新建失败", "字典名称不能为空，且不能包含点号、斜杠或反斜杠！", 3000);
 				return;
 			}
 
 			fs::path newDictPath = L"BaseConfig/Dict/pre/" + dictName.toStdWString() + L".toml";
-			if (fs::exists(newDictPath)) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "新建失败", "字典 " +
+			if (fs::exists(newDictPath) || dictName == "项目字典_译后") {
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "新建失败", "字典 " +
 					QString(newDictPath.filename().wstring()) + " 已存在", 3000);
 				return;
 			}
 
 			std::ofstream ofs(newDictPath);
 			if (!ofs.is_open()) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "新建失败", "无法创建 " +
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "新建失败", "无法创建 " +
 					QString(newDictPath.wstring()) + " 字典", 3000);
 				return;
 			}
@@ -438,7 +441,7 @@ void CommonPreDictPage::_setupUI()
 		{
 			int index = tabWidget->currentIndex();
 			if (index < 0) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "移除失败", "请先选择一个字典页！", 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "移除失败", "请先选择一个字典页！", 3000);
 				return;
 			}
 			QStackedWidget* stackedWidget = qobject_cast<QStackedWidget*>(tabWidget->currentWidget());
@@ -486,7 +489,7 @@ void CommonPreDictPage::_setupUI()
 						}
 					}
 					Q_EMIT commonDictsChanged();
-					ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "字典 "
+					ElaMessageBar::success(ElaMessageBarType::TopLeft, "删除成功", "字典 "
 						+ QString(dictName.c_str()) + " 已从字典管理和磁盘中移除！", 3000);
 				});
 			helpDialog.exec();
@@ -551,7 +554,7 @@ void CommonPreDictPage::_setupUI()
 				
 				std::ofstream ofs(it->dictPath);
 				if (!ofs.is_open()) {
-					ElaMessageBar::error(ElaMessageBarType::TopRight, "保存失败", "无法打开 " +
+					ElaMessageBar::error(ElaMessageBarType::TopLeft, "保存失败", "无法打开 " +
 						QString(it->dictPath.wstring()) + " 字典，将跳过该字典的保存", 3000);
 					continue;
 				}
@@ -561,14 +564,14 @@ void CommonPreDictPage::_setupUI()
 
 				if (stackedWidget->currentIndex() == 0) {
 					ofs << it->plainTextEdit->toPlainText().toStdString();
+					ofs.close();
+					QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
+					it->normalDictModel->loadData(newDictEntries);
 				}
 				else if (stackedWidget->currentIndex() == 1) {
 					QList<NormalDictEntry> dictEntries = it->normalDictModel->getEntries();
 					toml::array dictArr;
 					for (const auto& entry : dictEntries) {
-						if (entry.original.isEmpty()) {
-							continue;
-						}
 						toml::table dictTable;
 						dictTable.insert("searchStr", entry.original.toStdString());
 						dictTable.insert("replaceStr", entry.translation.toStdString());
@@ -579,11 +582,9 @@ void CommonPreDictPage::_setupUI()
 						dictArr.push_back(dictTable);
 					}
 					ofs << toml::table{ {"normalDict", dictArr} };
+					ofs.close();
+					it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
 				}
-				ofs.close();
-				QList<NormalDictEntry> newDictEntries = readNormalDicts(it->dictPath);
-				it->normalDictModel->loadData(newDictEntries);
-				it->plainTextEdit->setPlainText(readNormalDictsStr(it->dictPath));
 
 				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".openMode", stackedWidget->currentIndex());
 				insertToml(_globalConfig, "commonPreDicts.spec." + dictName + ".columnWidth.0", it->tableView->columnWidth(0));
@@ -612,7 +613,7 @@ void CommonPreDictPage::_setupUI()
 				}
 			}
 			Q_EMIT commonDictsChanged();
-			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "所有默认字典配置均已保存", 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "所有默认字典配置均已保存", 3000);
 		};
 
 

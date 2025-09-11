@@ -100,6 +100,6 @@ int main(int argc, char* argv[])
     // 程序退出前，确保服务器关闭
     server.close();
 
-    fs::remove(L"cache");
+    fs::remove_all(L"cache");
     return result;
 }

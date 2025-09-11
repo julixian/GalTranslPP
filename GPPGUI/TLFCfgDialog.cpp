@@ -42,7 +42,7 @@ TLFCfgDialog::TLFCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaCon
 	fixModeComboBox->addItem("平均");
 	if (!fixMode.isEmpty()) {
 		int index = fixModeComboBox->findText(fixMode);
-		if (index != -1) {
+		if (index >= 0) {
 			fixModeComboBox->setCurrentIndex(index);
 		}
 	}
@@ -95,7 +95,7 @@ TLFCfgDialog::TLFCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaCon
 		{
 			if (!fixMode.isEmpty()) {
 				int index = fixModeComboBox->findText(fixMode);
-				if (index != -1) {
+				if (index >= 0) {
 					fixModeComboBox->setCurrentIndex(index);
 				}
 			}

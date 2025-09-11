@@ -3,7 +3,8 @@ module;
 #include <mecab/mecab.h>
 #include <spdlog/spdlog.h>
 #include <toml++/toml.hpp>
-#include <boost/regex.hpp>
+#include <unicode/regex.h>
+#include <unicode/unistr.h>
 
 import std;
 import Tool;
@@ -54,11 +55,11 @@ export {
         std::string searchStr;
         std::string replaceStr;
         bool isReg = false;
-        boost::regex searchReg;
+        std::shared_ptr<icu::RegexPattern> searchReg;
 
         // 条件字典相关
         bool isConditional = false;
-        boost::regex conditionReg;
+        std::shared_ptr<icu::RegexPattern> conditionReg;
         ConditionTarget conditionTarget;
     };
 
@@ -210,7 +211,8 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         auto dictData = toml::parse(ifs);
         auto dicts = dictData["gptDict"].as_array();
         if (!dicts) {
-            throw std::invalid_argument(std::format("GPT 字典文件格式错误(未找到基本数组): {}", wide2Ascii(filePath)));
+            m_logger->info("已加载 GPT 字典: {}, 共 {} 个词条", wide2Ascii(filePath.filename()), count);
+            return;
         }
         dicts->for_each([&](auto&& el)
             {
@@ -225,7 +227,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
 
                     entry.searchStr = el.contains("org") ? el["org"].value_or("") : el["searchStr"].value_or("");
                     if (entry.searchStr.empty()) {
-                        throw std::invalid_argument(std::format("GPT 字典文件格式错误(searchStr|org 为空): {}", wide2Ascii(filePath)));
+                        return;
                     }
                     entry.replaceStr = el.contains("rep") ? el["rep"].value_or("") : el["replaceStr"].value_or("");
                     if (el.contains("note")) {
@@ -344,7 +346,8 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
         auto dictData = toml::parse(ifs);
         auto dicts = dictData["normalDict"].as_array();
         if (!dicts) {
-            throw std::invalid_argument(std::format("Normal 字典文件格式错误(未找到数组): {}", wide2Ascii(filePath)));
+            m_logger->info("已加载 Normal 字典: {}, 共 {} 个词条", wide2Ascii(filePath.filename()), count);
+            return;
         }
         dicts->for_each([&](auto&& el)
             {
@@ -360,10 +363,16 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
                     std::string str = el.contains("org") ? el["org"].value_or("") : el["searchStr"].value_or("");
                     if (str.empty()) {
-                        throw std::invalid_argument(std::format("Normal 字典文件格式错误(searchStr|org为空): {}", wide2Ascii(filePath)));
+                        return;
                     }
+
+                    UErrorCode status = U_ZERO_ERROR;
                     if (entry.isReg) {
-                        entry.searchReg = boost::regex(str);
+                        icu::UnicodeString ustr(icu::UnicodeString::fromUTF8(str));
+                        entry.searchReg.reset(icu::RegexPattern::compile(ustr, 0, status));
+                        if (U_FAILURE(status)) {
+                            throw std::runtime_error(std::format("Normal 字典文件格式错误(正则表达式错误): {}  ——  {}", wide2Ascii(filePath), str));
+                        }
                     }
                     else {
                         entry.searchStr = str;
@@ -386,20 +395,22 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                     else if (conditionTarget == "pretrans_text") entry.conditionTarget = ConditionTarget::PretransText;
                     else if (conditionTarget == "trans_preview") entry.conditionTarget = ConditionTarget::TransPreview;
                     else {
-                        throw std::invalid_argument(std::format("Normal 字典文件格式错误(conditionTarget 无效): {}  ——  {}", wide2Ascii(filePath), conditionTarget));
+                        throw std::invalid_argument(std::format("Normal 字典文件格式错误(conditionTarget 无效): {}  ——  {}",
+                            wide2Ascii(filePath), conditionTarget));
                     }
                     
                     str = el["conditionReg"].value_or("");
-                    entry.conditionReg = boost::regex(str);
+                    icu::UnicodeString ustr(icu::UnicodeString::fromUTF8(str));
+                    entry.conditionReg.reset(icu::RegexPattern::compile(ustr, 0, status));
+                    if (U_FAILURE(status)) {
+                        throw std::runtime_error(std::format("Normal 字典文件格式错误(conditionReg 正则表达式错误): {}  ——  {}",
+                            wide2Ascii(filePath), str));
+                    }
 
                     m_entries.push_back(entry);
                     count++;
                 }
             });
-    }
-    catch (const boost::regex_error& e) {
-        m_logger->error("非法的正则表达式, position: {}, code: {}", stream2String(e.position()), stream2String(e.code()));
-        throw std::invalid_argument(e.what());
     }
     catch (const toml::parse_error& e) {
         m_logger->error("Normal 字典文件解析错误: {}, 错误位置: {}, 错误信息: {}", wide2Ascii(filePath), stream2String(e.source().begin), e.description());
@@ -438,13 +449,29 @@ std::string NormalDictionary::doReplace(const Sentence* sentence, ConditionTarge
             canReplace = true;
         }
         else {
-            std::string textToInspect = chooseString(sentence, entry.conditionTarget);
-            canReplace = boost::regex_search(textToInspect, entry.conditionReg);
+            icu::UnicodeString textToInspect = icu::UnicodeString::fromUTF8(chooseString(sentence, entry.conditionTarget));
+            UErrorCode status = U_ZERO_ERROR;
+            std::unique_ptr<icu::RegexMatcher> matcher(entry.conditionReg->matcher(textToInspect, status));
+            if (!U_FAILURE(status)) {
+                canReplace = matcher->find();
+            }
+            else {
+                m_logger->error("正则表达式创建matcher失败: {}, 句子: [{}]", u_errorName(status), textToModify);
+            }
         }
 
         if (canReplace) {
             if (entry.isReg) {
-                textToModify = boost::regex_replace(textToModify, entry.searchReg, entry.replaceStr);
+                icu::UnicodeString ustr(icu::UnicodeString::fromUTF8(textToModify));
+                UErrorCode status = U_ZERO_ERROR;
+                std::unique_ptr<icu::RegexMatcher> matcher(entry.searchReg->matcher(ustr, status));
+                if (U_FAILURE(status)) {
+                    m_logger->error("正则表达式创建matcher失败: {}, 句子: [{}]", u_errorName(status), textToModify);
+                    return textToModify;
+                }
+                icu::UnicodeString result = matcher->replaceAll(icu::UnicodeString::fromUTF8(entry.replaceStr), status);
+                std::string str;
+                textToModify = result.toUTF8String(str);
             }
             else {
                 replaceStrInplace(textToModify, entry.searchStr, entry.replaceStr);

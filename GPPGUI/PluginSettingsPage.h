@@ -15,23 +15,31 @@ class PluginSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit PluginSettingsPage(toml::table& projectConfig, QWidget* parent = nullptr);
+    explicit PluginSettingsPage(QWidget* mainWindow, toml::table& projectConfig, QWidget* parent = nullptr);
     ~PluginSettingsPage();
     void apply2Config();
 
 private Q_SLOTS:
-    void _onMoveUp(PluginItemWidget* item);
-    void _onMoveDown(PluginItemWidget* item);
-    void _onSettings(PluginItemWidget* item);
+    void _onPreMoveUp(PluginItemWidget* item);
+    void _onPreMoveDown(PluginItemWidget* item);
+    void _onPreSettings(PluginItemWidget* item);
+    void _onPostMoveUp(PluginItemWidget* item);
+    void _onPostMoveDown(PluginItemWidget* item);
+    void _onPostSettings(PluginItemWidget* item);
 
 private:
     void _setupUI();
-    void _updateMoveButtonStates(); // 更新所有项的上下移动按钮状态
+    void _updatePreMoveButtonStates();
+    void _updatePostMoveButtonStates(); // 更新所有项的上下移动按钮状态
 
-    QVBoxLayout* _pluginListLayout; // 容纳所有 PluginItemWidget 的布局
-    QList<PluginItemWidget*> _pluginItems; // 按顺序存储所有项的指针
+    QVBoxLayout* _prePluginListLayout; // 容纳所有译前 PluginItemWidget 的布局
+    QList<PluginItemWidget*> _prePluginItems; // 按顺序存储所有项的指针
+
+    QVBoxLayout* _postPluginListLayout; // 容纳所有译后 PluginItemWidget 的布局
+    QList<PluginItemWidget*> _postPluginItems; // 按顺序存储所有项的指针
 
     toml::table& _projectConfig;
+    QWidget* _mainWindow;
 };
 
 #endif // PLUGINSETTINGSPAGE_H

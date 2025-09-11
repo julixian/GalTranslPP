@@ -64,6 +64,7 @@ private:
     PromptSettingsPage* _promptSettingsPage;
 
     std::atomic<bool> _isRunning = false;
+    QWidget* _mainWindow;
 
     void _setupUI();
     void _createNavigation();

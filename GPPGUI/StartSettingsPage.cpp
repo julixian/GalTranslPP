@@ -20,8 +20,8 @@
 
 import Tool;
 
-StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::table& projectConfig, QWidget* parent) : 
-	BasePage(parent), _projectConfig(projectConfig), _projectDir(projectDir)
+StartSettingsPage::StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::table& projectConfig, QWidget* parent) : 
+	BasePage(parent), _projectConfig(projectConfig), _projectDir(projectDir), _mainWindow(mainWindow)
 {
 	setWindowTitle("启动设置");
 	setTitleVisible(false);
@@ -74,38 +74,27 @@ void StartSettingsPage::_setupUI()
 	fileFormatLabel->setTextPixelSize(16);
 	fileFormatLabel->setText("文件格式:");
 	buttonLayout->addWidget(fileFormatLabel);
-	ElaComboBox* fileFormatComboBox = new ElaComboBox(buttonArea);
-	fileFormatComboBox->addItem("NormalJson");
-	fileFormatComboBox->addItem("Epub");
+	_fileFormatComboBox = new ElaComboBox(buttonArea);
+	_fileFormatComboBox->addItem("NormalJson");
+	_fileFormatComboBox->addItem("Epub");
 	if (!filePluginStr.isEmpty()) {
-		int index = fileFormatComboBox->findText(filePluginStr);
-		if (index != -1) {
-			fileFormatComboBox->setCurrentIndex(index);
+		int index = _fileFormatComboBox->findText(filePluginStr);
+		if (index >= 0) {
+			_fileFormatComboBox->setCurrentIndex(index);
 		}
 	}
-	connect(fileFormatComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
+	connect(_fileFormatComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
 		{
 			insertToml(_projectConfig, "plugins.filePlugin", text.toStdString());
 		});
-	buttonLayout->addWidget(fileFormatComboBox);
+	buttonLayout->addWidget(_fileFormatComboBox);
 
 	// 针对文件格式的输出设置
 	ElaPushButton* outputSetting = new ElaPushButton(buttonArea);
 	outputSetting->setText("文件输出设置");
 	buttonLayout->addWidget(outputSetting);
 	buttonLayout->addStretch();
-	connect(outputSetting, &ElaPushButton::clicked, this, [=](bool checked)
-		{
-			QString fileFormat = fileFormatComboBox->currentText();
-			if (fileFormat == "NormalJson") {
-				NJCfgDialog cfgDialog(_projectConfig, this);
-				cfgDialog.exec();
-			}
-			else if (fileFormat == "Epub") {
-				EpubCfgDialog cfgDialog(_projectConfig, this);
-				cfgDialog.exec();
-			}
-		});
+	connect(outputSetting, &ElaPushButton::clicked, this, &StartSettingsPage::_onOutputSettingClicked);
 
 	// 翻译模式
 	std::string transEngine = _projectConfig["plugins"]["transEngine"].value_or("ForGalJson");
@@ -125,7 +114,7 @@ void StartSettingsPage::_setupUI()
 	translateMode->addItem("Rebuild");
 	if (!transEngineStr.isEmpty()) {
 		int index = translateMode->findText(transEngineStr);
-		if (index != -1) {
+		if (index >= 0) {
 			translateMode->setCurrentIndex(index);
 		}
 	}
@@ -257,4 +246,17 @@ void StartSettingsPage::_workFinished(int exitCode)
 	Q_EMIT finishTranslating(_transEngine, exitCode);
 	_startTranslateButton->setEnabled(true);
 	_stopTranslateButton->setEnabled(false);
+}
+
+void StartSettingsPage::_onOutputSettingClicked()
+{
+	QString fileFormat = _fileFormatComboBox->currentText();
+	if (fileFormat == "NormalJson") {
+		NJCfgDialog cfgDialog(_projectConfig, _mainWindow);
+		cfgDialog.exec();
+	}
+	else if (fileFormat == "Epub") {
+		EpubCfgDialog cfgDialog(_projectConfig, _mainWindow);
+		cfgDialog.exec();
+	}
 }

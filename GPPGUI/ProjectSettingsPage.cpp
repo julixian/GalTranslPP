@@ -25,7 +25,7 @@
 import std;
 
 ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::path& projectDir, QWidget* parent)
-    : BasePage(parent), _projectDir(projectDir), _globalConfig(globalConfig)
+    : BasePage(parent), _projectDir(projectDir), _globalConfig(globalConfig), _mainWindow(parent)
 {
     setWindowTitle("ProjectSettings");
     setTitleVisible(false);
@@ -58,9 +58,6 @@ void ProjectSettingsPage::apply2Config()
     _startSettingsPage->apply2Config();
     _otherSettingsPage->apply2Config();
     _promptSettingsPage->apply2Config();
-
-    _nameTableSettingsPage->refreshTable();
-    _dictSettingsPage->refreshDicts();
 
     std::ofstream ofs(_projectDir / L"config.toml");
     ofs << _projectConfig;
@@ -167,13 +164,13 @@ void ProjectSettingsPage::_createNavigation()
 void ProjectSettingsPage::_createPages()
 {
     _apiSettingsPage = new APISettingsPage(_projectConfig, this);
-    _pluginSettingsPage = new PluginSettingsPage(_projectConfig, this);
+    _pluginSettingsPage = new PluginSettingsPage(_mainWindow, _projectConfig, this);
     _commonSettingsPage = new CommonSettingsPage(_projectConfig, this);
     _paSettingsPage = new PASettingsPage(_projectConfig, this);
     _nameTableSettingsPage = new NameTableSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _dictSettingsPage = new DictSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _promptSettingsPage = new PromptSettingsPage(_projectDir, _projectConfig, this);
-    _startSettingsPage = new StartSettingsPage(_projectDir, _projectConfig, this);
+    _startSettingsPage = new StartSettingsPage(_mainWindow, _projectDir, _projectConfig, this);
     _otherSettingsPage = new OtherSettingsPage(_projectDir, _projectConfig, this);
     _stackedWidget->addWidget(_apiSettingsPage);
     _stackedWidget->addWidget(_pluginSettingsPage);
@@ -187,7 +184,7 @@ void ProjectSettingsPage::_createPages()
 
     connect(_startSettingsPage, &StartSettingsPage::startTranslating, this, &ProjectSettingsPage::_onStartTranslating);
     connect(_startSettingsPage, &StartSettingsPage::finishTranslating, this, &ProjectSettingsPage::_onFinishTranslating);
-    connect(_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, [this]()
+    connect(_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, [=]()
         {
             this->apply2Config();
         });
@@ -226,7 +223,7 @@ void ProjectSettingsPage::_onNavigationButtonToggled(bool checked)
     // 3. 切换到对应的页面
     // 找到触发信号的按钮在列表中的索引
     int index = _navigationButtons.indexOf(triggeredButton);
-    if (index != -1)
+    if (index >= 0)
     {
         _stackedWidget->setCurrentIndex(index);
     }

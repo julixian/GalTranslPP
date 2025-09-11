@@ -14,10 +14,12 @@
 
 import Tool;
 
-PluginSettingsPage::PluginSettingsPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+PluginSettingsPage::PluginSettingsPage(QWidget* mainWindow, toml::table& projectConfig, QWidget* parent) :
+    BasePage(parent), _projectConfig(projectConfig), _mainWindow(mainWindow)
 {
     setWindowTitle("插件设置");
     setTitleVisible(false);
+
     _setupUI();
 }
 
@@ -28,7 +30,7 @@ PluginSettingsPage::~PluginSettingsPage()
 void PluginSettingsPage::apply2Config()
 {
     toml::array plugins;
-    for (PluginItemWidget* item : _pluginItems) {
+    for (PluginItemWidget* item : _postPluginItems) {
         if (!item->isEnabled()) {
             continue;
         }
@@ -43,90 +45,97 @@ void PluginSettingsPage::_setupUI()
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 
     //创建一个提示标题
-    ElaText* title = new ElaText(mainWidget);
-    title->setText("后处理插件设置(由上至下执行)");
-    title->setTextPixelSize(18);
+    ElaText* postTitle = new ElaText(mainWidget);
+    postTitle->setText("后处理插件设置(由上至下执行)");
+    postTitle->setTextPixelSize(18);
 
     // 创建一个容器用于放置列表
-    QWidget* listContainer = new QWidget(mainWidget);
+    QWidget* postListContainer = new QWidget(mainWidget);
 
-    _pluginListLayout = new QVBoxLayout(listContainer);
-    _pluginListLayout->setSpacing(20);
-    _pluginListLayout->setContentsMargins(5, 5, 5, 5);
+    _postPluginListLayout = new QVBoxLayout(postListContainer);
 
     // 插件名称列表
-    QStringList pluginNames = { "TextPostFull2Half", "TextLinebreakFix" };
-
-    // 遍历名称列表，创建并添加 PluginItemWidget
-    for (const QString& name : pluginNames)
-    {
-        PluginItemWidget* item = new PluginItemWidget(name, this);
-        _pluginItems.append(item); // 添加到列表中
-        _pluginListLayout->addWidget(item); // 添加到布局中
-
-        // 连接信号
-        connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onMoveUp);
-        connect(item, &PluginItemWidget::moveDownRequested, this, &PluginSettingsPage::_onMoveDown);
-        connect(item, &PluginItemWidget::settingsRequested, this, &PluginSettingsPage::_onSettings);
+    QStringList postPluginNames = { "TextPostFull2Half", "TextLinebreakFix" };
+    auto postPluginsArr = _projectConfig["plugins"]["textPostPlugins"].as_array();
+    if (postPluginsArr) {
+        for (const auto& elem : *postPluginsArr) {
+            auto pluginNameOpt = elem.value<std::string>();
+            if (!pluginNameOpt.has_value()) {
+                continue;
+            }
+            QString pluginName = QString::fromStdString(pluginNameOpt.value());
+            if (!postPluginNames.contains(pluginName)) {
+                continue;
+            }
+            postPluginNames.removeOne(pluginName);
+            PluginItemWidget* item = new PluginItemWidget(pluginName, this);
+            item->setEnabled(true);
+            _postPluginItems.append(item);
+            _postPluginListLayout->addWidget(item);
+            connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onPostMoveUp);
+            connect(item, &PluginItemWidget::moveDownRequested, this, &PluginSettingsPage::_onPostMoveDown);
+            connect(item, &PluginItemWidget::settingsRequested, this, &PluginSettingsPage::_onPostSettings);
+        }
     }
 
-    _pluginListLayout->addStretch(); // 弹簧将列表项向上推
+    // 遍历名称列表，创建并添加 PluginItemWidget
+    for (const QString& name : postPluginNames)
+    {
+        PluginItemWidget* item = new PluginItemWidget(name, this);
+        _postPluginItems.append(item); // 添加到列表中
+        _postPluginListLayout->addWidget(item); // 添加到布局中
+
+        // 连接信号
+        connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onPostMoveUp);
+        connect(item, &PluginItemWidget::moveDownRequested, this, &PluginSettingsPage::_onPostMoveDown);
+        connect(item, &PluginItemWidget::settingsRequested, this, &PluginSettingsPage::_onPostSettings);
+    }
 
     // 初始化按钮状态
-    _updateMoveButtonStates();
+    _updatePreMoveButtonStates();
+    _updatePostMoveButtonStates();
 
-    mainLayout->addWidget(title);
-    mainLayout->addWidget(listContainer);
+    mainLayout->addWidget(postTitle);
+    mainLayout->addWidget(postListContainer);
+    mainLayout->addStretch();
 
     addCentralWidget(mainWidget);
 }
 
-void PluginSettingsPage::_onMoveUp(PluginItemWidget* item)
+void PluginSettingsPage::_onPostMoveUp(PluginItemWidget* item)
 {
-    int index = _pluginListLayout->indexOf(item);
+    int index = _postPluginListLayout->indexOf(item);
     if (index > 0) // 确保不是第一个
     {
         // 从布局和列表中移除
-        _pluginListLayout->removeWidget(item);
-        _pluginItems.removeOne(item);
+        _postPluginListLayout->removeWidget(item);
+        _postPluginItems.removeOne(item);
 
         // 插入到新位置
-        _pluginListLayout->insertWidget(index - 1, item);
-        _pluginItems.insert(index - 1, item);
+        _postPluginListLayout->insertWidget(index - 1, item);
+        _postPluginItems.insert(index - 1, item);
 
-        _updateMoveButtonStates();
+        _updatePostMoveButtonStates();
     }
 }
 
-void PluginSettingsPage::_onMoveDown(PluginItemWidget* item)
+void PluginSettingsPage::_onPostMoveDown(PluginItemWidget* item)
 {
-    int index = _pluginListLayout->indexOf(item);
+    int index = _postPluginListLayout->indexOf(item);
     // 确保不是最后一个有效的item
-    if (index < _pluginItems.count() - 1)
+    if (index < _postPluginItems.count() - 1)
     {
-        _pluginListLayout->removeWidget(item);
-        _pluginItems.removeOne(item);
+        _postPluginListLayout->removeWidget(item);
+        _postPluginItems.removeOne(item);
 
-        _pluginListLayout->insertWidget(index + 1, item);
-        _pluginItems.insert(index + 1, item);
+        _postPluginListLayout->insertWidget(index + 1, item);
+        _postPluginItems.insert(index + 1, item);
 
-        _updateMoveButtonStates();
+        _updatePostMoveButtonStates();
     }
 }
 
-void PluginSettingsPage::_updateMoveButtonStates()
-{
-    for (int i = 0; i < _pluginItems.count(); ++i)
-    {
-        PluginItemWidget* item = _pluginItems.at(i);
-        // 第一个不能上移
-        item->setMoveUpButtonEnabled(i > 0);
-        // 最后一个不能下移
-        item->setMoveDownButtonEnabled(i < _pluginItems.count() - 1);
-    }
-}
-
-void PluginSettingsPage::_onSettings(PluginItemWidget* item)
+void PluginSettingsPage::_onPostSettings(PluginItemWidget* item)
 {
     if (!item) {
         return;
@@ -134,11 +143,78 @@ void PluginSettingsPage::_onSettings(PluginItemWidget* item)
     QString pluginName = item->getPluginName();
 
     if (pluginName == "TextPostFull2Half") {
-        PostFull2HalfCfgDialog dlg(_projectConfig, this);
+        PostFull2HalfCfgDialog dlg(_projectConfig, _mainWindow);
         dlg.exec();
     }
     else if (pluginName == "TextLinebreakFix") {
-        TLFCfgDialog dlg(_projectConfig, this);
+        TLFCfgDialog dlg(_projectConfig, _mainWindow);
         dlg.exec();
+    }
+}
+
+void PluginSettingsPage::_onPreMoveUp(PluginItemWidget* item)
+{
+    int index = _prePluginListLayout->indexOf(item);
+    if (index > 0) // 确保不是第一个
+    {
+        // 从布局和列表中移除
+        _prePluginListLayout->removeWidget(item);
+        _prePluginItems.removeOne(item);
+
+        // 插入到新位置
+        _prePluginListLayout->insertWidget(index - 1, item);
+        _prePluginItems.insert(index - 1, item);
+
+        _updatePreMoveButtonStates();
+    }
+}
+
+void PluginSettingsPage::_onPreMoveDown(PluginItemWidget* item)
+{
+    int index = _prePluginListLayout->indexOf(item);
+    // 确保不是最后一个有效的item
+    if (index < _prePluginItems.count() - 1)
+    {
+        _prePluginListLayout->removeWidget(item);
+        _prePluginItems.removeOne(item);
+
+        _prePluginListLayout->insertWidget(index + 1, item);
+        _prePluginItems.insert(index + 1, item);
+
+        _updatePreMoveButtonStates();
+    }
+}
+
+void PluginSettingsPage::_onPreSettings(PluginItemWidget* item)
+{
+    if (!item) {
+        return;
+    }
+    QString pluginName = item->getPluginName();
+
+    
+}
+
+void PluginSettingsPage::_updatePostMoveButtonStates()
+{
+    for (int i = 0; i < _postPluginItems.count(); ++i)
+    {
+        PluginItemWidget* item = _postPluginItems.at(i);
+        // 第一个不能上移
+        item->setMoveUpButtonEnabled(i > 0);
+        // 最后一个不能下移
+        item->setMoveDownButtonEnabled(i < _postPluginItems.count() - 1);
+    }
+}
+
+void PluginSettingsPage::_updatePreMoveButtonStates()
+{
+    for (int i = 0; i < _prePluginItems.count(); ++i)
+    {
+        PluginItemWidget* item = _prePluginItems.at(i);
+        // 第一个不能上移
+        item->setMoveUpButtonEnabled(i > 0);
+        // 最后一个不能下移
+        item->setMoveDownButtonEnabled(i < _prePluginItems.count() - 1);
     }
 }

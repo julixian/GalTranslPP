@@ -513,11 +513,12 @@ void DictSettingsPage::_setupUI()
 	_refreshFunc = [=]()
 		{
 			refreshGptDictFunc();
-			refreshPreDictFunc();
-			refreshPostDictFunc();
+			//refreshPreDictFunc();
+			//refreshPostDictFunc();
 		};
 
 
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 设置页
 	QWidget* settingWidget = new QWidget(mainWidget);
 	QVBoxLayout* settingLayout = new QVBoxLayout(settingWidget);
@@ -789,7 +790,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 					if (index >= 0) {
 						continue;
 					}
-					preDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					preDictNamesComboBox->insertItem(0, QString::fromStdString(*dictNameOpt));
 					if (_globalConfig["commonPreDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
 						commonPreDictsChosen.append(QString::fromStdString(*dictNameOpt));
 					}
@@ -821,7 +822,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 					if (index >= 0) {
 						continue;
 					}
-					gptDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					gptDictNamesComboBox->insertItem(0, QString::fromStdString(*dictNameOpt));
 					if (_globalConfig["commonGptDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
 						commonGptDictsChosen.append(QString::fromStdString(*dictNameOpt));
 					}
@@ -853,7 +854,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 					if (index >= 0) {
 						continue;
 					}
-					postDictNamesComboBox->addItem(QString::fromStdString(*dictNameOpt));
+					postDictNamesComboBox->insertItem(0, QString::fromStdString(*dictNameOpt));
 					if (_globalConfig["commonPostDicts"]["spec"][*dictNameOpt]["defaultOn"].value_or(true)) {
 						commonPostDictsChosen.append(QString::fromStdString(*dictNameOpt));
 					}
@@ -872,14 +873,12 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 				ofs.open(_projectDir / L"项目GPT字典.toml");
 				ofs << gptPlainTextEdit->toPlainText().toStdString();
 				ofs.close();
+				gptDictModel->loadData(readGptDicts());
 			}
 			else if (gptStackedWidget->currentIndex() == 1) {
 				toml::array gptDictArr;
 				QList<DictionaryEntry> gptEntries = gptDictModel->getEntries();
 				for (const auto& entry : gptEntries) {
-					if (entry.original.isEmpty() || entry.translation.isEmpty()) {
-						continue;
-					}
 					toml::table gptDictTbl;
 					gptDictTbl.insert("searchStr", entry.original.toStdString());
 					gptDictTbl.insert("replaceStr", entry.translation.toStdString());
@@ -889,20 +888,19 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 				ofs.open(_projectDir / L"项目GPT字典.toml");
 				ofs << toml::table{ {"gptDict", gptDictArr} };
 				ofs.close();
+				gptPlainTextEdit->setPlainText(readGptDictsStr());
 			}
 
 			if (preStackedWidget->currentIndex() == 0) {
 				ofs.open(_projectDir / L"项目字典_译前.toml");
 				ofs << prePlainTextEdit->toPlainText().toStdString();
 				ofs.close();
+				preDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译前.toml"));
 			}
 			else if (preStackedWidget->currentIndex() == 1) {
 				toml::array preDictArr;
 				QList<NormalDictEntry> preEntries = preDictModel->getEntries();
 				for (const auto& entry : preEntries) {
-					if (entry.original.isEmpty()) {
-						continue;
-					}
 					toml::table preDictTbl;
 					preDictTbl.insert("searchStr", entry.original.toStdString());
 					preDictTbl.insert("replaceStr", entry.translation.toStdString());
@@ -915,20 +913,19 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 				ofs.open(_projectDir / L"项目字典_译前.toml");
 				ofs << toml::table{ {"normalDict", preDictArr} };
 				ofs.close();
+				prePlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译前.toml"));
 			}
 
 			if (postStackedWidget->currentIndex() == 0) {
 				ofs.open(_projectDir / L"项目字典_译后.toml");
 				ofs << postPlainTextEdit->toPlainText().toStdString();
 				ofs.close();
+				postDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译后.toml"));
 			}
 			else if (postStackedWidget->currentIndex() == 1) {
 				toml::array postDictArr;
 				QList<NormalDictEntry> postEntries = postDictModel->getEntries();
 				for (const auto& entry : postEntries) {
-					if (entry.original.isEmpty()) {
-						continue;
-					}
 					toml::table postDictTbl;
 					postDictTbl.insert("searchStr", entry.original.toStdString());
 					postDictTbl.insert("replaceStr", entry.translation.toStdString());
@@ -941,6 +938,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 				ofs.open(_projectDir / L"项目字典_译后.toml");
 				ofs << toml::table{ {"normalDict", postDictArr} };
 				ofs.close();
+				postPlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译后.toml"));
 			}
 
 			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", gptDictTableView->columnWidth(0));

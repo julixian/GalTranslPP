@@ -216,7 +216,7 @@ void MainWindow::initContent()
                 if (!fs::exists(projectDir / L"config.toml")) {
                     continue;
                 }
-                QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir));
+                QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir, this));
                 connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
                     {
                         setNodeKeyPoints(nodeKey, getNodeKeyPoints(nodeKey) + 1);
@@ -315,7 +315,66 @@ void MainWindow::_on_newProject_triggered()
         fs::copy(L"BaseConfig/Prompt.toml", newProjectDir / L"Prompt.toml", fs::copy_options::overwrite_existing);
     }
 
-    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, newProjectDir));
+    try {
+        std::ifstream ifs(newProjectDir / L"config.toml");
+        toml::table configData = toml::parse(ifs);
+        ifs.close();
+
+        auto preDictNamesArr = _globalConfig["commonPreDicts"]["dictNames"].as_array();
+        auto preDictsArr = configData["dictionary"]["preDict"].as_array();
+        if (preDictNamesArr && preDictsArr) {
+            for (const auto& elem : *preDictNamesArr) {
+                auto preDictNameOpt = elem.value<std::string>();
+                if (!preDictNameOpt.has_value()) {
+                    continue;
+                }
+                if (!_globalConfig["commonPreDicts"]["spec"][*preDictNameOpt]["defaultOn"].value_or(true)) {
+                    continue;
+                }
+                preDictsArr->push_back(*preDictNameOpt + ".toml");
+            }
+        }
+
+        auto gptDictNamesArr = _globalConfig["commonGptDicts"]["dictNames"].as_array();
+        auto gptDictsArr = configData["dictionary"]["gptDict"].as_array();
+        if (gptDictNamesArr && gptDictsArr) {
+            for (const auto& elem : *gptDictNamesArr) {
+                auto gptDictNameOpt = elem.value<std::string>();
+                if (!gptDictNameOpt.has_value()) {
+                    continue;
+                }
+                if (!_globalConfig["commonGptDicts"]["spec"][*gptDictNameOpt]["defaultOn"].value_or(true)) {
+                    continue;
+                }
+                gptDictsArr->push_back(*gptDictNameOpt + ".toml");
+            }
+        }
+
+        auto postDictNamesArr = _globalConfig["commonPostDicts"]["dictNames"].as_array();
+        auto postDictsArr = configData["dictionary"]["postDict"].as_array();
+        if (postDictNamesArr && postDictsArr) {
+            for (const auto& elem : *postDictNamesArr) {
+                auto postDictNameOpt = elem.value<std::string>();
+                if (!postDictNameOpt.has_value()) {
+                    continue;
+                }
+                if (!_globalConfig["commonPostDicts"]["spec"][*postDictNameOpt]["defaultOn"].value_or(true)) {
+                    continue;
+                }
+                postDictsArr->push_back(*postDictNameOpt + ".toml");
+            }
+        }
+
+        std::ofstream ofs(newProjectDir / L"config.toml");
+        ofs << configData;
+        ofs.close();
+    }
+    catch (...) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, "创建失败", "无法写入配置文件！", 3000);
+        return;
+    }
+
+    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, newProjectDir, this));
     connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
         {
             setNodeKeyPoints(nodeKey, 1);
@@ -353,7 +412,7 @@ void MainWindow::_on_openProject_triggered()
         return;
     }
 
-    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir));
+    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir, this));
     connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
         {
             setNodeKeyPoints(nodeKey, 1);

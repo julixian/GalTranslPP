@@ -48,6 +48,9 @@ MainWindow::MainWindow(QWidget* parent)
             QMessageBox::critical(this, "解析错误", "基本配置文件不符合规范！", QMessageBox::Ok);
         }
     }
+    else {
+        QMessageBox::critical(this, "不是哥们", "有病吧，你把我软件的配置文件删了！？", QMessageBox::Ok);
+    }
 
     setIsAllowPageOpenInNewWindow(false);
 

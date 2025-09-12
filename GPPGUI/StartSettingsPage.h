@@ -25,55 +25,55 @@ using Duration = std::chrono::duration<double>; // 使用 double 类型的秒
 class ExponentialMovingAverageEstimator {
 private:
     double alpha;
-    double avg_speed;
-    TimePoint last_time;
-    double last_progress;
-    bool is_first_update;
+    double avgSpeed;
+    TimePoint lastTime;
+    double lastProgress;
+    bool isFirstUpdate;
 
 public:
-    explicit ExponentialMovingAverageEstimator(double smoothing_factor = 0.1)
-        : alpha(smoothing_factor), avg_speed(0.0), last_progress(0.0), is_first_update(true) {
+    explicit ExponentialMovingAverageEstimator(double smoothingFactor = 0.1)
+        : alpha(smoothingFactor), avgSpeed(0.0), lastProgress(0.0), isFirstUpdate(true) {
     }
 
-    Duration updateAndGetEta(double current_progress, double total_progress) {
-        TimePoint current_time = Clock::now();
+    Duration updateAndGetEta(double currentProgress, double totalProgress) {
+        TimePoint currentTime = Clock::now();
 
-        if (is_first_update) {
-            last_time = current_time;
-            last_progress = current_progress;
-            is_first_update = false;
+        if (isFirstUpdate) {
+            lastTime = currentTime;
+            lastProgress = currentProgress;
+            isFirstUpdate = false;
             return Duration(std::numeric_limits<double>::infinity());
         }
 
-        Duration delta_time = current_time - last_time;
-        double delta_progress = current_progress - last_progress;
+        Duration deltaTime = currentTime - lastTime;
+        double deltaProgress = currentProgress - lastProgress;
 
-        if (delta_time.count() > 1e-9) { // 避免除以零
-            double current_speed = delta_progress / delta_time.count();
-            if (avg_speed == 0.0) { // 第一次有效计算
-                avg_speed = current_speed;
+        if (deltaTime.count() > 1e-9) { // 避免除以零
+            double currentSpeed = deltaProgress / deltaTime.count();
+            if (avgSpeed == 0.0) { // 第一次有效计算
+                avgSpeed = currentSpeed;
             }
             else {
-                avg_speed = (alpha * current_speed) + ((1.0 - alpha) * avg_speed);
+                avgSpeed = (alpha * currentSpeed) + ((1.0 - alpha) * avgSpeed);
             }
         }
 
-        last_time = current_time;
-        last_progress = current_progress;
+        lastTime = currentTime;
+        lastProgress = currentProgress;
 
-        if (avg_speed <= 1e-9) {
+        if (avgSpeed <= 1e-9) {
             return Duration(std::numeric_limits<double>::infinity());
         }
 
-        double remaining_work = total_progress - current_progress;
-        return Duration(remaining_work / avg_speed);
+        double remainingWork = totalProgress - currentProgress;
+        return Duration(remainingWork / avgSpeed);
     }
 
     void reset()
     {
-        avg_speed = 0.0;
-        last_progress = 0.0;
-        is_first_update = true;
+        avgSpeed = 0.0;
+        lastProgress = 0.0;
+        isFirstUpdate = true;
     }
 };
 

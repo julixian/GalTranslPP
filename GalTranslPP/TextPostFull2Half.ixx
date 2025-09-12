@@ -7,7 +7,7 @@ module;
 
 import std;
 import Tool;
-import IPlugin;
+export import IPlugin;
 export module TextPostFull2Half;
 namespace fs = std::filesystem;
 
@@ -34,9 +34,14 @@ module :private;
 TextPostFull2Half::TextPostFull2Half(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger)
     : IPlugin(projectDir, logger)
 {
+    std::ifstream ifs;
     try {
-        auto projectConfig = toml::parse_file((projectDir / "config.toml").string());
-        auto pluginConfig = toml::parse_file((pluginConfigsPath / "textPostPlugins/TextPostFull2Half.toml").string());
+        ifs.open(projectDir / "config.toml");
+        auto projectConfig = toml::parse(ifs);
+        ifs.close();
+        ifs.open(pluginConfigsPath / "textPostPlugins/TextPostFull2Half.toml");
+        auto pluginConfig = toml::parse(ifs);
+        ifs.close();
 
         m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.是否替换标点");
         m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.反向替换");

@@ -105,6 +105,7 @@ export {
         std::string modelName;
         std::chrono::steady_clock::time_point lastReportTime;
         int reportCount = 0;
+        bool stream = false;
     };
 
     enum  class TransEngine

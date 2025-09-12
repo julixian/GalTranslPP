@@ -1,0 +1,31 @@
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '不知怎的'
+searchStr = 'somehow'
+
+[[normalDict]]
+conditionReg = '実家'
+conditionTarget = 'orig_text'
+isReg = false
+priority = 0
+replaceStr = '本家'
+searchStr = '娘家'
+
+[[normalDict]]
+conditionReg = '人妻|ひとづま'
+conditionTarget = 'orig_text'
+isReg = false
+priority = 0
+replaceStr = '人妻'
+searchStr = '有夫之妇'
+
+[[normalDict]]
+conditionReg = '^(?!.*サタン).*$'
+conditionTarget = 'orig_text'
+isReg = false
+priority = 0
+replaceStr = '魔王'
+searchStr = '撒旦'

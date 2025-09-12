@@ -10,6 +10,7 @@
 class QVBoxLayout;
 class ElaLineEdit;
 class ElaScrollPageArea;
+class ElaToggleSwitch;
 
 class APISettingsPage : public BasePage
 {
@@ -36,12 +37,13 @@ private:
         ElaLineEdit* keyEdit;
         ElaLineEdit* urlEdit;
         ElaLineEdit* modelEdit;
+        ElaToggleSwitch* streamSwitch;
     };
     QList<ApiRowControls> _apiRows;
 
     void _setupUI();
     // 创建一个新的API输入行（现在返回一个ElaScrollPageArea*）
-    ElaScrollPageArea* _createApiInputRowWidget(const QString& key = "", const QString& url = "", const QString& model = "");
+    ElaScrollPageArea* _createApiInputRowWidget(const QString& key = "", const QString& url = "", const QString& model = "", bool stream = false);
 };
 
 #endif // APISETTINGSPAGE_H

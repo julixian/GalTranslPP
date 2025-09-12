@@ -1,0 +1,127 @@
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'おちんちん'
+searchStr = 'オチンチン'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'ちんちん'
+searchStr = 'チンチン'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'おちんぽ'
+searchStr = 'おちんこ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'おちんぽ'
+searchStr = 'おチンポ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'おちんぽ'
+searchStr = '雄チンポ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'ちんぽ'
+searchStr = 'チンコ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'ちんぽ'
+searchStr = 'ちんこ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'おまんこ'
+searchStr = 'オマンコ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = 'まんこ'
+searchStr = 'マンコ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '肛門'
+searchStr = 'アヌス'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '肛門'
+searchStr = 'アナル'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '精液'
+searchStr = 'ザーメン'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = true
+priority = 0
+replaceStr = 'チン$1'
+searchStr = 'チ[○●〇]([コチポ])'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = true
+priority = 0
+replaceStr = 'ちん$1'
+searchStr = 'ち[○●〇]([こちぽ])'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = true
+priority = 0
+replaceStr = 'マンコ'
+searchStr = 'マ[○●〇]コ'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = true
+priority = 0
+replaceStr = 'まんこ'
+searchStr = 'ま[○●〇]こ'

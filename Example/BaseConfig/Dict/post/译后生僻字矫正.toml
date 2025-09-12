@@ -1,0 +1,167 @@
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '鰤'
+searchStr = '𫚕'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '篠'
+searchStr = '筿'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '鮟'
+searchStr = '𩽾'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '鱇'
+searchStr = '𩾌'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '庄'
+searchStr = '荘'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '泷'
+searchStr = '滝'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '窘'
+searchStr = '囧'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '㭴'
+searchStr = '樫'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '弦'
+searchStr = '纮'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '喷'
+searchStr = '偾'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '呕'
+searchStr = '哕'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '怜'
+searchStr = '憐'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '穗'
+searchStr = '穂'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '碎'
+searchStr = '砕'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '粹'
+searchStr = '粋'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '樱'
+searchStr = '桜'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '长'
+searchStr = '長'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '鸟'
+searchStr = '茑'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '堇'
+searchStr = '菫'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '呜'
+searchStr = '嗻'
+
+[[normalDict]]
+conditionReg = ''
+conditionTarget = ''
+isReg = false
+priority = 0
+replaceStr = '搔'
+searchStr = '掻'

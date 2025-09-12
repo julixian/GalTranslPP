@@ -52,7 +52,7 @@ export {
         int bar_width = 40;
         int total_thread_num;
         int current_thread_num;
-        std::chrono::steady_clock::time_point start_time;
+        std::chrono::high_resolution_clock::time_point start_time;
     };
 }
 
@@ -94,7 +94,7 @@ inline void progressbar::update(int ticks, bool removeCurrentLine) {
         fill += todo_char;
     }
 
-    double duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time).count() / 1000.0;
+    double duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
 
     std::string current_bar = std::format("翻译进度 [{}] {}{}{} {}/{} lines [{:.2f}%] in {:.1f}s ({:.2f} lines/s)",
         progress == n_cycles ? "处理完成" : std::format("{}/{}线程并发", current_thread_num, total_thread_num),

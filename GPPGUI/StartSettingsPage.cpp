@@ -11,8 +11,10 @@
 #include "ElaToolTip.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaPushButton.h"
+#include "ElaProgressRing.h"
 #include "ElaComboBox.h"
 #include "ElaMessageBar.h"
+#include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
 
 #include "NJCfgDialog.h"
@@ -93,8 +95,40 @@ void StartSettingsPage::_setupUI()
 	ElaPushButton* outputSetting = new ElaPushButton(buttonArea);
 	outputSetting->setText("文件输出设置");
 	buttonLayout->addWidget(outputSetting);
-	buttonLayout->addStretch();
 	connect(outputSetting, &ElaPushButton::clicked, this, &StartSettingsPage::_onOutputSettingClicked);
+
+	// 线程数
+	ElaText* threadNumLabel = new ElaText(buttonArea);
+	threadNumLabel->setTextPixelSize(16);
+	threadNumLabel->setText("工作线程数:");
+	buttonLayout->addWidget(threadNumLabel);
+	QWidget* threadNumWidget = new QWidget(buttonArea);
+	QHBoxLayout* threadNumLayout = new QHBoxLayout(threadNumWidget);
+	_threadNumRing = new ElaProgressRing(buttonArea);
+	threadNumLayout->addWidget(_threadNumRing);
+	ElaText* speedLabel = new ElaText(buttonArea);
+	speedLabel->setTextPixelSize(12);
+	speedLabel->setText("0 lines/s");
+	threadNumLayout->addWidget(speedLabel);
+	buttonLayout->addWidget(threadNumWidget);
+
+	// 已用时间
+	ElaText* usedTimeLabelText = new ElaText(buttonArea);
+	usedTimeLabelText->setTextPixelSize(14);
+	usedTimeLabelText->setText("已用时间:");
+	buttonLayout->addWidget(usedTimeLabelText);
+	ElaLCDNumber* usedTimeLabel = new ElaLCDNumber(buttonArea);
+	usedTimeLabel->display("00:00:00");
+	buttonLayout->addWidget(usedTimeLabel);
+
+	// 剩余时间
+	ElaText* remainTimeLabelText = new ElaText(buttonArea);
+	remainTimeLabelText->setTextPixelSize(14);
+	remainTimeLabelText->setText("剩余时间:");
+	buttonLayout->addWidget(remainTimeLabelText);
+	_remainTimeLabel = new ElaLCDNumber(buttonArea);
+	_remainTimeLabel->display("00:00:00");
+	buttonLayout->addWidget(_remainTimeLabel);
 
 	// 翻译模式
 	std::string transEngine = _projectConfig["plugins"]["transEngine"].value_or("ForGalJson");
@@ -171,7 +205,13 @@ void StartSettingsPage::_setupUI()
 		{
 			_progressBar->setRange(0, totalSentences);
 			_progressBar->setValue(0);
+			_threadNumRing->setRange(0, totalThreads);
+			_threadNumRing->setValue(0);
 			_progressBar->setFormat("%v/%m lines [%p%]");
+			_startTime = std::chrono::high_resolution_clock::now();
+			usedTimeLabel->display("00:00:00");
+			_remainTimeLabel->display("--:--");
+			_estimator.reset();
 		});
 	connect(_worker, &TranslatorWorker::writeLogSignal, this, [=](QString log)
 		{
@@ -189,15 +229,34 @@ void StartSettingsPage::_setupUI()
 		});
 	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
 		{
-
+			_threadNumRing->setValue(_threadNumRing->getValue() + 1);
 		});
 	connect(_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
 		{
-
+			_threadNumRing->setValue(_threadNumRing->getValue() - 1);
 		});
 	connect(_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
 		{
 			_progressBar->setValue(_progressBar->value() + ticks);
+			std::chrono::seconds elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>
+				(std::chrono::high_resolution_clock::now() - _startTime);
+			usedTimeLabel->display(QString::fromStdString(
+				std::format("{:%T}", elapsedSeconds)
+			));
+			speedLabel->setText(QString::fromStdString(
+				std::format("{:.2f} lines/s", (double)(_progressBar->value()) / (elapsedSeconds.count() + 1))
+			));
+			if (ticks <= 0) {
+				return;
+			}
+			Duration eta = _estimator.updateAndGetEta(_progressBar->value(), _progressBar->maximum());
+			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {
+				_remainTimeLabel->display("--:--");
+				return;
+			}
+			_remainTimeLabel->display(QString::fromStdString(
+				std::format("{:%T}", eta)
+			));
 		});
 
 	addCentralWidget(mainWidget);
@@ -225,6 +284,8 @@ void StartSettingsPage::_onStopTranslatingClicked()
 
 void StartSettingsPage::_workFinished(int exitCode)
 {
+	_threadNumRing->setValue(0);
+	_remainTimeLabel->display("00:00:00");
 	switch (exitCode)
 	{
 	case -2:

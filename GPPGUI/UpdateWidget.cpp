@@ -12,10 +12,10 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->setSizeConstraint(QLayout::SetMaximumSize);
     mainLayout->setContentsMargins(5, 10, 5, 5);
     mainLayout->setSpacing(4);
-    ElaText* updateTitle = new ElaText("2025-09-10更新", 15, this);
+    ElaText* updateTitle = new ElaText("2025-09-12更新", 15, this);
     ElaText* update1 = new ElaText("1、修复GPT字典保存的一个小bug", 13, this);
     update1->setIsWrapAnywhere(true);
-    ElaText* update2 = new ElaText("2、修复优化单文件分割时引出的Rebuild无法命中缓存bug", 13, this);
+    ElaText* update2 = new ElaText("2、修复优化单文件分割时引出的无法命中缓存bug", 13, this);
     update2->setIsWrapAnywhere(true);
     ElaText* update3 = new ElaText("3、新增默认提示词管理功能", 13, this);
     update3->setIsWrapAnywhere(true);
@@ -39,6 +39,12 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     update12->setIsWrapAnywhere(true);
     ElaText* update13 = new ElaText("13、将插件设置和文件输出设置时的阴影效果作用到主窗口上", 13, this);
     update13->setIsWrapAnywhere(true);
+    ElaText* update14 = new ElaText("14、开始翻译界面增加更多信息", 13, this);
+    update14->setIsWrapAnywhere(true);
+    ElaText* update15 = new ElaText("15、修复文件名和文件大小设置错误的bug", 13, this);
+    update15->setIsWrapAnywhere(true);
+    ElaText* update16 = new ElaText("16、尝试为apikey添加流式选项", 13, this);
+    update16->setIsWrapAnywhere(true);
 
     mainLayout->addWidget(updateTitle);
     mainLayout->addWidget(update1);
@@ -54,6 +60,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->addWidget(update11);
     mainLayout->addWidget(update12);
     mainLayout->addWidget(update13);
+    mainLayout->addWidget(update14);
+    mainLayout->addWidget(update15);
+    mainLayout->addWidget(update16);
     mainLayout->addStretch();
 }
 

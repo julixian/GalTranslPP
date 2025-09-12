@@ -107,6 +107,12 @@ void CommonSettingsPage::_setupUI()
 		{
 			if (checked) {
 				std::string value = button->text().toStdString();
+				if (value == "文件名") {
+					value = "name";
+				}
+				else if (value == "文件大小") {
+					value = "size";
+				}
 				insertToml(_projectConfig, "common.sortMethod", value);
 			}
 		});

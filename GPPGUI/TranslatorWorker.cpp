@@ -51,10 +51,8 @@ public:
             _writeLogCallback(_log);
             _log.clear();
         }
-        if (_progress > 0) {
-            _updateBarCallback(_progress);
-            _progress = 0;
-        }
+        _updateBarCallback(_progress);
+        _progress = 0;
     }
 
     GUIController(std::function<void(int, int)> makeBarCallback, std::function<void(const std::string&)> writeLogCallback,

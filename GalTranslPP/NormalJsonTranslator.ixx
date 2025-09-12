@@ -217,47 +217,49 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         int apiTimeOutSecond = configData["backendSpecific"]["OpenAI-Compatible"]["apiTimeout"].value_or(60);
         m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
-        std::vector<TranslationAPI> m_translationAPIs;
-        auto translationAPIs = configData["backendSpecific"]["OpenAI-Compatible"]["apis"].as_array();
-        if (!translationAPIs && transEngine != TransEngine::DumpName && transEngine != TransEngine::Rebuild) {
-            throw std::invalid_argument("OpenAI-Compatible apis not found in config.toml");
-        }
-        translationAPIs->for_each([&](auto&& el)
-            {
-                TranslationAPI translationAPI;
-                if constexpr (toml::is_table<decltype(el)>) {
-                    auto value = el["apikey"].value<std::string>();
-                    if (value.has_value()) {
-                        translationAPI.apikey = *value;
+        // 需要API
+        if (transEngine != TransEngine::DumpName && transEngine != TransEngine::Rebuild) {
+            auto translationAPIs = configData["backendSpecific"]["OpenAI-Compatible"]["apis"].as_array();
+            if (!translationAPIs) {
+                throw std::invalid_argument("OpenAI-Compatible apis not found in config.toml");
+            }
+            std::vector<TranslationAPI> m_translationAPIs;
+            translationAPIs->for_each([&](auto&& el)
+                {
+                    TranslationAPI translationAPI;
+                    if constexpr (toml::is_table<decltype(el)>) {
+                        if (auto value = el["apikey"].value<std::string>()) {
+                            translationAPI.apikey = *value;
+                        }
+                        else if (transEngine != TransEngine::Sakura) {
+                            return;
+                        }
+                        if (auto value = el["apiurl"].value<std::string>()) {
+                            translationAPI.apiurl = cvt2StdApiUrl(value.value());
+                        }
+                        else {
+                            return;
+                        }
+                        if (auto value = el["modelName"].value<std::string>()) {
+                            translationAPI.modelName = *value;
+                        }
+                        else if (transEngine != TransEngine::Sakura) {
+                            return;
+                        }
+                        translationAPI.stream = el["stream"].value_or(false);
+                        translationAPI.lastReportTime = std::chrono::steady_clock::now();
+                        m_translationAPIs.push_back(translationAPI);
                     }
-                    else {
-                        return;
-                    }
-                    value = el["apiurl"].value<std::string>();
-                    if (value.has_value()) {
-                        translationAPI.apiurl = cvt2StdApiUrl(value.value());
-                    }
-                    else {
-                        return;
-                    }
-                    value = el["modelName"].value<std::string>();
-                    if (value.has_value()) {
-                        translationAPI.modelName = *value;
-                    }
-                    else if (transEngine != TransEngine::Sakura) {
-                        return;
-                    }
-                    translationAPI.lastReportTime = std::chrono::steady_clock::now();
-                    m_translationAPIs.push_back(translationAPI);
-                }
-            });
+                });
 
-        if (m_translationAPIs.empty() && transEngine != TransEngine::DumpName && transEngine != TransEngine::Rebuild) {
-            throw std::invalid_argument("找不到可用的 apikey ");
+            if (m_translationAPIs.empty()) {
+                throw std::invalid_argument("config.toml 中找不到可用的 apikey ");
+            }
+            else {
+                m_apiPool.loadAPIs(m_translationAPIs);
+            }
         }
-        else {
-            m_apiPool.loadAPIs(m_translationAPIs);
-        }
+        
 
         // 集中的插件配置
         auto textPostPlugins = configData["plugins"]["textPostPlugins"].as_array();
@@ -399,7 +401,6 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         std::string systemKey;
         std::string userKey;
 
-
         switch (transEngine) {
         case TransEngine::ForGalJson:
             systemKey = "FORGALJSON_SYSTEM";
@@ -429,16 +430,13 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
             throw std::invalid_argument("未知的 TransEngine");
         }
 
-
-        auto value = promptData[systemKey].value<std::string>();
-        if (value.has_value()) {
+        if (auto value = promptData[systemKey].value<std::string>()) {
             m_systemPrompt = *value;
         }
         else {
             throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", systemKey));
         }
-        value = promptData[userKey].value<std::string>();
-        if (value.has_value()) {
+        if (auto value = promptData[userKey].value<std::string>()) {
             m_userPrompt = *value;
         }
         else {
@@ -652,29 +650,101 @@ void NormalJsonTranslator::postProcess(Sentence* se) {
 ApiResponse NormalJsonTranslator::performApiRequest(const json& payload, const TranslationAPI& api, int threadId) {
     ApiResponse apiResponse;
 
-    cpr::Response response = cpr::Post(
-        cpr::Url{ api.apiurl },
-        cpr::Body{ payload.dump() },
-        cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-        cpr::Timeout{ m_apiTimeOutMs }
-    );
+    // 检查是否为流式请求
+    bool isStream = payload.contains("stream") && payload.at("stream").get<bool>();
 
-    apiResponse.statusCode = response.status_code;
-    apiResponse.content = response.text; // 无论成功失败，都记录下响应体
+    if (isStream) {
+        // =================================================
+        // ===========   流式请求处理路径   ================
+        // =================================================
+        std::string concatenatedContent;
+        std::string sseBuffer;
 
-    if (response.status_code == 200) {
-        try {
-            apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
+        // 1. 定义一个符合 cpr::WriteCallback 构造函数要求的 lambda
+        auto callbackLambda = [&](const std::string_view& data, intptr_t userdata) -> bool 
+            {
+                // 将接收到的数据块(string_view)追加到缓冲区(string)
+                sseBuffer.append(data);
+                size_t pos;
+                while ((pos = sseBuffer.find('\n')) != std::string::npos) {
+                    std::string line = sseBuffer.substr(0, pos);
+                    sseBuffer.erase(0, pos + 1);
+
+                    if (line.rfind("data: ", 0) == 0) {
+                        std::string jsonDataStr = line.substr(6);
+                        if (jsonDataStr == "[DONE]") {
+                            return true;
+                        }
+                        try {
+                            json chunk = json::parse(jsonDataStr);
+                            if (!chunk["choices"].empty() && chunk["choices"][0].contains("delta") && chunk["choices"][0]["delta"].contains("content")) {
+                                auto content_node = chunk["choices"][0]["delta"]["content"];
+                                if (content_node.is_string()) {
+                                    concatenatedContent += content_node.get<std::string>();
+                                }
+                            }
+                        }
+                        catch (const json::exception&) {
+
+                        }
+                    }
+                }
+                // 继续接收数据
+                return !m_controller->shouldStop();
+            };
+
+        // 2. 使用上面定义的 lambda 来构造一个 cpr::WriteCallback 类的实例
+        cpr::WriteCallback writeCallbackInstance(callbackLambda);
+
+        // 3. 将该实例传递给 cpr::Post
+        cpr::Response response = cpr::Post(
+            cpr::Url{ api.apiurl },
+            cpr::Body{ payload.dump() },
+            cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
+            cpr::Timeout{ m_apiTimeOutMs },
+            writeCallbackInstance // 传递类的实例
+        );
+
+        apiResponse.statusCode = response.status_code;
+        if (response.status_code == 200) {
             apiResponse.success = true;
+            apiResponse.content = concatenatedContent;
         }
-        catch (const json::exception& e) {
-            m_logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
+        else {
             apiResponse.success = false;
+            apiResponse.content = response.text;
+            m_logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
         }
     }
     else {
-        m_logger->error("[线程 {}] API 请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
-        apiResponse.success = false;
+        // =================================================
+        // =========   非流式请求处理路径   =========
+        // =================================================
+        cpr::Response response = cpr::Post(
+            cpr::Url{ api.apiurl },
+            cpr::Body{ payload.dump() },
+            cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
+            cpr::Timeout{ m_apiTimeOutMs }
+        );
+
+        apiResponse.statusCode = response.status_code;
+        apiResponse.content = response.text; // 先记录原始响应体
+
+        if (response.status_code == 200) {
+            try {
+                // 解析完整的JSON响应
+                apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
+                apiResponse.success = true;
+            }
+            catch (const json::exception& e) {
+                m_logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
+                apiResponse.success = false;
+            }
+        }
+        else {
+            m_logger->error("[线程 {}] API 非流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
+            apiResponse.success = false;
+        }
     }
 
     return apiResponse;
@@ -795,6 +865,9 @@ bool NormalJsonTranslator::translateBatchWithRetry(std::vector<Sentence*>& batch
         TranslationAPI currentAPI = optAPI.value();
 
         json payload = { {"model", currentAPI.modelName}, {"messages", messages} };
+        if (currentAPI.stream) {
+            payload["stream"] = true;
+        }
 
         ApiResponse response = performApiRequest(payload, currentAPI, threadId);
         if (!response.success) {
@@ -1088,6 +1161,28 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
                 }
                 if (PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())) {
                     cachePaths.push_back(entry.path());
+                }
+            }
+
+            if (fs::exists(cachePath)) {
+                std::lock_guard<std::mutex> lock(m_cacheMutex);
+                try {
+                    ifs.open(cachePath);
+                    json cacheJsonList = json::parse(ifs);
+                    ifs.close();
+                    m_logger->debug("[线程 {}] 从 {} 加载了 {} 条缓存记录。", threadId, wide2Ascii(cachePath), cacheMap.size());
+
+                    for (size_t i = 0; i < cacheJsonList.size(); ++i) {
+                        const auto& item = cacheJsonList[i];
+                        std::string prevText = "None", currentText, nextText = "None";
+                        currentText = item.value("name", "") + item.value("pre_processed_text", "");
+                        if (i > 0) prevText = cacheJsonList[i - 1].value("name", "") + cacheJsonList[i - 1].value("pre_processed_text", "");
+                        if (i < cacheJsonList.size() - 1) nextText = cacheJsonList[i + 1].value("name", "") + cacheJsonList[i + 1].value("pre_processed_text", "");
+                        cacheMap.insert(std::make_pair(prevText + currentText + nextText, item));
+                    }
+                }
+                catch (const json::exception& e) {
+                    throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cachePath), e.what()));
                 }
             }
         }

@@ -6,6 +6,7 @@ apiTimeout = 60 # 请求超时时间，单位秒
   apikey = "sk-example-key"
   apiurl = "https://openai-example.com" # 请求地址，加不加/v1都行
   modelName = "modelName"
+  stream = false
 
 [plugins]
 filePlugin = "NormalJson" # 用于支持更多格式: NormalJson, Epub, MtoolJson(尚未实现)...

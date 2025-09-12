@@ -4,7 +4,6 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QButtonGroup>
 
 #include "ElaText.h"
@@ -14,6 +13,7 @@
 #include "ElaRadioButton.h"
 #include "ElaIconButton.h"
 #include "ElaSpinBox.h"
+#include "ElaToggleSwitch.h"
 #include "ElaToolTip.h"
 #include "ElaIcon.h"
 
@@ -35,7 +35,7 @@ void APISettingsPage::apply2Config()
 {
     toml::array apiArray;
     for (const auto& apiRow : _apiRows) {
-        if (apiRow.keyEdit->text().isEmpty() || apiRow.urlEdit->text().isEmpty())
+        if (apiRow.urlEdit->text().isEmpty())
         {
             continue;
         }
@@ -43,6 +43,7 @@ void APISettingsPage::apply2Config()
         apiTable.insert("apikey", apiRow.keyEdit->text().toStdString());
         apiTable.insert("apiurl", apiRow.urlEdit->text().toStdString());
         apiTable.insert("modelName", apiRow.modelEdit->text().toStdString());
+        apiTable.insert("stream", apiRow.streamSwitch->getIsToggled());
         apiArray.push_back(apiTable);
     }
     insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apis", apiArray);
@@ -68,7 +69,8 @@ void APISettingsPage::_setupUI()
             std::string key = (*tbl)["apikey"].value_or("");
             std::string url = (*tbl)["apiurl"].value_or("");
             std::string model = (*tbl)["modelName"].value_or("");
-            ElaScrollPageArea* newRowWidget = _createApiInputRowWidget(QString::fromStdString(key), QString::fromStdString(url), QString::fromStdString(model));
+            bool stream = (*tbl)["stream"].value_or(false);
+            ElaScrollPageArea* newRowWidget = _createApiInputRowWidget(QString::fromStdString(key), QString::fromStdString(url), QString::fromStdString(model), stream);
             _mainLayout->addWidget(newRowWidget);
         }
         if (apis->size() == 0) {
@@ -152,7 +154,7 @@ void APISettingsPage::_addApiInputRow()
 }
 
 // 【新增】这个函数创建一整行带边框和删除按钮的UI
-ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const QString& key, const QString& url, const QString& model)
+ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const QString& key, const QString& url, const QString& model, bool stream)
 {
     // 1. 创建带边框的容器 ElaScrollPageArea
     ElaScrollPageArea* container = new ElaScrollPageArea(this);
@@ -215,15 +217,31 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const QString& key,
     modelLayout->addWidget(modelEdit);
     formLayout->addWidget(modelContainer);
 
-    // 4. 创建右侧的删除按钮
+    // 4. 创建右侧的删除按钮 和 流式开关
+    QWidget* rightContainer = new QWidget(container);
+    QVBoxLayout* rightLayout = new QVBoxLayout(rightContainer);
+    rightLayout->addStretch();
+
     ElaIconButton* deleteButton = new ElaIconButton(ElaIconType::Trash, this);
     // 使用 QObject::setProperty 来给按钮附加它所属容器的指针
     deleteButton->setProperty("containerWidget", QVariant::fromValue<QWidget*>(container));
+    rightLayout->addWidget(deleteButton);
     connect(deleteButton, &ElaIconButton::clicked, this, &APISettingsPage::_onDeleteApiRow);
+    QWidget* streamContainer = new QWidget(rightContainer);
+    QHBoxLayout* streamLayout = new QHBoxLayout(streamContainer);
+    streamLayout->addStretch();
+    ElaText* streamLabel = new ElaText("流式", streamContainer);
+    streamLabel->setTextPixelSize(13);
+    streamLayout->addWidget(streamLabel);
+    ElaToggleSwitch* streamSwitch = new ElaToggleSwitch(streamContainer);
+    streamSwitch->setIsToggled(stream);
+    streamLayout->addWidget(streamSwitch);
+    rightLayout->addWidget(streamContainer);
+    rightLayout->addStretch();
 
     // 5. 组合布局
     containerLayout->addWidget(formContainer);
-    containerLayout->addWidget(deleteButton, 0, Qt::AlignRight);
+    containerLayout->addWidget(rightContainer, 0, Qt::AlignRight);
 
     // 6. 存储这组控件的引用
     ApiRowControls newRowControls;
@@ -231,6 +249,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const QString& key,
     newRowControls.keyEdit = keyEdit;
     newRowControls.urlEdit = urlEdit;
     newRowControls.modelEdit = modelEdit;
+    newRowControls.streamSwitch = streamSwitch;
     _apiRows.append(newRowControls);
 
     return container;

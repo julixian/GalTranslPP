@@ -6,14 +6,13 @@ module;
 #include <unicode/regex.h>
 #include <unicode/unistr.h>
 
-import std;
-import Tool;
 export module Dictionary;
+import Tool;
 namespace fs = std::filesystem;
 
 export {
 
-    enum class ConditionTarget { Name, OrigText, PreproText, PretransText, TransPreview };
+    enum class CachePart { Name, OrigText, PreproText, PretransText, TransPreview };
 
     struct GptTabEntry {
         int priority = 0;
@@ -43,7 +42,7 @@ export {
 
         std::string generatePrompt(const std::vector<Sentence*>& batch, TransEngine transEngine);
 
-        std::string doReplace(const Sentence* se, ConditionTarget targetToModify);
+        std::string doReplace(const Sentence* se, CachePart targetToModify);
 
         std::string checkDicUse(const Sentence* sentence);
     };
@@ -60,7 +59,7 @@ export {
         // 条件字典相关
         bool isConditional = false;
         std::shared_ptr<icu::RegexPattern> conditionReg;
-        ConditionTarget conditionTarget;
+        CachePart conditionTarget;
     };
 
     class NormalDictionary {
@@ -77,28 +76,28 @@ export {
 
         void sort();
 
-        std::string doReplace(const Sentence* sentence, ConditionTarget targetToModify);
+        std::string doReplace(const Sentence* sentence, CachePart targetToModify);
     };
 }
 
 
 module :private;
 
-std::string chooseString(const Sentence* sentence, ConditionTarget tar) {
+std::string chooseString(const Sentence* sentence, CachePart tar) {
     switch (tar) {
-    case ConditionTarget::Name:
+    case CachePart::Name:
         return sentence->name;
         break;
-    case ConditionTarget::OrigText:
+    case CachePart::OrigText:
         return sentence->original_text;
         break;
-    case ConditionTarget::PreproText:
+    case CachePart::PreproText:
         return sentence->pre_processed_text;
         break;
-    case ConditionTarget::PretransText:
+    case CachePart::PretransText:
         return sentence->pre_translated_text;
         break;
-    case ConditionTarget::TransPreview:
+    case CachePart::TransPreview:
         return sentence->translated_preview;
         break;
     default:
@@ -250,7 +249,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
     m_logger->info("已加载 GPT 字典: {}, 共 {} 个词条", wide2Ascii(filePath.filename()), count);
 }
 
-std::string GptDictionary::doReplace(const Sentence* se, ConditionTarget targetToModify) {
+std::string GptDictionary::doReplace(const Sentence* se, CachePart targetToModify) {
     std::string textToModify = chooseString(se, targetToModify);
 
     if (textToModify.empty()) {
@@ -389,11 +388,11 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                     }
 
                     std::string conditionTarget = el["conditionTarget"].value_or("");
-                    if (conditionTarget == "name") entry.conditionTarget = ConditionTarget::Name;
-                    else if (conditionTarget == "orig_text") entry.conditionTarget = ConditionTarget::OrigText;
-                    else if (conditionTarget == "preproc_text") entry.conditionTarget = ConditionTarget::PreproText;
-                    else if (conditionTarget == "pretrans_text") entry.conditionTarget = ConditionTarget::PretransText;
-                    else if (conditionTarget == "trans_preview") entry.conditionTarget = ConditionTarget::TransPreview;
+                    if (conditionTarget == "name") entry.conditionTarget = CachePart::Name;
+                    else if (conditionTarget == "orig_text") entry.conditionTarget = CachePart::OrigText;
+                    else if (conditionTarget == "preproc_text") entry.conditionTarget = CachePart::PreproText;
+                    else if (conditionTarget == "pretrans_text") entry.conditionTarget = CachePart::PretransText;
+                    else if (conditionTarget == "trans_preview") entry.conditionTarget = CachePart::TransPreview;
                     else {
                         throw std::invalid_argument(std::format("Normal 字典文件格式错误(conditionTarget 无效): {}  ——  {}",
                             wide2Ascii(filePath), conditionTarget));
@@ -436,7 +435,7 @@ void NormalDictionary::sort() {
         });
 }
 
-std::string NormalDictionary::doReplace(const Sentence* sentence, ConditionTarget targetToModify) {
+std::string NormalDictionary::doReplace(const Sentence* sentence, CachePart targetToModify) {
     std::string textToModify = chooseString(sentence, targetToModify);
 
     if (textToModify.empty()) {

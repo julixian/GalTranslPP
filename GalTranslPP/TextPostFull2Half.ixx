@@ -5,10 +5,9 @@ module;
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
 
-import std;
+export module TextPostFull2Half;
 import Tool;
 export import IPlugin;
-export module TextPostFull2Half;
 namespace fs = std::filesystem;
 
 export {
@@ -36,10 +35,10 @@ TextPostFull2Half::TextPostFull2Half(const fs::path& projectDir, std::shared_ptr
 {
     std::ifstream ifs;
     try {
-        ifs.open(projectDir / "config.toml");
+        ifs.open(projectDir / L"config.toml");
         auto projectConfig = toml::parse(ifs);
         ifs.close();
-        ifs.open(pluginConfigsPath / "textPostPlugins/TextPostFull2Half.toml");
+        ifs.open(pluginConfigsPath / L"textPostPlugins/TextPostFull2Half.toml");
         auto pluginConfig = toml::parse(ifs);
         ifs.close();
 

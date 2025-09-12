@@ -4,7 +4,6 @@ module;
 
 module IPlugin;
 
-import std;
 import Tool;
 import TextPostFull2Half;
 import TextLinebreakFix;

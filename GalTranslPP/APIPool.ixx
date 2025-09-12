@@ -2,9 +2,8 @@ module;
 
 #include <spdlog/spdlog.h>
 
-import std;
-import Tool;
 export module APIPool;
+import Tool;
 
 export {
 

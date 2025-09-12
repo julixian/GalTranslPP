@@ -20,12 +20,12 @@ transEngine = "ForGalJson"
 # DumpName: 生成 人名替换表.toml 以供替换人名
 # GenDict: 借助AI自动生成术语表，使用 GENDIC_SYSTEM 和 GENDIC_PROMPT 作为提示词
 # Rebuild: 即使problem或pre_jp中包含retranslKey也不会重翻，只根据缓存翻译重建结果
-# PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去程序根目录寻找
+# PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去 BaseConfig 下寻找
 
 textPostPlugins = [ 
   #"TextLinebreakFix"
-  # 其它什么的插件，谁知道会不会有呢
-] # 文本处理插件列表，可以设置多个，按顺序执行 TextLinebreakFix, ...
+  #"TextPostFull2Half.toml"
+] # 文本处理插件列表，可以设置多个，按顺序执行
 
   [plugins.NormalJson]
   output_with_src = true
@@ -35,6 +35,9 @@ textPostPlugins = [
 
   [plugins.TextLinebreakFix]
   "换行模式" = "优先标点"
+
+  [plugins.TextPostFull2Half]
+  "反向替换" = false  # false=全角->半角，true=半角->全角
 
 [common]
 numPerRequestTranslate = 8 # 单次请求翻译句子数量，推荐值 < 15

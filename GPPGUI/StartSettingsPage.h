@@ -35,14 +35,14 @@ public:
         : alpha(smoothingFactor), avgSpeed(0.0), lastProgress(0.0), isFirstUpdate(true) {
     }
 
-    Duration updateAndGetEta(double currentProgress, double totalProgress) {
+    std::pair<double, Duration> updateAndGetSpeedWithEta(double currentProgress, double totalProgress) {
         TimePoint currentTime = Clock::now();
 
         if (isFirstUpdate) {
             lastTime = currentTime;
             lastProgress = currentProgress;
             isFirstUpdate = false;
-            return Duration(std::numeric_limits<double>::infinity());
+            return std::make_pair(0.0, Duration(std::numeric_limits<double>::infinity()));
         }
 
         Duration deltaTime = currentTime - lastTime;
@@ -62,11 +62,11 @@ public:
         lastProgress = currentProgress;
 
         if (avgSpeed <= 1e-9) {
-            return Duration(std::numeric_limits<double>::infinity());
+            return std::make_pair(0.0, Duration(std::numeric_limits<double>::infinity()));
         }
 
         double remainingWork = totalProgress - currentProgress;
-        return Duration(remainingWork / avgSpeed);
+        return std::make_pair(avgSpeed, Duration(remainingWork / avgSpeed));
     }
 
     void reset()

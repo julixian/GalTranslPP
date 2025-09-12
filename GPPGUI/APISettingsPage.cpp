@@ -180,7 +180,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const QString& key,
         keyEdit->setText(key);
     }
     else {
-        keyEdit->setPlaceholderText("请输入 API Key");
+        keyEdit->setPlaceholderText("请输入 API Key(Sakura引擎可不填)");
     }
     apiKeyLayout->addWidget(keyEdit);
     formLayout->addWidget(apiKeyContainer);

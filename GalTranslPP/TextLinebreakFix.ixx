@@ -3,10 +3,9 @@ module;
 #include <spdlog/spdlog.h>
 #include <toml++/toml.hpp>
 
-import std;
+export module TextLinebreakFix;
 import Tool;
 import IPlugin;
-export module TextLinebreakFix;
 namespace fs = std::filesystem;
 
 export {

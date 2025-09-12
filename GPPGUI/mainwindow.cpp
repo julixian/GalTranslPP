@@ -143,7 +143,7 @@ void MainWindow::initWindow()
     connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, "设置"), &QAction::triggered, this, [=]() {
         navigation(_settingKey);
         });
-    connect(appBarMenu->addElaIconAction(ElaIconType::MoonStars, "更改项目主题"), &QAction::triggered, this, [=]() {
+    connect(appBarMenu->addElaIconAction(ElaIconType::MoonStars, "更改程序主题"), &QAction::triggered, this, [=]() {
         eTheme->setThemeMode(eTheme->getThemeMode() == ElaThemeType::Light ? ElaThemeType::Dark : ElaThemeType::Light);
         });
     setCustomMenu(appBarMenu);

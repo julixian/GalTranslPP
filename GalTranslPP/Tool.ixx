@@ -11,15 +11,15 @@ module;
 #include <unicode/uscript.h>
 #include <zip.h>
 
-export import std;
 export module Tool;
+export import std;
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 export {
 
-    std::string GPPVERSION = "0.1.5";
+    std::string GPPVERSION = "1.0.0";
 
     fs::path pluginConfigsPath = L"BaseConfig/pluginConfigs";
 

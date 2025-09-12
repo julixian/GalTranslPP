@@ -4,10 +4,9 @@
 #include <cld3/nnet_language_identifier.h>
 #include <cld3/language_identifier_features.h>
 
-import std;
+export module ProblemAnalyzer;
 import Tool;
 import Dictionary;
-export module ProblemAnalyzer;
 
 export {
 
@@ -51,8 +50,13 @@ export {
 module :private;
 
 void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const std::string& targetLang) {
-    if (sentence->translated_preview.empty() && !sentence->pre_processed_text.empty()) {
-        sentence->problem = "翻译为空";
+    if (sentence->translated_preview.empty()) {
+        if (!sentence->pre_processed_text.empty() && !sentence->pre_translated_text.empty()) {
+            sentence->problem = "翻译为空";
+        }
+        else {
+            sentence->problem.clear();
+        }
         return;
     }
     if (sentence->translated_preview.starts_with("(Failed to translate)")) {

@@ -8,12 +8,11 @@ module;
 #include <toml++/toml.hpp>
 #include <cpr/cpr.h>
 
-import std;
+export module DictionaryGenerator;
 import Tool;
 import APIPool;
 import Dictionary;
 import ITranslator;
-export module DictionaryGenerator;
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -84,9 +83,9 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             se.name = item.value("name", "");
             se.original_text = item.value("message", "");
             if (usePreDictInName) {
-                se.name = preDict.doReplace(&se, ConditionTarget::Name);
+                se.name = preDict.doReplace(&se, CachePart::Name);
             }
-            se.original_text = preDict.doReplace(&se, ConditionTarget::OrigText);
+            se.original_text = preDict.doReplace(&se, CachePart::OrigText);
             if (!se.name.empty()) {
                 m_nameSet.insert(se.name);
                 m_wordCounter[se.name] += 2;

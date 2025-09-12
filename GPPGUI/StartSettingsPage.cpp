@@ -243,13 +243,15 @@ void StartSettingsPage::_setupUI()
 			usedTimeLabel->display(QString::fromStdString(
 				std::format("{:%T}", elapsedSeconds)
 			));
-			speedLabel->setText(QString::fromStdString(
-				std::format("{:.2f} lines/s", (double)(_progressBar->value()) / (elapsedSeconds.count() + 1))
-			));
 			if (ticks <= 0) {
 				return;
 			}
-			Duration eta = _estimator.updateAndGetEta(_progressBar->value(), _progressBar->maximum());
+			auto etaWithSpeed = _estimator.updateAndGetSpeedWithEta(_progressBar->value(), _progressBar->maximum());
+			const double& speed = etaWithSpeed.first;
+			const Duration& eta = etaWithSpeed.second;
+			speedLabel->setText(QString::fromStdString(
+				std::format("{:.2f} lines/s", speed == 0.0 ? (double)_progressBar->maximum() / (elapsedSeconds.count() + 1) : speed)
+			));
 			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {
 				_remainTimeLabel->display("--:--");
 				return;
@@ -269,6 +271,7 @@ void StartSettingsPage::_onStartTranslatingClicked()
 
 	_startTranslateButton->setEnabled(false);
 	_progressBar->setValue(0);
+	insertToml(_projectConfig, "GUIConfig.inRunning", true);
 
 	Q_EMIT startWork();
 	_transEngine = QString::fromStdString(_projectConfig["plugins"]["transEngine"].value_or(std::string{}));
@@ -286,6 +289,7 @@ void StartSettingsPage::_workFinished(int exitCode)
 {
 	_threadNumRing->setValue(0);
 	_remainTimeLabel->display("00:00:00");
+	insertToml(_projectConfig, "GUIConfig.inRunning", false);
 	switch (exitCode)
 	{
 	case -2:

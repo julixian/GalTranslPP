@@ -4,7 +4,6 @@ module;
 #include <toml++/toml.hpp>
 module ITranslator;
 
-import std;
 import Tool;
 import NormalJsonTranslator;
 import EpubTranslator;

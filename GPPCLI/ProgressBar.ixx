@@ -2,25 +2,24 @@ module;
 
 #include <chrono>
 
-import std;
-import Tool;
 export module ProgressBar;
+import Tool;
 
 export {
-    class progressbar {
+    class ProgressBar {
 
     public:
         // default destructor
-        ~progressbar() = default;
+        ~ProgressBar() = default;
 
         // delete everything else
-        progressbar(progressbar const&) = delete;
-        progressbar& operator=(progressbar const&) = delete;
-        progressbar(progressbar&&) = delete;
-        progressbar& operator=(progressbar&&) = delete;
+        ProgressBar(ProgressBar const&) = delete;
+        ProgressBar& operator=(ProgressBar const&) = delete;
+        ProgressBar(ProgressBar&&) = delete;
+        ProgressBar& operator=(ProgressBar&&) = delete;
 
         // 句子数量 并发线程数量
-        inline progressbar(int n, int t);
+        inline ProgressBar(int n, int t);
 
         // chose your style
         inline void set_done_char(const std::string& sym) { done_char = sym; }
@@ -33,10 +32,12 @@ export {
 
         void add_thread_num() {
             current_thread_num++;
+            update(0, true);
         }
 
         void reduce_thread_num() {
             current_thread_num--;
+            update(0, true);
         }
 
     private:
@@ -56,7 +57,7 @@ export {
     };
 }
 
-inline progressbar::progressbar(int n, int t) :
+inline ProgressBar::ProgressBar(int n, int t) :
     progress(0),
     n_cycles(n),
     total_thread_num(t),
@@ -69,10 +70,10 @@ inline progressbar::progressbar(int n, int t) :
     start_time = std::chrono::steady_clock::now();
 }
 
-inline void progressbar::update(int ticks, bool removeCurrentLine) {
+inline void ProgressBar::update(int ticks, bool removeCurrentLine) {
 
     if (n_cycles == 0) throw std::runtime_error(
-        "progressbar::update: number of cycles not set");
+        "ProgressBar::update: number of cycles not set");
 
     int consoleWidth = getConsoleWidth();
 

@@ -6,10 +6,9 @@ module;
 #include <zip.h>
 #include <gumbo.h>
 
-import std;
+export module EpubTranslator;
 import Tool;
 import NormalJsonTranslator;
-export module EpubTranslator;
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -117,7 +116,7 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, TransEngine transEngi
 
 void EpubTranslator::run()
 {
-    m_logger->info("GalTranslPP EpubTranlator 启动...");
+    m_logger->info("GalTransl++ EpubTranlator 启动...");
 
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
@@ -144,7 +143,7 @@ void EpubTranslator::run()
     for (const auto& epubPath : epubFiles) {
         fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
         fs::path bookUnpackDir = m_tempUnpackDir / relEpubPath.parent_path() / relEpubPath.stem();
-        m_logger->info("解压 {} 到 {}", wide2Ascii(epubPath), wide2Ascii(bookUnpackDir));
+        m_logger->debug("解压 {} 到 {}", wide2Ascii(epubPath), wide2Ascii(bookUnpackDir));
         fs::create_directories(bookUnpackDir);
 
         int error = 0;
@@ -193,6 +192,7 @@ void EpubTranslator::run()
 
                 if (sentences.empty()) continue;
 
+                // 创建扁平化文件名
                 fs::path relativePath = fs::relative(htmlEntry.path(), bookDirPath);
                 std::string flatFileNameStr = bookName + "_" + wide2Ascii(relativePath);
                 std::replace(flatFileNameStr.begin(), flatFileNameStr.end(), '/', '_');
@@ -203,6 +203,10 @@ void EpubTranslator::run()
                 m_flatToOriginalPathMap[wide2Ascii(flatJsonFileName)] = htmlEntry.path();
 
                 // 存储元数据
+                std::ranges::sort(sentences, [](const auto& a, const auto& b)
+                    {
+                        return a.second.offset < b.second.offset;
+                    });
                 std::vector<EpubTextNodeInfo> metadata;
                 json j = json::array();
                 for (const auto& p : sentences) {
@@ -248,23 +252,6 @@ void EpubTranslator::run()
             throw std::runtime_error(std::format("元数据和翻译数据数量不匹配，无法重组: {}", wide2Ascii(rebuiltHtmlPath)));
         }
 
-        //for (int i = (int)metadata.size() - 1; i >= 0; --i) {
-        //    const auto& meta = metadata[i];
-        //    std::string translatedText = translatedData[i].value("message", "");
-        //    /*if (originalContent.substr(meta.offset, meta.length) != meta.original_text) {
-        //        m_logger->warn("文件 {} 在偏移 {} 处的原始文本不匹配，跳过此句替换。原本: {}, 翻译: {}， 子串: {}",
-        //            wide2Ascii(rebuiltHtmlPath), meta.offset, meta.original_text, translatedText, originalContent.substr(meta.offset, meta.length));
-        //        continue;
-        //    }*/
-        //    std::string replacement = m_bilingualOutput ? 
-        //        (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale + "em;\">" + originalContent.substr(meta.offset, meta.length) + "</span>") 
-        //        : translatedText;
-        //    originalContent.replace(meta.offset, meta.length, replacement);
-        //}
-
-        //std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
-        //ofs << originalContent;
-
         std::string newContent;
         newContent.reserve(originalContent.length() * 2);
         size_t lastPos = 0;
@@ -295,7 +282,7 @@ void EpubTranslator::run()
 
         fs::path outputEpubPath = m_epubOutputDir / relEpubPath;
         createParent(outputEpubPath);
-        m_logger->info("正在打包 {}", wide2Ascii(outputEpubPath));
+        m_logger->debug("正在打包 {}", wide2Ascii(outputEpubPath));
 
         int error = 0;
         zip* za = zip_open(wide2Ascii(outputEpubPath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &error);

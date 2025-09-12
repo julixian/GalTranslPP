@@ -70,6 +70,11 @@ void OtherSettingsPage::_setupUI()
 	moveButton->setText("移动项目");
 	connect(moveButton, &ElaPushButton::clicked, this, [=]()
 		{
+			if (_projectConfig["GUIConfig"]["isRunning"].value_or(false)) {
+				ElaMessageBar::warning(ElaMessageBarType::TopRight, "移动失败", "项目仍在运行中，无法移动", 3000);
+				return;
+			}
+
 			QString newProjectParentPath = QFileDialog::getExistingDirectory(this, "请选择要移动到的文件夹", QDir::currentPath() + "/Projects");
 			if (newProjectParentPath.isEmpty()) {
 				return;

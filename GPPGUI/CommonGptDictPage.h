@@ -49,6 +49,7 @@ private:
     std::function<void()> _applyFunc;
 
     QList<GptTabEntry> _gptTabEntries;
+    QWidget* _mainWindow;
 };
 
 #endif // COMMONGPTDICTPAGE_H

@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
                 translator->run();
             }
 
+            std::cout << std::endl;
             spdlog::info("项目 '{}' 处理完成！", wide2Ascii(currentProjectPath.wstring()));
 
         }

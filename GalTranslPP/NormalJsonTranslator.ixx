@@ -134,7 +134,7 @@ export {
 
         virtual ~NormalJsonTranslator()
         {
-            std::cout << std::endl;
+            m_logger->info("所有任务已完成！NormalJsonTranlator结束。");
         }
 
         virtual void run() override;
@@ -845,7 +845,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
             throw std::runtime_error("不支持的 TransEngine 用于构建输入");
         }
 
-        m_logger->info("[线程 {}] 开始翻译\nProblems:\n{}\nDict:\n{}\ninputBlock:\n{}", threadId, inputProblems, glossary, inputBlock);
+        m_logger->info("[线程 {}] [文件 {}] 开始翻译\nProblems:\n{}\nDict:\n{}\ninputBlock:\n{}", threadId, wide2Ascii(relInputPath.filename()), inputProblems, glossary, inputBlock);
         std::string promptReq = m_userPrompt;
         promptReq = boost::regex_replace(promptReq, boost::regex(R"(\[Problem Description\])"), inputProblems);
         promptReq = boost::regex_replace(promptReq, boost::regex(R"(\[Input\])"), inputBlock);
@@ -890,7 +890,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
             }
             // key 没有这个模型
             else if (lowerErrorMsg.find("no available") != std::string::npos) {
-                m_logger->error("[线程 {}] API Key [{}] 没有 [{}] 模型，将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
+                m_logger->error("[线程 {}] API Key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
                 m_apiPool.reportProblem(currentAPI);
                 continue;
             }
@@ -1505,7 +1505,8 @@ void NormalJsonTranslator::run() {
     }
 
     if (m_transEngine == TransEngine::GenDict) {
-        DictionaryGenerator generator(m_controller, m_apiPool, ascii2Wide(m_dictDir), m_systemPrompt, m_userPrompt, m_threadsNum, m_apiTimeOutMs);
+        DictionaryGenerator generator(m_controller, m_apiPool, ascii2Wide(m_dictDir), m_systemPrompt, m_userPrompt, m_apiStrategy,
+            m_maxRetries, m_threadsNum, m_apiTimeOutMs, m_checkQuota);
         generator.setLogger(m_logger);
         fs::path outputFilePath = m_projectDir / L"项目GPT字典-生成.toml";
         generator.generate(m_inputDir, outputFilePath, m_preDictionary, m_usePreDictInName);
@@ -1716,17 +1717,13 @@ void NormalJsonTranslator::run() {
             }
             problemOverviewStr += std::format("{}. {}  |  {}\n", problemCount++, problem, fileStr);
         }
-        problemOverviewStr += "问题概览结束\n```\n";
-        m_logger->error("{}", problemOverviewStr);
+        m_logger->error("{}问题概览结束\n```\n", problemOverviewStr);
     }
 
     fs::remove_all(m_inputCacheDir);
     fs::remove_all(m_outputCacheDir);
     if (m_transEngine == TransEngine::Rebuild && !m_rebuildSuccess) {
         m_logger->critical("重建失败，请检查log以定位问题");
-    }
-    else {
-        m_logger->info("所有任务已完成！NormalJsonTranlator结束。");
     }
 }
 

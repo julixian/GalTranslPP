@@ -3,24 +3,29 @@
 #include "PluginItemWidget.h"
 
 #include <QHBoxLayout>
+#include <QMap>
 #include "ElaText.h"
 #include "ElaToggleSwitch.h"
-#include "ElaIcon.h"
+#include "ElaToolTip.h"
 #include "ElaIconButton.h"
 
 PluginItemWidget::PluginItemWidget(const QString& pluginName, QWidget* parent)
     : ElaScrollPageArea(parent)
 {
-    setFixedHeight(60);
-
+    static const QMap<QString, QString> toolTipMap =
+    {
+        { "TextPostFull2Half", "全角半角转换插件" },
+        { "TextLinebreakFix", "换行修复插件" },
+    };
     // 主水平布局
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
-    mainLayout->setContentsMargins(10, 0, 10, 0);
 
     // 插件名称
     _pluginNameLabel = new ElaText(pluginName, this);
     _pluginNameLabel->setTextPixelSize(16);
     _pluginNameLabel->setWordWrap(false);
+    ElaToolTip* pluginToolTip = new ElaToolTip(_pluginNameLabel);
+    pluginToolTip->setToolTip(toolTipMap[pluginName]);
 
     // 新增设置按钮
     _settingsButton = new ElaIconButton(ElaIconType::Gear, this);
@@ -63,12 +68,12 @@ QString PluginItemWidget::getPluginName() const
     return _pluginNameLabel->text();
 }
 
-bool PluginItemWidget::isEnabled() const
+bool PluginItemWidget::isToggled() const
 {
     return _enableSwitch->getIsToggled();
 }
 
-void PluginItemWidget::setEnabled(bool enabled)
+void PluginItemWidget::setIsToggled(bool enabled)
 {
     _enableSwitch->setIsToggled(enabled);
 }

@@ -36,6 +36,7 @@ private:
     std::function<void()> _applyFunc;
 
     QList<NormalTabEntry> _normalTabEntries;
+    QWidget* _mainWindow;
 };
 
 #endif // COMMONPOSTDICTPAGE_H

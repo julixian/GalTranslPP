@@ -56,7 +56,7 @@ void OtherSettingsPage::_setupUI()
 	ElaLineEdit* pathEdit = new ElaLineEdit(pathArea);
 	pathEdit->setReadOnly(true);
 	pathEdit->setText(QString(_projectDir.wstring()));
-	pathEdit->setFixedWidth(400);
+	pathEdit->setFixedWidth(550);
 	pathLayout->addWidget(pathEdit);
 	ElaPushButton* openButton = new ElaPushButton(pathArea);
 	openButton->setText("打开文件夹");
@@ -110,7 +110,7 @@ void OtherSettingsPage::_setupUI()
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			Q_EMIT saveConfigSignal();
-			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", QString(_projectDir.filename().wstring()) + " 项目配置已保存", 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "项目 " + QString(_projectDir.filename().wstring()) + " 配置信息已保存", 3000);
 		});
 	saveLayout->addWidget(saveButton);
 	mainLayout->addWidget(saveArea);

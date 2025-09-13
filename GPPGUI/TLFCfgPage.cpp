@@ -1,8 +1,7 @@
-#include "TLFCfgDialog.h"
+#include "TLFCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
-#include <QDebug>
 
 #include "ElaScrollPageArea.h"
 #include "ElaSpinBox.h"
@@ -12,23 +11,21 @@
 
 import Tool;
 
-TLFCfgDialog::TLFCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaContentDialog(parent), _projectConfig(projectConfig)
+void TLFCfgPage::apply2Config()
 {
-	setWindowTitle("TextLinebreakFix Configuration");
 
-	setLeftButtonText("Cancel");
-	setMiddleButtonText("Reset");
-	setRightButtonText("OK");
+}
 
-	connect(this, &TLFCfgDialog::rightButtonClicked, this, &TLFCfgDialog::onRightButtonClicked);
-	connect(this, &TLFCfgDialog::middleButtonClicked, this, &TLFCfgDialog::onMiddleButtonClicked);
+TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+{
+	setWindowTitle("换行修复设置");
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 换行模式
-	QString fixMode = QString::fromStdString(_projectConfig["plugins"]["TextLinebreakFix"]["换行模式"].value_or(""));
+	QString fixMode = QString::fromStdString(_projectConfig["plugins"]["TextLinebreakFix"]["换行模式"].value_or(std::string{}));
 	ElaScrollPageArea* fixModeArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* fixModeLayout = new QHBoxLayout(fixModeArea);
 	ElaText* fixModeText = new ElaText("换行模式", fixModeArea);
@@ -85,51 +82,15 @@ TLFCfgDialog::TLFCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaCon
 		});
 	forceFixLayout->addWidget(forceFixToggleSwitch);
 
-	_resetFunc = [=]()
-		{
-			fixModeComboBox->setCurrentIndex(0);
-			segmentThresholdSpinBox->setValue(21);
-			forceFixToggleSwitch->setIsToggled(false);
-		};
-	_cancelFunc = [=]()
-		{
-			if (!fixMode.isEmpty()) {
-				int index = fixModeComboBox->findText(fixMode);
-				if (index >= 0) {
-					fixModeComboBox->setCurrentIndex(index);
-				}
-			}
-			segmentThresholdSpinBox->setValue(threshold);
-			forceFixToggleSwitch->setIsToggled(forceFix);
-		};
-
 	mainLayout->addWidget(fixModeArea);
 	mainLayout->addWidget(segmentThresholdArea);
 	mainLayout->addWidget(forceFixArea);
-
-	setCentralWidget(centerWidget);
+	mainLayout->addStretch();
+	centerWidget->setWindowTitle("换行修复设置");
+	addCentralWidget(centerWidget);
 }
 
-TLFCfgDialog::~TLFCfgDialog()
+TLFCfgPage::~TLFCfgPage()
 {
 
-}
-
-void TLFCfgDialog::onRightButtonClicked()
-{
-
-}
-
-void TLFCfgDialog::onMiddleButtonClicked()
-{
-	if (_resetFunc) {
-		_resetFunc();
-	}
-}
-
-void TLFCfgDialog::onLeftButtonClicked()
-{
-	if (_cancelFunc) {
-		_cancelFunc();
-	}
 }

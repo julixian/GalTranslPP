@@ -57,6 +57,7 @@ void CommonSettingsPage::_setupUI()
 	requestNumLayout->addWidget(requestNumText);
 	requestNumLayout->addStretch();
 	ElaSpinBox* requestNumSpinBox = new ElaSpinBox(requestNumArea);
+	requestNumSpinBox->setFocus();
 	requestNumSpinBox->setRange(1, 100);
 	requestNumSpinBox->setValue(requestNum);
 	requestNumLayout->addWidget(requestNumSpinBox);

@@ -1,7 +1,7 @@
-#include "EpubCfgDialog.h"
+#include "EpubCfgPage.h"
 
 #include <QVBoxLayout>
-#include <QFormLayout>
+#include <QHBoxLayout>
 
 #include "ElaScrollPageArea.h"
 #include "ElaToggleSwitch.h"
@@ -12,13 +12,14 @@
 
 import Tool;
 
-EpubCfgDialog::EpubCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaContentDialog(parent), _projectConfig(projectConfig)
+void EpubCfgPage::apply2Config()
 {
-	setWindowTitle("Epub Configuration");
 
-	setLeftButtonText("Cancel");
-	setMiddleButtonText("Reset");
-	setRightButtonText("OK");
+}
+
+EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+{
+	setWindowTitle("Epub 输出配置");
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);
@@ -97,49 +98,13 @@ EpubCfgDialog::EpubCfgDialog(toml::table& projectConfig, QWidget* parent) : ElaC
 			insertToml(_projectConfig, "plugins.Epub.缩小比例", value);
 		});
 	mainLayout->addWidget(scaleArea);
-
-
-	connect(this, &EpubCfgDialog::rightButtonClicked, this, &EpubCfgDialog::onRightButtonClicked);
-	connect(this, &EpubCfgDialog::middleButtonClicked, this, &EpubCfgDialog::onMiddleButtonClicked);
-	connect(this, &EpubCfgDialog::leftButtonClicked, this, &EpubCfgDialog::onLeftButtonClicked);
-
-	_resetFunc = [=]()
-		{
-			outputSwitch->setIsToggled(true);
-			colorDialog->setCurrentColor(QColor("#808080"));
-			scaleSlider->setValue(0.8);
-		};
-
-	_cancelFunc = [=]()
-		{
-			outputSwitch->setIsToggled(bilingual);
-			colorDialog->setCurrentColor(color);
-			scaleSlider->setValue(scale);
-		};
-
-	setCentralWidget(centerWidget);
+	
+	mainLayout->addStretch();
+	centerWidget->setWindowTitle("Epub 输出配置");
+	addCentralWidget(centerWidget);
 }
 
-EpubCfgDialog::~EpubCfgDialog()
+EpubCfgPage::~EpubCfgPage()
 {
 
-}
-
-void EpubCfgDialog::onRightButtonClicked()
-{
-
-}
-
-void EpubCfgDialog::onMiddleButtonClicked()
-{
-	if (_resetFunc) {
-		_resetFunc();
-	}
-}
-
-void EpubCfgDialog::onLeftButtonClicked()
-{
-	if (_cancelFunc) {
-		_cancelFunc();
-	}
 }

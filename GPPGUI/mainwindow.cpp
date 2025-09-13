@@ -9,8 +9,6 @@
 
 #include "ElaContentDialog.h"
 #include "ElaDockWidget.h"
-#include "ElaEventBus.h"
-#include "ElaLog.h"
 #include "ElaMenu.h"
 #include "ElaMenuBar.h"
 #include "ElaProgressBar.h"
@@ -118,6 +116,7 @@ void MainWindow::initWindow()
     setUserInfoCardTitle(QString::fromStdString("Galtransl++ v" + GPPVERSION));
     setUserInfoCardSubTitle("tianquyesss@gmail.com");
     setWindowTitle("Galtransl++");
+    setNavigationBarWidth(275);
 
     //停靠窗口
     ElaDockWidget* updateDockWidget = new ElaDockWidget("更新内容", this);
@@ -133,6 +132,7 @@ void MainWindow::initWindow()
             insertToml(_globalConfig, "showDockWidget." + gppversion, visible);
         });
 
+    // 右键菜单
     ElaMenu* appBarMenu = new ElaMenu(this);
     appBarMenu->setMenuItemHeight(27);
     // 召唤停靠窗口
@@ -161,17 +161,19 @@ void MainWindow::initEdgeLayout()
     customLayout->addStretch();
     // this->setMenuBar(menuBar);
     this->setCustomWidget(ElaAppBarType::MiddleArea, customWidget);
-    this->setCustomWidgetMaximumWidth(500);
+    this->setCustomWidgetMaximumWidth(700);
 
     QAction* newProjectAction = menuBar->addElaIconAction(ElaIconType::AtomSimple, "新建项目");
     QAction* openProjectAction = menuBar->addElaIconAction(ElaIconType::FolderOpen, "打开项目");
     QAction* removeProjectAction = menuBar->addElaIconAction(ElaIconType::TrashCan, "移除项目");
     QAction* deleteProjectAction = menuBar->addElaIconAction(ElaIconType::TrashXmark, "删除项目");
+    QAction* saveProjectAction = menuBar->addElaIconAction(ElaIconType::FloppyDisk, "保存项目配置");
 
     connect(newProjectAction, &QAction::triggered, this, &MainWindow::_on_newProject_triggered);
     connect(openProjectAction, &QAction::triggered, this, &MainWindow::_on_openProject_triggered);
     connect(removeProjectAction, &QAction::triggered, this, &MainWindow::_on_removeProject_triggered);
     connect(deleteProjectAction, &QAction::triggered, this, &MainWindow::_on_deleteProject_triggered);
+    connect(saveProjectAction, &QAction::triggered, this, &MainWindow::_on_saveProject_triggered);
 
     //状态栏
     ElaStatusBar* statusBar = new ElaStatusBar(this);
@@ -247,6 +249,20 @@ void MainWindow::initContent()
     addFooterNode("设置", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
     connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
         this->navigation(_homePage->property("ElaPageKey").toString());
+        });
+
+    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
+        {
+            auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+                {
+                    return page->property("ElaPageKey").toString() == nodeKey;
+                });
+            if (it != _projectPages.end()) {
+                setWindowTitle("Galtransl++ - " + (*it)->getProjectName());
+            }
+            else {
+                setWindowTitle("Galtransl++");
+            }
         });
 }
 
@@ -471,7 +487,7 @@ void MainWindow::_on_removeProject_triggered()
                     this->navigation(_projectPages.back()->property("ElaPageKey").toString());
                 }
             }
-            ElaMessageBar::success(ElaMessageBarType::TopRight, "移除成功", "当前项目已从项目管理中移除！", 3000);
+            ElaMessageBar::success(ElaMessageBarType::TopRight, "移除成功", "项目 " + it->get()->getProjectName() + " 已从项目管理中移除！", 3000);
         });
     helpDialog.exec();
 }
@@ -520,23 +536,41 @@ void MainWindow::_on_deleteProject_triggered()
                 }
             }
             fs::remove_all(projectDir);
-            ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "当前项目已从项目管理和磁盘中移除！", 3000);
+            ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "项目 " + it->get()->getProjectName() + " 已从项目管理和磁盘中移除！", 3000);
         });
     helpDialog.exec();
 }
 
+void MainWindow::_on_saveProject_triggered()
+{
+    QString pageKey = getCurrentNavigationPageKey();
+    auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+        {
+            return page->property("ElaPageKey").toString() == pageKey;
+        });
+    if (it == _projectPages.end()) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, "保存失败", "当前页面不是项目页面！", 3000);
+        return;
+    }
+
+    it->get()->apply2Config();
+    ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "项目 " + it->get()->getProjectName() + " 配置信息已保存！", 3000);
+}
+
 void MainWindow::_on_closeWindow_clicked()
 {
+    _defaultPromptPage->apply2Config();
+    _commonPreDictPage->apply2Config();
+    _commonGptDictPage->apply2Config();
+    _commonPostDictPage->apply2Config();
+
     toml::array projects;
     for (auto& page : _projectPages) {
         page->apply2Config();
         projects.push_back(wide2Ascii(page->getProjectDir()));
     }
     _globalConfig.insert_or_assign("projects", projects);
-    _defaultPromptPage->apply2Config();
-    _commonPreDictPage->apply2Config();
-    _commonGptDictPage->apply2Config();
-    _commonPostDictPage->apply2Config();
+
     QRect rect = frameGeometry();
     _globalConfig.insert_or_assign("windowWidth", rect.width());
     _globalConfig.insert_or_assign("windowHeight", rect.height());

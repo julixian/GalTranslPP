@@ -120,12 +120,12 @@
     <ClCompile Include="DictionaryModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
     <ClCompile Include="ElaInputDialog.cpp" />
-    <ClCompile Include="EpubCfgDialog.cpp" />
+    <ClCompile Include="EpubCfgPage.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="mainwindow.cpp" />
     <ClCompile Include="NameTableModel.cpp" />
     <ClCompile Include="NameTableSettingsPage.cpp" />
-    <ClCompile Include="NJCfgDialog.cpp" />
+    <ClCompile Include="NJCfgPage.cpp" />
     <ClCompile Include="NormalDictModel.cpp" />
     <ClCompile Include="OtherSettingsPage.cpp" />
     <ClCompile Include="PASettingsPage.cpp" />
@@ -140,8 +140,8 @@
     <ClCompile Include="UpdateWidget.cpp" />
     <ClCompile Include="ValueSliderWidget.cpp" />
     <QtMoc Include="PluginSettingsPage.h" />
-    <ClCompile Include="PostFull2HalfCfgDialog.cpp" />
-    <ClCompile Include="TLFCfgDialog.cpp" />
+    <ClCompile Include="PostFull2HalfCfgPage.cpp" />
+    <ClCompile Include="TLFCfgPage.cpp" />
     <ClCompile Include="ProjectSettingsPage.cpp" />
     <QtRcc Include="GPPGUI.qrc" />
     <ClCompile Include="main.cpp" />
@@ -159,10 +159,10 @@
     <QtMoc Include="PluginItemWidget.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="PostFull2HalfCfgDialog.h" />
+    <QtMoc Include="PostFull2HalfCfgPage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="TLFCfgDialog.h" />
+    <QtMoc Include="TLFCfgPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PASettingsPage.h" />
@@ -183,10 +183,10 @@
     <QtMoc Include="StartSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="NJCfgDialog.h" />
+    <QtMoc Include="NJCfgPage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="EpubCfgDialog.h" />
+    <QtMoc Include="EpubCfgPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="NameTableSettingsPage.h" />

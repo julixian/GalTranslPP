@@ -13,7 +13,7 @@
 #include "ElaPopularCard.h"
 #include "ElaScrollArea.h"
 #include "ElaText.h"
-#include "ElaPivot.h"
+#include "ElaTabWidget.h"
 #include "ElaToolTip.h"
 
 import Tool;
@@ -56,17 +56,10 @@ void DefaultPromptPage::_setupUI()
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
 
-	// 创建 Pivot 导航和 StackedWidget 内容区
-	_pivot = new ElaPivot(mainWidget);
-	_stackedWidget = new QStackedWidget(mainWidget);
-
-	// 建立 Pivot 和 StackedWidget 的连接
-	connect(_pivot, &ElaPivot::pivotClicked, _stackedWidget, &QStackedWidget::setCurrentIndex);
-
-	// 把pivot包到scrollarea中
-	ElaScrollPageArea* pivotScrollArea = new ElaScrollPageArea(mainWidget);
-	QVBoxLayout* pivotLayout = new QVBoxLayout(pivotScrollArea);
-	pivotLayout->addWidget(_pivot);
+	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
+	tabWidget->setTabsClosable(false);
+	tabWidget->setIsTabTransparent(true);
+	
 
 	QWidget* forgalJsonWidget = new QWidget(mainWidget);
 	QVBoxLayout* forgalJsonLayout = new QVBoxLayout(forgalJsonWidget);
@@ -130,8 +123,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认ForGalJson提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("ForGalJson");
-	_stackedWidget->addWidget(forgalJsonWidget);
+	tabWidget->addTab(forgalJsonWidget, "ForGalJson");
 
 	// FORGALTSV
 	QWidget* forgalTsvWidget = new QWidget(mainWidget);
@@ -194,8 +186,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认ForGalTsv提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("ForGalTsv");
-	_stackedWidget->addWidget(forgalTsvWidget);
+	tabWidget->addTab(forgalTsvWidget, "ForGalTsv");
 
 	// FORNOVELTSV
 	QWidget* forNovelTsvWidget = new QWidget(mainWidget);
@@ -258,8 +249,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认ForNovelTsv提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("ForNovelTsv");
-	_stackedWidget->addWidget(forNovelTsvWidget);
+	tabWidget->addTab(forNovelTsvWidget, "ForNovelTsv");
 
 	// DEEPSEEK
 	QWidget* deepSeekWidget = new QWidget(mainWidget);
@@ -322,8 +312,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认DeepSeek提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("DeepSeek");
-	_stackedWidget->addWidget(deepSeekWidget);
+	tabWidget->addTab(deepSeekWidget, "DeepSeek");
 
 	// SAKURA
 	QWidget* sakuraWidget = new QWidget(mainWidget);
@@ -386,8 +375,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认Sakura提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("Sakura");
-	_stackedWidget->addWidget(sakuraWidget);
+	tabWidget->addTab(sakuraWidget, "Sakura");
 
 	// GENDIC
 	QWidget* gendicWidget = new QWidget(mainWidget);
@@ -450,8 +438,7 @@ void DefaultPromptPage::_setupUI()
 			ofs.close();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "默认GenDict提示词配置已保存。", 3000);
 		});
-	_pivot->appendPivot("GenDict");
-	_stackedWidget->addWidget(gendicWidget);
+	tabWidget->addTab(gendicWidget, "GenDict");
 
 	_applyFunc = [=]()
 		{
@@ -473,10 +460,7 @@ void DefaultPromptPage::_setupUI()
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "所有默认提示词配置已保存。", 3000);
 		};
 
-	mainLayout->addWidget(pivotScrollArea, 0, Qt::AlignTop);
-	mainLayout->addWidget(_stackedWidget, 1);
-	_pivot->setCurrentIndex(0);
 
-	mainLayout->addStretch();
+	mainLayout->addWidget(tabWidget);
     addCentralWidget(mainWidget, true, true, 0);
 }

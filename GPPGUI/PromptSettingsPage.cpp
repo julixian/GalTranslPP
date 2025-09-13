@@ -2,7 +2,6 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QHeaderView>
 #include <QStackedWidget>
 
@@ -10,10 +9,10 @@
 #include "ElaLineEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
+#include "ElaTabWidget.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
-#include "ElaPivot.h"
 #include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
 
@@ -59,17 +58,10 @@ void PromptSettingsPage::_setupUI()
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
 
-	// 创建 Pivot 导航和 StackedWidget 内容区
-	_pivot = new ElaPivot(mainWidget);
-	_stackedWidget = new QStackedWidget(mainWidget);
+	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
+	tabWidget->setTabsClosable(false);
+	tabWidget->setIsTabTransparent(true);
 
-	// 建立 Pivot 和 StackedWidget 的连接
-	connect(_pivot, &ElaPivot::pivotClicked, _stackedWidget, &QStackedWidget::setCurrentIndex);
-
-	// 把pivot包到scrollarea中
-	ElaScrollPageArea* pivotScrollArea = new ElaScrollPageArea(mainWidget);
-	QVBoxLayout* pivotLayout = new QVBoxLayout(pivotScrollArea);
-	pivotLayout->addWidget(_pivot);
 
 	QWidget* forgalJsonWidget = new QWidget(mainWidget);
 	QVBoxLayout* forgalJsonLayout = new QVBoxLayout(forgalJsonWidget);
@@ -117,8 +109,7 @@ void PromptSettingsPage::_setupUI()
 			forgalJsonUserModeButtom->setEnabled(true);
 			forgalJsonSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("ForGalJson");
-	_stackedWidget->addWidget(forgalJsonWidget);
+	tabWidget->addTab(forgalJsonWidget, "ForGalJson");
 
 	// FORGALTSV
 	QWidget* forgalTsvWidget = new QWidget(mainWidget);
@@ -165,8 +156,7 @@ void PromptSettingsPage::_setupUI()
 			forgalTsvUserModeButtom->setEnabled(true);
 			forgalTsvSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("ForGalTsv");
-	_stackedWidget->addWidget(forgalTsvWidget);
+	tabWidget->addTab(forgalTsvWidget, "ForGalTsv");
 
 	// FORNOVELTSV
 	QWidget* forNovelTsvWidget = new QWidget(mainWidget);
@@ -213,8 +203,7 @@ void PromptSettingsPage::_setupUI()
 			forNovelTsvUserModeButtom->setEnabled(true);
 			forNovelTsvSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("ForNovelTsv");
-	_stackedWidget->addWidget(forNovelTsvWidget);
+	tabWidget->addTab(forNovelTsvWidget, "ForNovelTsv");
 
 	// DEEPSEEK
 	QWidget* deepSeekWidget = new QWidget(mainWidget);
@@ -261,8 +250,7 @@ void PromptSettingsPage::_setupUI()
 			deepSeekUserModeButtom->setEnabled(true);
 			deepSeekSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("DeepSeek");
-	_stackedWidget->addWidget(deepSeekWidget);
+	tabWidget->addTab(deepSeekWidget, "DeepSeek");
 
 	// SAKURA
 	QWidget* sakuraWidget = new QWidget(mainWidget);
@@ -309,8 +297,7 @@ void PromptSettingsPage::_setupUI()
 			sakuraUserModeButtom->setEnabled(true);
 			sakuraSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("Sakura");
-	_stackedWidget->addWidget(sakuraWidget);
+	tabWidget->addTab(sakuraWidget, "Sakura");
 
 	// GENDIC
 	QWidget* gendicWidget = new QWidget(mainWidget);
@@ -357,8 +344,7 @@ void PromptSettingsPage::_setupUI()
 			gendicUserModeButtom->setEnabled(true);
 			gendicSystemModeButtom->setEnabled(false);
 		});
-	_pivot->appendPivot("GenDict");
-	_stackedWidget->addWidget(gendicWidget);
+	tabWidget->addTab(gendicWidget, "GenDict");
 
 	_applyFunc = [=]()
 		{
@@ -379,10 +365,6 @@ void PromptSettingsPage::_setupUI()
 			ofs.close();
 		};
 
-	mainLayout->addWidget(pivotScrollArea, 0, Qt::AlignTop);
-	mainLayout->addWidget(_stackedWidget, 1);
-	_pivot->setCurrentIndex(0);
-
-	mainLayout->addStretch();
+	mainLayout->addWidget(tabWidget);
 	addCentralWidget(mainWidget, true, true, 0);
 }

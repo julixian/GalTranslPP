@@ -2,19 +2,18 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QHeaderView>
 #include <QStackedWidget>
 
 #include "ElaText.h"
 #include "ElaLineEdit.h"
+#include "ElaTabWidget.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMultiSelectComboBox.h"
 #include "ElaMessageBar.h"
-#include "ElaPivot.h"
 #include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
 
@@ -194,25 +193,19 @@ QString DictSettingsPage::readNormalDictsStr(const fs::path& dictPath)
 	return QString::fromStdString(result);
 }
 
+
+
 void DictSettingsPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
 
-	// 创建 Pivot 导航和 StackedWidget 内容区
-	_pivot = new ElaPivot(mainWidget);
-	_stackedWidget = new QStackedWidget(mainWidget);
+	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
+	tabWidget->setTabsClosable(false);
+	tabWidget->setIsTabTransparent(true);
 
-	// 建立 Pivot 和 StackedWidget 的连接
-	connect(_pivot, &ElaPivot::pivotClicked, _stackedWidget, &QStackedWidget::setCurrentIndex);
 
-	// 把pivot包到scrollarea中
-	ElaScrollPageArea* pivotScrollArea = new ElaScrollPageArea(mainWidget);
-	QVBoxLayout* pivotLayout = new QVBoxLayout(pivotScrollArea);
-	pivotLayout->addWidget(_pivot);
-
-	//QStringList dictNames = { "项目GPT字典", "项目译前字典", "项目译后字典" };
 	QWidget* gptDictWidget = new QWidget(mainWidget);
 	QVBoxLayout* gptDictLayout = new QVBoxLayout(gptDictWidget);
 	QWidget* gptButtonWidget = new QWidget(mainWidget);
@@ -236,7 +229,7 @@ void DictSettingsPage::_setupUI()
 	gptDictLayout->addWidget(gptButtonWidget, 0, Qt::AlignTop);
 
 
-	// 每个字典StackedWidget里又有一个StackedWidget区分表和纯文本
+	// 每个字典里又有一个StackedWidget区分表和纯文本
 
 	QStackedWidget* gptStackedWidget = new QStackedWidget(gptDictWidget);
 	// 项目GPT字典的纯文本模式
@@ -311,8 +304,7 @@ void DictSettingsPage::_setupUI()
 				gptDictModel->removeRow(index.row());
 			}
 		});
-	_pivot->appendPivot("项目GPT字典");
-	_stackedWidget->addWidget(gptDictWidget);
+	tabWidget->addTab(gptDictWidget, "项目GPT字典");
 
 	QWidget* preDictWidget = new QWidget(mainWidget);
 	QVBoxLayout* preDictLayout = new QVBoxLayout(preDictWidget);
@@ -408,8 +400,7 @@ void DictSettingsPage::_setupUI()
 				preDictModel->removeRow(index.row());
 			}
 		});
-	_pivot->appendPivot("项目译前字典");
-	_stackedWidget->addWidget(preDictWidget);
+	tabWidget->addTab(preDictWidget, "项目译前字典");
 
 	QWidget* postDictWidget = new QWidget(mainWidget);
 	QVBoxLayout* postDictLayout = new QVBoxLayout(postDictWidget);
@@ -507,8 +498,7 @@ void DictSettingsPage::_setupUI()
 				}
 			}
 		});
-	_pivot->appendPivot("项目译后字典");
-	_stackedWidget->addWidget(postDictWidget);
+	tabWidget->addTab(postDictWidget, "项目译后字典");
 
 	_refreshFunc = [=]()
 		{
@@ -722,8 +712,7 @@ void DictSettingsPage::_setupUI()
 	settingLayout->addWidget(useGPTDictToReplaceNameArea);
 
 	settingLayout->addStretch();
-	_pivot->appendPivot("项目字典设置");
-	_stackedWidget->addWidget(settingWidget);
+	tabWidget->addTab(settingWidget, "项目字典设置");
 
 	// 说明页
 	ElaScrollPageArea* descScrollArea = new ElaScrollPageArea(mainWidget);
@@ -753,8 +742,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 )");
 	descLayout->addWidget(descText);
 	descLayout->addStretch();
-	_pivot->appendPivot("说明");
-	_stackedWidget->addWidget(descScrollArea);
+	tabWidget->addTab(descScrollArea, "说明");
 
 
 	_refreshCommonDictsListFunc = [=]()
@@ -975,10 +963,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 			insertToml(_projectConfig, "dictionary.postDict", postDictNamesArr);
 		};
 
-	mainLayout->addWidget(pivotScrollArea, 0, Qt::AlignTop);
-	mainLayout->addWidget(_stackedWidget, 1);
-	_pivot->setCurrentIndex(0);
-
+	mainLayout->addWidget(tabWidget);
 	mainLayout->addStretch();
 	addCentralWidget(mainWidget, true, true, 0);
 }

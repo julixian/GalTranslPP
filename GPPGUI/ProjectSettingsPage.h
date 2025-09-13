@@ -46,9 +46,6 @@ Q_SIGNALS:
 private:
     // UI 控件
     QStackedWidget* _stackedWidget;
-    QVBoxLayout* _navigationLayout;
-    QVBoxLayout* _buttonsLayout;
-    QList<ElaToggleButton*> _navigationButtons; // 用 QList 存储按钮指针
     fs::path _projectDir;
     toml::table _projectConfig;
     toml::table& _globalConfig;
@@ -63,16 +60,13 @@ private:
     OtherSettingsPage* _otherSettingsPage;
     PromptSettingsPage* _promptSettingsPage;
 
-    std::atomic<bool> _isRunning = false;
+    bool _isRunning = false;
     QWidget* _mainWindow;
 
     void _setupUI();
-    void _createNavigation();
     void _createPages();
 
 private Q_SLOTS:
-    // 槽函数，用于响应导航按钮的状态变化
-    void _onNavigationButtonToggled(bool checked);
     // 槽函数，用于响应开始翻译按钮的点击
     void _onStartTranslating();
     void _onFinishTranslating(const QString& transEngine, int exitCode);

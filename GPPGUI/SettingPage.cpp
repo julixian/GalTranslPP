@@ -23,6 +23,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     // 预览窗口标题
     ElaWindow* window = dynamic_cast<ElaWindow*>(parent);
     setWindowTitle("Setting");
+    setContentsMargins(10, 10, 10, 10);
 
     ElaText* themeText = new ElaText("主题设置", this);
     themeText->setWordWrap(false);

@@ -16,7 +16,6 @@ public:
     void apply2Config();
 
 private:
-
     void _setupUI();
     toml::table& _projectConfig;
     std::function<void()> _applyFunc;

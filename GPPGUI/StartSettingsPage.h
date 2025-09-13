@@ -17,6 +17,8 @@ class ElaProgressBar;
 class ElaComboBox;
 class ElaProgressRing;
 class ElaLCDNumber;
+class NJCfgPage;
+class EpubCfgPage;
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<Clock>;
@@ -115,6 +117,9 @@ private:
     ExponentialMovingAverageEstimator _estimator;
 
     std::chrono::high_resolution_clock::time_point _startTime;
+
+    NJCfgPage* _njCfgPage;
+    EpubCfgPage* _epubCfgPage;
 
 private Q_SLOTS:
 

@@ -22,7 +22,7 @@ import Tool;
 namespace fs = std::filesystem;
 
 CommonGptDictPage::CommonGptDictPage(toml::table& globalConfig, QWidget* parent) :
-	BasePage(parent), _globalConfig(globalConfig)
+	BasePage(parent), _globalConfig(globalConfig), _mainWindow(parent)
 {
 	setWindowTitle("默认GPT字典设置");
 	setTitleVisible(false);
@@ -479,7 +479,7 @@ void CommonGptDictPage::_setupUI()
 			std::string dictName = wide2Ascii(it->dictPath.stem().wstring());
 
 			// 删除提示框
-			ElaContentDialog helpDialog(this);
+			ElaContentDialog helpDialog(_mainWindow);
 
 			helpDialog.setRightButtonText("是");
 			helpDialog.setMiddleButtonText("思考人生");
@@ -512,7 +512,7 @@ void CommonGptDictPage::_setupUI()
 					}
 					Q_EMIT commonDictsChanged();
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, "删除成功", "字典 "
-						+ QString(dictName.c_str()) + " 已从字典管理和磁盘中移除！", 3000);
+						+ QString::fromStdString(dictName) + " 已从字典管理和磁盘中移除！", 3000);
 				});
 			helpDialog.exec();
 		});

@@ -12,7 +12,6 @@
 
 namespace fs = std::filesystem;
 
-class ElaPivot;
 class QStackedWidget;
 
 class PromptSettingsPage : public BasePage
@@ -25,8 +24,6 @@ public:
     void apply2Config();
 
 private:
-    ElaPivot* _pivot;
-    QStackedWidget* _stackedWidget;
 
     void _setupUI();
     toml::table _promptConfig;

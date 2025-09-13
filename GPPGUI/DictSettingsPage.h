@@ -12,7 +12,6 @@
 
 namespace fs = std::filesystem;
 
-class ElaPivot;
 class QStackedWidget;
 
 class DictSettingsPage : public BasePage
@@ -27,8 +26,6 @@ public:
     void refreshCommonDictsList();
 
 private:
-    ElaPivot* _pivot;
-    QStackedWidget* _stackedWidget;
 
     QList<DictionaryEntry> readGptDicts();
     QString readGptDictsStr();

@@ -32,6 +32,7 @@ private Q_SLOTS:
     void _on_openProject_triggered();
     void _on_removeProject_triggered();
     void _on_deleteProject_triggered();
+    void _on_saveProject_triggered();
 
     void _on_closeWindow_clicked();
 

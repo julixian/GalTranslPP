@@ -22,7 +22,7 @@ import Tool;
 namespace fs = std::filesystem;
 
 CommonPostDictPage::CommonPostDictPage(toml::table& globalConfig, QWidget* parent) :
-	BasePage(parent), _globalConfig(globalConfig)
+	BasePage(parent), _globalConfig(globalConfig), _mainWindow(parent)
 {
 	setWindowTitle("默认译后字典设置");
 	setTitleVisible(false);
@@ -457,7 +457,7 @@ void CommonPostDictPage::_setupUI()
 			std::string dictName = wide2Ascii(it->dictPath.stem().wstring());
 
 			// 删除提示框
-			ElaContentDialog helpDialog(this);
+			ElaContentDialog helpDialog(_mainWindow);
 
 			helpDialog.setRightButtonText("是");
 			helpDialog.setMiddleButtonText("思考人生");

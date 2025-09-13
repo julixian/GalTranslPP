@@ -17,8 +17,8 @@
 #include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
 
-#include "NJCfgDialog.h"
-#include "EpubCfgDialog.h"
+#include "NJCfgPage.h"
+#include "EpubCfgPage.h"
 
 import Tool;
 
@@ -42,7 +42,8 @@ StartSettingsPage::~StartSettingsPage()
 
 void StartSettingsPage::apply2Config()
 {
-
+	_njCfgPage->apply2Config();
+	_epubCfgPage->apply2Config();
 }
 
 void StartSettingsPage::_setupUI()
@@ -221,6 +222,11 @@ void StartSettingsPage::_setupUI()
 			// 2. 使用一个临时的“影子”光标在后台进行操作
 			QTextCursor tempCursor(logOutput->document());
 			tempCursor.movePosition(QTextCursor::End); // 移动到文档末尾
+
+			//QTextCharFormat format;
+			//format.setForeground(QColor(255, 0, 0)); // 设置红色字体
+			//tempCursor.setCharFormat(format);
+
 			tempCursor.insertText(log);               // 在末尾插入文本
 			// 3. 智能滚动 (和之前一样)
 			if (scrollIsAtBottom) {
@@ -261,8 +267,25 @@ void StartSettingsPage::_setupUI()
 			));
 		});
 
-	addCentralWidget(mainWidget);
 	_workThread->start();
+	addCentralWidget(mainWidget);
+
+	// 顺序和_onOutputSettingClicked里的索引一致
+	_njCfgPage = new NJCfgPage(_projectConfig, this);
+	addCentralWidget(_njCfgPage);
+	_epubCfgPage = new EpubCfgPage(_projectConfig, this);
+	addCentralWidget(_epubCfgPage);
+}
+
+void StartSettingsPage::_onOutputSettingClicked()
+{
+	QString fileFormat = _fileFormatComboBox->currentText();
+	if (fileFormat == "NormalJson") {
+		this->navigation(1);
+	}
+	else if (fileFormat == "Epub") {
+		this->navigation(2);
+	}
 }
 
 void StartSettingsPage::_onStartTranslatingClicked()
@@ -311,17 +334,4 @@ void StartSettingsPage::_workFinished(int exitCode)
 	Q_EMIT finishTranslating(_transEngine, exitCode);
 	_startTranslateButton->setEnabled(true);
 	_stopTranslateButton->setEnabled(false);
-}
-
-void StartSettingsPage::_onOutputSettingClicked()
-{
-	QString fileFormat = _fileFormatComboBox->currentText();
-	if (fileFormat == "NormalJson") {
-		NJCfgDialog cfgDialog(_projectConfig, _mainWindow);
-		cfgDialog.exec();
-	}
-	else if (fileFormat == "Epub") {
-		EpubCfgDialog cfgDialog(_projectConfig, _mainWindow);
-		cfgDialog.exec();
-	}
 }

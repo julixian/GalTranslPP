@@ -82,13 +82,13 @@
     <ClCompile Include="StartSettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImp</Filter>
     </ClCompile>
-    <ClCompile Include="TLFCfgDialog.cpp">
+    <ClCompile Include="TLFCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
-    <ClCompile Include="NJCfgDialog.cpp">
+    <ClCompile Include="NJCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
-    <ClCompile Include="EpubCfgDialog.cpp">
+    <ClCompile Include="EpubCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
     <ClCompile Include="NameTableSettingsPage.cpp">
@@ -136,7 +136,7 @@
     <ClCompile Include="CommonPreDictPage.cpp">
       <Filter>Source Files\PageImp</Filter>
     </ClCompile>
-    <ClCompile Include="PostFull2HalfCfgDialog.cpp">
+    <ClCompile Include="PostFull2HalfCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
     <ClCompile Include="CommonPostDictPage.cpp">
@@ -180,13 +180,13 @@
     <QtMoc Include="StartSettingsPage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
-    <QtMoc Include="TLFCfgDialog.h">
+    <QtMoc Include="TLFCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="NJCfgDialog.h">
+    <QtMoc Include="NJCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="EpubCfgDialog.h">
+    <QtMoc Include="EpubCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="NameTableSettingsPage.h">
@@ -234,7 +234,7 @@
     <QtMoc Include="CommonPreDictPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
-    <QtMoc Include="PostFull2HalfCfgDialog.h">
+    <QtMoc Include="PostFull2HalfCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="CommonPostDictPage.h">

@@ -5,11 +5,13 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QStackedWidget>
-#include <QLabel>
 
 #include "ElaToggleButton.h"
-#include "ElaIcon.h"
+#include "ElaToolButton.h"
 #include "ElaMessageBar.h"
+#include "ElaMenu.h"
+#include "ElaMenuBar.h"
+#include "ElaText.h"
 #include "ElaScrollPageArea.h"
 
 #include "APISettingsPage.h"
@@ -27,15 +29,16 @@ import std;
 ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::path& projectDir, QWidget* parent)
     : BasePage(parent), _projectDir(projectDir), _globalConfig(globalConfig), _mainWindow(parent)
 {
-    setWindowTitle("ProjectSettings");
+    setWindowTitle("项目设置主页");
     setTitleVisible(false);
+    setContentsMargins(5, 10, 10, 10);
 
     std::ifstream ifs(_projectDir / L"config.toml");
     try {
         _projectConfig = toml::parse(ifs);
     }
     catch (...) {
-        ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "项目配置文件不符合规范", 3000);
+        ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "项目 " + QString(_projectDir.filename().wstring()) + " 的配置文件不符合规范", 3000);
     }
     ifs.close();
 
@@ -81,104 +84,132 @@ fs::path ProjectSettingsPage::getProjectDir()
 
 void ProjectSettingsPage::_setupUI()
 {
-    setWindowTitle("项目设置总页");
-    setTitleVisible(false);
-    QHBoxLayout* mainLayout = new QHBoxLayout();
-
-    QWidget* navigationWidget = new QWidget(this);
-    _navigationLayout = new QVBoxLayout(navigationWidget);
-    _navigationLayout->addSpacing(130);
-
-    ElaScrollPageArea* buttonsArea = new ElaScrollPageArea(navigationWidget);
-    buttonsArea->setFixedWidth(100);
-    buttonsArea->setFixedHeight(430);
-    _buttonsLayout = new QVBoxLayout(buttonsArea);
-
-    _navigationLayout->addWidget(buttonsArea);
-    _navigationLayout->addStretch();
-
-    _stackedWidget = new QStackedWidget(this);
-    _stackedWidget->setContentsMargins(0, 0, 20, 0);
-    _stackedWidget->setObjectName("SettingsStackedWidget");
-    _stackedWidget->setStyleSheet("#SettingsStackedWidget { background-color: transparent; }");
-
-    _createNavigation();
-    _createPages();
-
-    mainLayout->addWidget(buttonsArea);
-    mainLayout->addWidget(_stackedWidget, 1);
 
     QWidget* centralWidget = new QWidget(this);
-    centralWidget->setLayout(mainLayout);
+    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setSpacing(0);
+
+    QWidget* navigationWidget = new QWidget(this);
+    QHBoxLayout* navigationLayout = new QHBoxLayout(navigationWidget);
+    navigationLayout->setContentsMargins(0, 0, 0, 0);
+    ElaText* settingsTitle = new ElaText("API设置", navigationWidget);
+    settingsTitle->setTextPixelSize(18);
+    settingsTitle->setFixedWidth(85);
+    navigationLayout->addSpacing(30);
+    navigationLayout->addWidget(settingsTitle);
+    navigationLayout->addStretch();
+
+    ElaMenu* foundamentalSettingMenu = new ElaMenu(navigationWidget);
+    QAction* apiSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::MagnifyingGlassPlus, "API设置");
+    QAction* commonSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::BoxCheck, "一般设置");
+    QAction* paSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::Question, "问题分析");
+
+    ElaToolButton* foundamentalSettingButton = new ElaToolButton(navigationWidget);
+    foundamentalSettingButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    foundamentalSettingButton->setElaIcon(ElaIconType::Broom);
+    foundamentalSettingButton->setText("基本设置");
+    foundamentalSettingButton->setMenu(foundamentalSettingMenu);
+
+    ElaMenu* transMenu = new ElaMenu(navigationWidget);
+    QAction* nameTableSettingAction = transMenu->addElaIconAction(ElaIconType::User, "人名表");
+    QAction* dictSettingAction = transMenu->addElaIconAction(ElaIconType::Book, "项目字典");
+    QAction* promptSettingAction = transMenu->addElaIconAction(ElaIconType::Bell, "提示词");
+
+    ElaToolButton* transButton = new ElaToolButton(navigationWidget);
+    transButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    transButton->setElaIcon(ElaIconType::YenSign);
+    transButton->setText("翻译设置");
+    transButton->setMenu(transMenu);
+
+    ElaMenuBar* menuBar = new ElaMenuBar(navigationWidget);
+    menuBar->setContentsMargins(0, 0, 0, 0);
+    QAction* pluginSettingAction = menuBar->addElaIconAction(ElaIconType::Plug, "插件管理");
+    QAction* startTransAction = menuBar->addElaIconAction(ElaIconType::Play, "开始翻译");
+    QAction* otherSettingAction = menuBar->addElaIconAction(ElaIconType::Copy, "其他设置");
+
+    navigationLayout->addWidget(foundamentalSettingButton);
+    navigationLayout->addWidget(transButton);
+    navigationLayout->addWidget(menuBar);
+    navigationLayout->addStretch();
+    navigationLayout->addStretch();
+
+    _stackedWidget = new QStackedWidget(this);
+    _stackedWidget->setContentsMargins(0, 0, 0, 0);
+
+    _createPages();
+
+    connect(apiSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(0);
+            settingsTitle->setText("API设置");
+        });
+    connect(commonSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(1);
+            settingsTitle->setText("一般设置");
+        });
+    connect(paSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(2);
+            settingsTitle->setText("问题分析");
+        });
+    connect(nameTableSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(3);
+            settingsTitle->setText("人名表");
+        });
+    connect(dictSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(4);
+            settingsTitle->setText("项目字典");
+        });
+    connect(promptSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(5);
+            settingsTitle->setText("提示词");
+        });
+    connect(pluginSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(6);
+            settingsTitle->setText("插件管理");
+        });
+    connect(startTransAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(7);
+            settingsTitle->setText("开始翻译");
+        });
+    connect(otherSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(8);
+            settingsTitle->setText("其他设置");
+        });
+
+    mainLayout->addWidget(navigationWidget);
+    mainLayout->addWidget(_stackedWidget, 1);
+    
     addCentralWidget(centralWidget, true, true, 0);
-
-    // 初始状态设置：手动触发第一个按钮的点击逻辑
-    if (!_navigationButtons.isEmpty())
-    {
-        _navigationButtons.first()->setIsToggled(true);
-        _stackedWidget->setCurrentIndex(0);
-    }
-}
-
-void ProjectSettingsPage::_createNavigation()
-{
-    // 创建导航按钮
-    ElaToggleButton* apiButton = new ElaToggleButton("API 设置", this);
-    apiButton->setFixedHeight(35);
-    ElaToggleButton* pluginButton = new ElaToggleButton("插件管理", this);
-    pluginButton->setFixedHeight(35);
-    ElaToggleButton* commonButton = new ElaToggleButton("一般设置", this);
-    commonButton->setFixedHeight(35);
-    ElaToggleButton* paButton = new ElaToggleButton("问题分析", this);
-    paButton->setFixedHeight(35);
-    ElaToggleButton* nameTableButton = new ElaToggleButton("人名表", this);
-    nameTableButton->setFixedHeight(35);
-    ElaToggleButton* dictButton = new ElaToggleButton("项目字典", this);
-    dictButton->setFixedHeight(35);
-    ElaToggleButton* promptButton = new ElaToggleButton("提示词", this);
-    promptButton->setFixedHeight(35);
-    ElaToggleButton* startButton = new ElaToggleButton("开始翻译", this);
-    startButton->setFixedHeight(35);
-    ElaToggleButton* otherButton = new ElaToggleButton("其他设置", this);
-    otherButton->setFixedHeight(35);
-
-    // 将按钮添加到 QList 和布局中
-    _navigationButtons.append(apiButton);
-    _navigationButtons.append(pluginButton);
-    _navigationButtons.append(commonButton);
-    _navigationButtons.append(paButton);
-    _navigationButtons.append(nameTableButton);
-    _navigationButtons.append(dictButton);
-    _navigationButtons.append(promptButton);
-    _navigationButtons.append(startButton);
-    _navigationButtons.append(otherButton);
-
-    for (ElaToggleButton* button : _navigationButtons)
-    {
-        _buttonsLayout->addWidget(button);
-        // 连接每个按钮的 toggled 信号到同一个槽函数
-        connect(button, &ElaToggleButton::toggled, this, &ProjectSettingsPage::_onNavigationButtonToggled);
-    }
 }
 
 void ProjectSettingsPage::_createPages()
 {
     _apiSettingsPage = new APISettingsPage(_projectConfig, this);
-    _pluginSettingsPage = new PluginSettingsPage(_mainWindow, _projectConfig, this);
     _commonSettingsPage = new CommonSettingsPage(_projectConfig, this);
     _paSettingsPage = new PASettingsPage(_projectConfig, this);
     _nameTableSettingsPage = new NameTableSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _dictSettingsPage = new DictSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _promptSettingsPage = new PromptSettingsPage(_projectDir, _projectConfig, this);
+    _pluginSettingsPage = new PluginSettingsPage(_mainWindow, _projectConfig, this);
     _startSettingsPage = new StartSettingsPage(_mainWindow, _projectDir, _projectConfig, this);
     _otherSettingsPage = new OtherSettingsPage(_projectDir, _projectConfig, this);
+
     _stackedWidget->addWidget(_apiSettingsPage);
-    _stackedWidget->addWidget(_pluginSettingsPage);
     _stackedWidget->addWidget(_commonSettingsPage);
     _stackedWidget->addWidget(_paSettingsPage);
     _stackedWidget->addWidget(_nameTableSettingsPage);
     _stackedWidget->addWidget(_dictSettingsPage);
     _stackedWidget->addWidget(_promptSettingsPage);
+    _stackedWidget->addWidget(_pluginSettingsPage);
     _stackedWidget->addWidget(_startSettingsPage);
     _stackedWidget->addWidget(_otherSettingsPage);
 
@@ -188,45 +219,6 @@ void ProjectSettingsPage::_createPages()
         {
             this->apply2Config();
         });
-}
-
-// 槽函数，处理所有导航按钮的状态变化
-void ProjectSettingsPage::_onNavigationButtonToggled(bool checked)
-{
-    // 1. 确定是哪个按钮触发了信号
-    ElaToggleButton* triggeredButton = qobject_cast<ElaToggleButton*>(sender());
-    if (!triggeredButton)
-    {
-        return;
-    }
-
-    if (!checked)
-    {
-        triggeredButton->blockSignals(true);
-        triggeredButton->setIsToggled(true);
-        triggeredButton->blockSignals(false);
-        return;
-    }
-
-    // 2. 遍历所有导航按钮，实现互斥效果
-    for (ElaToggleButton* button : _navigationButtons)
-    {
-        if (button != triggeredButton)
-        {
-            // 关键：在不触发信号的情况下，取消其他按钮的选中状态
-            button->blockSignals(true);
-            button->setIsToggled(false);
-            button->blockSignals(false);
-        }
-    }
-
-    // 3. 切换到对应的页面
-    // 找到触发信号的按钮在列表中的索引
-    int index = _navigationButtons.indexOf(triggeredButton);
-    if (index >= 0)
-    {
-        _stackedWidget->setCurrentIndex(index);
-    }
 }
 
 void ProjectSettingsPage::_onStartTranslating()
@@ -251,5 +243,5 @@ void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int e
 
 bool ProjectSettingsPage::getIsRunning()
 {
-    return _isRunning.load();
+    return _isRunning;
 }

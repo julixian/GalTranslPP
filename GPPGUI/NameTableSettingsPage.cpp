@@ -140,12 +140,16 @@ void NameTableSettingsPage::_setupUI()
 	stackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["nameTableOpenMode"].value_or(_globalConfig["defaultNameTableOpenMode"].value_or(0)));
 	insertToml(_projectConfig, "GUIConfig.nameTableMode", stackedWidget->currentIndex());
 
+	plainTextModeButtom->setEnabled(stackedWidget->currentIndex() != 0);
+	TableModeButtom->setEnabled(stackedWidget->currentIndex() != 1);
 	addNameButtom->setEnabled(stackedWidget->currentIndex() == 1);
 	delNameButtom->setEnabled(stackedWidget->currentIndex() == 1);
 
 	connect(plainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(0);
+			plainTextModeButtom->setEnabled(false);
+			TableModeButtom->setEnabled(true);
 			addNameButtom->setEnabled(false);
 			delNameButtom->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 0);
@@ -153,6 +157,8 @@ void NameTableSettingsPage::_setupUI()
 	connect(TableModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(1);
+			plainTextModeButtom->setEnabled(true);
+			TableModeButtom->setEnabled(false);
 			addNameButtom->setEnabled(true);
 			delNameButtom->setEnabled(true);
 			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 1);

@@ -19,8 +19,8 @@ public:
 
     // 公共方法，用于获取当前项的状态
     QString getPluginName() const;
-    bool isEnabled() const;
-    void setEnabled(bool enabled);
+    bool isToggled() const;
+    void setIsToggled(bool enabled);
 
     // 控制上下移动按钮的可用性
     void setMoveUpButtonEnabled(bool enabled);

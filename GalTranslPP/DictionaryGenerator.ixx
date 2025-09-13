@@ -26,6 +26,9 @@ export {
         int m_threadsNum;
         int m_apiTimeoutMs;
         std::shared_ptr<spdlog::logger> m_logger;
+        std::string m_apiStrategy;
+        int m_maxRetries;
+        bool m_checkQuota;
 
         // 阶段一和二的结果
         std::vector<std::string> m_segments;
@@ -49,7 +52,8 @@ export {
     public:
         void setLogger(std::shared_ptr<spdlog::logger> logger) { m_logger = logger; }
         DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool, const fs::path& dictDir,
-            const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs);
+            const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy,
+            int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota);
         void generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName);
     };
 }
@@ -58,15 +62,17 @@ export {
 module :private;
 
 DictionaryGenerator::DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool,
-    const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, int threadsNum, int apiTimeoutMs)
+    const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy,
+    int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota)
     : m_controller(controller), m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
+    m_apiStrategy(apiStrategy), m_maxRetries(maxRetries), m_checkQuota(checkQuota),
     m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs) 
 {
     m_tagger.reset(
         MeCab::createTagger(("-r BaseConfig/DictGenerator/mecabrc -d " + wide2Ascii(dictDir, 0)).c_str())
     );
     if (!m_tagger) {
-        throw std::runtime_error("无法初始化 MeCab Tagger。请确保 BaseConfig/DictGenerator/mecabrc 和 " + wide2Ascii(dictDir) + " 存在");
+        throw std::runtime_error("无法初始化 MeCab Tagger。请确保 BaseConfig/DictGenerator/mecabrc 和 " + wide2Ascii(dictDir) + " 存在且无特殊字符");
     }
 }
 
@@ -229,34 +235,98 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
         {{"role", "user"}, {"content", prompt}}
         });
 
-    auto optApi = m_apiPool.getAPI();
-    if (!optApi) {
-        throw std::runtime_error("没有可用的API Key了");
-    }
-    TranslationAPI api = optApi.value();
-    json payload = { {"model", api.modelName}, {"messages", messages}, /*{"temperature", 0.6}*/ };
+    int retryCount = 0;
+    while (retryCount < m_maxRetries) {
+        if (m_controller->shouldStop()) {
+            return;
+        }
+        auto optAPI = m_apiStrategy == "random" ? m_apiPool.getAPI() : m_apiPool.getFirstAPI();
+        if (!optAPI) {
+            throw std::runtime_error("没有可用的API Key了");
+        }
+        TranslationAPI currentAPI = optAPI.value();
+        json payload = { {"model", currentAPI.modelName}, {"messages", messages}, /*{"temperature", 0.6}*/ };
 
-    m_logger->info("开始从段落中生成术语表\ninputBlock: \n{}", text);
-    ApiResponse response = performApiRequest(payload, api);
+        m_logger->info("开始从段落中生成术语表\ninputBlock: \n{}", text);
+        ApiResponse response = performApiRequest(payload, currentAPI);
 
-    if (response.success) {
-        m_logger->info("AI 字典生成成功:\n {}", response.content);
-        auto lines = splitString(response.content, '\n');
-        for (const auto& line : lines) {
-            auto parts = splitString(line, '\t');
-            if (parts.size() < 3 || parts[0].starts_with("日文原词") || parts[0].starts_with("NULL")) continue;
+        if (response.success) {
+            m_logger->info("AI 字典生成成功:\n {}", response.content);
+            auto lines = splitString(response.content, '\n');
+            for (const auto& line : lines) {
+                auto parts = splitString(line, '\t');
+                if (parts.size() < 3 || parts[0].starts_with("日文原词") || parts[0].starts_with("NULL")) continue;
 
-            std::lock_guard<std::mutex> lock(m_resultMutex);
-            m_finalCounter[parts[0]]++;
-            if (m_finalCounter[parts[0]] == 2) {
-                m_logger->trace("发现重复术语: {}\t{}\t{}", parts[0], parts[1], parts[2]);
+                std::lock_guard<std::mutex> lock(m_resultMutex);
+                m_finalCounter[parts[0]]++;
+                if (m_finalCounter[parts[0]] == 2) {
+                    m_logger->trace("发现重复术语: {}\t{}\t{}", parts[0], parts[1], parts[2]);
+                }
+                m_finalDict.emplace_back(parts[0], parts[1], parts[2]);
             }
-            m_finalDict.emplace_back(parts[0], parts[1], parts[2]);
+            break;
+        }
+        else {
+
+            std::string lowerErrorMsg = response.content;
+            std::transform(lowerErrorMsg.begin(), lowerErrorMsg.end(), lowerErrorMsg.begin(), ::tolower);
+
+            // 情况一：额度用尽 (Quota)
+            if (
+                m_checkQuota &&
+                (lowerErrorMsg.find("quota") != std::string::npos ||
+                    lowerErrorMsg.find("invalid tokens") != std::string::npos)
+                )
+            {
+                m_logger->error("API Key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", currentAPI.apikey);
+                m_apiPool.reportProblem(currentAPI);
+                // 不需要增加 retryCount
+                continue;
+            }
+            // key 没有这个模型
+            else if (lowerErrorMsg.find("no available") != std::string::npos) {
+                m_logger->error("API Key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", currentAPI.apikey, currentAPI.modelName);
+                m_apiPool.reportProblem(currentAPI);
+                continue;
+            }
+
+            // 情况二：频率限制 (429) 或其他可重试错误
+            // 状态码 429 是最明确的信号
+            if (response.statusCode == 429 || lowerErrorMsg.find("rate limit") != std::string::npos || lowerErrorMsg.find("try again") != std::string::npos) {
+                retryCount++;
+                m_logger->warn("遇到频率限制或可重试错误，进行第 {} 次退避等待...", retryCount);
+
+                // 实现指数退避与抖动
+                int sleepSeconds;
+                int maxSleepSeconds = static_cast<int>(std::pow(2, std::min(retryCount, 6)));
+                if (maxSleepSeconds > 0) {
+                    sleepSeconds = std::rand() % maxSleepSeconds;
+                }
+                else {
+                    sleepSeconds = 0;
+                }
+                m_logger->debug("将等待 {} 秒后重试...", sleepSeconds);
+                if (sleepSeconds > 0) {
+                    std::this_thread::sleep_for(std::chrono::seconds(sleepSeconds));
+                }
+                continue;
+            }
+
+            // 其他无法识别的硬性错误
+            retryCount++;
+            m_logger->warn("遇到未知API错误，进行第 {} 次重试...", retryCount);
+            if (m_apiStrategy == "fallback") {
+                m_logger->warn("将切换到下一个 API Key(如果有多个API Key的话)");
+                m_apiPool.resortTokens();
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(2)); // 简单等待
+            continue;
         }
     }
-    else {
-        m_logger->warn("AI 字典生成请求失败: {}", response.content);
+    if (retryCount >= m_maxRetries) {
+        m_logger->error("此线程 AI 字典生成失败，已达到最大重试次数。");
     }
+
     m_controller->updateBar();
     m_controller->reduceThreadNum();
 }

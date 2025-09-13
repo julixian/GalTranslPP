@@ -9,6 +9,8 @@
 
 class QVBoxLayout;
 class PluginItemWidget;
+class TLFCfgPage;
+class PostFull2HalfCfgPage;
 
 class PluginSettingsPage : public BasePage
 {
@@ -40,6 +42,9 @@ private:
 
     toml::table& _projectConfig;
     QWidget* _mainWindow;
+
+    TLFCfgPage* _tlfCfgPage;
+    PostFull2HalfCfgPage* _pf2hCfgPage;
 };
 
 #endif // PLUGINSETTINGSPAGE_H

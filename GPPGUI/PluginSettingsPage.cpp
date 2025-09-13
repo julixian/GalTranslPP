@@ -4,13 +4,12 @@
 #include "PluginItemWidget.h" // 引入自定义控件
 
 #include <QVBoxLayout>
-#include <QDebug>
 #include "ElaText.h"
 #include "ElaPushButton.h"
 #include "ElaScrollPageArea.h"
-#include "ElaContentDialog.h"
-#include "TLFCfgDialog.h"
-#include "PostFull2HalfCfgDialog.h"
+
+#include "TLFCfgPage.h"
+#include "PostFull2HalfCfgPage.h"
 
 import Tool;
 
@@ -29,9 +28,12 @@ PluginSettingsPage::~PluginSettingsPage()
 
 void PluginSettingsPage::apply2Config()
 {
+    _tlfCfgPage->apply2Config();
+    _pf2hCfgPage->apply2Config();
+
     toml::array plugins;
     for (PluginItemWidget* item : _postPluginItems) {
-        if (!item->isEnabled()) {
+        if (!item->isToggled()) {
             continue;
         }
         plugins.push_back(item->getPluginName().toStdString());
@@ -44,18 +46,20 @@ void PluginSettingsPage::_setupUI()
     QWidget* mainWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 
-    //创建一个提示标题
+    // 前处理插件列表
+
+    // 后处理插件列表
     ElaText* postTitle = new ElaText(mainWidget);
     postTitle->setText("后处理插件设置(由上至下执行)");
     postTitle->setTextPixelSize(18);
 
     // 创建一个容器用于放置列表
     QWidget* postListContainer = new QWidget(mainWidget);
-
     _postPluginListLayout = new QVBoxLayout(postListContainer);
 
     // 插件名称列表
     QStringList postPluginNames = { "TextPostFull2Half", "TextLinebreakFix" };
+    // 先处理项目已经启用的插件
     auto postPluginsArr = _projectConfig["plugins"]["textPostPlugins"].as_array();
     if (postPluginsArr) {
         for (const auto& elem : *postPluginsArr) {
@@ -69,7 +73,7 @@ void PluginSettingsPage::_setupUI()
             }
             postPluginNames.removeOne(pluginName);
             PluginItemWidget* item = new PluginItemWidget(pluginName, this);
-            item->setEnabled(true);
+            item->setIsToggled(true);
             _postPluginItems.append(item);
             _postPluginListLayout->addWidget(item);
             connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onPostMoveUp);
@@ -78,7 +82,7 @@ void PluginSettingsPage::_setupUI()
         }
     }
 
-    // 遍历名称列表，创建并添加 PluginItemWidget
+    // 遍历剩下的名称列表，创建并添加 PluginItemWidget
     for (const QString& name : postPluginNames)
     {
         PluginItemWidget* item = new PluginItemWidget(name, this);
@@ -100,7 +104,40 @@ void PluginSettingsPage::_setupUI()
     mainLayout->addStretch();
 
     addCentralWidget(mainWidget);
+
+    // 这里的顺序和_onPre/PostSettings 中的navigation索引对应
+    _pf2hCfgPage = new PostFull2HalfCfgPage(_projectConfig, this);
+    addCentralWidget(_pf2hCfgPage);
+    _tlfCfgPage = new TLFCfgPage(_projectConfig, this);
+    addCentralWidget(_tlfCfgPage);
 }
+
+void PluginSettingsPage::_onPostSettings(PluginItemWidget* item)
+{
+    if (!item) {
+        return;
+    }
+    QString pluginName = item->getPluginName();
+
+    if (pluginName == "TextPostFull2Half") {
+        this->navigation(1);
+    }
+    else if (pluginName == "TextLinebreakFix") {
+        this->navigation(2);
+    }
+}
+
+void PluginSettingsPage::_onPreSettings(PluginItemWidget* item)
+{
+    if (!item) {
+        return;
+    }
+    QString pluginName = item->getPluginName();
+
+
+}
+
+// 下面不用看，没什么用
 
 void PluginSettingsPage::_onPostMoveUp(PluginItemWidget* item)
 {
@@ -135,23 +172,6 @@ void PluginSettingsPage::_onPostMoveDown(PluginItemWidget* item)
     }
 }
 
-void PluginSettingsPage::_onPostSettings(PluginItemWidget* item)
-{
-    if (!item) {
-        return;
-    }
-    QString pluginName = item->getPluginName();
-
-    if (pluginName == "TextPostFull2Half") {
-        PostFull2HalfCfgDialog dlg(_projectConfig, _mainWindow);
-        dlg.exec();
-    }
-    else if (pluginName == "TextLinebreakFix") {
-        TLFCfgDialog dlg(_projectConfig, _mainWindow);
-        dlg.exec();
-    }
-}
-
 void PluginSettingsPage::_onPreMoveUp(PluginItemWidget* item)
 {
     int index = _prePluginListLayout->indexOf(item);
@@ -183,16 +203,6 @@ void PluginSettingsPage::_onPreMoveDown(PluginItemWidget* item)
 
         _updatePreMoveButtonStates();
     }
-}
-
-void PluginSettingsPage::_onPreSettings(PluginItemWidget* item)
-{
-    if (!item) {
-        return;
-    }
-    QString pluginName = item->getPluginName();
-
-    
 }
 
 void PluginSettingsPage::_updatePostMoveButtonStates()

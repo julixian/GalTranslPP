@@ -47,7 +47,10 @@ export {
 
         EpubTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller);
 
-        virtual ~EpubTranslator() {}
+        virtual ~EpubTranslator()
+        {
+            m_logger->info("所有任务已完成！EpubTranlator结束。");
+        }
     };
 }
 
@@ -349,6 +352,4 @@ void EpubTranslator::run()
             m_logger->info("已重建 EPUB 文件: {}", wide2Ascii(outputEpubPath));
         }
     }
-
-    m_logger->info("所有任务已完成！EpubTranlator结束。");
 }

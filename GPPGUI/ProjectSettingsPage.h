@@ -20,6 +20,7 @@ class CommonSettingsPage;
 class PASettingsPage;
 class NameTableSettingsPage;
 class DictSettingsPage;
+class DictExSettingsPage;
 class StartSettingsPage;
 class OtherSettingsPage;
 class PromptSettingsPage;
@@ -56,6 +57,7 @@ private:
     PASettingsPage* _paSettingsPage;
     NameTableSettingsPage* _nameTableSettingsPage;
     DictSettingsPage* _dictSettingsPage;
+    DictExSettingsPage* _dictExSettingsPage;
     StartSettingsPage* _startSettingsPage;
     OtherSettingsPage* _otherSettingsPage;
     PromptSettingsPage* _promptSettingsPage;

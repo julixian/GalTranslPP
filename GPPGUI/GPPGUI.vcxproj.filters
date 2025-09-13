@@ -145,6 +145,9 @@
     <ClCompile Include="CommonGptDictPage.cpp">
       <Filter>Source Files\PageImp</Filter>
     </ClCompile>
+    <ClCompile Include="DictExSettingsPage.cpp">
+      <Filter>Source Files\ProjectSettingImp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -242,6 +245,9 @@
     </QtMoc>
     <QtMoc Include="CommonGptDictPage.h">
       <Filter>Header Files\PageHeaders</Filter>
+    </QtMoc>
+    <QtMoc Include="DictExSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

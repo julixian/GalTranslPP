@@ -23,7 +23,6 @@ public:
     ~DictSettingsPage() override;
     void apply2Config();
     void refreshDicts();
-    void refreshCommonDictsList();
 
 private:
 
@@ -39,7 +38,6 @@ private:
 
     std::function<void()> _applyFunc;
     std::function<void()> _refreshFunc;
-    std::function<void()> _refreshCommonDictsListFunc;
 };
 
 #endif // COMMONSETTINGSPAGE_H

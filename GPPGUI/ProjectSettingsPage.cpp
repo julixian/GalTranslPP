@@ -19,6 +19,7 @@
 #include "CommonSettingsPage.h"
 #include "PASettingsPage.h"
 #include "DictSettingsPage.h"
+#include "DictExSettingsPage.h"
 #include "StartSettingsPage.h"
 #include "NameTableSettingsPage.h"
 #include "OtherSettingsPage.h"
@@ -58,6 +59,7 @@ void ProjectSettingsPage::apply2Config()
     _paSettingsPage->apply2Config();
     _nameTableSettingsPage->apply2Config();
     _dictSettingsPage->apply2Config();
+    _dictExSettingsPage->apply2Config();
     _startSettingsPage->apply2Config();
     _otherSettingsPage->apply2Config();
     _promptSettingsPage->apply2Config();
@@ -69,7 +71,7 @@ void ProjectSettingsPage::apply2Config()
 
 void ProjectSettingsPage::refreshCommonDicts()
 {
-    _dictSettingsPage->refreshCommonDictsList();
+    _dictExSettingsPage->refreshCommonDictsList();
 }
 
 QString ProjectSettingsPage::getProjectName()
@@ -114,6 +116,7 @@ void ProjectSettingsPage::_setupUI()
     ElaMenu* transMenu = new ElaMenu(navigationWidget);
     QAction* nameTableSettingAction = transMenu->addElaIconAction(ElaIconType::User, "人名表");
     QAction* dictSettingAction = transMenu->addElaIconAction(ElaIconType::Book, "项目字典");
+    QAction* dictExSettingAction = transMenu->addElaIconAction(ElaIconType::BookOpen, "字典设置");
     QAction* promptSettingAction = transMenu->addElaIconAction(ElaIconType::Bell, "提示词");
 
     ElaToolButton* transButton = new ElaToolButton(navigationWidget);
@@ -164,24 +167,29 @@ void ProjectSettingsPage::_setupUI()
             _stackedWidget->setCurrentIndex(4);
             settingsTitle->setText("项目字典");
         });
-    connect(promptSettingAction, &QAction::triggered, this, [=]()
+    connect(dictExSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(5);
+            settingsTitle->setText("字典设置");
+        });
+    connect(promptSettingAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(6);
             settingsTitle->setText("提示词");
         });
     connect(pluginSettingAction, &QAction::triggered, this, [=]()
         {
-            _stackedWidget->setCurrentIndex(6);
+            _stackedWidget->setCurrentIndex(7);
             settingsTitle->setText("插件管理");
         });
     connect(startTransAction, &QAction::triggered, this, [=]()
         {
-            _stackedWidget->setCurrentIndex(7);
+            _stackedWidget->setCurrentIndex(8);
             settingsTitle->setText("开始翻译");
         });
     connect(otherSettingAction, &QAction::triggered, this, [=]()
         {
-            _stackedWidget->setCurrentIndex(8);
+            _stackedWidget->setCurrentIndex(9);
             settingsTitle->setText("其他设置");
         });
 
@@ -198,6 +206,7 @@ void ProjectSettingsPage::_createPages()
     _paSettingsPage = new PASettingsPage(_projectConfig, this);
     _nameTableSettingsPage = new NameTableSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
     _dictSettingsPage = new DictSettingsPage(_projectDir, _globalConfig, _projectConfig, this);
+    _dictExSettingsPage = new DictExSettingsPage(_globalConfig, _projectConfig, this);
     _promptSettingsPage = new PromptSettingsPage(_projectDir, _projectConfig, this);
     _pluginSettingsPage = new PluginSettingsPage(_mainWindow, _projectConfig, this);
     _startSettingsPage = new StartSettingsPage(_mainWindow, _projectDir, _projectConfig, this);
@@ -208,6 +217,7 @@ void ProjectSettingsPage::_createPages()
     _stackedWidget->addWidget(_paSettingsPage);
     _stackedWidget->addWidget(_nameTableSettingsPage);
     _stackedWidget->addWidget(_dictSettingsPage);
+    _stackedWidget->addWidget(_dictExSettingsPage);
     _stackedWidget->addWidget(_promptSettingsPage);
     _stackedWidget->addWidget(_pluginSettingsPage);
     _stackedWidget->addWidget(_startSettingsPage);

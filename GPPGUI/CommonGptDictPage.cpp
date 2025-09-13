@@ -154,7 +154,7 @@ void CommonGptDictPage::_setupUI()
 	mainButtonLayout->addWidget(removeDictButton);
 	mainLayout->addWidget(mainButtonWidget, 0, Qt::AlignTop);
 
-	ElaTabWidget* tabWidget = new ElaTabWidget(mainButtonWidget);
+	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
 	auto commonGptDicts = _globalConfig["commonGptDicts"]["dictNames"].as_array();

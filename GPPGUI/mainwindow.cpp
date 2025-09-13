@@ -155,11 +155,10 @@ void MainWindow::initEdgeLayout()
     ElaMenuBar* menuBar = new ElaMenuBar(this);
     menuBar->setFixedHeight(30);
     QWidget* customWidget = new QWidget(this);
-    QVBoxLayout* customLayout = new QVBoxLayout(customWidget);
+    QHBoxLayout* customLayout = new QHBoxLayout(customWidget);
     customLayout->setContentsMargins(0, 0, 0, 0);
     customLayout->addWidget(menuBar);
     customLayout->addStretch();
-    // this->setMenuBar(menuBar);
     this->setCustomWidget(ElaAppBarType::MiddleArea, customWidget);
     this->setCustomWidgetMaximumWidth(700);
 
@@ -251,7 +250,7 @@ void MainWindow::initContent()
         this->navigation(_homePage->property("ElaPageKey").toString());
         });
 
-    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
+    /*connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
         {
             auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
                 {
@@ -263,7 +262,7 @@ void MainWindow::initContent()
             else {
                 setWindowTitle("Galtransl++");
             }
-        });
+        });*/
 }
 
 void MainWindow::_on_newProject_triggered()

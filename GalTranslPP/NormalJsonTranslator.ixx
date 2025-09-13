@@ -1481,6 +1481,8 @@ void NormalJsonTranslator::run() {
         }
     }
 
+    m_controller->makeBar(m_totalSentences, m_threadsNum);
+
     if (needGenerateNameTable) {
         std::vector<std::string> nameTableKeys;
         for (const auto& [name, count] : nameTableMap) {
@@ -1649,7 +1651,6 @@ void NormalJsonTranslator::run() {
 
     ctpl::thread_pool pool(std::min(m_threadsNum, (int)filePaths.size()));
     std::vector<std::future<void>> results;
-    m_controller->makeBar(m_totalSentences, m_threadsNum);
 
     for (const auto& filePath : filePaths) {
         results.emplace_back(pool.push([=](int id) {

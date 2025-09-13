@@ -117,6 +117,7 @@
     <ClCompile Include="CommonPreDictPage.cpp" />
     <ClCompile Include="CommonSettingsPage.cpp" />
     <ClCompile Include="DefaultPromptPage.cpp" />
+    <ClCompile Include="DictExSettingsPage.cpp" />
     <ClCompile Include="DictionaryModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
     <ClCompile Include="ElaInputDialog.cpp" />
@@ -241,6 +242,7 @@
   <ItemGroup>
     <QtMoc Include="CommonGptDictPage.h" />
     <QtMoc Include="CommonPostDictPage.h" />
+    <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

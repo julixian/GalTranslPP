@@ -163,11 +163,13 @@ void NameTableSettingsPage::_setupUI()
 			delNameButtom->setEnabled(true);
 			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 1);
 		});
-	connect(refreshButtom, &ElaPushButton::clicked, this, [=]()
+	auto refreshFunc = [=]()
 		{
-			nameTableModel->loadData(readNameTable());
 			plainTextEdit->setPlainText(readNameTableStr());
-		});
+			nameTableModel->loadData(readNameTable());
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "重新载入了人名表", 3000);
+		};
+	connect(refreshButtom, &ElaPushButton::clicked, this, refreshFunc);
 	connect(addNameButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			nameTableModel->insertRow(nameTableModel->rowCount());
@@ -216,11 +218,7 @@ void NameTableSettingsPage::_setupUI()
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.2", nameTableView->columnWidth(2));
 		};
 
-	_refreshFunc = [=]()
-		{
-			plainTextEdit->setPlainText(readNameTableStr());
-			nameTableModel->loadData(readNameTable());
-		};
+	_refreshFunc = refreshFunc;
 
 	addCentralWidget(mainWidget, true, true, 0);
 }

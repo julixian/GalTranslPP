@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QDir>
 #include <Windows.h>
 #include <QSharedMemory>
 #include <QLocalServer>
@@ -17,6 +18,9 @@ namespace fs = std::filesystem;
 int main(int argc, char* argv[])
 {
     QApplication a(argc, argv);
+
+    QString appDir = QApplication::applicationDirPath();
+    QDir::setCurrent(appDir);
 
     // 1. 使用 QSharedMemory 防止多实例运行
     // 使用一个唯一的key

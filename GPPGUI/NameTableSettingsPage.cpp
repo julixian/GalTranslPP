@@ -244,6 +244,9 @@ void NameTableSettingsPage::_setupUI()
 				ofs << "# '原名' = [ '译名', 出现次数 ]\n";
 				QList<NameTableEntry> entries = nameTableModel->getEntries();
 				for (const NameTableEntry& entry : entries) {
+					if (entry.original.isEmpty()) {
+						continue;
+					}
 					toml::table tbl;
 					tbl.insert(entry.original.toStdString(), toml::array{ entry.translation.toStdString(), entry.count });
 					ofs << tbl << "\n";

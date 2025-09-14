@@ -143,6 +143,14 @@ void ProjectSettingsPage::_setupUI()
 
     _createPages();
 
+    auto pageNavigation = [=]()
+        {
+            BasePage* page = qobject_cast<BasePage*>(_stackedWidget->currentWidget());
+            if (page) {
+                page->navigation(0);
+            }
+        };
+
     connect(apiSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(0);
@@ -181,11 +189,13 @@ void ProjectSettingsPage::_setupUI()
     connect(pluginSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(7);
+            pageNavigation();
             settingsTitle->setText("插件管理");
         });
     connect(startTransAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(8);
+            pageNavigation();
             settingsTitle->setText("开始翻译");
         });
     connect(otherSettingAction, &QAction::triggered, this, [=]()

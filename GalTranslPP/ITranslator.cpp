@@ -29,7 +29,7 @@ ITranslator::~ITranslator()
 
 }
 
-// CLI 版本
+
 std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller)
 {
     fs::path configFilePath = projectDir / L"config.toml";

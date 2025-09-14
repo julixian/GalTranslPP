@@ -206,6 +206,8 @@ void DictSettingsPage::_setupUI()
 	gptPlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* gptTableModeButtom = new ElaPushButton(gptButtonWidget);
 	gptTableModeButtom->setText("切换至表模式");
+	ElaPushButton* saveGptDictButton = new ElaPushButton(gptButtonWidget);
+	saveGptDictButton->setText("保存");
 	ElaPushButton* withdrawGptDictButton = new ElaPushButton(gptButtonWidget);
 	withdrawGptDictButton->setText("撤回");
 	withdrawGptDictButton->setEnabled(false);
@@ -218,6 +220,7 @@ void DictSettingsPage::_setupUI()
 	gptButtonLayout->addWidget(gptPlainTextModeButtom);
 	gptButtonLayout->addWidget(gptTableModeButtom);
 	gptButtonLayout->addStretch();
+	gptButtonLayout->addWidget(saveGptDictButton);
 	gptButtonLayout->addWidget(withdrawGptDictButton);
 	gptButtonLayout->addWidget(refreshGptDictButton);
 	gptButtonLayout->addWidget(addGptDictButton);
@@ -267,6 +270,38 @@ void DictSettingsPage::_setupUI()
 			gptDictModel->loadData(readGptDicts());
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "重新载入了项目GPT字典", 3000);
 		};
+	auto saveGptDictFunc = [=]()
+		{
+			std::ofstream ofs(_projectDir / L"项目GPT字典.toml");
+
+			if (fs::exists(_projectDir / L"项目GPT字典-生成.toml")) {
+				fs::remove(_projectDir / L"项目GPT字典-生成.toml");
+			}
+
+			if (gptStackedWidget->currentIndex() == 0) {
+				ofs << gptPlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+				gptDictModel->loadData(readGptDicts());
+			}
+			else if (gptStackedWidget->currentIndex() == 1) {
+				toml::array gptDictArr;
+				QList<DictionaryEntry> gptEntries = gptDictModel->getEntries();
+				for (const auto& entry : gptEntries) {
+					toml::table gptDictTbl;
+					gptDictTbl.insert("searchStr", entry.original.toStdString());
+					gptDictTbl.insert("replaceStr", entry.translation.toStdString());
+					gptDictTbl.insert("note", entry.description.toStdString());
+					gptDictArr.push_back(gptDictTbl);
+				}
+				ofs << toml::table{ {"gptDict", gptDictArr} };
+				ofs.close();
+				gptPlainTextEdit->setPlainText(readGptDictsStr());
+			}
+
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", gptDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", gptDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", gptDictTableView->columnWidth(2));
+		};
 	connect(gptPlainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			gptStackedWidget->setCurrentIndex(0);
@@ -274,6 +309,7 @@ void DictSettingsPage::_setupUI()
 			delGptDictButton->setEnabled(false);
 			gptPlainTextModeButtom->setEnabled(false);
 			gptTableModeButtom->setEnabled(true);
+			withdrawGptDictButton->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 0);
 		});
 	connect(gptTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -283,9 +319,15 @@ void DictSettingsPage::_setupUI()
 			delGptDictButton->setEnabled(true);
 			gptPlainTextModeButtom->setEnabled(true);
 			gptTableModeButtom->setEnabled(false);
+			withdrawGptDictButton->setEnabled(!_withdrawGptList.empty());
 			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 1);
 		});
 	connect(refreshGptDictButton, &ElaPushButton::clicked, this, refreshGptDictFunc);
+	connect(saveGptDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			saveGptDictFunc();
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "已保存项目GPT字典", 3000);
+		});
 	connect(addGptDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList index = gptDictTableView->selectionModel()->selectedIndexes();
@@ -337,6 +379,8 @@ void DictSettingsPage::_setupUI()
 	prePlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* preTableModeButtom = new ElaPushButton(preButtonWidget);
 	preTableModeButtom->setText("切换至表模式");
+	ElaPushButton* savePreDictButton = new ElaPushButton(preButtonWidget);
+	savePreDictButton->setText("保存");
 	ElaPushButton* withdrawPreDictButton = new ElaPushButton(preButtonWidget);
 	withdrawPreDictButton->setText("撤回");
 	withdrawPreDictButton->setEnabled(false);
@@ -349,6 +393,7 @@ void DictSettingsPage::_setupUI()
 	preButtonLayout->addWidget(prePlainTextModeButtom);
 	preButtonLayout->addWidget(preTableModeButtom);
 	preButtonLayout->addStretch();
+	preButtonLayout->addWidget(savePreDictButton);
 	preButtonLayout->addWidget(withdrawPreDictButton);
 	preButtonLayout->addWidget(refreshPreDictButton);
 	preButtonLayout->addWidget(addPreDictButton);
@@ -394,6 +439,38 @@ void DictSettingsPage::_setupUI()
 			preDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译前.toml"));
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "重新载入了项目译前字典", 3000);
 		};
+	auto savePreDictFunc = [=]()
+		{
+			std::ofstream ofs(_projectDir / L"项目字典_译前.toml");
+			if (preStackedWidget->currentIndex() == 0) {
+				ofs << prePlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+				preDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译前.toml"));
+			}
+			else if (preStackedWidget->currentIndex() == 1) {
+				toml::array preDictArr;
+				QList<NormalDictEntry> preEntries = preDictModel->getEntries();
+				for (const auto& entry : preEntries) {
+					toml::table preDictTbl;
+					preDictTbl.insert("searchStr", entry.original.toStdString());
+					preDictTbl.insert("replaceStr", entry.translation.toStdString());
+					preDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
+					preDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
+					preDictTbl.insert("isReg", entry.isReg);
+					preDictTbl.insert("priority", entry.priority);
+					preDictArr.push_back(preDictTbl);
+				}
+				ofs << toml::table{ {"normalDict", preDictArr} };
+				ofs.close();
+				prePlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译前.toml"));
+			}
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.0", preDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.1", preDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.2", preDictTableView->columnWidth(2));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.3", preDictTableView->columnWidth(3));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.4", preDictTableView->columnWidth(4));
+			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.5", preDictTableView->columnWidth(5));
+		};
 	connect(prePlainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			preStackedWidget->setCurrentIndex(0);
@@ -401,6 +478,7 @@ void DictSettingsPage::_setupUI()
 			delPreDictButton->setEnabled(false);
 			prePlainTextModeButtom->setEnabled(false);
 			preTableModeButtom->setEnabled(true);
+			withdrawPreDictButton->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 0);
 		});
 	connect(preTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -410,9 +488,15 @@ void DictSettingsPage::_setupUI()
 			delPreDictButton->setEnabled(true);
 			prePlainTextModeButtom->setEnabled(true);
 			preTableModeButtom->setEnabled(false);
+			withdrawPreDictButton->setEnabled(!_withdrawPreList.empty());
 			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 1);
 		});
 	connect(refreshPreDictButton, &ElaPushButton::clicked, this, refreshPreDictFunc);
+	connect(savePreDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			savePreDictFunc();
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "已保存项目译前字典", 3000);
+		});
 	connect(addPreDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList index = preDictTableView->selectionModel()->selectedIndexes();
@@ -464,6 +548,8 @@ void DictSettingsPage::_setupUI()
 	postPlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* postTableModeButtom = new ElaPushButton(postButtonWidget);
 	postTableModeButtom->setText("切换至表模式");
+	ElaPushButton* savePostDictButton = new ElaPushButton(postButtonWidget);
+	savePostDictButton->setText("保存");
 	ElaPushButton* withdrawPostDictButton = new ElaPushButton(postButtonWidget);
 	withdrawPostDictButton->setText("撤回");
 	withdrawPostDictButton->setEnabled(false);
@@ -476,6 +562,7 @@ void DictSettingsPage::_setupUI()
 	postButtonLayout->addWidget(postPlainTextModeButtom);
 	postButtonLayout->addWidget(postTableModeButtom);
 	postButtonLayout->addStretch();
+	postButtonLayout->addWidget(savePostDictButton);
 	postButtonLayout->addWidget(withdrawPostDictButton);
 	postButtonLayout->addWidget(refreshPostDictButton);
 	postButtonLayout->addWidget(addPostDictButton);
@@ -521,6 +608,38 @@ void DictSettingsPage::_setupUI()
 			postDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译后.toml"));
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "重新载入了项目译后字典", 3000);
 		};
+	auto savePostDictFunc = [=]()
+		{
+			std::ofstream ofs(_projectDir / L"项目字典_译后.toml");
+			if (postStackedWidget->currentIndex() == 0) {
+				ofs << postPlainTextEdit->toPlainText().toStdString();
+				ofs.close();
+				postDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译后.toml"));
+			}
+			else if (postStackedWidget->currentIndex() == 1) {
+				toml::array postDictArr;
+				QList<NormalDictEntry> postEntries = postDictModel->getEntries();
+				for (const auto& entry : postEntries) {
+					toml::table postDictTbl;
+					postDictTbl.insert("searchStr", entry.original.toStdString());
+					postDictTbl.insert("replaceStr", entry.translation.toStdString());
+					postDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
+					postDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
+					postDictTbl.insert("isReg", entry.isReg);
+					postDictTbl.insert("priority", entry.priority);
+					postDictArr.push_back(postDictTbl);
+				}
+				ofs << toml::table{ {"normalDict", postDictArr} };
+				ofs.close();
+				postPlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译后.toml"));
+			}
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.0", postDictTableView->columnWidth(0));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.1", postDictTableView->columnWidth(1));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.2", postDictTableView->columnWidth(2));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.3", postDictTableView->columnWidth(3));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.4", postDictTableView->columnWidth(4));
+			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.5", postDictTableView->columnWidth(5));
+		};
 	connect(postPlainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			postStackedWidget->setCurrentIndex(0);
@@ -528,6 +647,7 @@ void DictSettingsPage::_setupUI()
 			delPostDictButton->setEnabled(false);
 			postPlainTextModeButtom->setEnabled(false);
 			postTableModeButtom->setEnabled(true);
+			withdrawPostDictButton->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 0);
 		});
 	connect(postTableModeButtom, &ElaPushButton::clicked, this, [=]()
@@ -537,9 +657,15 @@ void DictSettingsPage::_setupUI()
 			delPostDictButton->setEnabled(true);
 			postPlainTextModeButtom->setEnabled(true);
 			postTableModeButtom->setEnabled(false);
+			withdrawPostDictButton->setEnabled(!_withdrawPostList.empty());
 			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 1);
 		});
 	connect(refreshPostDictButton, &ElaPushButton::clicked, this, refreshPostDictFunc);
+	connect(savePostDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			savePostDictFunc();
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "已保存项目译后字典", 3000);
+		});
 	connect(addPostDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList index = postDictTableView->selectionModel()->selectedIndexes();
@@ -614,7 +740,7 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 比如说，你在按开始翻译按钮时，人名表是以表模式显示的，项目GPT字典是纯文本模式显示的，
 则会先将 人名表 表模式 中的数据保存到 项目文件夹的 人名替换表.toml 中，
 将 项目GPT字典 纯文本模式 中的文本原样保存到 项目文件夹的 项目GPT字典.toml 中，
-然后再执行翻译。所以如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
+然后再执行翻译。所以如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错(不过保存时有合法性检测)。
 
 按刷新将会重新从项目文件夹中的 toml 文件读取数据，如果你在GUI中还有修改了没有保存的数据，
 请务必先确认备份情况再刷新。
@@ -626,97 +752,9 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 
 	_applyFunc = [=]()
 		{
-			std::ofstream ofs;
-
-			fs::remove(_projectDir / L"项目GPT字典-生成.toml");
-
-			if (gptStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目GPT字典.toml");
-				ofs << gptPlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-				gptDictModel->loadData(readGptDicts());
-			}
-			else if (gptStackedWidget->currentIndex() == 1) {
-				toml::array gptDictArr;
-				QList<DictionaryEntry> gptEntries = gptDictModel->getEntries();
-				for (const auto& entry : gptEntries) {
-					toml::table gptDictTbl;
-					gptDictTbl.insert("searchStr", entry.original.toStdString());
-					gptDictTbl.insert("replaceStr", entry.translation.toStdString());
-					gptDictTbl.insert("note", entry.description.toStdString());
-					gptDictArr.push_back(gptDictTbl);
-				}
-				ofs.open(_projectDir / L"项目GPT字典.toml");
-				ofs << toml::table{ {"gptDict", gptDictArr} };
-				ofs.close();
-				gptPlainTextEdit->setPlainText(readGptDictsStr());
-			}
-
-			if (preStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目字典_译前.toml");
-				ofs << prePlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-				preDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译前.toml"));
-			}
-			else if (preStackedWidget->currentIndex() == 1) {
-				toml::array preDictArr;
-				QList<NormalDictEntry> preEntries = preDictModel->getEntries();
-				for (const auto& entry : preEntries) {
-					toml::table preDictTbl;
-					preDictTbl.insert("searchStr", entry.original.toStdString());
-					preDictTbl.insert("replaceStr", entry.translation.toStdString());
-					preDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
-					preDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
-					preDictTbl.insert("isReg", entry.isReg);
-					preDictTbl.insert("priority", entry.priority);
-					preDictArr.push_back(preDictTbl);
-				}
-				ofs.open(_projectDir / L"项目字典_译前.toml");
-				ofs << toml::table{ {"normalDict", preDictArr} };
-				ofs.close();
-				prePlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译前.toml"));
-			}
-
-			if (postStackedWidget->currentIndex() == 0) {
-				ofs.open(_projectDir / L"项目字典_译后.toml");
-				ofs << postPlainTextEdit->toPlainText().toStdString();
-				ofs.close();
-				postDictModel->loadData(readNormalDicts(_projectDir / L"项目字典_译后.toml"));
-			}
-			else if (postStackedWidget->currentIndex() == 1) {
-				toml::array postDictArr;
-				QList<NormalDictEntry> postEntries = postDictModel->getEntries();
-				for (const auto& entry : postEntries) {
-					toml::table postDictTbl;
-					postDictTbl.insert("searchStr", entry.original.toStdString());
-					postDictTbl.insert("replaceStr", entry.translation.toStdString());
-					postDictTbl.insert("conditionTarget", entry.conditionTar.toStdString());
-					postDictTbl.insert("conditionReg", entry.conditionReg.toStdString());
-					postDictTbl.insert("isReg", entry.isReg);
-					postDictTbl.insert("priority", entry.priority);
-					postDictArr.push_back(postDictTbl);
-				}
-				ofs.open(_projectDir / L"项目字典_译后.toml");
-				ofs << toml::table{ {"normalDict", postDictArr} };
-				ofs.close();
-				postPlainTextEdit->setPlainText(readNormalDictsStr(_projectDir / L"项目字典_译后.toml"));
-			}
-
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", gptDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", gptDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", gptDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.0", preDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.1", preDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.2", preDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.3", preDictTableView->columnWidth(3));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.4", preDictTableView->columnWidth(4));
-			insertToml(_projectConfig, "GUIConfig.preDictTableColumnWidth.5", preDictTableView->columnWidth(5));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.0", postDictTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.1", postDictTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.2", postDictTableView->columnWidth(2));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.3", postDictTableView->columnWidth(3));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.4", postDictTableView->columnWidth(4));
-			insertToml(_projectConfig, "GUIConfig.postDictTableColumnWidth.5", postDictTableView->columnWidth(5));
+			saveGptDictFunc();
+			savePreDictFunc();
+			savePostDictFunc();
 		};
 
 	mainLayout->addWidget(tabWidget, 1);

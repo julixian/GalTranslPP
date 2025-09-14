@@ -204,6 +204,7 @@ void CommonNormalDictPage::_setupUI()
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			defaultOnButton->setIsToggled(_globalConfig[_modeConfig]["spec"][dictName]["defaultOn"].value_or(true));
+			insertToml(_globalConfig, _modeConfig + ".spec." + dictName + ".defaultOn", defaultOnButton->getIsToggled());
 
 			connect(plainTextModeButton, &ElaPushButton::clicked, this, [=]()
 				{
@@ -212,6 +213,7 @@ void CommonNormalDictPage::_setupUI()
 					tableModeButton->setEnabled(true);
 					addDictButton->setEnabled(false);
 					removeDictButton->setEnabled(false);
+					withdrawButton->setEnabled(false);
 				});
 
 			connect(tableModeButton, &ElaPushButton::clicked, this, [=]()
@@ -221,6 +223,7 @@ void CommonNormalDictPage::_setupUI()
 					tableModeButton->setEnabled(false);
 					addDictButton->setEnabled(true);
 					removeDictButton->setEnabled(true);
+					withdrawButton->setEnabled(!normalTabEntry.withdrawList->empty());
 				});
 
 			connect(defaultOnButton, &ElaToggleButton::toggled, this, [=](bool checked)

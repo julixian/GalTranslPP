@@ -104,20 +104,22 @@ void NameTableSettingsPage::_setupUI()
 
 	QWidget* buttonWidget = new QWidget(mainWidget);
 	QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
-	ElaPushButton* plainTextModeButtom = new ElaPushButton("切换至纯文本模式", buttonWidget);
-	ElaPushButton* TableModeButtom = new ElaPushButton("切换至表模式", buttonWidget);
-	ElaPushButton* withdrawButtom = new ElaPushButton("撤回", buttonWidget);
-	withdrawButtom->setEnabled(false);
-	ElaPushButton* refreshButtom = new ElaPushButton("刷新", buttonWidget);
-	ElaPushButton* addNameButtom = new ElaPushButton("添加人名", buttonWidget);
-	ElaPushButton* delNameButtom = new ElaPushButton("删除人名", buttonWidget);
-	buttonLayout->addWidget(plainTextModeButtom);
-	buttonLayout->addWidget(TableModeButtom);
+	ElaPushButton* plainTextModeButton = new ElaPushButton("切换至纯文本模式", buttonWidget);
+	ElaPushButton* TableModeButton = new ElaPushButton("切换至表模式", buttonWidget);
+	ElaPushButton* saveDictButton = new ElaPushButton("保存", buttonWidget);
+	ElaPushButton* withdrawButton = new ElaPushButton("撤回", buttonWidget);
+	withdrawButton->setEnabled(false);
+	ElaPushButton* refreshButton = new ElaPushButton("刷新", buttonWidget);
+	ElaPushButton* addNameButton = new ElaPushButton("添加人名", buttonWidget);
+	ElaPushButton* delNameButton = new ElaPushButton("删除人名", buttonWidget);
+	buttonLayout->addWidget(plainTextModeButton);
+	buttonLayout->addWidget(TableModeButton);
 	buttonLayout->addStretch();
-	buttonLayout->addWidget(withdrawButtom);
-	buttonLayout->addWidget(refreshButtom);
-	buttonLayout->addWidget(addNameButtom);
-	buttonLayout->addWidget(delNameButtom);
+	buttonLayout->addWidget(saveDictButton);
+	buttonLayout->addWidget(withdrawButton);
+	buttonLayout->addWidget(refreshButton);
+	buttonLayout->addWidget(addNameButton);
+	buttonLayout->addWidget(delNameButton);
 
 	QStackedWidget* stackedWidget = new QStackedWidget(mainWidget);
 	// 纯文本模式
@@ -147,27 +149,29 @@ void NameTableSettingsPage::_setupUI()
 	stackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["nameTableOpenMode"].value_or(_globalConfig["defaultNameTableOpenMode"].value_or(0)));
 	insertToml(_projectConfig, "GUIConfig.nameTableMode", stackedWidget->currentIndex());
 
-	plainTextModeButtom->setEnabled(stackedWidget->currentIndex() != 0);
-	TableModeButtom->setEnabled(stackedWidget->currentIndex() != 1);
-	addNameButtom->setEnabled(stackedWidget->currentIndex() == 1);
-	delNameButtom->setEnabled(stackedWidget->currentIndex() == 1);
+	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
+	TableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
+	addNameButton->setEnabled(stackedWidget->currentIndex() == 1);
+	delNameButton->setEnabled(stackedWidget->currentIndex() == 1);
 
-	connect(plainTextModeButtom, &ElaPushButton::clicked, this, [=]()
+	connect(plainTextModeButton, &ElaPushButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(0);
-			plainTextModeButtom->setEnabled(false);
-			TableModeButtom->setEnabled(true);
-			addNameButtom->setEnabled(false);
-			delNameButtom->setEnabled(false);
+			plainTextModeButton->setEnabled(false);
+			TableModeButton->setEnabled(true);
+			addNameButton->setEnabled(false);
+			delNameButton->setEnabled(false);
+			withdrawButton->setEnabled(false);
 			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 0);
 		});
-	connect(TableModeButtom, &ElaPushButton::clicked, this, [=]()
+	connect(TableModeButton, &ElaPushButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(1);
-			plainTextModeButtom->setEnabled(true);
-			TableModeButtom->setEnabled(false);
-			addNameButtom->setEnabled(true);
-			delNameButtom->setEnabled(true);
+			plainTextModeButton->setEnabled(true);
+			TableModeButton->setEnabled(false);
+			addNameButton->setEnabled(true);
+			delNameButton->setEnabled(true);
+			withdrawButton->setEnabled(!_withdrawList.isEmpty());
 			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 1);
 		});
 	auto refreshFunc = [=]()
@@ -176,12 +180,12 @@ void NameTableSettingsPage::_setupUI()
 			nameTableModel->loadData(readNameTable());
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "重新载入了人名表", 3000);
 		};
-	connect(refreshButtom, &ElaPushButton::clicked, this, refreshFunc);
-	connect(addNameButtom, &ElaPushButton::clicked, this, [=]()
+	connect(refreshButton, &ElaPushButton::clicked, this, refreshFunc);
+	connect(addNameButton, &ElaPushButton::clicked, this, [=]()
 		{
 			nameTableModel->insertRow(nameTableModel->rowCount());
 		});
-	connect(delNameButtom, &ElaPushButton::clicked, this, [=]()
+	connect(delNameButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList indexList = nameTableView->selectionModel()->selectedRows();
 			const QList<NameTableEntry>& entries = nameTableModel->getEntriesRef();
@@ -198,11 +202,18 @@ void NameTableSettingsPage::_setupUI()
 					nameTableModel->removeRow(index.row());
 				}
 				if (!_withdrawList.isEmpty()) {
-					withdrawButtom->setEnabled(true);
+					withdrawButton->setEnabled(true);
 				}
 			}
 		});
-	connect(withdrawButtom, &ElaPushButton::clicked, this, [=]()
+	connect(saveDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			if (_applyFunc) {
+				_applyFunc();
+			}
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, "保存成功", "已保存人名替换表", 3000);
+		});
+	connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
 		{
 			if (_withdrawList.isEmpty()) {
 				return;
@@ -211,7 +222,7 @@ void NameTableSettingsPage::_setupUI()
 			_withdrawList.pop_front();
 			nameTableModel->insertRow(0, entry);
 			if (_withdrawList.isEmpty()) {
-				withdrawButtom->setEnabled(false);
+				withdrawButton->setEnabled(false);
 			}
 		});
 

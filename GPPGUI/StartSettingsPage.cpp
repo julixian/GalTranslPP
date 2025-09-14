@@ -291,13 +291,13 @@ void StartSettingsPage::_setupUI()
 		});
 
 	_workThread->start();
-	addCentralWidget(mainWidget, true, true, 0);
+	addCentralWidget(mainWidget);
 
 	// 顺序和_onOutputSettingClicked里的索引一致
 	_njCfgPage = new NJCfgPage(_projectConfig, this);
-	addCentralWidget(_njCfgPage);
+	addCentralWidget(_njCfgPage, true, true, 0);
 	_epubCfgPage = new EpubCfgPage(_projectConfig, this);
-	addCentralWidget(_epubCfgPage);
+	addCentralWidget(_epubCfgPage, true, true, 0);
 }
 
 void StartSettingsPage::_onOutputSettingClicked()

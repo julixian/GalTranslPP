@@ -24,7 +24,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "5. 大幅美化了项目设置的各种排版",
         "6. 为字典生成也应用了翻译重试等网络设置",
         "7. 字典/表编辑页全部替换为tab标签页形式，可以拖拽下来在独立窗口中编辑",
-
+        "8. Epub增加预处理正则和后处理正则设置"
     };
 
     mainLayout->addWidget(updateTitle);

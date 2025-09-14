@@ -252,11 +252,14 @@ void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int e
 {
     if (
         exitCode == 0 &&
-        (transEngine == "DumpName" || transEngine == "GenDict") &&
         _globalConfig["autoRefreshAfterTranslate"].value_or(true)
         ) {
-        _nameTableSettingsPage->refreshTable();
-        _dictSettingsPage->refreshDicts();
+        if (transEngine == "DumpName") {
+            _nameTableSettingsPage->refreshTable();
+        }
+        else if (transEngine == "GenDict") {
+            _dictSettingsPage->refreshDicts();
+        }
     }
     Q_EMIT finishedTranslating(this->property("ElaPageKey").toString());
     _isRunning = false;

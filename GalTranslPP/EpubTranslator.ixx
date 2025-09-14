@@ -5,6 +5,8 @@ module;
 #include <toml++/toml.hpp>
 #include <zip.h>
 #include <gumbo.h>
+#include <unicode/regex.h>
+#include <unicode/unistr.h>
 
 export module EpubTranslator;
 import Tool;
@@ -17,6 +19,11 @@ export {
     struct EpubTextNodeInfo {
         size_t offset; // 节点在原始文件中的字节偏移量
         size_t length; // 节点内容的字节长度
+    };
+
+    struct RegexPattern {
+        std::shared_ptr<icu::RegexPattern> pattern;
+        icu::UnicodeString rep;
     };
 
     class EpubTranslator : public NormalJsonTranslator {
@@ -40,6 +47,10 @@ export {
 
         // 存储扁平化文件名到原始相对路径的映射
         std::map<std::string, fs::path> m_flatToOriginalPathMap;
+
+        // 预处理正则和后处理正则
+        std::vector<RegexPattern> m_preRegexPatterns;
+        std::vector<RegexPattern> m_postRegexPatterns;
 
     public:
 
@@ -108,6 +119,56 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, TransEngine transEngi
         m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.双语显示");
         m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.原文颜色");
         m_originalTextScale = std::to_string(parseToml<double>(projectConfig, pluginConfig, "plugins.Epub.缩小比例"));
+
+        auto preRegexArr = parseToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.预处理正则");
+        for (const auto& elem : preRegexArr) {
+            auto preRegexOpt = elem.as_table();
+            if (!preRegexOpt) {
+                continue;
+            }
+            std::string preRegexOrg = (*preRegexOpt).contains("org") ? (*preRegexOpt)["org"].value_or("") : 
+                (*preRegexOpt)["searchStr"].value_or("");
+            if (preRegexOrg.empty()) {
+                continue;
+            }
+            std::string preRegexRep = (*preRegexOpt).contains("rep") ? (*preRegexOpt)["rep"].value_or("") : 
+                (*preRegexOpt)["replaceStr"].value_or("");
+            RegexPattern preRegex;
+            icu::UnicodeString preRegexUStr = icu::UnicodeString::fromUTF8(preRegexOrg);
+            icu::UnicodeString repUStr = icu::UnicodeString::fromUTF8(preRegexRep);
+            UErrorCode status = U_ZERO_ERROR;
+            preRegex.pattern = std::shared_ptr<icu::RegexPattern>(icu::RegexPattern::compile(preRegexUStr, 0, status));
+            if (U_FAILURE(status)) {
+                throw std::runtime_error("预处理正则编译失败: " + preRegexOrg);
+            }
+            preRegex.rep = repUStr;
+            m_preRegexPatterns.push_back(preRegex);
+        }
+
+        auto postRegexArr = parseToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.后处理正则");
+        for (const auto& elem : postRegexArr) {
+            auto postRegexOpt = elem.as_table();
+            if (!postRegexOpt) {
+                continue;
+            }
+            std::string postRegexOrg = (*postRegexOpt).contains("org") ? (*postRegexOpt)["org"].value_or("") :
+                (*postRegexOpt)["searchStr"].value_or("");
+            if (postRegexOrg.empty()) {
+                continue;
+            }
+            std::string postRegexRep = (*postRegexOpt).contains("rep") ? (*postRegexOpt)["rep"].value_or("") :
+                (*postRegexOpt)["replaceStr"].value_or("");
+            RegexPattern postRegex;
+            icu::UnicodeString postRegexUStr = icu::UnicodeString::fromUTF8(postRegexOrg);
+            icu::UnicodeString repUStr = icu::UnicodeString::fromUTF8(postRegexRep);
+            UErrorCode status = U_ZERO_ERROR;
+            postRegex.pattern = std::shared_ptr<icu::RegexPattern>(icu::RegexPattern::compile(postRegexUStr, 0, status));
+            if (U_FAILURE(status)) {
+                throw std::runtime_error("后处理正则编译失败: " + postRegexOrg);
+            }
+            postRegex.rep = repUStr;
+            m_postRegexPatterns.push_back(postRegex);
+        }
 
     }
     catch (const toml::parse_error& e) {
@@ -188,6 +249,24 @@ void EpubTranslator::run()
 
                 std::ifstream ifs(htmlEntry.path(), std::ios::binary);
                 std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+
+                // 预处理正则替换
+                icu::UnicodeString contentUStr = icu::UnicodeString::fromUTF8(content);
+                for (const auto& preRegex : m_preRegexPatterns) {
+                    UErrorCode status = U_ZERO_ERROR;
+                    std::unique_ptr<icu::RegexMatcher> matcher(preRegex.pattern->matcher(contentUStr, status));
+                    if (U_FAILURE(status)) {
+                        m_logger->error("预处理正则替换失败");
+                        continue;
+                    }
+                    contentUStr = matcher->replaceAll(preRegex.rep, status);
+                    if (U_FAILURE(status)) {
+                        m_logger->error("预处理正则替换失败");
+                    }
+                }
+                content.clear();
+                content = contentUStr.toUTF8String(content);
+
                 GumboOutput* output = gumbo_parse(content.c_str());
                 std::vector<std::pair<std::string, EpubTextNodeInfo>> sentences;
                 extractTextNodes(output->root, sentences);
@@ -247,6 +326,23 @@ void EpubTranslator::run()
         std::string originalContent((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         ifs.close();
 
+        // 预处理正则替换
+        icu::UnicodeString contentUStr = icu::UnicodeString::fromUTF8(originalContent);
+        for (const auto& preRegex : m_preRegexPatterns) {
+            UErrorCode status = U_ZERO_ERROR;
+            std::unique_ptr<icu::RegexMatcher> matcher(preRegex.pattern->matcher(contentUStr, status));
+            if (U_FAILURE(status)) {
+                m_logger->error("预处理正则替换失败");
+                continue;
+            }
+            contentUStr = matcher->replaceAll(preRegex.rep, status);
+            if (U_FAILURE(status)) {
+                m_logger->error("预处理正则替换失败");
+            }
+        }
+        originalContent.clear();
+        originalContent = contentUStr.toUTF8String(originalContent);
+
         ifs.open(translatedJsonEntry.path());
         json translatedData = json::parse(ifs);
         ifs.close();
@@ -262,7 +358,7 @@ void EpubTranslator::run()
         for (size_t i = 0; i < metadata.size(); ++i) {
             std::string translatedText = translatedData[i].value("message", "");
             std::string replacement = m_bilingualOutput ? 
-                (translatedText + "<br><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale +
+                (translatedText + "<br/><span style=\"color:" + m_originalTextColor + "; font-size:" + m_originalTextScale +
                     "em;\">" + originalContent.substr(metadata[i].offset, metadata[i].length) + "</span>") 
                 : translatedText;
             newContent.append(originalContent.substr(lastPos, metadata[i].offset - lastPos));
@@ -272,6 +368,23 @@ void EpubTranslator::run()
         if (lastPos < originalContent.length()) {
             newContent.append(originalContent.substr(lastPos));
         }
+
+        // 后处理正则替换
+        icu::UnicodeString newContentUStr = icu::UnicodeString::fromUTF8(newContent);
+        for (const auto& postRegex : m_postRegexPatterns) {
+            UErrorCode status = U_ZERO_ERROR;
+            std::unique_ptr<icu::RegexMatcher> matcher(postRegex.pattern->matcher(newContentUStr, status));
+            if (U_FAILURE(status)) {
+                m_logger->error("后处理正则替换失败");
+                continue;
+            }
+            newContentUStr = matcher->replaceAll(postRegex.rep, status);
+            if (U_FAILURE(status)) {
+                m_logger->error("后处理正则替换失败");
+            }
+        }
+        newContent.clear();
+        newContent = newContentUStr.toUTF8String(newContent);
 
         std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
         ofs << newContent;

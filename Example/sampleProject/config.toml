@@ -33,6 +33,18 @@ textPostPlugins = [
   [plugins.Epub]
   "双语显示" = true
 
+    [plugins.Epub.'预处理正则']
+    org = '''<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'''
+    rep = '''[$2/$1]'''
+
+    [plugins.Epub.'预处理正则']
+    org = '''<span id="page_\d+?"/>'''
+    rep = ''
+
+    [plugins.Epub.'后处理正则']
+    org = '''\[([^/\[\]]+?)/([^/\[\]]+?)\]'''
+    rep = '''<ruby><rb>$2</rb><rt>$1</rt></ruby>'''
+
   [plugins.TextLinebreakFix]
   "换行模式" = "优先标点"
 
@@ -84,7 +96,7 @@ problemList = [
 ]
 
 #规定标点错漏要查哪些标点
-punctSet = """（()）：:*[]{}<>『』「」“”;；'"""
+punctSet = """（()）：:*[]{}<>『』「」“”;；'/\\"""
 langProbability = 0.85 # 语言不通检测的语言置信度，设置越高则检测越精准，但可能遗漏，反之亦然
 
 [dictionary]

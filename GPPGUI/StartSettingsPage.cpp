@@ -221,6 +221,9 @@ void StartSettingsPage::_setupUI()
 			// 1. 滚动条判断
 			QScrollBar* scrollBar = logOutput->verticalScrollBar();
 			bool scrollIsAtBottom = (scrollBar->value() == scrollBar->maximum());
+
+			scrollBar->blockSignals(true);
+
 			// 2. 使用一个临时的“影子”光标在后台进行操作
 			QTextCursor tempCursor(logOutput->document());
 			tempCursor.movePosition(QTextCursor::End); // 移动到文档末尾
@@ -247,6 +250,7 @@ void StartSettingsPage::_setupUI()
 			else {
 				tempCursor.insertText(log); // 在末尾插入文本
 			}
+			scrollBar->blockSignals(false);
 			// 3. 智能滚动
 			if (scrollIsAtBottom) {
 				scrollBar->setValue(scrollBar->maximum());
@@ -287,7 +291,7 @@ void StartSettingsPage::_setupUI()
 		});
 
 	_workThread->start();
-	addCentralWidget(mainWidget);
+	addCentralWidget(mainWidget, true, true, 0);
 
 	// 顺序和_onOutputSettingClicked里的索引一致
 	_njCfgPage = new NJCfgPage(_projectConfig, this);

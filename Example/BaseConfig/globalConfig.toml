@@ -1,7 +1,90 @@
+allowCloseWhenRunning = false
+autoRefreshAfterTranslate = true
+defaultDictOpenMode = 0
+defaultNameTableOpenMode = 0
+navigationMode = 0
 projects = []
 themeMode = 0
 windowDisplayMode = 1
-windowHeight = 804
-windowPosX = 200
-windowPosY = 168
-windowWidth = 1668
+windowHeight = 653
+windowPosX = 68
+windowPosY = 48
+windowWidth = 1315
+
+[commonGptDicts]
+dictNames = [ '通用GPT字典', '通用GPT_H字典' ]
+
+    [commonGptDicts.spec.'通用GPT_H字典']
+    defaultOn = true
+    openMode = 1
+
+        [commonGptDicts.spec.'通用GPT_H字典'.columnWidth]
+        0 = 357
+        1 = 175
+        2 = 425
+
+    [commonGptDicts.spec.'通用GPT字典']
+    defaultOn = true
+    openMode = 1
+
+        [commonGptDicts.spec.'通用GPT字典'.columnWidth]
+        0 = 284
+        1 = 298
+        2 = 375
+
+[commonPostDicts]
+dictNames = [ '译后翻译规范', '译后生僻字矫正' ]
+
+    [commonPostDicts.spec.'译后生僻字矫正']
+    defaultOn = true
+    openMode = 1
+
+        [commonPostDicts.spec.'译后生僻字矫正'.columnWidth]
+        0 = 300
+        1 = 217
+        2 = 100
+        3 = 172
+        4 = 75
+        5 = 60
+
+    [commonPostDicts.spec.'译后翻译规范']
+    defaultOn = true
+    openMode = 1
+
+        [commonPostDicts.spec.'译后翻译规范'.columnWidth]
+        0 = 279
+        1 = 248
+        2 = 100
+        3 = 172
+        4 = 75
+        5 = 60
+
+[commonPreDicts]
+dictNames = [ '译前H统一', '译前H口吃矫正' ]
+
+    [commonPreDicts.spec.'译前H口吃矫正']
+    defaultOn = false
+    openMode = 1
+
+        [commonPreDicts.spec.'译前H口吃矫正'.columnWidth]
+        0 = 311
+        1 = 214
+        2 = 100
+        3 = 172
+        4 = 75
+        5 = 60
+
+    [commonPreDicts.spec.'译前H统一']
+    defaultOn = true
+    openMode = 1
+
+        [commonPreDicts.spec.'译前H统一'.columnWidth]
+        0 = 261
+        1 = 256
+        2 = 100
+        3 = 172
+        4 = 75
+        5 = 60
+
+[showDockWidget]
+100 = true

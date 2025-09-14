@@ -158,14 +158,36 @@ export {
 
     template<typename T>
     T parseToml(toml::v3::table& config, toml::v3::table& backup, const std::string& path) {
-        auto optValue = config.at_path(path).value<T>();
-        if (!optValue.has_value()) {
-            optValue = backup.at_path(path).value<T>();
+        if constexpr (std::is_same_v<T, toml::array>) {
+            auto arr = config.at_path(path).as_array();
+            if (!arr) {
+                arr = backup.at_path(path).as_array();
+            }
+            if (!arr) {
+                throw std::runtime_error(std::format("配置项 {} 未找到", path));
+            }
+            return *arr;
         }
-        if (!optValue.has_value()) {
-            throw std::runtime_error(std::format("配置项 {} 未找到", path));
+        else if constexpr (std::is_same_v<T, toml::table>) {
+            auto tbl = config.at_path(path).as_table();
+            if (!tbl) {
+                tbl = backup.at_path(path).as_table();
+            }
+            if (!tbl) {
+                throw std::runtime_error(std::format("配置项 {} 未找到", path));
+            }
+            return *tbl;
         }
-        return optValue.value();
+        else {
+            auto optValue = config.at_path(path).value<T>();
+            if (!optValue.has_value()) {
+                optValue = backup.at_path(path).value<T>();
+            }
+            if (!optValue.has_value()) {
+                throw std::runtime_error(std::format("配置项 {} 未找到", path));
+            }
+            return optValue.value();
+        }
     }
 
     /**

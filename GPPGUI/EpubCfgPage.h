@@ -4,6 +4,7 @@
 #define EPUBCFGPAGE_H
 
 #include <toml++/toml.hpp>
+#include <functional>
 #include "BasePage.h"
 
 class EpubCfgPage : public BasePage
@@ -17,7 +18,7 @@ public:
 
 private:
     toml::table& _projectConfig;
-
+    std::function<void()> _applyFunc;
 };
 
 #endif // EPUBCFGPAGE_H

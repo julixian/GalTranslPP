@@ -5,6 +5,7 @@
 
 #include "ElaToggleSwitch.h"
 #include "ElaText.h"
+#include "ElaToolTip.h"
 #include "ElaScrollPageArea.h"
 
 import Tool;
@@ -45,6 +46,8 @@ PostFull2HalfCfgPage::PostFull2HalfCfgPage(toml::table& projectConfig, QWidget* 
     ElaScrollPageArea* reverseArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* reverseLayout = new QHBoxLayout(reverseArea);
     ElaText* reverseText = new ElaText("反向替换", reverseArea);
+    ElaToolTip* reverseTip = new ElaToolTip(reverseText);
+    reverseTip->setToolTip("关闭为全转半，开启为半转全");
     reverseText->setTextPixelSize(16);
     reverseLayout->addWidget(reverseText);
     reverseLayout->addStretch();

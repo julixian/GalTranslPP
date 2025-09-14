@@ -5,6 +5,7 @@
 
 #include <QList>
 #include <QStackedWidget>
+#include <QSharedPointer>
 #include <toml++/toml.hpp>
 #include <filesystem>
 #include "BasePage.h"
@@ -16,11 +17,14 @@ class ElaTableView;
 namespace fs = std::filesystem;
 
 struct GptTabEntry {
+    QWidget* pageMainWidget;
     QStackedWidget* stackedWidget;
     ElaPlainTextEdit* plainTextEdit;
     ElaTableView* tableView;
-    DictionaryModel* normalDictModel;
+    DictionaryModel* dictModel;
     fs::path dictPath;
+    QSharedPointer<QList<DictionaryEntry>> withdrawList;
+    GptTabEntry() : withdrawList(new QList<DictionaryEntry>){}
 };
 
 class CommonGptDictPage : public BasePage

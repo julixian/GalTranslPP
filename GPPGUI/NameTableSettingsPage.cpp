@@ -2,13 +2,13 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QHeaderView>
 #include <QStackedWidget>
 
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
+#include "ElaTabWidget.h"
 #include "ElaPlainTextEdit.h"
 
 import Tool;
@@ -94,6 +94,10 @@ QString NameTableSettingsPage::readNameTableStr()
 
 void NameTableSettingsPage::_setupUI()
 {
+	ElaTabWidget* tabWidget = new ElaTabWidget(this);
+	tabWidget->setIsTabTransparent(true);
+	tabWidget->setTabsClosable(false);
+
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(0, 0, 0, 0);
@@ -102,12 +106,15 @@ void NameTableSettingsPage::_setupUI()
 	QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
 	ElaPushButton* plainTextModeButtom = new ElaPushButton("切换至纯文本模式", buttonWidget);
 	ElaPushButton* TableModeButtom = new ElaPushButton("切换至表模式", buttonWidget);
+	ElaPushButton* withdrawButtom = new ElaPushButton("撤回", buttonWidget);
+	withdrawButtom->setEnabled(false);
 	ElaPushButton* refreshButtom = new ElaPushButton("刷新", buttonWidget);
 	ElaPushButton* addNameButtom = new ElaPushButton("添加人名", buttonWidget);
 	ElaPushButton* delNameButtom = new ElaPushButton("删除人名", buttonWidget);
 	buttonLayout->addWidget(plainTextModeButtom);
 	buttonLayout->addWidget(TableModeButtom);
 	buttonLayout->addStretch();
+	buttonLayout->addWidget(withdrawButtom);
 	buttonLayout->addWidget(refreshButtom);
 	buttonLayout->addWidget(addNameButtom);
 	buttonLayout->addWidget(delNameButtom);
@@ -177,14 +184,34 @@ void NameTableSettingsPage::_setupUI()
 	connect(delNameButtom, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList indexList = nameTableView->selectionModel()->selectedRows();
+			const QList<NameTableEntry>& entries = nameTableModel->getEntriesRef();
 			if (!indexList.isEmpty()) {
 				std::ranges::sort(indexList, [](const QModelIndex& a, const QModelIndex& b)
 					{
 						return a.row() > b.row();
 					});
 				for (const QModelIndex& index : indexList) {
+					if (_withdrawList.size() > 100) {
+						_withdrawList.pop_front();
+					}
+					_withdrawList.push_back(entries[index.row()]);
 					nameTableModel->removeRow(index.row());
 				}
+				if (!_withdrawList.isEmpty()) {
+					withdrawButtom->setEnabled(true);
+				}
+			}
+		});
+	connect(withdrawButtom, &ElaPushButton::clicked, this, [=]()
+		{
+			if (_withdrawList.isEmpty()) {
+				return;
+			}
+			NameTableEntry entry = _withdrawList.front();
+			_withdrawList.pop_front();
+			nameTableModel->insertRow(0, entry);
+			if (_withdrawList.isEmpty()) {
+				withdrawButtom->setEnabled(false);
 			}
 		});
 
@@ -220,5 +247,6 @@ void NameTableSettingsPage::_setupUI()
 
 	_refreshFunc = refreshFunc;
 
-	addCentralWidget(mainWidget, true, true, 0);
+	tabWidget->addTab(mainWidget, "人名表");
+	addCentralWidget(tabWidget, true, true, 0);
 }

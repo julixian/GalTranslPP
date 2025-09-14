@@ -43,6 +43,7 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 			fixModeComboBox->setCurrentIndex(index);
 		}
 	}
+	insertToml(_projectConfig, "plugins.TextLinebreakFix.换行模式", fixMode.toStdString());
 	connect(fixModeComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
 		{
 			insertToml(_projectConfig, "pulgins.TextLinebreakFix.换行模式", text.toStdString());
@@ -60,6 +61,7 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 	ElaSpinBox* segmentThresholdSpinBox = new ElaSpinBox(segmentThresholdArea);
 	segmentThresholdSpinBox->setRange(1, 999);
 	segmentThresholdSpinBox->setValue(threshold);
+	insertToml(_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", threshold);
 	connect(segmentThresholdSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
 		{
 			insertToml(_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", value);
@@ -76,6 +78,7 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 	forceFixLayout->addStretch();
 	ElaToggleSwitch* forceFixToggleSwitch = new ElaToggleSwitch(forceFixArea);
 	forceFixToggleSwitch->setIsToggled(forceFix);
+	insertToml(_projectConfig, "plugins.TextLinebreakFix.强制修复", forceFix);
 	connect(forceFixToggleSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
 		{
 			insertToml(_projectConfig, "plugins.TextLinebreakFix.强制修复", checked);

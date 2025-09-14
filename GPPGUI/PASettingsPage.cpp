@@ -105,10 +105,6 @@ void PASettingsPage::_setupUI()
 	languageProbabilitySlider->setFixedWidth(500);
 	languageProbabilitySlider->setValue(languageProbability);
 	languageProbabilityLayout->addWidget(languageProbabilitySlider);
-	connect(languageProbabilitySlider, &ValueSliderWidget::valueChanged, this, [=](double value)
-		{
-			insertToml(_projectConfig, "problemAnalyze.langProbability", value);
-		});
 	mainLayout->addWidget(languageProbabilityArea);
 
 	mainLayout->addSpacing(20);
@@ -155,7 +151,7 @@ void PASettingsPage::_setupUI()
 			}
 			insertToml(_projectConfig, "problemAnalyze.problemList", problemListArray);
 			insertToml(_projectConfig, "problemAnalyze.punctSet", punctuationList->text().toStdString());
-
+			insertToml(_projectConfig, "problemAnalyze.langProbability", languageProbabilitySlider->value());
 
 			std::stringstream ss(retranslKeyEdit->toPlainText().toStdString());
 			std::string key;

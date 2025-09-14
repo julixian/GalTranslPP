@@ -86,6 +86,7 @@ void StartSettingsPage::_setupUI()
 			_fileFormatComboBox->setCurrentIndex(index);
 		}
 	}
+	insertToml(_projectConfig, "plugins.filePlugin", filePlugin);
 	connect(_fileFormatComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
 		{
 			insertToml(_projectConfig, "plugins.filePlugin", text.toStdString());
@@ -153,6 +154,7 @@ void StartSettingsPage::_setupUI()
 			translateMode->setCurrentIndex(index);
 		}
 	}
+	insertToml(_projectConfig, "plugins.transEngine", transEngine);
 	connect(translateMode, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
 		{
 			insertToml(_projectConfig, "plugins.transEngine", text.toStdString());
@@ -223,12 +225,29 @@ void StartSettingsPage::_setupUI()
 			QTextCursor tempCursor(logOutput->document());
 			tempCursor.movePosition(QTextCursor::End); // 移动到文档末尾
 
-			//QTextCharFormat format;
-			//format.setForeground(QColor(255, 0, 0)); // 设置红色字体
-			//tempCursor.setCharFormat(format);
-
-			tempCursor.insertText(log);               // 在末尾插入文本
-			// 3. 智能滚动 (和之前一样)
+			if (log.contains("```\n问题概览:")) {
+				QString pre, overview, post;
+				int index = log.indexOf("```\n问题概览:");
+				pre = log.left(index);
+				log = log.mid(index);
+				index = log.indexOf("问题概览结束\n```");
+				overview = log.left(index + 10);
+				log = log.mid(index + 10);
+				post = log;
+				tempCursor.insertText(pre);
+				tempCursor.movePosition(QTextCursor::End);
+				QTextCharFormat format;
+				format.setForeground(QColor(255, 0, 0));
+				tempCursor.setCharFormat(format);
+				tempCursor.insertText(overview);
+				tempCursor.movePosition(QTextCursor::End);
+				tempCursor.setCharFormat(QTextCharFormat());
+				tempCursor.insertText(post);
+			}
+			else {
+				tempCursor.insertText(log); // 在末尾插入文本
+			}
+			// 3. 智能滚动
 			if (scrollIsAtBottom) {
 				scrollBar->setValue(scrollBar->maximum());
 			}

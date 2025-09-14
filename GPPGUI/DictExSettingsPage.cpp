@@ -164,10 +164,6 @@ void DictExSettingsPage::_setupUI()
 	ElaToggleSwitch* usePreDictInNameSwitch = new ElaToggleSwitch(usePreDictInNameArea);
 	usePreDictInNameSwitch->setIsToggled(usePreDictInName);
 	usePreDictInNameLayout->addWidget(usePreDictInNameSwitch);
-	connect(usePreDictInNameSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "dictionary.usePreDictInName", checked);
-		});
 	mainLayout->addWidget(usePreDictInNameArea);
 
 	bool usePostDictInName = _projectConfig["dictionary"]["usePostDictInName"].value_or(false);
@@ -182,10 +178,6 @@ void DictExSettingsPage::_setupUI()
 	ElaToggleSwitch* usePostDictInNameSwitch = new ElaToggleSwitch(usePostDictInNameArea);
 	usePostDictInNameSwitch->setIsToggled(usePostDictInName);
 	usePostDictInNameLayout->addWidget(usePostDictInNameSwitch);
-	connect(usePostDictInNameSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "dictionary.usePostDictInName", checked);
-		});
 	mainLayout->addWidget(usePostDictInNameArea);
 
 	bool usePreDictInMsg = _projectConfig["dictionary"]["usePreDictInMsg"].value_or(true);
@@ -200,10 +192,6 @@ void DictExSettingsPage::_setupUI()
 	ElaToggleSwitch* usePreDictInMsgSwitch = new ElaToggleSwitch(usePreDictInMsgArea);
 	usePreDictInMsgSwitch->setIsToggled(usePreDictInMsg);
 	usePreDictInMsgLayout->addWidget(usePreDictInMsgSwitch);
-	connect(usePreDictInMsgSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "dictionary.usePreDictInMsg", checked);
-		});
 	mainLayout->addWidget(usePreDictInMsgArea);
 
 	bool usePostDictInMsg = _projectConfig["dictionary"]["usePostDictInMsg"].value_or(true);
@@ -218,10 +206,6 @@ void DictExSettingsPage::_setupUI()
 	ElaToggleSwitch* usePostDictInMsgSwitch = new ElaToggleSwitch(usePostDictInMsgArea);
 	usePostDictInMsgSwitch->setIsToggled(usePostDictInMsg);
 	usePostDictInMsgLayout->addWidget(usePostDictInMsgSwitch);
-	connect(usePostDictInMsgSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "dictionary.usePostDictInMsg", checked);
-		});
 	mainLayout->addWidget(usePostDictInMsgArea);
 
 	bool useGPTDictToReplaceName = _projectConfig["dictionary"]["useGPTDictToReplaceName"].value_or(false);
@@ -236,10 +220,6 @@ void DictExSettingsPage::_setupUI()
 	ElaToggleSwitch* useGPTDictToReplaceNameSwitch = new ElaToggleSwitch(useGPTDictToReplaceNameArea);
 	useGPTDictToReplaceNameSwitch->setIsToggled(useGPTDictToReplaceName);
 	useGPTDictToReplaceNameLayout->addWidget(useGPTDictToReplaceNameSwitch);
-	connect(useGPTDictToReplaceNameSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "dictionary.useGPTDictToReplaceName", checked);
-		});
 	mainLayout->addWidget(useGPTDictToReplaceNameArea);
 	mainLayout->addStretch();
 
@@ -368,6 +348,12 @@ void DictExSettingsPage::_setupUI()
 			insertToml(_projectConfig, "dictionary.preDict", preDictNamesArr);
 			insertToml(_projectConfig, "dictionary.gptDict", gptDictNamesArr);
 			insertToml(_projectConfig, "dictionary.postDict", postDictNamesArr);
+
+			insertToml(_projectConfig, "dictionary.usePreDictInName", usePreDictInNameSwitch->getIsToggled());
+			insertToml(_projectConfig, "dictionary.usePostDictInName", usePostDictInNameSwitch->getIsToggled());
+			insertToml(_projectConfig, "dictionary.usePreDictInMsg", usePreDictInMsgSwitch->getIsToggled());
+			insertToml(_projectConfig, "dictionary.usePostDictInMsg", usePostDictInMsgSwitch->getIsToggled());
+			insertToml(_projectConfig, "dictionary.useGPTDictToReplaceName", useGPTDictToReplaceNameSwitch->getIsToggled());
 		};
 
 	addCentralWidget(mainWidget);

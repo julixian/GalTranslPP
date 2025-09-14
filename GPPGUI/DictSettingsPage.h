@@ -38,6 +38,10 @@ private:
 
     std::function<void()> _applyFunc;
     std::function<void()> _refreshFunc;
+
+    QList<DictionaryEntry> _withdrawGptList;
+    QList<NormalDictEntry> _withdrawPreList;
+    QList<NormalDictEntry> _withdrawPostList;
 };
 
 #endif // COMMONSETTINGSPAGE_H

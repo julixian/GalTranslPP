@@ -169,13 +169,12 @@ void NormalDictModel::loadData(const QList<NormalDictEntry>& entries)
     endResetModel();
 }
 
-bool NormalDictModel::insertRow(int row, const QModelIndex& parent)
+bool NormalDictModel::insertRow(int row, NormalDictEntry entry, const QModelIndex& parent)
 {
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    NormalDictEntry emptyEntry = { "", "", "", "", false, 0};
-    _entries.insert(row, emptyEntry);
+    _entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -197,6 +196,11 @@ bool NormalDictModel::removeRow(int row, const QModelIndex& parent)
 }
 
 QList<NormalDictEntry> NormalDictModel::getEntries() const
+{
+    return _entries;
+}
+
+const QList<NormalDictEntry>& NormalDictModel::getEntriesRef() const
 {
     return _entries;
 }

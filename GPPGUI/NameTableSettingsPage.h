@@ -31,6 +31,8 @@ private:
     fs::path& _projectDir;
     std::function<void()> _applyFunc;
     std::function<void()> _refreshFunc;
+
+    QList<NameTableEntry> _withdrawList;
 };
 
 #endif // NAMETABLESETTINGSPAGE_H

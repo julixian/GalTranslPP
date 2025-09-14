@@ -206,6 +206,9 @@ void DictSettingsPage::_setupUI()
 	gptPlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* gptTableModeButtom = new ElaPushButton(gptButtonWidget);
 	gptTableModeButtom->setText("切换至表模式");
+	ElaPushButton* withdrawGptDictButton = new ElaPushButton(gptButtonWidget);
+	withdrawGptDictButton->setText("撤回");
+	withdrawGptDictButton->setEnabled(false);
 	ElaPushButton* refreshGptDictButton = new ElaPushButton(gptButtonWidget);
 	refreshGptDictButton->setText("刷新");
 	ElaPushButton* addGptDictButton = new ElaPushButton(gptButtonWidget);
@@ -215,6 +218,7 @@ void DictSettingsPage::_setupUI()
 	gptButtonLayout->addWidget(gptPlainTextModeButtom);
 	gptButtonLayout->addWidget(gptTableModeButtom);
 	gptButtonLayout->addStretch();
+	gptButtonLayout->addWidget(withdrawGptDictButton);
 	gptButtonLayout->addWidget(refreshGptDictButton);
 	gptButtonLayout->addWidget(addGptDictButton);
 	gptButtonLayout->addWidget(delGptDictButton);
@@ -223,7 +227,7 @@ void DictSettingsPage::_setupUI()
 
 	// 每个字典里又有一个StackedWidget区分表和纯文本
 
-	QStackedWidget* gptStackedWidget = new QStackedWidget(tabWidget);
+	QStackedWidget* gptStackedWidget = new QStackedWidget(gptDictWidget);
 	// 项目GPT字典的纯文本模式
 	ElaPlainTextEdit* gptPlainTextEdit = new ElaPlainTextEdit(gptStackedWidget);
 	QFont plainTextFont = gptPlainTextEdit->font();
@@ -295,12 +299,32 @@ void DictSettingsPage::_setupUI()
 	connect(delGptDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList selectedRows = gptDictTableView->selectionModel()->selectedRows();
+			const QList<DictionaryEntry>& entries = gptDictModel->getEntriesRef();
 			std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 				{
 					return a.row() > b.row();
 				});
 			for (const QModelIndex& index : selectedRows) {
+				if (_withdrawGptList.size() > 100) {
+					_withdrawGptList.pop_front();
+				}
+				_withdrawGptList.push_back(entries[index.row()]);
 				gptDictModel->removeRow(index.row());
+			}
+			if (!_withdrawGptList.empty()) {
+				withdrawGptDictButton->setEnabled(true);
+			}
+		});
+	connect(withdrawGptDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			if (_withdrawGptList.empty()) {
+				return;
+			}
+			DictionaryEntry entry = _withdrawGptList.front();
+			_withdrawGptList.pop_front();
+			gptDictModel->insertRow(0, entry);
+			if (_withdrawGptList.empty()) {
+				withdrawGptDictButton->setEnabled(false);
 			}
 		});
 	tabWidget->addTab(gptDictWidget, "项目GPT字典");
@@ -313,6 +337,9 @@ void DictSettingsPage::_setupUI()
 	prePlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* preTableModeButtom = new ElaPushButton(preButtonWidget);
 	preTableModeButtom->setText("切换至表模式");
+	ElaPushButton* withdrawPreDictButton = new ElaPushButton(preButtonWidget);
+	withdrawPreDictButton->setText("撤回");
+	withdrawPreDictButton->setEnabled(false);
 	ElaPushButton* refreshPreDictButton = new ElaPushButton(preButtonWidget);
 	refreshPreDictButton->setText("刷新");
 	ElaPushButton* addPreDictButton = new ElaPushButton(preButtonWidget);
@@ -322,6 +349,7 @@ void DictSettingsPage::_setupUI()
 	preButtonLayout->addWidget(prePlainTextModeButtom);
 	preButtonLayout->addWidget(preTableModeButtom);
 	preButtonLayout->addStretch();
+	preButtonLayout->addWidget(withdrawPreDictButton);
 	preButtonLayout->addWidget(refreshPreDictButton);
 	preButtonLayout->addWidget(addPreDictButton);
 	preButtonLayout->addWidget(delPreDictButton);
@@ -398,12 +426,32 @@ void DictSettingsPage::_setupUI()
 	connect(delPreDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList selectedRows = preDictTableView->selectionModel()->selectedRows();
+			const QList<NormalDictEntry>& entries = preDictModel->getEntriesRef();
 			std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 				{
 					return a.row() > b.row();
 				});
 			for (const QModelIndex& index : selectedRows) {
+				if (_withdrawPreList.size() > 100) {
+					_withdrawPreList.pop_front();
+				}
+				_withdrawPreList.push_back(entries[index.row()]);
 				preDictModel->removeRow(index.row());
+			}
+			if (!_withdrawPreList.empty()) {
+				withdrawPreDictButton->setEnabled(true);
+			}
+		});
+	connect(withdrawPreDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			if (_withdrawPreList.empty()) {
+				return;
+			}
+			NormalDictEntry entry = _withdrawPreList.front();
+			_withdrawPreList.pop_front();
+			preDictModel->insertRow(0, entry);
+			if (_withdrawPreList.empty()) {
+				withdrawPreDictButton->setEnabled(false);
 			}
 		});
 	tabWidget->addTab(preDictWidget, "项目译前字典");
@@ -416,6 +464,9 @@ void DictSettingsPage::_setupUI()
 	postPlainTextModeButtom->setText("切换至纯文本模式");
 	ElaPushButton* postTableModeButtom = new ElaPushButton(postButtonWidget);
 	postTableModeButtom->setText("切换至表模式");
+	ElaPushButton* withdrawPostDictButton = new ElaPushButton(postButtonWidget);
+	withdrawPostDictButton->setText("撤回");
+	withdrawPostDictButton->setEnabled(false);
 	ElaPushButton* refreshPostDictButton = new ElaPushButton(postButtonWidget);
 	refreshPostDictButton->setText("刷新");
 	ElaPushButton* addPostDictButton = new ElaPushButton(postButtonWidget);
@@ -425,6 +476,7 @@ void DictSettingsPage::_setupUI()
 	postButtonLayout->addWidget(postPlainTextModeButtom);
 	postButtonLayout->addWidget(postTableModeButtom);
 	postButtonLayout->addStretch();
+	postButtonLayout->addWidget(withdrawPostDictButton);
 	postButtonLayout->addWidget(refreshPostDictButton);
 	postButtonLayout->addWidget(addPostDictButton);
 	postButtonLayout->addWidget(delPostDictButton);
@@ -501,14 +553,34 @@ void DictSettingsPage::_setupUI()
 	connect(delPostDictButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QModelIndexList selectedRows = postDictTableView->selectionModel()->selectedRows();
+			const QList<NormalDictEntry>& entries = postDictModel->getEntriesRef();
 			std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 				{
 					return a.row() > b.row();
 				});
 			if (!selectedRows.isEmpty()) {
 				for (const QModelIndex& index : selectedRows) {
+					if (_withdrawPostList.size() > 100) {
+						_withdrawPostList.pop_front();
+					}
+					_withdrawPostList.push_back(entries[index.row()]);
 					postDictModel->removeRow(index.row());
 				}
+			}
+			if (!_withdrawPostList.empty()) {
+				withdrawPostDictButton->setEnabled(true);
+			}
+		});
+	connect(withdrawPostDictButton, &ElaPushButton::clicked, this, [=]()
+		{
+			if (_withdrawPostList.empty()) {
+				return;
+			}
+			NormalDictEntry entry = _withdrawPostList.front();
+			_withdrawPostList.pop_front();
+			postDictModel->insertRow(0, entry);
+			if (_withdrawPostList.empty()) {
+				withdrawPostDictButton->setEnabled(false);
 			}
 		});
 	tabWidget->addTab(postDictWidget, "项目译后字典");

@@ -34,9 +34,10 @@ public:
 
     // --- 用于操作模型的公共方法 ---
     void loadData(const QList<DictionaryEntry>& entries); // 从外部加载数据
-    bool insertRow(int row, const QModelIndex& parent = QModelIndex());
+    bool insertRow(int row, DictionaryEntry entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
     QList<DictionaryEntry> getEntries() const;
+    const QList<DictionaryEntry>& getEntriesRef() const;
 
 private:
     QList<DictionaryEntry> _entries; // 存储所有字典条目的列表

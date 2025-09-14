@@ -58,7 +58,6 @@ void APISettingsPage::_setupUI()
     _mainLayout->setContentsMargins(5, 5, 5, 5);
     _mainLayout->setSpacing(15);
 
-    // 初始时，至少添加一个 API 输入行
     auto apis = _projectConfig["backendSpecific"]["OpenAI-Compatible"]["apis"].as_array();
     if (apis) {
         for (const auto& api : *apis) {
@@ -100,6 +99,8 @@ void APISettingsPage::_setupUI()
     QButtonGroup* apiStrategyGroup = new QButtonGroup(this);
     apiStrategyGroup->addButton(apiStrategyRandom, 0);
     apiStrategyGroup->addButton(apiStrategyFallback, 1);
+    isRandom ? insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
+        : insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
     connect(apiStrategyGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool isToggled)
         {
             if (isToggled) {
@@ -124,6 +125,7 @@ void APISettingsPage::_setupUI()
     apiTimeoutSpinBox->setRange(1, 999);
     apiTimeoutSpinBox->setValue(timeout);
     apiTimeoutLayout->addWidget(apiTimeoutSpinBox);
+    insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", timeout);
     connect(apiTimeoutSpinBox, QOverload<int>::of(&ElaSpinBox::valueChanged), this, [=](int value)
         {
             insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", value);

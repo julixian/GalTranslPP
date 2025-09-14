@@ -14,8 +14,8 @@ struct NormalDictEntry
     QString translation;
     QString conditionTar;
     QString conditionReg;
-    bool isReg;
-    int priority;
+    bool isReg = false;
+    int priority = 0;
 };
 
 class NormalDictModel : public QAbstractTableModel
@@ -46,9 +46,10 @@ public:
 
     // --- 用于操作模型的公共方法 ---
     void loadData(const QList<NormalDictEntry>& entries); // 从外部加载数据
-    bool insertRow(int row, const QModelIndex& parent = QModelIndex());
+    bool insertRow(int row, NormalDictEntry entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
     QList<NormalDictEntry> getEntries() const;
+    const QList<NormalDictEntry>& getEntriesRef() const;
 
 private:
     QList<NormalDictEntry> _entries; // 存储所有字典条目的列表

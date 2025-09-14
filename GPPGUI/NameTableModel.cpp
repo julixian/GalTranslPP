@@ -137,13 +137,12 @@ void NameTableModel::loadData(const QList<NameTableEntry>& entries)
     endResetModel();
 }
 
-bool NameTableModel::insertRow(int row, const QModelIndex& parent)
+bool NameTableModel::insertRow(int row, NameTableEntry entry, const QModelIndex& parent)
 {
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    NameTableEntry emptyEntry = { "", "", 0 };
-    _entries.insert(row, emptyEntry);
+    _entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -165,6 +164,11 @@ bool NameTableModel::removeRow(int row, const QModelIndex& parent)
 }
 
 QList<NameTableEntry> NameTableModel::getEntries() const
+{
+    return _entries;
+}
+
+const QList<NameTableEntry>& NameTableModel::getEntriesRef() const
 {
     return _entries;
 }

@@ -36,6 +36,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	ElaToggleSwitch* outputSwitch = new ElaToggleSwitch(outputArea);
 	outputSwitch->setIsToggled(bilingual);
 	outputLayout->addWidget(outputSwitch);
+	insertToml(_projectConfig, "plugins.Epub.双语显示", bilingual);
 	connect(outputSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
 		{
 			insertToml(_projectConfig, "plugins.Epub.双语显示", checked);
@@ -66,6 +67,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	connect(colorButton, &ElaPushButton::clicked, this, [=]() {
 		colorDialog->exec();
 		});
+	insertToml(_projectConfig, "plugins.Epub.原文颜色", colorDialog->getCurrentColorRGB().toStdString());
 	connect(colorDialog, &ElaColorDialog::colorSelected, this, [=](const QColor& color) {
 		colorButton->setLightDefaultColor(color);
 		colorButton->setLightHoverColor(color);
@@ -93,6 +95,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	scaleSlider->setDecimals(2);
 	scaleSlider->setValue(scale);
 	scaleLayout->addWidget(scaleSlider);
+	insertToml(_projectConfig, "plugins.Epub.缩小比例", scale);
 	connect(scaleSlider, &ValueSliderWidget::valueChanged, this, [=](double value)
 		{
 			insertToml(_projectConfig, "plugins.Epub.缩小比例", value);

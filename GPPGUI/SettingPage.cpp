@@ -81,7 +81,8 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     displayButtonGroup->addButton(_acrylicButton, 4);
     displayButtonGroup->addButton(_dwmBlurnormalButton, 5);
     int windowDisplayMode = _globalConfig["windowDisplayMode"].value_or(0); // 不知道为什么3及以上的值会失效
-    displayButtonGroup->button((int)windowDisplayMode)->setChecked(true);
+    insertToml(_globalConfig, "windowDisplayMode", windowDisplayMode);
+    displayButtonGroup->button(windowDisplayMode)->setChecked(true);
     eApp->setWindowDisplayMode((ElaApplicationType::WindowDisplayMode)windowDisplayMode);
 
     connect(displayButtonGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) {
@@ -138,6 +139,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     navigationGroup->addButton(_compactButton, 2);
     navigationGroup->addButton(_maximumButton, 3);
     int navigationMode = _globalConfig["navigationMode"].value_or(3);
+    insertToml(_globalConfig, "navigationMode", navigationMode);
     window->setNavigationBarDisplayMode((ElaNavigationType::NavigationDisplayMode)navigationMode);
     connect(navigationGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) {
         if (isToggled)
@@ -161,6 +163,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
     autoRefreshSwitch->setIsToggled(_globalConfig["autoRefreshAfterTranslate"].value_or(true));
+    insertToml(_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
     connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
         {
             insertToml(_globalConfig, "autoRefreshAfterTranslate", checked);
@@ -184,6 +187,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     nameTableOpenModeGroup->addButton(nameTableOpenModeTextButton, 0);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTableButton, 1);
     nameTableOpenModeGroup->button(nameTableOpenMode)->setChecked(true);
+    insertToml(_globalConfig, "defaultNameTableOpenMode", nameTableOpenMode);
     connect(nameTableOpenModeGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) {
         if (isToggled)
         {
@@ -208,6 +212,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     dictOpenModeGroup->addButton(dictOpenModeTextButton, 0);
     dictOpenModeGroup->addButton(dictOpenModeTableButton, 1);
     dictOpenModeGroup->button(dictOpenMode)->setChecked(true);
+    insertToml(_globalConfig, "defaultDictOpenMode", dictOpenMode);
     connect(dictOpenModeGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) {
         if (isToggled)
         {
@@ -223,6 +228,7 @@ SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     allowCloseWhenRunningText->setTextPixelSize(15);
     ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
     allowCloseWhenRunningSwitch->setIsToggled(_globalConfig["allowCloseWhenRunning"].value_or(false));
+    insertToml(_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());
     connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
         {
             insertToml(_globalConfig, "allowCloseWhenRunning", checked);

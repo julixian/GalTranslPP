@@ -26,9 +26,8 @@
 
 #include "HomePage.h"
 #include "DefaultPromptPage.h"
-#include "CommonPreDictPage.h"
 #include "CommonGptDictPage.h"
-#include "CommonPostDictPage.h"
+#include "CommonNormalDictPage.h"
 #include "ProjectSettingsPage.h"
 #include "SettingPage.h"
 
@@ -111,6 +110,7 @@ void MainWindow::initWindow()
     if (y < 0)y = 0;
     move(x, y);
     int themeMode = _globalConfig["themeMode"].value_or(0);
+    insertToml(_globalConfig, "themeMode", themeMode);
     eTheme->setThemeMode((ElaThemeType::ThemeMode)themeMode);
     setUserInfoCardPixmap(QPixmap(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
     setUserInfoCardTitle(QString::fromStdString("Galtransl++ v" + GPPVERSION));
@@ -126,6 +126,8 @@ void MainWindow::initWindow()
     std::string gppversion = GPPVERSION;
     std::erase_if(gppversion, [](char ch) { return ch == '.'; });
     updateDockWidget->setVisible(_globalConfig["showDockWidget"][gppversion].value_or(true));
+    insertToml(_globalConfig, "showDockWidget", toml::table{});
+    insertToml(_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
     connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
         {
             insertToml(_globalConfig, "showDockWidget", toml::table{});
@@ -187,9 +189,9 @@ void MainWindow::initContent()
     _homePage = new HomePage(this);
     _defaultPromptPage = new DefaultPromptPage(this);
 
-    _commonPreDictPage = new CommonPreDictPage(_globalConfig, this);
+    _commonPreDictPage = new CommonNormalDictPage("pre", _globalConfig, this);
     _commonGptDictPage = new CommonGptDictPage(_globalConfig, this);
-    _commonPostDictPage = new CommonPostDictPage(_globalConfig, this);
+    _commonPostDictPage = new CommonNormalDictPage("post", _globalConfig, this);
     
     _settingPage = new SettingPage(_globalConfig, this);
 
@@ -205,11 +207,11 @@ void MainWindow::initContent()
             }
         };
     addPageNode("通用译前字典", _commonPreDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(_commonPreDictPage, &CommonPreDictPage::commonDictsChanged, this, refreshCommonDicts);
+    connect(_commonPreDictPage, &CommonNormalDictPage::commonDictsChanged, this, refreshCommonDicts);
     addPageNode("通用GPT字典", _commonGptDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
     connect(_commonGptDictPage, &CommonGptDictPage::commonDictsChanged, this, refreshCommonDicts);
     addPageNode("通用译后字典", _commonPostDictPage, _commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(_commonPostDictPage, &CommonPostDictPage::commonDictsChanged, this, refreshCommonDicts);
+    connect(_commonPostDictPage, &CommonNormalDictPage::commonDictsChanged, this, refreshCommonDicts);
 
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();

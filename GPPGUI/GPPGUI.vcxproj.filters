@@ -133,14 +133,11 @@
     <ClCompile Include="UpdateChecker.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
     </ClCompile>
-    <ClCompile Include="CommonPreDictPage.cpp">
+    <ClCompile Include="CommonNormalDictPage.cpp">
       <Filter>Source Files\PageImp</Filter>
     </ClCompile>
     <ClCompile Include="PostFull2HalfCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImp</Filter>
-    </ClCompile>
-    <ClCompile Include="CommonPostDictPage.cpp">
-      <Filter>Source Files\PageImp</Filter>
     </ClCompile>
     <ClCompile Include="CommonGptDictPage.cpp">
       <Filter>Source Files\PageImp</Filter>
@@ -234,14 +231,11 @@
     <QtMoc Include="UpdateChecker.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="CommonPreDictPage.h">
+    <QtMoc Include="CommonNormalDictPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="PostFull2HalfCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
-    </QtMoc>
-    <QtMoc Include="CommonPostDictPage.h">
-      <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="CommonGptDictPage.h">
       <Filter>Header Files\PageHeaders</Filter>

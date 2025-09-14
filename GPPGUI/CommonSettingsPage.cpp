@@ -2,12 +2,12 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QButtonGroup>
 #include <QFileDialog>
 
 #include "ElaText.h"
 #include "ElaPlainTextEdit.h"
+#include "ElaDrawerArea.h"
 #include "ElaLineEdit.h"
 #include "ElaComboBox.h"
 #include "ElaScrollPageArea.h"
@@ -42,8 +42,6 @@ void CommonSettingsPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
-	mainLayout->setContentsMargins(0, 0, 0, 0);
-	mainLayout->setSpacing(5);
 
 	// 单次请求翻译句子数量
 	int requestNum = _projectConfig["common"]["numPerRequestTranslate"].value_or(8);
@@ -61,10 +59,6 @@ void CommonSettingsPage::_setupUI()
 	requestNumSpinBox->setRange(1, 100);
 	requestNumSpinBox->setValue(requestNum);
 	requestNumLayout->addWidget(requestNumSpinBox);
-	connect(requestNumSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.numPerRequestTranslate", value);
-		});
 	mainLayout->addWidget(requestNumArea);
 
 	// 最大线程数
@@ -79,10 +73,6 @@ void CommonSettingsPage::_setupUI()
 	maxThreadSpinBox->setRange(1, 100);
 	maxThreadSpinBox->setValue(maxThread);
 	maxThreadLayout->addWidget(maxThreadSpinBox);
-	connect(maxThreadSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.threadsNum", value);
-		});
 	mainLayout->addWidget(maxThreadArea);
 
 	// 翻译顺序，name为文件名，size为大文件优先，多线程时大文件优先可以提高整体速度[name/size]
@@ -104,19 +94,6 @@ void CommonSettingsPage::_setupUI()
 	orderLayout->addWidget(orderSizeRadio);
 	orderGroup->addButton(orderNameRadio, 0);
 	orderGroup->addButton(orderSizeRadio, 1);
-	connect(orderGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool checked)
-		{
-			if (checked) {
-				std::string value = button->text().toStdString();
-				if (value == "文件名") {
-					value = "name";
-				}
-				else if (value == "文件大小") {
-					value = "size";
-				}
-				insertToml(_projectConfig, "common.sortMethod", value);
-			}
-		});
 	mainLayout->addWidget(orderArea);
 
 	// 翻译到的目标语言，包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr]
@@ -138,22 +115,24 @@ void CommonSettingsPage::_setupUI()
 
 	// 是否启用单文件分割。Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割。[No/Num/Equal]
 	std::string split = _projectConfig["common"]["splitFile"].value_or("No");
-	ElaScrollPageArea* splitArea = new ElaScrollPageArea(mainWidget);
-	QHBoxLayout* splitLayout = new QHBoxLayout(splitArea);
-	ElaText* splitText = new ElaText("单文件分割", splitArea);
+	ElaDrawerArea* splitArea = new ElaDrawerArea(mainWidget);
+	QWidget* splitHeaderWidget = new QWidget(splitArea);
+	splitArea->setDrawerHeader(splitHeaderWidget);
+	QHBoxLayout* splitLayout = new QHBoxLayout(splitHeaderWidget);
+	ElaText* splitText = new ElaText("单文件分割", splitHeaderWidget);
 	splitText->setTextPixelSize(16);
 	ElaToolTip* splitTip = new ElaToolTip(splitText);
 	splitTip->setToolTip("Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割。");
 	splitLayout->addWidget(splitText);
 	splitLayout->addStretch();
-	QButtonGroup* splitGroup = new QButtonGroup(splitArea);
-	ElaRadioButton* splitNoRadio = new ElaRadioButton("No", splitArea);
+	QButtonGroup* splitGroup = new QButtonGroup(splitHeaderWidget);
+	ElaRadioButton* splitNoRadio = new ElaRadioButton("No", splitHeaderWidget);
 	splitNoRadio->setChecked(split == "No");
 	splitLayout->addWidget(splitNoRadio);
-	ElaRadioButton* splitNumRadio = new ElaRadioButton("Num", splitArea);
+	ElaRadioButton* splitNumRadio = new ElaRadioButton("Num", splitHeaderWidget);
 	splitNumRadio->setChecked(split == "Num");
 	splitLayout->addWidget(splitNumRadio);
-	ElaRadioButton* splitEqualRadio = new ElaRadioButton("Equal", splitArea);
+	ElaRadioButton* splitEqualRadio = new ElaRadioButton("Equal", splitHeaderWidget);
 	splitEqualRadio->setChecked(split == "Equal");
 	splitLayout->addWidget(splitEqualRadio);
 	splitGroup->addButton(splitNoRadio, 0);
@@ -163,14 +142,25 @@ void CommonSettingsPage::_setupUI()
 		{
 			if (checked) {
 				std::string value = button->text().toStdString();
-				insertToml(_projectConfig, "common.splitFile", value);
+				if (value == "No") {
+					splitArea->collpase();
+				}
+				else {
+					splitArea->expand();
+				}
+			}
+		});
+	connect(splitArea, &ElaDrawerArea::expandStateChanged, this, [=](bool expanded)
+		{
+			if (expanded && splitGroup->button(0)->isChecked()) {
+				splitArea->collpase();
 			}
 		});
 	mainLayout->addWidget(splitArea);
 
 	// Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分。
 	int splitNum = _projectConfig["common"]["splitFileNum"].value_or(1024);
-	ElaScrollPageArea* splitNumArea = new ElaScrollPageArea(mainWidget);
+	QWidget* splitNumArea = new QWidget(splitArea);
 	QHBoxLayout* splitNumLayout = new QHBoxLayout(splitNumArea);
 	ElaText* splitNumText = new ElaText("分割数量", splitNumArea);
 	splitNumText->setTextPixelSize(16);
@@ -182,27 +172,13 @@ void CommonSettingsPage::_setupUI()
 	splitNumSpinBox->setRange(1, 10000);
 	splitNumSpinBox->setValue(splitNum);
 	splitNumLayout->addWidget(splitNumSpinBox);
-	if (splitGroup->button(0)->isChecked()) {
-		splitNumArea->setVisible(false);
+	splitArea->addDrawer(splitNumArea);
+	if (split == "No") {
+		splitArea->collpase();
 	}
-	// 不启用单文件分割时，隐藏分割数量(或许之后可以做成抽屉)
-	connect(splitGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool checked)
-		{
-			if (!checked) {
-				return;
-			}
-			if (button == splitNoRadio) {
-				splitNumArea->setVisible(false);
-			}
-			else {
-				splitNumArea->setVisible(true);
-			}
-		});
-	connect(splitNumSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.splitFileNum", value);
-		});
-	mainLayout->addWidget(splitNumArea);
+	else {
+		splitArea->expand();
+	}
 
 	// 每翻译n次保存一次缓存
 	int saveInterval = _projectConfig["common"]["saveCacheInterval"].value_or(1);
@@ -218,10 +194,6 @@ void CommonSettingsPage::_setupUI()
 	cacheSpinBox->setRange(1, 10000);
 	cacheSpinBox->setValue(saveInterval);
 	cacheLayout->addWidget(cacheSpinBox);
-	connect(cacheSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.saveCacheInterval", value);
-		});
 	mainLayout->addWidget(cacheArea);
 
 	// 最大重试次数
@@ -236,10 +208,6 @@ void CommonSettingsPage::_setupUI()
 	retrySpinBox->setRange(1, 100);
 	retrySpinBox->setValue(maxRetries);
 	retryLayout->addWidget(retrySpinBox);
-	connect(retrySpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.maxRetries", value);
-		});
 	mainLayout->addWidget(retryArea);
 
 	// 携带上文数量
@@ -254,10 +222,6 @@ void CommonSettingsPage::_setupUI()
 	contextSpinBox->setRange(1, 100);
 	contextSpinBox->setValue(contextNum);
 	contextLayout->addWidget(contextSpinBox);
-	connect(contextSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "common.contextHistorySize", value);
-		});
 	mainLayout->addWidget(contextArea);
 
 	// 智能重试  # 解析结果失败时尝试折半重翻与清空上下文，避免无效重试。
@@ -273,10 +237,6 @@ void CommonSettingsPage::_setupUI()
 	ElaToggleSwitch* smartRetryToggle = new ElaToggleSwitch(smartRetryArea);
 	smartRetryToggle->setIsToggled(smartRetry);
 	smartRetryLayout->addWidget(smartRetryToggle);
-	connect(smartRetryToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "common.smartRetry", checked);
-		});
 	mainLayout->addWidget(smartRetryArea);
 
 	// 额度检测 # 运行时动态检测key额度
@@ -292,10 +252,6 @@ void CommonSettingsPage::_setupUI()
 	ElaToggleSwitch* checkQuotaToggle = new ElaToggleSwitch(checkQuotaArea);
 	checkQuotaToggle->setIsToggled(checkQuota);
 	checkQuotaLayout->addWidget(checkQuotaToggle);
-	connect(checkQuotaToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "common.checkQuota", checked);
-		});
 	mainLayout->addWidget(checkQuotaArea);
 
 	// 项目日志级别
@@ -321,10 +277,6 @@ void CommonSettingsPage::_setupUI()
 		}
 	}
 	logLayout->addWidget(logComboBox);
-	connect(logComboBox, &QComboBox::currentTextChanged, this, [=](const QString& text)
-		{
-			insertToml(_projectConfig, "common.logLevel", text.toStdString());
-		});
 	mainLayout->addWidget(logArea);
 
 	// 保存项目日志
@@ -338,10 +290,6 @@ void CommonSettingsPage::_setupUI()
 	ElaToggleSwitch* saveLogToggle = new ElaToggleSwitch(saveLogArea);
 	saveLogToggle->setIsToggled(saveLog);
 	saveLogLayout->addWidget(saveLogToggle);
-	connect(saveLogToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "common.saveLog", checked);
-		});
 	mainLayout->addWidget(saveLogArea);
 
 	// 分词器所用的词典的路径
@@ -372,14 +320,32 @@ void CommonSettingsPage::_setupUI()
 		});
 	mainLayout->addWidget(dictArea);
 
-	
-
-	mainLayout->addStretch();
 
 	_applyFunc = [=]()
 		{
+			insertToml(_projectConfig, "common.numPerRequestTranslate", requestNumSpinBox->value());
+			insertToml(_projectConfig, "common.threadsNum", maxThreadSpinBox->value());
+			QString orderValue = orderGroup->checkedButton()->text();
+			if (orderValue == "文件名") {
+				orderValue = "name";
+			}
+			else if (orderValue == "文件大小") {
+				orderValue = "size";
+			}
+			insertToml(_projectConfig, "common.sortMethod", orderValue.toStdString());
 			insertToml(_projectConfig, "common.targetLang", targetLineEdit->text().toStdString());
+			insertToml(_projectConfig, "common.splitFile", splitGroup->checkedButton()->text().toStdString());
+			insertToml(_projectConfig, "common.splitFileNum", splitNumSpinBox->value());
+			insertToml(_projectConfig, "common.saveCacheInterval", cacheSpinBox->value());
+			insertToml(_projectConfig, "common.maxRetries", retrySpinBox->value());
+			insertToml(_projectConfig, "common.contextHistorySize", contextSpinBox->value());
+			insertToml(_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
+			insertToml(_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
+			insertToml(_projectConfig, "common.logLevel", logComboBox->currentText().toStdString());
+			insertToml(_projectConfig, "common.saveLog", saveLogToggle->getIsToggled());
 			insertToml(_projectConfig, "common.dictDir", dictLineEdit->text().toStdString());
 		};
+
+	mainLayout->addStretch();
 	addCentralWidget(mainWidget, true, true, 0);
 }

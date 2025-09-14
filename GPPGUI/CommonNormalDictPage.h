@@ -1,22 +1,22 @@
-// CommonPreDictPage.h
+// CommonNormalDictPage.h
 
-#ifndef COMMONPREDICTPAGE_H
-#define COMMONPREDICTPAGE_H
+#ifndef COMMONNORMALDICTPAGE_H
+#define COMMONNORMALDICTPAGE_H
 
-#include <QList>
 #include <toml++/toml.hpp>
+#include <string>
 #include "BasePage.h"
 #include "NormalTabEntry.h"
 
 namespace fs = std::filesystem;
 
-class CommonPreDictPage : public BasePage
+class CommonNormalDictPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit CommonPreDictPage(toml::table& globalConfig, QWidget* parent = nullptr);
-    ~CommonPreDictPage() override;
+    explicit CommonNormalDictPage(const std::string& mode, toml::table& globalConfig, QWidget* parent = nullptr);
+    ~CommonNormalDictPage() override;
 
 Q_SIGNALS:
     void commonDictsChanged();
@@ -37,6 +37,9 @@ private:
 
     QList<NormalTabEntry> _normalTabEntries;
     QWidget* _mainWindow;
+
+    std::string _modePath;
+    std::string _modeConfig;
 };
 
-#endif // COMMONPREDICTPAGE_H
+#endif // COMMONNORMALDICTPAGE_H

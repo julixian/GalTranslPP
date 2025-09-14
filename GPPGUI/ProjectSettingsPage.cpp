@@ -96,6 +96,7 @@ void ProjectSettingsPage::_setupUI()
     QHBoxLayout* navigationLayout = new QHBoxLayout(navigationWidget);
     navigationLayout->setContentsMargins(0, 0, 0, 0);
     ElaText* settingsTitle = new ElaText("API设置", navigationWidget);
+    settingsTitle->setContentsMargins(0, 10, 0, 0);
     settingsTitle->setTextPixelSize(18);
     settingsTitle->setFixedWidth(85);
     navigationLayout->addSpacing(30);

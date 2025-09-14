@@ -140,13 +140,12 @@ void DictionaryModel::loadData(const QList<DictionaryEntry>& entries)
     endResetModel();
 }
 
-bool DictionaryModel::insertRow(int row, const QModelIndex& parent)
+bool DictionaryModel::insertRow(int row, DictionaryEntry entry, const QModelIndex& parent)
 {
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    DictionaryEntry emptyEntry = { "", "", "" };
-    _entries.insert(row, emptyEntry);
+    _entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -168,6 +167,11 @@ bool DictionaryModel::removeRow(int row, const QModelIndex& parent)
 }
 
 QList<DictionaryEntry> DictionaryModel::getEntries() const
+{
+    return _entries;
+}
+
+const QList<DictionaryEntry>& DictionaryModel::getEntriesRef() const
 {
     return _entries;
 }

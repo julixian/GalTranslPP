@@ -113,8 +113,7 @@
     <ClCompile Include="APISettingsPage.cpp" />
     <ClCompile Include="BasePage.cpp" />
     <ClCompile Include="CommonGptDictPage.cpp" />
-    <ClCompile Include="CommonPostDictPage.cpp" />
-    <ClCompile Include="CommonPreDictPage.cpp" />
+    <ClCompile Include="CommonNormalDictPage.cpp" />
     <ClCompile Include="CommonSettingsPage.cpp" />
     <ClCompile Include="DefaultPromptPage.cpp" />
     <ClCompile Include="DictExSettingsPage.cpp" />
@@ -237,11 +236,10 @@
     <ResourceCompile Include="GPPGUI.rc" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="CommonPreDictPage.h" />
+    <QtMoc Include="CommonNormalDictPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CommonGptDictPage.h" />
-    <QtMoc Include="CommonPostDictPage.h" />
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
   </ItemGroup>

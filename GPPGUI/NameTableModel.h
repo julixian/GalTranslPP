@@ -12,7 +12,7 @@ struct NameTableEntry
 {
     QString original;
     QString translation;
-    int count;
+    int count = 0;
 };
 
 class NameTableModel : public QAbstractTableModel
@@ -34,9 +34,10 @@ public:
 
     // --- 用于操作模型的公共方法 ---
     void loadData(const QList<NameTableEntry>& entries); // 从外部加载数据
-    bool insertRow(int row, const QModelIndex& parent = QModelIndex());
+    bool insertRow(int row, NameTableEntry entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
     QList<NameTableEntry> getEntries() const;
+    const QList<NameTableEntry>& getEntriesRef() const;
 
 private:
     QList<NameTableEntry> _entries; // 存储所有字典条目的列表

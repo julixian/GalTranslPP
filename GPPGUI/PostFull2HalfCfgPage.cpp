@@ -33,6 +33,7 @@ PostFull2HalfCfgPage::PostFull2HalfCfgPage(toml::table& projectConfig, QWidget* 
     punctuationLayout->addStretch();
     ElaToggleSwitch* punctuationSwitch = new ElaToggleSwitch(punctuationArea);
     punctuationSwitch->setIsToggled(convertPunctuation);
+    insertToml(_projectConfig, "plugins.TextPostFull2Half.是否替换标点", convertPunctuation);
     connect(punctuationSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked) {
         insertToml(_projectConfig, "plugins.TextPostFull2Half.是否替换标点", checked);
     });
@@ -49,6 +50,7 @@ PostFull2HalfCfgPage::PostFull2HalfCfgPage(toml::table& projectConfig, QWidget* 
     reverseLayout->addStretch();
     ElaToggleSwitch* reverseSwitch = new ElaToggleSwitch(reverseArea);
     reverseSwitch->setIsToggled(reverseConvert);
+    insertToml(_projectConfig, "plugins.TextPostFull2Half.是否反向替换", reverseConvert);
     connect(reverseSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked) {
         insertToml(_projectConfig, "plugins.TextPostFull2Half.反向替换", checked);
     });

@@ -47,6 +47,9 @@ void APISettingsPage::apply2Config()
         apiArray.push_back(apiTable);
     }
     insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apis", apiArray);
+    if (_applyFunc) {
+        _applyFunc();
+    }
 }
 
 void APISettingsPage::_setupUI()
@@ -99,15 +102,6 @@ void APISettingsPage::_setupUI()
     QButtonGroup* apiStrategyGroup = new QButtonGroup(this);
     apiStrategyGroup->addButton(apiStrategyRandom, 0);
     apiStrategyGroup->addButton(apiStrategyFallback, 1);
-    isRandom ? insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
-        : insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
-    connect(apiStrategyGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool isToggled)
-        {
-            if (isToggled) {
-                button == apiStrategyRandom ? insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
-                    : insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
-            }
-        });
 
     // API 超时时间
     int timeout = _projectConfig["backendSpecific"]["OpenAI-Compatible"]["apiTimeout"].value_or(180);
@@ -125,16 +119,18 @@ void APISettingsPage::_setupUI()
     apiTimeoutSpinBox->setRange(1, 999);
     apiTimeoutSpinBox->setValue(timeout);
     apiTimeoutLayout->addWidget(apiTimeoutSpinBox);
-    insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", timeout);
-    connect(apiTimeoutSpinBox, QOverload<int>::of(&ElaSpinBox::valueChanged), this, [=](int value)
-        {
-            insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", value);
-        });
 
     // “增加新 API”按钮
     ElaPushButton* addApiButton = new ElaPushButton("增加新 API", this);
     addApiButton->setFixedWidth(120);
     connect(addApiButton, &ElaPushButton::clicked, this, &APISettingsPage::_addApiInputRow);
+
+    _applyFunc = [=]()
+        {
+            apiStrategyGroup->button(0)->isChecked() ? insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
+                : insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
+            insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", apiTimeoutSpinBox->value());
+        };
 
     // 将按钮添加到布局中
     _mainLayout->addWidget(apiStrategyArea);

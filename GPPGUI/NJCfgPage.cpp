@@ -17,6 +17,7 @@ void NJCfgPage::apply2Config()
 NJCfgPage::NJCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
 {
 	setWindowTitle("NormalJson 输出配置");
+	setContentsMargins(10, 0, 10, 0);
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);

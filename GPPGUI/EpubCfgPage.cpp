@@ -25,6 +25,7 @@ void EpubCfgPage::apply2Config()
 EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
 {
 	setWindowTitle("Epub 输出配置");
+	setContentsMargins(10, 0, 10, 0);
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);
@@ -112,11 +113,6 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 		preRegexTable.insert("预处理正则", toml::array{});
 	}
 	ElaText* preRegexText = new ElaText("预处理正则", centerWidget);
-	ElaToolTip* preRegexTip = new ElaToolTip(preRegexText);
-	preRegexTip->setToolTip("遍历HTML文件前进行的过滤处理，遵循toml格式，如: \n"
-		R"("预处理正则" = [
-	{ org = '''<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>''', rep = '''[$2/$1]''' },
-])");
 	preRegexText->setTextPixelSize(18);
 	mainLayout->addSpacing(10);
 	mainLayout->addWidget(preRegexText);
@@ -141,17 +137,21 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 		postRegexTable.insert("后处理正则", toml::array{});
 	}
 	ElaText* postRegexText = new ElaText("后处理正则", centerWidget);
-	ElaToolTip* postRegexTip = new ElaToolTip(postRegexText);
-	postRegexTip->setToolTip("对翻译生成的新HTML文件进行的后处理，遵循toml格式，如: \n"
-		R"("后处理正则" = [
-	{ org = '''\[([^/\[\]]+?)/([^/\[\]]+?)\]''', rep = '''<ruby><rb>$2</rb><rt>$1</rt></ruby>''' },
-])");
 	postRegexText->setTextPixelSize(18);
 	mainLayout->addSpacing(10);
 	mainLayout->addWidget(postRegexText);
 	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(centerWidget);
 	postRegexEdit->setPlainText(QString::fromStdString(stream2String(postRegexTable)));
 	mainLayout->addWidget(postRegexEdit);
+
+	ElaText* tipText = new ElaText("说明", centerWidget);
+	tipText->setTextPixelSize(18);
+	mainLayout->addSpacing(10);
+	mainLayout->addWidget(tipText);
+	ElaPlainTextEdit* tipEdit = new ElaPlainTextEdit(centerWidget);
+	tipEdit->setReadOnly(true);
+	tipEdit->setPlainText(R"()");
+	mainLayout->addWidget(tipEdit);
 
 	_applyFunc = [=]()
 		{
@@ -170,7 +170,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 				}
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "Epub预处理正则格式错误", 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "Epub预处理正则格式错误", 3000);
 			}
 			try {
 				toml::table postTbl = toml::parse(postRegexEdit->toPlainText().toStdString());
@@ -183,7 +183,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 				}
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "Epub后处理正则格式错误", 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "Epub后处理正则格式错误", 3000);
 			}
 		};
 	

@@ -24,6 +24,7 @@ DictSettingsPage::DictSettingsPage(fs::path& projectDir, toml::table& globalConf
 {
 	setWindowTitle("项目字典设置");
 	setTitleVisible(false);
+	setContentsMargins(0, 0, 0, 0);
 
 	_setupUI();
 }
@@ -60,7 +61,7 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 				tbl = toml::parse(ifs);
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败",
 					QString(dictPath.filename().wstring()) + "不符合规范", 3000);
 				return;
 			}
@@ -69,13 +70,17 @@ QList<DictionaryEntry> DictSettingsPage::readGptDicts()
 			if (!dictArr) {
 				return;
 			}
-			for (const auto& dict : *dictArr) {
+			for (const auto& elem : *dictArr) {
+				auto dict = elem.as_table();
+				if (!dict) {
+					continue;
+				}
 				DictionaryEntry entry;
-				entry.original = dict.as_table()->contains("org") ? QString::fromStdString((*dict.as_table())["org"].value_or("")) : 
-					QString::fromStdString((*dict.as_table())["searchStr"].value_or(""));
-				entry.translation = dict.as_table()->contains("rep") ? QString::fromStdString((*dict.as_table())["rep"].value_or("")) : 
-					QString::fromStdString((*dict.as_table())["replaceStr"].value_or(""));
-				entry.description = dict.as_table()->contains("note") ? QString::fromStdString((*dict.as_table())["note"].value_or("")) : "";
+				entry.original = dict->contains("org") ? (*dict)["org"].value_or("") :
+					(*dict)["searchStr"].value_or("");
+				entry.translation = dict->contains("rep") ? QString::fromStdString((*dict)["rep"].value_or("")) :
+					(*dict)["replaceStr"].value_or("");
+				entry.description = dict->contains("note") ? (*dict)["note"].value_or("") : QString{};
 				result.push_back(entry);
 			}
 		};
@@ -101,7 +106,7 @@ QString DictSettingsPage::readGptDictsStr()
 				tbl = toml::parse(ifs);
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败",
 					QString(dictPath.filename().wstring()) + "不符合规范", 3000);
 				return false;
 			}
@@ -110,15 +115,19 @@ QString DictSettingsPage::readGptDictsStr()
 			if (!dictArr) {
 				return false;
 			}
-			for (const auto& dict : *dictArr) {
-				std::string original = dict.as_table()->contains("org") ? (*dict.as_table())["org"].value_or("") :
-					(*dict.as_table())["searchStr"].value_or("");
-				std::string translation = dict.as_table()->contains("rep") ? (*dict.as_table())["rep"].value_or("") :
-					(*dict.as_table())["replaceStr"].value_or("");
-				std::string description = dict.as_table()->contains("note") ? (*dict.as_table())["note"].value_or("") : "";
+			for (const auto& elem : *dictArr) {
+				auto dict = elem.as_table();
+				if (!dict) {
+					continue;
+				}
+				std::string original = dict->contains("org") ? (*dict)["org"].value_or("") :
+					(*dict)["searchStr"].value_or("");
+				std::string translation = dict->contains("rep") ? (*dict)["rep"].value_or("") :
+					(*dict)["replaceStr"].value_or("");
+				std::string description = dict->contains("note") ? (*dict)["note"].value_or("") : std::string{};
 				toml::table tbl{ {"org", original }, { "rep", translation }, { "note", description } };
-				result += std::format("    {{ org = {}, rep = {}, note = {} }},",
-					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) + "\n";
+				result += std::format("\t{{ org = {}, rep = {}, note = {} }},\n",
+					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"]));
 			}
 			return true;
 		};
@@ -151,7 +160,7 @@ QList<NormalDictEntry> DictSettingsPage::readNormalDicts(const fs::path& dictPat
 		tbl = toml::parse(ifs);
 	}
 	catch (...) {
-		ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败",
+		ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败",
 			QString(dictPath.filename().wstring()) + " 不符合规范", 3000);
 		return result;
 	}
@@ -160,16 +169,20 @@ QList<NormalDictEntry> DictSettingsPage::readNormalDicts(const fs::path& dictPat
 	if (!dictArr) {
 		return result;
 	}
-	for (const auto& dict : *dictArr) {
+	for (const auto& elem : *dictArr) {
+		auto dict = elem.as_table();
+		if (!dict) {
+			continue;
+		}
 		NormalDictEntry entry;
-		entry.original = dict.as_table()->contains("org") ? QString::fromStdString((*dict.as_table())["org"].value_or("")) : 
-			QString::fromStdString((*dict.as_table())["searchStr"].value_or(""));
-		entry.translation = dict.as_table()->contains("rep") ? QString::fromStdString((*dict.as_table())["rep"].value_or("")) : 
-			QString::fromStdString((*dict.as_table())["replaceStr"].value_or(""));
-		entry.conditionTar = (*dict.as_table())["conditionTarget"].value_or("");
-		entry.conditionReg = (*dict.as_table())["conditionReg"].value_or("");
-		entry.isReg = (*dict.as_table())["isReg"].value_or(false);
-		entry.priority = (*dict.as_table())["priority"].value_or(0);
+		entry.original = dict->contains("org") ? (*dict)["org"].value_or("") :
+			(*dict)["searchStr"].value_or("");
+		entry.translation = dict->contains("rep") ? (*dict)["rep"].value_or("") :
+			(*dict)["replaceStr"].value_or("");
+		entry.conditionTar = (*dict)["conditionTarget"].value_or("");
+		entry.conditionReg = (*dict)["conditionReg"].value_or("");
+		entry.isReg = (*dict)["isReg"].value_or(false);
+		entry.priority = (*dict)["priority"].value_or(0);
 		result.push_back(entry);
 	}
 	return result;
@@ -256,7 +269,6 @@ void DictSettingsPage::_setupUI()
 	gptDictTableView->setColumnWidth(2, _projectConfig["GUIConfig"]["gptDictTableColumnWidth"]["2"].value_or(425));
 	gptStackedWidget->addWidget(gptDictTableView);
 	gptStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["gptDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
-	insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", gptStackedWidget->currentIndex());
 
 	gptPlainTextModeButtom->setEnabled(gptStackedWidget->currentIndex() != 0);
 	gptTableModeButtom->setEnabled(gptStackedWidget->currentIndex() != 1);
@@ -310,7 +322,6 @@ void DictSettingsPage::_setupUI()
 			gptPlainTextModeButtom->setEnabled(false);
 			gptTableModeButtom->setEnabled(true);
 			withdrawGptDictButton->setEnabled(false);
-			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 0);
 		});
 	connect(gptTableModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
@@ -320,7 +331,6 @@ void DictSettingsPage::_setupUI()
 			gptPlainTextModeButtom->setEnabled(true);
 			gptTableModeButtom->setEnabled(false);
 			withdrawGptDictButton->setEnabled(!_withdrawGptList.empty());
-			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", 1);
 		});
 	connect(refreshGptDictButton, &ElaPushButton::clicked, this, refreshGptDictFunc);
 	connect(saveGptDictButton, &ElaPushButton::clicked, this, [=]()
@@ -425,7 +435,6 @@ void DictSettingsPage::_setupUI()
 	preDictTableView->setColumnWidth(5, _projectConfig["GUIConfig"]["preDictTableColumnWidth"]["5"].value_or(60));
 	preStackedWidget->addWidget(preDictTableView);
 	preStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["preDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
-	insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", preStackedWidget->currentIndex());
 
 	prePlainTextModeButtom->setEnabled(preStackedWidget->currentIndex() != 0);
 	preTableModeButtom->setEnabled(preStackedWidget->currentIndex() != 1);
@@ -479,7 +488,6 @@ void DictSettingsPage::_setupUI()
 			prePlainTextModeButtom->setEnabled(false);
 			preTableModeButtom->setEnabled(true);
 			withdrawPreDictButton->setEnabled(false);
-			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 0);
 		});
 	connect(preTableModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
@@ -489,7 +497,6 @@ void DictSettingsPage::_setupUI()
 			prePlainTextModeButtom->setEnabled(true);
 			preTableModeButtom->setEnabled(false);
 			withdrawPreDictButton->setEnabled(!_withdrawPreList.empty());
-			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", 1);
 		});
 	connect(refreshPreDictButton, &ElaPushButton::clicked, this, refreshPreDictFunc);
 	connect(savePreDictButton, &ElaPushButton::clicked, this, [=]()
@@ -594,7 +601,6 @@ void DictSettingsPage::_setupUI()
 	postDictTableView->setColumnWidth(5, _projectConfig["GUIConfig"]["postDictTableColumnWidth"]["5"].value_or(60));
 	postStackedWidget->addWidget(postDictTableView);
 	postStackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["postDictTableOpenMode"].value_or(_globalConfig["defaultDictOpenMode"].value_or(0)));
-	insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", postStackedWidget->currentIndex());
 
 	postPlainTextModeButtom->setEnabled(postStackedWidget->currentIndex() != 0);
 	postTableModeButtom->setEnabled(postStackedWidget->currentIndex() != 1);
@@ -648,7 +654,6 @@ void DictSettingsPage::_setupUI()
 			postPlainTextModeButtom->setEnabled(false);
 			postTableModeButtom->setEnabled(true);
 			withdrawPostDictButton->setEnabled(false);
-			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 0);
 		});
 	connect(postTableModeButtom, &ElaPushButton::clicked, this, [=]()
 		{
@@ -658,7 +663,6 @@ void DictSettingsPage::_setupUI()
 			postPlainTextModeButtom->setEnabled(true);
 			postTableModeButtom->setEnabled(false);
 			withdrawPostDictButton->setEnabled(!_withdrawPostList.empty());
-			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", 1);
 		});
 	connect(refreshPostDictButton, &ElaPushButton::clicked, this, refreshPostDictFunc);
 	connect(savePostDictButton, &ElaPushButton::clicked, this, [=]()
@@ -755,6 +759,9 @@ msg 字段则是 执行插件处理 -> 执行译后字典替换 -> 问题分析
 			saveGptDictFunc();
 			savePreDictFunc();
 			savePostDictFunc();
+			insertToml(_projectConfig, "GUIConfig.gptDictTableOpenMode", gptStackedWidget->currentIndex());
+			insertToml(_projectConfig, "GUIConfig.preDictTableOpenMode", preStackedWidget->currentIndex());
+			insertToml(_projectConfig, "GUIConfig.postDictTableOpenMode", postStackedWidget->currentIndex());
 		};
 
 	mainLayout->addWidget(tabWidget, 1);

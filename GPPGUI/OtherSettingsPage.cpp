@@ -7,13 +7,8 @@
 #include <QFileDialog>
 
 #include "ElaText.h"
-#include "ElaPlainTextEdit.h"
 #include "ElaLineEdit.h"
-#include "ElaComboBox.h"
 #include "ElaScrollPageArea.h"
-#include "ElaRadioButton.h"
-#include "ElaSpinBox.h"
-#include "ElaToggleSwitch.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
 #include "ElaToolTip.h"
@@ -25,6 +20,7 @@ OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, toml::table& projectC
 {
 	setWindowTitle("其它设置");
 	setTitleVisible(false);
+
 	_setupUI();
 }
 
@@ -70,7 +66,7 @@ void OtherSettingsPage::_setupUI()
 	moveButton->setText("移动项目");
 	connect(moveButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (_projectConfig["GUIConfig"]["isRunning"].value_or(false)) {
+			if (_projectConfig["GUIConfig"]["isRunning"].value_or(true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, "移动失败", "项目仍在运行中，无法移动", 3000);
 				return;
 			}
@@ -86,7 +82,13 @@ void OtherSettingsPage::_setupUI()
 				return;
 			}
 
-			fs::rename(_projectDir, newProjectPath);
+			try {
+				fs::rename(_projectDir, newProjectPath);
+			}
+			catch (const fs::filesystem_error& e) {
+				ElaMessageBar::warning(ElaMessageBarType::TopRight, "移动失败", QString(e.what()), 3000);
+				return;
+			}
 			_projectDir = newProjectPath;
 			pathEdit->setText(QString(_projectDir.wstring()));
 			ElaMessageBar::success(ElaMessageBarType::TopRight, "移动成功", QString(_projectDir.filename().wstring()) + " 项目已移动到新文件夹", 3000);

@@ -62,7 +62,6 @@ private:
     OtherSettingsPage* _otherSettingsPage;
     PromptSettingsPage* _promptSettingsPage;
 
-    bool _isRunning = false;
     QWidget* _mainWindow;
 
     void _setupUI();

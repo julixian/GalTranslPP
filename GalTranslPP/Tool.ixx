@@ -92,6 +92,7 @@ export {
         std::string problem;
         std::string translated_by;
         std::string translated_preview; // 对应 post_zh
+        std::string other_info;
 
         bool complete = false;
         Sentence* prev = nullptr;
@@ -203,21 +204,20 @@ export {
             cacheObj["index"] = se.index;
             cacheObj["name"] = se.name;
             cacheObj["original_text"] = se.original_text;
+            if (!se.other_info.empty()) {
+                cacheObj["other_info"] = se.other_info;
+            }
             cacheObj["pre_processed_text"] = se.pre_processed_text;
             cacheObj["pre_translated_text"] = se.pre_translated_text;
-            cacheObj["problem"] = se.problem;
-            cacheObj["problemExist"] = se.problem.empty() ? false : true;
+            if (!se.problem.empty()) {
+                cacheObj["problem"] = se.problem;
+            }
             cacheObj["translated_by"] = se.translated_by;
             cacheObj["translated_preview"] = se.translated_preview;
             cacheJson.push_back(cacheObj);
         }
-        try {
-            std::ofstream ofs(cachePath);
-            ofs << cacheJson.dump(2);
-        }
-        catch (const std::exception& e) {
-            throw std::runtime_error(std::format("保存缓存到 {} 失败: {}", wide2Ascii(cachePath.wstring()), e.what()));
-        }
+        std::ofstream ofs(cachePath);
+        ofs << cacheJson.dump(2);
     }
 
     /**

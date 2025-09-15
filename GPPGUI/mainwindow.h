@@ -13,6 +13,7 @@ class CommonNormalDictPage;
 class SettingPage;
 class ProjectSettingsPage;
 class ElaContentDialog;
+class UpdateChecker;
 
 class MainWindow : public ElaWindow
 {
@@ -21,7 +22,9 @@ class MainWindow : public ElaWindow
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    void afterShow();
+
+public Q_SLOTS:
+    void checkUpdate();
 
 protected:
     virtual void mouseReleaseEvent(QMouseEvent* event);
@@ -49,15 +52,17 @@ private:
     CommonNormalDictPage* _commonPostDictPage{nullptr};
     SettingPage* _settingPage{nullptr};
 
-    QString _commonDictExpanderKey{""};
-    QString _projectExpanderKey{""};
+    QString _commonDictExpanderKey;
+    QString _projectExpanderKey;
 
-    QString _aboutKey{""};
-    QString _settingKey{""};
+    QString _aboutKey;
+    QString _updateKey;
+    QString _settingKey;
 
-    QList<QSharedPointer<ProjectSettingsPage>> _projectPages{};
+    QList<QSharedPointer<ProjectSettingsPage>> _projectPages;
 
-    ElaContentDialog* _closeDialog{ nullptr };
+    ElaContentDialog* _closeDialog{nullptr};
+    UpdateChecker* _updateChecker{nullptr};
 
     toml::table _globalConfig;
 };

@@ -25,7 +25,7 @@
 #include "OtherSettingsPage.h"
 #include "PromptSettingsPage.h"
 
-import std;
+import Tool;
 
 ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::path& projectDir, QWidget* parent)
     : BasePage(parent), _projectDir(projectDir), _globalConfig(globalConfig), _mainWindow(parent)
@@ -42,6 +42,7 @@ ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::pa
         ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "项目 " + QString(_projectDir.filename().wstring()) + " 的配置文件不符合规范", 3000);
     }
     ifs.close();
+    insertToml(_projectConfig, "GUIConfig.isRunning", false);
 
     _setupUI();
 }
@@ -88,13 +89,13 @@ void ProjectSettingsPage::_setupUI()
 {
 
     QWidget* centralWidget = new QWidget(this);
+    centralWidget->setContentsMargins(0, 0, 0, 0);
     QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->setSpacing(0);
 
     QWidget* navigationWidget = new QWidget(this);
+    navigationWidget->setContentsMargins(0, 0, 0, 0);
     QHBoxLayout* navigationLayout = new QHBoxLayout(navigationWidget);
-    navigationLayout->setContentsMargins(0, 0, 0, 0);
     ElaText* settingsTitle = new ElaText("API设置", navigationWidget);
     settingsTitle->setContentsMargins(0, 10, 0, 0);
     settingsTitle->setTextPixelSize(18);
@@ -244,7 +245,7 @@ void ProjectSettingsPage::_createPages()
 
 void ProjectSettingsPage::_onStartTranslating()
 {
-    _isRunning = true;
+    insertToml(_projectConfig, "GUIConfig.isRunning", true);
     apply2Config();
 }
 
@@ -262,10 +263,10 @@ void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int e
         }
     }
     Q_EMIT finishedTranslating(this->property("ElaPageKey").toString());
-    _isRunning = false;
+    insertToml(_projectConfig, "GUIConfig.isRunning", false);
 }
 
 bool ProjectSettingsPage::getIsRunning()
 {
-    return _isRunning;
+    return _projectConfig["GUIConfig"]["isRunning"].value_or(true);
 }

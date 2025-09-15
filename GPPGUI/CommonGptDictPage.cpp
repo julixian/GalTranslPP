@@ -61,13 +61,17 @@ QList<DictionaryEntry> CommonGptDictPage::readGptDicts(const fs::path& dictPath)
 	if (!dictArr) {
 		return result;
 	}
-	for (const auto& dict : *dictArr) {
+	for (const auto& elem : *dictArr) {
+		auto dict = elem.as_table();
+		if (!dict) {
+			continue;
+		}
 		DictionaryEntry entry;
-		entry.original = dict.as_table()->contains("org") ? QString::fromStdString((*dict.as_table())["org"].value_or("")) :
-			QString::fromStdString((*dict.as_table())["searchStr"].value_or(""));
-		entry.translation = dict.as_table()->contains("rep") ? QString::fromStdString((*dict.as_table())["rep"].value_or("")) :
-			QString::fromStdString((*dict.as_table())["replaceStr"].value_or(""));
-		entry.description = dict.as_table()->contains("note") ? QString::fromStdString((*dict.as_table())["note"].value_or("")) : "";
+		entry.original = dict->contains("org") ? (*dict)["org"].value_or("") :
+			(*dict)["searchStr"].value_or("");
+		entry.translation = dict->contains("rep") ? (*dict)["rep"].value_or("") :
+			(*dict)["replaceStr"].value_or("");
+		entry.description = dict->contains("note") ? (*dict)["note"].value_or("") : QString{};
 		result.push_back(entry);
 	}
 	return result;
@@ -93,15 +97,19 @@ QString CommonGptDictPage::readGptDictsStr(const fs::path& dictPath)
 			if (!dictArr) {
 				return false;
 			}
-			for (const auto& dict : *dictArr) {
-				std::string original = dict.as_table()->contains("org") ? (*dict.as_table())["org"].value_or("") :
-					(*dict.as_table())["searchStr"].value_or("");
-				std::string translation = dict.as_table()->contains("rep") ? (*dict.as_table())["rep"].value_or("") :
-					(*dict.as_table())["replaceStr"].value_or("");
-				std::string description = dict.as_table()->contains("note") ? (*dict.as_table())["note"].value_or("") : "";
+			for (const auto& elem : *dictArr) {
+				auto dict = elem.as_table();
+				if (!dict) {
+					continue;
+				}
+				std::string original = dict->contains("org") ? (*dict)["org"].value_or("") :
+					(*dict)["searchStr"].value_or("");
+				std::string translation = dict->contains("rep") ? (*dict)["rep"].value_or("") :
+					(*dict)["replaceStr"].value_or("");
+				std::string description = dict->contains("note") ? (*dict)["note"].value_or("") : std::string{};
 				toml::table tbl{ {"org", original }, { "rep", translation }, { "note", description } };
-				result += std::format("    {{ org = {}, rep = {}, note = {} }},",
-					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"])) + "\n";
+				result += std::format("    {{ org = {}, rep = {}, note = {} }},\n",
+					stream2String(tbl["org"]), stream2String(tbl["rep"]), stream2String(tbl["note"]));
 			}
 			return true;
 		};
@@ -122,8 +130,6 @@ void CommonGptDictPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
-	mainLayout->setSpacing(0);
-	mainLayout->setContentsMargins(0, 0, 0, 0);
 
 	QWidget* mainButtonWidget = new QWidget(mainWidget);
 	QHBoxLayout* mainButtonLayout = new QHBoxLayout(mainButtonWidget);

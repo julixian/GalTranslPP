@@ -19,6 +19,7 @@ PostFull2HalfCfgPage::PostFull2HalfCfgPage(toml::table& projectConfig, QWidget* 
     : BasePage(parent), _projectConfig(projectConfig)
 {
     setWindowTitle("全角半角转换设置");
+    setContentsMargins(10, 0, 10, 0);
 
     // 创建中心部件和布局
     QWidget* centerWidget = new QWidget(this);

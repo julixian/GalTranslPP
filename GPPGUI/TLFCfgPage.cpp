@@ -19,6 +19,7 @@ void TLFCfgPage::apply2Config()
 TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
 {
 	setWindowTitle("换行修复设置");
+	setContentsMargins(10, 0, 10, 0);
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);

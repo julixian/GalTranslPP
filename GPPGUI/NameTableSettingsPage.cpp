@@ -18,6 +18,7 @@ NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, toml::table& 
 {
 	setWindowTitle("人名表");
 	setTitleVisible(false);
+	setContentsMargins(0, 0, 0, 0);
 
 	_setupUI();
 }
@@ -61,7 +62,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 	for (const auto& [key, value] : tbl) {
 		NameTableEntry entry;
 		entry.original = QString::fromStdString(std::string(key.str()));
-		if (auto valueArr = value.as_array()) {
+		if (auto valueArr = value.as_array(); valueArr->size() >= 2) {
 			if (auto optTrans = valueArr->get(0)->value<std::string>()) {
 				entry.translation = QString::fromStdString(*optTrans);
 			}
@@ -100,7 +101,6 @@ void NameTableSettingsPage::_setupUI()
 
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
-	mainLayout->setContentsMargins(0, 0, 0, 0);
 
 	QWidget* buttonWidget = new QWidget(mainWidget);
 	QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
@@ -147,7 +147,6 @@ void NameTableSettingsPage::_setupUI()
 	nameTableView->setColumnWidth(2, _projectConfig["GUIConfig"]["nameTableColumnWidth"]["2"].value_or(258));
 	stackedWidget->addWidget(nameTableView);
 	stackedWidget->setCurrentIndex(_projectConfig["GUIConfig"]["nameTableOpenMode"].value_or(_globalConfig["defaultNameTableOpenMode"].value_or(0)));
-	insertToml(_projectConfig, "GUIConfig.nameTableMode", stackedWidget->currentIndex());
 
 	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 	TableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
@@ -162,7 +161,6 @@ void NameTableSettingsPage::_setupUI()
 			addNameButton->setEnabled(false);
 			delNameButton->setEnabled(false);
 			withdrawButton->setEnabled(false);
-			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 0);
 		});
 	connect(TableModeButton, &ElaPushButton::clicked, this, [=]()
 		{
@@ -172,7 +170,6 @@ void NameTableSettingsPage::_setupUI()
 			addNameButton->setEnabled(true);
 			delNameButton->setEnabled(true);
 			withdrawButton->setEnabled(!_withdrawList.isEmpty());
-			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", 1);
 		});
 	auto refreshFunc = [=]()
 		{
@@ -208,6 +205,8 @@ void NameTableSettingsPage::_setupUI()
 		});
 	connect(saveDictButton, &ElaPushButton::clicked, this, [=]()
 		{
+			// 保存的提示和按钮绑定，因为保存项目配置时用的自己的提示
+			// 但刷新可以直接把提示丢进refreshFunc里，因为一般用到这个函数的时候都要提示(单独保存字典时的重载入是静默的)
 			if (_applyFunc) {
 				_applyFunc();
 			}
@@ -254,6 +253,7 @@ void NameTableSettingsPage::_setupUI()
 				ofs.close();
 				plainTextEdit->setPlainText(readNameTableStr());
 			}
+			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", stackedWidget->currentIndex());
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.0", nameTableView->columnWidth(0));
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.1", nameTableView->columnWidth(1));
 			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.2", nameTableView->columnWidth(2));

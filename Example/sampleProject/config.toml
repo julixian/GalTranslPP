@@ -33,17 +33,19 @@ textPostPlugins = [
   [plugins.Epub]
   "双语显示" = true
 
-    [plugins.Epub.'预处理正则']
-    org = '''<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'''
-    rep = '''[$2/$1]'''
+    [[plugins.Epub.'预处理正则']]
+    org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
+    rep = '[$2/$1]'
 
-    [plugins.Epub.'预处理正则']
-    org = '''<span id="page_\d+?"/>'''
-    rep = ''
+    [[plugins.Epub.'预处理正则']]
+    org = '(<p[^>/]*>)(.*?)(</p>)'
+    callback = [
+        { org = '<[^>]*>', rep = '', group = 2 },
+    ]
 
-    [plugins.Epub.'后处理正则']
-    org = '''\[([^/\[\]]+?)/([^/\[\]]+?)\]'''
-    rep = '''<ruby><rb>$2</rb><rt>$1</rt></ruby>'''
+    [[plugins.Epub.'后处理正则']]
+    org = '\[([^/\[\]]+?)/([^/\[\]]+?)\]'
+    rep = '<ruby><rb>$2</rb><rt>$1</rt></ruby>'
 
   [plugins.TextLinebreakFix]
   "换行模式" = "优先标点"

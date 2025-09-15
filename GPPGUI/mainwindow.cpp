@@ -109,46 +109,11 @@ void MainWindow::initWindow()
     if (x < 0)x = 0;
     if (y < 0)y = 0;
     move(x, y);
-    int themeMode = _globalConfig["themeMode"].value_or(0);
-    insertToml(_globalConfig, "themeMode", themeMode);
-    eTheme->setThemeMode((ElaThemeType::ThemeMode)themeMode);
     setUserInfoCardPixmap(QPixmap(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
     setUserInfoCardTitle(QString::fromStdString("Galtransl++ v" + GPPVERSION));
     setUserInfoCardSubTitle("tianquyesss@gmail.com");
     setWindowTitle("Galtransl++");
     setNavigationBarWidth(275);
-
-    //停靠窗口
-    ElaDockWidget* updateDockWidget = new ElaDockWidget("更新内容", this);
-    updateDockWidget->setWidget(new UpdateWidget(this));
-    this->addDockWidget(Qt::RightDockWidgetArea, updateDockWidget);
-    resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
-    std::string gppversion = GPPVERSION;
-    std::erase_if(gppversion, [](char ch) { return ch == '.'; });
-    updateDockWidget->setVisible(_globalConfig["showDockWidget"][gppversion].value_or(true));
-    insertToml(_globalConfig, "showDockWidget", toml::table{});
-    insertToml(_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
-    connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
-        {
-            insertToml(_globalConfig, "showDockWidget", toml::table{});
-            insertToml(_globalConfig, "showDockWidget." + gppversion, visible);
-        });
-
-    // 右键菜单
-    ElaMenu* appBarMenu = new ElaMenu(this);
-    appBarMenu->setMenuItemHeight(27);
-    // 召唤停靠窗口
-    connect(appBarMenu->addElaIconAction(ElaIconType::BellConcierge, "召唤停靠窗口"), &QAction::triggered, this, [=]()
-        {
-            updateDockWidget->show();
-        });
-    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, "设置"), &QAction::triggered, this, [=]() {
-        navigation(_settingKey);
-        });
-    connect(appBarMenu->addElaIconAction(ElaIconType::MoonStars, "更改程序主题"), &QAction::triggered, this, [=]() {
-        eTheme->setThemeMode(eTheme->getThemeMode() == ElaThemeType::Light ? ElaThemeType::Dark : ElaThemeType::Light);
-        });
-    setCustomMenu(appBarMenu);
 }
 
 void MainWindow::initEdgeLayout()
@@ -182,6 +147,38 @@ void MainWindow::initEdgeLayout()
     statusText->setTextPixelSize(14);
     statusBar->addWidget(statusText);
     this->setStatusBar(statusBar);
+
+    //停靠窗口
+    ElaDockWidget* updateDockWidget = new ElaDockWidget("更新内容", this);
+    updateDockWidget->setWidget(new UpdateWidget(this));
+    this->addDockWidget(Qt::RightDockWidgetArea, updateDockWidget);
+    resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
+    std::string gppversion = GPPVERSION;
+    std::erase_if(gppversion, [](char ch) { return ch == '.'; });
+    updateDockWidget->setVisible(_globalConfig["showDockWidget"][gppversion].value_or(true));
+    insertToml(_globalConfig, "showDockWidget", toml::table{});
+    insertToml(_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
+    connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
+        {
+            insertToml(_globalConfig, "showDockWidget", toml::table{});
+            insertToml(_globalConfig, "showDockWidget." + gppversion, visible);
+        });
+
+    // 右键菜单
+    ElaMenu* appBarMenu = new ElaMenu(this);
+    appBarMenu->setMenuItemHeight(27);
+    // 召唤停靠窗口
+    connect(appBarMenu->addElaIconAction(ElaIconType::BellConcierge, "召唤停靠窗口"), &QAction::triggered, this, [=]()
+        {
+            updateDockWidget->show();
+        });
+    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, "设置"), &QAction::triggered, this, [=]() {
+        navigation(_settingKey);
+        });
+    connect(appBarMenu->addElaIconAction(ElaIconType::MoonStars, "更改程序主题"), &QAction::triggered, this, [=]() {
+        eTheme->setThemeMode(eTheme->getThemeMode() == ElaThemeType::Light ? ElaThemeType::Dark : ElaThemeType::Light);
+        });
+    setCustomMenu(appBarMenu);
 }
 
 void MainWindow::initContent()
@@ -234,12 +231,19 @@ void MainWindow::initContent()
     }
     expandNavigationNode(_projectExpanderKey);
 
+    addFooterNode("检查更新", nullptr, _updateKey, 0, ElaIconType::Repeat);
+    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) 
+        {
+            if (_updateKey == nodeKey) {
+                ElaMessageBar::information(ElaMessageBarType::TopLeft, "请稍候", "正在检查更新...", 3000);
+                _updateChecker->check();
+            }
+        });
 
     addFooterNode("关于", nullptr, _aboutKey, 0, ElaIconType::User);
     _aboutPage = new AboutDialog();
-
     _aboutPage->hide();
-    connect(this, &ElaWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) {
+    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) {
         if (_aboutKey == nodeKey)
         {
             _aboutPage->setFixedSize(400, 400);
@@ -247,6 +251,7 @@ void MainWindow::initContent()
             _aboutPage->show();
         }
         });
+
     addFooterNode("设置", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
     connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
         this->navigation(_homePage->property("ElaPageKey").toString());
@@ -265,6 +270,8 @@ void MainWindow::initContent()
                 setWindowTitle("Galtransl++");
             }
         });*/
+
+    _updateChecker = new UpdateChecker(this);
 }
 
 void MainWindow::_on_newProject_triggered()
@@ -526,6 +533,13 @@ void MainWindow::_on_deleteProject_triggered()
     connect(&helpDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
         {
             fs::path projectDir = it->get()->getProjectDir();
+            try {
+                fs::remove_all(projectDir);
+            }
+            catch (const fs::filesystem_error& e) {
+                ElaMessageBar::warning(ElaMessageBarType::TopRight, "删除失败", e.what(), 3000);
+                return;
+            }
             removeNavigationNode(pageKey);
             _projectPages.erase(it);
             if (getCurrentNavigationPageKey() == _settingPage->property("ElaPageKey").toString()) {
@@ -536,7 +550,6 @@ void MainWindow::_on_deleteProject_triggered()
                     this->navigation(_projectPages.back()->property("ElaPageKey").toString());
                 }
             }
-            fs::remove_all(projectDir);
             ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "项目 " + it->get()->getProjectName() + " 已从项目管理和磁盘中移除！", 3000);
         });
     helpDialog.exec();
@@ -572,12 +585,7 @@ void MainWindow::_on_closeWindow_clicked()
     }
     _globalConfig.insert_or_assign("projects", projects);
 
-    QRect rect = frameGeometry();
-    _globalConfig.insert_or_assign("windowWidth", rect.width());
-    _globalConfig.insert_or_assign("windowHeight", rect.height());
-    _globalConfig.insert_or_assign("windowPosX", rect.x());
-    _globalConfig.insert_or_assign("windowPosY", rect.y());
-    _globalConfig.insert_or_assign("themeMode", (int)eTheme->getThemeMode());
+    _settingPage->apply2Config();
 
     std::ofstream ofs(L"BaseConfig/globalConfig.toml");
     ofs << _globalConfig;
@@ -585,16 +593,9 @@ void MainWindow::_on_closeWindow_clicked()
     MainWindow::closeWindow();
 }
 
-void MainWindow::afterShow()
+void MainWindow::checkUpdate()
 {
-    UpdateChecker* updateChecker = new UpdateChecker(this);
-    connect(updateChecker, &UpdateChecker::checkFinished, this, [=](bool hasNewVersion, QString newVersion)
-        {
-            if (hasNewVersion) {
-                ElaMessageBar::information(ElaMessageBarType::TopLeft, "检测到新版本", "最新版本: " + newVersion, 3000);
-            }
-        });
-    updateChecker->check();
+    _updateChecker->check();
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)

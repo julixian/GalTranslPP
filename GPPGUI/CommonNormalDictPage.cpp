@@ -75,16 +75,20 @@ QList<NormalDictEntry> CommonNormalDictPage::readNormalDicts(const fs::path& dic
 	if (!dictArr) {
 		return result;
 	}
-	for (const auto& dict : *dictArr) {
+	for (const auto& elem : *dictArr) {
+		auto dict = elem.as_table();
+		if (!dict) {
+			continue;
+		}
 		NormalDictEntry entry;
-		entry.original = dict.as_table()->contains("org") ? QString::fromStdString((*dict.as_table())["org"].value_or("")) :
-			QString::fromStdString((*dict.as_table())["searchStr"].value_or(""));
-		entry.translation = dict.as_table()->contains("rep") ? QString::fromStdString((*dict.as_table())["rep"].value_or("")) :
-			QString::fromStdString((*dict.as_table())["replaceStr"].value_or(""));
-		entry.conditionTar = (*dict.as_table())["conditionTarget"].value_or("");
-		entry.conditionReg = (*dict.as_table())["conditionReg"].value_or("");
-		entry.isReg = (*dict.as_table())["isReg"].value_or(false);
-		entry.priority = (*dict.as_table())["priority"].value_or(0);
+		entry.original = dict->contains("org") ? (*dict)["org"].value_or("") :
+			(*dict)["searchStr"].value_or("");
+		entry.translation = dict->contains("rep") ? (*dict)["rep"].value_or("") :
+			(*dict)["replaceStr"].value_or("");
+		entry.conditionTar = (*dict)["conditionTarget"].value_or("");
+		entry.conditionReg = (*dict)["conditionReg"].value_or("");
+		entry.isReg = (*dict)["isReg"].value_or(false);
+		entry.priority = (*dict)["priority"].value_or(0);
 		result.push_back(entry);
 	}
 	return result;

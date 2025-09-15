@@ -12,6 +12,7 @@ import Tool;
 UpdateChecker::UpdateChecker(QObject* parent) : QObject(parent)
 {
     m_networkManager = new QNetworkAccessManager(this);
+    connect(m_networkManager, &QNetworkAccessManager::finished, this, &UpdateChecker::onReplyFinished);
 }
 
 void UpdateChecker::check()
@@ -22,14 +23,12 @@ void UpdateChecker::check()
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     m_networkManager->get(request);
-    connect(m_networkManager, &QNetworkAccessManager::finished, this, &UpdateChecker::onReplyFinished);
 }
 
 void UpdateChecker::onReplyFinished(QNetworkReply* reply)
 {
     if (reply->error() != QNetworkReply::NoError) {
         ElaMessageBar::warning(ElaMessageBarType::TopLeft, "更新检测失败", "网络连接失败，请检查网络设置。", 5000);
-        emit checkFinished(false, "");
         reply->deleteLater();
         return;
     }
@@ -39,18 +38,20 @@ void UpdateChecker::onReplyFinished(QNetworkReply* reply)
 
     if (!jsonDoc.isObject()) {
         ElaMessageBar::warning(ElaMessageBarType::TopLeft, "更新检测失败", "获取更新信息失败。", 5000);
-        emit checkFinished(false, "");
         reply->deleteLater();
         return;
     }
 
     QJsonObject jsonObj = jsonDoc.object();
-
     std::string latestVersion = jsonObj["tag_name"].toString().toStdString();
-
     bool hasNewVersion = isVersionGreaterThan(latestVersion, GPPVERSION);
 
-    emit checkFinished(hasNewVersion, QString::fromStdString(latestVersion));
+    if (hasNewVersion) {
+        ElaMessageBar::information(ElaMessageBarType::TopLeft, "检测到新版本", "最新版本: " + QString::fromStdString(GPPVERSION), 5000);
+    }
+    else {
+        ElaMessageBar::success(ElaMessageBarType::TopLeft, "版本检测", "当前已是最新的版本", 5000);
+    }
     reply->deleteLater();
 }
 

@@ -77,15 +77,15 @@ export {
         int m_saveCacheInterval;
         int m_apiTimeOutMs;
 
-        bool m_checkQuota = true;
-        bool m_smartRetry = true;
-        bool m_rebuildSuccess = true;
-        bool m_usePreDictInName = false;
-        bool m_usePostDictInName = false;
-        bool m_usePreDictInMsg = true;
-        bool m_usePostDictInMsg = true;
-        bool m_useGPTDictToReplaceName = false;
-        bool m_outputWithSrc = true;
+        bool m_checkQuota;
+        bool m_smartRetry;
+        bool m_rebuildSuccess;
+        bool m_usePreDictInName;
+        bool m_usePostDictInName;
+        bool m_usePreDictInMsg;
+        bool m_usePostDictInMsg;
+        bool m_useGPTDictToReplaceName;
+        bool m_outputWithSrc;
 
         std::string m_apiStrategy;
         std::string m_sortMethod;

@@ -110,6 +110,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	mainLayout->addSpacing(10);
 	mainLayout->addWidget(preRegexText);
 	ElaPlainTextEdit* preRegexEdit = new ElaPlainTextEdit(centerWidget);
+	preRegexEdit->setMinimumHeight(300);
 	preRegexEdit->setPlainText(QString::fromStdString(stream2String(preRegexTable)));
 	mainLayout->addWidget(preRegexEdit);
 
@@ -134,6 +135,7 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	mainLayout->addSpacing(10);
 	mainLayout->addWidget(postRegexText);
 	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(centerWidget);
+	postRegexEdit->setMinimumHeight(300);
 	postRegexEdit->setPlainText(QString::fromStdString(stream2String(postRegexTable)));
 	mainLayout->addWidget(postRegexEdit);
 

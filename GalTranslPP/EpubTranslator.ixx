@@ -30,7 +30,7 @@ export {
         std::shared_ptr<icu::RegexPattern> org;
         icu::UnicodeString rep;
 
-        bool isCallback = false;
+        bool isCallback;
         std::multimap<int, CallbackPattern> callbackPatterns;
     };
 

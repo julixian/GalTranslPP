@@ -298,6 +298,7 @@ void CommonSettingsPage::_setupUI()
 	dictLayout->addWidget(dictText);
 	dictLayout->addStretch();
 	ElaLineEdit* dictLineEdit = new ElaLineEdit(dictArea);
+	dictLineEdit->setReadOnly(true);
 	dictLineEdit->setFixedWidth(400);
 	dictLineEdit->setText(dictPathStr);
 	dictLayout->addWidget(dictLineEdit);

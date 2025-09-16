@@ -213,17 +213,14 @@ void MainWindow::initContent()
     addExpanderNode("项目管理", _projectExpanderKey, ElaIconType::BriefcaseBlank);
     auto projects = _globalConfig["projects"].as_array();
     if (projects) {
-        for (auto&& elem : *projects) {
+        for (const auto& elem : *projects) {
             if (auto project = elem.value<std::string>()) {
                 fs::path projectDir(ascii2Wide(*project));
                 if (!fs::exists(projectDir / L"config.toml")) {
                     continue;
                 }
                 QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir, this));
-                connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
-                    {
-                        setNodeKeyPoints(nodeKey, getNodeKeyPoints(nodeKey) + 1);
-                    });
+                connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, &MainWindow::_on_finishTranslating);
                 _projectPages.push_back(newPage);
                 addPageNode(QString(projectDir.filename().wstring()), newPage.get(), _projectExpanderKey, ElaIconType::Projector);
             }
@@ -243,18 +240,20 @@ void MainWindow::initContent()
     addFooterNode("关于", nullptr, _aboutKey, 0, ElaIconType::User);
     _aboutPage = new AboutDialog();
     _aboutPage->hide();
-    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) {
-        if (_aboutKey == nodeKey)
+    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) 
         {
-            _aboutPage->setFixedSize(400, 400);
-            _aboutPage->moveToCenter();
-            _aboutPage->show();
-        }
+            if (_aboutKey == nodeKey)
+            {
+                _aboutPage->setFixedSize(400, 400);
+                _aboutPage->moveToCenter();
+                _aboutPage->show();
+            }
         });
 
     addFooterNode("设置", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
-    connect(this, &MainWindow::userInfoCardClicked, this, [=]() {
-        this->navigation(_homePage->property("ElaPageKey").toString());
+    connect(this, &MainWindow::userInfoCardClicked, this, [=]() 
+        {
+            this->navigation(_homePage->property("ElaPageKey").toString());
         });
 
     /*connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
@@ -290,7 +289,7 @@ void MainWindow::_on_newProject_triggered()
         return;
     }
 
-    if (std::any_of(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+    if (std::ranges::any_of(_projectPages, [&](auto& page)
         {
             return projectName == page->getProjectName();
         }))
@@ -402,10 +401,7 @@ void MainWindow::_on_newProject_triggered()
     }
 
     QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, newProjectDir, this));
-    connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
-        {
-            setNodeKeyPoints(nodeKey, 1);
-        });
+    connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, &MainWindow::_on_finishTranslating);
     _projectPages.push_back(newPage);
     addPageNode(projectName, newPage.get(), _projectExpanderKey, ElaIconType::Projector);
     this->navigation(newPage->property("ElaPageKey").toString());
@@ -430,7 +426,7 @@ void MainWindow::_on_openProject_triggered()
 
     QString projectName(projectDir.filename().wstring());
 
-    if (std::any_of(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+    if (std::ranges::any_of(_projectPages, [&](auto& page)
         {
             return page->getProjectName() == projectName;
         }))
@@ -440,10 +436,7 @@ void MainWindow::_on_openProject_triggered()
     }
 
     QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(_globalConfig, projectDir, this));
-    connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, [=](QString nodeKey)
-        {
-            setNodeKeyPoints(nodeKey, 1);
-        });
+    connect(newPage.get(), &ProjectSettingsPage::finishedTranslating, this, &MainWindow::_on_finishTranslating);
     _projectPages.push_back(newPage);
     addPageNode(newPage->getProjectName(), newPage.get(), _projectExpanderKey, ElaIconType::Projector);
     this->navigation(newPage->property("ElaPageKey").toString());
@@ -456,7 +449,7 @@ void MainWindow::_on_openProject_triggered()
 void MainWindow::_on_removeProject_triggered()
 {
     QString pageKey = getCurrentNavigationPageKey();
-    auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+    auto it = std::ranges::find_if(_projectPages, [&](auto& page)
         {
             return page->property("ElaPageKey").toString() == pageKey;
         });
@@ -503,7 +496,7 @@ void MainWindow::_on_removeProject_triggered()
 void MainWindow::_on_deleteProject_triggered()
 {
     QString pageKey = getCurrentNavigationPageKey();
-    auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+    auto it = std::ranges::find_if(_projectPages, [&](auto& page)
         {
             return page->property("ElaPageKey").toString() == pageKey;
         });
@@ -558,7 +551,7 @@ void MainWindow::_on_deleteProject_triggered()
 void MainWindow::_on_saveProject_triggered()
 {
     QString pageKey = getCurrentNavigationPageKey();
-    auto it = std::find_if(_projectPages.begin(), _projectPages.end(), [&](auto& page)
+    auto it = std::ranges::find_if(_projectPages, [&](auto& page)
         {
             return page->property("ElaPageKey").toString() == pageKey;
         });
@@ -569,6 +562,11 @@ void MainWindow::_on_saveProject_triggered()
 
     it->get()->apply2Config();
     ElaMessageBar::success(ElaMessageBarType::TopRight, "保存成功", "项目 " + it->get()->getProjectName() + " 配置信息已保存！", 3000);
+}
+
+void MainWindow::_on_finishTranslating(QString nodeKey)
+{
+    setNodeKeyPoints(nodeKey, getNodeKeyPoints(nodeKey) + 1);
 }
 
 void MainWindow::_on_closeWindow_clicked()

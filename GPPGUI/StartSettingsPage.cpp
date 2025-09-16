@@ -5,6 +5,7 @@
 #include <QButtonGroup>
 #include <QFileDialog>
 #include <QScrollBar>
+#include <QSystemTrayIcon>
 
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
@@ -338,16 +339,49 @@ void StartSettingsPage::_workFinished(int exitCode)
 	_threadNumRing->setValue(0);
 	_remainTimeLabel->display("00:00:00");
 	insertToml(_projectConfig, "GUIConfig.inRunning", false);
+
+	// 创建一个托盘图标对象
+	static QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
+
+	// 设置图标
+	trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
+	trayIcon->show();
+
 	switch (exitCode)
 	{
 	case -2:
 		ElaMessageBar::error(ElaMessageBarType::BottomRight, "翻译失败", "项目 " + QString(_projectDir.filename().wstring()) + " 翻译任务失败，请检查日志输出。", 3000);
+
+		// 显示通知消息
+		trayIcon->showMessage(
+			"翻译失败",                  // 标题
+			"项目 " + QString(_projectDir.filename().wstring()) + " 翻译任务失败，请检查日志输出。",      // 内容
+			QSystemTrayIcon::Critical, // 图标类型 (Information, Warning, Critical)
+			5000                          // 显示时长 (毫秒)
+		);
 		break;
 	case -1:
 		ElaMessageBar::error(ElaMessageBarType::BottomRight, "翻译失败", "项目 " + QString(_projectDir.filename().wstring()) + " 连工厂函数都失败了，玩毛啊", 3000);
 		break;
 	case 0:
-		ElaMessageBar::success(ElaMessageBarType::BottomRight, "翻译完成", "请查收项目 " + QString(_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
+		if (_transEngine == "DumpName" || _transEngine == "GenDict") {
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, "生成完成", "项目 " + QString(_projectDir.filename().wstring()) + " 的生成任务已完成。", 3000);
+			trayIcon->showMessage(
+				"生成完成",                  // 标题
+				"项目 " + QString(_projectDir.filename().wstring()) + " 的生成任务已完成。",      // 内容
+				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
+				5000                          // 显示时长 (毫秒)
+			);
+		}
+		else {
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, "翻译完成", "请在 gt_output 文件夹中查收项目 " + QString(_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
+			trayIcon->showMessage(
+				"翻译完成",                  // 标题
+				"请在 gt_output 文件夹中查收项目 " + QString(_projectDir.filename().wstring()) + " 的翻译结果。",      // 内容
+				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
+				5000                          // 显示时长 (毫秒)
+			);
+		}
 		break;
 	case 1:
 		ElaMessageBar::information(ElaMessageBarType::BottomRight, "停止成功", "项目 " + QString(_projectDir.filename().wstring()) + " 的翻译任务已终止", 3000);

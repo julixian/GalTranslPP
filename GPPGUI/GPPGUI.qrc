@@ -13,5 +13,6 @@
         <file>Resource/Image/vnt.png</file>
         <file>Resource/Image/webIcon.jpeg</file>
         <file>Resource/sampleProject.zip</file>
+        <file>Resource/Image/julixian_s.ico</file>
     </qresource>
 </RCC>

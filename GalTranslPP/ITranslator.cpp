@@ -41,43 +41,13 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, std::s
     ifs.close();
 
     std::string filePlugin = configData["plugins"]["filePlugin"].value_or("NormalJson");
-    std::string transEngineStr = configData["plugins"]["transEngine"].value_or("ForGalJson");
-
-    TransEngine transEngine;
-    if (transEngineStr == "ForGalJson") {
-        transEngine = TransEngine::ForGalJson;
-    }
-    else if (transEngineStr == "ForGalTsv") {
-        transEngine = TransEngine::ForGalTsv;
-    }
-    else if (transEngineStr == "ForNovelTsv") {
-        transEngine = TransEngine::ForNovelTsv;
-    }
-    else if (transEngineStr == "DeepseekJson") {
-        transEngine = TransEngine::DeepseekJson;
-    }
-    else if (transEngineStr == "Sakura") {
-        transEngine = TransEngine::Sakura;
-    }
-    else if (transEngineStr == "DumpName") {
-        transEngine = TransEngine::DumpName;
-    }
-    else if (transEngineStr == "GenDict") {
-        transEngine = TransEngine::GenDict;
-    }
-    else if (transEngineStr == "Rebuild") {
-        transEngine = TransEngine::Rebuild;
-    }
-    else {
-        throw std::runtime_error("Invalid trans engine");
-    }
 
     if (filePlugin == "NormalJson") {
-        std::unique_ptr<ITranslator> translator = std::make_unique<NormalJsonTranslator>(projectDir, transEngine, controller);
+        std::unique_ptr<ITranslator> translator = std::make_unique<NormalJsonTranslator>(projectDir, controller);
         return translator;
     }
     else if (filePlugin == "Epub") {
-        std::unique_ptr<ITranslator> translator = std::make_unique<EpubTranslator>(projectDir, transEngine, controller);
+        std::unique_ptr<ITranslator> translator = std::make_unique<EpubTranslator>(projectDir, controller);
         return translator;
     }
 

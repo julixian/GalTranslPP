@@ -129,7 +129,7 @@ export {
         void processFile(const fs::path& inputPath, int threadId);
 
 	public:
-        NormalJsonTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller,
+        NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller,
             std::optional<fs::path> inputDir = std::nullopt, std::optional<fs::path> inputCacheDir = std::nullopt,
             std::optional<fs::path> outputDir = std::nullopt, std::optional<fs::path> outputCacheDir = std::nullopt);
 
@@ -147,10 +147,10 @@ export {
 
 module :private;
 
-NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller,
+NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller,
     std::optional<fs::path> inputDir, std::optional<fs::path> inputCacheDir,
     std::optional<fs::path> outputDir, std::optional<fs::path> outputCacheDir) :
-    m_projectDir(projectDir), m_transEngine(transEngine), m_controller(controller)
+    m_projectDir(projectDir), m_controller(controller)
 {
     m_inputDir = inputDir.value_or(m_projectDir / L"gt_input");
     m_inputCacheDir = inputCacheDir.value_or(L"cache" / m_projectDir.filename() / L"gt_input_cache");
@@ -168,6 +168,34 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         auto configData = toml::parse(ifs);
         ifs.close();
 
+        std::string transEngineStr = configData["plugins"]["transEngine"].value_or("ForGalJson");
+        if (transEngineStr == "ForGalJson") {
+            m_transEngine = TransEngine::ForGalJson;
+        }
+        else if (transEngineStr == "ForGalTsv") {
+            m_transEngine = TransEngine::ForGalTsv;
+        }
+        else if (transEngineStr == "ForNovelTsv") {
+            m_transEngine = TransEngine::ForNovelTsv;
+        }
+        else if (transEngineStr == "DeepseekJson") {
+            m_transEngine = TransEngine::DeepseekJson;
+        }
+        else if (transEngineStr == "Sakura") {
+            m_transEngine = TransEngine::Sakura;
+        }
+        else if (transEngineStr == "DumpName") {
+            m_transEngine = TransEngine::DumpName;
+        }
+        else if (transEngineStr == "GenDict") {
+            m_transEngine = TransEngine::GenDict;
+        }
+        else if (transEngineStr == "Rebuild") {
+            m_transEngine = TransEngine::Rebuild;
+        }
+        else {
+            throw std::runtime_error("Invalid trans engine");
+        }
 
         // 日志配置
         spdlog::level::level_enum logLevel;
@@ -220,7 +248,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
         // 需要API
-        if (transEngine != TransEngine::DumpName && transEngine != TransEngine::Rebuild) {
+        if (m_transEngine != TransEngine::DumpName && m_transEngine != TransEngine::Rebuild) {
             auto translationAPIs = configData["backendSpecific"]["OpenAI-Compatible"]["apis"].as_array();
             if (!translationAPIs) {
                 throw std::invalid_argument("OpenAI-Compatible apis not found in config.toml");
@@ -233,7 +261,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
                         if (auto value = el["apikey"].value<std::string>()) {
                             translationAPI.apikey = *value;
                         }
-                        else if (transEngine != TransEngine::Sakura) {
+                        else if (m_transEngine != TransEngine::Sakura) {
                             return;
                         }
                         if (auto value = el["apiurl"].value<std::string>()) {
@@ -245,7 +273,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
                         if (auto value = el["modelName"].value<std::string>()) {
                             translationAPI.modelName = *value;
                         }
-                        else if (transEngine != TransEngine::Sakura) {
+                        else if (m_transEngine != TransEngine::Sakura) {
                             return;
                         }
                         translationAPI.stream = el["stream"].value_or(false);
@@ -385,7 +413,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         m_gptDictionary.sort();
         m_postDictionary.sort();
 
-        if (transEngine == TransEngine::DumpName || transEngine == TransEngine::Rebuild) {
+        if (m_transEngine == TransEngine::DumpName || m_transEngine == TransEngine::Rebuild) {
             // 这两个不需要加载提示词
             return;
         }
@@ -405,7 +433,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
         std::string systemKey;
         std::string userKey;
 
-        switch (transEngine) {
+        switch (m_transEngine) {
         case TransEngine::ForGalJson:
             systemKey = "FORGALJSON_SYSTEM";
             userKey = "FORGALJSON_TRANS_PROMPT_EN";

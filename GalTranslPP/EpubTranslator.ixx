@@ -71,7 +71,7 @@ export {
 
         virtual void run() override;
 
-        EpubTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller);
+        EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller);
 
         virtual ~EpubTranslator()
         {
@@ -108,8 +108,8 @@ void extractTextNodes(GumboNode* node, std::vector<std::pair<std::string, EpubTe
     }
 }
 
-EpubTranslator::EpubTranslator(const fs::path& projectDir, TransEngine transEngine, std::shared_ptr<IController> controller) :
-    NormalJsonTranslator(projectDir, transEngine, controller,
+EpubTranslator::EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller) :
+    NormalJsonTranslator(projectDir, controller,
         // m_inputDir                                                m_inputCacheDir
         // m_outputDir                                               m_outputCacheDir
         L"cache" / projectDir.filename() / L"epub_json_input", L"cache" / projectDir.filename() / L"gt_input_cache",

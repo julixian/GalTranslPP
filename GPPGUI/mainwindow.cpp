@@ -131,15 +131,15 @@ void MainWindow::initEdgeLayout()
 
     QAction* newProjectAction = menuBar->addElaIconAction(ElaIconType::AtomSimple, "新建项目");
     QAction* openProjectAction = menuBar->addElaIconAction(ElaIconType::FolderOpen, "打开项目");
+    QAction* saveProjectAction = menuBar->addElaIconAction(ElaIconType::FloppyDisk, "保存项目配置");
     QAction* removeProjectAction = menuBar->addElaIconAction(ElaIconType::TrashCan, "移除项目");
     QAction* deleteProjectAction = menuBar->addElaIconAction(ElaIconType::TrashXmark, "删除项目");
-    QAction* saveProjectAction = menuBar->addElaIconAction(ElaIconType::FloppyDisk, "保存项目配置");
 
     connect(newProjectAction, &QAction::triggered, this, &MainWindow::_on_newProject_triggered);
     connect(openProjectAction, &QAction::triggered, this, &MainWindow::_on_openProject_triggered);
+    connect(saveProjectAction, &QAction::triggered, this, &MainWindow::_on_saveProject_triggered);
     connect(removeProjectAction, &QAction::triggered, this, &MainWindow::_on_removeProject_triggered);
     connect(deleteProjectAction, &QAction::triggered, this, &MainWindow::_on_deleteProject_triggered);
-    connect(saveProjectAction, &QAction::triggered, this, &MainWindow::_on_saveProject_triggered);
 
     //状态栏
     ElaStatusBar* statusBar = new ElaStatusBar(this);

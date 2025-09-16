@@ -25,13 +25,6 @@ DictExSettingsPage::~DictExSettingsPage()
 
 }
 
-void DictExSettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 void DictExSettingsPage::refreshCommonDictsList()
 {
 	if (_refreshCommonDictsListFunc) {

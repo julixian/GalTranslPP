@@ -301,10 +301,12 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, TransEngi
             retranslKeys->for_each([&](auto&& el)
                 {
                     if constexpr (toml::is_string<decltype(el)>) {
+                        if ((*el).empty()) {
+                            return;
+                        }
                         m_retranslKeys.push_back(*el);
                     }
                 });
-            std::erase_if(m_retranslKeys, [](const std::string& key) { return key.empty(); });
         }
 
         auto problemList = configData["problemAnalyze"]["problemList"].as_array();

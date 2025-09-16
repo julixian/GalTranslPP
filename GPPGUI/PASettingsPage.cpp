@@ -33,13 +33,6 @@ PASettingsPage::~PASettingsPage()
 
 }
 
-void PASettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 void PASettingsPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);

@@ -19,7 +19,7 @@ class PluginSettingsPage : public BasePage
 public:
     explicit PluginSettingsPage(QWidget* mainWindow, toml::table& projectConfig, QWidget* parent = nullptr);
     ~PluginSettingsPage();
-    void apply2Config();
+    virtual void apply2Config() override;
 
 private Q_SLOTS:
     void _onPreMoveUp(PluginItemWidget* item);
@@ -43,6 +43,8 @@ private:
     toml::table& _projectConfig;
     QWidget* _mainWindow;
 
+private:
+    // 以下为各个插件的设置页面
     TLFCfgPage* _tlfCfgPage;
     PostFull2HalfCfgPage* _pf2hCfgPage;
 };

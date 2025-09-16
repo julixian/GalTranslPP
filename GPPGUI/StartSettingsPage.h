@@ -87,7 +87,7 @@ class StartSettingsPage : public BasePage
 public:
     explicit StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::table& projectConfig, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
-    void apply2Config();
+    virtual void apply2Config() override;
 
 Q_SIGNALS:
     void startTranslating();  // 让projectSettings去保存配置
@@ -115,20 +115,19 @@ private:
     ElaProgressRing* _threadNumRing;
     ElaLCDNumber* _remainTimeLabel;
     ExponentialMovingAverageEstimator _estimator;
-
     std::chrono::high_resolution_clock::time_point _startTime;
-
-    NJCfgPage* _njCfgPage;
-    EpubCfgPage* _epubCfgPage;
 
 private Q_SLOTS:
 
     void _onStartTranslatingClicked();
     void _onStopTranslatingClicked();
-
     void _workFinished(int exitCode); // worker结束了的信号
-
     void _onOutputSettingClicked();
+
+private:
+    // 文件格式输出配置页
+    NJCfgPage* _njCfgPage;
+    EpubCfgPage* _epubCfgPage;
 };
 
 #endif // STARTSETTINGSPAGE_H

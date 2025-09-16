@@ -15,7 +15,6 @@ class DictExSettingsPage : public BasePage
 public:
     explicit DictExSettingsPage(toml::table& globalConfig, toml::table& projectConfig, QWidget* parent = nullptr);
     ~DictExSettingsPage() override;
-    void apply2Config();
     void refreshCommonDictsList();
 
 private:
@@ -24,7 +23,6 @@ private:
     toml::table& _globalConfig;
     toml::table& _projectConfig;
 
-    std::function<void()> _applyFunc;
     std::function<void()> _refreshCommonDictsListFunc;
 };
 

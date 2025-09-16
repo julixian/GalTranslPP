@@ -28,13 +28,6 @@ NameTableSettingsPage::~NameTableSettingsPage()
 
 }
 
-void NameTableSettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 void NameTableSettingsPage::refreshTable()
 {
 	if (_refreshFunc) {

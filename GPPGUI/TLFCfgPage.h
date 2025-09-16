@@ -13,7 +13,6 @@ class TLFCfgPage : public BasePage
 public:
     explicit TLFCfgPage(toml::table& projectConfig, QWidget* parent = nullptr);
     ~TLFCfgPage();
-    void apply2Config();
 
 private:
     toml::table& _projectConfig;

@@ -11,7 +11,6 @@ class PostFull2HalfCfgPage : public BasePage
 public:
     explicit PostFull2HalfCfgPage(toml::table& projectConfig, QWidget* parent = nullptr);
     ~PostFull2HalfCfgPage();
-    void apply2Config();
 
 private:
     toml::table& _projectConfig;

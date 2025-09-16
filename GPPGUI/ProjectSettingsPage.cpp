@@ -39,7 +39,7 @@ ProjectSettingsPage::ProjectSettingsPage(toml::table& globalConfig, const fs::pa
         _projectConfig = toml::parse(ifs);
     }
     catch (...) {
-        ElaMessageBar::error(ElaMessageBarType::TopRight, "解析失败", "项目 " + QString(_projectDir.filename().wstring()) + " 的配置文件不符合规范", 3000);
+        ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "项目 " + QString(_projectDir.filename().wstring()) + " 的配置文件不符合规范", 3000);
     }
     ifs.close();
     insertToml(_projectConfig, "GUIConfig.isRunning", false);
@@ -246,7 +246,7 @@ void ProjectSettingsPage::_createPages()
 void ProjectSettingsPage::_onStartTranslating()
 {
     insertToml(_projectConfig, "GUIConfig.isRunning", true);
-    apply2Config();
+    this->apply2Config();
 }
 
 void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int exitCode)

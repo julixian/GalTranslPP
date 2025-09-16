@@ -38,9 +38,6 @@ public:
 Q_SIGNALS:
     void commonDictsChanged();
 
-public Q_SLOTS:
-    void apply2Config();
-
 private:
 
     QList<DictionaryEntry> readGptDicts(const fs::path& dictPath);
@@ -49,8 +46,6 @@ private:
     void _setupUI();
 
     toml::table& _globalConfig;
-
-    std::function<void()> _applyFunc;
 
     QList<GptTabEntry> _gptTabEntries;
     QWidget* _mainWindow;

@@ -36,13 +36,6 @@ CommonGptDictPage::~CommonGptDictPage()
 
 }
 
-void CommonGptDictPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 QList<DictionaryEntry> CommonGptDictPage::readGptDicts(const fs::path& dictPath)
 {
 	QList<DictionaryEntry> result;

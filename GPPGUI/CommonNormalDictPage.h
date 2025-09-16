@@ -21,9 +21,6 @@ public:
 Q_SIGNALS:
     void commonDictsChanged();
 
-public Q_SLOTS:
-    void apply2Config();
-
 private:
 
     QList<NormalDictEntry> readNormalDicts(const fs::path& dictPath);
@@ -32,8 +29,6 @@ private:
     void _setupUI();
 
     toml::table& _globalConfig;
-
-    std::function<void()> _applyFunc;
 
     QList<NormalTabEntry> _normalTabEntries;
     QWidget* _mainWindow;

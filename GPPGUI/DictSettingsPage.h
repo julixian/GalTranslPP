@@ -21,7 +21,6 @@ class DictSettingsPage : public BasePage
 public:
     explicit DictSettingsPage(fs::path& projectDir, toml::table& globalConfig, toml::table& projectConfig, QWidget* parent = nullptr);
     ~DictSettingsPage() override;
-    void apply2Config();
     void refreshDicts();
 
 private:
@@ -36,7 +35,6 @@ private:
     toml::table& _projectConfig;
     fs::path& _projectDir;
 
-    std::function<void()> _applyFunc;
     std::function<void()> _refreshFunc;
 
     QList<DictionaryEntry> _withdrawGptList;

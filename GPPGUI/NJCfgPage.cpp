@@ -9,11 +9,6 @@
 
 import Tool;
 
-void NJCfgPage::apply2Config()
-{
-
-}
-
 NJCfgPage::NJCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
 {
 	setWindowTitle("NormalJson 输出配置");

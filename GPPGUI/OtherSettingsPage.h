@@ -15,7 +15,6 @@ class OtherSettingsPage : public BasePage
 public:
     explicit OtherSettingsPage(fs::path& projectDir, toml::table& projectConfig, QWidget* parent = nullptr);
     ~OtherSettingsPage() override;
-    void apply2Config();
 
 Q_SIGNALS:
     void saveConfigSignal();

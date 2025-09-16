@@ -13,7 +13,6 @@ class NJCfgPage : public BasePage
 public:
     explicit NJCfgPage(toml::table& projectConfig, QWidget* parent = nullptr);
     ~NJCfgPage();
-    void apply2Config();
 
 private:
     toml::table& _projectConfig;

@@ -15,13 +15,6 @@
 
 import Tool;
 
-void SettingPage::apply2Config()
-{
-    if (_applyFunc) {
-        _applyFunc();
-    }
-}
-
 SettingPage::SettingPage(toml::table& globalConfig, QWidget* parent)
     : BasePage(parent), _globalConfig(globalConfig)
 {

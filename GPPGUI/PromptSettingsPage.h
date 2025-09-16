@@ -12,8 +12,6 @@
 
 namespace fs = std::filesystem;
 
-class QStackedWidget;
-
 class PromptSettingsPage : public BasePage
 {
     Q_OBJECT
@@ -21,7 +19,6 @@ class PromptSettingsPage : public BasePage
 public:
     explicit PromptSettingsPage(fs::path& projectDir, toml::table& projectConfig, QWidget* parent = nullptr);
     ~PromptSettingsPage() override;
-    void apply2Config();
 
 private:
 
@@ -30,7 +27,6 @@ private:
     toml::table& _projectConfig;
     fs::path& _projectDir;
 
-    std::function<void()> _applyFunc;
 };
 
 #endif // PROMPTSSETTINGSPAGE_H

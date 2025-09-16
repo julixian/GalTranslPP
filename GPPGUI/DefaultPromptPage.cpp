@@ -43,13 +43,6 @@ DefaultPromptPage::~DefaultPromptPage()
 {
 }
 
-void DefaultPromptPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 void DefaultPromptPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);

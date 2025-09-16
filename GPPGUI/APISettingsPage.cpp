@@ -24,6 +24,7 @@ APISettingsPage::APISettingsPage(toml::table& projectConfig, QWidget* parent)
 {
     setWindowTitle("API 设置");
     setTitleVisible(false);
+
     _setupUI();
 }
 

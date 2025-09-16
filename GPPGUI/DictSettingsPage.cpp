@@ -34,13 +34,6 @@ DictSettingsPage::~DictSettingsPage()
 
 }
 
-void DictSettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 void DictSettingsPage::refreshDicts()
 {
 	if (_refreshFunc) {

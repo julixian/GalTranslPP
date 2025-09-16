@@ -6,14 +6,11 @@
 #include <QList>
 #include <toml++/toml.hpp>
 #include <filesystem>
-#include <atomic>
 #include "BasePage.h"
 
 namespace fs = std::filesystem;
 
 class QStackedWidget;
-class QVBoxLayout;
-class ElaToggleButton;
 class APISettingsPage;
 class PluginSettingsPage;
 class CommonSettingsPage;
@@ -35,11 +32,11 @@ public:
 
     QString getProjectName();
     fs::path getProjectDir();
+    bool getIsRunning();
 
-    void apply2Config();
+    virtual void apply2Config() override;
     void refreshCommonDicts();
 
-    bool getIsRunning();
 
 Q_SIGNALS:
         void finishedTranslating(QString nodeKey); // 用于加红点提示翻译完成

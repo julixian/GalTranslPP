@@ -47,13 +47,6 @@ CommonNormalDictPage::~CommonNormalDictPage()
 
 }
 
-void CommonNormalDictPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 QList<NormalDictEntry> CommonNormalDictPage::readNormalDicts(const fs::path& dictPath)
 {
 	QList<NormalDictEntry> result;

@@ -44,13 +44,6 @@ PromptSettingsPage::~PromptSettingsPage()
 
 }
 
-void PromptSettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
-}
-
 
 void PromptSettingsPage::_setupUI()
 {

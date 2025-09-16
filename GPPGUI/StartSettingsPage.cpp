@@ -44,6 +44,9 @@ void StartSettingsPage::apply2Config()
 {
 	_njCfgPage->apply2Config();
 	_epubCfgPage->apply2Config();
+	if (_applyFunc) {
+		_applyFunc();
+	}
 }
 
 void StartSettingsPage::_setupUI()
@@ -86,11 +89,6 @@ void StartSettingsPage::_setupUI()
 			_fileFormatComboBox->setCurrentIndex(index);
 		}
 	}
-	insertToml(_projectConfig, "plugins.filePlugin", filePlugin);
-	connect(_fileFormatComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
-		{
-			insertToml(_projectConfig, "plugins.filePlugin", text.toStdString());
-		});
 	buttonLayout->addWidget(_fileFormatComboBox);
 
 	// 针对文件格式的输出设置
@@ -154,11 +152,6 @@ void StartSettingsPage::_setupUI()
 			translateMode->setCurrentIndex(index);
 		}
 	}
-	insertToml(_projectConfig, "plugins.transEngine", transEngine);
-	connect(translateMode, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
-		{
-			insertToml(_projectConfig, "plugins.transEngine", text.toStdString());
-		});
 	buttonLayout->addWidget(translateMode);
 
 	// 开始翻译
@@ -293,6 +286,12 @@ void StartSettingsPage::_setupUI()
 	_workThread->start();
 	addCentralWidget(mainWidget);
 
+	_applyFunc = [=]()
+		{
+			insertToml(_projectConfig, "plugins.filePlugin", _fileFormatComboBox->currentText().toStdString());
+			insertToml(_projectConfig, "plugins.transEngine", translateMode->currentText().toStdString());
+		};
+
 	// 顺序和_onOutputSettingClicked里的索引一致
 	_njCfgPage = new NJCfgPage(_projectConfig, this);
 	addCentralWidget(_njCfgPage, true, true, 0);
@@ -310,6 +309,9 @@ void StartSettingsPage::_onOutputSettingClicked()
 		this->navigation(2);
 	}
 }
+
+
+// 底下的可以不用看
 
 void StartSettingsPage::_onStartTranslatingClicked()
 {

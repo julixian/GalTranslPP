@@ -18,7 +18,6 @@ class NameTableSettingsPage : public BasePage
 public:
     explicit NameTableSettingsPage(fs::path& projectDir, toml::table& globalConfig, toml::table& projectConfig, QWidget* parent = nullptr);
     ~NameTableSettingsPage() override;
-    void apply2Config();
     void refreshTable();
 
 private:
@@ -29,7 +28,6 @@ private:
     toml::table& _projectConfig;
     toml::table& _globalConfig;
     fs::path& _projectDir;
-    std::function<void()> _applyFunc;
     std::function<void()> _refreshFunc;
 
     QList<NameTableEntry> _withdrawList;

@@ -11,11 +11,6 @@
 
 import Tool;
 
-void TLFCfgPage::apply2Config()
-{
-
-}
-
 TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
 {
 	setWindowTitle("换行修复设置");
@@ -44,11 +39,6 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 			fixModeComboBox->setCurrentIndex(index);
 		}
 	}
-	insertToml(_projectConfig, "plugins.TextLinebreakFix.换行模式", fixMode.toStdString());
-	connect(fixModeComboBox, &ElaComboBox::currentTextChanged, this, [=](const QString& text)
-		{
-			insertToml(_projectConfig, "pulgins.TextLinebreakFix.换行模式", text.toStdString());
-		});
 	fixModeLayout->addWidget(fixModeComboBox);
 
 	// 分段字数阈值
@@ -62,11 +52,6 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 	ElaSpinBox* segmentThresholdSpinBox = new ElaSpinBox(segmentThresholdArea);
 	segmentThresholdSpinBox->setRange(1, 999);
 	segmentThresholdSpinBox->setValue(threshold);
-	insertToml(_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", threshold);
-	connect(segmentThresholdSpinBox, &ElaSpinBox::valueChanged, this, [=](int value)
-		{
-			insertToml(_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", value);
-		});
 	segmentThresholdLayout->addWidget(segmentThresholdSpinBox);
 
 	// 强制修复
@@ -79,12 +64,14 @@ TLFCfgPage::TLFCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage(p
 	forceFixLayout->addStretch();
 	ElaToggleSwitch* forceFixToggleSwitch = new ElaToggleSwitch(forceFixArea);
 	forceFixToggleSwitch->setIsToggled(forceFix);
-	insertToml(_projectConfig, "plugins.TextLinebreakFix.强制修复", forceFix);
-	connect(forceFixToggleSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			insertToml(_projectConfig, "plugins.TextLinebreakFix.强制修复", checked);
-		});
 	forceFixLayout->addWidget(forceFixToggleSwitch);
+
+	_applyFunc = [=]()
+		{
+			insertToml(_projectConfig, "plugins.TextLinebreakFix.换行模式", fixModeComboBox->currentText().toStdString());
+			insertToml(_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", segmentThresholdSpinBox->value());
+			insertToml(_projectConfig, "plugins.TextLinebreakFix.强制修复", forceFixToggleSwitch->getIsToggled());
+		};
 
 	mainLayout->addWidget(fixModeArea);
 	mainLayout->addWidget(segmentThresholdArea);

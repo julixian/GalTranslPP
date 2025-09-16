@@ -23,19 +23,13 @@ CommonSettingsPage::CommonSettingsPage(toml::table& projectConfig, QWidget* pare
 {
 	setWindowTitle("一般设置");
 	setTitleVisible(false);
+
 	_setupUI();
 }
 
 CommonSettingsPage::~CommonSettingsPage()
 {
 
-}
-
-void CommonSettingsPage::apply2Config()
-{
-	if (_applyFunc) {
-		_applyFunc();
-	}
 }
 
 void CommonSettingsPage::_setupUI()

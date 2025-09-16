@@ -29,10 +29,6 @@ OtherSettingsPage::~OtherSettingsPage()
 
 }
 
-void OtherSettingsPage::apply2Config()
-{
-}
-
 void OtherSettingsPage::_setupUI()
 {
 	QWidget* mainWidget = new QWidget(this);

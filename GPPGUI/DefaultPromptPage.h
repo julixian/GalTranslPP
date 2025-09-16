@@ -3,7 +3,6 @@
 
 #include <toml++/toml.hpp>
 #include <QStackedWidget>
-#include <functional>
 #include "BasePage.h"
 
 class DefaultPromptPage : public BasePage
@@ -14,13 +13,9 @@ public:
     explicit DefaultPromptPage(QWidget* parent = nullptr);
     ~DefaultPromptPage();
 
-public Q_SLOTS:
-    void apply2Config();
-
 private:
 
     toml::table _promptConfig;
-    std::function<void()> _applyFunc;
 
     void _setupUI();
 };

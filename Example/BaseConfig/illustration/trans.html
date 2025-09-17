@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>GalTransl++ 翻译流程与替换型字典介绍</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        h1, h2, h3 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            color: #005a9c;
+        }
+        h1 {
+            text-align: center;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Consolas", "Courier New", monospace;
+            color: #d63384;
+            font-size: 0.9em;
+        }
+        .highlight {
+            color: #007bff;
+            font-weight: bold;
+        }
+        .warning {
+            color: #d9534f;
+            font-weight: bold;
+        }
+        .note {
+            background-color: #f8f9fa;
+            border-left: 5px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        dl dt {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        dl dd {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        ol, ul {
+            padding-left: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>GalTransl++ 翻译流程与替换型字典介绍</h1>
+
+    <p>对于熟悉GalTransl的人来说，过渡到GalTransl++ CLI版本可谓易如反掌，所以接下来主要讲GUI。不过GalTransl的说明本身也差点意思，所以还是在这里先谈一下翻译流程。</p>
+
+    <p>GalTransl++无论处理哪种文件格式，最后都是统一化为 <code>json</code> 来读取。每个json文件是一个对象列表，每个对象代表一个<span class="highlight">『句子』</span>，这是喂给AI进行翻译的基本单位。读取json时主要关注两个键，分别为 <code>name</code> 和 <code>message</code>，不同的翻译模式(<code>transEngine</code>)就是对这两个键进行各种不同的处理:</p>
+
+    <h2>翻译模式 (transEngine)</h2>
+    <dl>
+        <dt><code>ForGalJson</code></dt>
+        <dd>实际翻译模式，向AI输入json格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以json格式回复，程序将解析返回的Json。</dd>
+
+        <dt><code>ForGalTsv</code></dt>
+        <dd>实际翻译模式，向AI输入TSV格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以TSV格式回复，程序将解析返回的TSV，<span class="highlight">可能比ForGalJson模式更省token</span>。</dd>
+
+        <dt><code>ForNovelTsv</code></dt>
+        <dd>实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向AI输入和解析的时候都<span class="highlight">不带name键</span>。</dd>
+        
+        <dt><code>DeepseekJson</code></dt>
+        <dd>实际翻译模式，和 <code>ForGalJson</code> 的唯一区别是程序自带的默认提示词变成了中文。</dd>
+
+        <dt><code>Sakura</code></dt>
+        <dd>实际翻译模式，向AI输入自然语言形式的句子(包含<code>name</code>和<code>message</code>)，由于Sakura是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</dd>
+
+        <dt><code>DumpName</code></dt>
+        <dd>提取所有的<code>name</code>键，在项目文件夹下生成 <code style="color: green;">人名替换表.toml</code> 以供统一替换人名。</dd>
+
+        <dt><code>GenDict</code></dt>
+        <dd>借助AI自动生成术语表，保存在项目文件夹下的 <code style="color: green;">项目GPT字典-生成.toml</code> 中。</dd>
+
+        <dt><code>Rebuild</code></dt>
+        <dd>即使<code>problem</code>或<code>orig_text</code>中包含<code>retranslKey</code>也不会重翻，<span class="highlight">只根据缓存重建结果</span>。</dd>
+        
+        <dt><code>ShowNormal</code></dt>
+        <dd>保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错。</dd>
+    </dl>
+
+    <h2>缓存 (Cache) 机制</h2>
+    <p>在<code>Rebuild</code>中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code>文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
+    <p class="note"><span class="warning">需要特别注意的是</span>，在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++会尽可能在这种情况下保证原有缓存的命中，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数，并尽可能避免以上两点，为此也可以使用<code>ShowNormal</code>观察切割后的文件。</p>
+
+    <p><code>retranslKey</code>指的是<span class="highlight">重翻关键字</span>，<code>problem</code>指的是缓存中的问题。GalTransl++会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。一般情况下，如果<code>problem</code>或<code>orig_text</code>(一个缓存键，存储的是原始message)中包含设定的<code>retranslKey</code>，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得删除所有<code>retranslKey</code>，要么使用<code>Rebuild</code>模式忽略翻译。</p>
+
+    <div class="note">
+        <p>对于所有实际翻译模式和<code>GenDict</code>，提示词均可完全自定义。当然，每个翻译模式基本的输入和输出要求不能变，因为其所对应的格式化输入和解析输出的代码是写死的。</p>
+        <p class="warning">如果你看不懂提示词怎么改，那么别jb乱动就是了。</p>
+    </div>
+
+    <h2>字典系统</h2>
+    <p>GalTransl++的字典分为 <b class="highlight">译前字典</b>, <b class="highlight">GPT字典</b>, <b class="highlight">译后字典</b> 三大类。每类字典都有<span class="highlight">通用</span>和<span class="highlight">项目</span>两种。顾名思义，通用字典可以被所有项目所见，项目字典只能被当前项目所见。具体一个项目要用哪些字典，可以在项目的 <code>翻译设置->字典设置</code> 中找到对应的选项进行选择。</p>
+    <p>这三类字典中，译前和译后字典为<b class="highlight">替换型字典</b>，GPT字典为<b class="highlight">提示型字典</b>。即译前和译后字典执行的是搜索替换，而GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给AI以规范翻译，那至于AI想不想用，用成什么样，就不是程序能管得到的了。</p>
+
+    <h3>GUI中的字典解析与保存</h3>
+    <p>通用字典可以有多个，而项目字典和人名表每个项目各只有一个。下面将主要介绍项目字典，因为GUI的限制，其和GalTransl的行为有所不同(包括数量，CLI版本项目字典的数量是无限制的)。</p>
+    <ul>
+        <li>GUI会读取项目文件夹下 <code>人名替换表.toml</code> 来作为 <b>人名表</b> 中的数据。</li>
+        <li>读取 <code>项目字典_译前.toml</code> 来作为 <b>项目译前字典</b> 中的数据。</li>
+        <li>读取 <code>项目GPT字典.toml</code> 和 <code>项目GPT字典-生成.toml</code> 并<span class="highlight">合并</span>其中的数据来作为 <b>项目GPT字典</b> 中的数据。</li>
+        <li>读取 <code>项目字典_译后.toml</code> 来作为 <b>项目译后字典</b> 中的数据。</li>
+    </ul>
+
+    <p>人名表和字典都分别有<b class="highlight">纯文本模式</b>和<b class="highlight">表模式</b>，具体在翻译时用哪个模式的数据会在你按开始翻译按钮时决定。比如说，你在按开始翻译按钮时，人名表是以表模式显示的，项目GPT字典是纯文本模式显示的，则会先将 <b>人名表 表模式</b> 中的数据保存到项目文件夹的 <code>人名替换表.toml</code> 中，将 <b>项目GPT字典 纯文本模式</b> 中的文本原样保存到项目文件夹的 <code>项目GPT字典.toml</code> 中 (<span class="warning">会顺带删除 <code>项目GPT字典-生成.toml</code></span>，因为此时数据已经合并，如果<code>项目GPT字典-生成.toml</code>残留有上次的数据，则下次刷新时会重复读取)，然后再执行翻译。所以如果在纯文本模式下没有按 <code>toml</code> 格式来编辑，翻译时肯定会报错。</p>
+    
+    <p class="note">
+        <b>按刷新</b>: 将会重新从项目文件夹中的 <code>toml</code> 文件读取数据。如果你在GUI中还有修改了没有保存的数据，<span class="warning">请务必先确认备份情况再刷新</span>。<br>
+        <span class="warning">特别注意</span>：由于<code>DumpName</code>/<code>GenDict</code>任务会分别生成 <code>人名替换表.toml</code> / <code>项目GPT字典-生成.toml</code>，如果原本有这个文件则会<b class="warning">覆盖掉</b>，默认也会在任务结束后自动刷新 人名表/项目GPT字典，所以<span class="warning">请务必注意不要被其覆盖掉有用的信息</span>。<br><br>
+        <b>按保存</b>: 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。<br><br>
+        <b>保存项目配置</b>
+        按下开始翻译按钮或关闭程序时也会自动执行。将GUI项目中的所有数据保存到项目文件夹下对应的 <code>toml</code> 文件中。
+    </p>
+
+    <h2>一个常见的翻译流程</h2>
+    <ol>
+        <li>新建项目 -> 输入项目名</li>
+        <li>在新建的项目文件夹中的<code>gt_input</code>文件夹中放入待翻译的文件</li>
+        <li>填入API和key</li>
+        <li>运行 <code>GenDict</code> 自动生成术语表</li>
+        <li>调整术语表，根据需求修改字典并选择要使用的字典</li>
+        <li>如果文件支持提取name，则可运行 <code>DumpName</code> 并编辑人名表</li>
+        <li>选用合适的实际翻译模式进行翻译</li>
+        <li>查看问题</li>
+        <li>根据问题选择编辑<code>retranslKey</code>并重翻 / 直接修改缓存</li>
+        <li>重翻 / 重建 (<code>Rebuild</code>)</li>
+        <li>在<code>gt_output</code>中查收结果</li>
+    </ol>
+    
+    <h2>替换型字典的语法</h2>
+    <ul>
+        <li><b>译前字典</b>会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
+        <li><b>译后字典</b>会搜索并替换 <code>pre_translated_text</code> 以供 <code>translated_preview</code> 最终输出。</li>
+    </ul>
+    <p><b>条件对象</b>是指条件正则要作用于的文本，可以是 <code>name</code>, <code>orig_text</code>, <code>preproc_text</code>, <code>pretrans_text</code> 中的任意一个。</p>
+    <p><b>当且仅当</b><b class="highlight">条件正则</b>能够完全匹配条件对象所对应的字符串时，才会执行替换</p>
+    <p>当 <b class="highlight">启用正则</b> 为 <code>true</code> 时，原文和译文将被视为正则表达式进行替换，<span class="highlight">优先级越高的字典越先执行</span>。</p>
+
+    <h2>翻译后处理顺序</h2>
+    <p><b><code>name</code> 字段在翻译后的处理顺序是:</b></p>
+    <ol>
+        <li>执行GPT字典替换</li>
+        <li>执行人名表替换</li>
+        <li>执行译后字典替换</li>
+    </ol>
+    <p><b><code>msg</code> 字段则是:</b></p>
+    <ol>
+        <li>执行插件处理</li>
+        <li>执行译后字典替换</li>
+        <li>问题分析</li>
+    </ol>
+
+    <p class="note">GalTransl++中能够自定义编辑的所有正则均是以<b class="highlight">字符为单位</b>的，比如即使emoji表情'😪' 在UTF-8中占用4个字节，在正则中依然是可以以一个<code>.</code>来匹配的。</p>
+
+</body>
+</html>

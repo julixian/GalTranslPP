@@ -43,16 +43,16 @@ export {
 
         int m_totalSentences = 0;
         int m_completedSentences = 0;
+        bool m_rebuildSuccess = true;
+
         int m_threadsNum;
         int m_batchSize;
         int m_contextHistorySize;
         int m_maxRetries;
         int m_saveCacheInterval;
         int m_apiTimeOutMs;
-
         bool m_checkQuota;
         bool m_smartRetry;
-        bool m_rebuildSuccess;
         bool m_usePreDictInName;
         bool m_usePostDictInName;
         bool m_usePreDictInMsg;
@@ -63,8 +63,8 @@ export {
         std::string m_apiStrategy;
         std::string m_sortMethod;
         std::string m_splitFile;
-        int m_splitFileNum = 25;
-        std::string m_linebreakSymbol = "auto";
+        int m_splitFileNum;
+        std::string m_linebreakSymbol;
         std::vector<std::string> m_retranslKeys;
 
         bool m_needsCombining = false;
@@ -1058,7 +1058,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
         }
         std::string relInputPathStr = wide2Ascii(relInputPath);
         for (const auto& se : sentences) {
-            if (!se.complete || se.problem.empty()) {
+            if (se.problem.empty()) {
                 continue;
             }
             toml::table tbl;

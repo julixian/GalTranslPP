@@ -250,10 +250,6 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
 std::string GptDictionary::doReplace(const Sentence* se, CachePart targetToModify) {
     std::string textToModify = chooseString(se, targetToModify);
 
-    if (textToModify.empty()) {
-        return textToModify;
-    }
-
     for (const auto& entry : m_entries) {
         replaceStrInplace(textToModify, entry.searchStr, entry.replaceStr);
     }

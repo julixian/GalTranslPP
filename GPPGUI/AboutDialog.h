@@ -9,6 +9,9 @@ class AboutDialog : public ElaDialog
 public:
     explicit AboutDialog(QWidget* parent = nullptr);
     ~AboutDialog();
+
+Q_SIGNALS:
+    void checkUpdateSignal();
 };
 
 #endif // ABOUTDIALOG_H

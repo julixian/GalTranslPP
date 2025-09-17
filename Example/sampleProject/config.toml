@@ -19,7 +19,7 @@ transEngine = "ForGalJson"
 # Sakura: 使用 SAKURA_SYSTEM_PROMPT 和 SAKURA_TRANS_PROMPT 作为提示词
 # DumpName: 生成 人名替换表.toml 以供替换人名
 # GenDict: 借助AI自动生成术语表，使用 GENDIC_SYSTEM 和 GENDIC_PROMPT 作为提示词
-# Rebuild: 即使problem或pre_jp中包含retranslKey也不会重翻，只根据缓存翻译重建结果
+# Rebuild: 即使problem或orig_text中包含retranslKey也不会重翻，只根据缓存翻译重建结果
 # ShowNormal: 展示预处理后的内容及句子，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错
 # PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去 BaseConfig 下寻找
 
@@ -73,7 +73,7 @@ saveLog = true
 # 分词器所用的词典的路径
 dictDir = "BaseConfig/DictGenerator/mecab-ipadic-utf8" # 也可以用 mecab-ipadic-neologd 或 unidic(均需从网上下载字典)
 
-#"重翻在缓存的problem或pre_jp中包含对应**关键字**的句子，去掉下面列表中的#号注释来使用，也可添加自定义的关键字。",
+#"重翻在缓存的problem或orig_text中包含对应**关键字**的句子，去掉下面列表中的#号注释来使用，也可添加自定义的关键字。",
 retranslKeys = [
   "翻译失败",
   #"残留日文",

@@ -102,6 +102,7 @@ void MainWindow::initWindow()
     // 详见 ElaWidgetTool 开源项目的示例
     setFocusPolicy(Qt::StrongFocus);
     setWindowIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
+
     int width = _globalConfig["windowWidth"].value_or(1450);
     int height = _globalConfig["windowHeight"].value_or(770);
     resize(width, height - 30);
@@ -110,10 +111,17 @@ void MainWindow::initWindow()
     if (x < 0)x = 0;
     if (y < 0)y = 0;
     move(x, y);
+
     setUserInfoCardPixmap(QPixmap(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
     setUserInfoCardTitle(QString::fromStdString("Galtransl++ v" + GPPVERSION));
     setUserInfoCardSubTitle("tianquyesss@gmail.com");
+    connect(this, &MainWindow::userInfoCardClicked, this, [=]()
+        {
+            this->navigation(_homePage->property("ElaPageKey").toString());
+        });
+
     setWindowTitle("Galtransl++");
+
     setNavigationBarWidth(275);
 }
 
@@ -229,32 +237,29 @@ void MainWindow::initContent()
     }
     expandNavigationNode(_projectExpanderKey);
 
-    addFooterNode("检查更新", nullptr, _updateKey, 0, ElaIconType::Repeat);
-    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) 
-        {
-            if (_updateKey == nodeKey) {
-                ElaMessageBar::information(ElaMessageBarType::TopLeft, "请稍候", "正在检查更新...", 3000);
-                _updateChecker->check();
-            }
-        });
-
+    addFooterNode("使用说明", nullptr, _transIllustrationKey, 0, ElaIconType::BookOpen);
     addFooterNode("关于", nullptr, _aboutKey, 0, ElaIconType::User);
     _aboutPage = new AboutDialog();
     _aboutPage->hide();
+    addFooterNode("设置", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
+
+    connect(_aboutPage, &AboutDialog::checkUpdateSignal, this, [=]()
+        {
+            ElaMessageBar::information(ElaMessageBarType::TopLeft, "请稍候", "正在检查更新...", 3000);
+            _updateChecker->check();
+        });
+
     connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) 
         {
-            if (_aboutKey == nodeKey)
+            if (_transIllustrationKey == nodeKey) {
+                QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/trans.html"));
+            }
+            else if (_aboutKey == nodeKey)
             {
                 _aboutPage->setFixedSize(400, 400);
                 _aboutPage->moveToCenter();
                 _aboutPage->show();
             }
-        });
-
-    addFooterNode("设置", _settingPage, _settingKey, 0, ElaIconType::GearComplex);
-    connect(this, &MainWindow::userInfoCardClicked, this, [=]() 
-        {
-            this->navigation(_homePage->property("ElaPageKey").toString());
         });
 
     /*connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)

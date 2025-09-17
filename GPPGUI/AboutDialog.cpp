@@ -5,7 +5,10 @@
 #include <QVBoxLayout>
 
 #include "ElaImageCard.h"
+#include "ElaMenuBar.h"
 #include "ElaText.h"
+
+import Tool;
 
 AboutDialog::AboutDialog(QWidget* parent)
     : ElaDialog(parent)
@@ -24,7 +27,7 @@ AboutDialog::AboutDialog(QWidget* parent)
     pixCardLayout->addWidget(pixCard);
     pixCardLayout->addStretch();
 
-    ElaText* versionText = new ElaText("GalTransl++ GUI", this);
+    ElaText* versionText = new ElaText("GalTransl++ GUI v" + QString::fromStdString(GPPVERSION), this);
     QFont versionTextFont = versionText->font();
     versionTextFont.setWeight(QFont::Bold);
     versionText->setFont(versionTextFont);
@@ -38,11 +41,22 @@ AboutDialog::AboutDialog(QWidget* parent)
     copyrightText->setWordWrap(false);
     copyrightText->setTextPixelSize(14);
 
+    ElaMenuBar* menuBar = new ElaMenuBar(this);
+    QAction* checkUpdateAction = menuBar->addElaIconAction(ElaIconType::CheckToSlot, "检查更新");
+    connect(checkUpdateAction, &QAction::triggered, this, [=]()
+        {
+            Q_EMIT checkUpdateSignal();
+        });
+    QHBoxLayout* checkUpdateLayout = new QHBoxLayout();
+    checkUpdateLayout->addStretch();
+    checkUpdateLayout->addWidget(menuBar);
+
     QVBoxLayout* textLayout = new QVBoxLayout();
     textLayout->setSpacing(15);
     textLayout->addWidget(versionText);
     textLayout->addWidget(licenseText);
     textLayout->addWidget(copyrightText);
+    textLayout->addLayout(checkUpdateLayout);
     textLayout->addStretch();
 
     QHBoxLayout* contentLayout = new QHBoxLayout();

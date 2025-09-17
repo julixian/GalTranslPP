@@ -118,7 +118,7 @@ void ProjectSettingsPage::_setupUI()
     ElaMenu* transMenu = new ElaMenu(navigationWidget);
     QAction* nameTableSettingAction = transMenu->addElaIconAction(ElaIconType::User, "人名表");
     QAction* dictSettingAction = transMenu->addElaIconAction(ElaIconType::Book, "项目字典");
-    QAction* dictExSettingAction = transMenu->addElaIconAction(ElaIconType::BookOpen, "字典设置");
+    QAction* dictExSettingAction = transMenu->addElaIconAction(ElaIconType::BookQuran, "字典设置");
     QAction* promptSettingAction = transMenu->addElaIconAction(ElaIconType::Bell, "提示词");
 
     ElaToolButton* transButton = new ElaToolButton(navigationWidget);

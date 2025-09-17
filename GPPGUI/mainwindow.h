@@ -58,7 +58,7 @@ private:
     QString _projectExpanderKey;
 
     QString _aboutKey;
-    QString _updateKey;
+    QString _transIllustrationKey;
     QString _settingKey;
 
     QList<QSharedPointer<ProjectSettingsPage>> _projectPages;

@@ -125,9 +125,14 @@ bool NormalDictModel::setData(const QModelIndex& index, const QVariant& value, i
             entry.translation = value.toString();
             break;
         case Column::ConditionTar:
-            if (entry.conditionTar == value.toString()) return false;
+        {
+            QString str = value.toString();
+            if (entry.conditionTar == str) return false;
+            if (str != "name" && str != "orig_text" && str != "preproc_text" &&
+                str != "pretrans_text") return false;
             entry.conditionTar = value.toString();
-            break;
+        }
+        break;
         case Column::ConditionReg:
             if (entry.conditionReg == value.toString()) return false;
             entry.conditionReg = value.toString();

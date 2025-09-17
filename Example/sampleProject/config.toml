@@ -52,7 +52,7 @@ textPostPlugins = [
   "换行模式" = "优先标点"
 
   [plugins.TextPostFull2Half]
-  "反向替换" = false  # false=全角->半角，true=半角->全角
+  "是否反向替换" = false  # false=全角->半角，true=半角->全角
 
 [common]
 numPerRequestTranslate = 8 # 单次请求翻译句子数量，推荐值 < 15

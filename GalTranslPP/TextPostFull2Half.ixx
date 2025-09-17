@@ -43,7 +43,7 @@ TextPostFull2Half::TextPostFull2Half(const fs::path& projectDir, std::shared_ptr
         ifs.close();
 
         m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.是否替换标点");
-        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.反向替换");
+        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextPostFull2Half.是否反向替换");
 
         createConversionMap();
         m_logger->info("译后全角半角转换插件已加载 - 替换标点: {}, 反向替换: {}",

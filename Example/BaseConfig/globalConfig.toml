@@ -6,10 +6,10 @@ navigationMode = 0
 projects = []
 themeMode = 0
 windowDisplayMode = 1
-windowHeight = 653
-windowPosX = 68
-windowPosY = 48
-windowWidth = 1315
+windowHeight = 718
+windowPosX = 48
+windowPosY = 12
+windowWidth = 1308
 
 [commonGptDicts]
 dictNames = [ '通用GPT字典', '通用GPT_H字典' ]

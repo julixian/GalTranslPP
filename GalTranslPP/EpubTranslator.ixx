@@ -58,20 +58,23 @@ export {
         // Value: 元数据
         std::map<fs::path, std::vector<EpubTextNodeInfo>> m_jsonToMetadataMap;
 
-        // 存储json文件相对路径到原始HTML路径的映射
+        // 存储json文件相对路径到原始HTML完整路径的映射
         std::map<fs::path, fs::path> m_jsonToHtmlPathMap;
 
-        // 存储json文件相对路径到其所属epub路径的映射
+        // 存储json文件相对路径到其所属epub完整路径的映射
         std::map<fs::path, fs::path> m_jsonToEpubPathMap;
 
-        // 每个epub对应的多个json文件相对路径以及有没有处理完毕
+        // 存储json文件相对路径到 normal_post 完整路径的映射
+        std::map<fs::path, fs::path> m_jsonToNormalPostMap;
+
+        // 每个epub完整路径对应的多个json文件相对路径以及有没有处理完毕
         std::map<fs::path, std::map<fs::path, bool>> m_epubToJsonsMap;
 
     public:
 
         virtual void run() override;
 
-        EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller);
+        EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger);
 
         virtual ~EpubTranslator()
         {
@@ -108,8 +111,8 @@ void extractTextNodes(GumboNode* node, std::vector<std::pair<std::string, EpubTe
     }
 }
 
-EpubTranslator::EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller) :
-    NormalJsonTranslator(projectDir, controller,
+EpubTranslator::EpubTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger) :
+    NormalJsonTranslator(projectDir, controller, logger,
         // m_inputDir                                                m_inputCacheDir
         // m_outputDir                                               m_outputCacheDir
         L"cache" / projectDir.filename() / L"epub_json_input", L"cache" / projectDir.filename() / L"gt_input_cache",
@@ -346,11 +349,15 @@ void EpubTranslator::run()
 
                 // 创建json相对路径
                 fs::path relativePath = fs::relative(htmlEntry.path(), bookUnpackPath); // OEBPS/chapter1.html
+                fs::path showNormalHtmlPath = m_projectDir / L"epub_show_normal" / relBookDir / relativePath;
+                fs::path showNormalPostHtmlPath = m_projectDir / L"epub_show_normal_post" / relBookDir / relativePath;
                 fs::path relJsonPath = relBookDir / relativePath.replace_extension(".json"); // dir1/book1/OEBPS/chapter1.json
+
 
                 // 存储映射关系
                 m_jsonToHtmlPathMap[relJsonPath] = htmlEntry.path();
                 m_jsonToEpubPathMap[relJsonPath] = epubPath;
+                m_jsonToNormalPostMap[relJsonPath] = showNormalPostHtmlPath;
                 m_epubToJsonsMap[epubPath].insert(std::make_pair(relJsonPath, false));
 
                 // 存储元数据
@@ -367,8 +374,15 @@ void EpubTranslator::run()
                 m_jsonToMetadataMap[relJsonPath] = metadata;
 
                 createParent(m_inputDir / relJsonPath); // cache/myproject/epub_json_input/dir1/book1/OEBPS/chapter1.json
-                std::ofstream ofs(m_inputDir / relJsonPath);
+                std::ofstream ofs;
+                ofs.open(m_inputDir / relJsonPath);
                 ofs << j.dump(2);
+                ofs.close();
+
+                createParent(showNormalHtmlPath);
+                ofs.open(showNormalHtmlPath, std::ios::binary);
+                ofs << content;
+                ofs.close();
             }
         }
     }
@@ -437,8 +451,16 @@ void EpubTranslator::run()
                 // 后处理正则替换
                 regexReplace(m_postRegexPatterns, newContent);
 
-                std::ofstream ofs(rebuiltHtmlPath, std::ios::binary);
+                std::ofstream ofs;
+                ofs.open(rebuiltHtmlPath, std::ios::binary);
                 ofs << newContent;
+                ofs.close();
+
+                fs::path showNormalPostHtmlPath = m_jsonToNormalPostMap[relJsonPath];
+                createParent(showNormalPostHtmlPath);
+                ofs.open(showNormalPostHtmlPath, std::ios::binary);
+                ofs << newContent;
+                ofs.close();
             }
 
             fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);

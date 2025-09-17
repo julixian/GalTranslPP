@@ -2,10 +2,8 @@ module;
 
 #include <Windows.h>
 #include <boost/regex.hpp>
-#include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
 #include <toml++/toml.hpp>
 #include <Shlwapi.h>
 #include <ctpl_stl.h>
@@ -24,36 +22,11 @@ namespace fs = std::filesystem;
 
 export {
 
-    template<typename Mutex>
-    class ControllerSink : public spdlog::sinks::base_sink<Mutex> {
-    public:
-        explicit ControllerSink(std::shared_ptr<IController> controller)
-            : m_controller(controller) {
-        }
-
-    protected:
-
-        void sink_it_(const spdlog::details::log_msg& msg) override {
-            spdlog::memory_buf_t formatted;
-            this->formatter_->format(msg, formatted);
-            m_controller->writeLog(fmt::to_string(formatted));
-        }
-
-        void flush_() override {
-            // 也可以在IController里再写一个虚flush，不过感觉没什么必要了
-        }
-
-    private:
-        std::shared_ptr<IController> m_controller;
-    };
-
-
 	class NormalJsonTranslator : public ITranslator {
 	protected:
 
         TransEngine m_transEngine;
         std::shared_ptr<IController> m_controller;
-        std::shared_ptr<ControllerSink<std::mutex>> m_controllerSink;
         std::shared_ptr<spdlog::logger> m_logger;
 
         fs::path m_inputDir;
@@ -119,20 +92,12 @@ export {
 
         void postProcess(Sentence* se);
 
-        std::string generateCacheKey(const Sentence* s);
-        
-        std::string buildContextHistory(const std::vector<Sentence*>& batch);
-
-        ApiResponse performApiRequest(const json& payload, const TranslationAPI& api, int threadId);
-
         bool translateBatchWithRetry(const fs::path& relInputPath, std::vector<Sentence*>& batch, int threadId);
-
-        void combineOutputFiles(const fs::path& originalFilename, const std::map<fs::path, bool>& splitFileParts);
 
         void processFile(const fs::path& inputPath, int threadId);
 
 	public:
-        NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller,
+        NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger,
             std::optional<fs::path> inputDir = std::nullopt, std::optional<fs::path> inputCacheDir = std::nullopt,
             std::optional<fs::path> outputDir = std::nullopt, std::optional<fs::path> outputCacheDir = std::nullopt);
 
@@ -150,10 +115,11 @@ export {
 
 module :private;
 
-NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller,
+NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger,
     std::optional<fs::path> inputDir, std::optional<fs::path> inputCacheDir,
     std::optional<fs::path> outputDir, std::optional<fs::path> outputCacheDir) :
-    m_projectDir(projectDir), m_controller(controller)
+    m_projectDir(projectDir), m_controller(controller), m_logger(logger), 
+    m_apiPool(logger), m_gptDictionary(logger), m_preDictionary(logger), m_postDictionary(logger), m_problemAnalyzer(logger)
 {
     m_inputDir = inputDir.value_or(m_projectDir / L"gt_input");
     m_inputCacheDir = inputCacheDir.value_or(L"cache" / m_projectDir.filename() / L"gt_input_cache");
@@ -196,51 +162,12 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
         else if (transEngineStr == "Rebuild") {
             m_transEngine = TransEngine::Rebuild;
         }
+        else if (transEngineStr == "ShowNormal") {
+            m_transEngine = TransEngine::ShowNormal;
+        }
         else {
             throw std::runtime_error("Invalid trans engine");
         }
-
-        // 日志配置
-        spdlog::level::level_enum logLevel;
-        bool saveLog = configData["common"]["saveLog"].value_or(true);
-        std::string logLevelStr = configData["common"]["logLevel"].value_or("info");
-        if (logLevelStr == "trace") {
-            logLevel = spdlog::level::trace;
-        }
-        else if (logLevelStr == "debug") {
-            logLevel = spdlog::level::debug;
-        }
-        else if (logLevelStr == "info") {
-            logLevel = spdlog::level::info;
-        }
-        else if (logLevelStr == "warn") {
-            logLevel = spdlog::level::warn;
-        }
-        else if (logLevelStr == "err") {
-            logLevel = spdlog::level::err;
-        }
-        else if (logLevelStr == "critical") {
-            logLevel = spdlog::level::critical;
-        }
-        else {
-            throw std::runtime_error("Invalid log level");
-        }
-
-        m_controllerSink = std::make_shared<ControllerSink<std::mutex>>(m_controller);
-        std::vector<spdlog::sink_ptr> sinks = { m_controllerSink };
-        if (saveLog) {
-            sinks.push_back(std::make_shared<spdlog::sinks::basic_file_sink_mt>(wide2Ascii(m_projectDir, 0) + "/log.txt", true));
-        }
-        m_logger = std::make_shared<spdlog::logger>(wide2Ascii(m_projectDir) + "-Logger", sinks.begin(), sinks.end());
-        m_logger->set_level(logLevel);
-        m_logger->set_pattern("[%H:%M:%S.%e %^%l%$] %v");
-        m_logger->info("Logger initialized.");
-        m_apiPool.setLogger(m_logger);
-        m_gptDictionary.setLogger(m_logger);
-        m_preDictionary.setLogger(m_logger);
-        m_postDictionary.setLogger(m_logger);
-        m_problemAnalyzer.setLogger(m_logger);
-        // 日志配置结束
 
 
         m_apiStrategy = configData["backendSpecific"]["OpenAI-Compatible"]["apiStrategy"].value_or("random");
@@ -251,7 +178,7 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
         m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
         // 需要API
-        if (m_transEngine != TransEngine::DumpName && m_transEngine != TransEngine::Rebuild) {
+        if (m_transEngine != TransEngine::DumpName && m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
             auto translationAPIs = configData["backendSpecific"]["OpenAI-Compatible"]["apis"].as_array();
             if (!translationAPIs) {
                 throw std::invalid_argument("OpenAI-Compatible apis not found in config.toml");
@@ -416,8 +343,8 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
         m_gptDictionary.sort();
         m_postDictionary.sort();
 
-        if (m_transEngine == TransEngine::DumpName || m_transEngine == TransEngine::Rebuild) {
-            // 这两个不需要加载提示词
+        if (m_transEngine == TransEngine::DumpName || m_transEngine == TransEngine::Rebuild || m_transEngine == TransEngine::ShowNormal) {
+            // 这几个不需要加载提示词
             return;
         }
 
@@ -482,133 +409,6 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
         m_logger->critical("项目配置文件解析失败, 错误位置: {}, 错误信息: {}", stream2String(e.source().begin), e.description());
         throw std::runtime_error(e.what());
     }
-}
-
-/**
-* @brief 根据句子的上下文生成唯一的缓存键，复刻 GalTransl 逻辑
-*/
-std::string NormalJsonTranslator::generateCacheKey(const Sentence* s) {
-    std::string prev_text = "None";
-    const Sentence* temp = s->prev;
-    if (temp) {
-        prev_text = temp->name + temp->pre_processed_text;
-    }
-
-    std::string current_text = s->name + s->pre_processed_text;
-
-    std::string next_text = "None";
-    temp = s->next;
-    if (temp) {
-        next_text = temp->name + temp->pre_processed_text;
-    }
-
-    return prev_text + current_text + next_text;
-}
-
-/**
-* @brief 构建用于 Prompt 的上下文历史
-*/
-std::string NormalJsonTranslator::buildContextHistory(const std::vector<Sentence*>& batch) {
-    if (batch.empty() || !batch[0]->prev) {
-        return {};
-    }
-
-    std::string history;
-
-    switch (m_transEngine) {
-    case TransEngine::ForGalTsv: {
-        history = "NAME\tDST\tID\n"; // Or DST\tID for novel
-        std::vector<std::string> contextLines;
-        const Sentence* current = batch[0]->prev;
-        int count = 0;
-        while (current && count < m_contextHistorySize) {
-            if (current->complete) {
-                std::string name = current->name.empty() ? "null" : current->name;
-                contextLines.push_back(name + "\t" + current->pre_translated_text + "\t" + std::to_string(current->index));
-                count++;
-            }
-            current = current->prev;
-        }
-        std::reverse(contextLines.begin(), contextLines.end());
-        if (contextLines.empty()) return {};
-        for (const auto& line : contextLines) {
-            history += line + "\n";
-        }
-        break;
-    }
-    case TransEngine::ForNovelTsv: {
-        history = "DST\tID\n"; // Or DST\tID for novel
-        std::vector<std::string> contextLines;
-        const Sentence* current = batch[0]->prev;
-        int count = 0;
-        while (current && count < m_contextHistorySize) {
-            if (current->complete) {
-                contextLines.push_back(current->pre_translated_text + "\t" + std::to_string(current->index));
-                count++;
-            }
-            current = current->prev;
-        }
-        std::reverse(contextLines.begin(), contextLines.end());
-        if (contextLines.empty()) return {};
-        for (const auto& line : contextLines) {
-            history += line + "\n";
-        }
-        break;
-    }
-
-    case TransEngine::ForGalJson:
-    case TransEngine::DeepseekJson:
-    {
-        json historyJson = json::array();
-        const Sentence* current = batch[0]->prev;
-        int count = 0;
-        while (current && count < m_contextHistorySize) {
-            if (current->complete) { // current->complete
-                json item;
-                item["id"] = current->index;
-                if (!current->name.empty()) item["name"] = current->name;
-                item["dst"] = current->pre_translated_text;
-                historyJson.push_back(item);
-                count++;
-            }
-            current = current->prev;
-        }
-        std::reverse(historyJson.begin(), historyJson.end());
-        for (const auto& item : historyJson) {
-            history += item.dump() + "\n";
-        }
-        history = "```jsonline\n" + history + "```";
-    }
-    break;
-
-    case TransEngine::Sakura:
-    {
-        const Sentence* current = batch[0]->prev;
-        int count = 0;
-        std::vector<std::string> contextLines;
-        while (current && count < m_contextHistorySize) {
-            if (current->complete) {
-                if (!current->name.empty()) {
-                    contextLines.push_back(current->name + ":::::" + current->pre_translated_text); // :::::
-                }
-                else {
-                    contextLines.push_back(current->pre_translated_text);
-                }
-                count++;
-            }
-            current = current->prev;
-        }
-        std::reverse(contextLines.begin(), contextLines.end());
-        for (const auto& line : contextLines) {
-            history += line + "\n";
-        }
-    }
-    break;
-    default:
-        throw std::runtime_error("未知的 PromptType");
-    }
-
-    return history;
 }
 
 void NormalJsonTranslator::preProcess(Sentence* se) {
@@ -682,108 +482,6 @@ void NormalJsonTranslator::postProcess(Sentence* se) {
     m_problemAnalyzer.analyze(se, m_gptDictionary, m_targetLang);
 }
 
-ApiResponse NormalJsonTranslator::performApiRequest(const json& payload, const TranslationAPI& api, int threadId) {
-    ApiResponse apiResponse;
-
-    // 检查是否为流式请求
-    bool isStream = payload.contains("stream") && payload.at("stream").get<bool>();
-
-    if (isStream) {
-        // =================================================
-        // ===========   流式请求处理路径   ================
-        // =================================================
-        std::string concatenatedContent;
-        std::string sseBuffer;
-
-        // 1. 定义一个符合 cpr::WriteCallback 构造函数要求的 lambda
-        auto callbackLambda = [&](const std::string_view& data, intptr_t userdata) -> bool 
-            {
-                // 将接收到的数据块(string_view)追加到缓冲区(string)
-                sseBuffer.append(data);
-                size_t pos;
-                while ((pos = sseBuffer.find('\n')) != std::string::npos) {
-                    std::string line = sseBuffer.substr(0, pos);
-                    sseBuffer.erase(0, pos + 1);
-
-                    if (line.rfind("data: ", 0) == 0) {
-                        std::string jsonDataStr = line.substr(6);
-                        if (jsonDataStr == "[DONE]") {
-                            return true;
-                        }
-                        try {
-                            json chunk = json::parse(jsonDataStr);
-                            if (!chunk["choices"].empty() && chunk["choices"][0].contains("delta") && chunk["choices"][0]["delta"].contains("content")) {
-                                auto content_node = chunk["choices"][0]["delta"]["content"];
-                                if (content_node.is_string()) {
-                                    concatenatedContent += content_node.get<std::string>();
-                                }
-                            }
-                        }
-                        catch (const json::exception&) {
-
-                        }
-                    }
-                }
-                // 继续接收数据
-                return !m_controller->shouldStop();
-            };
-
-        // 2. 使用上面定义的 lambda 来构造一个 cpr::WriteCallback 类的实例
-        cpr::WriteCallback writeCallbackInstance(callbackLambda);
-
-        // 3. 将该实例传递给 cpr::Post
-        cpr::Response response = cpr::Post(
-            cpr::Url{ api.apiurl },
-            cpr::Body{ payload.dump() },
-            cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-            cpr::Timeout{ m_apiTimeOutMs },
-            writeCallbackInstance // 传递类的实例
-        );
-
-        apiResponse.statusCode = response.status_code;
-        if (response.status_code == 200) {
-            apiResponse.success = true;
-            apiResponse.content = concatenatedContent;
-        }
-        else {
-            apiResponse.success = false;
-            apiResponse.content = response.text;
-            m_logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
-        }
-    }
-    else {
-        // =================================================
-        // =========   非流式请求处理路径   =========
-        // =================================================
-        cpr::Response response = cpr::Post(
-            cpr::Url{ api.apiurl },
-            cpr::Body{ payload.dump() },
-            cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-            cpr::Timeout{ m_apiTimeOutMs }
-        );
-
-        apiResponse.statusCode = response.status_code;
-        apiResponse.content = response.text; // 先记录原始响应体
-
-        if (response.status_code == 200) {
-            try {
-                // 解析完整的JSON响应
-                apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
-                apiResponse.success = true;
-            }
-            catch (const json::exception& e) {
-                m_logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
-                apiResponse.success = false;
-            }
-        }
-        else {
-            m_logger->error("[线程 {}] API 非流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
-            apiResponse.success = false;
-        }
-    }
-
-    return apiResponse;
-}
 
 bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath, std::vector<Sentence*>& batch, int threadId) {
 
@@ -793,11 +491,13 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
     for (auto& pSentence : batch) {
         if (pSentence->pre_processed_text.empty()) {
             pSentence->complete = true;
+            m_completedSentences++;
+            m_controller->updateBar(); // 为空不翻译
         }
     }
 
     int retryCount = 0;
-    std::string contextHistory = buildContextHistory(batch);
+    std::string contextHistory = buildContextHistory(batch, m_transEngine, m_contextHistorySize);
     std::string glossary = m_gptDictionary.generatePrompt(batch, m_transEngine);
 
     while (retryCount < m_maxRetries) {
@@ -818,7 +518,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
         }
 
         if (m_smartRetry && retryCount == 2 && batchToTransThisRound.size() > 1) {
-            m_logger->warn("[线程 {}] [文件 {}] 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath.filename()));
+            m_logger->warn("[线程 {}] [文件 {}] 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath));
 
             size_t mid = batchToTransThisRound.size() / 2;
             std::vector<Sentence*> firstHalf(batchToTransThisRound.begin(), batchToTransThisRound.begin() + mid);
@@ -830,7 +530,7 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
             return firstOk && secondOk;
         }
         else if (m_smartRetry && retryCount == 3) {
-            m_logger->warn("[线程 {}] [文件 {}] 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath.filename()));
+            m_logger->warn("[线程 {}] [文件 {}] 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath));
             contextHistory.clear();
         }
 
@@ -908,11 +608,8 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
         TranslationAPI currentAPI = optAPI.value();
 
         json payload = { {"model", currentAPI.modelName}, {"messages", messages} };
-        if (currentAPI.stream) {
-            payload["stream"] = true;
-        }
 
-        ApiResponse response = performApiRequest(payload, currentAPI, threadId);
+        ApiResponse response = performApiRequest(payload, currentAPI, threadId, m_controller, m_logger, m_apiTimeOutMs);
         if (!response.success) {
             
             std::string lowerErrorMsg = response.content;
@@ -1167,8 +864,12 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
     fs::path relInputPath = fs::relative(inputPath, m_needsCombining ? m_inputCacheDir : m_inputDir);
     fs::path outputPath = m_needsCombining ? (m_outputCacheDir / relInputPath) : (m_outputDir / relInputPath);
     fs::path cachePath = m_cacheDir / relInputPath;
+    fs::path showNormalPath = m_projectDir / L"gt_show_normal" / relInputPath;
     createParent(outputPath);
     createParent(cachePath);
+    if (m_transEngine == TransEngine::ShowNormal) {
+        createParent(showNormalPath);
+    }
 
     std::vector<Sentence> sentences;
     try {
@@ -1193,6 +894,25 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
         throw std::runtime_error(std::format("[线程 {}] [文件 {}] 解析失败: {}", threadId, wide2Ascii(inputPath), e.what()));
     }
 
+    if (m_transEngine == TransEngine::ShowNormal) {
+        json showNormalJson = json::array();
+        for (const auto& se : sentences) {
+            json showNormalObj;
+            showNormalObj["name"] = se.name;
+            showNormalObj["original_text"] = se.original_text;
+            if (!se.other_info.empty()) {
+                showNormalObj["other_info"] = se.other_info;
+            }
+            showNormalObj["pre_processed_text"] = se.pre_processed_text;
+            showNormalJson.push_back(showNormalObj);
+            m_completedSentences++;
+            m_controller->updateBar(); // ShowNormal
+        }
+        std::ofstream ofs(showNormalPath);
+        ofs << showNormalJson.dump(2);
+        return;
+    }
+
     std::multimap<std::string, json> cacheMap;
 
     {
@@ -1210,13 +930,13 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
                 }
             }
 
-            if (fs::exists(cachePath)) {
+            for (const auto& cp : cachePaths) {
                 std::lock_guard<std::mutex> lock(m_cacheMutex);
                 try {
-                    ifs.open(cachePath);
+                    ifs.open(cp);
                     json cacheJsonList = json::parse(ifs);
                     ifs.close();
-                    m_logger->debug("[线程 {}] 从 {} 加载了 {} 条缓存记录。", threadId, wide2Ascii(cachePath), cacheMap.size());
+                    m_logger->debug("[线程 {}] 从 {} 加载了 {} 条缓存记录。", threadId, wide2Ascii(cp), cacheMap.size());
 
                     for (size_t i = 0; i < cacheJsonList.size(); ++i) {
                         const auto& item = cacheJsonList[i];
@@ -1228,7 +948,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
                     }
                 }
                 catch (const json::exception& e) {
-                    throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cachePath), e.what()));
+                    throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cp), e.what()));
                 }
             }
         }
@@ -1278,7 +998,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
                 continue;
             }
             else {
-                m_logger->error("[线程 {}] [文件 {}] 缓存中找不到句子: [{}]，可能是修改了译前词典或句子尚未缓存", threadId, wide2Ascii(relInputPath.filename()), se.original_text);
+                m_logger->error("[线程 {}] [文件 {}] 缓存中找不到句子: [{}]，可能是修改了译前词典/分割数目或句子尚未缓存", threadId, wide2Ascii(relInputPath.filename()), se.original_text);
                 m_rebuildSuccess = false;
                 se.pre_translated_text = se.pre_processed_text;
                 se.complete = true;
@@ -1401,7 +1121,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
             return;
         }
         m_logger->debug("开始合并 {} 的缓存文件...", wide2Ascii(relInputPath));
-        combineOutputFiles(originalRelFilePath, splitFileParts);
+        combineOutputFiles(originalRelFilePath, splitFileParts, m_logger, m_outputCacheDir, m_outputDir);
         
         if (m_onFileProcessed) {
             m_onFileProcessed(originalRelFilePath);
@@ -1412,40 +1132,6 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
             m_onFileProcessed(relInputPath);
         }
     }
-}
-
-
-void NormalJsonTranslator::combineOutputFiles(const fs::path& originalRelFilePath, const std::map<fs::path, bool>& splitFileParts) {
-    json combinedJson = json::array();
-
-    std::ifstream ifs;
-    m_logger->debug("开始合并文件: {}", wide2Ascii(originalRelFilePath));
-
-    for (const auto& [relPartPath, ready] : splitFileParts) {
-        fs::path partPath = m_outputCacheDir / relPartPath;
-        if (fs::exists(partPath)) {
-            try {
-                ifs.open(partPath);
-                json partData = json::parse(ifs);
-                ifs.close();
-                combinedJson.insert(combinedJson.end(), partData.begin(), partData.end());
-            }
-            catch (const json::exception& e) {
-                ifs.close();
-                m_logger->critical("合并文件 {} 时出错", wide2Ascii(partPath));
-                throw std::runtime_error(e.what());
-            }
-        }
-        else {
-            throw std::runtime_error(std::format("试图合并 {} 时出错，缺少文件 {}", wide2Ascii(originalRelFilePath), wide2Ascii(partPath)));
-        }
-    }
-
-    fs::path finalOutputPath = m_outputDir / originalRelFilePath;
-    createParent(finalOutputPath);
-    std::ofstream ofs(finalOutputPath);
-    ofs << combinedJson.dump(2);
-    m_logger->info("文件 {} 合并完成，已保存到 {}", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath));
 }
 
 
@@ -1525,14 +1211,15 @@ void NormalJsonTranslator::run() {
         ofs.close();
         m_logger->info("已生成 人名替换表.toml 文件");
         if (m_transEngine == TransEngine::DumpName) {
+            m_completedSentences += m_totalSentences;
+            m_controller->updateBar(m_totalSentences);
             return;
         }
     }
 
     if (m_transEngine == TransEngine::GenDict) {
-        DictionaryGenerator generator(m_controller, m_apiPool, ascii2Wide(m_dictDir), m_systemPrompt, m_userPrompt, m_apiStrategy,
+        DictionaryGenerator generator(m_controller, m_logger, m_apiPool, ascii2Wide(m_dictDir), m_systemPrompt, m_userPrompt, m_apiStrategy,
             m_maxRetries, m_threadsNum, m_apiTimeOutMs, m_checkQuota);
-        generator.setLogger(m_logger);
         fs::path outputFilePath = m_projectDir / L"项目GPT字典-生成.toml";
         generator.generate(m_inputDir, outputFilePath, m_preDictionary, m_usePreDictInName);
         m_logger->info("已生成 项目GPT字典-生成.toml 文件");
@@ -1758,7 +1445,7 @@ void NormalJsonTranslator::run() {
     fs::remove_all(m_inputCacheDir);
     fs::remove_all(m_outputCacheDir);
     if (m_transEngine == TransEngine::Rebuild && !m_rebuildSuccess) {
-        m_logger->critical("重建失败，请检查log以定位问题");
+        m_logger->critical("重建不完全，请检查log以定位问题");
     }
 }
 

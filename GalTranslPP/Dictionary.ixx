@@ -30,9 +30,8 @@ export {
         std::shared_ptr<spdlog::logger> m_logger;
 
     public:
-        void setLogger(std::shared_ptr<spdlog::logger> logger) {
-            m_logger = logger;
-        }
+
+        GptDictionary(std::shared_ptr<spdlog::logger> logger) : m_logger(logger) {}
 
         void sort();
 
@@ -68,9 +67,8 @@ export {
         std::shared_ptr<spdlog::logger> m_logger;
 
     public:
-        void setLogger(std::shared_ptr<spdlog::logger> logger) {
-            m_logger = logger;
-        }
+
+        NormalDictionary(std::shared_ptr<spdlog::logger> logger) : m_logger(logger) {}
 
         void loadFromFile(const fs::path& filePath);
 

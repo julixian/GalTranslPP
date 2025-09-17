@@ -17,11 +17,7 @@ export {
         std::mt19937 m_gen;
 
     public:
-        APIPool();
-
-        void setLogger(std::shared_ptr<spdlog::logger> logger) {
-            m_logger = logger;
-        }
+        APIPool(std::shared_ptr<spdlog::logger> logger);
 
         void loadAPIs(const std::vector<TranslationAPI>& apis);
 
@@ -40,7 +36,7 @@ export {
 
 module :private;
 
-APIPool::APIPool() : m_gen(m_rd()) {}
+APIPool::APIPool(std::shared_ptr<spdlog::logger> logger) : m_logger(logger), m_gen(m_rd()) {}
 
 void APIPool::loadAPIs(const std::vector<TranslationAPI>& apis) {
     std::lock_guard<std::mutex> lock(m_mutex);

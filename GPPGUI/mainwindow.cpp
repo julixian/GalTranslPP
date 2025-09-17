@@ -62,9 +62,10 @@ MainWindow::MainWindow(QWidget* parent)
     // 拦截默认关闭事件
     _closeDialog = new ElaContentDialog(this);
     connect(_closeDialog, &ElaContentDialog::rightButtonClicked, this, &MainWindow::_on_closeWindow_clicked);
-    connect(_closeDialog, &ElaContentDialog::middleButtonClicked, this, [=]() {
-        _closeDialog->close();
-        showMinimized();
+    connect(_closeDialog, &ElaContentDialog::middleButtonClicked, this, [=]() 
+        {
+            _closeDialog->close();
+            showMinimized();
         });
     this->setIsDefaultClosed(false);
     connect(this, &MainWindow::closeButtonClicked, this, [=]()

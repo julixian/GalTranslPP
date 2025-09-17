@@ -36,9 +36,7 @@ export {
 
 	public:
 
-        void setLogger(std::shared_ptr<spdlog::logger> logger) {
-            m_logger = logger;
-        }
+        ProblemAnalyzer(std::shared_ptr<spdlog::logger> logger) : m_logger(logger) {}
 
 		void loadProblems(const std::vector<std::string>& problemList, const std::string& punctSet, double langProbability);
 

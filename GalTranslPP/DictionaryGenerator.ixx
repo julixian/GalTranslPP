@@ -46,12 +46,10 @@ export {
 
         void preprocessAndTokenize(const std::vector<fs::path>& jsonFiles, NormalDictionary& preDict, bool usePreDictInName);
         std::vector<int> solveSentenceSelection();
-        ApiResponse performApiRequest(const json& payload, const TranslationAPI& api);
-        void callLLMToGenerate(int segmentIndex);
+        void callLLMToGenerate(int segmentIndex, int threadId);
 
     public:
-        void setLogger(std::shared_ptr<spdlog::logger> logger) { m_logger = logger; }
-        DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool, const fs::path& dictDir,
+        DictionaryGenerator(std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger, APIPool& apiPool, const fs::path& dictDir,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy,
             int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota);
         void generate(const fs::path& inputDir, const fs::path& outputFilePath, NormalDictionary& preDict, bool usePreDictInName);
@@ -61,10 +59,10 @@ export {
 
 module :private;
 
-DictionaryGenerator::DictionaryGenerator(std::shared_ptr<IController> controller, APIPool& apiPool,
+DictionaryGenerator::DictionaryGenerator(std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger, APIPool& apiPool,
     const fs::path& dictDir, const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy,
     int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota)
-    : m_controller(controller), m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
+    : m_controller(controller), m_logger(logger), m_apiPool(apiPool), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
     m_apiStrategy(apiStrategy), m_maxRetries(maxRetries), m_checkQuota(checkQuota),
     m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs) 
 {
@@ -189,27 +187,7 @@ std::vector<int> DictionaryGenerator::solveSentenceSelection() {
     return selectedIndices;
 }
 
-ApiResponse DictionaryGenerator::performApiRequest(const json& payload, const TranslationAPI& api) {
-    ApiResponse apiResponse;
-    cpr::Response response = cpr::Post(
-        cpr::Url{ api.apiurl }, cpr::Body{ payload.dump() },
-        cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-        cpr::Timeout{ m_apiTimeoutMs }
-    );
-    apiResponse.statusCode = response.status_code;
-    apiResponse.content = response.text;
-    if (response.status_code == 200) {
-        try {
-            apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
-            apiResponse.success = true;
-        }
-        catch (...) { apiResponse.success = false; }
-    }
-    else { apiResponse.success = false; }
-    return apiResponse;
-}
-
-void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
+void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
     if (m_controller->shouldStop()) {
         return;
     }
@@ -247,11 +225,11 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
         TranslationAPI currentAPI = optAPI.value();
         json payload = { {"model", currentAPI.modelName}, {"messages", messages}, /*{"temperature", 0.6}*/ };
 
-        m_logger->info("开始从段落中生成术语表\ninputBlock: \n{}", text);
-        ApiResponse response = performApiRequest(payload, currentAPI);
+        m_logger->info("[线程 {}] 开始从段落中生成术语表\ninputBlock: \n{}", threadId, text);
+        ApiResponse response = performApiRequest(payload, currentAPI, threadId, m_controller, m_logger, m_apiTimeoutMs);
 
         if (response.success) {
-            m_logger->info("AI 字典生成成功:\n {}", response.content);
+            m_logger->info("[线程 {}] AI 字典生成成功:\n {}", threadId, response.content);
             auto lines = splitString(response.content, '\n');
             for (const auto& line : lines) {
                 auto parts = splitString(line, '\t');
@@ -278,14 +256,14 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
                     lowerErrorMsg.find("invalid tokens") != std::string::npos)
                 )
             {
-                m_logger->error("API Key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", currentAPI.apikey);
+                m_logger->error("[线程 {}] API Key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", threadId, currentAPI.apikey);
                 m_apiPool.reportProblem(currentAPI);
                 // 不需要增加 retryCount
                 continue;
             }
             // key 没有这个模型
             else if (lowerErrorMsg.find("no available") != std::string::npos) {
-                m_logger->error("API Key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", currentAPI.apikey, currentAPI.modelName);
+                m_logger->error("[线程 {}] API Key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
                 m_apiPool.reportProblem(currentAPI);
                 continue;
             }
@@ -294,7 +272,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
             // 状态码 429 是最明确的信号
             if (response.statusCode == 429 || lowerErrorMsg.find("rate limit") != std::string::npos || lowerErrorMsg.find("try again") != std::string::npos) {
                 retryCount++;
-                m_logger->warn("遇到频率限制或可重试错误，进行第 {} 次退避等待...", retryCount);
+                m_logger->warn("[线程 {}] 遇到频率限制或可重试错误，进行第 {} 次退避等待...", threadId, retryCount);
 
                 // 实现指数退避与抖动
                 int sleepSeconds;
@@ -314,9 +292,9 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
 
             // 其他无法识别的硬性错误
             retryCount++;
-            m_logger->warn("遇到未知API错误，进行第 {} 次重试...", retryCount);
+            m_logger->warn("[线程 {}] 遇到未知API错误，进行第 {} 次重试...", threadId, retryCount);
             if (m_apiStrategy == "fallback") {
-                m_logger->warn("将切换到下一个 API Key(如果有多个API Key的话)");
+                m_logger->warn("[线程 {}] 将切换到下一个 API Key(如果有多个API Key的话)", threadId);
                 m_apiPool.resortTokens();
             }
             std::this_thread::sleep_for(std::chrono::seconds(2)); // 简单等待
@@ -324,7 +302,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex) {
         }
     }
     if (retryCount >= m_maxRetries) {
-        m_logger->error("此线程 AI 字典生成失败，已达到最大重试次数。");
+        m_logger->error("[线程 {}] AI 字典生成失败，已达到最大重试次数。", threadId);
     }
 
     m_controller->updateBar();
@@ -355,9 +333,10 @@ void DictionaryGenerator::generate(const fs::path& inputDir, const fs::path& out
     m_controller->makeBar((int)selectedIndices.size(), threadsNum);
     ctpl::thread_pool pool(threadsNum);
     std::vector<std::future<void>> results;
-    for (int idx : selectedIndices) {
-        results.emplace_back(pool.push([this, idx](int) {
-            this->callLLMToGenerate(idx);
+    for (int segmentIdx : selectedIndices) {
+        results.emplace_back(pool.push([=](int threadId) 
+            {
+                this->callLLMToGenerate(segmentIdx, threadId);
             }));
     }
     for (auto& res : results) {

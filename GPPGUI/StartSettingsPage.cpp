@@ -147,6 +147,7 @@ void StartSettingsPage::_setupUI()
 	translateMode->addItem("DumpName");
 	translateMode->addItem("GenDict");
 	translateMode->addItem("Rebuild");
+	translateMode->addItem("ShowNormal");
 	if (!transEngineStr.isEmpty()) {
 		int index = translateMode->findText(transEngineStr);
 		if (index >= 0) {
@@ -369,6 +370,15 @@ void StartSettingsPage::_workFinished(int exitCode)
 			trayIcon->showMessage(
 				"生成完成",                  // 标题
 				"项目 " + QString(_projectDir.filename().wstring()) + " 的生成任务已完成。",      // 内容
+				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
+				5000                          // 显示时长 (毫秒)
+			);
+		}
+		else if (_transEngine == "ShowNormal") {
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, "生成完成", "请在 show_normal 文件夹中查收项目 " + QString(_projectDir.filename().wstring()) + " 的预处理结果。", 3000);
+			trayIcon->showMessage(
+				"生成完成",                  // 标题
+				"请在 show_normal 文件夹中查收项目 " + QString(_projectDir.filename().wstring()) + " 的预处理结果。",      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);

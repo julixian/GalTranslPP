@@ -8,6 +8,7 @@
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
+#include "ElaIconButton.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
@@ -141,22 +142,36 @@ void CommonNormalDictPage::_setupUI()
 			QWidget* pageButtonWidget = new QWidget(pageMainWidget);
 			QHBoxLayout* pageButtonLayout = new QHBoxLayout(pageButtonWidget);
 			ElaPushButton* plainTextModeButton = new ElaPushButton(mainButtonWidget);
-			plainTextModeButton->setText("切换至纯文本模式");
+			plainTextModeButton->setText("纯文本模式");
 			ElaPushButton* tableModeButton = new ElaPushButton(mainButtonWidget);
-			tableModeButton->setText("切换至表模式");
+			tableModeButton->setText("表模式");
 			ElaToggleButton* defaultOnButton = new ElaToggleButton(mainButtonWidget);
 			defaultOnButton->setText("默认启用");
-			ElaPushButton* saveAllButton = new ElaPushButton(mainButtonWidget);
-			saveAllButton->setText("保存全部");
-			ElaPushButton* saveButton = new ElaPushButton(mainButtonWidget);
-			saveButton->setText("保存");
-			ElaPushButton* withdrawButton = new ElaPushButton(mainButtonWidget);
-			withdrawButton->setText("撤回");
+			ElaIconButton* saveAllButton = new ElaIconButton(ElaIconType::CheckDouble, mainButtonWidget);
+			saveAllButton->setFixedWidth(30);
+			ElaToolTip* saveAllButtonToolTip = new ElaToolTip(saveAllButton);
+			saveAllButtonToolTip->setToolTip("保存所有页");
+			ElaIconButton* saveButton = new ElaIconButton(ElaIconType::Check, mainButtonWidget);
+			saveButton->setFixedWidth(30);
+			ElaToolTip* saveButtonToolTip = new ElaToolTip(saveButton);
+			saveButtonToolTip->setToolTip("保存当前页");
+			ElaIconButton* withdrawButton = new ElaIconButton(ElaIconType::ArrowLeft, mainButtonWidget);
+			withdrawButton->setFixedWidth(30);
+			ElaToolTip* withdrawButtonToolTip = new ElaToolTip(withdrawButton);
+			withdrawButtonToolTip->setToolTip("撤回删除行");
 			withdrawButton->setEnabled(false);
-			ElaPushButton* addDictButton = new ElaPushButton(mainButtonWidget);
-			addDictButton->setText("添加词条");
-			ElaPushButton* removeDictButton = new ElaPushButton(mainButtonWidget);
-			removeDictButton->setText("删除词条");
+			ElaIconButton* refreshButton = new ElaIconButton(ElaIconType::ArrowRotateRight, mainButtonWidget);
+			refreshButton->setFixedWidth(30);
+			ElaToolTip* refreshButtonToolTip = new ElaToolTip(refreshButton);
+			refreshButtonToolTip->setToolTip("刷新当前页");
+			ElaIconButton* addDictButton = new ElaIconButton(ElaIconType::Plus, mainButtonWidget);
+			addDictButton->setFixedWidth(30);
+			ElaToolTip* addDictButtonToolTip = new ElaToolTip(addDictButton);
+			addDictButtonToolTip->setToolTip("添加词条");
+			ElaIconButton* removeDictButton = new ElaIconButton(ElaIconType::Minus, mainButtonWidget);
+			removeDictButton->setFixedWidth(30);
+			ElaToolTip* removeDictButtonToolTip = new ElaToolTip(removeDictButton);
+			removeDictButtonToolTip->setToolTip("删除词条");
 			pageButtonLayout->addWidget(plainTextModeButton);
 			pageButtonLayout->addWidget(tableModeButton);
 			pageButtonLayout->addWidget(defaultOnButton);
@@ -164,6 +179,7 @@ void CommonNormalDictPage::_setupUI()
 			pageButtonLayout->addWidget(saveAllButton);
 			pageButtonLayout->addWidget(saveButton);
 			pageButtonLayout->addWidget(withdrawButton);
+			pageButtonLayout->addWidget(refreshButton);
 			pageButtonLayout->addWidget(addDictButton);
 			pageButtonLayout->addWidget(removeDictButton);
 			pageMainLayout->addWidget(pageButtonWidget, 0, Qt::AlignTop);
@@ -322,6 +338,14 @@ void CommonNormalDictPage::_setupUI()
 					if (normalTabEntry.withdrawList->empty()) {
 						withdrawButton->setEnabled(false);
 					}
+				});
+
+			connect(refreshButton, &ElaPushButton::clicked, this, [=]()
+				{
+					plainTextEdit->setPlainText(readNormalDictsStr(dictPath));
+					model->loadData(readNormalDicts(dictPath));
+					ElaMessageBar::success(ElaMessageBarType::TopLeft, "刷新成功", "字典 " +
+						QString::fromStdString(dictName) + " 已刷新", 3000);
 				});
 
 			normalTabEntry.pageMainWidget = pageMainWidget;

@@ -5,6 +5,8 @@
 #include <QHeaderView>
 #include <QStackedWidget>
 
+#include "ElaIconButton.h"
+#include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
@@ -97,14 +99,31 @@ void NameTableSettingsPage::_setupUI()
 
 	QWidget* buttonWidget = new QWidget(mainWidget);
 	QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
-	ElaPushButton* plainTextModeButton = new ElaPushButton("切换至纯文本模式", buttonWidget);
-	ElaPushButton* TableModeButton = new ElaPushButton("切换至表模式", buttonWidget);
-	ElaPushButton* saveDictButton = new ElaPushButton("保存", buttonWidget);
-	ElaPushButton* withdrawButton = new ElaPushButton("撤回", buttonWidget);
+	ElaPushButton* plainTextModeButton = new ElaPushButton("纯文本模式", buttonWidget);
+	ElaPushButton* TableModeButton = new ElaPushButton("表模式", buttonWidget);
+
+	ElaIconButton* saveDictButton = new ElaIconButton(ElaIconType::Check, buttonWidget);
+	saveDictButton->setFixedWidth(30);
+	ElaToolTip* saveDictButtonToolTip = new ElaToolTip(saveDictButton);
+	saveDictButtonToolTip->setToolTip("保存当前页");
+	ElaIconButton* withdrawButton = new ElaIconButton(ElaIconType::ArrowLeft, buttonWidget);
+	withdrawButton->setFixedWidth(30);
+	ElaToolTip* withdrawButtonToolTip = new ElaToolTip(withdrawButton);
+	withdrawButtonToolTip->setToolTip("撤回删除行");
 	withdrawButton->setEnabled(false);
-	ElaPushButton* refreshButton = new ElaPushButton("刷新", buttonWidget);
-	ElaPushButton* addNameButton = new ElaPushButton("添加人名", buttonWidget);
-	ElaPushButton* delNameButton = new ElaPushButton("删除人名", buttonWidget);
+	ElaIconButton* refreshButton = new ElaIconButton(ElaIconType::ArrowRotateRight, buttonWidget);
+	refreshButton->setFixedWidth(30);
+	ElaToolTip* refreshButtonToolTip = new ElaToolTip(refreshButton);
+	refreshButtonToolTip->setToolTip("刷新当前页");
+	ElaIconButton* addNameButton = new ElaIconButton(ElaIconType::Plus, buttonWidget);
+	addNameButton->setFixedWidth(30);
+	ElaToolTip* addNameButtonToolTip = new ElaToolTip(addNameButton);
+	addNameButtonToolTip->setToolTip("添加词条");
+	ElaIconButton* delNameButton = new ElaIconButton(ElaIconType::Minus, buttonWidget);
+	delNameButton->setFixedWidth(30);
+	ElaToolTip* delNameButtonToolTip = new ElaToolTip(delNameButton);
+	delNameButtonToolTip->setToolTip("删除词条");
+	
 	buttonLayout->addWidget(plainTextModeButton);
 	buttonLayout->addWidget(TableModeButton);
 	buttonLayout->addStretch();

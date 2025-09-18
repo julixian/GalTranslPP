@@ -7,6 +7,7 @@
 
 #include "ElaText.h"
 #include "ElaPlainTextEdit.h"
+#include "ElaMessageBar.h"
 #include "ElaDrawerArea.h"
 #include "ElaLineEdit.h"
 #include "ElaComboBox.h"
@@ -316,6 +317,25 @@ void CommonSettingsPage::_setupUI()
 	mainLayout->addWidget(dictArea);
 
 
+	// 项目所用的换行
+	std::string linebreakSymbol = _projectConfig["common"]["linebreakSymbol"].value_or("auto");
+	toml::table tbl{ { "linebreakSymbol", linebreakSymbol} };
+	toml::toml_formatter formatter{ tbl, { toml::format_flags::none} };
+	std::stringstream ss;
+	ss << formatter;
+	QString linebreakSymbolStr = QString::fromStdString(ss.str());
+	mainLayout->addSpacing(10);
+	ElaText* linebreakText = new ElaText("本项目所使用的换行符", mainWidget);
+	linebreakText->setTextPixelSize(18);
+	ElaToolTip* linebreakTip = new ElaToolTip(linebreakText);
+	linebreakTip->setToolTip("将换行符统一规范为 <br> ，具体替换时机详见使用说明，auto为自动检测");
+	mainLayout->addWidget(linebreakText);
+	ElaPlainTextEdit* linebreakEdit = new ElaPlainTextEdit(mainWidget);
+	linebreakEdit->setPlainText(linebreakSymbolStr);
+	linebreakEdit->setFixedHeight(100);
+	mainLayout->addWidget(linebreakEdit);
+
+
 	_applyFunc = [=]()
 		{
 			insertToml(_projectConfig, "common.numPerRequestTranslate", requestNumSpinBox->value());
@@ -339,6 +359,14 @@ void CommonSettingsPage::_setupUI()
 			insertToml(_projectConfig, "common.logLevel", logComboBox->currentText().toStdString());
 			insertToml(_projectConfig, "common.saveLog", saveLogToggle->getIsToggled());
 			insertToml(_projectConfig, "common.dictDir", dictLineEdit->text().toStdString());
+			try {
+				toml::table newTbl = toml::parse(linebreakEdit->toPlainText().toStdString());
+				std::string newLinebreakSymbol = newTbl["linebreakSymbol"].value_or("auto");
+				insertToml(_projectConfig, "common.linebreakSymbol", newLinebreakSymbol);
+			}
+			catch (...) {
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "linebreakSymbol格式错误", 3000);
+			}
 		};
 
 	mainLayout->addStretch();

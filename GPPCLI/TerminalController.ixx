@@ -4,6 +4,7 @@ module;
 #include <spdlog/sinks/base_sink.h>
 
 export module TerminalController;
+
 import Tool;
 import ProgressBar;
 export import ITranslator;

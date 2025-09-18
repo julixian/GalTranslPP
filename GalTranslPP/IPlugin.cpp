@@ -1,12 +1,8 @@
-module;
-
-#include <spdlog/spdlog.h>
-
 module IPlugin;
 
-import Tool;
 import TextPostFull2Half;
 import TextLinebreakFix;
+
 namespace fs = std::filesystem;
 
 IPlugin::IPlugin(const fs::path& projectDir, std::shared_ptr<spdlog::logger> logger) :

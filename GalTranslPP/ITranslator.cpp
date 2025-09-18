@@ -2,13 +2,14 @@ module;
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <toml++/toml.hpp>
 
 module ITranslator;
 
+import <toml++/toml.hpp>;
 import Tool;
 import NormalJsonTranslator;
 import EpubTranslator;
+
 namespace fs = std::filesystem;
 
 IController::IController()

@@ -1,7 +1,7 @@
-module;
-
 export module ITranslator;
+
 import std;
+
 namespace fs = std::filesystem;
 
 export {

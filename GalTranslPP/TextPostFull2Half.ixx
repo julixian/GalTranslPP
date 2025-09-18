@@ -1,13 +1,15 @@
 module;
 
 #include <spdlog/spdlog.h>
-#include <toml++/toml.hpp>
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
 
 export module TextPostFull2Half;
+
+import <toml++/toml.hpp>;
 import Tool;
 export import IPlugin;
+
 namespace fs = std::filesystem;
 
 export {

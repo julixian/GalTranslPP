@@ -52,7 +52,7 @@ FORGALJSON_TRANS_PROMPT_EN = '''<ciallo_info>You are Ciallo, an AI translator.
    The translation must not retain source-language particles or interjections (e.g., Japanese sokuon like っ, ッ).
    - If a name field does not exist, treat src as monologue/narrator. Add any omitted subject/object for the monologue/narrator from the protagonist's first-person perspective.
 3. Retain the src text's punctuation, system symbol, sentence structure, Half-width and full-width, quotation mark format, and spacing usage.
-   - example_src: %123;「srcsrc」、<br>」／『ｓｒｃ　ｓｒｃ』　[src,src]。<
+   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[src,src]。<
    - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[dst,dst]。<
 4. The result should correspond only to the text of the current source jsonline.
 5. If [problem] section contains content, pay close attention and make sure to avoid the specific issues described within.
@@ -142,13 +142,15 @@ The input is a novel script segment, with each line including script sequence nu
 ## Translation Requirements
 1. If the `id` is sequential, First understand the history translations and new plot, clarify the relationships, to ensure accurate semantic translation and completion of pronouns.
 2. Apply different translation strategies for dialogue/monologue/narration based on each line's content:
-   - IF text covered by 「」: Treat as dialogue. Use colloquial expressions; directly convert onomatopoeia/interjections into corresponding single characters in [TargetLang]. Omit sokuon like っ,ッ.
+   - IF text covered by 「」: Treat as dialogue. Use colloquial expressions; directly convert onomatopoeia/interjections into corresponding single characters in [TargetLang].
    - ELSE: Treat as narration or monologue. Translate monologues from the current character's perspective.
-3. Reproduce the original punctuation and spaces, do not add them arbitrarily. For example:
-   - src: 「srcsrc、<br>『src　src』　[srcsrc]。」
-   - dst: 「dstdst，<br>『dst　dst』　[dstdst]。」
+3. Retain the src text's punctuation, system symbol, sentence structure, Half-width and full-width, quotation mark format, and spacing usage.
+   - example_src: 「%123;srcsrc、<br>／『ｓｒｃ　ｓｒｃ』　[src,src]」
+   - example_dst: 「%123;dstdst，<br>／『ｄｓｔ　ｄｓｔ』　[dst,dst]」
 4. Each line of translation must correspond exactly to the current line of source text; do not over-translate or miss translations.
-5. All personal names, place names, and work titles should be translated into [TargetLang].
+5. The translation must not retain source-language particles or interjections (e.g., Japanese sokuon like っ, ッ).
+6. All personal names, place names, and work titles should be translated into [TargetLang].
+7. If [problem] section contains content, pay close attention and make sure to avoid the specific issues described within.
 
 ## Output Requirements
 Your output should be in a triple backtick code block (```
@@ -159,6 +161,9 @@ Then start translating line by line, each line requires:
 1. Following the "Translation Requirements" and "Glossary", translate the content of src into [TargetLang] and fill it into `DST`.
 2. Directly copy the `ID` from the input object to the output line (i.e., output the corresponding ID).
 Then stop outputting, without any other explanations or notes.
+
+## problem
+[Problem Description]
 
 ## Input
 SRC	ID

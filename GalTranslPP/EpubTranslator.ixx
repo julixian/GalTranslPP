@@ -1,16 +1,18 @@
 module;
 
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
-#include <toml++/toml.hpp>
-#include <zip.h>
-#include <gumbo.h>
 #include <unicode/regex.h>
 #include <unicode/unistr.h>
+#include <zip.h>
+#include <gumbo.h>
 
 export module EpubTranslator;
+
+import <nlohmann/json.hpp>;
+import <toml++/toml.hpp>;
 import Tool;
 import NormalJsonTranslator;
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 

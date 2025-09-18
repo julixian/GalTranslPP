@@ -3,7 +3,9 @@ module;
 #include <spdlog/spdlog.h>
 
 export module IPlugin;
+
 export import Tool;
+
 namespace fs = std::filesystem;
 
 export {

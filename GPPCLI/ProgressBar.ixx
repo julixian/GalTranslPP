@@ -1,8 +1,5 @@
-module;
-
-#include <chrono>
-
 export module ProgressBar;
+
 import Tool;
 
 export {

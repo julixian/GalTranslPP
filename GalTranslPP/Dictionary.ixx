@@ -2,17 +2,19 @@ module;
 
 #include <mecab/mecab.h>
 #include <spdlog/spdlog.h>
-#include <toml++/toml.hpp>
 #include <unicode/regex.h>
 #include <unicode/unistr.h>
 
 export module Dictionary;
+
+import <toml++/toml.hpp>;
 import Tool;
+
 namespace fs = std::filesystem;
 
 export {
 
-    enum class CachePart { Name, OrigText, PreproText, PretransText, TransPreview };
+    enum class CachePart { Name, NamePreview, OrigText, PreprocText, PretransText, TransPreview };
 
     struct GptTabEntry {
         int priority = 0;
@@ -89,7 +91,7 @@ std::string chooseString(const Sentence* sentence, CachePart tar) {
     case CachePart::OrigText:
         return sentence->original_text;
         break;
-    case CachePart::PreproText:
+    case CachePart::PreprocText:
         return sentence->pre_processed_text;
         break;
     case CachePart::PretransText:
@@ -384,7 +386,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                     std::string conditionTarget = el["conditionTarget"].value_or("");
                     if (conditionTarget == "name") entry.conditionTarget = CachePart::Name;
                     else if (conditionTarget == "orig_text") entry.conditionTarget = CachePart::OrigText;
-                    else if (conditionTarget == "preproc_text") entry.conditionTarget = CachePart::PreproText;
+                    else if (conditionTarget == "preproc_text") entry.conditionTarget = CachePart::PreprocText;
                     else if (conditionTarget == "pretrans_text") entry.conditionTarget = CachePart::PretransText;
                     else if (conditionTarget == "trans_preview") entry.conditionTarget = CachePart::TransPreview;
                     else {

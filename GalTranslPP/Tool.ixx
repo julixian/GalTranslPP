@@ -1,18 +1,20 @@
 module;
+
 #include <Windows.h>
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
-#include <toml++/toml.hpp>
 #include <boost/regex.hpp>
+#include <cpr/cpr.h>
+#include <zip.h>
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
 #include <unicode/brkiter.h>
 #include <unicode/schriter.h>
 #include <unicode/uscript.h>
-#include <cpr/cpr.h>
-#include <zip.h>
 
 export module Tool;
+
+import <nlohmann/json.hpp>;
+import <toml++/toml.hpp>;
 export import std;
 import ITranslator;
 
@@ -88,15 +90,17 @@ export {
     struct Sentence {
         int index;
         std::string name;
-        std::string original_text; // 对应 pre_jp
-        std::string pre_processed_text; // 对应 post_jp
-        std::string pre_translated_text; // 对应 pre_zh
+        std::string name_preview;
+        std::string original_text;
+        std::string pre_processed_text;
+        std::string pre_translated_text;
         std::string problem;
         std::string translated_by;
-        std::string translated_preview; // 对应 post_zh
-        std::string other_info;
+        std::string translated_preview;
+        std::map<std::string, std::string> other_info;
 
         bool complete = false;
+        bool hasName = false;
         Sentence* prev = nullptr;
         Sentence* next = nullptr;
         std::string originalLinebreak;
@@ -250,15 +254,32 @@ export {
     }
 
     void combineOutputFiles(const fs::path& originalRelFilePath, const std::map<fs::path, bool>& splitFileParts,
-        std::shared_ptr<spdlog::logger> m_logger, const fs::path& m_outputCacheDir, const fs::path& m_outputDir) {
+        std::shared_ptr<spdlog::logger> logger, const fs::path& outputCacheDir, const fs::path& outputDir) {
 
         json combinedJson = json::array();
 
         std::ifstream ifs;
-        m_logger->debug("开始合并文件: {}", wide2Ascii(originalRelFilePath));
+        logger->debug("开始合并文件: {}", wide2Ascii(originalRelFilePath));
 
+        std::vector<fs::path> partPaths;
         for (const auto& [relPartPath, ready] : splitFileParts) {
-            fs::path partPath = m_outputCacheDir / relPartPath;
+            partPaths.push_back(relPartPath);
+        }
+
+        std::ranges::sort(partPaths, [&](const fs::path& a, const fs::path& b)
+            {
+                size_t posA = a.filename().wstring().rfind(L"_part_");
+                size_t posB = b.filename().wstring().rfind(L"_part_");
+                if (posA == std::wstring::npos || posB == std::wstring::npos) {
+                    return false;
+                }
+                std::wstring numA = a.filename().wstring().substr(posA + 6, a.filename().wstring().length() - posA - 11);
+                std::wstring numB = b.filename().wstring().substr(posB + 6, b.filename().wstring().length() - posB - 11);
+                return std::stoi(numA) < std::stoi(numB);
+            });
+
+        for (const auto& relPartPath : partPaths) {
+            fs::path partPath = outputCacheDir / relPartPath;
             if (fs::exists(partPath)) {
                 try {
                     ifs.open(partPath);
@@ -268,7 +289,7 @@ export {
                 }
                 catch (const json::exception& e) {
                     ifs.close();
-                    m_logger->critical("合并文件 {} 时出错", wide2Ascii(partPath));
+                    logger->critical("合并文件 {} 时出错", wide2Ascii(partPath));
                     throw std::runtime_error(e.what());
                 }
             }
@@ -277,14 +298,15 @@ export {
             }
         }
 
-        fs::path finalOutputPath = m_outputDir / originalRelFilePath;
+        fs::path finalOutputPath = outputDir / originalRelFilePath;
         createParent(finalOutputPath);
         std::ofstream ofs(finalOutputPath);
         ofs << combinedJson.dump(2);
-        m_logger->info("文件 {} 合并完成，已保存到 {}", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath));
+        logger->info("文件 {} 合并完成，已保存到 {}", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath));
     }
 
-    ApiResponse performApiRequest(json& payload, const TranslationAPI& api, int threadId, std::shared_ptr<IController> m_controller, std::shared_ptr<spdlog::logger> m_logger, int m_apiTimeOutMs) {
+    ApiResponse performApiRequest(json& payload, const TranslationAPI& api, int threadId,
+        std::shared_ptr<IController> controller, std::shared_ptr<spdlog::logger> logger, int apiTimeOutMs) {
         ApiResponse apiResponse;
 
         if (api.stream) {
@@ -325,7 +347,7 @@ export {
                         }
                     }
                     // 继续接收数据
-                    return !m_controller->shouldStop();
+                    return !controller->shouldStop();
                 };
 
             // 2. 使用上面定义的 lambda 来构造一个 cpr::WriteCallback 类的实例
@@ -336,7 +358,7 @@ export {
                 cpr::Url{ api.apiurl },
                 cpr::Body{ payload.dump() },
                 cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-                cpr::Timeout{ m_apiTimeOutMs },
+                cpr::Timeout{ apiTimeOutMs },
                 writeCallbackInstance // 传递类的实例
             );
 
@@ -348,7 +370,7 @@ export {
             else {
                 apiResponse.success = false;
                 apiResponse.content = response.text;
-                m_logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
+                logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
             }
         }
         else {
@@ -359,7 +381,7 @@ export {
                 cpr::Url{ api.apiurl },
                 cpr::Body{ payload.dump() },
                 cpr::Header{ {"Content-Type", "application/json"}, {"Authorization", "Bearer " + api.apikey} },
-                cpr::Timeout{ m_apiTimeOutMs }
+                cpr::Timeout{ apiTimeOutMs }
             );
 
             apiResponse.statusCode = response.status_code;
@@ -372,12 +394,12 @@ export {
                     apiResponse.success = true;
                 }
                 catch (const json::exception& e) {
-                    m_logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
+                    logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
                     apiResponse.success = false;
                 }
             }
             else {
-                m_logger->error("[线程 {}] API 非流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
+                logger->error("[线程 {}] API 非流请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
                 apiResponse.success = false;
             }
         }
@@ -465,6 +487,7 @@ export {
             json cacheObj;
             cacheObj["index"] = se.index;
             cacheObj["name"] = se.name;
+            cacheObj["name_preview"] = se.name_preview;
             cacheObj["original_text"] = se.original_text;
             if (!se.other_info.empty()) {
                 cacheObj["other_info"] = se.other_info;

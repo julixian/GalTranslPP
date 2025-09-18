@@ -136,7 +136,10 @@ EpubCfgPage::EpubCfgPage(toml::table& projectConfig, QWidget* parent) : BasePage
 	mainLayout->addWidget(postRegexText);
 	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(centerWidget);
 	postRegexEdit->setMinimumHeight(300);
-	postRegexEdit->setPlainText(QString::fromStdString(stream2String(postRegexTable)));
+	toml::toml_formatter formatter{ postRegexTable , {toml::format_flags::none} };
+	std::stringstream ss;
+	ss << formatter;
+	postRegexEdit->setPlainText(QString::fromStdString(ss.str()));
 	mainLayout->addWidget(postRegexEdit);
 
 	ElaText* tipText = new ElaText("说明", centerWidget);

@@ -165,17 +165,19 @@
     <p><b>当且仅当</b><b class="highlight">条件正则</b>能够完全匹配条件对象所对应的字符串时，才会执行替换</p>
     <p>当 <b class="highlight">启用正则</b> 为 <code>true</code> 时，原文和译文将被视为正则表达式进行替换，<span class="highlight">优先级越高的字典越先执行</span>。</p>
 
-    <h2>翻译后处理顺序</h2>
-    <p><b><code>name</code> 字段在翻译后的处理顺序是:</b></p>
+    <h2>处理与翻译顺序</h2>
     <ol>
-        <li>执行GPT字典替换</li>
-        <li>执行人名表替换</li>
-        <li>执行译后字典替换</li>
-    </ol>
-    <p><b><code>msg</code> 字段则是:</b></p>
-    <ol>
-        <li>执行插件处理</li>
-        <li>执行译后字典替换</li>
+        <li>可选: 对 <code>name</code> 执行译前字典替换<span class="highlight">(人名表收集的也是这一步后的 <code>name</code> )</span></li>
+        <li>将 <code>message</code> 中的换行统一替换为 <code>&lt;br&gt;</code> </li>
+        <li>可选: 对 <code>message</code> 执行译前字典替换</li>
+        <li>执行前处理插件</li>
+        <li>AI翻译</li>
+        <li>执行后处理插件</li>
+        <li>可选: 对 <code>message</code> 执行译后字典替换</li>
+        <li>将 <code>message</code> 中的换行从 <code>&lt;br&gt;</code> 换回原符号</li>
+        <li>可选: 对 <code>name</code> 执行GPT字典替换<span class="highlight">(此时GPT字典将被临时视为替换型字典)</span></li>
+        <li>对 <code>name</code> 执行人名表替换<span class="highlight">(人名表译名为空则忽略)</span></li>
+        <li>可选: 对 <code>name</code> 执行译后字典替换</li>
         <li>问题分析</li>
     </ol>
 

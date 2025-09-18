@@ -4,6 +4,7 @@
 import std;
 import Tool;
 import TerminalController;
+
 namespace fs = std::filesystem;
 
 #pragma comment(lib, "../lib/GalTranslPP.lib")

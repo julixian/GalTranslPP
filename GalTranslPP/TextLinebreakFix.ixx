@@ -1,11 +1,13 @@
 module;
 
 #include <spdlog/spdlog.h>
-#include <toml++/toml.hpp>
 
 export module TextLinebreakFix;
+
+import <toml++/toml.hpp>;
 import Tool;
 import IPlugin;
+
 namespace fs = std::filesystem;
 
 export {
@@ -63,27 +65,27 @@ void TextLinebreakFix::run(Sentence* se)
 		return;
 	}
 
-	int orgLinebreakCount = countSubstring(se->original_text, se->originalLinebreak);
-	int newLinebreakCount = countSubstring(se->pre_translated_text, se->originalLinebreak);
+	int origLinebreakCount = countSubstring(se->original_text, "<br>");
+	int newLinebreakCount = countSubstring(se->translated_preview, "<br>");
 
-	if (newLinebreakCount == orgLinebreakCount && !m_forceFix) {
+	if (newLinebreakCount == origLinebreakCount && !m_forceFix) {
 		return;
 	}
 
-	m_logger->debug("需要修复换行的句子[{}]: 原文{}行, 译文{}行", se->original_text, orgLinebreakCount + 1, newLinebreakCount + 1);
+	m_logger->debug("需要修复换行的句子[{}]: 原文{}行, 译文{}行", se->original_text, origLinebreakCount + 1, newLinebreakCount + 1);
 
-	std::string orgText = se->pre_translated_text;
+	std::string orgText = se->translated_preview;
 
 	if (m_mode == "平均") {
 		int linebreakAdded = 0;
-		std::string text = se->pre_translated_text;
-		replaceStrInplace(text, se->originalLinebreak, "");
+		std::string text = se->translated_preview;
+		replaceStrInplace(text, "<br>", "");
 		std::vector<std::string> graphemes = splitIntoGraphemes(text);
 		size_t totalCharCount = graphemes.size();
 		if (totalCharCount == 0) {
 			return;
 		}
-		size_t charsPerLine = totalCharCount / (orgLinebreakCount + 1);
+		size_t charsPerLine = totalCharCount / (origLinebreakCount + 1);
 		if (charsPerLine == 0) {
 			charsPerLine = 1;
 		}
@@ -91,7 +93,7 @@ void TextLinebreakFix::run(Sentence* se)
 		text.clear();
 		for (size_t i = 0; i < graphemes.size(); i++) {
 			text += graphemes[i];
-			if ((i + 1) % charsPerLine == 0 && linebreakAdded < orgLinebreakCount && i != graphemes.size() - 1) {
+			if ((i + 1) % charsPerLine == 0 && linebreakAdded < origLinebreakCount && i != graphemes.size() - 1) {
 				text += se->originalLinebreak;
 				linebreakAdded++;
 			}
@@ -185,12 +187,12 @@ void TextLinebreakFix::run(Sentence* se)
 
 		std::vector<size_t> positionsToAddLinebreak; // 最终要在 text 中插入换行符的位置
 
-		if (punctPositions.size() == orgLinebreakCount) {
+		if (punctPositions.size() == origLinebreakCount) {
 			for (auto& pos : punctPositions) {
 				positionsToAddLinebreak.push_back(pos.second);
 			}
 		}
-		else if (punctPositions.size() < orgLinebreakCount) {
+		else if (punctPositions.size() < origLinebreakCount) {
 			for (auto& pos : punctPositions) {
 				positionsToAddLinebreak.push_back(pos.second);
 			}
@@ -240,6 +242,6 @@ void TextLinebreakFix::run(Sentence* se)
 		throw std::runtime_error("未知的换行模式: " + m_mode);
 	}
 
-	m_logger->debug("句子[{}]({}行): 修正后译文[{}]({}行)", orgText, orgLinebreakCount + 1, se->pre_translated_text, countSubstring(se->pre_translated_text, se->originalLinebreak) + 1);
+	m_logger->debug("句子[{}]({}行): 修正后译文[{}]({}行)", orgText, origLinebreakCount + 1, se->pre_translated_text, countSubstring(se->pre_translated_text, se->originalLinebreak) + 1);
 }
 

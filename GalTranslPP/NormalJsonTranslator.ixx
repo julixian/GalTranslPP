@@ -4,6 +4,7 @@ module;
 #include <Shlwapi.h>
 #include <boost/regex.hpp>
 #include <spdlog/spdlog.h>
+#pragma comment(lib, "Shlwapi.lib")
 
 export module NormalJsonTranslator;
 
@@ -945,16 +946,16 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
     std::vector<Sentence*> toTranslate;
 
     {
-        std::multimap<std::string, json> cacheMap;
+        std::map<std::string, json> cacheMap;
 
         auto insertCacheMap = [&cacheMap](const json& jsonArr)
             {
                 for (size_t i = 0; i < jsonArr.size(); ++i) {
                     const auto& item = jsonArr[i];
                     std::string prevText = "None", currentText, nextText = "None";
-                    currentText = item.value("name", "") + item.value("pre_processed_text", "");
-                    if (i > 0) prevText = jsonArr[i - 1].value("name", "") + jsonArr[i - 1].value("pre_processed_text", "");
-                    if (i + 1 < jsonArr.size()) nextText = jsonArr[i + 1].value("name", "") + jsonArr[i + 1].value("pre_processed_text", "");
+                    currentText = item.value("name", "") + item.value("original_text", "") + item.value("pre_processed_text", "");
+                    if (i > 0) prevText = jsonArr[i - 1].value("name", "") + jsonArr[i - 1].value("original_text", "") + jsonArr[i - 1].value("pre_processed_text", "");
+                    if (i + 1 < jsonArr.size()) nextText = jsonArr[i + 1].value("name", "") + jsonArr[i + 1].value("original_text", "") + jsonArr[i + 1].value("pre_processed_text", "");
                     cacheMap.insert(std::make_pair(prevText + currentText + nextText, item));
                 }
             };
@@ -1017,7 +1018,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
                 continue;
             }
             std::string key = generateCacheKey(&se);
-            auto it = findSame(cacheMap, key, &se);
+            auto it = cacheMap.find(key);
             if (it == cacheMap.end()) {
                 toTranslate.push_back(&se);
                 continue;
@@ -1036,13 +1037,13 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
             postProcess(&se);
         }
 
-        m_logger->info("[线程 {}] [文件 {}] 共 {} 句，命中缓存 {} 句，需翻译 {} 句。", threadId, wide2Ascii(relInputPath.filename()),
+        m_logger->info("[线程 {}] [文件 {}] 共 {} 句，命中缓存 {} 句，需翻译 {} 句。", threadId, wide2Ascii(relInputPath),
             sentences.size(), sentences.size() - toTranslate.size(), toTranslate.size());
 
         if (m_transEngine == TransEngine::Rebuild && !toTranslate.empty()) {
+            m_logger->critical("[线程 {}] [文件 {}] 有 {} 句未命中缓存，这些句子是: ", threadId, wide2Ascii(relInputPath), toTranslate.size());
             for (auto& se : toTranslate) {
-                m_logger->error("[线程 {}] [文件 {}] 缓存中找不到句子: [{}]，可能是修改了译前词典/分割数目或句子尚未缓存",
-                    threadId, wide2Ascii(relInputPath), se->original_text);
+                m_logger->error("[{}]", se->original_text);
             }
             saveCache(sentences, cachePath);
             m_controller->reduceThreadNum();
@@ -1287,7 +1288,7 @@ void NormalJsonTranslator::run() {
                 json data = json::parse(ifs);
                 ifs.close();
 
-                std::vector<json> parts = splitJsonArray(data, m_splitFileNum);
+                std::vector<json> parts = splitJsonArrayEqual(data, m_splitFileNum);
                 fs::path relWholePath = fs::relative(entry.path(), m_inputDir); // 原始json相对路径
 
                 std::wstring stem = fs::relative(entry.path(), m_inputDir).parent_path() / entry.path().stem();
@@ -1332,7 +1333,7 @@ void NormalJsonTranslator::run() {
                 ifs.close();
 
                 fs::path relWholePath = fs::relative(entry.path(), m_inputDir); // 原始json相对路径
-                std::vector<json> parts = splitJsonArrayByChunkSize(data, m_splitFileNum);
+                std::vector<json> parts = splitJsonArrayNum(data, m_splitFileNum);
 
                 std::wstring stem = fs::relative(entry.path(), m_inputDir).parent_path() / entry.path().stem();
                 for (size_t i = 0; i < parts.size(); ++i) {
@@ -1460,4 +1461,7 @@ void NormalJsonTranslator::run() {
 
     fs::remove_all(m_inputCacheDir);
     fs::remove_all(m_outputCacheDir);
+    if (m_transEngine == TransEngine::Rebuild && m_completedSentences != m_totalSentences) {
+        m_logger->critical("重建过程中有句子未命中缓存，请检查日志以定位问题。");
+    }
 }

@@ -73,6 +73,14 @@ export {
         return tokens;
     }
 
+    std::vector<std::string> splitString(const std::string& s, const std::string& delimiter) {
+        std::vector<std::string> parts;
+        for (const auto& part_view : std::views::split(s, delimiter)) {
+            parts.emplace_back(part_view.begin(), part_view.end());
+        }
+        return parts;
+    }
+
     int getConsoleWidth() {
         CONSOLE_SCREEN_BUFFER_INFO csbi;
         HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -133,15 +141,15 @@ export {
         std::string prev_text = "None";
         const Sentence* temp = s->prev;
         if (temp) {
-            prev_text = temp->name + temp->pre_processed_text;
+            prev_text = temp->name + temp->original_text + temp->pre_processed_text;
         }
 
-        std::string current_text = s->name + s->pre_processed_text;
+        std::string current_text = s->name + s->original_text + s->pre_processed_text;
 
         std::string next_text = "None";
         temp = s->next;
         if (temp) {
-            next_text = temp->name + temp->pre_processed_text;
+            next_text = temp->name + temp->original_text + temp->pre_processed_text;
         }
 
         return prev_text + current_text + next_text;
@@ -414,16 +422,6 @@ export {
             });
     }
 
-    std::multimap<std::string, json>::const_iterator findSame(const std::multimap<std::string, json>& map, const std::string& key, const Sentence* se) {
-        auto range = map.equal_range(key);
-        for (auto it = range.first; it != range.second; ++it) {
-            if (it->second.value("original_text", "") == se->original_text) {
-                return it;
-            }
-        }
-        return map.end();
-    }
-
     std::string cvt2StdApiUrl(const std::string& url) {
         std::string ret = url;
         if (ret.ends_with("/")) {
@@ -511,7 +509,7 @@ export {
     * @param chunkSize 每个小数组包含的元素数量
     * @return 一个包含多个小 JSON 数组的 vector
     */
-    std::vector<json> splitJsonArrayByChunkSize(const json& originalData, int chunkSize) {
+    std::vector<json> splitJsonArrayNum(const json& originalData, int chunkSize) {
         if (chunkSize <= 0 || !originalData.is_array() || originalData.empty()) {
             return { originalData };
         }
@@ -536,7 +534,7 @@ export {
      * @param numParts 要分割成的份数
      * @return 一个包含多个小 JSON 数组的 vector
      */
-    std::vector<json> splitJsonArray(const json& originalData, int numParts) {
+    std::vector<json> splitJsonArrayEqual(const json& originalData, int numParts) {
         if (numParts <= 1 || !originalData.is_array() || originalData.empty()) {
             return { originalData };
         }
@@ -648,7 +646,7 @@ export {
         icu::UnicodeString uString = icu::UnicodeString::fromUTF8(sourceString);
 
         std::unique_ptr<icu::BreakIterator> breakIterator(
-            icu::BreakIterator::createCharacterInstance(icu::Locale::getDefault(), errorCode)
+            icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
         );
 
         if (U_FAILURE(errorCode)) {
@@ -679,6 +677,7 @@ export {
         return count;
     }
 
+    // 计算的是子串在删去子串后的主串中出现的位置
     std::vector<double> getSubstringPositions(const std::string& text, const std::string& sub) {
         if (text.empty() || sub.empty()) return {};
         std::vector<size_t> positions;
@@ -828,7 +827,9 @@ export {
             }
             else {
                 zip_file* zf = zip_fopen_index(za, i, 0);
-                if (!zf) continue;
+                if (!zf) {
+                    throw std::runtime_error(std::format("Failed to open file in zip archive: {}, file: {}", wide2Ascii(zipPath), zs.name));
+                }
                 std::vector<char> buffer(zs.size);
                 zip_fread(zf, buffer.data(), zs.size);
                 zip_fclose(zf);

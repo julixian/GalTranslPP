@@ -88,6 +88,9 @@ std::string chooseString(const Sentence* sentence, CachePart tar) {
     case CachePart::Name:
         return sentence->name;
         break;
+    case CachePart::NamePreview:
+        return sentence->name_preview;
+        break;
     case CachePart::OrigText:
         return sentence->original_text;
         break;

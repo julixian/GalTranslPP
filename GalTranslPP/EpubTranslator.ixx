@@ -299,36 +299,9 @@ void EpubTranslator::run()
         // 解压 EPUB 文件
         m_logger->debug("解压 {} 到 {}", wide2Ascii(epubPath), wide2Ascii(bookUnpackPath));
         fs::create_directories(bookUnpackPath);
-        int error = 0;
-        zip* za = zip_open(wide2Ascii(epubPath).c_str(), 0, &error);
-        if (!za) { 
-            throw std::runtime_error("无法打开 EPUB 文件: " + wide2Ascii(epubPath));
+        if (!extractZip(epubPath, bookUnpackPath)) {
+            throw std::runtime_error(std::format("解压 {} 失败，无法打开文件", wide2Ascii(epubPath)));
         }
-        zip_int64_t num_entries = zip_get_num_entries(za, 0);
-        std::ofstream ofs;
-        for (zip_int64_t i = 0; i < num_entries; i++) {
-            zip_stat_t zs;
-            zip_stat_index(za, i, 0, &zs);
-            fs::path outpath = bookUnpackPath / ascii2Wide(zs.name);
-            if (zs.name[strlen(zs.name) - 1] == '/') {
-                fs::create_directories(outpath);
-            }
-            else {
-                zip_file* zf = zip_fopen_index(za, i, 0);
-                if (!zf) {
-                    throw std::runtime_error("Epub 文件解压失败: " + wide2Ascii(epubPath));
-                }
-                std::vector<char> buffer(zs.size);
-                zip_fread(zf, buffer.data(), zs.size);
-                zip_fclose(zf);
-                fs::create_directories(outpath.parent_path());
-                ofs.open(outpath, std::ios::binary);
-                ofs.write(buffer.data(), buffer.size());
-                ofs.close();
-            }
-        }
-        zip_close(za);
-
 
         // 从html中提取json和元数据
         createParent(bookRebuildPath);
@@ -370,6 +343,7 @@ void EpubTranslator::run()
                 std::vector<EpubTextNodeInfo> metadata;
                 json j = json::array();
                 for (const auto& p : sentences) {
+                    // TODO: 添加可选正则区分 name 和 message
                     j.push_back({ {"name", ""}, {"message", p.first} });
                     metadata.push_back(p.second);
                 }

@@ -65,7 +65,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const 
 
     sentence->problem.clear();
     std::vector<std::string> problemList;
-    const std::string& origText = sentence->original_text;
+    const std::string& origText = sentence->pre_processed_text;
     const std::string& transView = sentence->translated_preview;
 
     // 1. 词频过高
@@ -124,7 +124,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const 
         double lenBeta = m_problems.strictlyLonger ? 1.0 : 1.3;
         if (transView.length() > origText.length() * lenBeta && !origText.empty()) {
             double ratio = transView.length() / (double)origText.length();
-            problemList.push_back(std::format("比日文长 {:.1f} 倍", ratio));
+            problemList.push_back(std::format("比日文长 {:.2f} 倍", ratio));
         }
     }
 

@@ -252,7 +252,7 @@ void MainWindow::initContent()
     connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey) 
         {
             if (_transIllustrationKey == nodeKey) {
-                QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/trans.html"));
+                QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/foundation.html"));
             }
             else if (_aboutKey == nodeKey)
             {
@@ -483,6 +483,7 @@ void MainWindow::_on_removeProject_triggered()
 
     connect(&helpDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
         {
+            QString projectName = it->get()->getProjectName();
             it->get()->apply2Config();
             removeNavigationNode(pageKey);
             _projectPages.erase(it);
@@ -494,7 +495,7 @@ void MainWindow::_on_removeProject_triggered()
                     this->navigation(_projectPages.back()->property("ElaPageKey").toString());
                 }
             }
-            ElaMessageBar::success(ElaMessageBarType::TopRight, "移除成功", "项目 " + it->get()->getProjectName() + " 已从项目管理中移除！", 3000);
+            ElaMessageBar::success(ElaMessageBarType::TopRight, "移除成功", "项目 " + projectName + " 已从项目管理中移除！", 3000);
         });
     helpDialog.exec();
 }
@@ -532,6 +533,7 @@ void MainWindow::_on_deleteProject_triggered()
     connect(&helpDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
         {
             fs::path projectDir = it->get()->getProjectDir();
+            QString projectName = it->get()->getProjectName();
             try {
                 fs::remove_all(projectDir);
             }
@@ -549,7 +551,7 @@ void MainWindow::_on_deleteProject_triggered()
                     this->navigation(_projectPages.back()->property("ElaPageKey").toString());
                 }
             }
-            ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "项目 " + it->get()->getProjectName() + " 已从项目管理和磁盘中移除！", 3000);
+            ElaMessageBar::success(ElaMessageBarType::TopRight, "删除成功", "项目 " + projectName + " 已从项目管理和磁盘中移除！", 3000);
         });
     helpDialog.exec();
 }

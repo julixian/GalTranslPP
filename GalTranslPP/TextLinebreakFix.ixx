@@ -52,6 +52,8 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& projectDir, std::shared_ptr<s
 		if (m_segmentThreshold <= 0) {
 			throw std::runtime_error("分段字数阈值必须大于0");
 		}
+
+		m_logger->info("已加载插件 TextLinebreakFix, 换行模式: {}, 分段字数阈值: {}, 强制修复: {}", m_mode, m_segmentThreshold, m_forceFix);
 	}
 	catch (const toml::parse_error& e) {
 		m_logger->critical("换行修复配置文件解析错误: {}", e.description());

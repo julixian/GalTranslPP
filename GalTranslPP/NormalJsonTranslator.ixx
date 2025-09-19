@@ -188,22 +188,28 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
                 {
                     TranslationAPI translationAPI;
                     if constexpr (toml::is_table<decltype(el)>) {
-                        if (auto value = el["apikey"].value<std::string>()) {
+                        if (auto value = el["apikey"].value<std::string>(); !((*value).empty())) {
                             translationAPI.apikey = *value;
                         }
-                        else if (m_transEngine != TransEngine::Sakura) {
+                        else if (m_transEngine == TransEngine::Sakura) {
+                            translationAPI.apikey = "sk-sakura";
+                        }
+                        else{
                             return;
                         }
-                        if (auto value = el["apiurl"].value<std::string>()) {
+                        if (auto value = el["apiurl"].value<std::string>(); !((*value).empty())) {
                             translationAPI.apiurl = cvt2StdApiUrl(value.value());
                         }
                         else {
                             return;
                         }
-                        if (auto value = el["modelName"].value<std::string>()) {
+                        if (auto value = el["modelName"].value<std::string>(); !((*value).empty())) {
                             translationAPI.modelName = *value;
                         }
-                        else if (m_transEngine != TransEngine::Sakura) {
+                        else if (m_transEngine == TransEngine::Sakura) {
+                            translationAPI.modelName = "sakura";
+                        }
+                        else{
                             return;
                         }
                         translationAPI.stream = el["stream"].value_or(false);
@@ -220,6 +226,17 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, std::shar
             }
         }
 
+        auto textPrePlugins = configData["plugins"]["textPrePlugins"].as_array();
+        if (textPrePlugins) {
+            std::vector<std::string> pluginNames;
+            textPrePlugins->for_each([&](auto&& el)
+                {
+                    if constexpr (toml::is_string<decltype(el)>) {
+                        pluginNames.push_back(*el);
+                    }
+                });
+            m_prePlugins = registerPlugins(pluginNames, m_projectDir, m_logger);
+        }
 
         // 集中的插件配置
         auto textPostPlugins = configData["plugins"]["textPostPlugins"].as_array();
@@ -467,6 +484,9 @@ void NormalJsonTranslator::preProcess(Sentence* se) {
 
     for (const auto& plugin : m_prePlugins) {
         plugin->run(se);
+        if (se->complete) {
+            break;
+        }
     }
 
 }
@@ -682,6 +702,8 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
     return false;
 }
 
+
+// ============================================        processFile        ========================================
 void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) {
     if (m_controller->shouldStop()) {
         return;

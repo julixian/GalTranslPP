@@ -2,7 +2,7 @@
 
 ![GalTransl++ GUI](https://github.com/julixian/GalTranslPP/blob/master/img/GalTranslPP.png?raw=true)
 
-**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl) 以项目为基本的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量透明的、拥有高度且方便的扩展能力的翻译核心。
+**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量透明的、拥有高度且方便的扩展能力的翻译核心。
 
 **GalTransl++ GUI** 是包装了GalTransl++核心的，以 `在GUI下尽可能保持高度自定义` 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。
 

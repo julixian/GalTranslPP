@@ -4,8 +4,3 @@
 # replaceStr = "めちゃくちゃ"
 # priority = 50
 # 详细语法规范请参考通用字典
-
-[[normalDict]]
-searchStr = "\t"
-replaceStr = "[t]"
-priority = 9999

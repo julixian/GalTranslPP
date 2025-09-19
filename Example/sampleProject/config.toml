@@ -3,9 +3,9 @@ apiStrategy = "random" # 令牌策略，random随机轮询，fallback优先第�
 apiTimeout = 60 # 请求超时时间，单位秒
 
   [[backendSpecific.OpenAI-Compatible.apis]]
-  apikey = "sk-example-key"
+  apikey = "sk-example-key"             # sakura引擎可不填
   apiurl = "https://openai-example.com" # 请求地址，加不加/v1都行
-  modelName = "modelName"
+  modelName = "modelName"               # sakura引擎可不填
   stream = false
 
 [plugins]
@@ -93,8 +93,8 @@ problemList = [
   "字典未使用",
 
   "残留日文",
-  #"引入拉丁字母",
-  #"引入韩文",
+  "引入拉丁字母",
+  "引入韩文",
   "语言不通",
 ]
 

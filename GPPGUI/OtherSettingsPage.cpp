@@ -99,7 +99,7 @@ void OtherSettingsPage::_setupUI()
 	ElaText* saveLabel = new ElaText(saveArea);
 	ElaToolTip* saveTip = new ElaToolTip(saveLabel);
 	saveTip->setToolTip("开始翻译或关闭程序时会自动保存所有项目的配置，一般无需手动保存。");
-	saveLabel->setText("保存配置");
+	saveLabel->setText("保存项目配置");
 	saveLabel->setTextPixelSize(16);
 	saveLayout->addWidget(saveLabel);
 	saveLayout->addStretch();
@@ -112,6 +112,26 @@ void OtherSettingsPage::_setupUI()
 		});
 	saveLayout->addWidget(saveButton);
 	mainLayout->addWidget(saveArea);
+
+
+	// 刷新项目配置
+	ElaScrollPageArea* refreshArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* refreshLayout = new QHBoxLayout(refreshArea);
+	ElaText* refreshLabel = new ElaText("刷新项目配置", refreshArea);
+	refreshLabel->setTextPixelSize(16);
+	refreshLabel->setWordWrap(false);
+	ElaToolTip* refreshTip = new ElaToolTip(refreshLabel);
+	refreshTip->setToolTip("将刷新现有配置和字典，谨慎使用。");
+	refreshLayout->addWidget(refreshLabel);
+	refreshLayout->addStretch();
+	ElaPushButton* refreshButton = new ElaPushButton(refreshArea);
+	refreshButton->setText("刷新");
+	connect(refreshButton, &ElaPushButton::clicked, this, [=]()
+		{
+			Q_EMIT refreshProjectConfigSignal();
+		});
+	refreshLayout->addWidget(refreshButton);
+	mainLayout->addWidget(refreshArea);
 	
 	mainLayout->addStretch();
 	addCentralWidget(mainWidget, true, true, 0);

@@ -9,8 +9,3 @@
 # 含义是如果 orig_text 中含有 人妻 或 ひとづま，则将 pre_translated_text 中的 有夫之妇 替换为 人妻
 # 译后字典会搜索并替换 pre_translated_text 以供 translated_preview 最终输出
 # 详细语法规范请参考通用字典
-
-[[normalDict]]
-searchStr = "[t]"
-replaceStr = "\t"
-priority = 9999

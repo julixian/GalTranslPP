@@ -19,6 +19,7 @@ export import std;
 import ITranslator;
 
 using json = nlohmann::json;
+using ordered_json = nlohmann::ordered_json;
 namespace fs = std::filesystem;
 
 export {
@@ -261,10 +262,217 @@ export {
         return history;
     }
 
+    void fillBlockAndMap(const std::vector<Sentence*>& batchToTransThisRound, std::map<int, Sentence*>& id2SentenceMap, std::string& inputBlock, TransEngine transEngine) {
+        switch (transEngine) {
+        case TransEngine::ForGalTsv: {
+            for (const auto& pSentence : batchToTransThisRound) {
+                std::string name = pSentence->name.empty() ? "null" : pSentence->name;
+                inputBlock += name + "\t" + pSentence->pre_processed_text + "\t" + std::to_string(pSentence->index) + "\n";
+                id2SentenceMap[pSentence->index] = pSentence;
+            }
+            break;
+        }
+        case TransEngine::ForNovelTsv: {
+            for (const auto& pSentence : batchToTransThisRound) {
+                inputBlock += pSentence->pre_processed_text + "\t" + std::to_string(pSentence->index) + "\n";
+                id2SentenceMap[pSentence->index] = pSentence;
+            }
+            break;
+        }
+
+        case TransEngine::ForGalJson:
+        case TransEngine::DeepseekJson:
+            for (const auto& pSentence : batchToTransThisRound) {
+                json item;
+                item["id"] = pSentence->index;
+                if (!pSentence->name.empty()) item["name"] = pSentence->name;
+                item["src"] = pSentence->pre_processed_text;
+                inputBlock += item.dump() + "\n";
+                id2SentenceMap[pSentence->index] = pSentence;
+            }
+            break;
+
+        case TransEngine::Sakura:
+            for (const auto& pSentence : batchToTransThisRound) {
+                if (!pSentence->name.empty()) {
+                    inputBlock += pSentence->name + ":::::" + pSentence->pre_processed_text + "\n";
+                }
+                else {
+                    inputBlock += pSentence->pre_processed_text + "\n";
+                }
+            }
+            inputBlock.pop_back(); // 移除最后一个换行符
+            break;
+        default:
+            throw std::runtime_error("不支持的 TransEngine 用于构建输入");
+        }
+    }
+
+    void parseContent(std::string& content, std::vector<Sentence*>& batchToTransThisRound, std::map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
+        TransEngine transEngine, bool& parseError, int& parsedCount, std::shared_ptr<IController> controller, int& completedSentences) {
+        if (content.find("</think>") != std::string::npos) {
+            content = content.substr(content.find("</think>") + 8);
+        }
+        switch (transEngine) {
+        case TransEngine::ForGalTsv: 
+        {
+            size_t start = content.find("NAME\tDST\tID");
+            if (start == std::string::npos) {
+                parseError = true;
+                break;
+            }
+
+            std::stringstream ss(content.substr(start));
+            std::string line;
+            std::getline(ss, line); // Skip header
+
+            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
+                if (line.empty() || line.find("```") != std::string::npos) continue;
+                auto parts = splitString(line, '\t');
+                if (parts.size() < 3) {
+                    parseError = true;
+                    continue;
+                }
+                try {
+                    int id = std::stoi(parts[2]);
+                    if (id2SentenceMap.count(id)) {
+                        if (parts[1].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
+                        id2SentenceMap[id]->pre_translated_text = parts[1];
+                        id2SentenceMap[id]->translated_by = modelName;
+                        id2SentenceMap[id]->complete = true;
+                        completedSentences++;
+                        controller->updateBar(); // ForGalTsv
+                        parsedCount++;
+                    }
+                }
+                catch (...) {
+                    parseError = true;
+                    continue;
+                }
+            }
+
+        }
+        break;
+
+        case TransEngine::ForNovelTsv:
+        {
+            size_t start = content.find("DST\tID"); // or DST\tID
+            if (start == std::string::npos) {
+                parseError = true;
+                break;
+            }
+
+            std::stringstream ss(content.substr(start));
+            std::string line;
+            std::getline(ss, line); // Skip header
+
+            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
+                if (line.empty() || line.find("```") != std::string::npos) continue;
+                auto parts = splitString(line, '\t');
+                if (parts.size() < 2) {
+                    parseError = true;
+                    continue;
+                }
+                try {
+                    int id = std::stoi(parts[1]);
+                    if (id2SentenceMap.count(id)) {
+                        if (parts[0].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
+                        id2SentenceMap[id]->pre_translated_text = parts[0];
+                        id2SentenceMap[id]->translated_by = modelName;
+                        id2SentenceMap[id]->complete = true;
+                        completedSentences++;
+                        controller->updateBar(); // ForNovelTsv
+                        parsedCount++;
+                    }
+                }
+                catch (...) {
+                    parseError = true;
+                    continue;
+                }
+            }
+        }
+        break;
+
+        case TransEngine::ForGalJson:
+        case TransEngine::DeepseekJson:
+        {
+            size_t start = std::min(content.find("{\"id\""), content.find("{\"dst\""));
+            if (start == std::string::npos) {
+                parseError = true;
+                break;
+            }
+
+            std::stringstream ss(content.substr(start));
+            std::string line;
+            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
+                if (line.empty() || !line.starts_with('{')) continue;
+                try {
+                    json item = json::parse(line);
+                    int id = item.at("id");
+                    if (id2SentenceMap.count(id)) {
+                        if (item.at("dst").empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
+                            parseError = true;
+                            continue;
+                        }
+                        id2SentenceMap[id]->pre_translated_text = item.at("dst");
+                        id2SentenceMap[id]->translated_by = modelName;
+                        id2SentenceMap[id]->complete = true;
+                        completedSentences++;
+                        controller->updateBar(); // ForGalJson/DeepseekJson
+                        parsedCount++;
+                    }
+                }
+                catch (...) {
+                    parseError = true;
+                    continue;
+                }
+            }
+        }
+        break;
+
+        case TransEngine::Sakura:
+        {
+            auto lines = splitString(content, '\n');
+            // 核心检查：行数是否匹配
+            if (lines.size() != batchToTransThisRound.size()) {
+                parseError = true;
+                break;
+            }
+
+            for (size_t i = 0; i < lines.size(); ++i) {
+                std::string translatedLine = lines[i];
+                Sentence* currentSentence = batchToTransThisRound[i];
+
+                // 尝试剥离说话人
+                if (!currentSentence->name.empty() && translatedLine.find(":::::") != std::string::npos) {
+                    size_t msgStart = translatedLine.find(":::::");
+                    translatedLine = translatedLine.substr(msgStart + 5);
+                }
+
+                currentSentence->pre_translated_text = translatedLine;
+                currentSentence->translated_by = modelName;
+                currentSentence->complete = true;
+                completedSentences++;
+                controller->updateBar(); // Sakura
+                parsedCount++;
+            }
+        }
+        break;
+        default:
+            throw std::runtime_error("不支持的 TransEngine 用于解析输出");
+        }
+    }
+
     void combineOutputFiles(const fs::path& originalRelFilePath, const std::map<fs::path, bool>& splitFileParts,
         std::shared_ptr<spdlog::logger> logger, const fs::path& outputCacheDir, const fs::path& outputDir) {
 
-        json combinedJson = json::array();
+        ordered_json combinedJson = ordered_json::array();
 
         std::ifstream ifs;
         logger->debug("开始合并文件: {}", wide2Ascii(originalRelFilePath));
@@ -291,7 +499,7 @@ export {
             if (fs::exists(partPath)) {
                 try {
                     ifs.open(partPath);
-                    json partData = json::parse(ifs);
+                    ordered_json partData = ordered_json::parse(ifs);
                     ifs.close();
                     combinedJson.insert(combinedJson.end(), partData.begin(), partData.end());
                 }

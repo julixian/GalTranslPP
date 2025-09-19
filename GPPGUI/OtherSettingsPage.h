@@ -18,6 +18,7 @@ public:
 
 Q_SIGNALS:
     void saveConfigSignal();
+    void refreshProjectConfigSignal();
 
 private:
 

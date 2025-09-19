@@ -96,12 +96,12 @@ void ProjectSettingsPage::_setupUI()
     QWidget* navigationWidget = new QWidget(this);
     navigationWidget->setContentsMargins(0, 0, 0, 0);
     QHBoxLayout* navigationLayout = new QHBoxLayout(navigationWidget);
-    ElaText* settingsTitle = new ElaText("API设置", navigationWidget);
-    settingsTitle->setContentsMargins(0, 10, 0, 0);
-    settingsTitle->setTextPixelSize(18);
-    settingsTitle->setFixedWidth(85);
+    _settingsTitle = new ElaText("API设置", navigationWidget);
+    _settingsTitle->setContentsMargins(0, 10, 0, 0);
+    _settingsTitle->setTextPixelSize(18);
+    _settingsTitle->setFixedWidth(85);
     navigationLayout->addSpacing(30);
-    navigationLayout->addWidget(settingsTitle);
+    navigationLayout->addWidget(_settingsTitle);
     navigationLayout->addStretch();
 
     ElaMenu* foundamentalSettingMenu = new ElaMenu(navigationWidget);
@@ -155,37 +155,37 @@ void ProjectSettingsPage::_setupUI()
     connect(apiSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(0);
-            settingsTitle->setText("API设置");
+            _settingsTitle->setText("API设置");
         });
     connect(commonSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(1);
-            settingsTitle->setText("一般设置");
+            _settingsTitle->setText("一般设置");
         });
     connect(paSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(2);
-            settingsTitle->setText("问题分析");
+            _settingsTitle->setText("问题分析");
         });
     connect(nameTableSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(3);
-            settingsTitle->setText("人名表");
+            _settingsTitle->setText("人名表");
         });
     connect(dictSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(4);
-            settingsTitle->setText("项目字典");
+            _settingsTitle->setText("项目字典");
         });
     connect(dictExSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(5);
-            settingsTitle->setText("字典设置");
+            _settingsTitle->setText("字典设置");
         });
     connect(promptSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(6);
-            settingsTitle->setText("提示词");
+            _settingsTitle->setText("提示词");
         });
     connect(pluginSettingAction, &QAction::triggered, this, [=]()
         {
@@ -193,7 +193,7 @@ void ProjectSettingsPage::_setupUI()
                 pageNavigation();
             }
             _stackedWidget->setCurrentIndex(7);
-            settingsTitle->setText("插件管理");
+            _settingsTitle->setText("插件管理");
         });
     connect(startTransAction, &QAction::triggered, this, [=]()
         {
@@ -201,12 +201,12 @@ void ProjectSettingsPage::_setupUI()
                 pageNavigation();
             }
             _stackedWidget->setCurrentIndex(8);
-            settingsTitle->setText("开始翻译");
+            _settingsTitle->setText("开始翻译");
         });
     connect(otherSettingAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(9);
-            settingsTitle->setText("其他设置");
+            _settingsTitle->setText("其他设置");
         });
 
     mainLayout->addWidget(navigationWidget);
@@ -241,10 +241,35 @@ void ProjectSettingsPage::_createPages()
 
     connect(_startSettingsPage, &StartSettingsPage::startTranslating, this, &ProjectSettingsPage::_onStartTranslating);
     connect(_startSettingsPage, &StartSettingsPage::finishTranslating, this, &ProjectSettingsPage::_onFinishTranslating);
-    connect(_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, [=]()
-        {
-            this->apply2Config();
-        });
+    connect(_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, &ProjectSettingsPage::apply2Config);
+    connect(_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::_refreshProjectConfig);
+}
+
+void ProjectSettingsPage::_refreshProjectConfig()
+{
+    bool isRunning = _projectConfig["GUIConfig"]["isRunning"].value_or(true);
+    if (isRunning) {
+        ElaMessageBar::error(ElaMessageBarType::TopLeft, "正在翻译", "项目仍在运行中，无法刷新配置", 3000);
+        return;
+    }
+    std::ifstream ifs(_projectDir / L"config.toml");
+    try {
+        _projectConfig = toml::parse(ifs);
+    }
+    catch (...) {
+        ElaMessageBar::error(ElaMessageBarType::TopLeft, "解析失败", "项目 " + QString(_projectDir.filename().wstring()) + " 的配置文件不符合规范", 3000);
+        return;
+    }
+    ifs.close();
+    insertToml(_projectConfig, "GUIConfig.isRunning", false);
+    while (_stackedWidget->count() > 0) {
+        QWidget* widget = _stackedWidget->currentWidget();
+        _stackedWidget->removeWidget(widget);
+        widget->deleteLater();
+    }
+    _createPages();
+    _stackedWidget->setCurrentIndex(9);
+    ElaMessageBar::success(ElaMessageBarType::TopRight, "刷新成功", "项目配置刷新成功", 3000);
 }
 
 void ProjectSettingsPage::_onStartTranslating()

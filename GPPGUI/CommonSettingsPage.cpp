@@ -328,7 +328,7 @@ void CommonSettingsPage::_setupUI()
 	ElaText* linebreakText = new ElaText("本项目所使用的换行符", mainWidget);
 	linebreakText->setTextPixelSize(18);
 	ElaToolTip* linebreakTip = new ElaToolTip(linebreakText);
-	linebreakTip->setToolTip("将换行符统一规范为 <br> ，具体替换时机详见使用说明，auto为自动检测");
+	linebreakTip->setToolTip("将换行符统一规范为 <br> 以方便检错和修复，具体替换时机详见使用说明，auto为自动检测");
 	mainLayout->addWidget(linebreakText);
 	ElaPlainTextEdit* linebreakEdit = new ElaPlainTextEdit(mainWidget);
 	linebreakEdit->setPlainText(linebreakSymbolStr);

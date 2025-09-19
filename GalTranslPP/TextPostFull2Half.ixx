@@ -170,5 +170,5 @@ std::string TextPostFull2Half::convertText(const std::string& text) {
 }
 
 void TextPostFull2Half::run(Sentence* se) {
-    se->pre_translated_text = convertText(se->pre_translated_text);
+    se->translated_preview = convertText(se->translated_preview);
 }

@@ -460,6 +460,7 @@ void NormalJsonTranslator::preProcess(Sentence* se) {
     if (!se->originalLinebreak.empty()) {
         replaceStrInplace(se->pre_processed_text, se->originalLinebreak, "<br>");
     }
+    replaceStrInplace(se->pre_processed_text, "\t", "<tab>");
     if (m_usePreDictInMsg) {
         se->pre_processed_text = m_preDictionary.doReplace(se, CachePart::PreprocText);
     }
@@ -482,6 +483,7 @@ void NormalJsonTranslator::postProcess(Sentence* se) {
     if (m_usePostDictInMsg) {
         se->translated_preview = m_postDictionary.doReplace(se, CachePart::TransPreview);
     }
+    replaceStrInplace(se->translated_preview, "<tab>", "\t");
     if (!se->originalLinebreak.empty()) {
         replaceStrInplace(se->translated_preview, "<br>", se->originalLinebreak);
     }
@@ -556,60 +558,19 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
             contextHistory.clear();
         }
 
-        std::string inputBlock;
-        std::string inputProblems;
-        std::map<int, Sentence*> id2SentenceMap; // 用于 TSV/JSON 
 
+        std::string inputProblems;
         for (auto pSentence : batchToTransThisRound) {
             if (!pSentence->problem.empty() && inputProblems.find(pSentence->problem) == std::string::npos) {
                 inputProblems += pSentence->problem + "\n";
             }
         }
-        switch (m_transEngine) {
-        case TransEngine::ForGalTsv: {
-            for (const auto& pSentence : batchToTransThisRound) {
-                std::string name = pSentence->name.empty() ? "null" : pSentence->name;
-                inputBlock += name + "\t" + pSentence->pre_processed_text + "\t" + std::to_string(pSentence->index) + "\n";
-                id2SentenceMap[pSentence->index] = pSentence;
-            }
-            break;
-        }
-        case TransEngine::ForNovelTsv: {
-            for (const auto& pSentence : batchToTransThisRound) {
-                inputBlock += pSentence->pre_processed_text + "\t" + std::to_string(pSentence->index) + "\n";
-                id2SentenceMap[pSentence->index] = pSentence;
-            }
-            break;
-        }
 
-        case TransEngine::ForGalJson:
-        case TransEngine::DeepseekJson:
-            for (const auto& pSentence : batchToTransThisRound) {
-                json item;
-                item["id"] = pSentence->index;
-                if (!pSentence->name.empty()) item["name"] = pSentence->name;
-                item["src"] = pSentence->pre_processed_text;
-                inputBlock += item.dump() + "\n";
-                id2SentenceMap[pSentence->index] = pSentence;
-            }
-            break;
+        std::string inputBlock;
+        std::map<int, Sentence*> id2SentenceMap; // 用于 TSV/JSON 
+        fillBlockAndMap(batchToTransThisRound, id2SentenceMap, inputBlock, m_transEngine);
 
-        case TransEngine::Sakura:
-            for (const auto& pSentence : batchToTransThisRound) {
-                if (!pSentence->name.empty()) {
-                    inputBlock += pSentence->name + ":::::" + pSentence->pre_processed_text + "\n";
-                }
-                else {
-                    inputBlock += pSentence->pre_processed_text + "\n";
-                }
-            }
-            inputBlock.pop_back(); // 移除最后一个换行符
-            break;
-        default:
-            throw std::runtime_error("不支持的 TransEngine 用于构建输入");
-        }
-
-        m_logger->info("[线程 {}] [文件 {}] 开始翻译\nProblems:\n{}\nDict:\n{}\ninputBlock:\n{}", threadId, wide2Ascii(relInputPath.filename()), inputProblems, glossary, inputBlock);
+        m_logger->info("[线程 {}] [文件 {}] 开始翻译\nProblems:\n{}\nDict:\n{}\ninputBlock:\n{}", threadId, wide2Ascii(relInputPath), inputProblems, glossary, inputBlock);
         std::string promptReq = m_userPrompt;
         promptReq = boost::regex_replace(promptReq, boost::regex(R"(\[Problem Description\])"), inputProblems);
         promptReq = boost::regex_replace(promptReq, boost::regex(R"(\[Input\])"), inputBlock);
@@ -691,166 +652,12 @@ bool NormalJsonTranslator::translateBatchWithRetry(const fs::path& relInputPath,
 
         // --- 如果请求成功，则继续解析 ---
         std::string content = response.content;
-        m_logger->info("[线程 {}] [文件 {}] 成功响应，解析结果: \n{}", threadId, wide2Ascii(relInputPath.filename()), content);
+        m_logger->info("[线程 {}] [文件 {}] 成功响应，解析结果: \n{}", threadId, wide2Ascii(relInputPath), content);
         int parsedCount = 0;
         bool parseError = false;
 
-        if (content.find("</think>") != std::string::npos) {
-            content = content.substr(content.find("</think>") + 8);
-        }
-        switch (m_transEngine) {
-        case TransEngine::ForGalTsv: {
-            size_t start = content.find("NAME\tDST\tID");
-            if (start == std::string::npos) {
-                parseError = true;
-                break;
-            }
-
-            std::stringstream ss(content.substr(start));
-            std::string line;
-            std::getline(ss, line); // Skip header
-
-            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
-                if (line.empty() || line.find("```") != std::string::npos) continue;
-                auto parts = splitString(line, '\t');
-                if (parts.size() < 3) {
-                    parseError = true;
-                    continue;
-                }
-                try {
-                    int id = std::stoi(parts[2]);
-                    if (id2SentenceMap.count(id)) {
-                        if (parts[1].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
-                            parseError = true;
-                            continue;
-                        }
-                        id2SentenceMap[id]->pre_translated_text = parts[1];
-                        id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->complete = true;
-                        m_completedSentences++;
-                        m_controller->updateBar(); // ForGalTsv
-                        parsedCount++;
-                    }
-                }
-                catch (...) {
-                    parseError = true;
-                    continue;
-                }
-            }
-
-        }
-                                   break;
-
-        case TransEngine::ForNovelTsv:
-        {
-            size_t start = content.find("DST\tID"); // or DST\tID
-            if (start == std::string::npos) {
-                parseError = true;
-                break;
-            }
-
-            std::stringstream ss(content.substr(start));
-            std::string line;
-            std::getline(ss, line); // Skip header
-
-            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
-                if (line.empty() || line.find("```") != std::string::npos) continue;
-                auto parts = splitString(line, '\t');
-                if (parts.size() < 2) {
-                    parseError = true;
-                    continue;
-                }
-                try {
-                    int id = std::stoi(parts[1]);
-                    if (id2SentenceMap.count(id)) {
-                        if (parts[0].empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
-                            parseError = true;
-                            continue;
-                        }
-                        id2SentenceMap[id]->pre_translated_text = parts[0];
-                        id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->complete = true;
-                        m_completedSentences++;
-                        m_controller->updateBar(); // ForNovelTsv
-                        parsedCount++;
-                    }
-                }
-                catch (...) {
-                    parseError = true;
-                    continue;
-                }
-            }
-        }
-        break;
-
-        case TransEngine::ForGalJson:
-        case TransEngine::DeepseekJson:
-        {
-            size_t start = std::min(content.find("{\"id\""), content.find("{\"dst\""));
-            if (start == std::string::npos) {
-                parseError = true;
-                break;
-            }
-
-            std::stringstream ss(content.substr(start));
-            std::string line;
-            while (parsedCount < batchToTransThisRound.size() && std::getline(ss, line)) {
-                if (line.empty() || !line.starts_with('{')) continue;
-                try {
-                    json item = json::parse(line);
-                    int id = item.at("id");
-                    if (id2SentenceMap.count(id)) {
-                        if (item.at("dst").empty() && !id2SentenceMap[id]->pre_processed_text.empty()) {
-                            parseError = true;
-                            continue;
-                        }
-                        id2SentenceMap[id]->pre_translated_text = item.at("dst");
-                        id2SentenceMap[id]->translated_by = currentAPI.modelName;
-                        id2SentenceMap[id]->complete = true;
-                        m_completedSentences++;
-                        m_controller->updateBar(); // ForGalJson/DeepseekJson
-                        parsedCount++;
-                    }
-                }
-                catch (...) {
-                    parseError = true;
-                    continue;
-                }
-            }
-        }
-        break;
-
-        case TransEngine::Sakura:
-        {
-            auto lines = splitString(content, '\n');
-            // 核心检查：行数是否匹配
-            if (lines.size() != batchToTransThisRound.size()) {
-                parseError = true;
-                break;
-            }
-
-            for (size_t i = 0; i < lines.size(); ++i) {
-                std::string translatedLine = lines[i];
-                Sentence* currentSentence = batchToTransThisRound[i];
-
-                // 尝试剥离说话人
-                if (!currentSentence->name.empty() && translatedLine.find(":::::") != std::string::npos) {
-                    size_t msgStart = translatedLine.find(":::::");
-                    translatedLine = translatedLine.substr(msgStart + 5);
-                }
-
-                currentSentence->pre_translated_text = translatedLine;
-                currentSentence->translated_by = currentAPI.modelName;
-                currentSentence->complete = true;
-                m_completedSentences++;
-                m_controller->updateBar(); // Sakura
-                parsedCount++;
-            }
-        }
-        break;
-        default:
-            throw std::runtime_error("不支持的 TransEngine 用于解析输出");
-        }
+        parseContent(content, batchToTransThisRound, id2SentenceMap, currentAPI.modelName, m_transEngine, parseError, parsedCount,
+            m_controller, m_completedSentences);
 
         if (parseError || parsedCount != batchToTransThisRound.size()) {
             retryCount++;
@@ -889,9 +696,6 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
     fs::path showNormalPath = m_projectDir / L"gt_show_normal" / relInputPath;
     createParent(outputPath);
     createParent(cachePath);
-    if (m_transEngine == TransEngine::ShowNormal) {
-        createParent(showNormalPath);
-    }
 
     std::vector<Sentence> sentences;
     try {
@@ -938,6 +742,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
             m_completedSentences++;
             m_controller->updateBar(); // ShowNormal
         }
+        createParent(showNormalPath);
         std::ofstream ofs(showNormalPath);
         ofs << showNormalJson.dump(2);
         return;
@@ -962,7 +767,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
 
         std::vector<fs::path> cachePaths;
         if (m_needsCombining && m_transEngine != TransEngine::Rebuild) {
-            // 这个逻辑非常耗时
+            // 这个逻辑还挺耗时的
             size_t pos = relInputPath.filename().wstring().rfind(L"_part_");
             std::wstring orgStem = relInputPath.filename().wstring().substr(0, pos);
             std::wstring cacheSpec = orgStem + L"_part_*.json";
@@ -1105,17 +910,17 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
         }
     }
 
-    json outputJson = json::array();
-    for (auto& se : sentences) {
-        ordered_json item;
+    ordered_json outputJson = ordered_json::array();
+    for (const auto& se : sentences) {
+        ordered_json obj;
         if (se.hasName) {
-            item["name"] = se.name_preview;
+            obj["name"] = se.name_preview;
         }
-        item["message"] = se.translated_preview;
+        obj["message"] = se.translated_preview;
         if (m_outputWithSrc) {
-            item["src_msg"] = se.original_text;
+            obj["src_msg"] = se.original_text;
         }
-        outputJson.push_back(item);
+        outputJson.push_back(obj);
     }
 
     std::lock_guard<std::mutex> lock(m_outputCacheFileMutex);
@@ -1151,7 +956,7 @@ void NormalJsonTranslator::processFile(const fs::path& inputPath, int threadId) 
     }
 }
 
-
+// ================================================         run           ========================================
 void NormalJsonTranslator::run() {
     m_logger->info("GalTransl++ NormalJsonTranlator 启动...");
 

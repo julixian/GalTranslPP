@@ -1,11 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="APIPool.ixx" />
-    <ClCompile Include="Dictionary.ixx" />
-    <ClCompile Include="DictionaryGenerator.ixx" />
-    <ClCompile Include="ProblemAnalyzer.ixx" />
-    <ClCompile Include="Tool.ixx" />
     <ClCompile Include="IPlugin.cpp">
       <Filter>textPlugins</Filter>
     </ClCompile>
@@ -30,6 +25,21 @@
     <ClCompile Include="NormalJsonTranslator.ixx">
       <Filter>filePlugins</Filter>
     </ClCompile>
+    <ClCompile Include="APIPool.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Dictionary.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryGenerator.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ProblemAnalyzer.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Tool.ixx">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -37,6 +47,9 @@
     </Filter>
     <Filter Include="textPlugins">
       <UniqueIdentifier>{37fcb97f-7dfc-4f79-a33f-66e8e440d1d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{be76689c-5c70-4419-87f1-e4fa81fa2b9d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@
 
 namespace fs = std::filesystem;
 
+class ElaText;
 class QStackedWidget;
 class APISettingsPage;
 class PluginSettingsPage;
@@ -58,6 +59,7 @@ private:
     StartSettingsPage* _startSettingsPage;
     OtherSettingsPage* _otherSettingsPage;
     PromptSettingsPage* _promptSettingsPage;
+    ElaText* _settingsTitle;
 
     QWidget* _mainWindow;
 
@@ -68,6 +70,7 @@ private Q_SLOTS:
     // 槽函数，用于响应开始翻译按钮的点击
     void _onStartTranslating();
     void _onFinishTranslating(const QString& transEngine, int exitCode);
+    void _refreshProjectConfig();
 };
 
 #endif // PROJECTSETTINGSPAGE_H

@@ -65,7 +65,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const 
 
     sentence->problem.clear();
     std::vector<std::string> problemList;
-    const std::string& origText = sentence->pre_processed_text;
+    const std::string& origText = sentence->original_text;
     const std::string& transView = sentence->translated_preview;
 
     // 1. 词频过高

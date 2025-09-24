@@ -63,7 +63,18 @@ ElaWidgetTools的编译产物在ElaWidgetTools根目录下的out\build\release\E
 将其中的ElaWidgetTools.lib和ElaWidgetTools.exp移动到GalTranslPP根目录的lib文件夹(没有则自行创建)，
 待会编译完GPPGUI后把ElaWidgetTools.dll复制到Release\GPPGUI
 
-## 6. 编译GalTranslPP项目
+## 6. QSimpleUpdater（GPPGUI Updater的依赖项）
+
+克隆QSimpleUpdater仓库
+
+```cmd
+https://github.com/alex-spataru/QSimpleUpdater.git
+```
+
+编译方法与ElaWidgetTools一样，编译完毕后在QSimpleUpdater根目录下的out\build\release内，将  
+其中的QSimpleUpdater.lib移动到GalTranslPP根目录的lib文件夹
+
+## 7. 编译GalTranslPP项目
 
 用Visual Studio 2026打开`GalTranslPP.sln`  
 
@@ -76,7 +87,7 @@ ElaWidgetTools的编译产物在ElaWidgetTools根目录下的out\build\release\E
 >另外由于我所使用的环境较新，也可能会有一些比较罕见的问题。  
 >目前已知项目依赖 `mecab:x64-windows` 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022  
 
-故目前编译项目依赖需要在三个模块的属性中临时切换工具集为v143，  
-然后在选项卡的`生成`-`批生成`中任意编译一个模块比如GPPGUI，  
+故目前编译项目依赖需要在GalTranslPP模块的属性中临时切换工具集为v143，  
+然后在选项卡的`生成`-`批生成`中编译GalTranslPP Release x64，  
 依赖编译完成后进入正式编译时会乱码报错，  
-此时将工具集切换回v145即可正常编译。
+此时将工具集切换回v145即可正常编译其余任意模块。

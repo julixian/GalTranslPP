@@ -82,6 +82,8 @@ export {
 
     std::string extractHangul(const std::string& sourceString);
 
+    std::string extractNonGbkChars(const std::string& sourceString);
+
     void extractZip(const fs::path& zipPath, const fs::path& outputDir);
 
 
@@ -588,6 +590,41 @@ std::string extractLatin(const std::string& sourceString) {
 
 std::string extractHangul(const std::string& sourceString) {
     return extractCharactersByScripts(sourceString, { USCRIPT_HANGUL });
+}
+
+std::string extractNonGbkChars(const std::string& sourceString) {
+#ifdef _WIN32
+    std::wstring wstr = ascii2Wide(sourceString);
+    BOOL usedDefaultChar = FALSE;
+    int len = WideCharToMultiByte(936, 0, wstr.c_str(), -1, nullptr, 0, "?", &usedDefaultChar);
+    if (!usedDefaultChar) {
+        return "";
+    }
+
+    std::string result;
+    std::set<UChar32> seen_chars;
+    icu::UnicodeString uString = icu::UnicodeString::fromUTF8(sourceString);
+    icu::StringCharacterIterator iter(uString);
+    UChar32 c;
+    while (iter.hasNext()) {
+        c = iter.next32PostInc();
+        icu::UnicodeString uchar_str(c);
+        std::string char_str;
+        uchar_str.toUTF8String(char_str);
+        std::wstring wchar_str = ascii2Wide(char_str);
+        BOOL charUsedDefault = FALSE;
+        WideCharToMultiByte(936, 0, wchar_str.c_str(), -1, nullptr, 0, "?", &charUsedDefault);
+        if (charUsedDefault) {
+            if (seen_chars.find(c) == seen_chars.end()) {
+                result += char_str;
+                seen_chars.insert(c);
+            }
+        }
+    }
+    return result;
+#else
+    return "";
+#endif
 }
 
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {

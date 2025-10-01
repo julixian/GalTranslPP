@@ -106,7 +106,6 @@ void TextPostFull2Half::createConversionMap() {
         m_conversionMap[U'＠'] = U'@';
         m_conversionMap[U'＾'] = U'^';
         m_conversionMap[U'｜'] = U'|';
-        m_conversionMap[U'～'] = U'~';
         m_conversionMap[U'｀'] = U'`';
         m_conversionMap[U'　'] = U' '; // 全角空格
         m_conversionMap[U'…'] = U'.'; m_conversionMap[U'…'] = U'.'; m_conversionMap[U'…'] = U'.'; // 转为3个点
@@ -117,7 +116,8 @@ void TextPostFull2Half::createConversionMap() {
         m_conversionMap[U'·'] = U'·';
         m_conversionMap[U'′'] = U'\'';
         m_conversionMap[U'″'] = U'"';
-        m_conversionMap[U'〜'] = U'~';  
+        m_conversionMap[U'〜'] = U'~';
+        m_conversionMap[U'～'] = U'~';
         m_conversionMap[U'￥'] = U'¥';
         m_conversionMap[U'￠'] = U'¢';
         m_conversionMap[U'￡'] = U'£';

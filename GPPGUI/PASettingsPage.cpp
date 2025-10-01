@@ -44,9 +44,9 @@ void PASettingsPage::_setupUI()
 
 	// 要发现的问题清单
 	QStringList problemList = { "词频过高","标点错漏","丢失换行","多加换行","比原文长","比原文长严格","字典未使用",
-		"残留日文","引入拉丁字母","引入韩文","语言不通", };
+		"残留日文","引入拉丁字母","引入韩文","引入非GBK字符","语言不通", };
 	QStringList problemListToShow = { tr("词频过高"), tr("标点错漏"), tr("丢失换行"), tr("多加换行"), tr("比原文长"), tr("比原文长严格"),
-		tr("字典未使用"), tr("残留日文"), tr("引入拉丁字母"), tr("引入韩文"), tr("语言不通"), };
+		tr("字典未使用"), tr("残留日文"), tr("引入拉丁字母"), tr("引入韩文"), tr("引入非GBK字符"), tr("语言不通"), };
 
 	std::set<std::string> problemListSet;
 	auto& problemListOrgArray = _projectConfig["problemAnalyze"]["problemList"];

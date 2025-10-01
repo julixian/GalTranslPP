@@ -1961,6 +1961,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="PASettingsPage.cpp" line="49"/>
+        <source>引入非GBK字符</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="PASettingsPage.cpp" line="60"/>
         <source>要发现的问题清单</source>
         <translation type="unfinished"></translation>

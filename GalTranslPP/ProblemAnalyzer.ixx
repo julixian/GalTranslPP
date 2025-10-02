@@ -24,6 +24,7 @@ export {
         ProblemCompareObj introLatin;
         ProblemCompareObj introHangul;
         ProblemCompareObj introNonGbk;
+        ProblemCompareObj introTraditionalChinese;
         ProblemCompareObj linebreakLost;
         ProblemCompareObj linebreakAdded;
         ProblemCompareObj longer;
@@ -126,6 +127,13 @@ void ProblemAnalyzer::analyze(Sentence* sentence, GptDictionary& gptDict, const 
         const std::string& transView = chooseStringRef(sentence, m_problems.introNonGbk.check);
         if (std::string nonGbk = extractNonGbkChars(transView); !nonGbk.empty()) {
             sentence->problems.push_back("引入非GBK字符: " + nonGbk);
+        }
+    }
+
+    if (m_problems.introTraditionalChinese.use) {
+        const std::string& transView = chooseStringRef(sentence, m_problems.introTraditionalChinese.check);
+        if (std::string traditionalChars = extractTraditionalChinese(transView); !traditionalChars.empty()) {
+            sentence->problems.push_back("引入繁体字: " + traditionalChars);
         }
     }
 
@@ -266,6 +274,9 @@ void ProblemAnalyzer::loadProblems(const std::vector<std::string>& problemList, 
         else if (problem == "引入非GBK字符") {
             m_problems.introNonGbk.use = true;
         }
+        else if (problem == "引入繁体字") {
+            m_problems.introTraditionalChinese.use = true;
+        }
 		else if (problem == "丢失换行") {
 			m_problems.linebreakLost.use = true;
 		}
@@ -321,6 +332,9 @@ void ProblemAnalyzer::overwriteCompareObj(const std::string& problemKey, const s
     }
     else if (problemKey == "引入非GBK字符") {
         saveCachePart(m_problems.introNonGbk, base, check);
+    }
+    else if (problemKey == "引入繁体字") {
+        saveCachePart(m_problems.introTraditionalChinese, base, check);
     }
     else if (problemKey == "丢失换行") {
         saveCachePart(m_problems.linebreakLost, base, check);

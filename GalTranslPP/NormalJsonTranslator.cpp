@@ -1471,6 +1471,14 @@ void NormalJsonTranslator::afterRun() {
     if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild && m_completedSentences != m_totalSentences) {
         m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。", m_completedSentences.load(), m_totalSentences);
     }
+    try {
+        if (Py_IsInitialized()) {
+            PythonMainInterpreterManager::getInstance().releaseNLPResources(m_logger);
+        }
+    }
+    catch (const std::exception& e) {
+        m_logger->warn("执行 NLP GC 失败: {}", e.what());
+    }
 }
 
 void NormalJsonTranslator::process(std::vector<fs::path> relFilePaths) {

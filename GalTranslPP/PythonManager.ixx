@@ -79,6 +79,8 @@ export {
             return future;
         }
         
+        void releaseNLPResources(const std::shared_ptr<spdlog::logger>& logger);
+
         std::shared_ptr<py::object> registerNLPFunction
         (const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger, bool& needReboot);
 

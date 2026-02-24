@@ -4,6 +4,11 @@
 #include "GPPMacros.hpp"
 #include <spdlog/spdlog.h>
 #include <ctpl_stl.h>
+#ifdef _WIN32
+#include <Windows.h>
+#include <Psapi.h>
+#pragma comment(lib, "Psapi.lib")
+#endif
 
 module PythonManager;
 
@@ -14,6 +19,66 @@ import NLPTool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;
+
+namespace {
+    struct ProcessMemorySnapshot {
+        size_t workingSet = 0;
+        size_t privateBytes = 0;
+        bool available = false;
+    };
+
+    std::string formatByteSize(size_t bytes) {
+        constexpr double kib = 1024.0;
+        constexpr double mib = kib * 1024.0;
+        constexpr double gib = mib * 1024.0;
+        if (bytes >= static_cast<size_t>(gib)) {
+            return std::format("{:.2f} GiB", static_cast<double>(bytes) / gib);
+        }
+        if (bytes >= static_cast<size_t>(mib)) {
+            return std::format("{:.2f} MiB", static_cast<double>(bytes) / mib);
+        }
+        if (bytes >= static_cast<size_t>(kib)) {
+            return std::format("{:.2f} KiB", static_cast<double>(bytes) / kib);
+        }
+        return std::format("{} B", bytes);
+    }
+
+    ProcessMemorySnapshot readProcessMemorySnapshot() {
+        ProcessMemorySnapshot snapshot;
+#ifdef _WIN32
+        PROCESS_MEMORY_COUNTERS_EX pmc = {};
+        if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc))) {
+            snapshot.workingSet = static_cast<size_t>(pmc.WorkingSetSize);
+            snapshot.privateBytes = static_cast<size_t>(pmc.PrivateUsage);
+            snapshot.available = true;
+        }
+#endif
+        return snapshot;
+    }
+
+    void logNlpMemoryUsage(const std::shared_ptr<spdlog::logger>& logger, const std::string& stage) {
+        if (!logger) {
+            return;
+        }
+        const ProcessMemorySnapshot snapshot = readProcessMemorySnapshot();
+        if (!snapshot.available) {
+            logger->debug("[NLP内存] {} | 进程内存采样不可用", stage);
+            return;
+        }
+        logger->info("[NLP内存] {} | WorkingSet={} Private={}",
+            stage, formatByteSize(snapshot.workingSet), formatByteSize(snapshot.privateBytes));
+    }
+
+    void trimProcessWorkingSet(const std::shared_ptr<spdlog::logger>& logger) {
+#ifdef _WIN32
+        if (!EmptyWorkingSet(GetCurrentProcess()) && logger) {
+            logger->debug("[NLP内存] EmptyWorkingSet 调用失败: {}", GetLastError());
+        }
+#else
+        (void)logger;
+#endif
+    }
+}
 
 // 定义一个 C++ 模块，它将被嵌入到 Python 解释器中
 // 所有脚本都可以通过 `import gpp_plugin_api` 来使用这些功能
@@ -354,6 +419,50 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
     logger->debug("所有依赖均已安装");
 }
 
+void PythonMainInterpreterManager::releaseNLPResources(const std::shared_ptr<spdlog::logger>& logger) {
+    size_t removedEntries = 0;
+    size_t aliveEntries = 0;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        for (auto moduleIt = m_nlpModuleFunctions.begin(); moduleIt != m_nlpModuleFunctions.end();) {
+            auto& modelMap = moduleIt->second;
+            for (auto modelIt = modelMap.begin(); modelIt != modelMap.end();) {
+                if (modelIt->second.expired()) {
+                    modelIt = modelMap.erase(modelIt);
+                    removedEntries++;
+                }
+                else {
+                    ++aliveEntries;
+                    ++modelIt;
+                }
+            }
+            if (modelMap.empty()) {
+                moduleIt = m_nlpModuleFunctions.erase(moduleIt);
+            }
+            else {
+                ++moduleIt;
+            }
+        }
+    }
+    logNlpMemoryUsage(logger, "NLP GC 前");
+    auto releaseTaskFunc = []()
+        {
+            try {
+                py::module_ gc = py::module_::import("gc");
+                gc.attr("collect")();
+            }
+            catch (const py::error_already_set& e) {
+                throw std::runtime_error(std::format("释放 NLP 资源时出现异常: {}", e.what()));
+            }
+        };
+    //submitTask(std::move(releaseTaskFunc)).get();
+    trimProcessWorkingSet(logger);
+    if (logger) {
+        logger->info("[NLP内存] NLP GC 条目: removed={} alive={}", removedEntries, aliveEntries);
+    }
+    logNlpMemoryUsage(logger, "NLP GC 后");
+}
+
 // 最理想的情况当然是把 NLP 函数也放在子解释器里运行，但这些 NLP 模块都很娇气，不是在主解释里的导入就会崩溃。。。
 std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
 (const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger, bool& needReboot) {
@@ -365,6 +474,7 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
     }
     std::shared_ptr<py::object> pythonNLPModuleFunc;
 
+    logNlpMemoryUsage(logger, std::format("加载前 {}:{}", moduleName, modelName));
     logger->info("正在加载模块 {} 的模型 {}", moduleName, modelName);
     auto loadModelTaskFunc = [&]()
         {
@@ -408,6 +518,7 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
         };
     PythonMainInterpreterManager::getInstance().submitTask(std::move(loadModelTaskFunc)).get();
     logger->debug("模块 {} 的模型 {} 已加载", moduleName, modelName);
+    logNlpMemoryUsage(logger, std::format("加载后 {}:{}", moduleName, modelName));
     return pythonNLPModuleFunc;
 }
 

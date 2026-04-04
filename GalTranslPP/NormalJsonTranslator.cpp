@@ -679,7 +679,8 @@ void NormalJsonTranslator::init()
                 m_problemAnalyzer->loadProblems(*problemList, punctSet, codePage, langProbability);
             }
 
-            const auto retranslKeys = toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "retranslKeys");
+            const auto retranslKeys = 
+                toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "retranslKeys");
             if (retranslKeys) {
                 for (const auto& elem : *retranslKeys) {
                     if (elem.is_string()) {
@@ -706,7 +707,8 @@ void NormalJsonTranslator::init()
                 }
             }
 
-            const auto skipProblems = toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "skipProblems");
+            const auto skipProblems = 
+                toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "skipProblems");
             if (skipProblems) {
                 for (const auto& elem : *skipProblems) {
                     if (elem.is_string()) {
@@ -731,7 +733,8 @@ void NormalJsonTranslator::init()
                 }
             }
 
-            const auto overwriteCompareObj = toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "overwriteCompareObj");
+            const auto overwriteCompareObj = 
+                toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "overwriteCompareObj");
             if (overwriteCompareObj) {
                 for (const auto& tbl : *overwriteCompareObj) {
                     const std::string problemKey = toml::find_or(tbl, "problemKey", "");

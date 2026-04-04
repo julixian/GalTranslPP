@@ -17,6 +17,7 @@
 #include "ElaMessageBar.h"
 #include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
+#include "ElaToggleSwitch.h"
 
 #include "NJCfgPage.h"
 #include "EpubCfgPage.h"
@@ -403,6 +404,36 @@ void StartSettingsPage::_setupUI()
 	}
 	buttonLayout->addWidget(translateMode);
 
+	const bool agentEnabled = toml::find_or(_projectConfig, "agent", "enabled", false);
+	ElaText* agentModeLabel = new ElaText(buttonArea);
+	agentModeLabel->setTextPixelSize(14);
+	agentModeLabel->setText(tr("实验性: Agent 模式"));
+	buttonLayout->addWidget(agentModeLabel);
+	ElaToggleSwitch* agentModeToggle = new ElaToggleSwitch(buttonArea);
+	agentModeToggle->setIsToggled(agentEnabled);
+	buttonLayout->addWidget(agentModeToggle);
+
+	const std::string nativeFunctionCallingMode = toml::find_or(_projectConfig, "agent", "nativeFunctionCalling", "auto");
+	ElaText* nativeFunctionCallingLabel = new ElaText(buttonArea);
+	nativeFunctionCallingLabel->setTextPixelSize(14);
+	nativeFunctionCallingLabel->setText(tr("原生函数调用: Auto"));
+	buttonLayout->addWidget(nativeFunctionCallingLabel);
+	ElaToggleSwitch* nativeFunctionCallingToggle = new ElaToggleSwitch(buttonArea);
+	nativeFunctionCallingToggle->setIsToggled(nativeFunctionCallingMode != "off");
+	buttonLayout->addWidget(nativeFunctionCallingToggle);
+	auto refreshAgentControls = [=]()
+		{
+			const bool supportsAgent = translateMode->currentText() == "ForGalTsv";
+			agentModeToggle->setEnabled(supportsAgent);
+			if (!supportsAgent) {
+				agentModeToggle->setIsToggled(false);
+			}
+			nativeFunctionCallingToggle->setEnabled(supportsAgent && agentModeToggle->getIsToggled());
+		};
+	connect(translateMode, &ElaComboBox::currentTextChanged, this, [=](const QString&) { refreshAgentControls(); });
+	connect(agentModeToggle, &ElaToggleSwitch::toggled, this, [=](bool) { refreshAgentControls(); });
+	refreshAgentControls();
+
 	// 开始翻译
 	_startTranslateButton = new ElaPushButton(buttonArea);
 	_startTranslateButton->setText(tr("开始翻译"));
@@ -527,6 +558,8 @@ void StartSettingsPage::_setupUI()
 				insertToml(_projectConfig, "plugins.filePlugin", customFilePluginStr);
 			}
 			insertToml(_projectConfig, "plugins.transEngine", translateMode->currentText().toStdString());
+			insertToml(_projectConfig, "agent.enabled", agentModeToggle->getIsToggled());
+			insertToml(_projectConfig, "agent.nativeFunctionCalling", nativeFunctionCallingToggle->getIsToggled() ? std::string("auto") : std::string("off"));
 		};
 
 	// 顺序和_onOutputSettingClicked里的索引一致

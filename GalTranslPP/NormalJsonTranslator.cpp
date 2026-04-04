@@ -24,6 +24,291 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
+namespace {
+    struct AgentToolCallRequest {
+        std::string id;
+        std::string name;
+        json arguments = json::object();
+    };
+
+    struct AgentProtocolResponse {
+        std::string action;
+        std::vector<AgentToolCallRequest> calls;
+        json translations = json::array();
+        json termUpdates = json::array();
+        json rewriteRequests = json::array();
+        json fileNotePatch = json::object();
+        json summary = json::object();
+        std::string rawContent;
+    };
+
+    std::string nowTimestampString() {
+        const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        return std::to_string(now);
+    }
+
+    json loadJsonFileOrDefault(const fs::path& path, const json& fallback = json::object()) {
+        try {
+            if (!fs::exists(path)) {
+                return fallback;
+            }
+            std::ifstream ifs(path, std::ios::binary);
+            return json::parse(ifs);
+        }
+        catch (...) {
+            return fallback;
+        }
+    }
+
+    void saveJsonFilePretty(const fs::path& path, const json& value) {
+        createParent(path);
+        std::ofstream ofs(path, std::ios::binary);
+        ofs << value.dump(2);
+    }
+
+    fs::path buildAgentFileNotePath(const fs::path& root, const fs::path& relInputPath) {
+        fs::path notePath = root / relInputPath;
+        notePath += L".json";
+        return notePath;
+    }
+
+    std::string trimCopy(std::string value) {
+        const auto isNotSpace = [](unsigned char ch) { return !std::isspace(ch); };
+        const auto begin = std::ranges::find_if(value, isNotSpace);
+        if (begin == value.end()) {
+            return {};
+        }
+        const auto end = std::ranges::find_if(value | std::views::reverse, isNotSpace).base();
+        return std::string(begin, end);
+    }
+
+    std::optional<json> tryParseJsonEnvelope(std::string text) {
+        text = trimCopy(std::move(text));
+        if (text.empty()) {
+            return std::nullopt;
+        }
+
+        const size_t fencedStart = text.find("```");
+        if (fencedStart != std::string::npos) {
+            const size_t lineEnd = text.find('\n', fencedStart);
+            const size_t fencedEnd = text.rfind("```");
+            if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
+                text = trimCopy(text.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
+            }
+        }
+
+        try {
+            return json::parse(text);
+        }
+        catch (...) {}
+
+        const size_t jsonStart = text.find('{');
+        const size_t jsonEnd = text.rfind('}');
+        if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
+            return std::nullopt;
+        }
+
+        try {
+            return json::parse(text.substr(jsonStart, jsonEnd - jsonStart + 1));
+        }
+        catch (...) {
+            return std::nullopt;
+        }
+    }
+
+    AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
+        AgentProtocolResponse result;
+        result.rawContent = content;
+        const std::optional<json> payloadOpt = tryParseJsonEnvelope(content);
+        if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
+            throw std::runtime_error("Agent 响应不是合法 JSON 对象");
+        }
+
+        const json& payload = *payloadOpt;
+        result.action = payload.value("action", "");
+        if (const auto it = payload.find("calls"); it != payload.end() && it->is_array()) {
+            for (const auto& call : *it) {
+                if (!call.is_object()) {
+                    continue;
+                }
+                AgentToolCallRequest parsed;
+                parsed.id = call.value("id", std::format("call_{}", result.calls.size()));
+                parsed.name = call.value("name", "");
+                if (const auto argIt = call.find("arguments"); argIt != call.end()) {
+                    parsed.arguments = *argIt;
+                }
+                result.calls.push_back(std::move(parsed));
+            }
+        }
+        if (const auto it = payload.find("translations"); it != payload.end() && it->is_array()) {
+            result.translations = *it;
+        }
+        if (const auto it = payload.find("term_updates"); it != payload.end() && it->is_array()) {
+            result.termUpdates = *it;
+        }
+        if (const auto it = payload.find("rewrite_requests"); it != payload.end() && it->is_array()) {
+            result.rewriteRequests = *it;
+        }
+        if (const auto it = payload.find("file_note_patch"); it != payload.end() && it->is_object()) {
+            result.fileNotePatch = *it;
+        }
+        if (const auto it = payload.find("summary"); it != payload.end() && it->is_object()) {
+            result.summary = *it;
+        }
+        return result;
+    }
+
+    AgentProtocolResponse parseAgentApiResponse(const ApiResponse& response) {
+        if (response.hasToolCalls) {
+            AgentProtocolResponse result;
+            result.action = "tool_calls";
+            result.rawContent = response.content;
+            for (const auto& toolCall : response.toolCalls) {
+                if (!toolCall.is_object()) {
+                    continue;
+                }
+                AgentToolCallRequest parsed;
+                parsed.id = toolCall.value("id", std::format("tool_{}", result.calls.size()));
+                if (const auto funcIt = toolCall.find("function"); funcIt != toolCall.end() && funcIt->is_object()) {
+                    parsed.name = funcIt->value("name", "");
+                    if (const auto argsIt = funcIt->find("arguments"); argsIt != funcIt->end()) {
+                        if (argsIt->is_string()) {
+                            const std::string argsStr = argsIt->get<std::string>();
+                            if (const auto parsedArgs = tryParseJsonEnvelope(argsStr); parsedArgs.has_value()) {
+                                parsed.arguments = *parsedArgs;
+                            }
+                        }
+                        else {
+                            parsed.arguments = *argsIt;
+                        }
+                    }
+                }
+                result.calls.push_back(std::move(parsed));
+            }
+            return result;
+        }
+
+        return parseAgentTextResponse(response.content);
+    }
+
+    bool shouldFallbackFromNativeFunctionCalling(const ApiResponse& response) {
+        if (response.success) {
+            return false;
+        }
+        std::string lower = response.content;
+        str2LowerInplace(lower);
+        return response.statusCode == 400 || response.statusCode == 404 || response.statusCode == 422
+            || lower.contains("tool_choice")
+            || lower.contains("tool_calls")
+            || lower.contains("function")
+            || lower.contains("tools");
+    }
+
+    json buildAgentNativeTools() {
+        const json commonString = { {"type", "string"} };
+        const json commonInt = { {"type", "integer"} };
+        return json::array({
+            {
+                {"type", "function"},
+                {"function", {
+                    {"name", "list_files"},
+                    {"description", "List available project files for cross-file lookup."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", {
+                            {"pattern", commonString},
+                            {"limit", commonInt}
+                        }},
+                        {"additionalProperties", false}
+                    }}
+                }}
+            },
+            {
+                {"type", "function"},
+                {"function", {
+                    {"name", "read_lines"},
+                    {"description", "Read a slice of source and cached translation lines from a file."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", {
+                            {"file", commonString},
+                            {"start", commonInt},
+                            {"count", commonInt},
+                            {"include_src", { {"type", "boolean"} }},
+                            {"include_dst", { {"type", "boolean"} }}
+                        }},
+                        {"required", json::array({"file", "start", "count"})},
+                        {"additionalProperties", false}
+                    }}
+                }}
+            },
+            {
+                {"type", "function"},
+                {"function", {
+                    {"name", "search_text"},
+                    {"description", "Search source text, cached translations, summaries, or term ledger."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", {
+                            {"query", commonString},
+                            {"scope", { {"type", "string"}, {"enum", json::array({"current_file", "all_files", "specified_file"})} }},
+                            {"file", commonString},
+                            {"limit", commonInt}
+                        }},
+                        {"required", json::array({"query", "scope"})},
+                        {"additionalProperties", false}
+                    }}
+                }}
+            },
+            {
+                {"type", "function"},
+                {"function", {
+                    {"name", "get_term"},
+                    {"description", "Get the current term ledger record for a term."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", { {"term", commonString} }},
+                        {"required", json::array({"term"})},
+                        {"additionalProperties", false}
+                    }}
+                }}
+            },
+            {
+                {"type", "function"},
+                {"function", {
+                    {"name", "get_file_note"},
+                    {"description", "Read the saved summary and unresolved notes of a file."},
+                    {"parameters", {
+                        {"type", "object"},
+                        {"properties", { {"file", commonString} }},
+                        {"required", json::array({"file"})},
+                        {"additionalProperties", false}
+                    }}
+                }}
+            }
+        });
+    }
+
+    int sanitizeToolLimit(int requested, int fallback, int maxLimit = 200) {
+        if (requested <= 0) {
+            return fallback;
+        }
+        return std::min(requested, maxLimit);
+    }
+
+    bool hasAgentWorkUnitArtifacts(
+        const fs::path& relFilePath,
+        const fs::path& outputDir,
+        const fs::path& outputCacheDir,
+        const fs::path& transCacheDir,
+        bool needsCombining
+    ) {
+        const fs::path outputPath = needsCombining ? (outputCacheDir / relFilePath) : (outputDir / relFilePath);
+        const fs::path cachePath = transCacheDir / relFilePath;
+        return fs::exists(outputPath) && fs::exists(cachePath);
+    }
+}
+
 NormalJsonTranslator::~NormalJsonTranslator() 
 {
     m_logger->info("所有任务已完成！NormalJsonTranslator结束。");
@@ -44,6 +329,12 @@ NormalJsonTranslator::NormalJsonTranslator(const fs::path& projectDir, const std
     m_transCacheDir = m_projectDir / transCacheDirName;
     m_otherCacheDir = m_projectDir / otherCacheDirName;
     m_backgroundTextCachePath = m_otherCacheDir / L"backgroundTextCache.json";
+    m_agentRootDir = m_otherCacheDir / L"agent";
+    m_agentRunStatePath = m_agentRootDir / L"run_state.json";
+    m_agentTermLedgerPath = m_agentRootDir / L"term_ledger.json";
+    m_agentRewriteQueuePath = m_agentRootDir / L"rewrite_queue.json";
+    m_agentFileNotesDir = m_agentRootDir / L"file_notes";
+    m_agentSearchCatalogPath = m_agentRootDir / L"search_catalog.json";
     try {
         if (fs::exists(m_backgroundTextCachePath)) {
             std::ifstream ifs(m_backgroundTextCachePath, std::ios::binary);
@@ -117,6 +408,32 @@ void NormalJsonTranslator::init()
         m_smartRetry = toml::find_or(configData, "common", "smartRetry", false);
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
+        m_agentEnabled = toml::find_or(configData, "agent", "enabled", false);
+        m_agentChunkSize = toml::find_or(configData, "agent", "chunkSize", 24);
+        m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 6);
+        m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 48000);
+        m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 64000);
+        m_agentLookaheadLines = toml::find_or(configData, "agent", "lookaheadLines", 80);
+        m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 40);
+        m_agentAllowCrossFileSearch = toml::find_or(configData, "agent", "allowCrossFileSearch", true);
+        m_agentNativeFunctionCalling = toml::find_or(configData, "agent", "nativeFunctionCalling", "auto");
+        m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", true);
+        m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
+
+        if (m_agentEnabled) {
+            if (m_transEngine != TransEngine::ForGalTsv) {
+                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv");
+            }
+            if (m_agentChunkSize <= 0 || m_agentMaxTurnsPerChunk <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
+                throw std::invalid_argument("Agent 模式配置无效");
+            }
+            if (m_agentSoftContextChars > m_agentHardContextChars) {
+                std::swap(m_agentSoftContextChars, m_agentHardContextChars);
+            }
+            if (m_agentNativeFunctionCalling != "auto" && m_agentNativeFunctionCalling != "on" && m_agentNativeFunctionCalling != "off") {
+                throw std::invalid_argument("agent.nativeFunctionCalling 必须是 auto/on/off");
+            }
+        }
 
         m_usePreDictInName = toml::find_or(configData, "dictionary", "usePreDictInName", false);
         m_usePostDictInName = toml::find_or(configData, "dictionary", "usePostDictInName", false);
@@ -760,6 +1077,723 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     return false;
 }
 
+bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId) {
+    for (Sentence* se : batch) {
+        if (se->pre_processed_text.empty()) {
+            se->complete = true;
+            ++m_completedSentences;
+            m_controller->updateBar();
+        }
+    }
+
+    auto currentChunk = [&]() {
+        return batch
+            | std::views::filter([](const Sentence* se) { return !se->complete; })
+            | std::ranges::to<std::vector>();
+    };
+
+    auto resolveInputPath = [&](const fs::path& relPath) {
+        if (m_needsCombining && fs::exists(m_inputCacheDir / relPath)) {
+            return m_inputCacheDir / relPath;
+        }
+        return m_inputDir / relPath;
+    };
+
+    auto loadFileNote = [&](const fs::path& targetRelPath) {
+        std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
+        return loadJsonFileOrDefault(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
+    };
+
+    auto saveFileNote = [&](const fs::path& targetRelPath, const json& note) {
+        std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
+        saveJsonFilePretty(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), note);
+    };
+
+    auto loadTermLedger = [&]() {
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        return loadJsonFileOrDefault(m_agentTermLedgerPath, json::object());
+    };
+
+    auto saveTermLedger = [&](const json& ledger) {
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        saveJsonFilePretty(m_agentTermLedgerPath, ledger);
+    };
+
+    auto loadRewriteQueue = [&]() {
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        return loadJsonFileOrDefault(m_agentRewriteQueuePath, json::array());
+    };
+
+    auto saveRewriteQueue = [&](const json& queue) {
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        saveJsonFilePretty(m_agentRewriteQueuePath, queue);
+    };
+
+    auto updateRunState = [&](const std::string& status, int lastCommittedIndex = -1, const std::string& leaseOwner = {}) {
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        json state = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
+        if (!state.contains("files") || !state["files"].is_array()) {
+            state["files"] = json::array();
+        }
+        const std::string relPathStr = wide2Ascii(relInputPath);
+        auto it = std::ranges::find_if(state["files"], [&](const json& item) {
+            return item.value("file", "") == relPathStr;
+        });
+        if (it == state["files"].end()) {
+            state["files"].push_back({
+                {"file", relPathStr},
+                {"status", status},
+                {"lease_owner", leaseOwner},
+                {"last_committed_index", lastCommittedIndex},
+                {"updated_at", nowTimestampString()}
+            });
+        }
+        else {
+            (*it)["status"] = status;
+            (*it)["lease_owner"] = leaseOwner;
+            if (lastCommittedIndex >= 0) {
+                (*it)["last_committed_index"] = lastCommittedIndex;
+            }
+            (*it)["updated_at"] = nowTimestampString();
+        }
+        state["updated_at"] = nowTimestampString();
+        saveJsonFilePretty(m_agentRunStatePath, state);
+    };
+
+    auto loadCacheDstMap = [&](const fs::path& targetRelPath) {
+        absl::flat_hash_map<int, json> cacheMap;
+        const fs::path cachePath = m_transCacheDir / targetRelPath;
+        if (!fs::exists(cachePath)) {
+            return cacheMap;
+        }
+        try {
+            std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
+            std::ifstream ifs(cachePath, std::ios::binary);
+            json cacheJson = json::parse(ifs);
+            for (const auto& item : cacheJson) {
+                const int index = item.value("index", -1);
+                if (index >= 0) {
+                    cacheMap[index] = item;
+                }
+            }
+        }
+        catch (...) {}
+        return cacheMap;
+    };
+
+    auto readLinesTool = [&](const json& arguments) {
+        const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
+        const int start = std::max(0, arguments.value("start", 0));
+        const int count = std::max(0, arguments.value("count", m_agentLookaheadLines));
+        const bool includeSrc = arguments.value("include_src", true);
+        const bool includeDst = arguments.value("include_dst", true);
+
+        json result = {
+            {"file", wide2Ascii(targetRelPath)},
+            {"lines", json::array()}
+        };
+
+        try {
+            std::ifstream ifs(resolveInputPath(targetRelPath), std::ios::binary);
+            ordered_json inputJson = ordered_json::parse(ifs);
+            const auto cacheMap = loadCacheDstMap(targetRelPath);
+            for (int i = start; i < (int)inputJson.size() && i < start + count; ++i) {
+                json line = { {"id", i} };
+                if (inputJson[i].contains("name")) {
+                    line["name"] = inputJson[i]["name"];
+                }
+                if (inputJson[i].contains("names")) {
+                    line["names"] = inputJson[i]["names"];
+                }
+                if (includeSrc) {
+                    line["src"] = inputJson[i].value("message", "");
+                }
+                if (includeDst) {
+                    if (const auto it = cacheMap.find(i); it != cacheMap.end()) {
+                        line["dst"] = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
+                    }
+                }
+                result["lines"].push_back(std::move(line));
+            }
+        }
+        catch (const std::exception& e) {
+            result["error"] = e.what();
+        }
+        return result;
+    };
+
+    auto listFilesTool = [&](const json& arguments) {
+        const std::string pattern = str2Lower(arguments.value("pattern", ""));
+        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
+        json files = json::array();
+        for (const auto& relFile : m_agentKnownRelFiles) {
+            const std::string relFileStr = wide2Ascii(relFile);
+            if (!pattern.empty() && !str2Lower(relFileStr).contains(pattern)) {
+                continue;
+            }
+            files.push_back(relFileStr);
+            if ((int)files.size() >= limit) {
+                break;
+            }
+        }
+        return json{ {"files", files} };
+    };
+
+    auto searchTextTool = [&](const json& arguments) {
+        const std::string query = arguments.value("query", "");
+        const std::string queryLower = str2Lower(query);
+        const std::string scope = arguments.value("scope", "current_file");
+        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
+        std::vector<fs::path> targetFiles;
+
+        if (scope == "specified_file") {
+            targetFiles.push_back(ascii2Wide(arguments.value("file", wide2Ascii(relInputPath))));
+        }
+        else if (scope == "all_files" && m_agentAllowCrossFileSearch) {
+            targetFiles = m_agentKnownRelFiles;
+        }
+        else {
+            targetFiles.push_back(relInputPath);
+        }
+
+        json matches = json::array();
+        auto pushMatch = [&](json&& item) {
+            if ((int)matches.size() < limit) {
+                matches.push_back(std::move(item));
+            }
+        };
+
+        const json termLedger = loadTermLedger();
+        for (const auto& item : termLedger.items()) {
+            if ((int)matches.size() >= limit) {
+                break;
+            }
+            const std::string term = item.key();
+            const json& entry = item.value();
+            const std::string targetTerm = entry.value("target_term", "");
+            if (str2Lower(term).contains(queryLower) || str2Lower(targetTerm).contains(queryLower)) {
+                pushMatch(json{
+                    {"type", "term"},
+                    {"term", term},
+                    {"target_term", targetTerm},
+                    {"status", entry.value("status", "tentative")},
+                    {"note", entry.value("note", "")}
+                });
+            }
+        }
+
+        for (const auto& targetRelPath : targetFiles) {
+            if ((int)matches.size() >= limit) {
+                break;
+            }
+            try {
+                std::ifstream ifs(resolveInputPath(targetRelPath), std::ios::binary);
+                ordered_json inputJson = ordered_json::parse(ifs);
+                const auto cacheMap = loadCacheDstMap(targetRelPath);
+                for (const auto& [index, item] : inputJson | std::views::enumerate) {
+                    if ((int)matches.size() >= limit) {
+                        break;
+                    }
+                    const std::string src = item.value("message", "");
+                    std::string dst;
+                    if (const auto it = cacheMap.find((int)index); it != cacheMap.end()) {
+                        dst = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
+                    }
+                    if (!str2Lower(src).contains(queryLower) && !str2Lower(dst).contains(queryLower)) {
+                        continue;
+                    }
+                    pushMatch(json{
+                        {"type", "line"},
+                        {"file", wide2Ascii(targetRelPath)},
+                        {"id", (int)index},
+                        {"src", src},
+                        {"dst", dst}
+                    });
+                }
+
+                if ((int)matches.size() >= limit) {
+                    continue;
+                }
+                const json fileNote = loadFileNote(targetRelPath);
+                if (!fileNote.empty() && str2Lower(fileNote.dump()).contains(queryLower)) {
+                    pushMatch(json{
+                        {"type", "file_note"},
+                        {"file", wide2Ascii(targetRelPath)},
+                        {"note", fileNote}
+                    });
+                }
+            }
+            catch (...) {}
+        }
+
+        return json{ {"matches", matches} };
+    };
+
+    auto getTermTool = [&](const json& arguments) {
+        const std::string term = arguments.value("term", "");
+        const json ledger = loadTermLedger();
+        return json{
+            {"term", term},
+            {"entry", ledger.contains(term) ? ledger.at(term) : json(nullptr)}
+        };
+    };
+
+    auto getFileNoteTool = [&](const json& arguments) {
+        const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
+        return json{
+            {"file", wide2Ascii(targetRelPath)},
+            {"note", loadFileNote(targetRelPath)}
+        };
+    };
+
+    auto executeToolCalls = [&](const std::vector<AgentToolCallRequest>& calls) {
+        json toolResults = json::array();
+        for (const auto& call : calls) {
+            json result = {
+                {"id", call.id},
+                {"name", call.name}
+            };
+            try {
+                if (call.name == "list_files") {
+                    result["result"] = listFilesTool(call.arguments);
+                }
+                else if (call.name == "read_lines") {
+                    result["result"] = readLinesTool(call.arguments);
+                }
+                else if (call.name == "search_text") {
+                    result["result"] = searchTextTool(call.arguments);
+                }
+                else if (call.name == "get_term") {
+                    result["result"] = getTermTool(call.arguments);
+                }
+                else if (call.name == "get_file_note") {
+                    result["result"] = getFileNoteTool(call.arguments);
+                }
+                else {
+                    result["error"] = std::format("未知工具: {}", call.name);
+                }
+            }
+            catch (const std::exception& e) {
+                result["error"] = e.what();
+            }
+            toolResults.push_back(std::move(result));
+        }
+        return toolResults;
+    };
+
+    auto termLedgerExcerpt = [&]() {
+        const json ledger = loadTermLedger();
+        json excerpt = json::array();
+        for (const auto& item : ledger.items()) {
+            const std::string term = item.key();
+            const json& entry = item.value();
+            excerpt.push_back({
+                {"term", term},
+                {"target_term", entry.value("target_term", "")},
+                {"status", entry.value("status", "tentative")},
+                {"category", entry.value("category", "")}
+            });
+            if ((int)excerpt.size() >= m_agentSearchResultLimit) {
+                break;
+            }
+        }
+        return excerpt.dump(2);
+    };
+
+    auto buildBaseMessages = [&](const std::string& rollingSummary, const json& fileNote) {
+        absl::btree_map<int, Sentence*> id2SentenceMap;
+        std::string inputBlock;
+        fillBlockAndMap(batch, id2SentenceMap, inputBlock, m_transEngine);
+        std::string userPrompt = std::format(
+            "You are working in GalTransl++ experimental agent mode.\n"
+            "Current file: {0}\n"
+            "Current chunk ids: {1}-{2}\n"
+            "You may either call read-only tools, return a compact_context action, or return a commit action.\n"
+            "Never write files directly. All writes must go through commit.\n"
+            "Commit requirements:\n"
+            "1. action must be commit.\n"
+            "2. translations must cover every current chunk id exactly once.\n"
+            "3. Each translation item must include id and dst.\n"
+            "4. term_updates/rewrite_requests/file_note_patch are optional.\n"
+            "5. Return valid JSON only.\n\n"
+            "If context is near limit, prefer compact_context and summarize confirmed terms, tentative terms, unresolved questions, scene state, and cross-file clues.\n\n"
+            "Rolling summary:\n{3}\n\n"
+            "Current file note:\n{4}\n\n"
+            "Known terms excerpt:\n{5}\n\n"
+            "Current chunk TSV:\nNAME\\tSRC\\tID\n{6}",
+            wide2Ascii(relInputPath),
+            batch.front()->index,
+            batch.back()->index,
+            rollingSummary.empty() ? "None" : rollingSummary,
+            fileNote.empty() ? "None" : fileNote.dump(2),
+            termLedgerExcerpt(),
+            inputBlock
+        );
+
+        return json::array({
+            {{"role", "system"}, {"content", m_systemPrompt + "\nYou are now in a structured agent workflow. Output valid JSON only unless using native tool calls."}},
+            {{"role", "user"}, {"content", userPrompt}}
+        });
+    };
+
+    auto approximateMessagesChars = [](const json& messages) {
+        size_t total = 0;
+        for (const auto& item : messages) {
+            total += item.dump().size();
+        }
+        return total;
+    };
+
+    auto mergeFileNotePatch = [&](json& note, const json& patch) {
+        if (!patch.is_object()) {
+            return;
+        }
+        for (const auto& item : patch.items()) {
+            note[item.key()] = item.value();
+        }
+    };
+
+    auto appendOccurrence = [](json& entry, const fs::path& file, int id) {
+        if (!entry.contains("occurrences") || !entry["occurrences"].is_array()) {
+            entry["occurrences"] = json::array();
+        }
+        const std::string fileStr = wide2Ascii(file);
+        const bool exists = std::ranges::any_of(entry["occurrences"], [&](const json& occurrence) {
+            return occurrence.value("file", "") == fileStr && occurrence.value("id", -1) == id;
+        });
+        if (!exists) {
+            entry["occurrences"].push_back({ {"file", fileStr}, {"id", id} });
+        }
+    };
+
+    auto enqueueRewriteRequest = [&](json& queue, const json& request) {
+        if (!request.is_object()) {
+            return;
+        }
+        const std::string file = request.value("file", "");
+        const int id = request.value("id", -1);
+        const std::string sourceTerm = request.value("source_term", "");
+        const bool exists = std::ranges::any_of(queue, [&](const json& item) {
+            return item.value("file", "") == file && item.value("id", -1) == id && item.value("source_term", "") == sourceTerm;
+        });
+        if (!exists) {
+            queue.push_back(request);
+        }
+    };
+
+    auto applyCommit = [&](const AgentProtocolResponse& protocol, const std::string& modelName, int& committedCount) {
+        std::unordered_map<int, json> translationMap;
+        for (const auto& item : protocol.translations) {
+            if (!item.is_object()) {
+                continue;
+            }
+            const int id = item.value("id", -1);
+            const std::string dst = item.value("dst", "");
+            if (id >= 0 && !dst.empty()) {
+                translationMap.insert_or_assign(id, item);
+            }
+        }
+
+        const std::vector<Sentence*> pending = currentChunk();
+        if (translationMap.size() != pending.size()) {
+            throw std::runtime_error("commit 未覆盖当前 chunk 的全部句子");
+        }
+
+        committedCount = 0;
+        for (Sentence* se : pending) {
+            const auto it = translationMap.find(se->index);
+            if (it == translationMap.end()) {
+                throw std::runtime_error(std::format("commit 缺少句子 {}", se->index));
+            }
+            se->pre_translated_text = it->second.value("dst", "");
+            if (se->pre_translated_text.empty()) {
+                throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
+            }
+            se->translated_by = modelName;
+            se->complete = true;
+            ++committedCount;
+        }
+
+        if (committedCount > 0) {
+            m_completedSentences += committedCount;
+            m_controller->updateBar(committedCount);
+        }
+
+        json fileNote = loadFileNote(relInputPath);
+        mergeFileNotePatch(fileNote, protocol.fileNotePatch);
+        if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
+            backgroundText = protocol.summary["rolling_context"].get<std::string>();
+            fileNote["rolling_context"] = backgroundText;
+        }
+        else if (protocol.summary.contains("context") && protocol.summary["context"].is_string()) {
+            backgroundText = protocol.summary["context"].get<std::string>();
+            fileNote["rolling_context"] = backgroundText;
+        }
+        saveFileNote(relInputPath, fileNote);
+
+        json termLedger = loadTermLedger();
+        json rewriteQueue = loadRewriteQueue();
+        const std::vector<int> currentChunkIds = pending | std::views::transform([](const Sentence* se) { return se->index; }) | std::ranges::to<std::vector>();
+        for (const auto& update : protocol.termUpdates) {
+            if (!update.is_object()) {
+                continue;
+            }
+            const std::string sourceTerm = update.value("source_term", update.value("term", ""));
+            const std::string targetTerm = update.value("target_term", update.value("translation", ""));
+            if (sourceTerm.empty() || targetTerm.empty()) {
+                continue;
+            }
+            json& entry = termLedger[sourceTerm];
+            const std::string oldTarget = entry.value("target_term", "");
+            entry["target_term"] = targetTerm;
+            entry["status"] = update.value("status", entry.value("status", "tentative"));
+            entry["category"] = update.value("category", entry.value("category", ""));
+            entry["note"] = update.value("note", entry.value("note", ""));
+            if (update.contains("line_ids") && update["line_ids"].is_array()) {
+                for (const auto& idVal : update["line_ids"]) {
+                    appendOccurrence(entry, relInputPath, idVal.get<int>());
+                }
+            }
+            else {
+                for (const int id : currentChunkIds) {
+                    appendOccurrence(entry, relInputPath, id);
+                }
+            }
+
+            if (!m_agentReconciling && !oldTarget.empty() && oldTarget != targetTerm && m_agentRewriteMode == "queue_retranslate") {
+                for (const auto& occurrence : entry["occurrences"]) {
+                    enqueueRewriteRequest(rewriteQueue, {
+                        {"file", occurrence.value("file", "")},
+                        {"id", occurrence.value("id", -1)},
+                        {"source_term", sourceTerm},
+                        {"old_target", oldTarget},
+                        {"new_target", targetTerm}
+                    });
+                }
+            }
+        }
+
+        if (!m_agentReconciling) {
+            for (const auto& request : protocol.rewriteRequests) {
+                enqueueRewriteRequest(rewriteQueue, request);
+            }
+        }
+
+        saveTermLedger(termLedger);
+        saveRewriteQueue(rewriteQueue);
+        updateRunState("in_progress", pending.back()->index, std::format("thread-{}", threadId));
+    };
+
+    int retryCount = 0;
+    while (retryCount == 0 || retryCount < m_maxRetries) {
+        if (m_controller->shouldStop()) {
+            return false;
+        }
+
+        const std::vector<Sentence*> pending = currentChunk();
+        if (pending.empty()) {
+            return true;
+        }
+
+        bool useNativeFunctionCalling = m_agentNativeFunctionCalling != "off";
+        json fileNote = loadFileNote(relInputPath);
+        json messages = buildBaseMessages(backgroundText, fileNote);
+        bool compactRequested = false;
+
+        for (int turn = 0; turn < m_agentMaxTurnsPerChunk; ++turn) {
+            if (approximateMessagesChars(messages) > (size_t)m_agentHardContextChars) {
+                messages = buildBaseMessages(backgroundText, loadFileNote(relInputPath));
+                compactRequested = false;
+            }
+            else if (!compactRequested && approximateMessagesChars(messages) > (size_t)m_agentSoftContextChars) {
+                messages.push_back({
+                    {"role", "user"},
+                    {"content", "Context is close to the limit. Return a compact_context action only. Do not call tools or commit in this turn."}
+                });
+                compactRequested = true;
+            }
+
+            const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
+            if (!apiOpt.has_value()) {
+                throw std::runtime_error("没有可用的API Key了");
+            }
+            const TranslationApi& currentApi = apiOpt.value();
+
+            json payload = { {"messages", messages} };
+            if (useNativeFunctionCalling && !currentApi.stream) {
+                payload["tools"] = buildAgentNativeTools();
+                payload["tool_choice"] = "auto";
+            }
+
+            ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeOutMs);
+            if (useNativeFunctionCalling && m_agentNativeFunctionCalling == "auto" && shouldFallbackFromNativeFunctionCalling(response)) {
+                m_logger->warn("[线程 {}] [文件 {}] 原生函数调用不可用，自动退回文本协议。", threadId, wide2Ascii(relInputPath));
+                useNativeFunctionCalling = false;
+                continue;
+            }
+
+            if (!checkResponse(
+                response, m_apiPool, currentApi, relInputPath, m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
+            )) {
+                break;
+            }
+
+            AgentProtocolResponse protocol;
+            try {
+                protocol = parseAgentApiResponse(response);
+            }
+            catch (const std::exception& e) {
+                ++retryCount;
+                m_logger->warn("[线程 {}] [文件 {}] Agent 响应解析失败，第 {} 次重试。原始响应: {}\n错误: {}",
+                    threadId, wide2Ascii(relInputPath), retryCount, response.content, e.what());
+                break;
+            }
+
+            if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
+                const json toolResults = executeToolCalls(protocol.calls);
+                compactRequested = false;
+                if (response.hasToolCalls && useNativeFunctionCalling && response.message.is_object() && !response.message.empty()) {
+                    messages.push_back(response.message);
+                    for (const auto& result : toolResults) {
+                        messages.push_back({
+                            {"role", "tool"},
+                            {"tool_call_id", result.value("id", "")},
+                            {"content", result.dump(2)}
+                        });
+                    }
+                }
+                else {
+                    messages.push_back({ {"role", "assistant"}, {"content", response.content} });
+                    messages.push_back({
+                        {"role", "user"},
+                        {"content", std::string("Tool results:\n```json\n") + toolResults.dump(2) + "\n```"}
+                    });
+                }
+                continue;
+            }
+
+            if (protocol.action == "compact_context") {
+                if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
+                    backgroundText = protocol.summary["rolling_context"].get<std::string>();
+                }
+                else if (protocol.summary.contains("context") && protocol.summary["context"].is_string()) {
+                    backgroundText = protocol.summary["context"].get<std::string>();
+                }
+                else if (!response.content.empty()) {
+                    backgroundText = response.content;
+                }
+                json fileNotePatch = loadFileNote(relInputPath);
+                fileNotePatch["rolling_context"] = backgroundText;
+                fileNotePatch["updated_at"] = nowTimestampString();
+                saveFileNote(relInputPath, fileNotePatch);
+                messages = buildBaseMessages(backgroundText, loadFileNote(relInputPath));
+                compactRequested = false;
+                continue;
+            }
+
+            if (protocol.action == "commit") {
+                int committedCount = 0;
+                try {
+                    applyCommit(protocol, currentApi.modelName, committedCount);
+                }
+                catch (const std::exception& e) {
+                    ++retryCount;
+                    m_logger->warn("[线程 {}] [文件 {}] Agent commit 校验失败，第 {} 次重试。错误: {}",
+                        threadId, wide2Ascii(relInputPath), retryCount, e.what());
+                    break;
+                }
+                m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句。", threadId, wide2Ascii(relInputPath), committedCount);
+                return true;
+            }
+
+            ++retryCount;
+            m_logger->warn("[线程 {}] [文件 {}] Agent 返回未知 action '{}'，第 {} 次重试。", threadId, wide2Ascii(relInputPath), protocol.action, retryCount);
+            break;
+        }
+    }
+
+    size_t failedCount = 0;
+    for (Sentence* se : batch | std::views::filter([](const Sentence* s) { return !s->complete; })) {
+        ++failedCount;
+        se->pre_translated_text = "(Failed to translate)" + se->pre_processed_text;
+        se->complete = true;
+        ++m_completedSentences;
+        m_controller->updateBar();
+    }
+    m_logger->error("[线程 {}] [文件 {}] Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
+        threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size());
+    return false;
+}
+
+void NormalJsonTranslator::runAgentFinalReconcile() {
+    if (!m_agentEnabled || !m_agentFinalReconcileSingleThread) {
+        return;
+    }
+
+    json rewriteQueue = loadJsonFileOrDefault(m_agentRewriteQueuePath, json::array());
+    if (!rewriteQueue.is_array() || rewriteQueue.empty()) {
+        return;
+    }
+
+    m_logger->info("Agent 模式开始最终单线程 reconcile，共 {} 条重翻请求。", rewriteQueue.size());
+    m_agentReconciling = true;
+
+    absl::btree_map<fs::path, std::vector<int>> fileToIds;
+    for (const auto& request : rewriteQueue) {
+        if (!request.is_object()) {
+            continue;
+        }
+        const std::string file = request.value("file", "");
+        const int id = request.value("id", -1);
+        if (!file.empty() && id >= 0) {
+            fileToIds[ascii2Wide(file)].push_back(id);
+        }
+    }
+
+    for (auto& [filePath, ids] : fileToIds) {
+        std::ranges::sort(ids);
+        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+
+        const fs::path cachePath = m_transCacheDir / filePath;
+        if (fs::exists(cachePath)) {
+            try {
+                std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
+                std::ifstream ifs(cachePath, std::ios::binary);
+                json cacheJson = json::parse(ifs);
+                ifs.close();
+                json filtered = json::array();
+                if (cacheJson.is_array()) {
+                    for (const auto& item : cacheJson) {
+                        if (!std::ranges::contains(ids, item.value("index", -1))) {
+                            filtered.push_back(item);
+                        }
+                    }
+                }
+                else {
+                    filtered = cacheJson;
+                }
+                std::ofstream ofs(cachePath, std::ios::binary);
+                ofs << filtered.dump(2);
+            }
+            catch (const std::exception& e) {
+                m_logger->error("reconcile 清理缓存 {} 失败: {}", wide2Ascii(filePath), e.what());
+                continue;
+            }
+        }
+
+        try {
+            processFile(filePath, 0);
+        }
+        catch (const std::exception& e) {
+            m_logger->error("reconcile 重翻文件 {} 失败: {}", wide2Ascii(filePath), e.what());
+        }
+    }
+
+    saveJsonFilePretty(m_agentRewriteQueuePath, json::array());
+    m_agentReconciling = false;
+    m_logger->info("Agent 模式最终单线程 reconcile 完成。");
+}
+
 
 // ============================================        processFile        ========================================
 void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadId) {
@@ -774,10 +1808,46 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     const fs::path cachePath = m_transCacheDir / relInputPath;
     const fs::path showNormalPath = m_projectDir / L"gt_show_normal" / relInputPath;
 
+    auto updateAgentRunStateLocal = [&](const std::string& status, int lastCommittedIndex = -1) {
+        if (!m_agentEnabled) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(m_agentStateMutex);
+        json state = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
+        if (!state.contains("files") || !state["files"].is_array()) {
+            return;
+        }
+        const std::string relPathStr = wide2Ascii(relInputPath);
+        auto it = std::ranges::find_if(state["files"], [&](const json& item) {
+            return item.value("file", "") == relPathStr;
+        });
+        if (it == state["files"].end()) {
+            state["files"].push_back({
+                {"file", relPathStr},
+                {"status", status},
+                {"lease_owner", std::format("thread-{}", threadId)},
+                {"last_committed_index", lastCommittedIndex},
+                {"updated_at", nowTimestampString()}
+            });
+        }
+        else {
+            (*it)["status"] = status;
+            (*it)["lease_owner"] = status == "done" ? "" : std::format("thread-{}", threadId);
+            if (lastCommittedIndex >= 0) {
+                (*it)["last_committed_index"] = lastCommittedIndex;
+            }
+            (*it)["updated_at"] = nowTimestampString();
+        }
+        state["updated_at"] = nowTimestampString();
+        saveJsonFilePretty(m_agentRunStatePath, state);
+    };
+
     createParent(outputPath);
     createParent(cachePath);
     ordered_json jSentences;
     std::vector<Sentence> sentences;
+
+    updateAgentRunStateLocal("in_progress");
 
 
     // 解析输入文件
@@ -1073,10 +2143,16 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
                 saveProblemOverviewFunc();
+                updateAgentRunStateLocal("pending");
                 return;
             }
 
-            translateBatch(relInputPath, batchView, backgroundText, threadId);
+            if (m_agentEnabled) {
+                translateBatchAgent(relInputPath, batchView, backgroundText, threadId);
+            }
+            else {
+                translateBatch(relInputPath, batchView, backgroundText, threadId);
+            }
             for (Sentence* se : batchView) {
                 postProcess(se);
             }
@@ -1120,6 +2196,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     std::ofstream ofs(outputPath, std::ios::binary);
     ofs << jSentences.dump(2);
     ofs.close();
+    updateAgentRunStateLocal("done", sentences.empty() ? -1 : sentences.back().index);
 
     m_logger->info("[线程 {}] [文件 {}] 处理完成。", threadId, wide2Ascii(relInputPath));
 
@@ -1409,6 +2486,135 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun() {
     else {
         throw std::invalid_argument(std::format("未知的排序模式: {}", m_sortMethod));
     }
+
+    if (m_agentEnabled) {
+        m_agentKnownRelFiles = relFilePaths;
+        createParent(m_agentRunStatePath);
+        fs::create_directories(m_agentFileNotesDir);
+        const json currentAgentConfig = {
+            {"threads_num", m_threadsNum},
+            {"split_file", m_splitFile},
+            {"split_file_num", m_splitFileNum},
+            {"chunk_size", m_agentChunkSize},
+            {"max_turns_per_chunk", m_agentMaxTurnsPerChunk},
+            {"soft_context_chars", m_agentSoftContextChars},
+            {"hard_context_chars", m_agentHardContextChars},
+            {"lookahead_lines", m_agentLookaheadLines},
+            {"search_result_limit", m_agentSearchResultLimit},
+            {"allow_cross_file_search", m_agentAllowCrossFileSearch},
+            {"native_function_calling", m_agentNativeFunctionCalling},
+            {"final_reconcile_single_thread", m_agentFinalReconcileSingleThread},
+            {"rewrite_mode", m_agentRewriteMode}
+        };
+        const std::string configSignature = currentAgentConfig.dump();
+
+        json runState = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
+        const json previousAgentConfig = runState.contains("config") && runState["config"].is_object() ? runState["config"] : json::object();
+        const bool hasPreviousConfig = !previousAgentConfig.empty();
+        const bool threadsChanged = hasPreviousConfig && previousAgentConfig.value("threads_num", m_threadsNum) != m_threadsNum;
+        const bool workLayoutChanged = !hasPreviousConfig
+            || previousAgentConfig.value("split_file", m_splitFile) != m_splitFile
+            || previousAgentConfig.value("split_file_num", m_splitFileNum) != m_splitFileNum
+            || previousAgentConfig.value("chunk_size", m_agentChunkSize) != m_agentChunkSize;
+
+        absl::flat_hash_map<std::string, json> oldEntries;
+        if (runState.contains("files") && runState["files"].is_array()) {
+            for (const auto& item : runState["files"]) {
+                if (!item.is_object()) {
+                    continue;
+                }
+                const std::string relFile = item.value("file", "");
+                if (!relFile.empty()) {
+                    oldEntries.insert_or_assign(relFile, item);
+                }
+            }
+        }
+
+        int preservedDoneCount = 0;
+        int requeuedCount = 0;
+        json normalizedFiles = json::array();
+        const std::string updatedAt = nowTimestampString();
+        for (const auto& relFilePath : relFilePaths) {
+            const std::string relFileStr = wide2Ascii(relFilePath);
+            json entry = {
+                {"file", relFileStr},
+                {"status", "pending"},
+                {"lease_owner", ""},
+                {"last_committed_index", -1},
+                {"updated_at", updatedAt}
+            };
+
+            const bool artifactDone = hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
+            if (const auto it = oldEntries.find(relFileStr); it != oldEntries.end()) {
+                const json& oldEntry = it->second;
+                const std::string oldStatus = oldEntry.value("status", "pending");
+                if (!workLayoutChanged) {
+                    entry["last_committed_index"] = oldEntry.value("last_committed_index", -1);
+                }
+                if (artifactDone && oldStatus == "done") {
+                    entry["status"] = "done";
+                    ++preservedDoneCount;
+                }
+                else {
+                    if (oldStatus == "in_progress" || oldStatus == "done") {
+                        ++requeuedCount;
+                    }
+                    if (workLayoutChanged) {
+                        entry["last_committed_index"] = -1;
+                    }
+                }
+            }
+            else if (artifactDone) {
+                entry["status"] = "done";
+                ++preservedDoneCount;
+            }
+
+            normalizedFiles.push_back(std::move(entry));
+        }
+
+        runState = {
+            {"config_signature", configSignature},
+            {"config", currentAgentConfig},
+            {"updated_at", updatedAt},
+            {"files", normalizedFiles}
+        };
+        saveJsonFilePretty(m_agentRunStatePath, runState);
+
+        if (hasPreviousConfig) {
+            if (workLayoutChanged) {
+                m_logger->info("Agent 运行配置发生工作单元变化，已重建调度列表并保留 {} 个已完成工作单元。", preservedDoneCount);
+            }
+            else if (threadsChanged) {
+                m_logger->info("Agent 线程数发生变化，已清理旧 lease，并保留 {} 个已完成工作单元。", preservedDoneCount);
+            }
+            else if (requeuedCount > 0) {
+                m_logger->info("Agent 已恢复上次未完成的进度，重新排队 {} 个工作单元。", requeuedCount);
+            }
+        }
+
+        if (m_needsCombining) {
+            for (const auto& item : runState["files"]) {
+                const fs::path relFilePath = ascii2Wide(item.value("file", ""));
+                const bool isDone = item.value("status", "pending") == "done"
+                    && hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
+                if (const auto it = m_splitFilePartsToJson.find(relFilePath); it != m_splitFilePartsToJson.end()) {
+                    m_jsonToSplitFileParts[it->second][relFilePath] = isDone;
+                }
+            }
+        }
+
+        saveJsonFilePretty(m_agentSearchCatalogPath, json{
+            {"updated_at", nowTimestampString()},
+            {"files", relFilePaths | std::views::transform([](const fs::path& p) { return wide2Ascii(p); }) | std::ranges::to<std::vector>()}
+        });
+        if (!fs::exists(m_agentTermLedgerPath)) {
+            saveJsonFilePretty(m_agentTermLedgerPath, json::object());
+        }
+        if (!fs::exists(m_agentRewriteQueuePath)) {
+            saveJsonFilePretty(m_agentRewriteQueuePath, json::array());
+        }
+    }
+
     return relFilePaths;
 }
 
@@ -1495,6 +2701,62 @@ void NormalJsonTranslator::afterRun() {
 }
 
 void NormalJsonTranslator::process(std::vector<fs::path> relFilePaths) {
+    if (m_agentEnabled && !m_agentReconciling) {
+        json runState = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
+        absl::flat_hash_map<std::string, std::string> statusByFile;
+        if (runState.contains("files") && runState["files"].is_array()) {
+            for (const auto& item : runState["files"]) {
+                if (!item.is_object()) {
+                    continue;
+                }
+                const std::string relFile = item.value("file", "");
+                if (!relFile.empty()) {
+                    statusByFile.insert_or_assign(relFile, item.value("status", "pending"));
+                }
+            }
+        }
+
+        if (m_needsCombining) {
+            for (const auto& [originalRelFilePath, splitFileParts] : m_jsonToSplitFileParts) {
+                const bool allDone = std::ranges::all_of(splitFileParts, [&](const auto& partState) {
+                    return partState.second
+                        && hasAgentWorkUnitArtifacts(partState.first, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
+                });
+                if (!allDone || fs::exists(m_outputDir / originalRelFilePath)) {
+                    continue;
+                }
+                m_logger->info("Agent 恢复已完成的分割输出合并: {}", wide2Ascii(originalRelFilePath));
+                combineOutputFiles(originalRelFilePath, splitFileParts, m_outputCacheDir, m_outputDir, m_logger);
+            }
+        }
+
+        std::vector<fs::path> pendingFilePaths;
+        int skippedDoneCount = 0;
+        for (const auto& relFilePath : relFilePaths) {
+            const std::string relFileStr = wide2Ascii(relFilePath);
+            const auto statusIt = statusByFile.find(relFileStr);
+            const bool isDone = statusIt != statusByFile.end()
+                && statusIt->second == "done"
+                && hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
+            if (isDone) {
+                ++skippedDoneCount;
+                continue;
+            }
+            pendingFilePaths.push_back(relFilePath);
+        }
+
+        if (skippedDoneCount > 0) {
+            m_logger->info("Agent 恢复模式跳过 {} 个已完成工作单元。", skippedDoneCount);
+        }
+        relFilePaths = std::move(pendingFilePaths);
+    }
+
+    if (relFilePaths.empty()) {
+        m_logger->info("没有需要重新调度的文件任务。");
+        runAgentFinalReconcile();
+        return;
+    }
+
     std::vector<std::future<void>> results;
     m_threadPool.resize(std::min(m_threadsNum, (int)relFilePaths.size()));
     for (const auto& filePath : relFilePaths) {
@@ -1507,6 +2769,7 @@ void NormalJsonTranslator::process(std::vector<fs::path> relFilePaths) {
     }
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
     waitForThreads(m_threadPool, results);
+    runAgentFinalReconcile();
 }
 
 void NormalJsonTranslator::run() {

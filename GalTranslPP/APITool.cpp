@@ -12,6 +12,32 @@ module APITool;
 
 import Tool;
 
+namespace {
+    std::string flattenMessageContent(const json& contentNode) {
+        if (contentNode.is_string()) {
+            return contentNode.get<std::string>();
+        }
+        if (!contentNode.is_array()) {
+            return {};
+        }
+
+        std::string result;
+        for (const auto& item : contentNode) {
+            if (item.is_string()) {
+                result += item.get<std::string>();
+                continue;
+            }
+            if (!item.is_object()) {
+                continue;
+            }
+            if (const auto it = item.find("text"); it != item.end() && it->is_string()) {
+                result += it->get<std::string>();
+            }
+        }
+        return result;
+    }
+}
+
 #ifdef _WIN32
 // Windows下获取系统代理的辅助函数
 std::string getSystemProxyUrl() {
@@ -162,7 +188,19 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
         if (response.status_code == 200) {
             try {
                 // 解析完整的JSON响应
-                apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
+                json responseJson = json::parse(response.text);
+                const json& message = responseJson["choices"][0]["message"];
+                apiResponse.message = message;
+                if (const auto toolCallsIt = message.find("tool_calls"); toolCallsIt != message.end() && toolCallsIt->is_array()) {
+                    apiResponse.toolCalls = *toolCallsIt;
+                    apiResponse.hasToolCalls = !toolCallsIt->empty();
+                }
+                if (const auto contentIt = message.find("content"); contentIt != message.end()) {
+                    apiResponse.content = flattenMessageContent(*contentIt);
+                }
+                else {
+                    apiResponse.content.clear();
+                }
                 apiResponse.success = true;
             }
             catch (const json::exception& e) {

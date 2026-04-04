@@ -108,6 +108,18 @@ maxRotateFiles = 1
 # 解析不完整时重翻整段而非仅重翻漏掉的部分，增加模型因串行而导致解析失败时的容错
 # 默认关闭以节省token/防止因模型截断造成无限循环
 retransAllWhenFail = false
+[agent]
+enabled = false
+chunkSize = 24
+maxTurnsPerChunk = 6
+softContextChars = 48000
+hardContextChars = 64000
+lookaheadLines = 80
+searchResultLimit = 40
+allowCrossFileSearch = true
+nativeFunctionCalling = "auto" # auto/on/off
+finalReconcileSingleThread = true
+rewriteMode = "queue_retranslate"
 
 # 用于生成字典和查错的分词器后端及其设置 (除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的)
 # 但 MeCab 只限于日文分词，如果想分词其它语言需要使用别的分词器并指定对应语言的模型

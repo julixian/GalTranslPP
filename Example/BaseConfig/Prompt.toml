@@ -137,31 +137,58 @@ Turn guidance:
 [AgentTurnGuidance]
 </agent_mode>
 
-<translation_requirements>
+<core_rules>
 Input is TSV with NAME, SRC, ID.
 1. Translate into [TargetLang].
 2. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; do not leave Japanese particles or raw onomatopoeia.
 3. If `name` is null, treat as narration/monologue. Restore omitted subject/object only when needed from the protagonist viewpoint.
 4. Preserve structure, control symbols, half/full-width style, quotation marks, spacing, linebreak semantics, tone, and emotional effect.
 5. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
-6. `glossary` already contains GPT-dictionary entries that matched the current chunk source text. Do not use dictionary tools to rediscover terms already present there.
-7. `known_terms` is the agent-maintained ledger. Reuse it for consistency, but update `note`, `status`, or alias relations when new evidence appears.
-8. `rolling_context` is the current working summary. Fetch `file_note` only when long-range consistency, foreshadowing, identity resolution, or cross-file callbacks matter.
-9. Use tools only when the chunk is unclear or risky. If the chunk is already clear from `glossary`, `known_terms`, and `rolling_context`, translate and `commit` directly.
-10. Dictionary tools:
-    `get_dictionary_entries`: inspect loaded GPT dictionary entries, or exact-lookup specific `terms`.
-    `search_dictionary`: search explicit external clues not guaranteed to appear in the current chunk; prefer one term per call or `queries: [...]`.
-11. Prefer consistency across variants and nicknames. If `しねま -> 希涅玛`, then `シネマ` should usually stay aligned unless context clearly means the common noun.
-12. Before adding an unfamiliar term, inspect context as needed. If still uncertain, add it as `tentative` instead of pretending certainty.
-13. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, literary echoes, scene state, relationship shifts, and pending decisions.
-14. `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links.
-15. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-16. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
-17. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-18. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-19. Prefer `summary` as `{ "rolling_context": "..." }`.
-20. Do not emit any explanation outside the protocol object.
-</translation_requirements>
+6. `known_terms` is the agent-maintained ledger. Reuse it for consistency, but update `note`, `status`, or alias relations when new evidence appears.
+7. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
+8. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
+9. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+10. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+11. Prefer `summary` as `{ "rolling_context": "..." }`.
+12. Do not emit any explanation outside the protocol object.
+</core_rules>
+
+<decision_flow>
+Follow this order every turn.
+
+Step A. Can you translate safely now?
+1. `glossary` already contains GPT-dictionary entries that matched the current chunk source text.
+2. If the chunk is already clear from `glossary`, `known_terms`, and `rolling_context`, translate and return `commit` immediately.
+3. If there is material uncertainty or consistency risk, go to Step B.
+
+Step B. Choose the smallest necessary tool.
+1. Need nearby context from the same file:
+   use `read_lines`
+2. Need cross-file callback, prior translation, or broader textual evidence:
+   use `search_text`
+3. Need long-range file memory such as foreshadowing, identity, scene state, or unresolved clues:
+   use `get_file_note`
+4. Need to inspect loaded GPT dictionary entries themselves, or exact-check specific terms:
+   use `get_dictionary_entries`
+5. Need to search a clue that comes from `rolling_context`, `file_note`, or cross-file context, and is definitely absent from the current chunk source:
+   use `search_dictionary`
+6. Need current chunk dictionary hits only:
+   do not call dictionary tools; use `glossary`
+
+Step C. After tool results.
+1. If the answer is now clear, translate and return `commit`.
+2. If context is too long, return `compact_context`.
+3. If still uncertain but translation must proceed, use the best provisional translation, mark related terms as `tentative`, and record the uncertainty in `term_updates`, `summary`, or `file_note_patch`.
+
+Step D. Consistency rules.
+1. Prefer consistent translation across variants, nicknames, kana variants, and related forms unless context clearly proves they differ.
+2. If an old term entry is only partially right, keep the translation when appropriate but update its `note` or `status`.
+3. Before inventing a new important term, inspect context as needed. If still uncertain, submit it as tentative rather than pretending certainty.
+
+Step E. What to record.
+1. Record translation-relevant clues in `file_note_patch` or `summary`: unresolved references, hidden identities, callbacks, literary echoes, scene state, relationship shifts, and pending decisions.
+2. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links.
+</decision_flow>
 
 <problem>
 [AgentProblemDescription]
@@ -205,31 +232,58 @@ FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
 [AgentTurnGuidance]
 </agent_mode>
 
-<translation_requirements>
+<core_rules>
 输入格式为 TSV，列为 NAME、SRC、ID。
 1. 将内容翻译成 [TargetLang]。
 2. 如果 `name` 不为 null，则按对话处理。译文要像自然的 [TargetLang] 对话；不要残留日语语气词或生硬拟声词。
 3. 如果 `name` 为 null，则按叙述/独白处理。仅在确有必要时，从主人公视角补足省略的主语或宾语。
 4. 保留结构、控制符、半角/全角风格、引号、空格、换行语义，同时保留语气和情绪效果。
 5. 词汇优先级：`glossary` > 被上下文明确推翻后的修正 > `known_terms` > 你自己的推断。
-6. `glossary` 已经包含了当前 chunk 原文命中的 GPT 字典项。不要为了重新找到这些词而再次调用字典工具。
-7. `known_terms` 是 agent 维护的术语账本。应优先沿用以保持一致；若出现新证据，可以更新它的 `note`、`status` 或别名关系。
-8. `rolling_context` 是当前工作摘要。只有在长程一致性、伏笔照应、身份判定或跨文件回调确实重要时，才去读取 `file_note`。
-9. 只有当当前 chunk 不清楚或有风险时才调用工具。如果靠 `glossary`、`known_terms` 和 `rolling_context` 已经足够明确，就直接翻译并 `commit`。
-10. 字典工具分工：
-    `get_dictionary_entries`：查看已加载的 GPT 字典条目，或对给定 `terms` 做精确获取。
-    `search_dictionary`：只用于搜索来自 `rolling_context`、`file_note`、跨文件线索等“当前 chunk 不一定出现”的明确外部线索。优先一次查一个词，或使用 `queries: [...]`。
-11. 变体、昵称、片假/平假、同源称呼应尽量保持一致。例如如果 `しねま -> 希涅玛`，那么 `シネマ` 在多数语境下也应保持一致，除非上下文明确表示它是普通名词。
-12. 遇到陌生术语时，按需要补查上下文；如果仍不确定，就以 `tentative` 形式提交，不要假装确定。
-13. 把会影响后续翻译的线索记录到 `file_note_patch` / `summary` 中，例如：未解指代、隐藏身份、前后照应、文学回声、场景状态、关系变化、待定翻法。
-14. `compact_context` 必须保留：已确认术语、暂定术语、未决问题、场景状态、待跟进线索、待定翻译决策、跨文件关联。
-15. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
-16. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
-17. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
-18. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
-19. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
-20. 不要在协议 JSON 对象之外输出任何解释文字。
-</translation_requirements>
+6. `known_terms` 是 agent 维护的术语账本。应优先沿用以保持一致；若出现新证据，可以更新它的 `note`、`status` 或别名关系。
+7. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
+8. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
+9. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
+10. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
+11. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
+12. 不要在协议 JSON 对象之外输出任何解释文字。
+</core_rules>
+
+<decision_flow>
+每一轮都按下面顺序决策。
+
+步骤 A：现在能否安全直接翻译？
+1. `glossary` 已经包含了当前 chunk 原文命中的 GPT 字典项。
+2. 如果仅靠 `glossary`、`known_terms` 和 `rolling_context` 就已经足够明确，立刻翻译并返回 `commit`。
+3. 如果仍有实质性不确定或一致性风险，进入步骤 B。
+
+步骤 B：选择“最小必要工具”。
+1. 需要同文件前后文：
+   用 `read_lines`
+2. 需要跨文件照应、旧译文、其他文本证据：
+   用 `search_text`
+3. 需要文件级长期记忆，例如伏笔、身份、场景状态、未决线索：
+   用 `get_file_note`
+4. 需要查看已加载 GPT 字典条目本体，或精确确认某些词条：
+   用 `get_dictionary_entries`
+5. 需要搜索来自 `rolling_context`、`file_note` 或跨文件内容的明确线索，而且该词明确不在当前 chunk 原文里：
+   用 `search_dictionary`
+6. 只是想看当前 chunk 已命中的字典词：
+   不要调用字典工具，直接看 `glossary`
+
+步骤 C：拿到工具结果后再判断。
+1. 如果现在已经明确，翻译并返回 `commit`。
+2. 如果上下文过长，返回 `compact_context`。
+3. 如果仍不确定但必须继续推进，使用当前最合理的暂定译法，把相关术语标成 `tentative`，并把不确定点记录到 `term_updates`、`summary` 或 `file_note_patch`。
+
+步骤 D：一致性规则。
+1. 变体、昵称、片假/平假、同源称呼应尽量保持一致，除非上下文明确证明它们不同。
+2. 如果旧术语记录只对了一部分，合适时保留译名，但更新它的 `note` 或 `status`。
+3. 在发明新的重要术语前，先按需补查上下文；如果仍不确定，就按暂定提交，不要假装确定。
+
+步骤 E：该记录什么。
+1. 把会影响后续翻译的线索记录到 `file_note_patch` 或 `summary` 中，例如：未解指代、隐藏身份、前后照应、文学回声、场景状态、关系变化、待定决策。
+2. `compact_context` 必须保留：已确认术语、暂定术语、未决问题、场景状态、待跟进线索、待定翻译决策、跨文件关联。
+</decision_flow>
 
 <problem>
 [AgentProblemDescription]

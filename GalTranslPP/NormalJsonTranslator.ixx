@@ -115,6 +115,8 @@ export {
         // 原始json相对路径到多个输入分割文件相对路径及其有没有完成的映射
         absl::flat_hash_map<fs::path, absl::flat_hash_map<fs::path, bool>> m_jsonToSplitFileParts;
         std::vector<fs::path> m_agentKnownRelFiles;
+        std::vector<fs::path> m_agentDictionaryPaths;
+        std::optional<fs::path> m_agentProjectInfoPath;
 
         absl::flat_hash_map<std::string, std::string> m_nameMap;
         toml::ordered_value m_problemOverview = toml::array{};

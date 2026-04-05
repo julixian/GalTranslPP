@@ -222,16 +222,6 @@ namespace {
         return !trimmed.empty() && trimmed != "[]" && trimmed != "null";
     }
 
-    bool pathStartsWith(const fs::path& root, const fs::path& candidate) {
-        auto rootIt = root.begin();
-        auto candidateIt = candidate.begin();
-        for (; rootIt != root.end(); ++rootIt, ++candidateIt) {
-            if (candidateIt == candidate.end() || str2Lower(rootIt->wstring()) != str2Lower(candidateIt->wstring())) {
-                return false;
-            }
-        }
-        return true;
-    }
 }
 
 // 只读运行状态加载函数，主要给恢复调度和启动检查使用。
@@ -378,49 +368,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return cacheMap;
     };
 
-    // Agent 也允许读取项目里的参考文本文件，例如 config、项目字典、Prompt、
-    // 自定义插件脚本等，供模型在术语不确定时自行核对。
-    auto isProjectReferenceTextFile = [&](const fs::path& relPath) {
-        static const absl::flat_hash_set<std::string> allowedExtensions = {
-            ".toml", ".json", ".txt", ".md", ".ini", ".yaml", ".yml", ".tsv", ".csv", ".lua", ".py"
-        };
-        const std::string ext = str2Lower(relPath.extension().string());
-        return allowedExtensions.contains(ext);
-    };
-
-    auto isProjectReferenceCandidate = [&](const fs::path& relPath) {
-        if (relPath.empty()) {
-            return false;
-        }
-        static const absl::flat_hash_set<std::string> blockedTopLevelDirs = {
-            "gt_input", "gt_output", "logs", "other_cache", "transl_cache", "gt_show_normal"
-        };
-        const auto firstPartIt = relPath.begin();
-        if (firstPartIt != relPath.end() && blockedTopLevelDirs.contains(str2Lower(wide2Ascii(*firstPartIt)))) {
-            return false;
-        }
-        return isProjectReferenceTextFile(relPath);
-    };
-
-    auto resolveProjectReferencePath = [&](const std::string& relPathStr) {
-        if (relPathStr.empty()) {
-            throw std::runtime_error("file 不能为空");
-        }
-        const fs::path root = fs::weakly_canonical(m_projectDir);
-        const fs::path resolved = fs::weakly_canonical(m_projectDir / ascii2Wide(relPathStr));
-        if (!pathStartsWith(root, resolved)) {
-            throw std::runtime_error("只允许读取项目目录内的文件");
-        }
-        if (!fs::exists(resolved) || !fs::is_regular_file(resolved)) {
-            throw std::runtime_error("目标文件不存在");
-        }
-        const fs::path relPath = fs::relative(resolved, root);
-        if (!isProjectReferenceCandidate(relPath)) {
-            throw std::runtime_error("该文件不在可读取的项目参考文件范围内");
-        }
-        return std::make_pair(resolved, relPath);
-    };
-
     // 下面开始是“模型工具调用”在本地侧的只读实现。
     // 模型可以请求这些工具，但它们都不能直接写文件；真正落盘必须走 commit。
     auto readLinesTool = [&](const json& arguments) {
@@ -482,40 +429,101 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return json{ {"files", files} };
     };
 
-    // `list_reference_files`：列出项目内可读取的参考文本文件。
-    auto listReferenceFilesTool = [&](const json& arguments) {
-        const std::string pattern = str2Lower(arguments.value("pattern", ""));
-        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit, 400);
-        json files = json::array();
-        for (const auto& entry : fs::recursive_directory_iterator(m_projectDir)) {
-            if (!entry.is_regular_file()) {
-                continue;
+    // `search_dictionary`：在当前运行实际加载过的字典文件里搜索词条。
+    auto searchDictionaryTool = [&](const json& arguments) {
+        const std::string query = arguments.value("query", "");
+        const std::string queryLower = str2Lower(query);
+        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit, 200);
+        json matches = json::array();
+        auto pushMatch = [&](json&& item) {
+            if ((int)matches.size() < limit) {
+                matches.push_back(std::move(item));
             }
-            const fs::path relPath = fs::relative(entry.path(), m_projectDir);
-            if (!isProjectReferenceCandidate(relPath)) {
-                continue;
-            }
-            const std::string relPathStr = wide2Ascii(relPath);
-            if (!pattern.empty() && !str2Lower(relPathStr).contains(pattern)) {
-                continue;
-            }
-            files.push_back(relPathStr);
-            if ((int)files.size() >= limit) {
+        };
+
+        for (const fs::path& dictPath : m_agentDictionaryPaths) {
+            if ((int)matches.size() >= limit) {
                 break;
             }
+            try {
+                const auto dictData = toml::uparse(dictPath);
+                const fs::path relPath = fs::relative(dictPath, m_projectDir);
+                const std::string relPathStr = wide2Ascii(relPath);
+
+                if (dictData.contains("gptDict")) {
+                    const auto& dictTbls = dictData.at("gptDict").as_array();
+                    for (const auto& el : dictTbls) {
+                        const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
+                            (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
+                        const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
+                            (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
+                        const std::string note = el.contains("note") ? el.at("note").as_string() : "";
+                        const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + relPathStr);
+                        if (queryLower.empty() || haystack.contains(queryLower)) {
+                            pushMatch(json{
+                                {"type", "gpt_dict"},
+                                {"file", relPathStr},
+                                {"source_term", sourceTerm},
+                                {"target_term", targetTerm},
+                                {"note", note}
+                            });
+                            if ((int)matches.size() >= limit) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                if ((int)matches.size() >= limit) {
+                    break;
+                }
+                if (dictData.contains("normalDict")) {
+                    const auto& dictTbls = dictData.at("normalDict").as_array();
+                    for (const auto& el : dictTbls) {
+                        const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
+                            (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
+                        const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
+                            (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
+                        const std::string conditionTarget = el.contains("conditionTarget") ? el.at("conditionTarget").as_string() : "";
+                        const std::string conditionReg = el.contains("conditionReg") ? el.at("conditionReg").as_string() : "";
+                        const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + conditionTarget + "\n" + conditionReg + "\n" + relPathStr);
+                        if (queryLower.empty() || haystack.contains(queryLower)) {
+                            pushMatch(json{
+                                {"type", "normal_dict"},
+                                {"file", relPathStr},
+                                {"source_term", sourceTerm},
+                                {"target_term", targetTerm},
+                                {"condition_target", conditionTarget},
+                                {"condition_reg", conditionReg},
+                                {"is_regex", el.contains("isReg") && el.at("isReg").as_boolean()}
+                            });
+                            if ((int)matches.size() >= limit) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (...) {}
         }
-        return json{ {"files", files} };
+        return json{ {"matches", matches} };
     };
 
-    // `read_reference_file`：读取项目里的配置/字典/提示词等文本文件。
-    auto readReferenceFileTool = [&](const json& arguments) {
+    // `get_project_note`：读取项目根目录中的用户脚本说明文件（如果存在）。
+    auto getProjectNoteTool = [&](const json& arguments) {
+        if (!m_agentProjectInfoPath.has_value()) {
+            return json{
+                {"available", false},
+                {"file", nullptr},
+                {"content", ""}
+            };
+        }
         const int maxChars = sanitizeToolLimit(arguments.value("max_chars", 20000), 20000, 120000);
-        const auto [resolvedPath, relPath] = resolveProjectReferencePath(arguments.value("file", ""));
-        std::ifstream ifs(resolvedPath, std::ios::binary);
+        std::ifstream ifs(m_agentProjectInfoPath.value(), std::ios::binary);
         const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
         const bool truncated = (int)content.size() > maxChars;
         return json{
-            {"file", wide2Ascii(relPath)},
+            {"available", true},
+            {"file", wide2Ascii(fs::relative(m_agentProjectInfoPath.value(), m_projectDir))},
             {"content", truncated ? content.substr(0, maxChars) : content},
             {"truncated", truncated},
             {"total_chars", (int)content.size()}
@@ -646,23 +654,23 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 if (call.name == "list_files") {
                     result["result"] = listFilesTool(call.arguments);
                 }
-                else if (call.name == "list_reference_files") {
-                    result["result"] = listReferenceFilesTool(call.arguments);
-                }
                 else if (call.name == "read_lines") {
                     result["result"] = readLinesTool(call.arguments);
                 }
-                else if (call.name == "read_reference_file") {
-                    result["result"] = readReferenceFileTool(call.arguments);
-                }
                 else if (call.name == "search_text") {
                     result["result"] = searchTextTool(call.arguments);
+                }
+                else if (call.name == "search_dictionary") {
+                    result["result"] = searchDictionaryTool(call.arguments);
                 }
                 else if (call.name == "get_term") {
                     result["result"] = getTermTool(call.arguments);
                 }
                 else if (call.name == "get_file_note") {
                     result["result"] = getFileNoteTool(call.arguments);
+                }
+                else if (call.name == "get_project_note") {
+                    result["result"] = getProjectNoteTool(call.arguments);
                 }
                 else {
                     result["error"] = std::format("未知工具: {}", call.name);
@@ -760,6 +768,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         const std::string inputProblems = currentProblemSummary();
         const std::string glossary = currentGlossary();
         const std::string knownTerms = termLedgerExcerpt(inputBlock, rollingSummary, fileNote);
+        const std::string extraTools = m_agentProjectInfoPath.has_value()
+            ? std::format("get_project_note: read optional user-provided script note file `{}`\n", wide2Ascii(fs::relative(m_agentProjectInfoPath.value(), m_projectDir)))
+            : "";
 
         const std::string schemaDescription =
             "{"
@@ -787,6 +798,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         replaceStrInplace(userPrompt, "[AgentKnownTerms]", knownTerms);
         replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
         replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
+        replaceStrInplace(userPrompt, "[AgentExtraTools]", extraTools);
         replaceStrInplace(userPrompt, "[AgentTurnGuidance]",
             "If context is near limit, return compact_context only. "
             "Otherwise either call read-only tools or return a commit that covers every current chunk id exactly once.");

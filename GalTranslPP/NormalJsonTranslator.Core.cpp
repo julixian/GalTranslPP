@@ -157,6 +157,19 @@ void NormalJsonTranslator::init()
         m_useGptDictToReplaceName = toml::find_or(configData, "dictionary", "useGPTDictInName", false);
         const std::string defaultDictFolder = toml::find_or(configData, "dictionary", "defaultDictFolder", "BaseConfig/Dict");
         const fs::path defaultDictFolderPath = ascii2Wide(defaultDictFolder);
+        m_agentDictionaryPaths.clear();
+        m_agentProjectInfoPath.reset();
+
+        const auto registerAgentDictionaryPath = [&](const fs::path& dictPath)
+        {
+            if (!m_agentEnabled || !fs::exists(dictPath)) {
+                return;
+            }
+            const fs::path normalized = fs::weakly_canonical(dictPath);
+            if (!std::ranges::contains(m_agentDictionaryPaths, normalized)) {
+                m_agentDictionaryPaths.push_back(normalized);
+            }
+        };
 
         auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)
         {
@@ -170,16 +183,35 @@ void NormalJsonTranslator::init()
                 fs::path dictPath = m_projectDir / ascii2Wide(dictFileName);
                 if (fs::exists(dictPath)) {
                     dict->loadFromFile(dictPath);
+                    registerAgentDictionaryPath(dictPath);
                 }
                 else {
                     dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
                     if (fs::exists(dictPath)) {
                         dict->loadFromFile(dictPath);
+                        registerAgentDictionaryPath(dictPath);
                     }
                 }
             }
             dict->sort();
         };
+        if (m_agentEnabled) {
+            static const std::array<fs::path, 6> agentProjectInfoCandidates = {
+                L"脚本说明.md",
+                L"剧情说明.md",
+                L"设定补充.md",
+                L"script_info.md",
+                L"story_info.md",
+                L"project_note.md"
+            };
+            for (const fs::path& candidate : agentProjectInfoCandidates) {
+                const fs::path fullPath = m_projectDir / candidate;
+                if (fs::exists(fullPath) && fs::is_regular_file(fullPath)) {
+                    m_agentProjectInfoPath = fs::weakly_canonical(fullPath);
+                    break;
+                }
+            }
+        }
         m_preDictionary = std::make_unique<NormalDictionary>(m_projectDir, m_luaManager, m_pythonManager, m_logger);
         loadDictsFunc("pre", m_preDictionary);
 

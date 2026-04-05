@@ -148,7 +148,7 @@ Input is TSV with NAME, SRC, ID.
 7. `known_terms` is the agent-maintained term ledger. It may be partial. Reuse it for consistency, but you may refine its `note`, `status`, or alias mapping when new evidence appears.
 8. `file_note` is long-lived file-level memory. `rolling_context` is the current working summary. Read both before guessing when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
 9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, file_note, or rolling_context.
-10. If glossary/known_terms may be incomplete, you may inspect project dictionaries, config, prompts, or plugin text files through the reference-file tools before deciding a term.
+10. If glossary/known_terms may be incomplete, use dictionary search before inventing important names, aliases, or terminology.
 11. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
 12. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
 13. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
@@ -184,13 +184,12 @@ Input is TSV with NAME, SRC, ID.
 
 <tools>
 list_files: list available script files
-list_reference_files: list readable project dictionaries/config/prompts/plugins
 read_lines: read source and cached translations from a file range
-read_reference_file: read a project text reference file by relative path
 search_text: search source, cached dst, term ledger, and file notes
+search_dictionary: search loaded project/default dictionaries
 get_term: read one term-ledger entry
 get_file_note: read durable file notes
-</tools>
+[AgentExtraTools]</tools>
 
 <input_tsv>
 [AgentCurrentChunkTsv]

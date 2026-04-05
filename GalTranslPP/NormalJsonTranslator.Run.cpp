@@ -344,6 +344,17 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             || previousAgentConfig.value("split_file_num", m_splitFileNum) != m_splitFileNum
             || previousAgentConfig.value("chunk_size", m_agentChunkSize) != m_agentChunkSize;
 
+        // `threads_num` 变化只影响调度并发度，不改变工作单元本身的边界，因此可以保留旧的
+        // `last_committed_index`，只需清掉旧 lease 重新排队未完成任务。
+        //
+        // `split_file / split_file_num / chunk_size` 变化则属于“工作单元边界变化”：
+        // 重新切分后，同一个 part 的内容和覆盖范围都可能变，旧的 `last_committed_index`
+        // 已经不能安全映射到新 part，所以这里会：
+        // 1. 重建新的工作单元列表
+        // 2. 丢弃旧工作单元级进度（把 `last_committed_index` 置回 -1）
+        // 3. 保留更稳定的持久化产物：trans_cache / term_ledger / file_note / 已完成输出
+        // 后续恢复时会依靠缓存重新命中已翻好的句子，而不是试图沿用旧 part 的游标。
+
         absl::flat_hash_map<std::string, json> oldEntries;
         if (runState.contains("files") && runState["files"].is_array()) {
             for (const auto& item : runState["files"]) {
@@ -379,10 +390,13 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
                     entry["last_committed_index"] = oldEntry.value("last_committed_index", -1);
                 }
                 if (artifactDone && oldStatus == "done") {
+                    // 只有“新工作单元名仍然存在，且输出/缓存成品也都还在”时，才直接继承 done。
                     entry["status"] = "done";
                     ++preservedDoneCount;
                 }
                 else {
+                    // 工作单元边界变了时，不尝试把旧 part 进度硬映射到新 part；
+                    // 统一回到 pending，由缓存系统在 processFile 阶段重新消化已完成内容。
                     if (oldStatus == "in_progress" || oldStatus == "done") {
                         ++requeuedCount;
                     }

@@ -396,12 +396,23 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     }
 
+    // 下面这些 lambda 都只是当前函数内部复用的小工具。
+    // 它们本身不会向模型发请求，职责大致分成三类：
+    // 1. 输入/缓存读取辅助
+    // 2. 模型可调用的只读工具实现
+    // 3. commit 校验与落盘辅助
+    // 真正会触发模型请求的地方只有后面 turn 循环里的 performApiRequest。
+
+    // 返回当前 chunk 里还未完成的句子。
+    // 构造消息、校验 commit、失败重试时都会重复调用它。
     auto currentChunk = [&]() {
         return batch
             | std::views::filter([](const Sentence* se) { return !se->complete; })
             | std::ranges::to<std::vector>();
     };
 
+    // 把相对路径解析成实际应读取的输入文件。
+    // splitFile 场景下优先读输入缓存里的 part 文件，否则读原始输入目录。
     auto resolveInputPath = [&](const fs::path& relPath) {
         if (m_needsCombining && fs::exists(m_inputCacheDir / relPath)) {
             return m_inputCacheDir / relPath;
@@ -409,6 +420,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return m_inputDir / relPath;
     };
 
+    // 把某个文件当前已有的缓存译文读成内存 map，供只读工具和搜索逻辑复用。
+    // 这里只读 trans_cache，不会写回任何状态。
     auto loadCacheDstMap = [&](const fs::path& targetRelPath) {
         absl::flat_hash_map<int, json> cacheMap;
         const fs::path cachePath = m_transCacheDir / targetRelPath;
@@ -430,6 +443,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return cacheMap;
     };
 
+    // 下面开始是“模型工具调用”在本地侧的只读实现。
+    // 模型可以请求这些工具，但它们都不能直接写文件；真正落盘必须走 commit。
     auto readLinesTool = [&](const json& arguments) {
         const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
         const int start = std::max(0, arguments.value("start", 0));
@@ -471,6 +486,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return result;
     };
 
+    // `list_files`：给模型一个可用文件列表，方便后续跨文件定位。
     auto listFilesTool = [&](const json& arguments) {
         const std::string pattern = str2Lower(arguments.value("pattern", ""));
         const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
@@ -488,6 +504,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return json{ {"files", files} };
     };
 
+    // `search_text`：统一搜索术语账本、原文、缓存译文以及 file note。
+    // 这是跨 chunk / 跨文件补上下文时最常用的工具之一。
     auto searchTextTool = [&](const json& arguments) {
         const std::string query = arguments.value("query", "");
         const std::string queryLower = str2Lower(query);
@@ -578,6 +596,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return json{ {"matches", matches} };
     };
 
+    // `get_term`：读取某个术语在全局账本中的当前记录。
     auto getTermTool = [&](const json& arguments) {
         const std::string term = arguments.value("term", "");
         const json ledger = loadAgentTermLedger();
@@ -587,6 +606,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         };
     };
 
+    // `get_file_note`：读取文件级摘要，帮助模型拿到长程剧情/场景信息。
     auto getFileNoteTool = [&](const json& arguments) {
         const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
         return json{
@@ -595,6 +615,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         };
     };
 
+    // 按工具名把模型请求分发到上面的只读工具实现，并收集执行结果。
+    // 这里只执行工具，不会再次请求模型。
     auto executeToolCalls = [&](const std::vector<AgentToolCallRequest>& calls) {
         json toolResults = json::array();
         for (const auto& call : calls) {
@@ -630,6 +652,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return toolResults;
     };
 
+    // 从全局术语账本里截一小段摘要塞进提示词，减少模型每轮都去查工具的次数。
     auto termLedgerExcerpt = [&]() {
         const json ledger = loadAgentTermLedger();
         json excerpt = json::array();
@@ -649,6 +672,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return excerpt.dump(2);
     };
 
+    // 组装“一轮模型请求”的基础消息。
+    // 这里本身不发请求，只负责把 chunk、rolling context、file note、术语摘要等拼好。
     auto buildBaseMessages = [&](const std::string& rollingSummary, const json& fileNote) {
         absl::btree_map<int, Sentence*> id2SentenceMap;
         std::string inputBlock;
@@ -685,6 +710,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         });
     };
 
+    // 粗略估算消息大小，用于决定是否先要求模型压缩上下文。
     auto approximateMessagesChars = [](const json& messages) {
         size_t total = 0;
         for (const auto& item : messages) {
@@ -693,6 +719,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return total;
     };
 
+    // 合并模型给出的 file_note_patch。
     auto mergeFileNotePatch = [&](json& note, const json& patch) {
         if (!patch.is_object()) {
             return;
@@ -702,6 +729,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     };
 
+    // 给术语账本追加出现位置，便于后续术语改判时回溯受影响句子。
     auto appendOccurrence = [](json& entry, const fs::path& file, int id) {
         if (!entry.contains("occurrences") || !entry["occurrences"].is_array()) {
             entry["occurrences"] = json::array();
@@ -715,6 +743,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     };
 
+    // 向 rewrite_queue 去重追加重翻请求。
+    // 请求来源可能是模型显式提交，也可能是术语译法变化后程序自动生成。
     auto enqueueRewriteRequest = [&](json& queue, const json& request) {
         if (!request.is_object()) {
             return;
@@ -730,6 +760,11 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     };
 
+    // `commit` 的本地落盘入口：
+    // 1. 校验模型是否完整覆盖当前 chunk
+    // 2. 更新句子对象、file note 和共享状态文件
+    // 3. 推进进度条与 run_state
+    // 它本身不会再调用模型；校验失败后由外层 turn/retry 逻辑决定是否重试。
     auto applyCommit = [&](const AgentProtocolResponse& protocol, const std::string& modelName, int& committedCount) {
         std::unordered_map<int, json> translationMap;
         for (const auto& item : protocol.translations) {
@@ -877,6 +912,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         json messages = buildBaseMessages(backgroundText, fileNote);
         bool compactRequested = false;
 
+        // 这里开始才是“单个 chunk 的模型多轮循环”。
+        // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
         for (int turn = 0; turn < m_agentMaxTurnsPerChunk; ++turn) {
             const size_t messageChars = approximateMessagesChars(messages);
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
@@ -908,6 +945,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 payload["tool_choice"] = "auto";
             }
 
+            // 整个 translateBatchAgent 里，真正向模型发请求的地方只有这里。
             ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeOutMs);
             if (useNativeFunctionCalling && m_agentNativeFunctionCalling == "auto" && shouldFallbackFromNativeFunctionCalling(response)) {
                 m_logger->warn("[线程 {}] [文件 {}] 原生函数调用不可用，自动退回文本协议。", threadId, wide2Ascii(relInputPath));
@@ -938,6 +976,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 m_logger->info("[线程 {}] [文件 {}] Agent 请求 {} 个工具调用。", threadId, wide2Ascii(relInputPath), protocol.calls.size());
                 const json toolResults = executeToolCalls(protocol.calls);
                 compactRequested = false;
+                // 工具调用分支不会直接完成 chunk，而是把工具结果回填给下一轮模型继续推理。
                 if (response.hasToolCalls && useNativeFunctionCalling && response.message.is_object() && !response.message.empty()) {
                     messages.push_back(response.message);
                     for (const auto& result : toolResults) {
@@ -959,6 +998,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             if (protocol.action == "compact_context") {
+                // 压缩分支只更新 rolling context / file note，不提交任何句子。
                 if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
                     backgroundText = protocol.summary["rolling_context"].get<std::string>();
                 }
@@ -979,6 +1019,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             if (protocol.action == "commit") {
+                // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
                 int committedCount = 0;
                 try {
                     applyCommit(protocol, currentApi.modelName, committedCount);

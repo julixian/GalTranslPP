@@ -31,20 +31,6 @@ namespace {
         return std::to_string(now);
     }
 
-    json loadJsonFileOrDefault(const fs::path& path, const json& fallback = json::object())
-    {
-        try {
-            if (!fs::exists(path)) {
-                return fallback;
-            }
-            std::ifstream ifs(path, std::ios::binary);
-            return json::parse(ifs);
-        }
-        catch (...) {
-            return fallback;
-        }
-    }
-
     void saveJsonFilePretty(const fs::path& path, const json& value)
     {
         createParent(path);
@@ -52,32 +38,6 @@ namespace {
         ofs << value.dump(2);
     }
 
-    bool hasAgentWorkUnitArtifacts(
-        const fs::path& relFilePath,
-        const fs::path& outputDir,
-        const fs::path& outputCacheDir,
-        const fs::path& transCacheDir,
-        bool needsCombining
-    ) {
-        const fs::path outputPath = needsCombining ? (outputCacheDir / relFilePath) : (outputDir / relFilePath);
-        const fs::path cachePath = transCacheDir / relFilePath;
-        return fs::exists(outputPath) && fs::exists(cachePath);
-    }
-
-    std::string buildAgentWorkUnitFingerprint(
-        const fs::path& relFilePath,
-        const fs::path& inputDir,
-        const fs::path& inputCacheDir,
-        bool needsCombining
-    ) {
-        const fs::path inputPath = needsCombining ? (inputCacheDir / relFilePath) : (inputDir / relFilePath);
-        if (!fs::exists(inputPath) || !fs::is_regular_file(inputPath)) {
-            return {};
-        }
-        const uintmax_t fileSize = fs::file_size(inputPath);
-        const auto crc = calculateFileCRC64(inputPath);
-        return std::format("{}|{}|{:016X}", wide2Ascii(relFilePath), fileSize, crc);
-    }
 }
 
 std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
@@ -328,7 +288,9 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
         throw std::invalid_argument(std::format("未知的排序模式: {}", m_sortMethod));
     }
 
-    // 6. Agent 模式启动前构建 run_state、search_catalog 等共享状态文件。
+    // 6. Agent 模式启动前初始化共享状态文件。
+    // 这里只做“建目录 + 建索引 + 写基础 run_state”，不再在这里做工作单元继承、
+    // 指纹对比、done 恢复等调度决策；句级是否需要重翻统一交给 processFile。
     if (m_agentEnabled) {
         m_agentKnownRelFiles = relFilePaths;
         createParent(m_agentRunStatePath);
@@ -346,123 +308,26 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             {"final_reconcile_single_thread", m_agentFinalReconcileSingleThread},
             {"rewrite_mode", m_agentRewriteMode}
         };
-        const std::string configSignature = currentAgentConfig.dump();
-
-        json runState = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
-        const json previousAgentConfig = runState.contains("config") && runState["config"].is_object() ? runState["config"] : json::object();
-        const bool hasPreviousConfig = !previousAgentConfig.empty();
-        const bool threadsChanged = hasPreviousConfig && previousAgentConfig.value("threads_num", m_threadsNum) != m_threadsNum;
-        const bool workLayoutChanged = !hasPreviousConfig
-            || previousAgentConfig.value("split_file", m_splitFile) != m_splitFile
-            || previousAgentConfig.value("split_file_num", m_splitFileNum) != m_splitFileNum;
-
-        // `threads_num` 变化只影响调度并发度，不改变工作单元本身的边界，因此可以保留旧的
-        // `last_committed_index`，只需清掉旧 lease 重新排队未完成任务。
-        //
-        // `split_file / split_file_num` 变化则属于“工作单元边界变化”：
-        // 重新切分后，同一个 part 的内容和覆盖范围都可能变，旧的 `last_committed_index`
-        // 已经不能安全映射到新 part，所以这里会：
-        // 1. 重建新的工作单元列表
-        // 2. 丢弃旧工作单元级进度（把 `last_committed_index` 置回 -1）
-        // 3. 保留更稳定的持久化产物：trans_cache / term_ledger / file_note / 已完成输出
-        // 后续恢复时会依靠缓存重新命中已翻好的句子，而不是试图沿用旧 part 的游标。
-
-        absl::flat_hash_map<std::string, json> oldEntries;
-        if (runState.contains("files") && runState["files"].is_array()) {
-            for (const auto& item : runState["files"]) {
-                if (!item.is_object()) {
-                    continue;
-                }
-                const std::string relFile = item.value("file", "");
-                if (!relFile.empty()) {
-                    oldEntries.insert_or_assign(relFile, item);
-                }
-            }
-        }
-
-        int preservedDoneCount = 0;
-        int requeuedCount = 0;
-        int fingerprintMismatchCount = 0;
-        json normalizedFiles = json::array();
         const std::string updatedAt = nowTimestampString();
+        json normalizedFiles = json::array();
         for (const auto& relFilePath : relFilePaths) {
             const std::string relFileStr = wide2Ascii(relFilePath);
-            const std::string inputFingerprint = buildAgentWorkUnitFingerprint(relFilePath, m_inputDir, m_inputCacheDir, m_needsCombining);
             json entry = {
                 {"file", relFileStr},
                 {"status", "pending"},
                 {"lease_owner", ""},
                 {"last_committed_index", -1},
-                {"input_fingerprint", inputFingerprint},
                 {"updated_at", updatedAt}
             };
-
-            const bool artifactDone = hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
-            if (const auto it = oldEntries.find(relFileStr); it != oldEntries.end()) {
-                const json& oldEntry = it->second;
-                const std::string oldStatus = oldEntry.value("status", "pending");
-                const std::string oldFingerprint = oldEntry.value("input_fingerprint", "");
-                const bool fingerprintMatches = !inputFingerprint.empty() && oldFingerprint == inputFingerprint;
-                if (!workLayoutChanged) {
-                    entry["last_committed_index"] = oldEntry.value("last_committed_index", -1);
-                }
-                if (artifactDone && oldStatus == "done" && fingerprintMatches) {
-                    // 只有旧状态为 done、产物仍在、且输入指纹完全一致时，才允许直接继承 done。
-                    entry["status"] = "done";
-                    ++preservedDoneCount;
-                }
-                else {
-                    // 只要工作单元边界变化，或者同名工作单元的输入内容已经变化，
-                    // 都不尝试把旧进度硬映射到新工作单元；统一回到 pending，
-                    // 由缓存系统在 processFile 阶段重新消化已完成内容。
-                    if (oldStatus == "in_progress" || oldStatus == "paused" || oldStatus == "done") {
-                        ++requeuedCount;
-                    }
-                    if (oldStatus == "done" && artifactDone && !fingerprintMatches) {
-                        ++fingerprintMismatchCount;
-                    }
-                    if (workLayoutChanged) {
-                        entry["last_committed_index"] = -1;
-                    }
-                }
-            }
-
             normalizedFiles.push_back(std::move(entry));
         }
 
-        runState = {
-            {"config_signature", configSignature},
+        const json runState = {
             {"config", currentAgentConfig},
             {"updated_at", updatedAt},
             {"files", normalizedFiles}
         };
         saveJsonFilePretty(m_agentRunStatePath, runState);
-
-        if (hasPreviousConfig) {
-            if (workLayoutChanged) {
-                m_logger->info("Agent 运行配置发生工作单元变化，已重建调度列表并保留 {} 个已完成工作单元。", preservedDoneCount);
-            }
-            else if (threadsChanged) {
-                m_logger->info("Agent 线程数发生变化，已清理旧 lease，并保留 {} 个已完成工作单元。", preservedDoneCount);
-            }
-            else if (requeuedCount > 0) {
-                m_logger->info("Agent 已恢复上次未完成的进度，重新排队 {} 个工作单元。", requeuedCount);
-            }
-            if (fingerprintMismatchCount > 0) {
-                m_logger->warn("Agent 检测到 {} 个同名工作单元的输入内容已变化，不再直接继承 done，将回到 pending 并依赖缓存重跑。", fingerprintMismatchCount);
-            }
-        }
-
-        if (m_needsCombining) {
-            for (const auto& item : runState["files"]) {
-                const fs::path relFilePath = ascii2Wide(item.value("file", ""));
-                const bool isDone = item.value("status", "pending") == "done"
-                    && hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
-                if (const auto it = m_splitFilePartsToJson.find(relFilePath); it != m_splitFilePartsToJson.end()) {
-                    m_jsonToSplitFileParts[it->second][relFilePath] = isDone;
-                }
-            }
-        }
 
         saveJsonFilePretty(m_agentSearchCatalogPath, json{
             {"updated_at", nowTimestampString()},
@@ -562,57 +427,9 @@ void NormalJsonTranslator::afterRun()
 
 void NormalJsonTranslator::process(std::vector<fs::path> relFilePaths)
 {
-    // Agent 恢复模式下，会在调度前把已完成工作单元过滤掉。
-    if (m_agentEnabled && !m_agentReconciling) {
-        json runState = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
-        absl::flat_hash_map<std::string, std::string> statusByFile;
-        if (runState.contains("files") && runState["files"].is_array()) {
-            for (const auto& item : runState["files"]) {
-                if (!item.is_object()) {
-                    continue;
-                }
-                const std::string relFile = item.value("file", "");
-                if (!relFile.empty()) {
-                    statusByFile.insert_or_assign(relFile, item.value("status", "pending"));
-                }
-            }
-        }
-
-        if (m_needsCombining) {
-            for (const auto& [originalRelFilePath, splitFileParts] : m_jsonToSplitFileParts) {
-                const bool allDone = std::ranges::all_of(splitFileParts, [&](const auto& partState)
-                {
-                    return partState.second
-                        && hasAgentWorkUnitArtifacts(partState.first, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
-                });
-                if (!allDone || fs::exists(m_outputDir / originalRelFilePath)) {
-                    continue;
-                }
-                m_logger->info("Agent 恢复已完成的分割输出合并: {}", wide2Ascii(originalRelFilePath));
-                combineOutputFiles(originalRelFilePath, splitFileParts, m_outputCacheDir, m_outputDir, m_logger);
-            }
-        }
-
-        std::vector<fs::path> pendingFilePaths;
-        int skippedDoneCount = 0;
-        for (const auto& relFilePath : relFilePaths) {
-            const std::string relFileStr = wide2Ascii(relFilePath);
-            const auto statusIt = statusByFile.find(relFileStr);
-            const bool isDone = statusIt != statusByFile.end()
-                && statusIt->second == "done"
-                && hasAgentWorkUnitArtifacts(relFilePath, m_outputDir, m_outputCacheDir, m_transCacheDir, m_needsCombining);
-            if (isDone) {
-                ++skippedDoneCount;
-                continue;
-            }
-            pendingFilePaths.push_back(relFilePath);
-        }
-
-        if (skippedDoneCount > 0) {
-            m_logger->info("Agent 恢复模式跳过 {} 个已完成工作单元。", skippedDoneCount);
-        }
-        relFilePaths = std::move(pendingFilePaths);
-    }
+    // Agent 模式不再在调度前按“整文件 done”跳过任务。
+    // 是否需要重翻由 processFile 里的缓存命中 + retranslKeys 做句级判断，
+    // 这样能和普通模式保持一致，也避免 run_state 提前把整文件短路掉。
 
     if (relFilePaths.empty()) {
         m_logger->info("没有需要重新调度的文件任务。");

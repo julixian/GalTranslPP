@@ -1379,9 +1379,26 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             return false;
         }
 
-        const std::vector<Sentence*> pending = currentChunk();
+        std::vector<Sentence*> pending = currentChunk();
         if (pending.empty()) {
             return true;
+        }
+
+        if (m_smartRetry && retryCount == 2 && pending.size() > 1) {
+            m_logger->warn("[线程 {}] [文件 {}] Agent 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath));
+
+            const size_t mid = pending.size() / 2;
+            std::span<Sentence*> pendingSpan(pending);
+            std::span<Sentence*> firstHalf = pendingSpan.subspan(0, mid);
+            std::span<Sentence*> secondHalf = pendingSpan.subspan(mid);
+
+            bool firstOk = translateBatchAgent(relInputPath, firstHalf, backgroundText, threadId);
+            bool secondOk = translateBatchAgent(relInputPath, secondHalf, backgroundText, threadId);
+            return firstOk && secondOk;
+        }
+        else if (m_smartRetry && retryCount == 3) {
+            m_logger->warn("[线程 {}] [文件 {}] Agent 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath));
+            backgroundText.clear();
         }
 
         m_logger->debug("[线程 {}] [文件 {}] Agent chunk 开始，当前待提交 {} 句，允许最多 {} 轮。", threadId, wide2Ascii(relInputPath), pending.size(), m_agentMaxTurnsPerChunk);

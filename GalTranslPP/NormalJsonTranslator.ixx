@@ -47,14 +47,14 @@ export {
         fs::path m_agentFileNotesDir;
         fs::path m_agentSearchCatalogPath;
 
-        // relPathString, backgroundText
+        // 键为相对路径字符串，值为该文件对应的背景摘要文本
         std::shared_mutex m_backgroundTextCacheMapMutex;
         absl::btree_map<std::string, std::string> m_backgroundTextCacheMap;
 
         std::string m_systemPrompt;
         std::string m_userPrompt;
-        // Agent mode keeps its own prompt templates so the structured workflow can also
-        // be configured from Prompt.toml instead of being hard-coded in C++.
+        // Agent 模式单独维护一套提示词模板，便于从 Prompt.toml 外置配置，
+        // 而不是把协议和工作流硬编码在 C++ 里。
         std::string m_agentSystemPrompt;
         std::string m_agentUserPrompt;
         std::string m_targetLang;
@@ -99,7 +99,7 @@ export {
         int m_agentLookaheadLines = 80;
         int m_agentSearchResultLimit = 40;
         std::vector<CheckSeCondFunc> m_retranslKeys;
-        // first: 要忽略的 problem 正则表达式 pattern，second: 忽略条件
+        // first: 要忽略的问题正则表达式，second: 对应的忽略条件
         using SkipProblemCondition = std::pair<jpc::Regex, std::optional<CheckSeCondFunc>>;
         std::vector<SkipProblemCondition> m_skipProblems;
 
@@ -138,12 +138,13 @@ export {
         void postProcess(Sentence* se);
 
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
-        // Agent mode runs a small multi-turn loop per chunk. A single chunk normally hits
-        // this once, but retries may re-enter it when commit validation or response parsing fails.
+        // Agent 模式会在单个 chunk 内运行一个小型多轮循环。
+        // 正常情况下每个 chunk 只会进入一次；如果 commit 校验失败或响应解析失败，
+        // 则会按现有重试逻辑再次进入。
         bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
 
-        // Shared persistent-state helpers for Agent mode. All write paths should go through
-        // these helpers so worker threads do not race on load-modify-save windows.
+        // Agent 模式共享持久化状态的辅助函数。
+        // 所有写路径都应经过这些函数，避免 worker 线程在 load-modify-save 窗口内互相覆盖。
         json loadAgentRunState();
         json loadAgentTermLedger();
         json loadAgentRewriteQueue();
@@ -154,8 +155,8 @@ export {
         void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator);
 
         void processFile(const fs::path& relInputPath, int threadId);
-        // Reconcile is called once after the thread pool drains. In v1 it consumes queued
-        // rewrite requests and re-runs affected files in a conservative single-thread pass.
+        // 在线程池处理完成后执行一次最终 reconcile。
+        // v1 会保守地以单线程方式消费 rewrite_queue，并重跑受影响文件。
         void runAgentFinalReconcile();
 
     public:

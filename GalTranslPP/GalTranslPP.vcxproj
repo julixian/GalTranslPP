@@ -196,8 +196,11 @@
     <ClCompile Include="NornalJsonTranslatorHelperTool.ixx" />
     <ClCompile Include="NLPTool.cpp" />
     <ClCompile Include="NLPTool.ixx" />
-    <ClCompile Include="NormalJsonTranslatorAgent.cpp" />
-    <ClCompile Include="NormalJsonTranslator.cpp" />
+    <ClCompile Include="NormalJsonTranslator.Agent.cpp" />
+    <ClCompile Include="NormalJsonTranslator.Batch.cpp" />
+    <ClCompile Include="NormalJsonTranslator.Core.cpp" />
+    <ClCompile Include="NormalJsonTranslator.File.cpp" />
+    <ClCompile Include="NormalJsonTranslator.Run.cpp" />
     <ClCompile Include="PDFTool.cpp" />
     <ClCompile Include="PDFTool.ixx" />
     <ClCompile Include="PDFTranslator.cpp" />

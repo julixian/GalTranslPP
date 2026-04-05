@@ -85,10 +85,19 @@
     <ClCompile Include="ITranslator.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.cpp">
+    <ClCompile Include="NormalJsonTranslator.Agent.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslatorAgent.cpp">
+    <ClCompile Include="NormalJsonTranslator.Batch.cpp">
+      <Filter>filePlugins</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Core.cpp">
+      <Filter>filePlugins</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.File.cpp">
+      <Filter>filePlugins</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Run.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
     <ClCompile Include="Tool.cpp">

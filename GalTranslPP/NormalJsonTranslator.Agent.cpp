@@ -299,28 +299,28 @@ namespace {
     }
 }
 
-// Read-only helper used by startup recovery and scheduling paths. Called a handful of times
-// per run, not per sentence.
+// 只读运行状态加载函数，主要给恢复调度和启动检查使用。
+// 它通常每次运行只会调用少数几次，而不是按句子频繁调用。
 json NormalJsonTranslator::loadAgentRunState() {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     return loadJsonFileOrDefault(m_agentRunStatePath, json::object());
 }
 
-// Read-only helper used by tools and prompt construction. May be called several times within
-// one agent chunk because tool execution and prompt rebuilding both need ledger snapshots.
+// 只读术语账本加载函数，主要供工具执行和提示词重建使用。
+// 单个 chunk 在一次多轮循环里可能会反复读取几次。
 json NormalJsonTranslator::loadAgentTermLedger() {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     return loadJsonFileOrDefault(m_agentTermLedgerPath, json::object());
 }
 
-// Read-only helper used mainly by final reconcile and recovery code.
+// 只读重翻队列加载函数，主要给恢复流程和最终 reconcile 使用。
 json NormalJsonTranslator::loadAgentRewriteQueue() {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     return loadJsonFileOrDefault(m_agentRewriteQueuePath, json::array());
 }
 
-// File notes are per-input-file summaries. They are read before most agent turns and written
-// after compact/commit, so a single chunk may touch the same note multiple times.
+// `file_note` 是按输入文件保存的摘要。
+// 多数 agent 轮次在进入前都会读一次，在 `compact_context` 或 `commit` 后可能再写回一次。
 json NormalJsonTranslator::loadAgentFileNote(const fs::path& targetRelPath) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
     return loadJsonFileOrDefault(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
@@ -331,8 +331,8 @@ void NormalJsonTranslator::saveAgentFileNote(const fs::path& targetRelPath, cons
     saveJsonFilePretty(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), note);
 }
 
-// Lightweight run_state updates for lifecycle transitions such as file start, stop, and finish.
-// This is normally called once when a worker enters processFile, once on stop, and once on finish.
+// 轻量的 `run_state` 生命周期更新函数。
+// 通常在 worker 进入 `processFile`、处理中断、处理完成这几个时机调用。
 void NormalJsonTranslator::updateAgentRunStateEntry(
     const fs::path& relInputPath,
     const std::string& status,
@@ -372,8 +372,8 @@ void NormalJsonTranslator::updateAgentRunStateEntry(
     saveJsonFilePretty(m_agentRunStatePath, state);
 }
 
-// Strongly serialized mutation path for the shared Agent state files. Commit paths use this
-// instead of separate load/save calls so concurrent workers cannot overwrite each other.
+// 共享 Agent 状态文件的强串行修改入口。
+// `commit` 路径必须走这里，避免多个 worker 在线程并发时发生 `load/save` 覆盖。
 void NormalJsonTranslator::mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator) {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     json runState = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
@@ -386,8 +386,8 @@ void NormalJsonTranslator::mutateAgentState(const std::function<void(json& runSt
 }
 
 bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId) {
-    // Agent mode sits on top of the normal batch scheduler. For one chunk it may talk to the
-    // model multiple times: tool calls, optional context compaction, then a final validated commit.
+    // Agent 模式复用外层 batch 调度，但单个 chunk 内可能进行多轮交互：
+    // 先发起工具调用，再按需压缩上下文，最后提交通过校验的 `commit`。
     for (Sentence* se : batch) {
         if (se->pre_processed_text.empty()) {
             se->complete = true;
@@ -785,8 +785,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             | std::views::transform([](const Sentence* se) { return se->index; })
             | std::ranges::to<std::vector>();
 
-        // Commit is the only place where Agent mode mutates durable shared state. We update
-        // run_state, term_ledger and rewrite_queue under one mutex to avoid load-save races.
+        // `commit` 是 Agent 模式唯一允许修改共享持久化状态的入口。
+        // 这里会在同一把锁下同时更新 `run_state`、`term_ledger` 和 `rewrite_queue`。
         mutateAgentState([&](json& runState, json& termLedger, json& rewriteQueue) {
             if (!runState.contains("files") || !runState["files"].is_array()) {
                 runState["files"] = json::array();

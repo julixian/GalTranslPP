@@ -63,6 +63,21 @@ namespace {
         const fs::path cachePath = transCacheDir / relFilePath;
         return fs::exists(outputPath) && fs::exists(cachePath);
     }
+
+    std::string buildAgentWorkUnitFingerprint(
+        const fs::path& relFilePath,
+        const fs::path& inputDir,
+        const fs::path& inputCacheDir,
+        bool needsCombining
+    ) {
+        const fs::path inputPath = needsCombining ? (inputCacheDir / relFilePath) : (inputDir / relFilePath);
+        if (!fs::exists(inputPath) || !fs::is_regular_file(inputPath)) {
+            return {};
+        }
+        const uintmax_t fileSize = fs::file_size(inputPath);
+        const auto crc = calculateFileCRC64(inputPath);
+        return std::format("{}|{}|{:016X}", wide2Ascii(relFilePath), fileSize, crc);
+    }
 }
 
 std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
@@ -370,15 +385,18 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
 
         int preservedDoneCount = 0;
         int requeuedCount = 0;
+        int fingerprintMismatchCount = 0;
         json normalizedFiles = json::array();
         const std::string updatedAt = nowTimestampString();
         for (const auto& relFilePath : relFilePaths) {
             const std::string relFileStr = wide2Ascii(relFilePath);
+            const std::string inputFingerprint = buildAgentWorkUnitFingerprint(relFilePath, m_inputDir, m_inputCacheDir, m_needsCombining);
             json entry = {
                 {"file", relFileStr},
                 {"status", "pending"},
                 {"lease_owner", ""},
                 {"last_committed_index", -1},
+                {"input_fingerprint", inputFingerprint},
                 {"updated_at", updatedAt}
             };
 
@@ -386,28 +404,30 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             if (const auto it = oldEntries.find(relFileStr); it != oldEntries.end()) {
                 const json& oldEntry = it->second;
                 const std::string oldStatus = oldEntry.value("status", "pending");
+                const std::string oldFingerprint = oldEntry.value("input_fingerprint", "");
+                const bool fingerprintMatches = !inputFingerprint.empty() && oldFingerprint == inputFingerprint;
                 if (!workLayoutChanged) {
                     entry["last_committed_index"] = oldEntry.value("last_committed_index", -1);
                 }
-                if (artifactDone && oldStatus == "done") {
-                    // 只有“新工作单元名仍然存在，且输出/缓存成品也都还在”时，才直接继承 done。
+                if (artifactDone && oldStatus == "done" && fingerprintMatches) {
+                    // 只有旧状态为 done、产物仍在、且输入指纹完全一致时，才允许直接继承 done。
                     entry["status"] = "done";
                     ++preservedDoneCount;
                 }
                 else {
-                    // 工作单元边界变了时，不尝试把旧 part 进度硬映射到新 part；
-                    // 统一回到 pending，由缓存系统在 processFile 阶段重新消化已完成内容。
+                    // 只要工作单元边界变化，或者同名工作单元的输入内容已经变化，
+                    // 都不尝试把旧进度硬映射到新工作单元；统一回到 pending，
+                    // 由缓存系统在 processFile 阶段重新消化已完成内容。
                     if (oldStatus == "in_progress" || oldStatus == "done") {
                         ++requeuedCount;
+                    }
+                    if (oldStatus == "done" && artifactDone && !fingerprintMatches) {
+                        ++fingerprintMismatchCount;
                     }
                     if (workLayoutChanged) {
                         entry["last_committed_index"] = -1;
                     }
                 }
-            }
-            else if (artifactDone) {
-                entry["status"] = "done";
-                ++preservedDoneCount;
             }
 
             normalizedFiles.push_back(std::move(entry));
@@ -430,6 +450,9 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             }
             else if (requeuedCount > 0) {
                 m_logger->info("Agent 已恢复上次未完成的进度，重新排队 {} 个工作单元。", requeuedCount);
+            }
+            if (fingerprintMismatchCount > 0) {
+                m_logger->warn("Agent 检测到 {} 个同名工作单元的输入内容已变化，不再直接继承 done，将回到 pending 并依赖缓存重跑。", fingerprintMismatchCount);
             }
         }
 

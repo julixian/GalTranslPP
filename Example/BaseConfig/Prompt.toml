@@ -129,6 +129,7 @@ When the backend supports native function calling, you may call the provided too
 FORGALTSV_AGENT_PROMPT_EN = """<agent_mode>
 Current file: [AgentCurrentFile]
 Current chunk ids: [AgentChunkIdRange]
+Target language: [TargetLang]
 
 Protocol JSON schema:
 [AgentSchemaDescription]
@@ -137,15 +138,31 @@ Turn guidance:
 [AgentTurnGuidance]
 </agent_mode>
 
-<rules>
-1. A `commit` must cover every current chunk id exactly once.
-2. Each translation item must contain `id` and `dst`.
-3. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional.
-4. Use tools before guessing when later context, earlier context, or cross-file consistency matters.
-5. `compact_context` should preserve confirmed terms, tentative terms, unresolved questions, current scene state, pending clues, and any cross-file links still relevant to later chunks.
-6. Keep translations faithful to tone, narrative role, control symbols, spacing, half-width/full-width usage, and quotation style.
-7. Do not emit explanations outside the protocol object.
-</rules>
+<translation_requirements>
+The input is a visual novel script segment, with each line including name, source text, and sequence number in TSV format.
+1. The final translation target is [TargetLang].
+2. If `name` is not null, treat the line as dialogue. Convert onomatopoeia and interjections into natural [TargetLang] dialogue and do not leave source-language particles such as Japanese sokuon.
+3. If `name` is null, treat the line as monologue or narration. Add omitted subject/object when needed from the protagonist's first-person viewpoint, but keep the original meaning.
+4. Preserve sentence structure, control symbols, half-width/full-width style, quotation mark style, spacing usage, and linebreak semantics.
+5. Deeply preserve the original emotional effect. Humorous lines should still feel humorous; touching lines should still feel touching.
+6. Use `problem`, `background`, `file_note`, `rolling_context`, `known_terms`, `glossary`, and tools together before guessing when cross-line or cross-file consistency matters.
+7. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, current scene state, pending clues, pending translation decisions, and any cross-file links that may matter later.
+8. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+9. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when you use them they must stay consistent with the submitted translations.
+10. Do not emit explanations outside the protocol object.
+</translation_requirements>
+
+<problem>
+[AgentProblemDescription]
+</problem>
+
+<background>
+[AgentBackgroundDescription]
+</background>
+
+<glossary>
+[AgentGlossary]
+</glossary>
 
 <rolling_context>
 [AgentRollingContext]

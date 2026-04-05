@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #define PYBIND11_HEADERS
 #define PCRE2_HEADERS
@@ -285,17 +285,6 @@ namespace {
             return fallback;
         }
         return std::min(requested, maxLimit);
-    }
-
-    void replacePromptToken(std::string& text, const std::string& token, const std::string& value) {
-        if (token.empty()) {
-            return;
-        }
-        size_t pos = 0;
-        while ((pos = text.find(token, pos)) != std::string::npos) {
-            text.replace(pos, token.size(), value);
-            pos += value.size();
-        }
     }
 }
 
@@ -672,12 +661,41 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return excerpt.dump(2);
     };
 
+    auto currentProblemSummary = [&]() {
+        const std::vector<Sentence*> pending = currentChunk();
+        return std::ranges::fold_left(
+            pending
+                | std::views::transform([](const Sentence* se) { return se->problems; })
+                | std::views::join,
+            std::string{},
+            [](const std::string& acc, const std::string& value)
+            {
+                if (!acc.contains(value)) {
+                    return acc + value + "\n";
+                }
+                return acc;
+            }
+        );
+    };
+
+    auto currentGlossary = [&]() {
+        std::vector<Sentence*> pending = currentChunk();
+        if (pending.empty()) {
+            return std::string{};
+        }
+        std::span<Sentence*> pendingSpan(pending);
+        return m_gptDictionary->generatePrompt(pendingSpan, m_transEngine);
+    };
+
     // 组装“一轮模型请求”的基础消息。
-    // 这里本身不发请求，只负责把 chunk、rolling context、file note、术语摘要等拼好。
+    // 这里本身不发请求，只负责把 chunk、rolling context、problem/background/glossary、
+    // file note、术语摘要等拼好。
     auto buildBaseMessages = [&](const std::string& rollingSummary, const json& fileNote) {
         absl::btree_map<int, Sentence*> id2SentenceMap;
         std::string inputBlock;
         fillBlockAndMap(batch, id2SentenceMap, inputBlock, m_transEngine);
+        const std::string inputProblems = currentProblemSummary();
+        const std::string glossary = currentGlossary();
 
         const std::string schemaDescription =
             "{"
@@ -692,14 +710,22 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             "}";
 
         std::string userPrompt = m_agentUserPrompt;
-        replacePromptToken(userPrompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
-        replacePromptToken(userPrompt, "[AgentChunkIdRange]", std::format("{}-{}", batch.front()->index, batch.back()->index));
-        replacePromptToken(userPrompt, "[AgentRollingContext]", rollingSummary.empty() ? "None" : rollingSummary);
-        replacePromptToken(userPrompt, "[AgentFileNote]", fileNote.empty() ? "None" : fileNote.dump(2));
-        replacePromptToken(userPrompt, "[AgentKnownTerms]", termLedgerExcerpt());
-        replacePromptToken(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
-        replacePromptToken(userPrompt, "[AgentSchemaDescription]", schemaDescription);
-        replacePromptToken(userPrompt, "[AgentTurnGuidance]",
+        replaceStrInplace(userPrompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
+        replaceStrInplace(userPrompt, "[AgentChunkIdRange]", std::format("{}-{}", batch.front()->index, batch.back()->index));
+        replaceStrInplace(userPrompt, "[TargetLang]", m_targetLang);
+        replaceStrInplace(userPrompt, "[AgentTargetLang]", m_targetLang);
+        replaceStrInplace(userPrompt, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
+        replaceStrInplace(userPrompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
+        replaceStrInplace(userPrompt, "[Background Description]", rollingSummary.empty() ? "None" : rollingSummary);
+        replaceStrInplace(userPrompt, "[AgentBackgroundDescription]", rollingSummary.empty() ? "None" : rollingSummary);
+        replaceStrInplace(userPrompt, "[Glossary]", glossary.empty() ? "None" : glossary);
+        replaceStrInplace(userPrompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
+        replaceStrInplace(userPrompt, "[AgentRollingContext]", rollingSummary.empty() ? "None" : rollingSummary);
+        replaceStrInplace(userPrompt, "[AgentFileNote]", fileNote.empty() ? "None" : fileNote.dump(2));
+        replaceStrInplace(userPrompt, "[AgentKnownTerms]", termLedgerExcerpt());
+        replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
+        replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
+        replaceStrInplace(userPrompt, "[AgentTurnGuidance]",
             "If context is near limit, return compact_context only. "
             "Otherwise either call read-only tools or return a commit that covers every current chunk id exactly once.");
 
@@ -950,6 +976,11 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             if (useNativeFunctionCalling && m_agentNativeFunctionCalling == "auto" && shouldFallbackFromNativeFunctionCalling(response)) {
                 m_logger->warn("[线程 {}] [文件 {}] 原生函数调用不可用，自动退回文本协议。", threadId, wide2Ascii(relInputPath));
                 useNativeFunctionCalling = false;
+                // 某些 OpenAI-compatible 后端在继续原生 tool-call 链时要求保留内部 thought_signature。
+                // 一旦检测到这类不兼容错误，就丢弃当前原生工具调用链，回到纯文本协议重新开始本 chunk 的这一轮。
+                messages = buildBaseMessages(backgroundText, loadAgentFileNote(relInputPath));
+                compactRequested = false;
+                --turn;
                 continue;
             }
 

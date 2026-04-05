@@ -92,6 +92,80 @@ namespace {
         return count;
     }
 
+    // 仅用于轻量 JSON 兜底修复：判断当前位置的双引号是否已经被反斜杠转义。
+    // 这段逻辑只服务于“尽量把模型输出恢复成可解析 JSON”，不参与正式翻译内容改写。
+    bool isEscapedAt(std::string_view text, size_t pos) {
+        if (pos == 0 || pos >= text.size()) {
+            return false;
+        }
+        size_t slashCount = 0;
+        for (size_t i = pos; i > 0;) {
+            --i;
+            if (text[i] != '\\') {
+                break;
+            }
+            ++slashCount;
+        }
+        return slashCount % 2 == 1;
+    }
+
+    // 仅修复少数常见字符串字段里的裸双引号。
+    // 目标是处理模型把英文引号直接写进 JSON 字符串、导致整包无法 parse 的情况；
+    // 这里只在行级做最小改动，不做语义清洗，也不改 commit 后真正落盘的 dst 内容。
+    std::string repairLikelyJsonStringFieldLine(std::string line) {
+        const std::string trimmed = trimCopy(line);
+        static constexpr std::array<std::string_view, 5> kRepairableFields = {
+            "\"dst\":",
+            "\"note\":",
+            "\"rolling_context\":",
+            "\"context\":",
+            "\"reason\":"
+        };
+        const bool shouldRepair = std::ranges::any_of(kRepairableFields, [&](std::string_view field) {
+            return trimmed.starts_with(field);
+        });
+        if (!shouldRepair) {
+            return line;
+        }
+
+        const size_t colonPos = line.find(':');
+        if (colonPos == std::string::npos) {
+            return line;
+        }
+        const size_t openingQuotePos = line.find('"', colonPos + 1);
+        if (openingQuotePos == std::string::npos) {
+            return line;
+        }
+
+        size_t closingQuotePos = std::string::npos;
+        for (size_t i = line.size(); i > openingQuotePos + 1; --i) {
+            const size_t pos = i - 1;
+            if (line[pos] != '"' || isEscapedAt(line, pos)) {
+                continue;
+            }
+            const std::string suffix = trimCopy(line.substr(pos + 1));
+            if (suffix.empty() || suffix == ",") {
+                closingQuotePos = pos;
+                break;
+            }
+        }
+        if (closingQuotePos == std::string::npos || closingQuotePos <= openingQuotePos) {
+            return line;
+        }
+
+        std::string repaired;
+        repaired.reserve(line.size() + 8);
+        repaired.append(line.substr(0, openingQuotePos + 1));
+        for (size_t pos = openingQuotePos + 1; pos < closingQuotePos; ++pos) {
+            if (line[pos] == '"' && !isEscapedAt(line, pos)) {
+                repaired.push_back('\\');
+            }
+            repaired.push_back(line[pos]);
+        }
+        repaired.append(line.substr(closingQuotePos));
+        return repaired;
+    }
+
     std::string lightRepairAgentJsonText(std::string text) {
         if (text.empty()) {
             return text;
@@ -102,12 +176,18 @@ namespace {
         std::vector<std::string> lines;
         bool repaired = false;
         while (std::getline(input, line)) {
+            const std::string originalLine = line;
+            line = repairLikelyJsonStringFieldLine(std::move(line));
             const std::string trimmed = trimCopy(line);
-            if ((trimmed.starts_with("\"dst\":") || trimmed.starts_with("\"note\":") || trimmed.starts_with("\"rolling_context\":"))
+            if ((trimmed.starts_with("\"dst\":")
+                || trimmed.starts_with("\"note\":")
+                || trimmed.starts_with("\"rolling_context\":")
+                || trimmed.starts_with("\"context\":")
+                || trimmed.starts_with("\"reason\":"))
                 && countUnescapedDoubleQuotes(line) % 2 == 1) {
                 line.push_back('"');
-                repaired = true;
             }
+            repaired = repaired || line != originalLine;
             lines.push_back(std::move(line));
         }
 

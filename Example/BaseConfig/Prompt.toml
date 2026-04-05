@@ -210,11 +210,17 @@ Step E. What to record.
 <tools>
 list_files: list available script files
 read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range
+example: `{ "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }`
 search_text(query, scope=current_file|all_files|specified_file, file?): search source, cached dst, term ledger, and file notes; `scope` is file range only, not a search field selector
+example: `{ "id": "search1", "name": "search_text", "arguments": { "query": "カヤ", "scope": "all_files" } }`
 get_dictionary_entries(terms?, limit?): inspect loaded GPT dictionary entries; omit `terms` to inspect the dictionary itself, or pass `terms` for exact entry lookup
+example: `{ "id": "dict1", "name": "get_dictionary_entries", "arguments": { "terms": ["しねま", "シネマ"] } }`
 search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or `queries: [...]`
+example: `{ "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"], "mode": "fuzzy" } }`
 get_term(term): read one term-ledger entry
+example: `{ "id": "term1", "name": "get_term", "arguments": { "term": "しねま" } }`
 get_file_note(file?): read durable file notes
+example: `{ "id": "note1", "name": "get_file_note", "arguments": { "file": "[AgentCurrentFile]" } }`
 [AgentExtraTools]</tools>
 
 <input_tsv>
@@ -306,11 +312,17 @@ FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
 <tools>
 list_files: 列出可用脚本文件
 read_lines(file, start, count, include_src=true, include_dst=true): 读取指定文件区间的原文与缓存译文
+示例：`{ "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }`
 search_text(query, scope=current_file|all_files|specified_file, file?): 搜索原文、缓存译文、术语账本与 file note；`scope` 只表示文件范围，不表示搜索字段
+示例：`{ "id": "search1", "name": "search_text", "arguments": { "query": "カヤ", "scope": "all_files" } }`
 get_dictionary_entries(terms?, limit?): 查看已加载 GPT 字典条目；不传 `terms` 时查看字典本体，传 `terms` 时做精确获取
+示例：`{ "id": "dict1", "name": "get_dictionary_entries", "arguments": { "terms": ["しねま", "シネマ"] } }`
 search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): 对明确的外部线索做 GPT 字典模糊搜索；优先一次一个词，或使用 `queries: [...]`
+示例：`{ "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"], "mode": "fuzzy" } }`
 get_term(term): 读取单个术语账本条目
+示例：`{ "id": "term1", "name": "get_term", "arguments": { "term": "しねま" } }`
 get_file_note(file?): 读取持久化 file note
+示例：`{ "id": "note1", "name": "get_file_note", "arguments": { "file": "[AgentCurrentFile]" } }`
 [AgentExtraTools]</tools>
 
 <input_tsv>

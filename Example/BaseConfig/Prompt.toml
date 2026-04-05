@@ -140,18 +140,23 @@ Turn guidance:
 <core_rules>
 Input is TSV with NAME, SRC, ID.
 1. Translate into [TargetLang].
-2. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; do not leave Japanese particles or raw onomatopoeia.
-3. If `name` is null, treat as narration/monologue. Restore omitted subject/object only when needed from the protagonist viewpoint.
-4. Preserve structure, control symbols, half/full-width style, quotation marks, spacing, linebreak semantics, tone, and emotional effect.
-5. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
-6. `known_terms` is the agent-maintained ledger. Reuse it for consistency, but update `note`, `status`, or alias relations when new evidence appears.
-7. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
-8. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-9. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-10. `dst` must contain translated text only. Do not include NAME, `null`, tabs, TSV columns, or the line id inside `dst`.
-11. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-12. Prefer `summary` as `{ "rolling_context": "..." }`.
-13. Do not emit any explanation outside the protocol object.
+2. First absorb `problem`, `glossary`, `rolling_context`, and `known_terms` before deciding whether the chunk is already safe to translate.
+3. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; directly convert onomatopoeia/interjections into natural [TargetLang] wording; do not leave Japanese particles or raw onomatopoeia.
+4. If `name` is null, treat as narration/monologue. Restore omitted subject/object only when needed from the protagonist viewpoint.
+5. Deeply preserve the original emotional effect. If the source is funny, the translation should still feel funny; if touching, it should still feel touching.
+6. Preserve source structure exactly where possible: control symbols, placeholders, bracket families, half/full-width style, quotation-mark family, spacing, linebreak semantics, and sentence ordering.
+7. Do not introduce a new punctuation system unless the source literally contains it. If the source uses `「」`, keep `「」`; do not replace it with `“ ”`. If the source does not contain `（ ） ：`, do not casually add them. Preserve symbols such as `%123;`, `<br>`, `／`, `『』`, `［］`, `[$ctrlcmd$]`, and `[kanji/ruby]`.
+8. Each `dst` must correspond to the current source line only. Do not merge lines, split lines, over-translate, or omit content.
+9. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
+10. `known_terms` is the agent-maintained ledger. Reuse it for consistency, but update `note`, `status`, or alias relations when new evidence appears.
+11. If a line looks like pure control code or otherwise suspicious non-dialogue text, you may prefix that line's `dst` with `(GPPCProblem: [brief issue])`.
+12. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
+13. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
+14. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+15. `dst` must contain translated text only. Do not include NAME, `null`, tabs, TSV columns, or the line id inside `dst`.
+16. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+17. Prefer `summary` as `{ "rolling_context": "..." }`. Use it as the next-chunk translation background, recording only translation-relevant context.
+18. Do not emit any explanation outside the protocol object.
 </core_rules>
 
 <decision_flow>
@@ -242,18 +247,23 @@ FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
 <core_rules>
 输入格式为 TSV，列为 NAME、SRC、ID。
 1. 将内容翻译成 [TargetLang]。
-2. 如果 `name` 不为 null，则按对话处理。译文要像自然的 [TargetLang] 对话；不要残留日语语气词或生硬拟声词。
-3. 如果 `name` 为 null，则按叙述/独白处理。仅在确有必要时，从主人公视角补足省略的主语或宾语。
-4. 保留结构、控制符、半角/全角风格、引号、空格、换行语义，同时保留语气和情绪效果。
-5. 词汇优先级：`glossary` > 被上下文明确推翻后的修正 > `known_terms` > 你自己的推断。
-6. `known_terms` 是 agent 维护的术语账本。应优先沿用以保持一致；若出现新证据，可以更新它的 `note`、`status` 或别名关系。
-7. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
-8. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
-9. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
-10. `dst` 里只能放译文正文本身。不要把 NAME、`null`、Tab、TSV 列或行 id 混进 `dst`。
-11. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
-12. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
-13. 不要在协议 JSON 对象之外输出任何解释文字。
+2. 在判断能否直接翻译前，先吸收 `problem`、`glossary`、`rolling_context` 和 `known_terms`。
+3. 如果 `name` 不为 null，则按对话处理。译文要像自然的 [TargetLang] 对话；拟声词、语气词要直接转成自然的 [TargetLang] 表达，不要残留生硬日语。
+4. 如果 `name` 为 null，则按叙述/独白处理。仅在确有必要时，从主人公视角补足省略的主语或宾语。
+5. 要尽量保留原文的情绪效果。原文好笑时，译文也应让人觉得好笑；原文动人时，译文也应保持感染力。
+6. 尽量原样保留源文本的结构：控制符、占位符、括号体系、半角/全角风格、引号体系、空格、换行语义、句序。
+7. 不要平白引入新的标点体系，除非原文真的有。原文用 `「」` 就继续用 `「」`，不要擅自换成 `“ ”`。原文没有 `（ ） ：` 时，也不要随手补进去。像 `%123;`、`<br>`、`／`、`『』`、`［］`、`[$ctrlcmd$]`、`[汉字/注音]` 这类形式应保持。
+8. 每个 `dst` 只对应当前这一行原文。不要合并行、拆分行、过度发挥，也不要漏译。
+9. 词汇优先级：`glossary` > 被上下文明确推翻后的修正 > `known_terms` > 你自己的推断。
+10. `known_terms` 是 agent 维护的术语账本。应优先沿用以保持一致；若出现新证据，可以更新它的 `note`、`status` 或别名关系。
+11. 如果某一行看起来更像纯控制码，或明显不是正常台词/叙述，可以在该行 `dst` 最前面加上 `(GPPCProblem: [简短问题])`。
+12. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
+13. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
+14. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
+15. `dst` 里只能放译文正文本身。不要把 NAME、`null`、Tab、TSV 列或行 id 混进 `dst`。
+16. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
+17. `summary` 推荐格式为 `{ "rolling_context": "..." }`。它承担旧版 background summary 的作用，只记录对后续翻译有帮助的背景信息。
+18. 不要在协议 JSON 对象之外输出任何解释文字。
 </core_rules>
 
 <decision_flow>

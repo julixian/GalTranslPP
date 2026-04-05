@@ -140,7 +140,7 @@ Turn guidance:
 <translation_requirements>
 Input is TSV with NAME, SRC, ID.
 1. Translate into [TargetLang].
-2. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; do not leave Japanese particles or raw onomatopoeia unless stylistically required.
+2. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; do not leave Japanese particles or raw onomatopoeia.
 3. If `name` is null, treat as narration/monologue. Restore omitted subject/object only when needed from the protagonist viewpoint.
 4. Preserve structure, control symbols, half/full-width style, quotation marks, spacing, linebreak semantics, tone, and emotional effect.
 5. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
@@ -187,6 +187,74 @@ get_dictionary_entries: inspect loaded GPT dictionary entries; omit `terms` to i
 search_dictionary: fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or `queries: [...]`
 get_term: read one term-ledger entry
 get_file_note: read durable file notes
+[AgentExtraTools]</tools>
+
+<input_tsv>
+[AgentCurrentChunkTsv]
+</input_tsv>
+"""
+FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
+当前文件: [AgentCurrentFile]
+当前 chunk ids: [AgentChunkIdRange]
+目标语言: [TargetLang]
+
+协议 JSON schema:
+[AgentSchemaDescription]
+
+本轮指导:
+[AgentTurnGuidance]
+</agent_mode>
+
+<translation_requirements>
+输入格式为 TSV，列为 NAME、SRC、ID。
+1. 将内容翻译成 [TargetLang]。
+2. 如果 `name` 不为 null，则按对话处理。译文要像自然的 [TargetLang] 对话；不要残留日语语气词或生硬拟声词。
+3. 如果 `name` 为 null，则按叙述/独白处理。仅在确有必要时，从主人公视角补足省略的主语或宾语。
+4. 保留结构、控制符、半角/全角风格、引号、空格、换行语义，同时保留语气和情绪效果。
+5. 词汇优先级：`glossary` > 被上下文明确推翻后的修正 > `known_terms` > 你自己的推断。
+6. `glossary` 已经包含了当前 chunk 原文命中的 GPT 字典项。不要为了重新找到这些词而再次调用字典工具。
+7. `known_terms` 是 agent 维护的术语账本。应优先沿用以保持一致；若出现新证据，可以更新它的 `note`、`status` 或别名关系。
+8. `rolling_context` 是当前工作摘要。只有在长程一致性、伏笔照应、身份判定或跨文件回调确实重要时，才去读取 `file_note`。
+9. 只有当当前 chunk 不清楚或有风险时才调用工具。如果靠 `glossary`、`known_terms` 和 `rolling_context` 已经足够明确，就直接翻译并 `commit`。
+10. 字典工具分工：
+    `get_dictionary_entries`：查看已加载的 GPT 字典条目，或对给定 `terms` 做精确获取。
+    `search_dictionary`：只用于搜索来自 `rolling_context`、`file_note`、跨文件线索等“当前 chunk 不一定出现”的明确外部线索。优先一次查一个词，或使用 `queries: [...]`。
+11. 变体、昵称、片假/平假、同源称呼应尽量保持一致。例如如果 `しねま -> 希涅玛`，那么 `シネマ` 在多数语境下也应保持一致，除非上下文明确表示它是普通名词。
+12. 遇到陌生术语时，按需要补查上下文；如果仍不确定，就以 `tentative` 形式提交，不要假装确定。
+13. 把会影响后续翻译的线索记录到 `file_note_patch` / `summary` 中，例如：未解指代、隐藏身份、前后照应、文学回声、场景状态、关系变化、待定翻法。
+14. `compact_context` 必须保留：已确认术语、暂定术语、未决问题、场景状态、待跟进线索、待定翻译决策、跨文件关联。
+15. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
+16. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
+17. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
+18. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
+19. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
+20. 不要在协议 JSON 对象之外输出任何解释文字。
+</translation_requirements>
+
+<problem>
+[AgentProblemDescription]
+</problem>
+
+<glossary>
+[AgentGlossary]
+</glossary>
+
+<rolling_context>
+[AgentRollingContext]
+</rolling_context>
+
+<known_terms>
+[AgentKnownTerms]
+</known_terms>
+
+<tools>
+list_files: 列出可用脚本文件
+read_lines: 读取指定文件区间的原文与缓存译文
+search_text: 搜索原文、缓存译文、术语账本与 file note
+get_dictionary_entries: 查看已加载 GPT 字典条目；不传 `terms` 时查看字典本体，传 `terms` 时做精确获取
+search_dictionary: 对明确的外部线索做 GPT 字典模糊搜索；优先一次一个词，或使用 `queries: [...]`
+get_term: 读取单个术语账本条目
+get_file_note: 读取持久化 file note
 [AgentExtraTools]</tools>
 
 <input_tsv>

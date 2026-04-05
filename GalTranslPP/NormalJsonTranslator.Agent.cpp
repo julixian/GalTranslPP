@@ -186,26 +186,6 @@ namespace {
         return std::min(requested, maxLimit);
     }
 
-    std::string truncateForAgentLog(std::string text, size_t maxChars = 4000) {
-        if (text.size() <= maxChars) {
-            return text;
-        }
-        return text.substr(0, maxChars) + std::format("\n...(truncated, total {} chars)", text.size());
-    }
-
-    std::string formatToolCallRequestsForLog(const std::vector<AgentToolCallRequest>& calls) {
-        std::string result;
-        for (const auto& [index, call] : calls | std::views::enumerate) {
-            result += std::format(
-                "[{}] {}({})\n",
-                index + 1,
-                call.name.empty() ? "<unknown>" : call.name,
-                call.arguments.dump(2)
-            );
-        }
-        return result;
-    }
-
     std::string jsonStringOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
         if (!obj.is_object()) {
             return fallback;
@@ -215,11 +195,6 @@ namespace {
             return it->get<std::string>();
         }
         return fallback;
-    }
-
-    bool jsonLooksMeaningfulArrayText(const std::string& text) {
-        const std::string trimmed = trimCopy(text);
-        return !trimmed.empty() && trimmed != "[]" && trimmed != "null";
     }
 
 }
@@ -244,8 +219,11 @@ json NormalJsonTranslator::loadAgentRewriteQueue() {
     return loadJsonFileOrDefault(m_agentRewriteQueuePath, json::array());
 }
 
-// `file_note` 是按输入文件保存的摘要。
-// 多数 agent 轮次在进入前都会读一次，在 `compact_context` 或 `commit` 后可能再写回一次。
+// `file_note` 是按输入文件保存的持久化备注。
+// 它不再默认注入每轮提示词，而是作为：
+// 1. `get_file_note` 工具的读取源
+// 2. 术语筛选时的相关性参考
+// 3. `compact_context` / `commit` 的落盘目标
 json NormalJsonTranslator::loadAgentFileNote(const fs::path& targetRelPath) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
     return loadJsonFileOrDefault(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
@@ -657,6 +635,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     };
 
     // 从全局术语账本里截一小段摘要塞进提示词，减少模型每轮都去查工具的次数。
+    // 这里会参考当前 chunk、rolling_context 以及当前文件的 file_note，
+    // 但 file_note 本身不会被默认注入提示词。
     auto termLedgerExcerpt = [&](const std::string& currentInputBlock, const std::string& rollingSummary, const json& fileNote) {
         const json ledger = loadAgentTermLedger();
         json relevant = json::array();
@@ -721,25 +701,17 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return m_gptDictionary->generatePrompt(pendingSpan, m_transEngine);
     };
 
-    auto currentInputBlock = [&]() {
-        std::vector<Sentence*> pending = currentChunk();
-        absl::btree_map<int, Sentence*> id2SentenceMap;
-        std::string inputBlock;
-        std::span<Sentence*> pendingSpan(pending);
-        fillBlockAndMap(pendingSpan, id2SentenceMap, inputBlock, m_transEngine);
-        return inputBlock;
-    };
-
     // 组装“一轮模型请求”的基础消息。
     // 这里本身不发请求，只负责把 chunk、rolling context、problem/background/glossary、
-    // file note、术语摘要等拼好。
-    auto buildBaseMessages = [&](const std::string& rollingSummary, const json& fileNote) {
+    // 术语摘要和协议说明拼好。若模型需要 file_note，必须显式调用 `get_file_note`。
+    auto buildBaseMessages = [&](const std::string& rollingSummary) {
         absl::btree_map<int, Sentence*> id2SentenceMap;
         std::string inputBlock;
         fillBlockAndMap(batch, id2SentenceMap, inputBlock, m_transEngine);
         const std::string inputProblems = currentProblemSummary();
         const std::string glossary = currentGlossary();
-        const std::string knownTerms = termLedgerExcerpt(inputBlock, rollingSummary, fileNote);
+        const json currentFileNote = loadAgentFileNote(relInputPath);
+        const std::string knownTerms = termLedgerExcerpt(inputBlock, rollingSummary, currentFileNote);
         const std::string extraTools = m_agentProjectInfoPath.has_value()
             ? std::format("get_project_note: read optional user-provided script note file `{}`\n", wide2Ascii(fs::relative(m_agentProjectInfoPath.value(), m_projectDir)))
             : "";
@@ -766,7 +738,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         replaceStrInplace(userPrompt, "[Glossary]", glossary.empty() ? "None" : glossary);
         replaceStrInplace(userPrompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
         replaceStrInplace(userPrompt, "[AgentRollingContext]", rollingSummary.empty() ? "None" : rollingSummary);
-        replaceStrInplace(userPrompt, "[AgentFileNote]", fileNote.empty() ? "None" : fileNote.dump(2));
         replaceStrInplace(userPrompt, "[AgentKnownTerms]", knownTerms);
         replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
         replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
@@ -1010,41 +981,10 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
 
         m_logger->debug("[线程 {}] [文件 {}] Agent chunk 开始，当前待提交 {} 句，允许最多 {} 轮。", threadId, wide2Ascii(relInputPath), pending.size(), m_agentMaxTurnsPerChunk);
-
-        const std::string inputProblems = currentProblemSummary();
-        const std::string glossary = currentGlossary();
-        const std::string inputBlock = currentInputBlock();
-        json fileNote = loadAgentFileNote(relInputPath);
-        const std::string knownTerms = termLedgerExcerpt(inputBlock, backgroundText, fileNote);
-        json messages = buildBaseMessages(backgroundText, fileNote);
+        json messages = buildBaseMessages(backgroundText);
         bool compactRequested = false;
-
-        std::string logBlock;
-        if (!inputProblems.empty()) {
-            logBlock += "\nProblems:\n" + inputProblems;
-        }
-        if (!backgroundText.empty()) {
-            logBlock += "\nBackground:\n" + truncateForAgentLog(backgroundText);
-        }
-        if (m_logger->should_log(spdlog::level::debug) && !fileNote.empty()) {
-            logBlock += "\nFileNote:\n" + truncateForAgentLog(fileNote.dump(2));
-        }
-        if (!glossary.empty()) {
-            logBlock += "\nGlossary:\n" + truncateForAgentLog(glossary);
-        }
-        if (jsonLooksMeaningfulArrayText(knownTerms) || m_logger->should_log(spdlog::level::trace)) {
-            logBlock += "\nKnownTerms:\n" + truncateForAgentLog(knownTerms, 12000);
-        }
-        logBlock += "\ninputBlock:\n" + inputBlock;
-        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译:{}", threadId, wide2Ascii(relInputPath), logBlock);
-        if (m_logger->should_log(spdlog::level::trace)) {
-            m_logger->trace(
-                "[线程 {}] [文件 {}] Agent 初始请求消息:\n{}",
-                threadId,
-                wide2Ascii(relInputPath),
-                truncateForAgentLog(messages.dump(2), 20000)
-            );
-        }
+        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句。",
+            threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size());
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
@@ -1052,20 +992,10 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const size_t messageChars = approximateMessagesChars(messages);
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
                 threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars);
-            if (m_logger->should_log(spdlog::level::trace)) {
-                m_logger->trace(
-                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮请求消息:\n{}",
-                    threadId,
-                    wide2Ascii(relInputPath),
-                    turn + 1,
-                    m_agentMaxTurnsPerChunk,
-                    truncateForAgentLog(messages.dump(2), 20000)
-                );
-            }
 
             if (messageChars > (size_t)m_agentHardContextChars) {
                 m_logger->warn("[线程 {}] [文件 {}] Agent 上下文超过 hardContextChars，回退到最近摘要重建消息。", threadId, wide2Ascii(relInputPath));
-                messages = buildBaseMessages(backgroundText, loadAgentFileNote(relInputPath));
+                messages = buildBaseMessages(backgroundText);
                 compactRequested = false;
             }
             else if (!compactRequested && messageChars > (size_t)m_agentSoftContextChars) {
@@ -1106,28 +1036,16 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
-            if (m_logger->should_log(spdlog::level::trace) && !response.content.empty()) {
-                m_logger->trace("[线程 {}] [文件 {}] Agent 第 {}/{} 轮原始响应:\n{}", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, response.content);
-            }
 
             if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
                 m_logger->info(
-                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用:\n{}",
+                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用。",
                     threadId,
                     wide2Ascii(relInputPath),
-                    protocol.calls.size(),
-                    formatToolCallRequestsForLog(protocol.calls)
+                    protocol.calls.size()
                 );
                 const json toolResults = executeToolCalls(protocol.calls);
                 compactRequested = false;
-                if (m_logger->should_log(spdlog::level::debug)) {
-                    m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent 工具返回:\n{}",
-                        threadId,
-                        wide2Ascii(relInputPath),
-                        truncateForAgentLog(toolResults.dump(2), 12000)
-                    );
-                }
                 // 工具调用分支不会直接完成 chunk，而是把工具结果回填给下一轮模型继续推理。
                 messages.push_back({ {"role", "assistant"}, {"content", response.content} });
                 messages.push_back({
@@ -1153,28 +1071,13 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 fileNotePatch["updated_at"] = nowTimestampString();
                 saveAgentFileNote(relInputPath, fileNotePatch);
                 m_logger->info("[线程 {}] [文件 {}] Agent 已压缩上下文，摘要长度 {} 字符。", threadId, wide2Ascii(relInputPath), backgroundText.size());
-                if (m_logger->should_log(spdlog::level::debug) && !backgroundText.empty()) {
-                    m_logger->debug("[线程 {}] [文件 {}] Agent 压缩后摘要:\n{}", threadId, wide2Ascii(relInputPath), truncateForAgentLog(backgroundText, 12000));
-                }
-                messages = buildBaseMessages(backgroundText, loadAgentFileNote(relInputPath));
+                messages = buildBaseMessages(backgroundText);
                 compactRequested = false;
                 continue;
             }
 
             if (protocol.action == "commit") {
                 // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
-                if (m_logger->should_log(spdlog::level::debug)) {
-                    m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nsummary={}",
-                        threadId,
-                        wide2Ascii(relInputPath),
-                        truncateForAgentLog(protocol.translations.dump(2), 12000),
-                        truncateForAgentLog(protocol.termUpdates.dump(2), 12000),
-                        truncateForAgentLog(protocol.rewriteRequests.dump(2), 12000),
-                        truncateForAgentLog(protocol.fileNotePatch.dump(2), 12000),
-                        truncateForAgentLog(protocol.summary.dump(2), 12000)
-                    );
-                }
                 int committedCount = 0;
                 try {
                     applyCommit(protocol, currentApi.modelName, committedCount);

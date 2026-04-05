@@ -146,8 +146,8 @@ Input is TSV with NAME, SRC, ID.
 5. Preserve tone and emotional effect, not just literal meaning.
 6. `glossary` is user-authored terminology. Treat it as the highest-priority lexical reference unless the current context proves it is inapplicable.
 7. `known_terms` is the agent-maintained term ledger. It may be partial. Reuse it for consistency, but you may refine its `note`, `status`, or alias mapping when new evidence appears.
-8. `file_note` is long-lived file-level memory. `rolling_context` is the current working summary. Read both before guessing when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
-9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, file_note, or rolling_context.
+8. `rolling_context` is the current working summary. `file_note` is durable file-level memory that you can fetch with `get_file_note` when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
+9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, rolling_context, or a file note you already fetched.
 10. If glossary/known_terms may be incomplete, use GPT-dictionary search before inventing important names, aliases, or terminology.
 11. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
 12. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
@@ -173,10 +173,6 @@ Input is TSV with NAME, SRC, ID.
 <rolling_context>
 [AgentRollingContext]
 </rolling_context>
-
-<file_note>
-[AgentFileNote]
-</file_note>
 
 <known_terms>
 [AgentKnownTerms]

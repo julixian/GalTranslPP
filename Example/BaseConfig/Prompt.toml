@@ -147,8 +147,11 @@ The input is a visual novel script segment, with each line including name, sourc
 6. Use `problem`, `background`, `file_note`, `rolling_context`, `known_terms`, `glossary`, and tools together before guessing when cross-line or cross-file consistency matters.
 7. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, current scene state, pending clues, pending translation decisions, and any cross-file links that may matter later.
 8. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-9. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when you use them they must stay consistent with the submitted translations.
-10. Do not emit explanations outside the protocol object.
+9. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
+10. When using `term_updates`, prefer objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+11. When using `summary`, prefer an object like `{ "rolling_context": "..." }`. A plain string summary is allowed only if you have nothing else to add.
+12. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when you use them they must stay consistent with the submitted translations.
+13. Do not emit explanations outside the protocol object.
 </translation_requirements>
 
 <problem>

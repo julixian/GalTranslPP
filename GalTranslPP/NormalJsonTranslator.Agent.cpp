@@ -135,7 +135,30 @@ namespace {
             result.translations = *it;
         }
         if (const auto it = payload.find("term_updates"); it != payload.end() && it->is_array()) {
-            result.termUpdates = *it;
+            result.termUpdates = json::array();
+            for (const auto& update : *it) {
+                if (!update.is_object()) {
+                    continue;
+                }
+                json normalized = update;
+                if (!normalized.contains("source_term")) {
+                    if (const auto srcIt = normalized.find("src"); srcIt != normalized.end() && srcIt->is_string()) {
+                        normalized["source_term"] = *srcIt;
+                    }
+                    else if (const auto termIt = normalized.find("term"); termIt != normalized.end() && termIt->is_string()) {
+                        normalized["source_term"] = *termIt;
+                    }
+                }
+                if (!normalized.contains("target_term")) {
+                    if (const auto dstIt = normalized.find("dst"); dstIt != normalized.end() && dstIt->is_string()) {
+                        normalized["target_term"] = *dstIt;
+                    }
+                    else if (const auto transIt = normalized.find("translation"); transIt != normalized.end() && transIt->is_string()) {
+                        normalized["target_term"] = *transIt;
+                    }
+                }
+                result.termUpdates.push_back(std::move(normalized));
+            }
         }
         if (const auto it = payload.find("rewrite_requests"); it != payload.end() && it->is_array()) {
             result.rewriteRequests = *it;
@@ -143,8 +166,15 @@ namespace {
         if (const auto it = payload.find("file_note_patch"); it != payload.end() && it->is_object()) {
             result.fileNotePatch = *it;
         }
-        if (const auto it = payload.find("summary"); it != payload.end() && it->is_object()) {
-            result.summary = *it;
+        if (const auto it = payload.find("summary"); it != payload.end()) {
+            if (it->is_object()) {
+                result.summary = *it;
+            }
+            else if (it->is_string()) {
+                result.summary = json::object({
+                    {"rolling_context", it->get<std::string>()}
+                });
+            }
         }
         return result;
     }
@@ -538,10 +568,12 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const std::string term = item.key();
             const json& entry = item.value();
             excerpt.push_back({
+                {"source_term", term},
                 {"term", term},
                 {"target_term", entry.value("target_term", "")},
                 {"status", entry.value("status", "tentative")},
-                {"category", entry.value("category", "")}
+                {"category", entry.value("category", "")},
+                {"note", entry.value("note", "")}
             });
             if ((int)excerpt.size() >= m_agentSearchResultLimit) {
                 break;
@@ -746,6 +778,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
         // `commit` 是 Agent 模式唯一允许修改共享持久化状态的入口。
         // 这里会在同一把锁下同时更新 `run_state`、`term_ledger` 和 `rewrite_queue`。
+        int appliedTermUpdateCount = 0;
         mutateAgentState([&](json& runState, json& termLedger, json& rewriteQueue) {
             if (!runState.contains("files") || !runState["files"].is_array()) {
                 runState["files"] = json::array();
@@ -780,6 +813,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 if (sourceTerm.empty() || targetTerm.empty()) {
                     continue;
                 }
+                ++appliedTermUpdateCount;
                 json& entry = termLedger[sourceTerm];
                 const std::string oldTarget = entry.value("target_term", "");
                 entry["target_term"] = targetTerm;
@@ -816,6 +850,15 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
             }
         });
+        if (!protocol.termUpdates.empty()) {
+            m_logger->debug(
+                "[线程 {}] [文件 {}] Agent 术语账本本轮实际写入 {} / {} 条。",
+                threadId,
+                wide2Ascii(relInputPath),
+                appliedTermUpdateCount,
+                protocol.termUpdates.size()
+            );
+        }
     };
 
     int retryCount = 0;

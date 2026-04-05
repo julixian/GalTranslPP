@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #define PYBIND11_HEADERS
 #define PCRE2_HEADERS
@@ -395,7 +395,7 @@ void NormalJsonTranslator::init()
                 std::optional<std::vector<std::string>>
             >(configData, "problemAnalyze", "problemList");
             if (problemList) {
-                const std::string punctSet = toml::find_or(configData, "problemAnalyze", "punctSet", "（()）：:*[]{}<>『』「」“”;；'/\\\\");
+                const std::string punctSet = toml::find_or(configData, "problemAnalyze", "punctSet", "（()）：:*[]{}<>『』「」“”;；'/\\");
                 const std::string codePage = toml::find_or(configData, "problemAnalyze", "codePage", "gbk");
                 double langProbability = toml::find_or(configData, "problemAnalyze", "langProbability", 0.94);
                 m_problemAnalyzer->loadProblems(*problemList, punctSet, codePage, langProbability);

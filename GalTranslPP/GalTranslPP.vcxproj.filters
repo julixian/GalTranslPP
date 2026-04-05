@@ -10,9 +10,6 @@
     <ClCompile Include="TextLinebreakFix.ixx">
       <Filter>textPlugins</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.ixx">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
     <ClCompile Include="APIPool.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -85,21 +82,6 @@
     <ClCompile Include="ITranslator.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.Agent.cpp">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.Batch.cpp">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.Core.cpp">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.File.cpp">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.Run.cpp">
-      <Filter>filePlugins</Filter>
-    </ClCompile>
     <ClCompile Include="Tool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
@@ -169,6 +151,24 @@
     <ClCompile Include="..\3rdParty\spdlog.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Agent.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Batch.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Core.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.File.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.Run.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.ixx">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -185,6 +185,9 @@
     </Filter>
     <Filter Include="Tools\Utils\specialized">
       <UniqueIdentifier>{cb1a4c6b-be5d-4d19-bbc5-3de2ec63f522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="filePlugins\NormalJsonTranslator">
+      <UniqueIdentifier>{a41ce28e-4b90-422b-afee-9f30153d608d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

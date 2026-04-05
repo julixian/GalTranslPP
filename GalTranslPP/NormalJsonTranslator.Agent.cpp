@@ -449,22 +449,10 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return json{ {"files", files} };
     };
 
-    // `search_dictionary`：在当前运行实际加载过的 GPT 字典文件里搜索词条。
-    auto searchDictionaryTool = [&](const json& arguments) {
-        const std::string query = arguments.value("query", "");
-        const std::string queryLower = str2Lower(query);
-        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit, 200);
-        json matches = json::array();
-        auto pushMatch = [&](json&& item) {
-            if ((int)matches.size() < limit) {
-                matches.push_back(std::move(item));
-            }
-        };
-
+    // 收集当前运行实际加载过的 GPT 字典条目，供“精确获取”和“带 query 搜索”两类工具复用。
+    auto collectDictionaryEntries = [&]() {
+        json entries = json::array();
         for (const fs::path& dictPath : m_agentDictionaryPaths) {
-            if ((int)matches.size() >= limit) {
-                break;
-            }
             try {
                 const auto dictData = toml::uparse(dictPath);
                 const fs::path relPath = fs::relative(dictPath, m_projectDir);
@@ -480,24 +468,146 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                     const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
                         (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
                     const std::string note = el.contains("note") ? el.at("note").as_string() : "";
-                    const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + relPathStr);
-                    if (queryLower.empty() || haystack.contains(queryLower)) {
-                        pushMatch(json{
-                            {"type", "gpt_dict"},
-                            {"file", relPathStr},
-                            {"source_term", sourceTerm},
-                            {"target_term", targetTerm},
-                            {"note", note}
-                        });
-                        if ((int)matches.size() >= limit) {
-                            break;
-                        }
+                    if (sourceTerm.empty() && targetTerm.empty() && note.empty()) {
+                        continue;
                     }
+                    entries.push_back(json{
+                        {"type", "gpt_dict"},
+                        {"file", relPathStr},
+                        {"source_term", sourceTerm},
+                        {"target_term", targetTerm},
+                        {"note", note}
+                    });
                 }
             }
             catch (...) {}
         }
-        return json{ {"matches", matches} };
+        return entries;
+    };
+
+    // `get_dictionary_entries`：优先用于“查看已加载 GPT 字典里到底有哪些条目”。
+    // 不传 `terms` 时返回完整字典的前 N 条；传 `terms` 时做精确筛选。
+    auto getDictionaryEntriesTool = [&](const json& arguments) {
+        const int limit = sanitizeToolLimit(arguments.value("limit", 200), 200, 2000);
+        std::vector<std::string> terms;
+        if (const auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
+            for (const auto& term : *it) {
+                if (term.is_string()) {
+                    const std::string value = trimCopy(term.get<std::string>());
+                    if (!value.empty()) {
+                        terms.push_back(value);
+                    }
+                }
+            }
+        }
+        else if (const auto it = arguments.find("term"); it != arguments.end() && it->is_string()) {
+            const std::string value = trimCopy(it->get<std::string>());
+            if (!value.empty()) {
+                terms.push_back(value);
+            }
+        }
+
+        const json allEntries = collectDictionaryEntries();
+        json entries = json::array();
+        int matchedTotal = 0;
+        auto pushEntry = [&](const json& entry) {
+            if ((int)entries.size() < limit) {
+                entries.push_back(entry);
+            }
+        };
+
+        if (terms.empty()) {
+            for (const auto& entry : allEntries) {
+                ++matchedTotal;
+                pushEntry(entry);
+            }
+        }
+        else {
+            for (const auto& entry : allEntries) {
+                const std::string sourceTerm = entry.value("source_term", "");
+                const std::string targetTerm = entry.value("target_term", "");
+                const bool matched = std::ranges::any_of(terms, [&](const std::string& term) {
+                    return sourceTerm == term || targetTerm == term;
+                });
+                if (matched) {
+                    ++matchedTotal;
+                    pushEntry(entry);
+                }
+            }
+        }
+
+        return json{
+            {"entries", entries},
+            {"total_entries", (int)allEntries.size()},
+            {"returned_entries", (int)entries.size()},
+            {"matched_entries", matchedTotal},
+            {"truncated", (int)entries.size() < matchedTotal}
+        };
+    };
+
+    // `search_dictionary`：只在你已经有明确查询词、且它不一定会出现在当前 chunk glossary 时使用。
+    // 支持单个 `query`，或多个 `queries`。默认做模糊匹配；若希望更严格，可传 `mode=exact`。
+    auto searchDictionaryTool = [&](const json& arguments) {
+        std::vector<std::string> queries;
+        if (const auto it = arguments.find("queries"); it != arguments.end() && it->is_array()) {
+            for (const auto& query : *it) {
+                if (query.is_string()) {
+                    const std::string value = trimCopy(query.get<std::string>());
+                    if (!value.empty()) {
+                        queries.push_back(value);
+                    }
+                }
+            }
+        }
+        if (queries.empty()) {
+            const std::string query = trimCopy(arguments.value("query", ""));
+            if (!query.empty()) {
+                std::istringstream iss(query);
+                for (std::string token; iss >> token;) {
+                    queries.push_back(token);
+                }
+                if (queries.empty()) {
+                    queries.push_back(query);
+                }
+            }
+        }
+
+        const std::string mode = str2Lower(arguments.value("mode", "fuzzy"));
+        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit, 200);
+        json matches = json::array();
+        auto pushMatch = [&](const json& item) {
+            if ((int)matches.size() < limit) {
+                matches.push_back(item);
+            }
+        };
+
+        const json allEntries = collectDictionaryEntries();
+        for (const auto& entry : allEntries) {
+            if ((int)matches.size() >= limit) {
+                break;
+            }
+            const std::string sourceTerm = entry.value("source_term", "");
+            const std::string targetTerm = entry.value("target_term", "");
+            const std::string note = entry.value("note", "");
+            const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + entry.value("file", ""));
+            const bool matched = std::ranges::any_of(queries, [&](const std::string& query) {
+                if (query.empty()) {
+                    return false;
+                }
+                if (mode == "exact") {
+                    return sourceTerm == query || targetTerm == query;
+                }
+                return haystack.contains(str2Lower(query));
+            });
+            if (matched) {
+                pushMatch(entry);
+            }
+        }
+        return json{
+            {"queries", queries},
+            {"mode", mode},
+            {"matches", matches}
+        };
     };
 
     // `get_project_note`：读取项目根目录中的用户脚本说明文件（如果存在）。
@@ -654,6 +764,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
                 else if (call.name == "search_dictionary") {
                     result["result"] = searchDictionaryTool(call.arguments);
+                }
+                else if (call.name == "get_dictionary_entries") {
+                    result["result"] = getDictionaryEntriesTool(call.arguments);
                 }
                 else if (call.name == "get_term") {
                     result["result"] = getTermTool(call.arguments);

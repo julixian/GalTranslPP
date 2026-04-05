@@ -148,19 +148,21 @@ Input is TSV with NAME, SRC, ID.
 7. `known_terms` is the agent-maintained term ledger. It may be partial. Reuse it for consistency, but you may refine its `note`, `status`, or alias mapping when new evidence appears.
 8. `rolling_context` is the current working summary. `file_note` is durable file-level memory that you can fetch with `get_file_note` when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
 9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, rolling_context, or a file note you already fetched.
-10. If glossary/known_terms may be incomplete, use GPT-dictionary search before inventing important names, aliases, or terminology.
-11. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
-12. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
-13. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
-14. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, deliberate ambiguity, literary echoes, scene state, relationship shifts, and anything likely to affect later translation.
-15. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
-16. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-17. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
-18. For `tool_calls`, each item in `calls` should use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`. Do not rename these keys to `method`, `tool`, `function`, or `params`.
-19. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-20. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
-21. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
-22. Do not emit any explanation outside the protocol object.
+10. `glossary` already contains GPT-dictionary entries that matched the current chunk source text. Do not call dictionary tools just to rediscover terms that are already present in `glossary`.
+11. Prefer `get_dictionary_entries` when you need to inspect loaded GPT-dictionary entries themselves. Use it with no `terms` to inspect the loaded dictionary, or with `terms` for exact entry lookup.
+12. Use `search_dictionary` only when you already have a specific query from rolling_context, file_note, cross-file context, or another clue that may not appear in the current chunk. Prefer one term per call, or use `queries: [...]`. Do not concatenate many names into one space-separated query string unless you truly want broad fuzzy matching.
+13. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
+14. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
+15. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
+16. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, deliberate ambiguity, literary echoes, scene state, relationship shifts, and anything likely to affect later translation.
+17. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
+18. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+19. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
+20. For `tool_calls`, each item in `calls` should use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`. Do not rename these keys to `method`, `tool`, `function`, or `params`.
+21. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+22. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
+23. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
+24. Do not emit any explanation outside the protocol object.
 </translation_requirements>
 
 <problem>
@@ -183,7 +185,8 @@ Input is TSV with NAME, SRC, ID.
 list_files: list available script files
 read_lines: read source and cached translations from a file range
 search_text: search source, cached dst, term ledger, and file notes
-search_dictionary: search loaded GPT dictionaries
+get_dictionary_entries: inspect loaded GPT dictionary entries; omit `terms` to inspect the dictionary itself, or pass `terms` for exact entry lookup
+search_dictionary: fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or `queries: [...]`
 get_term: read one term-ledger entry
 get_file_note: read durable file notes
 [AgentExtraTools]</tools>

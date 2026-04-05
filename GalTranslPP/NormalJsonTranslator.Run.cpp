@@ -417,7 +417,7 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
                     // 只要工作单元边界变化，或者同名工作单元的输入内容已经变化，
                     // 都不尝试把旧进度硬映射到新工作单元；统一回到 pending，
                     // 由缓存系统在 processFile 阶段重新消化已完成内容。
-                    if (oldStatus == "in_progress" || oldStatus == "done") {
+                    if (oldStatus == "in_progress" || oldStatus == "paused" || oldStatus == "done") {
                         ++requeuedCount;
                     }
                     if (oldStatus == "done" && artifactDone && !fingerprintMatches) {

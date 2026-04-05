@@ -216,6 +216,11 @@ namespace {
         }
         return fallback;
     }
+
+    bool jsonLooksMeaningfulArrayText(const std::string& text) {
+        const std::string trimmed = trimCopy(text);
+        return !trimmed.empty() && trimmed != "[]" && trimmed != "null";
+    }
 }
 
 // 只读运行状态加载函数，主要给恢复调度和启动检查使用。
@@ -572,25 +577,42 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     };
 
     // 从全局术语账本里截一小段摘要塞进提示词，减少模型每轮都去查工具的次数。
-    auto termLedgerExcerpt = [&]() {
+    auto termLedgerExcerpt = [&](const std::string& currentInputBlock, const std::string& rollingSummary, const json& fileNote) {
         const json ledger = loadAgentTermLedger();
-        json excerpt = json::array();
+        json relevant = json::array();
+        json fallback = json::array();
+        const std::string inputLower = str2Lower(currentInputBlock);
+        const std::string summaryLower = str2Lower(rollingSummary);
+        const std::string fileNoteLower = str2Lower(fileNote.dump());
         for (const auto& item : ledger.items()) {
             const std::string term = item.key();
             const json& entry = item.value();
-            excerpt.push_back({
+            const json normalizedEntry = {
                 {"source_term", term},
                 {"term", term},
                 {"target_term", entry.value("target_term", "")},
                 {"status", entry.value("status", "tentative")},
                 {"category", entry.value("category", "")},
                 {"note", entry.value("note", "")}
-            });
-            if ((int)excerpt.size() >= m_agentSearchResultLimit) {
-                break;
+            };
+
+            const std::string termLower = str2Lower(term);
+            const std::string targetLower = str2Lower(entry.value("target_term", ""));
+            const std::string noteLower = str2Lower(entry.value("note", ""));
+            const bool isRelevant =
+                (!inputLower.empty() && inputLower.contains(termLower))
+                || (!summaryLower.empty() && (summaryLower.contains(termLower) || (!targetLower.empty() && summaryLower.contains(targetLower))))
+                || (!fileNoteLower.empty() && (fileNoteLower.contains(termLower) || (!targetLower.empty() && fileNoteLower.contains(targetLower)) || (!noteLower.empty() && fileNoteLower.contains(noteLower))));
+
+            if (isRelevant) {
+                relevant.push_back(normalizedEntry);
+                continue;
+            }
+            if ((int)fallback.size() < m_agentSearchResultLimit) {
+                fallback.push_back(normalizedEntry);
             }
         }
-        return excerpt.dump(2);
+        return (relevant.empty() ? fallback : relevant).dump(2);
     };
 
     auto currentProblemSummary = [&]() {
@@ -637,6 +659,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         fillBlockAndMap(batch, id2SentenceMap, inputBlock, m_transEngine);
         const std::string inputProblems = currentProblemSummary();
         const std::string glossary = currentGlossary();
+        const std::string knownTerms = termLedgerExcerpt(inputBlock, rollingSummary, fileNote);
 
         const std::string schemaDescription =
             "{"
@@ -657,13 +680,11 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         replaceStrInplace(userPrompt, "[AgentTargetLang]", m_targetLang);
         replaceStrInplace(userPrompt, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
         replaceStrInplace(userPrompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
-        replaceStrInplace(userPrompt, "[Background Description]", rollingSummary.empty() ? "None" : rollingSummary);
-        replaceStrInplace(userPrompt, "[AgentBackgroundDescription]", rollingSummary.empty() ? "None" : rollingSummary);
         replaceStrInplace(userPrompt, "[Glossary]", glossary.empty() ? "None" : glossary);
         replaceStrInplace(userPrompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
         replaceStrInplace(userPrompt, "[AgentRollingContext]", rollingSummary.empty() ? "None" : rollingSummary);
         replaceStrInplace(userPrompt, "[AgentFileNote]", fileNote.empty() ? "None" : fileNote.dump(2));
-        replaceStrInplace(userPrompt, "[AgentKnownTerms]", termLedgerExcerpt());
+        replaceStrInplace(userPrompt, "[AgentKnownTerms]", knownTerms);
         replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
         replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
         replaceStrInplace(userPrompt, "[AgentTurnGuidance]",
@@ -910,6 +931,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         const std::string glossary = currentGlossary();
         const std::string inputBlock = currentInputBlock();
         json fileNote = loadAgentFileNote(relInputPath);
+        const std::string knownTerms = termLedgerExcerpt(inputBlock, backgroundText, fileNote);
         json messages = buildBaseMessages(backgroundText, fileNote);
         bool compactRequested = false;
 
@@ -926,8 +948,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         if (!glossary.empty()) {
             logBlock += "\nGlossary:\n" + truncateForAgentLog(glossary);
         }
-        if (m_logger->should_log(spdlog::level::trace)) {
-            logBlock += "\nKnownTerms:\n" + truncateForAgentLog(termLedgerExcerpt(), 12000);
+        if (jsonLooksMeaningfulArrayText(knownTerms) || m_logger->should_log(spdlog::level::trace)) {
+            logBlock += "\nKnownTerms:\n" + truncateForAgentLog(knownTerms, 12000);
         }
         logBlock += "\ninputBlock:\n" + inputBlock;
         m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译:{}", threadId, wide2Ascii(relInputPath), logBlock);

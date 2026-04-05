@@ -332,7 +332,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
                 saveProblemOverviewFunc();
-                updateAgentRunStateEntry(relInputPath, "pending", -1, {});
+                updateAgentRunStateEntry(relInputPath, "paused", -1, {});
                 return;
             }
 

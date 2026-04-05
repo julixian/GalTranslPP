@@ -82,6 +82,9 @@ export {
         bool m_agentEnabled = false;
         bool m_agentAllowCrossFileSearch = true;
         bool m_agentFinalReconcileSingleThread = true;
+        // 仅在最终单线程 reconcile 阶段为 true。
+        // 作用是避免“reconcile 触发的重翻”再次把术语改判回写成新的 rewrite_queue，
+        // 从而形成自我追加、难以收敛的循环。
         bool m_agentReconciling = false;
 
         std::string m_apiStrategy;
@@ -91,7 +94,6 @@ export {
         int m_cacheSearchDistance;
         std::string m_linebreakSymbol;
         std::string m_agentRewriteMode = "queue_retranslate";
-        int m_agentChunkSize = 24;
         int m_agentMaxTurnsPerChunk = 6;
         int m_agentSoftContextChars = 48000;
         int m_agentHardContextChars = 64000;

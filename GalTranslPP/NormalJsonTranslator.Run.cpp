@@ -337,7 +337,6 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             {"threads_num", m_threadsNum},
             {"split_file", m_splitFile},
             {"split_file_num", m_splitFileNum},
-            {"chunk_size", m_agentChunkSize},
             {"max_turns_per_chunk", m_agentMaxTurnsPerChunk},
             {"soft_context_chars", m_agentSoftContextChars},
             {"hard_context_chars", m_agentHardContextChars},
@@ -355,13 +354,12 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
         const bool threadsChanged = hasPreviousConfig && previousAgentConfig.value("threads_num", m_threadsNum) != m_threadsNum;
         const bool workLayoutChanged = !hasPreviousConfig
             || previousAgentConfig.value("split_file", m_splitFile) != m_splitFile
-            || previousAgentConfig.value("split_file_num", m_splitFileNum) != m_splitFileNum
-            || previousAgentConfig.value("chunk_size", m_agentChunkSize) != m_agentChunkSize;
+            || previousAgentConfig.value("split_file_num", m_splitFileNum) != m_splitFileNum;
 
         // `threads_num` 变化只影响调度并发度，不改变工作单元本身的边界，因此可以保留旧的
         // `last_committed_index`，只需清掉旧 lease 重新排队未完成任务。
         //
-        // `split_file / split_file_num / chunk_size` 变化则属于“工作单元边界变化”：
+        // `split_file / split_file_num` 变化则属于“工作单元边界变化”：
         // 重新切分后，同一个 part 的内容和覆盖范围都可能变，旧的 `last_committed_index`
         // 已经不能安全映射到新 part，所以这里会：
         // 1. 重建新的工作单元列表

@@ -110,7 +110,6 @@ maxRotateFiles = 1
 retransAllWhenFail = false
 [agent]
 enabled = false
-chunkSize = 24
 maxTurnsPerChunk = 6
 softContextChars = 48000
 hardContextChars = 64000

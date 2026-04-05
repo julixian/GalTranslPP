@@ -128,7 +128,6 @@ void NormalJsonTranslator::init()
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "agent", "enabled", false);
-        m_agentChunkSize = toml::find_or(configData, "agent", "chunkSize", 24);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 6);
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 48000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 64000);
@@ -142,7 +141,7 @@ void NormalJsonTranslator::init()
             if (m_transEngine != TransEngine::ForGalTsv) {
                 throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv");
             }
-            if (m_agentChunkSize <= 0 || m_agentMaxTurnsPerChunk <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
+            if (m_agentMaxTurnsPerChunk <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
                 throw std::invalid_argument("Agent 模式配置无效");
             }
             if (m_agentSoftContextChars > m_agentHardContextChars) {

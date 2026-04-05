@@ -526,6 +526,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
     // 下面开始是“模型工具调用”在本地侧的只读实现。
     // 模型可以请求这些工具，但它们都不能直接写文件；真正落盘必须走 commit。
+    // `read_lines`：读取同文件或指定文件的一段上下文。
+    // 若该段已有缓存，则优先返回缓存中的 `original_text` / `pre_translated_text`，
+    // 让模型看到的内容尽量与当前缓存状态一致，而不是退回到原始输入文件。
     auto readLinesTool = [&](const json& arguments) {
         const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
         const int start = std::max(0, arguments.value("start", 0));
@@ -544,6 +547,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const auto cacheMap = loadCacheDstMap(targetRelPath);
             for (int i = start; i < (int)inputJson.size() && i < start + count; ++i) {
                 json line = { {"id", i} };
+                const auto cacheIt = cacheMap.find(i);
                 if (inputJson[i].contains("name")) {
                     line["name"] = inputJson[i]["name"];
                 }
@@ -551,11 +555,15 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                     line["names"] = inputJson[i]["names"];
                 }
                 if (includeSrc) {
-                    line["src"] = inputJson[i].value("message", "");
+                    std::string src = inputJson[i].value("message", "");
+                    if (cacheIt != cacheMap.end()) {
+                        src = cacheIt->second.value("original_text", src);
+                    }
+                    line["src"] = src;
                 }
                 if (includeDst) {
-                    if (const auto it = cacheMap.find(i); it != cacheMap.end()) {
-                        line["dst"] = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
+                    if (cacheIt != cacheMap.end()) {
+                        line["dst"] = cacheIt->second.value("pre_translated_text", cacheIt->second.value("translated_preview", ""));
                     }
                 }
                 result["lines"].push_back(std::move(line));
@@ -1040,9 +1048,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
         replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
         replaceStrInplace(userPrompt, "[AgentExtraTools]", extraTools);
-        replaceStrInplace(userPrompt, "[AgentTurnGuidance]",
-            "If context is near limit, return compact_context only. "
-            "Otherwise either call read-only tools or return a commit that covers every current chunk id exactly once.");
 
         const std::string& agentSystemPrompt = m_agentSystemPrompt.empty() ? m_systemPrompt : m_agentSystemPrompt;
         return json::array({

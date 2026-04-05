@@ -138,8 +138,8 @@ void NormalJsonTranslator::init()
         m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
 
         if (m_agentEnabled) {
-            if (m_transEngine != TransEngine::ForGalTsv) {
-                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv");
+            if (m_transEngine != TransEngine::ForGalTsv && m_transEngine != TransEngine::ForNovelTsv) {
+                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv");
             }
             if (m_agentMaxTurnsPerChunk <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
                 throw std::invalid_argument("Agent 模式配置无效");
@@ -360,10 +360,21 @@ void NormalJsonTranslator::init()
             m_systemPrompt = readPromptString(systemKey);
             m_userPrompt = readPromptString(userKey);
 
-            if (m_agentEnabled && m_transEngine == TransEngine::ForGalTsv) {
-                m_agentSystemPrompt = readPromptString("FORGALTSV_AGENT_SYSTEM");
-                m_agentUserPrompt = readPromptString("FORGALTSV_AGENT_PROMPT_EN");
-                m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORGALTSV_AGENT_SYSTEM / FORGALTSV_AGENT_PROMPT_EN。");
+            if (m_agentEnabled) {
+                switch (m_transEngine) {
+                case TransEngine::ForGalTsv:
+                    m_agentSystemPrompt = readPromptString("FORGALTSV_AGENT_SYSTEM");
+                    m_agentUserPrompt = readPromptString("FORGALTSV_AGENT_PROMPT_EN");
+                    m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORGALTSV_AGENT_SYSTEM / FORGALTSV_AGENT_PROMPT_EN。");
+                    break;
+                case TransEngine::ForNovelTsv:
+                    m_agentSystemPrompt = readPromptString("FORNOVELTSV_AGENT_SYSTEM");
+                    m_agentUserPrompt = readPromptString("FORNOVELTSV_AGENT_PROMPT_EN");
+                    m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORNOVELTSV_AGENT_SYSTEM / FORNOVELTSV_AGENT_PROMPT_EN。");
+                    break;
+                default:
+                    break;
+                }
             }
         }
 

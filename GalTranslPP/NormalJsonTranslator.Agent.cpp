@@ -57,6 +57,13 @@ namespace {
         ofs << value.dump(2);
     }
 
+    json sanitizeAgentFileNote(json note) {
+        if (note.is_object()) {
+            note.erase("rolling_context");
+        }
+        return note;
+    }
+
     fs::path buildAgentFileNotePath(const fs::path& root, const fs::path& relInputPath) {
         fs::path notePath = root / relInputPath;
         notePath += L".json";
@@ -364,6 +371,20 @@ namespace {
         return result;
     }
 
+    std::string formatToolCallSummary(const std::vector<AgentToolCallRequest>& calls) {
+        if (calls.empty()) {
+            return "None";
+        }
+        std::string result;
+        for (const auto& [index, call] : calls | std::views::enumerate) {
+            if (index > 0) {
+                result += ", ";
+            }
+            result += call.name.empty() ? "<unknown>" : call.name;
+        }
+        return result;
+    }
+
     std::string jsonStringOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
         if (!obj.is_object()) {
             return fallback;
@@ -404,12 +425,12 @@ json NormalJsonTranslator::loadAgentRewriteQueue() {
 // 3. `compact_context` / `commit` 的落盘目标
 json NormalJsonTranslator::loadAgentFileNote(const fs::path& targetRelPath) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    return loadJsonFileOrDefault(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
+    return sanitizeAgentFileNote(loadJsonFileOrDefault(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object()));
 }
 
 void NormalJsonTranslator::saveAgentFileNote(const fs::path& targetRelPath, const json& note) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    saveJsonFilePretty(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), note);
+    saveJsonFilePretty(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), sanitizeAgentFileNote(note));
 }
 
 // 轻量的 `run_state` 生命周期更新函数。
@@ -941,8 +962,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     };
 
     // 从全局术语账本里截一小段摘要塞进提示词，减少模型每轮都去查工具的次数。
-    // 这里会参考当前 chunk、rolling_context 以及当前文件的 file_note，
-    // 但 file_note 本身不会被默认注入提示词。
+    // 这里会参考当前 chunk、rolling_context 以及当前文件的 file_note。
+    // file_note 现在会默认注入提示词，但仍然只保留“长期可复用”的文件级信息，
+    // 不再混入 rolling_context。
     auto termLedgerExcerpt = [&](const std::string& currentInputBlock, const std::string& rollingSummary, const json& fileNote) {
         const json ledger = loadAgentTermLedger();
         json relevant = json::array();
@@ -982,7 +1004,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     };
 
     auto currentProblemSummary = [&]() {
-        const std::vector<Sentence*> pending = currentChunk();
+        std::vector<Sentence*> pending = currentChunk();
         return std::ranges::fold_left(
             pending
                 | std::views::transform([](const Sentence* se) { return se->problems; })
@@ -1007,9 +1029,43 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return m_gptDictionary->generatePrompt(pendingSpan, m_transEngine);
     };
 
+    // 生成类似旧版 translateBatch 的“本轮输入摘要”日志。
+    // info 层保留足够排查问题的关键信息；debug 层再额外展开 file_note / known_terms 等较长内容。
+    auto buildAgentLogBlock = [&](const std::string& rollingSummary) {
+        std::vector<Sentence*> pending = currentChunk();
+        absl::btree_map<int, Sentence*> id2SentenceMap;
+        std::string inputBlock;
+        std::span<Sentence*> pendingSpan(pending);
+        fillBlockAndMap(pendingSpan, id2SentenceMap, inputBlock, m_transEngine);
+
+        const std::string inputProblems = currentProblemSummary();
+        const std::string glossary = currentGlossary();
+        const json currentFileNote = loadAgentFileNote(relInputPath);
+        const std::string knownTerms = termLedgerExcerpt(inputBlock, rollingSummary, currentFileNote);
+
+        std::string logBlock;
+        if (!inputProblems.empty()) {
+            logBlock += "\nProblems:\n" + inputProblems;
+        }
+        if (m_logger->should_log(spdlog::level::debug) && !rollingSummary.empty()) {
+            logBlock += "\nRollingContext:\n" + rollingSummary + "\n";
+        }
+        if (m_logger->should_log(spdlog::level::debug) && !currentFileNote.empty()) {
+            logBlock += "\nFileNote:\n" + currentFileNote.dump(2) + "\n";
+        }
+        if (!glossary.empty()) {
+            logBlock += "\nGlossary:\n" + glossary;
+        }
+        if (m_logger->should_log(spdlog::level::debug) && knownTerms != "[]") {
+            logBlock += "\nKnownTerms:\n" + knownTerms;
+        }
+        logBlock += "\ninputBlock:\n" + inputBlock;
+        return logBlock;
+    };
+
     // 组装“一轮模型请求”的基础消息。
-    // 这里本身不发请求，只负责把 chunk、rolling context、problem/background/glossary、
-    // 术语摘要和协议说明拼好。若模型需要 file_note，必须显式调用 `get_file_note`。
+    // 这里本身不发请求，只负责把 chunk、rolling context、problem/glossary/file_note、
+    // 术语摘要和协议说明拼好。若模型需要别的文件的 file_note，仍需显式调用 `get_file_note`。
     auto buildBaseMessages = [&](const std::string& rollingSummary) {
         absl::btree_map<int, Sentence*> id2SentenceMap;
         std::string inputBlock;
@@ -1043,9 +1099,22 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         replaceStrInplace(userPrompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
         replaceStrInplace(userPrompt, "[Glossary]", glossary.empty() ? "None" : glossary);
         replaceStrInplace(userPrompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
+        replaceStrInplace(userPrompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump(2));
         replaceStrInplace(userPrompt, "[AgentRollingContext]", rollingSummary.empty() ? "None" : rollingSummary);
         replaceStrInplace(userPrompt, "[AgentKnownTerms]", knownTerms);
-        replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", std::string("NAME\tSRC\tID\n") + inputBlock);
+        std::string agentInputHeader;
+        switch (m_transEngine) {
+        case TransEngine::ForGalTsv:
+            agentInputHeader = "NAME\tSRC\tID\n";
+            break;
+        case TransEngine::ForNovelTsv:
+            agentInputHeader = "SRC\tID\n";
+            break;
+        default:
+            agentInputHeader.clear();
+            break;
+        }
+        replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", agentInputHeader + inputBlock);
         replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
         replaceStrInplace(userPrompt, "[AgentExtraTools]", extraTools);
 
@@ -1181,7 +1250,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         mergeFileNotePatch(nextFileNote, protocol.fileNotePatch);
         if (!protocol.rollingContext.empty()) {
             nextBackgroundText = protocol.rollingContext;
-            nextFileNote["rolling_context"] = nextBackgroundText;
         }
         nextFileNote["updated_at"] = nowTimestampString();
 
@@ -1319,8 +1387,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         m_logger->debug("[线程 {}] [文件 {}] Agent chunk 开始，当前待提交 {} 句，允许最多 {} 轮。", threadId, wide2Ascii(relInputPath), pending.size(), m_agentMaxTurnsPerChunk);
         json messages = buildBaseMessages(backgroundText);
         bool compactRequested = false;
-        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句。",
-            threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size());
+        const std::string logBlock = buildAgentLogBlock(backgroundText);
+        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句，最多 {} 轮:\n{}",
+            threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size(), m_agentMaxTurnsPerChunk, logBlock);
         if (m_logger->should_log(spdlog::level::trace)) {
             m_logger->trace(
                 "[线程 {}] [文件 {}] Agent 初始请求消息（实际发送给模型）:\n{}",
@@ -1389,7 +1458,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 break;
             }
 
-            m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
+            m_logger->info("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。",
+                threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
             if (m_logger->should_log(spdlog::level::trace) && !response.content.empty()) {
                 m_logger->trace(
                     "[线程 {}] [文件 {}] Agent 第 {}/{} 轮原始响应:\n{}",
@@ -1403,10 +1473,11 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
                 m_logger->info(
-                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用。",
+                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用: {}。",
                     threadId,
                     wide2Ascii(relInputPath),
-                    protocol.calls.size()
+                    protocol.calls.size(),
+                    formatToolCallSummary(protocol.calls)
                 );
                 if (m_logger->should_log(spdlog::level::debug)) {
                     m_logger->debug(
@@ -1418,6 +1489,12 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
                 const json toolResults = executeToolCalls(protocol.calls);
                 compactRequested = false;
+                m_logger->info(
+                    "[线程 {}] [文件 {}] Agent 工具执行完成，返回 {} 项结果，继续下一轮。",
+                    threadId,
+                    wide2Ascii(relInputPath),
+                    toolResults.size()
+                );
                 if (m_logger->should_log(spdlog::level::debug)) {
                     m_logger->debug(
                         "[线程 {}] [文件 {}] Agent 工具返回结果:\n{}",
@@ -1443,10 +1520,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 else if (!response.content.empty()) {
                     backgroundText = response.content;
                 }
-                json fileNotePatch = loadAgentFileNote(relInputPath);
-                fileNotePatch["rolling_context"] = backgroundText;
-                fileNotePatch["updated_at"] = nowTimestampString();
-                saveAgentFileNote(relInputPath, fileNotePatch);
                 m_logger->info("[线程 {}] [文件 {}] Agent 已压缩上下文，摘要长度 {} 字符。", threadId, wide2Ascii(relInputPath), backgroundText.size());
                 messages = buildBaseMessages(backgroundText);
                 compactRequested = false;
@@ -1477,8 +1550,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                         threadId, wide2Ascii(relInputPath), retryCount, e.what());
                     break;
                 }
-                m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句，术语更新 {} 条，重翻请求 {} 条。",
-                    threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size());
+                m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句，术语更新 {} 条，重翻请求 {} 条，新的 rolling_context 长度 {} 字符。",
+                    threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size(), protocol.rollingContext.size());
                 return true;
             }
 

@@ -111,10 +111,10 @@ retransAllWhenFail = false
 [agent]
 enabled = false
 maxTurnsPerChunk = 6
-softContextChars = 48000
-hardContextChars = 64000
+softContextChars = 50000
+hardContextChars = 100000
 lookaheadLines = 80
-searchResultLimit = 40
+searchResultLimit = 50
 allowCrossFileSearch = true
 finalReconcileSingleThread = true
 rewriteMode = "queue_retranslate"

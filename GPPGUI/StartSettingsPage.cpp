@@ -414,7 +414,8 @@ void StartSettingsPage::_setupUI()
 	buttonLayout->addWidget(agentModeToggle);
 	auto refreshAgentControls = [=]()
 		{
-			const bool supportsAgent = translateMode->currentText() == "ForGalTsv";
+			const QString currentMode = translateMode->currentText();
+			const bool supportsAgent = currentMode == "ForGalTsv" || currentMode == "ForNovelTsv";
 			agentModeToggle->setEnabled(supportsAgent);
 			if (!supportsAgent) {
 				agentModeToggle->setIsToggled(false);

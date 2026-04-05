@@ -53,6 +53,10 @@ export {
 
         std::string m_systemPrompt;
         std::string m_userPrompt;
+        // Agent mode keeps its own prompt templates so the structured workflow can also
+        // be configured from Prompt.toml instead of being hard-coded in C++.
+        std::string m_agentSystemPrompt;
+        std::string m_agentUserPrompt;
         std::string m_targetLang;
 
         int m_totalSentences = 0;
@@ -134,9 +138,24 @@ export {
         void postProcess(Sentence* se);
 
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
+        // Agent mode runs a small multi-turn loop per chunk. A single chunk normally hits
+        // this once, but retries may re-enter it when commit validation or response parsing fails.
         bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
 
+        // Shared persistent-state helpers for Agent mode. All write paths should go through
+        // these helpers so worker threads do not race on load-modify-save windows.
+        json loadAgentRunState();
+        json loadAgentTermLedger();
+        json loadAgentRewriteQueue();
+        json loadAgentFileNote(const fs::path& targetRelPath);
+        void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
+        void updateAgentRunStateEntry(const fs::path& relInputPath, const std::string& status,
+            int lastCommittedIndex = -1, const std::string& leaseOwner = {});
+        void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator);
+
         void processFile(const fs::path& relInputPath, int threadId);
+        // Reconcile is called once after the thread pool drains. In v1 it consumes queued
+        // rewrite requests and re-runs affected files in a conservative single-thread pass.
         void runAgentFinalReconcile();
 
     public:

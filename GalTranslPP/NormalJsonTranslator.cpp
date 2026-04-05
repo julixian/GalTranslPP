@@ -550,19 +550,26 @@ void NormalJsonTranslator::init()
                 m_apiPool->loadApis(std::move(apis));
             }
 
-            const fs::path promptPath = [&]()
-                {
-                    fs::path ret = m_projectDir / L"Prompt.toml";
-                    if (!fs::exists(promptPath)) {
-                        if (!fs::exists(defaultPromptPath)) {
-                            throw std::runtime_error("找不到 Prompt.toml 文件");
-                        }
-                        ret = defaultPromptPath;
-                    }
-                    return ret;
-                }();
+            const fs::path projectPromptPath = m_projectDir / L"Prompt.toml";
+            const bool hasProjectPrompt = fs::exists(projectPromptPath);
+            const bool hasDefaultPrompt = fs::exists(defaultPromptPath);
+            if (!hasProjectPrompt && !hasDefaultPrompt) {
+                throw std::runtime_error("找不到 Prompt.toml 文件");
+            }
 
-            const auto promptData = toml::uparse(promptPath);
+            const auto projectPromptData = hasProjectPrompt ? toml::uparse(projectPromptPath) : toml::value{};
+            const auto defaultPromptData = hasDefaultPrompt ? toml::uparse(defaultPromptPath) : toml::value{};
+
+            const auto readPromptString = [&](const std::string& key) -> std::string
+                {
+                    if (hasProjectPrompt && projectPromptData.contains(key) && projectPromptData.at(key).is_string()) {
+                        return projectPromptData.at(key).as_string();
+                    }
+                    if (hasDefaultPrompt && defaultPromptData.contains(key) && defaultPromptData.at(key).is_string()) {
+                        return defaultPromptData.at(key).as_string();
+                    }
+                    throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", key));
+                };
 
             std::string systemKey;
             std::string userKey;
@@ -601,17 +608,13 @@ void NormalJsonTranslator::init()
                 throw std::invalid_argument("未知的 TransEngine");
             }
 
-            if (promptData.contains(systemKey) && promptData.at(systemKey).is_string()) {
-                m_systemPrompt = promptData.at(systemKey).as_string();
-            }
-            else {
-                throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", systemKey));
-            }
-            if (promptData.contains(userKey) && promptData.at(userKey).is_string()) {
-                m_userPrompt = promptData.at(userKey).as_string();
-            }
-            else {
-                throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", userKey));
+            m_systemPrompt = readPromptString(systemKey);
+            m_userPrompt = readPromptString(userKey);
+
+            if (m_agentEnabled && m_transEngine == TransEngine::ForGalTsv) {
+                m_agentSystemPrompt = readPromptString("FORGALTSV_AGENT_SYSTEM");
+                m_agentUserPrompt = readPromptString("FORGALTSV_AGENT_PROMPT_EN");
+                m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORGALTSV_AGENT_SYSTEM / FORGALTSV_AGENT_PROMPT_EN。");
             }
         }
 
@@ -1080,6 +1083,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     return false;
 }
 
+#if 0
 bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId) {
     for (Sentence* se : batch) {
         if (se->pre_processed_text.empty()) {
@@ -1798,6 +1802,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
 }
 
 
+#endif
 // ============================================        processFile        ========================================
 void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadId) {
     if (m_controller->shouldStop()) {
@@ -1811,46 +1816,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     const fs::path cachePath = m_transCacheDir / relInputPath;
     const fs::path showNormalPath = m_projectDir / L"gt_show_normal" / relInputPath;
 
-    auto updateAgentRunStateLocal = [&](const std::string& status, int lastCommittedIndex = -1) {
-        if (!m_agentEnabled) {
-            return;
-        }
-        std::lock_guard<std::mutex> lock(m_agentStateMutex);
-        json state = loadJsonFileOrDefault(m_agentRunStatePath, json::object());
-        if (!state.contains("files") || !state["files"].is_array()) {
-            return;
-        }
-        const std::string relPathStr = wide2Ascii(relInputPath);
-        auto it = std::ranges::find_if(state["files"], [&](const json& item) {
-            return item.value("file", "") == relPathStr;
-        });
-        if (it == state["files"].end()) {
-            state["files"].push_back({
-                {"file", relPathStr},
-                {"status", status},
-                {"lease_owner", std::format("thread-{}", threadId)},
-                {"last_committed_index", lastCommittedIndex},
-                {"updated_at", nowTimestampString()}
-            });
-        }
-        else {
-            (*it)["status"] = status;
-            (*it)["lease_owner"] = status == "done" ? "" : std::format("thread-{}", threadId);
-            if (lastCommittedIndex >= 0) {
-                (*it)["last_committed_index"] = lastCommittedIndex;
-            }
-            (*it)["updated_at"] = nowTimestampString();
-        }
-        state["updated_at"] = nowTimestampString();
-        saveJsonFilePretty(m_agentRunStatePath, state);
-    };
-
     createParent(outputPath);
     createParent(cachePath);
     ordered_json jSentences;
     std::vector<Sentence> sentences;
 
-    updateAgentRunStateLocal("in_progress");
+    updateAgentRunStateEntry(relInputPath, "in_progress", -1, std::format("thread-{}", threadId));
 
 
     // 解析输入文件
@@ -2146,10 +2117,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
                 saveProblemOverviewFunc();
-                updateAgentRunStateLocal("pending");
+                updateAgentRunStateEntry(relInputPath, "pending", -1, {});
                 return;
             }
 
+            // Normal mode issues one model request per batch. Agent mode keeps the same outer
+            // scheduler but replaces the inner translation step with a small multi-turn loop.
             if (m_agentEnabled) {
                 translateBatchAgent(relInputPath, batchView, backgroundText, threadId);
             }
@@ -2199,7 +2172,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     std::ofstream ofs(outputPath, std::ios::binary);
     ofs << jSentences.dump(2);
     ofs.close();
-    updateAgentRunStateLocal("done", sentences.empty() ? -1 : sentences.back().index);
+    updateAgentRunStateEntry(relInputPath, "done", sentences.empty() ? -1 : sentences.back().index, {});
 
     m_logger->info("[线程 {}] [文件 {}] 处理完成。", threadId, wide2Ascii(relInputPath));
 

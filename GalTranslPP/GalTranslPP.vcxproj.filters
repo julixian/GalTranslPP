@@ -88,6 +88,9 @@
     <ClCompile Include="NormalJsonTranslator.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
+    <ClCompile Include="NormalJsonTranslatorAgent.cpp">
+      <Filter>filePlugins</Filter>
+    </ClCompile>
     <ClCompile Include="Tool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>

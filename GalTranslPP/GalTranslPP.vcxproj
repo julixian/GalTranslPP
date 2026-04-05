@@ -196,6 +196,7 @@
     <ClCompile Include="NornalJsonTranslatorHelperTool.ixx" />
     <ClCompile Include="NLPTool.cpp" />
     <ClCompile Include="NLPTool.ixx" />
+    <ClCompile Include="NormalJsonTranslatorAgent.cpp" />
     <ClCompile Include="NormalJsonTranslator.cpp" />
     <ClCompile Include="PDFTool.cpp" />
     <ClCompile Include="PDFTool.ixx" />

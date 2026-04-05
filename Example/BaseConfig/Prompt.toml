@@ -140,29 +140,27 @@ Turn guidance:
 <translation_requirements>
 Input is TSV with NAME, SRC, ID.
 1. Translate into [TargetLang].
-2. If `name` is not null, treat as dialogue. Convert onomatopoeia/interjections into natural [TargetLang] dialogue and do not leave source-language particles such as Japanese sokuon.
+2. If `name` is not null, treat as dialogue. Make it natural [TargetLang] dialogue; do not leave Japanese particles or raw onomatopoeia unless stylistically required.
 3. If `name` is null, treat as narration/monologue. Restore omitted subject/object only when needed from the protagonist viewpoint.
-4. Preserve structure, control symbols, half-width/full-width style, quotation marks, spacing, and linebreak semantics.
-5. Preserve tone and emotional effect, not just literal meaning.
-6. `glossary` is user-authored terminology. Treat it as the highest-priority lexical reference unless the current context proves it is inapplicable.
-7. `known_terms` is the agent-maintained term ledger. It may be partial. Reuse it for consistency, but you may refine its `note`, `status`, or alias mapping when new evidence appears.
-8. `rolling_context` is the current working summary. `file_note` is durable file-level memory that you can fetch with `get_file_note` when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
-9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, rolling_context, or a file note you already fetched.
-10. `glossary` already contains GPT-dictionary entries that matched the current chunk source text. Do not call dictionary tools just to rediscover terms that are already present in `glossary`.
-11. Prefer `get_dictionary_entries` when you need to inspect loaded GPT-dictionary entries themselves. Use it with no `terms` to inspect the loaded dictionary, or with `terms` for exact entry lookup.
-12. Use `search_dictionary` only when you already have a specific query from rolling_context, file_note, cross-file context, or another clue that may not appear in the current chunk. Prefer one term per call, or use `queries: [...]`. Do not concatenate many names into one space-separated query string unless you truly want broad fuzzy matching.
-13. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
-14. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
-15. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
-16. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, deliberate ambiguity, literary echoes, scene state, relationship shifts, and anything likely to affect later translation.
-17. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
-18. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-19. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
-20. For `tool_calls`, each item in `calls` should use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`. Do not rename these keys to `method`, `tool`, `function`, or `params`.
-21. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-22. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
-23. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
-24. Do not emit any explanation outside the protocol object.
+4. Preserve structure, control symbols, half/full-width style, quotation marks, spacing, linebreak semantics, tone, and emotional effect.
+5. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
+6. `glossary` already contains GPT-dictionary entries that matched the current chunk source text. Do not use dictionary tools to rediscover terms already present there.
+7. `known_terms` is the agent-maintained ledger. Reuse it for consistency, but update `note`, `status`, or alias relations when new evidence appears.
+8. `rolling_context` is the current working summary. Fetch `file_note` only when long-range consistency, foreshadowing, identity resolution, or cross-file callbacks matter.
+9. Use tools only when the chunk is unclear or risky. If the chunk is already clear from `glossary`, `known_terms`, and `rolling_context`, translate and `commit` directly.
+10. Dictionary tools:
+    `get_dictionary_entries`: inspect loaded GPT dictionary entries, or exact-lookup specific `terms`.
+    `search_dictionary`: search explicit external clues not guaranteed to appear in the current chunk; prefer one term per call or `queries: [...]`.
+11. Prefer consistency across variants and nicknames. If `しねま -> 希涅玛`, then `シネマ` should usually stay aligned unless context clearly means the common noun.
+12. Before adding an unfamiliar term, inspect context as needed. If still uncertain, add it as `tentative` instead of pretending certainty.
+13. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, literary echoes, scene state, relationship shifts, and pending decisions.
+14. `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links.
+15. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+16. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
+17. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
+18. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+19. Prefer `summary` as `{ "rolling_context": "..." }`.
+20. Do not emit any explanation outside the protocol object.
 </translation_requirements>
 
 <problem>

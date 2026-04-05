@@ -29,7 +29,7 @@ namespace {
         json termUpdates = json::array();
         json rewriteRequests = json::array();
         json fileNotePatch = json::object();
-        json summary = json::object();
+        std::string rollingContext;
         std::string rawContent;
     };
 
@@ -324,15 +324,8 @@ namespace {
         if (const auto it = payload.find("file_note_patch"); it != payload.end() && it->is_object()) {
             result.fileNotePatch = *it;
         }
-        if (const auto it = payload.find("summary"); it != payload.end()) {
-            if (it->is_object()) {
-                result.summary = *it;
-            }
-            else if (it->is_string()) {
-                result.summary = json::object({
-                    {"rolling_context", it->get<std::string>()}
-                });
-            }
+        if (const auto it = payload.find("rolling_context"); it != payload.end() && it->is_string()) {
+            result.rollingContext = it->get<std::string>();
         }
         return result;
     }
@@ -1030,7 +1023,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             "\"term_updates\":[],"
             "\"rewrite_requests\":[],"
             "\"file_note_patch\":{},"
-            "\"summary\":{}"
+            "\"rolling_context\":\"\""
             "}";
 
         std::string userPrompt = m_agentUserPrompt;
@@ -1181,12 +1174,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         json nextFileNote = fileNote;
         std::string nextBackgroundText = backgroundText;
         mergeFileNotePatch(nextFileNote, protocol.fileNotePatch);
-        if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
-            nextBackgroundText = protocol.summary["rolling_context"].get<std::string>();
-            nextFileNote["rolling_context"] = nextBackgroundText;
-        }
-        else if (protocol.summary.contains("context") && protocol.summary["context"].is_string()) {
-            nextBackgroundText = protocol.summary["context"].get<std::string>();
+        if (!protocol.rollingContext.empty()) {
+            nextBackgroundText = protocol.rollingContext;
             nextFileNote["rolling_context"] = nextBackgroundText;
         }
         nextFileNote["updated_at"] = nowTimestampString();
@@ -1443,11 +1432,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             if (protocol.action == "compact_context") {
                 // 压缩分支只更新 rolling context / file note，不提交任何句子。
-                if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
-                    backgroundText = protocol.summary["rolling_context"].get<std::string>();
-                }
-                else if (protocol.summary.contains("context") && protocol.summary["context"].is_string()) {
-                    backgroundText = protocol.summary["context"].get<std::string>();
+                if (!protocol.rollingContext.empty()) {
+                    backgroundText = protocol.rollingContext;
                 }
                 else if (!response.content.empty()) {
                     backgroundText = response.content;
@@ -1466,14 +1452,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
                 if (m_logger->should_log(spdlog::level::debug)) {
                     m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nsummary={}",
+                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nrolling_context={}",
                         threadId,
                         wide2Ascii(relInputPath),
                         truncateForAgentLog(protocol.translations.dump(2), 12000),
                         truncateForAgentLog(protocol.termUpdates.dump(2), 12000),
                         truncateForAgentLog(protocol.rewriteRequests.dump(2), 12000),
                         truncateForAgentLog(protocol.fileNotePatch.dump(2), 12000),
-                        truncateForAgentLog(protocol.summary.dump(2), 12000)
+                        truncateForAgentLog(protocol.rollingContext, 12000)
                     );
                 }
                 int committedCount = 0;

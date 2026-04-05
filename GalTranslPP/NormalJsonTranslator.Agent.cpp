@@ -205,6 +205,17 @@ namespace {
         }
         return result;
     }
+
+    std::string jsonStringOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
+        if (!obj.is_object()) {
+            return fallback;
+        }
+        const auto it = obj.find(std::string(key));
+        if (it != obj.end() && it->is_string()) {
+            return it->get<std::string>();
+        }
+        return fallback;
+    }
 }
 
 // 只读运行状态加载函数，主要给恢复调度和启动检查使用。
@@ -739,38 +750,40 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             throw std::runtime_error("commit 未覆盖当前 chunk 的全部句子");
         }
 
-        committedCount = 0;
+        struct PendingSentencePatch {
+            Sentence* sentence = nullptr;
+            std::string dst;
+        };
+        std::vector<PendingSentencePatch> sentencePatches;
+        sentencePatches.reserve(pending.size());
         for (Sentence* se : pending) {
             const auto it = translationMap.find(se->index);
             if (it == translationMap.end()) {
                 throw std::runtime_error(std::format("commit 缺少句子 {}", se->index));
             }
-            se->pre_translated_text = it->second.value("dst", "");
-            if (se->pre_translated_text.empty()) {
+            const std::string dst = it->second.value("dst", "");
+            if (dst.empty()) {
                 throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
             }
-            se->translated_by = modelName;
-            se->complete = true;
-            ++committedCount;
-        }
-
-        if (committedCount > 0) {
-            m_completedSentences += committedCount;
-            m_controller->updateBar(committedCount);
+            sentencePatches.push_back({
+                .sentence = se,
+                .dst = dst
+            });
         }
 
         json fileNote = loadAgentFileNote(relInputPath);
-        mergeFileNotePatch(fileNote, protocol.fileNotePatch);
+        json nextFileNote = fileNote;
+        std::string nextBackgroundText = backgroundText;
+        mergeFileNotePatch(nextFileNote, protocol.fileNotePatch);
         if (protocol.summary.contains("rolling_context") && protocol.summary["rolling_context"].is_string()) {
-            backgroundText = protocol.summary["rolling_context"].get<std::string>();
-            fileNote["rolling_context"] = backgroundText;
+            nextBackgroundText = protocol.summary["rolling_context"].get<std::string>();
+            nextFileNote["rolling_context"] = nextBackgroundText;
         }
         else if (protocol.summary.contains("context") && protocol.summary["context"].is_string()) {
-            backgroundText = protocol.summary["context"].get<std::string>();
-            fileNote["rolling_context"] = backgroundText;
+            nextBackgroundText = protocol.summary["context"].get<std::string>();
+            nextFileNote["rolling_context"] = nextBackgroundText;
         }
-        fileNote["updated_at"] = nowTimestampString();
-        saveAgentFileNote(relInputPath, fileNote);
+        nextFileNote["updated_at"] = nowTimestampString();
 
         const std::vector<int> currentChunkIds = pending
             | std::views::transform([](const Sentence* se) { return se->index; })
@@ -815,11 +828,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
                 ++appliedTermUpdateCount;
                 json& entry = termLedger[sourceTerm];
-                const std::string oldTarget = entry.value("target_term", "");
+                if (!entry.is_object()) {
+                    entry = json::object();
+                }
+                const std::string oldTarget = jsonStringOr(entry, "target_term");
                 entry["target_term"] = targetTerm;
-                entry["status"] = update.value("status", entry.value("status", "tentative"));
-                entry["category"] = update.value("category", entry.value("category", ""));
-                entry["note"] = update.value("note", entry.value("note", ""));
+                entry["status"] = jsonStringOr(update, "status", jsonStringOr(entry, "status", "tentative"));
+                entry["category"] = jsonStringOr(update, "category", jsonStringOr(entry, "category"));
+                entry["note"] = jsonStringOr(update, "note", jsonStringOr(entry, "note"));
                 if (update.contains("line_ids") && update["line_ids"].is_array()) {
                     for (const auto& idVal : update["line_ids"]) {
                         appendOccurrence(entry, relInputPath, idVal.get<int>());
@@ -850,6 +866,22 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
             }
         });
+
+        saveAgentFileNote(relInputPath, nextFileNote);
+        backgroundText = nextBackgroundText;
+
+        committedCount = 0;
+        for (const auto& patch : sentencePatches) {
+            patch.sentence->pre_translated_text = patch.dst;
+            patch.sentence->translated_by = modelName;
+            patch.sentence->complete = true;
+            ++committedCount;
+        }
+        if (committedCount > 0) {
+            m_completedSentences += committedCount;
+            m_controller->updateBar(committedCount);
+        }
+
         if (!protocol.termUpdates.empty()) {
             m_logger->debug(
                 "[线程 {}] [文件 {}] Agent 术语账本本轮实际写入 {} / {} 条。",

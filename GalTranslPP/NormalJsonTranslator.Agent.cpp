@@ -124,8 +124,23 @@ namespace {
                 }
                 AgentToolCallRequest parsed;
                 parsed.id = call.value("id", std::format("call_{}", result.calls.size()));
+                // 兼容历史/模型变体：
+                // 首选 `name` + `arguments`，同时接受 `method` / `tool` / `function`
+                // 以及 `params` 作为别名，避免模型因为字段漂移而整轮工具调用失效。
                 parsed.name = call.value("name", "");
+                if (parsed.name.empty()) {
+                    parsed.name = call.value("method", "");
+                }
+                if (parsed.name.empty()) {
+                    parsed.name = call.value("tool", "");
+                }
+                if (parsed.name.empty()) {
+                    parsed.name = call.value("function", "");
+                }
                 if (const auto argIt = call.find("arguments"); argIt != call.end()) {
+                    parsed.arguments = *argIt;
+                }
+                else if (const auto argIt = call.find("params"); argIt != call.end()) {
                     parsed.arguments = *argIt;
                 }
                 result.calls.push_back(std::move(parsed));

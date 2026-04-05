@@ -156,10 +156,11 @@ Input is TSV with NAME, SRC, ID.
 15. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
 16. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
 17. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
-18. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-19. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
-20. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
-21. Do not emit any explanation outside the protocol object.
+18. For `tool_calls`, each item in `calls` should use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`. Do not rename these keys to `method`, `tool`, `function`, or `params`.
+19. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+20. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
+21. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
+22. Do not emit any explanation outside the protocol object.
 </translation_requirements>
 
 <problem>

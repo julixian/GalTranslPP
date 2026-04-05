@@ -429,7 +429,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return json{ {"files", files} };
     };
 
-    // `search_dictionary`：在当前运行实际加载过的字典文件里搜索词条。
+    // `search_dictionary`：在当前运行实际加载过的 GPT 字典文件里搜索词条。
     auto searchDictionaryTool = [&](const json& arguments) {
         const std::string query = arguments.value("query", "");
         const std::string queryLower = str2Lower(query);
@@ -450,55 +450,27 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 const fs::path relPath = fs::relative(dictPath, m_projectDir);
                 const std::string relPathStr = wide2Ascii(relPath);
 
-                if (dictData.contains("gptDict")) {
-                    const auto& dictTbls = dictData.at("gptDict").as_array();
-                    for (const auto& el : dictTbls) {
-                        const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
-                            (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
-                        const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
-                            (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
-                        const std::string note = el.contains("note") ? el.at("note").as_string() : "";
-                        const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + relPathStr);
-                        if (queryLower.empty() || haystack.contains(queryLower)) {
-                            pushMatch(json{
-                                {"type", "gpt_dict"},
-                                {"file", relPathStr},
-                                {"source_term", sourceTerm},
-                                {"target_term", targetTerm},
-                                {"note", note}
-                            });
-                            if ((int)matches.size() >= limit) {
-                                break;
-                            }
-                        }
-                    }
+                if (!dictData.contains("gptDict")) {
+                    continue;
                 }
-                if ((int)matches.size() >= limit) {
-                    break;
-                }
-                if (dictData.contains("normalDict")) {
-                    const auto& dictTbls = dictData.at("normalDict").as_array();
-                    for (const auto& el : dictTbls) {
-                        const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
-                            (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
-                        const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
-                            (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
-                        const std::string conditionTarget = el.contains("conditionTarget") ? el.at("conditionTarget").as_string() : "";
-                        const std::string conditionReg = el.contains("conditionReg") ? el.at("conditionReg").as_string() : "";
-                        const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + conditionTarget + "\n" + conditionReg + "\n" + relPathStr);
-                        if (queryLower.empty() || haystack.contains(queryLower)) {
-                            pushMatch(json{
-                                {"type", "normal_dict"},
-                                {"file", relPathStr},
-                                {"source_term", sourceTerm},
-                                {"target_term", targetTerm},
-                                {"condition_target", conditionTarget},
-                                {"condition_reg", conditionReg},
-                                {"is_regex", el.contains("isReg") && el.at("isReg").as_boolean()}
-                            });
-                            if ((int)matches.size() >= limit) {
-                                break;
-                            }
+                const auto& dictTbls = dictData.at("gptDict").as_array();
+                for (const auto& el : dictTbls) {
+                    const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
+                        (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
+                    const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
+                        (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
+                    const std::string note = el.contains("note") ? el.at("note").as_string() : "";
+                    const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + relPathStr);
+                    if (queryLower.empty() || haystack.contains(queryLower)) {
+                        pushMatch(json{
+                            {"type", "gpt_dict"},
+                            {"file", relPathStr},
+                            {"source_term", sourceTerm},
+                            {"target_term", targetTerm},
+                            {"note", note}
+                        });
+                        if ((int)matches.size() >= limit) {
+                            break;
                         }
                     }
                 }

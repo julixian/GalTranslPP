@@ -183,13 +183,17 @@ void NormalJsonTranslator::init()
                 fs::path dictPath = m_projectDir / ascii2Wide(dictFileName);
                 if (fs::exists(dictPath)) {
                     dict->loadFromFile(dictPath);
-                    registerAgentDictionaryPath(dictPath);
+                    if (dictType == "gpt") {
+                        registerAgentDictionaryPath(dictPath);
+                    }
                 }
                 else {
                     dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
                     if (fs::exists(dictPath)) {
                         dict->loadFromFile(dictPath);
-                        registerAgentDictionaryPath(dictPath);
+                        if (dictType == "gpt") {
+                            registerAgentDictionaryPath(dictPath);
+                        }
                     }
                 }
             }

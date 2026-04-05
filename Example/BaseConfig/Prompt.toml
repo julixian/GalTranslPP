@@ -147,18 +147,19 @@ Input is TSV with NAME, SRC, ID.
 6. `glossary` is user-authored terminology. Treat it as the highest-priority lexical reference unless the current context proves it is inapplicable.
 7. `known_terms` is the agent-maintained term ledger. It may be partial. Reuse it for consistency, but you may refine its `note`, `status`, or alias mapping when new evidence appears.
 8. `file_note` is long-lived file-level memory. `rolling_context` is the current working summary. Read both before guessing when consistency, foreshadowing, speaker identity, nickname resolution, or cross-file callbacks matter.
-9. Tools are read-only. Use them before inventing terminology when context is insufficient. Especially use them for aliases, nicknames, hiragana/katakana variants, abbreviations, titles, spells, poems, and terms whose meaning may depend on later lines or other files.
-10. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
-11. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
-12. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
-13. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, deliberate ambiguity, literary echoes, scene state, relationship shifts, and anything likely to affect later translation.
-14. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
-15. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-16. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
-17. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-18. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
-19. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
-20. Do not emit any explanation outside the protocol object.
+9. Tools are read-only. Search when current context is insufficient or risky, but do not search reflexively when the answer is already clear from the chunk, glossary, known_terms, file_note, or rolling_context.
+10. If glossary/known_terms may be incomplete, you may inspect project dictionaries, config, prompts, or plugin text files through the reference-file tools before deciding a term.
+11. When a new term may refer to an existing entity, prefer consistent translation. If `しねま -> 希涅玛`, then variants like `シネマ` should usually stay aligned unless the context clearly means the common noun “cinema/movie theater”.
+12. Before adding an unfamiliar term, search as much as needed. If still uncertain, submit it as tentative rather than pretending certainty.
+13. If an old term entry is only partially right, keep the translation if appropriate but update `note` and/or `status`. Example: gender, role, alias relation, corrupted-state name, or plot-dependent reinterpretation may need later correction.
+14. Record translation-relevant clues in `file_note_patch` / `summary`: unresolved references, hidden identities, callbacks, deliberate ambiguity, literary echoes, scene state, relationship shifts, and anything likely to affect later translation.
+15. A `compact_context` must preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links that may matter later.
+16. A `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
+17. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string inside `file_note_patch`, and every string inside `summary`. Never write these fields in English unless [TargetLang] itself is English.
+18. Prefer `term_updates` objects shaped like `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+19. Prefer `summary` as `{ "rolling_context": "..." }`. A plain string summary is allowed only when nothing else is needed.
+20. `term_updates`, `rewrite_requests`, `file_note_patch`, and `summary` are optional, but when present they must stay consistent with the submitted translations.
+21. Do not emit any explanation outside the protocol object.
 </translation_requirements>
 
 <problem>
@@ -183,7 +184,9 @@ Input is TSV with NAME, SRC, ID.
 
 <tools>
 list_files: list available script files
+list_reference_files: list readable project dictionaries/config/prompts/plugins
 read_lines: read source and cached translations from a file range
+read_reference_file: read a project text reference file by relative path
 search_text: search source, cached dst, term ledger, and file notes
 get_term: read one term-ledger entry
 get_file_note: read durable file notes

@@ -221,6 +221,17 @@ namespace {
         const std::string trimmed = trimCopy(text);
         return !trimmed.empty() && trimmed != "[]" && trimmed != "null";
     }
+
+    bool pathStartsWith(const fs::path& root, const fs::path& candidate) {
+        auto rootIt = root.begin();
+        auto candidateIt = candidate.begin();
+        for (; rootIt != root.end(); ++rootIt, ++candidateIt) {
+            if (candidateIt == candidate.end() || str2Lower(rootIt->wstring()) != str2Lower(candidateIt->wstring())) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 // 只读运行状态加载函数，主要给恢复调度和启动检查使用。
@@ -367,6 +378,49 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return cacheMap;
     };
 
+    // Agent 也允许读取项目里的参考文本文件，例如 config、项目字典、Prompt、
+    // 自定义插件脚本等，供模型在术语不确定时自行核对。
+    auto isProjectReferenceTextFile = [&](const fs::path& relPath) {
+        static const absl::flat_hash_set<std::string> allowedExtensions = {
+            ".toml", ".json", ".txt", ".md", ".ini", ".yaml", ".yml", ".tsv", ".csv", ".lua", ".py"
+        };
+        const std::string ext = str2Lower(relPath.extension().string());
+        return allowedExtensions.contains(ext);
+    };
+
+    auto isProjectReferenceCandidate = [&](const fs::path& relPath) {
+        if (relPath.empty()) {
+            return false;
+        }
+        static const absl::flat_hash_set<std::string> blockedTopLevelDirs = {
+            "gt_input", "gt_output", "logs", "other_cache", "transl_cache", "gt_show_normal"
+        };
+        const auto firstPartIt = relPath.begin();
+        if (firstPartIt != relPath.end() && blockedTopLevelDirs.contains(str2Lower(wide2Ascii(*firstPartIt)))) {
+            return false;
+        }
+        return isProjectReferenceTextFile(relPath);
+    };
+
+    auto resolveProjectReferencePath = [&](const std::string& relPathStr) {
+        if (relPathStr.empty()) {
+            throw std::runtime_error("file 不能为空");
+        }
+        const fs::path root = fs::weakly_canonical(m_projectDir);
+        const fs::path resolved = fs::weakly_canonical(m_projectDir / ascii2Wide(relPathStr));
+        if (!pathStartsWith(root, resolved)) {
+            throw std::runtime_error("只允许读取项目目录内的文件");
+        }
+        if (!fs::exists(resolved) || !fs::is_regular_file(resolved)) {
+            throw std::runtime_error("目标文件不存在");
+        }
+        const fs::path relPath = fs::relative(resolved, root);
+        if (!isProjectReferenceCandidate(relPath)) {
+            throw std::runtime_error("该文件不在可读取的项目参考文件范围内");
+        }
+        return std::make_pair(resolved, relPath);
+    };
+
     // 下面开始是“模型工具调用”在本地侧的只读实现。
     // 模型可以请求这些工具，但它们都不能直接写文件；真正落盘必须走 commit。
     auto readLinesTool = [&](const json& arguments) {
@@ -426,6 +480,46 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
         }
         return json{ {"files", files} };
+    };
+
+    // `list_reference_files`：列出项目内可读取的参考文本文件。
+    auto listReferenceFilesTool = [&](const json& arguments) {
+        const std::string pattern = str2Lower(arguments.value("pattern", ""));
+        const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit, 400);
+        json files = json::array();
+        for (const auto& entry : fs::recursive_directory_iterator(m_projectDir)) {
+            if (!entry.is_regular_file()) {
+                continue;
+            }
+            const fs::path relPath = fs::relative(entry.path(), m_projectDir);
+            if (!isProjectReferenceCandidate(relPath)) {
+                continue;
+            }
+            const std::string relPathStr = wide2Ascii(relPath);
+            if (!pattern.empty() && !str2Lower(relPathStr).contains(pattern)) {
+                continue;
+            }
+            files.push_back(relPathStr);
+            if ((int)files.size() >= limit) {
+                break;
+            }
+        }
+        return json{ {"files", files} };
+    };
+
+    // `read_reference_file`：读取项目里的配置/字典/提示词等文本文件。
+    auto readReferenceFileTool = [&](const json& arguments) {
+        const int maxChars = sanitizeToolLimit(arguments.value("max_chars", 20000), 20000, 120000);
+        const auto [resolvedPath, relPath] = resolveProjectReferencePath(arguments.value("file", ""));
+        std::ifstream ifs(resolvedPath, std::ios::binary);
+        const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+        const bool truncated = (int)content.size() > maxChars;
+        return json{
+            {"file", wide2Ascii(relPath)},
+            {"content", truncated ? content.substr(0, maxChars) : content},
+            {"truncated", truncated},
+            {"total_chars", (int)content.size()}
+        };
     };
 
     // `search_text`：统一搜索术语账本、原文、缓存译文以及 file note。
@@ -552,8 +646,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 if (call.name == "list_files") {
                     result["result"] = listFilesTool(call.arguments);
                 }
+                else if (call.name == "list_reference_files") {
+                    result["result"] = listReferenceFilesTool(call.arguments);
+                }
                 else if (call.name == "read_lines") {
                     result["result"] = readLinesTool(call.arguments);
+                }
+                else if (call.name == "read_reference_file") {
+                    result["result"] = readReferenceFileTool(call.arguments);
                 }
                 else if (call.name == "search_text") {
                     result["result"] = searchTextTool(call.arguments);

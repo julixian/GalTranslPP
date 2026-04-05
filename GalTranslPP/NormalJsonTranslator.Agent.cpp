@@ -186,6 +186,33 @@ namespace {
         return std::min(requested, maxLimit);
     }
 
+    // Agent 调试日志只记录“真实交互链路”上的内容：
+    // 1. 实际发给模型的 messages
+    // 2. 模型原始响应
+    // 3. 模型请求的工具与参数
+    // 4. 工具执行结果
+    // 5. commit 中真正提交的协议内容
+    // 这些日志不会再回流给模型，只用于人工排错。
+    std::string truncateForAgentLog(std::string text, size_t maxChars = 4000) {
+        if (text.size() <= maxChars) {
+            return text;
+        }
+        return text.substr(0, maxChars) + std::format("\n...(truncated, total {} chars)", text.size());
+    }
+
+    std::string formatToolCallRequestsForLog(const std::vector<AgentToolCallRequest>& calls) {
+        std::string result;
+        for (const auto& [index, call] : calls | std::views::enumerate) {
+            result += std::format(
+                "[{}] {}({})\n",
+                index + 1,
+                call.name.empty() ? "<unknown>" : call.name,
+                call.arguments.dump(2)
+            );
+        }
+        return result;
+    }
+
     std::string jsonStringOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
         if (!obj.is_object()) {
             return fallback;
@@ -985,6 +1012,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         bool compactRequested = false;
         m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句。",
             threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size());
+        if (m_logger->should_log(spdlog::level::trace)) {
+            m_logger->trace(
+                "[线程 {}] [文件 {}] Agent 初始请求消息（实际发送给模型）:\n{}",
+                threadId,
+                wide2Ascii(relInputPath),
+                truncateForAgentLog(messages.dump(2), 20000)
+            );
+        }
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
@@ -992,6 +1027,16 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const size_t messageChars = approximateMessagesChars(messages);
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
                 threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars);
+            if (m_logger->should_log(spdlog::level::trace)) {
+                m_logger->trace(
+                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮请求消息（实际发送给模型）:\n{}",
+                    threadId,
+                    wide2Ascii(relInputPath),
+                    turn + 1,
+                    m_agentMaxTurnsPerChunk,
+                    truncateForAgentLog(messages.dump(2), 20000)
+                );
+            }
 
             if (messageChars > (size_t)m_agentHardContextChars) {
                 m_logger->warn("[线程 {}] [文件 {}] Agent 上下文超过 hardContextChars，回退到最近摘要重建消息。", threadId, wide2Ascii(relInputPath));
@@ -1036,6 +1081,16 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
+            if (m_logger->should_log(spdlog::level::trace) && !response.content.empty()) {
+                m_logger->trace(
+                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮原始响应:\n{}",
+                    threadId,
+                    wide2Ascii(relInputPath),
+                    turn + 1,
+                    m_agentMaxTurnsPerChunk,
+                    truncateForAgentLog(response.content, 20000)
+                );
+            }
 
             if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
                 m_logger->info(
@@ -1044,8 +1099,24 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                     wide2Ascii(relInputPath),
                     protocol.calls.size()
                 );
+                if (m_logger->should_log(spdlog::level::debug)) {
+                    m_logger->debug(
+                        "[线程 {}] [文件 {}] Agent 工具调用明细:\n{}",
+                        threadId,
+                        wide2Ascii(relInputPath),
+                        formatToolCallRequestsForLog(protocol.calls)
+                    );
+                }
                 const json toolResults = executeToolCalls(protocol.calls);
                 compactRequested = false;
+                if (m_logger->should_log(spdlog::level::debug)) {
+                    m_logger->debug(
+                        "[线程 {}] [文件 {}] Agent 工具返回结果:\n{}",
+                        threadId,
+                        wide2Ascii(relInputPath),
+                        truncateForAgentLog(toolResults.dump(2), 12000)
+                    );
+                }
                 // 工具调用分支不会直接完成 chunk，而是把工具结果回填给下一轮模型继续推理。
                 messages.push_back({ {"role", "assistant"}, {"content", response.content} });
                 messages.push_back({
@@ -1078,6 +1149,18 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             if (protocol.action == "commit") {
                 // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
+                if (m_logger->should_log(spdlog::level::debug)) {
+                    m_logger->debug(
+                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nsummary={}",
+                        threadId,
+                        wide2Ascii(relInputPath),
+                        truncateForAgentLog(protocol.translations.dump(2), 12000),
+                        truncateForAgentLog(protocol.termUpdates.dump(2), 12000),
+                        truncateForAgentLog(protocol.rewriteRequests.dump(2), 12000),
+                        truncateForAgentLog(protocol.fileNotePatch.dump(2), 12000),
+                        truncateForAgentLog(protocol.summary.dump(2), 12000)
+                    );
+                }
                 int committedCount = 0;
                 try {
                     applyCommit(protocol, currentApi.modelName, committedCount);

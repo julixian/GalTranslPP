@@ -281,7 +281,7 @@ Protocol JSON schema:
 </translation_requirements>
 
 <commit_output_format>
-1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(num) and `dst`(str).
+1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(integer type) and `dst`.
 2. `dst` must contain translated text ONLY. Do not include NAME, null or the line id inside dst.
 3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Changing `target_term` for an exitsting item will automatically cause retranslations for influenced sentences.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.
@@ -398,7 +398,7 @@ Protocol JSON schema:
 </translation_requirements>
 
 <commit_output_format>
-1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(num) and `dst`(str).
+1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(integer type) and `dst`.
 2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
 3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Changing `target_term` for an existing item will automatically cause retranslations for influenced sentences.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.

@@ -124,7 +124,6 @@ You may do exactly one of the following in each turn:
 
 Never claim to have edited files directly. Only `commit` may request durable updates.
 When using the JSON text protocol, output a single JSON object only.
-When the backend supports native function calling, you may call the provided tools instead of emitting text JSON tool calls.
 """
 FORGALTSV_AGENT_PROMPT_EN = """<agent_mode>
 Current file: [AgentCurrentFile]

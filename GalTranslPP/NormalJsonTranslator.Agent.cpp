@@ -149,142 +149,31 @@ namespace {
         return result;
     }
 
-    AgentProtocolResponse parseAgentApiResponse(const ApiResponse& response) {
-        if (response.hasToolCalls) {
-            AgentProtocolResponse result;
-            result.action = "tool_calls";
-            result.rawContent = response.content;
-            for (const auto& toolCall : response.toolCalls) {
-                if (!toolCall.is_object()) {
-                    continue;
-                }
-                AgentToolCallRequest parsed;
-                parsed.id = toolCall.value("id", std::format("tool_{}", result.calls.size()));
-                if (const auto funcIt = toolCall.find("function"); funcIt != toolCall.end() && funcIt->is_object()) {
-                    parsed.name = funcIt->value("name", "");
-                    if (const auto argsIt = funcIt->find("arguments"); argsIt != funcIt->end()) {
-                        if (argsIt->is_string()) {
-                            const std::string argsStr = argsIt->get<std::string>();
-                            if (const auto parsedArgs = tryParseJsonEnvelope(argsStr)) {
-                                parsed.arguments = *parsedArgs;
-                            }
-                        }
-                        else {
-                            parsed.arguments = *argsIt;
-                        }
-                    }
-                }
-                result.calls.push_back(std::move(parsed));
-            }
-            return result;
-        }
-
-        return parseAgentTextResponse(response.content);
-    }
-
-    bool shouldFallbackFromNativeFunctionCalling(const ApiResponse& response) {
-        if (response.success) {
-            return false;
-        }
-        std::string lower = response.content;
-        str2LowerInplace(lower);
-        return response.statusCode == 400 || response.statusCode == 404 || response.statusCode == 422
-            || lower.contains("tool_choice")
-            || lower.contains("tool_calls")
-            || lower.contains("function")
-            || lower.contains("tools");
-    }
-
-    json buildAgentNativeTools() {
-        const json commonString = { {"type", "string"} };
-        const json commonInt = { {"type", "integer"} };
-        return json::array({
-            {
-                {"type", "function"},
-                {"function", {
-                    {"name", "list_files"},
-                    {"description", "List available project files for cross-file lookup."},
-                    {"parameters", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"pattern", commonString},
-                            {"limit", commonInt}
-                        }},
-                        {"additionalProperties", false}
-                    }}
-                }}
-            },
-            {
-                {"type", "function"},
-                {"function", {
-                    {"name", "read_lines"},
-                    {"description", "Read a slice of source and cached translation lines from a file."},
-                    {"parameters", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"file", commonString},
-                            {"start", commonInt},
-                            {"count", commonInt},
-                            {"include_src", { {"type", "boolean"} }},
-                            {"include_dst", { {"type", "boolean"} }}
-                        }},
-                        {"required", json::array({"file", "start", "count"})},
-                        {"additionalProperties", false}
-                    }}
-                }}
-            },
-            {
-                {"type", "function"},
-                {"function", {
-                    {"name", "search_text"},
-                    {"description", "Search source text, cached translations, summaries, or term ledger."},
-                    {"parameters", {
-                        {"type", "object"},
-                        {"properties", {
-                            {"query", commonString},
-                            {"scope", { {"type", "string"}, {"enum", json::array({"current_file", "all_files", "specified_file"})} }},
-                            {"file", commonString},
-                            {"limit", commonInt}
-                        }},
-                        {"required", json::array({"query", "scope"})},
-                        {"additionalProperties", false}
-                    }}
-                }}
-            },
-            {
-                {"type", "function"},
-                {"function", {
-                    {"name", "get_term"},
-                    {"description", "Get the current term ledger record for a term."},
-                    {"parameters", {
-                        {"type", "object"},
-                        {"properties", { {"term", commonString} }},
-                        {"required", json::array({"term"})},
-                        {"additionalProperties", false}
-                    }}
-                }}
-            },
-            {
-                {"type", "function"},
-                {"function", {
-                    {"name", "get_file_note"},
-                    {"description", "Read the saved summary and unresolved notes of a file."},
-                    {"parameters", {
-                        {"type", "object"},
-                        {"properties", { {"file", commonString} }},
-                        {"required", json::array({"file"})},
-                        {"additionalProperties", false}
-                    }}
-                }}
-            }
-        });
-    }
-
     int sanitizeToolLimit(int requested, int fallback, int maxLimit = 200) {
         if (requested <= 0) {
             return fallback;
         }
         return std::min(requested, maxLimit);
+    }
+
+    std::string truncateForAgentLog(std::string text, size_t maxChars = 4000) {
+        if (text.size() <= maxChars) {
+            return text;
+        }
+        return text.substr(0, maxChars) + std::format("\n...(truncated, total {} chars)", text.size());
+    }
+
+    std::string formatToolCallRequestsForLog(const std::vector<AgentToolCallRequest>& calls) {
+        std::string result;
+        for (const auto& [index, call] : calls | std::views::enumerate) {
+            result += std::format(
+                "[{}] {}({})\n",
+                index + 1,
+                call.name.empty() ? "<unknown>" : call.name,
+                call.arguments.dump(2)
+            );
+        }
+        return result;
     }
 }
 
@@ -687,6 +576,15 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         return m_gptDictionary->generatePrompt(pendingSpan, m_transEngine);
     };
 
+    auto currentInputBlock = [&]() {
+        std::vector<Sentence*> pending = currentChunk();
+        absl::btree_map<int, Sentence*> id2SentenceMap;
+        std::string inputBlock;
+        std::span<Sentence*> pendingSpan(pending);
+        fillBlockAndMap(pendingSpan, id2SentenceMap, inputBlock, m_transEngine);
+        return inputBlock;
+    };
+
     // 组装“一轮模型请求”的基础消息。
     // 这里本身不发请求，只负责把 chunk、rolling context、problem/background/glossary、
     // file note、术语摘要等拼好。
@@ -933,10 +831,39 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
         m_logger->debug("[线程 {}] [文件 {}] Agent chunk 开始，当前待提交 {} 句，允许最多 {} 轮。", threadId, wide2Ascii(relInputPath), pending.size(), m_agentMaxTurnsPerChunk);
 
-        bool useNativeFunctionCalling = m_agentNativeFunctionCalling != "off";
+        const std::string inputProblems = currentProblemSummary();
+        const std::string glossary = currentGlossary();
+        const std::string inputBlock = currentInputBlock();
         json fileNote = loadAgentFileNote(relInputPath);
         json messages = buildBaseMessages(backgroundText, fileNote);
         bool compactRequested = false;
+
+        std::string logBlock;
+        if (!inputProblems.empty()) {
+            logBlock += "\nProblems:\n" + inputProblems;
+        }
+        if (!backgroundText.empty()) {
+            logBlock += "\nBackground:\n" + truncateForAgentLog(backgroundText);
+        }
+        if (m_logger->should_log(spdlog::level::debug) && !fileNote.empty()) {
+            logBlock += "\nFileNote:\n" + truncateForAgentLog(fileNote.dump(2));
+        }
+        if (!glossary.empty()) {
+            logBlock += "\nGlossary:\n" + truncateForAgentLog(glossary);
+        }
+        if (m_logger->should_log(spdlog::level::trace)) {
+            logBlock += "\nKnownTerms:\n" + truncateForAgentLog(termLedgerExcerpt(), 12000);
+        }
+        logBlock += "\ninputBlock:\n" + inputBlock;
+        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译:{}", threadId, wide2Ascii(relInputPath), logBlock);
+        if (m_logger->should_log(spdlog::level::trace)) {
+            m_logger->trace(
+                "[线程 {}] [文件 {}] Agent 初始请求消息:\n{}",
+                threadId,
+                wide2Ascii(relInputPath),
+                truncateForAgentLog(messages.dump(2), 20000)
+            );
+        }
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
@@ -944,6 +871,16 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const size_t messageChars = approximateMessagesChars(messages);
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
                 threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars);
+            if (m_logger->should_log(spdlog::level::trace)) {
+                m_logger->trace(
+                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮请求消息:\n{}",
+                    threadId,
+                    wide2Ascii(relInputPath),
+                    turn + 1,
+                    m_agentMaxTurnsPerChunk,
+                    truncateForAgentLog(messages.dump(2), 20000)
+                );
+            }
 
             if (messageChars > (size_t)m_agentHardContextChars) {
                 m_logger->warn("[线程 {}] [文件 {}] Agent 上下文超过 hardContextChars，回退到最近摘要重建消息。", threadId, wide2Ascii(relInputPath));
@@ -966,23 +903,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             const TranslationApi& currentApi = apiOpt.value();
 
             json payload = { {"messages", messages} };
-            if (useNativeFunctionCalling && !currentApi.stream) {
-                payload["tools"] = buildAgentNativeTools();
-                payload["tool_choice"] = "auto";
-            }
 
             // 整个 translateBatchAgent 里，真正向模型发请求的地方只有这里。
             ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeOutMs);
-            if (useNativeFunctionCalling && m_agentNativeFunctionCalling == "auto" && shouldFallbackFromNativeFunctionCalling(response)) {
-                m_logger->warn("[线程 {}] [文件 {}] 原生函数调用不可用，自动退回文本协议。", threadId, wide2Ascii(relInputPath));
-                useNativeFunctionCalling = false;
-                // 某些 OpenAI-compatible 后端在继续原生 tool-call 链时要求保留内部 thought_signature。
-                // 一旦检测到这类不兼容错误，就丢弃当前原生工具调用链，回到纯文本协议重新开始本 chunk 的这一轮。
-                messages = buildBaseMessages(backgroundText, loadAgentFileNote(relInputPath));
-                compactRequested = false;
-                --turn;
-                continue;
-            }
 
             if (!checkResponse(
                 response, m_apiPool, currentApi, relInputPath, m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
@@ -992,7 +915,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             AgentProtocolResponse protocol;
             try {
-                protocol = parseAgentApiResponse(response);
+                protocol = parseAgentTextResponse(response.content);
             }
             catch (const std::exception& e) {
                 ++retryCount;
@@ -1002,29 +925,34 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
+            if (m_logger->should_log(spdlog::level::trace) && !response.content.empty()) {
+                m_logger->trace("[线程 {}] [文件 {}] Agent 第 {}/{} 轮原始响应:\n{}", threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, response.content);
+            }
 
             if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
-                m_logger->info("[线程 {}] [文件 {}] Agent 请求 {} 个工具调用。", threadId, wide2Ascii(relInputPath), protocol.calls.size());
+                m_logger->info(
+                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用:\n{}",
+                    threadId,
+                    wide2Ascii(relInputPath),
+                    protocol.calls.size(),
+                    formatToolCallRequestsForLog(protocol.calls)
+                );
                 const json toolResults = executeToolCalls(protocol.calls);
                 compactRequested = false;
+                if (m_logger->should_log(spdlog::level::debug)) {
+                    m_logger->debug(
+                        "[线程 {}] [文件 {}] Agent 工具返回:\n{}",
+                        threadId,
+                        wide2Ascii(relInputPath),
+                        truncateForAgentLog(toolResults.dump(2), 12000)
+                    );
+                }
                 // 工具调用分支不会直接完成 chunk，而是把工具结果回填给下一轮模型继续推理。
-                if (response.hasToolCalls && useNativeFunctionCalling && response.message.is_object() && !response.message.empty()) {
-                    messages.push_back(response.message);
-                    for (const auto& result : toolResults) {
-                        messages.push_back({
-                            {"role", "tool"},
-                            {"tool_call_id", result.value("id", "")},
-                            {"content", result.dump(2)}
-                        });
-                    }
-                }
-                else {
-                    messages.push_back({ {"role", "assistant"}, {"content", response.content} });
-                    messages.push_back({
-                        {"role", "user"},
-                        {"content", std::string("Tool results:\n```json\n") + toolResults.dump(2) + "\n```"}
-                    });
-                }
+                messages.push_back({ {"role", "assistant"}, {"content", response.content} });
+                messages.push_back({
+                    {"role", "user"},
+                    {"content", std::string("Tool results:\n```json\n") + toolResults.dump(2) + "\n```"}
+                });
                 continue;
             }
 
@@ -1044,6 +972,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 fileNotePatch["updated_at"] = nowTimestampString();
                 saveAgentFileNote(relInputPath, fileNotePatch);
                 m_logger->info("[线程 {}] [文件 {}] Agent 已压缩上下文，摘要长度 {} 字符。", threadId, wide2Ascii(relInputPath), backgroundText.size());
+                if (m_logger->should_log(spdlog::level::debug) && !backgroundText.empty()) {
+                    m_logger->debug("[线程 {}] [文件 {}] Agent 压缩后摘要:\n{}", threadId, wide2Ascii(relInputPath), truncateForAgentLog(backgroundText, 12000));
+                }
                 messages = buildBaseMessages(backgroundText, loadAgentFileNote(relInputPath));
                 compactRequested = false;
                 continue;
@@ -1051,6 +982,18 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             if (protocol.action == "commit") {
                 // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
+                if (m_logger->should_log(spdlog::level::debug)) {
+                    m_logger->debug(
+                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nsummary={}",
+                        threadId,
+                        wide2Ascii(relInputPath),
+                        truncateForAgentLog(protocol.translations.dump(2), 12000),
+                        truncateForAgentLog(protocol.termUpdates.dump(2), 12000),
+                        truncateForAgentLog(protocol.rewriteRequests.dump(2), 12000),
+                        truncateForAgentLog(protocol.fileNotePatch.dump(2), 12000),
+                        truncateForAgentLog(protocol.summary.dump(2), 12000)
+                    );
+                }
                 int committedCount = 0;
                 try {
                     applyCommit(protocol, currentApi.modelName, committedCount);

@@ -344,7 +344,6 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             {"lookahead_lines", m_agentLookaheadLines},
             {"search_result_limit", m_agentSearchResultLimit},
             {"allow_cross_file_search", m_agentAllowCrossFileSearch},
-            {"native_function_calling", m_agentNativeFunctionCalling},
             {"final_reconcile_single_thread", m_agentFinalReconcileSingleThread},
             {"rewrite_mode", m_agentRewriteMode}
         };

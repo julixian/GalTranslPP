@@ -135,7 +135,6 @@ void NormalJsonTranslator::init()
         m_agentLookaheadLines = toml::find_or(configData, "agent", "lookaheadLines", 80);
         m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 40);
         m_agentAllowCrossFileSearch = toml::find_or(configData, "agent", "allowCrossFileSearch", true);
-        m_agentNativeFunctionCalling = toml::find_or(configData, "agent", "nativeFunctionCalling", "auto");
         m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", true);
         m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
 
@@ -148,9 +147,6 @@ void NormalJsonTranslator::init()
             }
             if (m_agentSoftContextChars > m_agentHardContextChars) {
                 std::swap(m_agentSoftContextChars, m_agentHardContextChars);
-            }
-            if (m_agentNativeFunctionCalling != "auto" && m_agentNativeFunctionCalling != "on" && m_agentNativeFunctionCalling != "off") {
-                throw std::invalid_argument("agent.nativeFunctionCalling 必须是 auto/on/off");
             }
         }
 

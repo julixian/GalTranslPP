@@ -90,7 +90,6 @@ export {
         int m_splitFileNum;
         int m_cacheSearchDistance;
         std::string m_linebreakSymbol;
-        std::string m_agentNativeFunctionCalling = "auto";
         std::string m_agentRewriteMode = "queue_retranslate";
         int m_agentChunkSize = 24;
         int m_agentMaxTurnsPerChunk = 6;

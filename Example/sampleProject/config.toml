@@ -117,7 +117,6 @@ hardContextChars = 64000
 lookaheadLines = 80
 searchResultLimit = 40
 allowCrossFileSearch = true
-nativeFunctionCalling = "auto" # auto/on/off
 finalReconcileSingleThread = true
 rewriteMode = "queue_retranslate"
 

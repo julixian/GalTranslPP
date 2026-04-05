@@ -73,6 +73,58 @@ namespace {
         return std::string(begin, end);
     }
 
+    size_t countUnescapedDoubleQuotes(std::string_view text) {
+        size_t count = 0;
+        bool escaped = false;
+        for (const char ch : text) {
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (ch == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch == '"') {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    std::string lightRepairAgentJsonText(std::string text) {
+        if (text.empty()) {
+            return text;
+        }
+
+        std::stringstream input(text);
+        std::string line;
+        std::vector<std::string> lines;
+        bool repaired = false;
+        while (std::getline(input, line)) {
+            const std::string trimmed = trimCopy(line);
+            if ((trimmed.starts_with("\"dst\":") || trimmed.starts_with("\"note\":") || trimmed.starts_with("\"rolling_context\":"))
+                && countUnescapedDoubleQuotes(line) % 2 == 1) {
+                line.push_back('"');
+                repaired = true;
+            }
+            lines.push_back(std::move(line));
+        }
+
+        if (!repaired) {
+            return text;
+        }
+
+        std::string repairedText;
+        for (size_t i = 0; i < lines.size(); ++i) {
+            repairedText += lines[i];
+            if (i + 1 < lines.size()) {
+                repairedText.push_back('\n');
+            }
+        }
+        return repairedText;
+    }
+
     std::optional<json> tryParseJsonEnvelope(std::string text) {
         text = trimCopy(std::move(text));
         if (text.empty()) {
@@ -93,6 +145,12 @@ namespace {
         }
         catch (...) {}
 
+        text = lightRepairAgentJsonText(text);
+        try {
+            return json::parse(text);
+        }
+        catch (...) {}
+
         const size_t jsonStart = text.find('{');
         const size_t jsonEnd = text.rfind('}');
         if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
@@ -103,7 +161,12 @@ namespace {
             return json::parse(text.substr(jsonStart, jsonEnd - jsonStart + 1));
         }
         catch (...) {
-            return std::nullopt;
+            try {
+                return json::parse(lightRepairAgentJsonText(text.substr(jsonStart, jsonEnd - jsonStart + 1)));
+            }
+            catch (...) {
+                return std::nullopt;
+            }
         }
     }
 
@@ -641,6 +704,13 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         const int limit = sanitizeToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
         std::vector<fs::path> targetFiles;
 
+        if (scope != "current_file" && scope != "all_files" && scope != "specified_file") {
+            return json{
+                {"error", std::format("search_text.scope 非法: {}。允许值仅有 current_file|all_files|specified_file", scope)},
+                {"allowed_scope", json::array({"current_file", "all_files", "specified_file"})}
+            };
+        }
+
         if (scope == "specified_file") {
             targetFiles.push_back(ascii2Wide(arguments.value("file", wide2Ascii(relInputPath))));
         }
@@ -941,6 +1011,70 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     };
 
+    auto getSentenceAgentName = [](const Sentence* se) {
+        if (se == nullptr || se->nameType == NameType::None) {
+            return std::string("null");
+        }
+        return se->name;
+    };
+
+    // `dst` 只能是译文正文本身，不应带 NAME / null / ID / TSV 列。
+    // 这里只做最保守的清洗：剥掉常见的 `name<TAB>` / `null<TAB>` 前缀，
+    // 以及误带上的尾部 `TAB + 当前 id`。
+    auto normalizeCommitDst = [&](const Sentence* se, std::string dst) {
+        const std::string speaker = getSentenceAgentName(se);
+        const std::array<std::string, 2> allowedPrefixes = {
+            speaker + "\t",
+            std::string("null\t")
+        };
+        for (const std::string& prefix : allowedPrefixes) {
+            if (dst.starts_with(prefix)) {
+                dst.erase(0, prefix.size());
+                break;
+            }
+        }
+
+        const std::string trailingId = std::format("\t{}", se->index);
+        if (dst.ends_with(trailingId)) {
+            dst.erase(dst.size() - trailingId.size());
+        }
+        return trimCopy(std::move(dst));
+    };
+
+    auto validateNormalizedDst = [](const Sentence* se, const std::string& dst) {
+        if (dst.empty()) {
+            throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
+        }
+        if (dst.contains('\t')) {
+            throw std::runtime_error(std::format("commit 句子 {} 的 dst 仍包含 Tab，疑似混入 TSV 列", se->index));
+        }
+    };
+
+    auto inferOccurrenceIdsFromChunk = [&](const std::string& sourceTerm, const std::vector<Sentence*>& pending) {
+        std::vector<int> matchedIds;
+        for (const Sentence* se : pending) {
+            if (se == nullptr || sourceTerm.empty()) {
+                continue;
+            }
+            bool matched = false;
+            if (se->nameType != NameType::None && se->name.contains(sourceTerm)) {
+                matched = true;
+            }
+            if (!matched) {
+                matched = se->original_text.contains(sourceTerm) || se->pre_processed_text.contains(sourceTerm);
+            }
+            if (!matched && !se->names.empty()) {
+                matched = std::ranges::any_of(se->names, [&](const std::string& name) {
+                    return name.contains(sourceTerm);
+                });
+            }
+            if (matched) {
+                matchedIds.push_back(se->index);
+            }
+        }
+        return matchedIds;
+    };
+
     // 向 rewrite_queue 去重追加重翻请求。
     // 请求来源可能是模型显式提交，也可能是术语译法变化后程序自动生成。
     auto enqueueRewriteRequest = [&](json& queue, const json& request) {
@@ -987,15 +1121,18 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         };
         std::vector<PendingSentencePatch> sentencePatches;
         sentencePatches.reserve(pending.size());
+        int normalizedDstCount = 0;
         for (Sentence* se : pending) {
             const auto it = translationMap.find(se->index);
             if (it == translationMap.end()) {
                 throw std::runtime_error(std::format("commit 缺少句子 {}", se->index));
             }
-            const std::string dst = it->second.value("dst", "");
-            if (dst.empty()) {
-                throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
+            const std::string rawDst = it->second.value("dst", "");
+            const std::string dst = normalizeCommitDst(se, rawDst);
+            if (dst != rawDst) {
+                ++normalizedDstCount;
             }
+            validateNormalizedDst(se, dst);
             sentencePatches.push_back({
                 .sentence = se,
                 .dst = dst
@@ -1069,12 +1206,24 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 entry["note"] = jsonStringOr(update, "note", jsonStringOr(entry, "note"));
                 if (update.contains("line_ids") && update["line_ids"].is_array()) {
                     for (const auto& idVal : update["line_ids"]) {
-                        appendOccurrence(entry, relInputPath, idVal.get<int>());
+                        const int id = idVal.get<int>();
+                        if (std::ranges::contains(currentChunkIds, id)) {
+                            appendOccurrence(entry, relInputPath, id);
+                        }
                     }
                 }
                 else {
-                    for (const int id : currentChunkIds) {
+                    const std::vector<int> inferredIds = inferOccurrenceIdsFromChunk(sourceTerm, pending);
+                    for (const int id : inferredIds) {
                         appendOccurrence(entry, relInputPath, id);
+                    }
+                    if (inferredIds.empty()) {
+                        m_logger->debug(
+                            "[线程 {}] [文件 {}] Agent 术语 {} 未提供 line_ids，且本地未在当前 chunk 匹配到出现位置，本轮不记录 occurrence。",
+                            threadId,
+                            wide2Ascii(relInputPath),
+                            sourceTerm
+                        );
                     }
                 }
 
@@ -1120,6 +1269,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 wide2Ascii(relInputPath),
                 appliedTermUpdateCount,
                 protocol.termUpdates.size()
+            );
+        }
+        if (normalizedDstCount > 0) {
+            m_logger->debug(
+                "[线程 {}] [文件 {}] Agent commit 本轮自动清理了 {} 条混入 NAME/ID/Tab 的 dst。",
+                threadId,
+                wide2Ascii(relInputPath),
+                normalizedDstCount
             );
         }
     };

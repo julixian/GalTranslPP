@@ -148,9 +148,10 @@ Input is TSV with NAME, SRC, ID.
 7. All durable state text must use [TargetLang], including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and every string in `summary`.
 8. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
 9. `commit` must cover every current chunk id exactly once. Each translation item must contain `id` and `dst`.
-10. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
-11. Prefer `summary` as `{ "rolling_context": "..." }`.
-12. Do not emit any explanation outside the protocol object.
+10. `dst` must contain translated text only. Do not include NAME, `null`, tabs, TSV columns, or the line id inside `dst`.
+11. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`.
+12. Prefer `summary` as `{ "rolling_context": "..." }`.
+13. Do not emit any explanation outside the protocol object.
 </core_rules>
 
 <decision_flow>
@@ -208,12 +209,12 @@ Step E. What to record.
 
 <tools>
 list_files: list available script files
-read_lines: read source and cached translations from a file range
-search_text: search source, cached dst, term ledger, and file notes
-get_dictionary_entries: inspect loaded GPT dictionary entries; omit `terms` to inspect the dictionary itself, or pass `terms` for exact entry lookup
-search_dictionary: fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or `queries: [...]`
-get_term: read one term-ledger entry
-get_file_note: read durable file notes
+read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range
+search_text(query, scope=current_file|all_files|specified_file, file?): search source, cached dst, term ledger, and file notes; `scope` is file range only, not a search field selector
+get_dictionary_entries(terms?, limit?): inspect loaded GPT dictionary entries; omit `terms` to inspect the dictionary itself, or pass `terms` for exact entry lookup
+search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or `queries: [...]`
+get_term(term): read one term-ledger entry
+get_file_note(file?): read durable file notes
 [AgentExtraTools]</tools>
 
 <input_tsv>
@@ -243,9 +244,10 @@ FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
 7. 所有持久化状态文本都必须使用 [TargetLang]，包括 `term_updates.note`、`rewrite_requests.reason`、`file_note_patch` 中的所有字符串，以及 `summary` 中的所有字符串。
 8. `tool_calls` 使用 `{ "id": "...", "name": "tool_name", "arguments": { ... } }`。
 9. `commit` 必须完整覆盖当前 chunk 的每个 id，且恰好一次。每个翻译项都必须包含 `id` 和 `dst`。
-10. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
-11. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
-12. 不要在协议 JSON 对象之外输出任何解释文字。
+10. `dst` 里只能放译文正文本身。不要把 NAME、`null`、Tab、TSV 列或行 id 混进 `dst`。
+11. `term_updates` 推荐格式为 `{ "source_term": "...", "target_term": "...", "status": "tentative|final", "category": "...", "note": "...", "line_ids": [...] }`。
+12. `summary` 推荐格式为 `{ "rolling_context": "..." }`。
+13. 不要在协议 JSON 对象之外输出任何解释文字。
 </core_rules>
 
 <decision_flow>
@@ -303,12 +305,12 @@ FORGALTSV_AGENT_PROMPT_ZH = """<agent_mode>
 
 <tools>
 list_files: 列出可用脚本文件
-read_lines: 读取指定文件区间的原文与缓存译文
-search_text: 搜索原文、缓存译文、术语账本与 file note
-get_dictionary_entries: 查看已加载 GPT 字典条目；不传 `terms` 时查看字典本体，传 `terms` 时做精确获取
-search_dictionary: 对明确的外部线索做 GPT 字典模糊搜索；优先一次一个词，或使用 `queries: [...]`
-get_term: 读取单个术语账本条目
-get_file_note: 读取持久化 file note
+read_lines(file, start, count, include_src=true, include_dst=true): 读取指定文件区间的原文与缓存译文
+search_text(query, scope=current_file|all_files|specified_file, file?): 搜索原文、缓存译文、术语账本与 file note；`scope` 只表示文件范围，不表示搜索字段
+get_dictionary_entries(terms?, limit?): 查看已加载 GPT 字典条目；不传 `terms` 时查看字典本体，传 `terms` 时做精确获取
+search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): 对明确的外部线索做 GPT 字典模糊搜索；优先一次一个词，或使用 `queries: [...]`
+get_term(term): 读取单个术语账本条目
+get_file_note(file?): 读取持久化 file note
 [AgentExtraTools]</tools>
 
 <input_tsv>

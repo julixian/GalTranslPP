@@ -282,8 +282,8 @@ Protocol JSON schema:
 
 <commit_output_format>
 1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(integer type) and `dst`.
-2. `dst` must contain translated text ONLY. Do not include NAME, null or the line id inside dst.
-3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Changing `target_term` for an exitsting item will automatically cause retranslations for influenced sentences.
+2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
+3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Changing `target_term` for an existing item will automatically cause retranslations for influenced sentences.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.
 5. `file_note_patch` is for durable file-level notes, not noisy per-turn chatter. Prefer translation-relevant clues such as long-lived scene state, unresolved clues, identity hints, relationship shifts, callbacks, and literary echoes.
 6. Prefer `file_note_patch` to be a compact object. Typical keys may include `summary`, `scene_state`, `unresolved_clues`, `relationship_updates`, `term_hints`, or other clearly named fields when truly useful.

@@ -1011,45 +1011,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
     };
 
-    auto getSentenceAgentName = [](const Sentence* se) {
-        if (se == nullptr || se->nameType == NameType::None) {
-            return std::string("null");
-        }
-        return se->name;
-    };
-
-    // `dst` 只能是译文正文本身，不应带 NAME / null / ID / TSV 列。
-    // 这里只做最保守的清洗：剥掉常见的 `name<TAB>` / `null<TAB>` 前缀，
-    // 以及误带上的尾部 `TAB + 当前 id`。
-    auto normalizeCommitDst = [&](const Sentence* se, std::string dst) {
-        const std::string speaker = getSentenceAgentName(se);
-        const std::array<std::string, 2> allowedPrefixes = {
-            speaker + "\t",
-            std::string("null\t")
-        };
-        for (const std::string& prefix : allowedPrefixes) {
-            if (dst.starts_with(prefix)) {
-                dst.erase(0, prefix.size());
-                break;
-            }
-        }
-
-        const std::string trailingId = std::format("\t{}", se->index);
-        if (dst.ends_with(trailingId)) {
-            dst.erase(dst.size() - trailingId.size());
-        }
-        return trimCopy(std::move(dst));
-    };
-
-    auto validateNormalizedDst = [](const Sentence* se, const std::string& dst) {
-        if (dst.empty()) {
-            throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
-        }
-        if (dst.contains('\t')) {
-            throw std::runtime_error(std::format("commit 句子 {} 的 dst 仍包含 Tab，疑似混入 TSV 列", se->index));
-        }
-    };
-
     auto inferOccurrenceIdsFromChunk = [&](const std::string& sourceTerm, const std::vector<Sentence*>& pending) {
         std::vector<int> matchedIds;
         for (const Sentence* se : pending) {
@@ -1121,18 +1082,15 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         };
         std::vector<PendingSentencePatch> sentencePatches;
         sentencePatches.reserve(pending.size());
-        int normalizedDstCount = 0;
         for (Sentence* se : pending) {
             const auto it = translationMap.find(se->index);
             if (it == translationMap.end()) {
                 throw std::runtime_error(std::format("commit 缺少句子 {}", se->index));
             }
-            const std::string rawDst = it->second.value("dst", "");
-            const std::string dst = normalizeCommitDst(se, rawDst);
-            if (dst != rawDst) {
-                ++normalizedDstCount;
+            const std::string dst = it->second.value("dst", "");
+            if (dst.empty()) {
+                throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
             }
-            validateNormalizedDst(se, dst);
             sentencePatches.push_back({
                 .sentence = se,
                 .dst = dst
@@ -1269,14 +1227,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 wide2Ascii(relInputPath),
                 appliedTermUpdateCount,
                 protocol.termUpdates.size()
-            );
-        }
-        if (normalizedDstCount > 0) {
-            m_logger->debug(
-                "[线程 {}] [文件 {}] Agent commit 本轮自动清理了 {} 条混入 NAME/ID/Tab 的 dst。",
-                threadId,
-                wide2Ascii(relInputPath),
-                normalizedDstCount
             );
         }
     };

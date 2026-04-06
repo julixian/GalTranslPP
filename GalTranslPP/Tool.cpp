@@ -754,6 +754,17 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
     extractor.extractItems(wide2Ascii(zipPath, 65001, nullptr), indices, wide2Ascii(outputDir, 65001, nullptr));
 }
 
+std::string nowTimestampString() {
+    const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return std::to_string(now);
+}
+
+void saveJsonFile(const fs::path& path, const json& value) {
+    createParent(path);
+    std::ofstream ofs(path, std::ios::binary);
+    ofs << value.dump(2);
+}
+
 uint64_t calculateFileCRC64(const fs::path& filePath) {
     std::ifstream ifs(filePath, std::ios::binary);
     boost::crc_optimal<64, 0x42F0E1EBA9EA3693, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, true, true> crc;

@@ -138,6 +138,10 @@ export {
     void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::string& fileName);
     void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes);
 
+    void saveJsonFile(const fs::path& path, const json& value);
+
+    std::string nowTimestampString();
+
     uint64_t calculateFileCRC64(const fs::path& filePath);
 
     bool cmpVer(const std::string& latestVer, const std::string& currentVer, bool& isCompatible);

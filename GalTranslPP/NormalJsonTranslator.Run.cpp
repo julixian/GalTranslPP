@@ -24,20 +24,62 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-namespace {
-    std::string nowTimestampString()
-    {
-        const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-        return std::to_string(now);
-    }
+std::vector<std::string> collectRelFileStrings(const std::vector<fs::path>& relFilePaths) {
+    return relFilePaths
+        | std::views::transform([](const fs::path& p) { return wide2Ascii(p); })
+        | std::ranges::to<std::vector>();
+}
 
-    void saveJsonFilePretty(const fs::path& path, const json& value)
-    {
-        createParent(path);
-        std::ofstream ofs(path, std::ios::binary);
-        ofs << value.dump(2);
+std::string jsonStringFieldOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
+    if (!obj.is_object()) {
+        return fallback;
     }
+    const auto it = obj.find(std::string(key));
+    if (it != obj.end() && it->is_string()) {
+        return it->get<std::string>();
+    }
+    return fallback;
+}
 
+json buildReconcileStateForRunState(const std::string& status, int pendingRequests, const std::string& note = {}) {
+    json state = {
+        {"status", status},
+        {"pending_requests", std::max(pendingRequests, 0)},
+        {"updated_at", nowTimestampString()}
+    };
+    if (!note.empty()) {
+        state["note"] = note;
+    }
+    return state;
+}
+
+json buildInputFingerprintMap(const fs::path& inputRootDir, const std::vector<fs::path>& relFilePaths) {
+    json fingerprints = json::object();
+    for (const auto& relFilePath : relFilePaths) {
+        const fs::path absPath = inputRootDir / relFilePath;
+        if (!fs::exists(absPath) || !fs::is_regular_file(absPath)) {
+            fingerprints[wide2Ascii(relFilePath)] = "";
+            continue;
+        }
+        fingerprints[wide2Ascii(relFilePath)] = std::format("{:016X}", calculateFileCRC64(absPath));
+    }
+    return fingerprints;
+}
+
+bool areInputFingerprintsEqual(const json& lhs, const json& rhs) {
+    if (!lhs.is_object() || !rhs.is_object()) {
+        return false;
+    }
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+    for (const auto& item : lhs.items()) {
+        const auto it = rhs.find(item.key());
+        if (it == rhs.end() || *it != item.value()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
@@ -295,19 +337,8 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
         m_agentKnownRelFiles = relFilePaths;
         createParent(m_agentRunStatePath);
         fs::create_directories(m_agentFileNotesDir);
-        const json currentAgentConfig = {
-            {"threads_num", m_threadsNum},
-            {"split_file", m_splitFile},
-            {"split_file_num", m_splitFileNum},
-            {"max_turns_per_chunk", m_agentMaxTurnsPerChunk},
-            {"soft_context_chars", m_agentSoftContextChars},
-            {"hard_context_chars", m_agentHardContextChars},
-            {"lookahead_lines", m_agentLookaheadLines},
-            {"search_result_limit", m_agentSearchResultLimit},
-            {"allow_cross_file_search", m_agentAllowCrossFileSearch},
-            {"final_reconcile_single_thread", m_agentFinalReconcileSingleThread},
-            {"rewrite_mode", m_agentRewriteMode}
-        };
+        const json oldRunState = fs::exists(m_agentRunStatePath) ? loadAgentRunState() : json::object();
+        const json oldRewriteQueue = fs::exists(m_agentRewriteQueuePath) ? loadAgentRewriteQueue() : json::array();
         const std::string updatedAt = nowTimestampString();
         json normalizedFiles = json::array();
         for (const auto& relFilePath : relFilePaths) {
@@ -322,22 +353,53 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
             normalizedFiles.push_back(std::move(entry));
         }
 
-        const json runState = {
-            {"config", currentAgentConfig},
-            {"updated_at", updatedAt},
-            {"files", normalizedFiles}
-        };
-        saveJsonFilePretty(m_agentRunStatePath, runState);
+        const std::vector<std::string> currentFileStrings = collectRelFileStrings(relFilePaths);
+        const fs::path fingerprintRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
+        const json currentInputFingerprints = buildInputFingerprintMap(fingerprintRootDir, relFilePaths);
+        const json oldInputFingerprints = oldRunState.value("input_fingerprints", json::object());
+        const bool inputFingerprintsUnchanged = areInputFingerprintsEqual(oldInputFingerprints, currentInputFingerprints);
+        const int pendingRewriteRequests = oldRewriteQueue.is_array() ? (int)oldRewriteQueue.size() : 0;
+        json reconcileState = buildReconcileStateForRunState("idle", pendingRewriteRequests);
+        std::string rewriteQueueResetNote;
+        if (pendingRewriteRequests > 0 && !inputFingerprintsUnchanged) {
+            reconcileState = buildReconcileStateForRunState("invalidated", 0, "检测到工作输入文件指纹变化，旧的重翻队列已失效并被清空。");
+            rewriteQueueResetNote = std::format("检测到工作输入文件指纹变化，已丢弃 {} 条旧的 reconcile 重翻请求。", pendingRewriteRequests);
+        }
+        else if (pendingRewriteRequests > 0) {
+            const json oldReconcileState = oldRunState.value("reconcile", json::object());
+            const std::string oldStatus = jsonStringFieldOr(oldReconcileState, "status");
+            if (oldStatus == "paused" || oldStatus == "in_progress") {
+                reconcileState = buildReconcileStateForRunState("paused", pendingRewriteRequests, "检测到上次 reconcile 中断且输入未变，本次可继续恢复。");
+            }
+            else {
+                reconcileState = buildReconcileStateForRunState("idle", pendingRewriteRequests);
+            }
+        }
 
-        saveJsonFilePretty(m_agentSearchCatalogPath, json{
+        const json runState = {
+            {"updated_at", updatedAt},
+            {"files", normalizedFiles},
+            {"reconcile", reconcileState},
+            {"input_fingerprints", currentInputFingerprints}
+        };
+        saveJsonFile(m_agentRunStatePath, runState);
+
+        saveJsonFile(m_agentSearchCatalogPath, json{
             {"updated_at", nowTimestampString()},
-            {"files", relFilePaths | std::views::transform([](const fs::path& p) { return wide2Ascii(p); }) | std::ranges::to<std::vector>()}
+            {"files", currentFileStrings}
         });
         if (!fs::exists(m_agentTermLedgerPath)) {
-            saveJsonFilePretty(m_agentTermLedgerPath, json::object());
+            saveJsonFile(m_agentTermLedgerPath, json::object());
         }
-        if (!fs::exists(m_agentRewriteQueuePath)) {
-            saveJsonFilePretty(m_agentRewriteQueuePath, json::array());
+        if (!fs::exists(m_agentTermConflictPath)) {
+            saveJsonFile(m_agentTermConflictPath, json::array());
+        }
+        if (!rewriteQueueResetNote.empty()) {
+            saveJsonFile(m_agentRewriteQueuePath, json::array());
+            m_logger->warn("{}", rewriteQueueResetNote);
+        }
+        else if (!fs::exists(m_agentRewriteQueuePath)) {
+            saveJsonFile(m_agentRewriteQueuePath, json::array());
         }
     }
 

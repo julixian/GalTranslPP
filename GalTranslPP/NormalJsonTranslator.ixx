@@ -20,24 +20,24 @@ import ITranslator;
 
 namespace fs = std::filesystem;
 
-struct AgentToolCallRequest {
-    std::string id;
-    std::string name;
-    json arguments = json::object();
-};
-
-struct AgentProtocolResponse {
-    std::string action;
-    std::vector<AgentToolCallRequest> calls;
-    json translations = json::array();
-    json termUpdates = json::array();
-    json rewriteRequests = json::array();
-    json fileNotePatch = json::object();
-    std::string rollingContext;
-    std::string rawContent;
-};
-
 export {
+
+    struct AgentToolCallRequest {
+        std::string id;
+        std::string name;
+        json arguments = json::object();
+    };
+
+    struct AgentProtocolResponse {
+        std::string action;
+        std::vector<AgentToolCallRequest> calls;
+        json translations = json::array();
+        json termUpdates = json::array();
+        json rewriteRequests = json::array();
+        json fileNotePatch = json::object();
+        std::string rollingContext;
+        std::string rawContent;
+    };
 
     class NormalJsonTranslator : public ITranslator {
 
@@ -61,6 +61,7 @@ export {
         fs::path m_agentRunStatePath;
         fs::path m_agentTermLedgerPath;
         fs::path m_agentRewriteQueuePath;
+        fs::path m_agentTermConflictPath;
         fs::path m_agentFileNotesDir;
         fs::path m_agentSearchCatalogPath;
 
@@ -99,7 +100,7 @@ export {
         bool m_agentEnabled = false;
         bool m_agentAllowCrossFileSearch = true;
         bool m_agentFinalReconcileSingleThread = true;
-        // 仅在最终单线程 reconcile 阶段为 true。
+        // 仅在最终 reconcile 阶段为 true。
         // 作用是避免“reconcile 触发的重翻”再次把术语改判回写成新的 rewrite_queue，
         // 从而形成自我追加、难以收敛的循环。
         bool m_agentReconciling = false;
@@ -168,11 +169,13 @@ export {
         json loadAgentRunState();
         json loadAgentTermLedger();
         json loadAgentRewriteQueue();
+        json loadAgentTermConflicts();
         json loadAgentFileNote(const fs::path& targetRelPath);
         void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
         void updateAgentRunStateEntry(const fs::path& relInputPath, const std::string& status,
             int lastCommittedIndex = -1, const std::string& leaseOwner = {});
-        void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator);
+        void updateAgentReconcileState(const std::string& status, int pendingRequests = -1, const std::string& note = {});
+        void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
         std::string buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         json buildAgentBaseMessages(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,
@@ -180,7 +183,7 @@ export {
 
         void processFile(const fs::path& relInputPath, int threadId);
         // 在线程池处理完成后执行一次最终 reconcile。
-        // v1 会保守地以单线程方式消费 rewrite_queue，并重跑受影响文件。
+        // `m_agentFinalReconcileSingleThread=true` 时走单线程，否则按文件并行。
         void runAgentFinalReconcile();
 
     public:

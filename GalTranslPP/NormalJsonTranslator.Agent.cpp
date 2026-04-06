@@ -15,11 +15,6 @@ import Tool;
 
 namespace fs = std::filesystem;
 
-std::string nowTimestampString() {
-    const auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    return std::to_string(now);
-}
-
 json loadJsonFileOr(const fs::path& path, const json& fallback = json::object()) {
     try {
         if (!fs::exists(path)) {
@@ -31,12 +26,6 @@ json loadJsonFileOr(const fs::path& path, const json& fallback = json::object())
     catch (...) {
         return fallback;
     }
-}
-
-void saveJsonFile(const fs::path& path, const json& value) {
-    createParent(path);
-    std::ofstream ofs(path, std::ios::binary);
-    ofs << value.dump(2);
 }
 
 json sanitizeAgentFileNote(json note) {
@@ -80,7 +69,7 @@ std::optional<json> tryParseJsonEnvelope(std::string text) {
     try {
         return json::parse(text);
     }
-    catch (...) {}
+    catch (...) { }
 
     text = lightRepairJsonText(text);
     try {
@@ -398,6 +387,187 @@ void enqueueAgentRewriteRequest(json& queue, const json& request) {
     }
 }
 
+std::string buildAgentRewriteQueueKey(const std::string& file, int id) {
+    return std::format("{}#{}", file, id);
+}
+
+absl::btree_map<fs::path, std::vector<int>> collectAgentReconcileTargets(const json& rewriteQueue) {
+    absl::btree_map<fs::path, std::vector<int>> fileToIds;
+    if (!rewriteQueue.is_array()) {
+        return fileToIds;
+    }
+
+    for (const auto& request : rewriteQueue) {
+        if (!request.is_object()) {
+            continue;
+        }
+        const std::string file = request.value("file", "");
+        const int id = request.value("id", -1);
+        if (file.empty() || id < 0) {
+            continue;
+        }
+        fileToIds[ascii2Wide(file)].push_back(id);
+    }
+
+    for (auto& ids : fileToIds | std::views::values) {
+        std::ranges::sort(ids);
+        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+    }
+    return fileToIds;
+}
+
+int countAgentCachedRewriteHits(const fs::path& cachePath, const std::vector<int>& ids, std::shared_mutex& transCacheMutex) {
+    if (!fs::exists(cachePath) || ids.empty()) {
+        return 0;
+    }
+
+    try {
+        std::shared_lock<std::shared_mutex> lock(transCacheMutex);
+        std::ifstream ifs(cachePath, std::ios::binary);
+        json cacheJson = json::parse(ifs);
+        if (!cacheJson.is_array()) {
+            return 0;
+        }
+
+        int hits = 0;
+        for (const auto& item : cacheJson) {
+            if (std::ranges::contains(ids, item.value("index", -1))) {
+                ++hits;
+            }
+        }
+        return hits;
+    }
+    catch (...) {
+        return 0;
+    }
+}
+
+bool invalidateAgentReconcileCacheForFile(
+    const fs::path& cachePath,
+    const std::vector<int>& ids,
+    std::shared_mutex& transCacheMutex,
+    const std::shared_ptr<spdlog::logger>& logger,
+    const fs::path& relFilePath
+) {
+    if (!fs::exists(cachePath) || ids.empty()) {
+        return true;
+    }
+
+    try {
+        std::lock_guard<std::shared_mutex> lock(transCacheMutex);
+        std::ifstream ifs(cachePath, std::ios::binary);
+        json cacheJson = json::parse(ifs);
+        ifs.close();
+
+        json filtered = json::array();
+        if (cacheJson.is_array()) {
+            for (const auto& item : cacheJson) {
+                if (!std::ranges::contains(ids, item.value("index", -1))) {
+                    filtered.push_back(item);
+                }
+            }
+        }
+        else {
+            filtered = cacheJson;
+        }
+
+        std::ofstream ofs(cachePath, std::ios::binary);
+        ofs << filtered.dump(2);
+        return true;
+    }
+    catch (const std::exception& e) {
+        logger->error("reconcile 清理缓存 {} 失败: {}", wide2Ascii(relFilePath), e.what());
+        return false;
+    }
+}
+
+json buildAgentReconcileStateObject(const std::string& status, int pendingRequests, const std::string& note = {}) {
+    json state = {
+        {"status", status},
+        {"pending_requests", std::max(pendingRequests, 0)},
+        {"updated_at", nowTimestampString()}
+    };
+    if (!note.empty()) {
+        state["note"] = note;
+    }
+    return state;
+}
+
+json removeCompletedAgentRewriteRequests(const json& queue, const absl::flat_hash_set<std::string>& completedKeys) {
+    if (!queue.is_array() || completedKeys.empty()) {
+        return queue;
+    }
+
+    json filtered = json::array();
+    for (const auto& item : queue) {
+        if (!item.is_object()) {
+            filtered.push_back(item);
+            continue;
+        }
+        const std::string key = buildAgentRewriteQueueKey(item.value("file", ""), item.value("id", -1));
+        if (!completedKeys.contains(key)) {
+            filtered.push_back(item);
+        }
+    }
+    return filtered;
+}
+
+void upsertAgentTermConflict(json& termConflicts, const json& record) {
+    if (!termConflicts.is_array() || !record.is_object()) {
+        return;
+    }
+
+    const std::string sourceTerm = record.value("source_term", "");
+    const std::string oldTarget = record.value("old_target", "");
+    const std::string newTarget = record.value("new_target", "");
+    if (sourceTerm.empty() || oldTarget.empty() || newTarget.empty()) {
+        return;
+    }
+
+    auto conflictIt = std::ranges::find_if(termConflicts, [&](const json& item)
+        {
+            return item.is_object()
+                && item.value("source_term", "") == sourceTerm
+                && item.value("old_target", "") == oldTarget
+                && item.value("new_target", "") == newTarget;
+        });
+
+    if (conflictIt == termConflicts.end()) {
+        json newRecord = record;
+        newRecord["updated_at"] = nowTimestampString();
+        termConflicts.push_back(std::move(newRecord));
+        return;
+    }
+
+    if (!conflictIt->contains("occurrences") || !(*conflictIt)["occurrences"].is_array()) {
+        (*conflictIt)["occurrences"] = json::array();
+    }
+    const json newOccurrences = record.value("occurrences", json::array());
+    for (const auto& occurrence : newOccurrences) {
+        if (!occurrence.is_object()) {
+            continue;
+        }
+        const std::string file = occurrence.value("file", "");
+        const int id = occurrence.value("id", -1);
+        const bool exists = std::ranges::any_of((*conflictIt)["occurrences"], [&](const json& item)
+            {
+                return item.is_object()
+                    && item.value("file", "") == file
+                    && item.value("id", -1) == id;
+            });
+        if (!exists) {
+            (*conflictIt)["occurrences"].push_back(occurrence);
+        }
+    }
+    (*conflictIt)["updated_at"] = nowTimestampString();
+    if (const auto noteIt = record.find("note"); noteIt != record.end() && noteIt->is_string()) {
+        (*conflictIt)["note"] = *noteIt;
+    }
+    if (const auto statusIt = record.find("status"); statusIt != record.end() && statusIt->is_string()) {
+        (*conflictIt)["status"] = *statusIt;
+    }
+}
+
 // 只读运行状态加载函数，主要给恢复调度和启动检查使用。
 // 它通常每次运行只会调用少数几次，而不是按句子频繁调用。
 json NormalJsonTranslator::loadAgentRunState() {
@@ -416,6 +586,11 @@ json NormalJsonTranslator::loadAgentTermLedger() {
 json NormalJsonTranslator::loadAgentRewriteQueue() {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     return loadJsonFileOr(m_agentRewriteQueuePath, json::array());
+}
+
+json NormalJsonTranslator::loadAgentTermConflicts() {
+    std::lock_guard<std::mutex> lock(m_agentStateMutex);
+    return loadJsonFileOr(m_agentTermConflictPath, json::array());
 }
 
 // `file_note` 是按输入文件保存的持久化备注。
@@ -475,17 +650,35 @@ void NormalJsonTranslator::updateAgentRunStateEntry(
     saveJsonFile(m_agentRunStatePath, state);
 }
 
+void NormalJsonTranslator::updateAgentReconcileState(const std::string& status, int pendingRequests, const std::string& note) {
+    if (!m_agentEnabled) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(m_agentStateMutex);
+    json state = loadJsonFileOr(m_agentRunStatePath, json::object());
+    int finalPendingRequests = pendingRequests;
+    if (finalPendingRequests < 0) {
+        const json rewriteQueue = loadJsonFileOr(m_agentRewriteQueuePath, json::array());
+        finalPendingRequests = rewriteQueue.is_array() ? (int)rewriteQueue.size() : 0;
+    }
+    state["reconcile"] = buildAgentReconcileStateObject(status, finalPendingRequests, note);
+    state["updated_at"] = nowTimestampString();
+    saveJsonFile(m_agentRunStatePath, state);
+}
+
 // 共享 Agent 状态文件的强串行修改入口。
 // `commit` 路径必须走这里，避免多个 worker 在线程并发时发生 `load/save` 覆盖。
-void NormalJsonTranslator::mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator) {
+void NormalJsonTranslator::mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator) {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     json runState = loadJsonFileOr(m_agentRunStatePath, json::object());
     json termLedger = loadJsonFileOr(m_agentTermLedgerPath, json::object());
     json rewriteQueue = loadJsonFileOr(m_agentRewriteQueuePath, json::array());
-    mutator(runState, termLedger, rewriteQueue);
+    json termConflicts = loadJsonFileOr(m_agentTermConflictPath, json::array());
+    mutator(runState, termLedger, rewriteQueue, termConflicts);
     saveJsonFile(m_agentRunStatePath, runState);
     saveJsonFile(m_agentTermLedgerPath, termLedger);
     saveJsonFile(m_agentRewriteQueuePath, rewriteQueue);
+    saveJsonFile(m_agentTermConflictPath, termConflicts);
 }
 
 std::string NormalJsonTranslator::buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary) {
@@ -637,7 +830,8 @@ void NormalJsonTranslator::applyAgentCommit(
         | std::ranges::to<std::vector>();
 
     int appliedTermUpdateCount = 0;
-    mutateAgentState([&](json& runState, json& termLedger, json& rewriteQueue) 
+    int recordedTermConflictCount = 0;
+    mutateAgentState([&](json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)
         {
             if (!runState.contains("files") || !runState["files"].is_array()) {
                 runState["files"] = json::array();
@@ -706,15 +900,29 @@ void NormalJsonTranslator::applyAgentCommit(
                     }
                 }
 
-                if (!m_agentReconciling && !oldTarget.empty() && oldTarget != targetTerm && m_agentRewriteMode == "queue_retranslate") {
-                    for (const auto& occurrence : entry["occurrences"]) {
-                        ::enqueueAgentRewriteRequest(rewriteQueue, json{
-                                {"file", occurrence.value("file", "")},
-                                {"id", occurrence.value("id", -1)},
-                                {"source_term", sourceTerm},
-                                {"old_target", oldTarget},
-                                {"new_target", targetTerm}
-                            });
+                if (!m_agentReconciling && !oldTarget.empty() && oldTarget != targetTerm) {
+                    json conflictRecord = {
+                        {"source_term", sourceTerm},
+                        {"old_target", oldTarget},
+                        {"new_target", targetTerm},
+                        {"status", entry.value("status", "tentative")},
+                        {"note", entry.value("note", "")},
+                        {"occurrences", entry.value("occurrences", json::array())}
+                    };
+                    if (m_agentRewriteMode == "queue_retranslate") {
+                        for (const auto& occurrence : entry["occurrences"]) {
+                            ::enqueueAgentRewriteRequest(rewriteQueue, json{
+                                    {"file", occurrence.value("file", "")},
+                                    {"id", occurrence.value("id", -1)},
+                                    {"source_term", sourceTerm},
+                                    {"old_target", oldTarget},
+                                    {"new_target", targetTerm}
+                                });
+                        }
+                    }
+                    else if (m_agentRewriteMode == "mark_only") {
+                        ::upsertAgentTermConflict(termConflicts, conflictRecord);
+                        ++recordedTermConflictCount;
                     }
                 }
             }
@@ -743,11 +951,12 @@ void NormalJsonTranslator::applyAgentCommit(
 
     if (!protocol.termUpdates.empty()) {
         m_logger->debug(
-            "[线程 {}] [文件 {}] Agent 术语账本本轮实际写入 {} / {} 条。",
+            "[线程 {}] [文件 {}] Agent 术语账本本轮实际写入 {} / {} 条，记录术语冲突 {} 条。",
             threadId,
             wide2Ascii(relInputPath),
             appliedTermUpdateCount,
-            protocol.termUpdates.size()
+            protocol.termUpdates.size(),
+            recordedTermConflictCount
         );
     }
 }
@@ -1413,73 +1622,179 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 }
 
 void NormalJsonTranslator::runAgentFinalReconcile() {
-    if (!m_agentEnabled || !m_agentFinalReconcileSingleThread) {
+    if (!m_agentEnabled) {
         return;
     }
 
     json rewriteQueue = loadAgentRewriteQueue();
     if (!rewriteQueue.is_array() || rewriteQueue.empty()) {
+        updateAgentReconcileState("idle", 0);
         return;
     }
 
-    m_logger->info("Agent 模式开始最终单线程 reconcile，共 {} 条重翻请求。", rewriteQueue.size());
-    m_agentReconciling = true;
+    const absl::btree_map<fs::path, std::vector<int>> rawFileToIds = collectAgentReconcileTargets(rewriteQueue);
+    absl::flat_hash_set<std::string> knownFiles;
+    for (const auto& relFilePath : m_agentKnownRelFiles) {
+        knownFiles.insert(wide2Ascii(relFilePath));
+    }
 
     absl::btree_map<fs::path, std::vector<int>> fileToIds;
-    for (const auto& request : rewriteQueue) {
-        if (!request.is_object()) {
+    absl::flat_hash_set<std::string> removableKeys;
+    int invalidRequestCount = 0;
+    for (const auto& [filePath, ids] : rawFileToIds) {
+        const std::string fileStr = wide2Ascii(filePath);
+        if (!knownFiles.empty() && !knownFiles.contains(fileStr)) {
+            invalidRequestCount += (int)ids.size();
+            for (const int id : ids) {
+                removableKeys.insert(buildAgentRewriteQueueKey(fileStr, id));
+            }
             continue;
         }
-        const std::string file = request.value("file", "");
-        const int id = request.value("id", -1);
-        if (!file.empty() && id >= 0) {
-            fileToIds[ascii2Wide(file)].push_back(id);
-        }
+        fileToIds[filePath] = ids;
     }
 
-    for (auto& [filePath, ids] : fileToIds) {
-        std::ranges::sort(ids);
-        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
+    if (fileToIds.empty()) {
+        int remainingRequests = 0;
+        mutateAgentState([&](json& runState, json&, json& queue, json&)
+            {
+                queue = removeCompletedAgentRewriteRequests(queue, removableKeys);
+                remainingRequests = queue.is_array() ? (int)queue.size() : 0;
+                const std::string note = invalidRequestCount > 0
+                    ? std::format("已丢弃 {} 条无法映射到当前工作单元的重翻请求。", invalidRequestCount)
+                    : std::string{};
+                runState["reconcile"] = buildAgentReconcileStateObject(remainingRequests == 0 ? "idle" : "paused", remainingRequests, note);
+                runState["updated_at"] = nowTimestampString();
+            });
+        if (invalidRequestCount > 0) {
+            m_logger->warn("Agent reconcile 发现 {} 条重翻请求已无法映射到当前工作单元，已从队列移除。", invalidRequestCount);
+        }
+        return;
+    }
 
-        const fs::path cachePath = m_transCacheDir / filePath;
-        if (fs::exists(cachePath)) {
+    int rollbackCount = 0;
+    for (const auto& [filePath, ids] : fileToIds) {
+        rollbackCount += countAgentCachedRewriteHits(m_transCacheDir / filePath, ids, m_transCacheMutex);
+    }
+    const int safeRollbackCount = std::min(rollbackCount, m_completedSentences.load());
+    if (safeRollbackCount > 0) {
+        m_completedSentences -= safeRollbackCount;
+        m_controller->updateBar(-safeRollbackCount);
+    }
+
+    const bool singleThreadMode = m_agentFinalReconcileSingleThread || fileToIds.size() <= 1;
+    const char* modeText = singleThreadMode ? "单线程" : "多线程";
+    if (invalidRequestCount > 0) {
+        m_logger->warn("Agent reconcile 有 {} 条旧请求无法映射到当前工作单元，将在本轮结束后从队列移除。", invalidRequestCount);
+    }
+    m_logger->info(
+        "Agent 模式开始最终 {} reconcile，共 {} 条重翻请求，涉及 {} 个文件，进度回退 {} 句。",
+        modeText,
+        rewriteQueue.size(),
+        fileToIds.size(),
+        safeRollbackCount
+    );
+    updateAgentReconcileState("in_progress", (int)rewriteQueue.size(), std::format("当前以{}模式执行。", modeText));
+    m_agentReconciling = true;
+
+    absl::flat_hash_set<std::string> completedKeys = removableKeys;
+    std::mutex completedKeysMutex;
+    std::atomic_bool sawFailure = false;
+
+    auto runOneFile = [&](const fs::path& filePath, const std::vector<int>& ids, int threadId)
+        {
+            if (m_controller->shouldStop()) {
+                return;
+            }
+
+            if (!invalidateAgentReconcileCacheForFile(
+                m_transCacheDir / filePath,
+                ids,
+                m_transCacheMutex,
+                m_logger,
+                filePath
+            )) {
+                sawFailure = true;
+                return;
+            }
+
             try {
-                std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
-                std::ifstream ifs(cachePath, std::ios::binary);
-                json cacheJson = json::parse(ifs);
-                ifs.close();
-                json filtered = json::array();
-                if (cacheJson.is_array()) {
-                    for (const auto& item : cacheJson) {
-                        if (!std::ranges::contains(ids, item.value("index", -1))) {
-                            filtered.push_back(item);
-                        }
+                m_logger->info("[线程 {}] Agent reconcile 重翻文件 {}，目标句数 {}。", threadId, wide2Ascii(filePath), ids.size());
+                processFile(filePath, threadId);
+                if (!m_controller->shouldStop()) {
+                    std::lock_guard<std::mutex> lock(completedKeysMutex);
+                    for (const int id : ids) {
+                        completedKeys.insert(buildAgentRewriteQueueKey(wide2Ascii(filePath), id));
                     }
                 }
-                else {
-                    filtered = cacheJson;
-                }
-                std::ofstream ofs(cachePath, std::ios::binary);
-                ofs << filtered.dump(2);
             }
             catch (const std::exception& e) {
-                m_logger->error("reconcile 清理缓存 {} 失败: {}", wide2Ascii(filePath), e.what());
-                continue;
+                sawFailure = true;
+                m_logger->error("reconcile 重翻文件 {} 失败: {}", wide2Ascii(filePath), e.what());
             }
-        }
+        };
 
-        try {
-            m_logger->info("Agent reconcile 重翻文件 {}，目标句数 {}。", wide2Ascii(filePath), ids.size());
-            processFile(filePath, 0);
+    if (singleThreadMode) {
+        m_controller->addThreadNum();
+        for (const auto& [filePath, ids] : fileToIds) {
+            if (m_controller->shouldStop()) {
+                break;
+            }
+            runOneFile(filePath, ids, 0);
         }
-        catch (const std::exception& e) {
-            m_logger->error("reconcile 重翻文件 {} 失败: {}", wide2Ascii(filePath), e.what());
+        m_controller->reduceThreadNum();
+    }
+    else {
+        std::vector<std::future<void>> results;
+        m_threadPool.resize(std::min(m_threadsNum, (int)fileToIds.size()));
+        for (const auto& [filePath, ids] : fileToIds) {
+            results.emplace_back(m_threadPool.push([&, filePath, ids](const int id)
+                {
+                    m_controller->addThreadNum();
+                    runOneFile(filePath, ids, id);
+                    m_controller->reduceThreadNum();
+                }));
         }
+        waitForThreads(m_threadPool, results);
     }
 
-    mutateAgentState([&](json&, json&, json& queue) {
-        queue = json::array();
-    });
+    int remainingRequests = 0;
+    std::string finalStatus;
+    std::string finalNote;
+    mutateAgentState([&](json& runState, json&, json& queue, json&)
+        {
+            queue = removeCompletedAgentRewriteRequests(queue, completedKeys);
+            remainingRequests = queue.is_array() ? (int)queue.size() : 0;
+            finalStatus = remainingRequests == 0 ? "idle" : "paused";
+
+            if (m_controller->shouldStop()) {
+                finalStatus = remainingRequests == 0 ? "idle" : "paused";
+                finalNote = remainingRequests == 0
+                    ? std::format("{} reconcile 在暂停前已完成。", modeText)
+                    : std::format("reconcile 已暂停，剩余 {} 条重翻请求待下次继续。", remainingRequests);
+            }
+            else if (remainingRequests == 0) {
+                finalNote = std::format("{} reconcile 已完成。", modeText);
+            }
+            else if (sawFailure.load()) {
+                finalNote = std::format("reconcile 有部分文件失败，剩余 {} 条重翻请求保留待下次继续。", remainingRequests);
+            }
+            else {
+                finalNote = std::format("reconcile 未完全消费队列，剩余 {} 条重翻请求。", remainingRequests);
+            }
+            runState["reconcile"] = buildAgentReconcileStateObject(finalStatus, remainingRequests, finalNote);
+            runState["updated_at"] = nowTimestampString();
+        });
+
     m_agentReconciling = false;
-    m_logger->info("Agent 模式最终单线程 reconcile 完成。");
+    if (remainingRequests == 0) {
+        m_logger->info("Agent 模式最终 {} reconcile 完成。", modeText);
+    }
+    else {
+        if (m_controller->shouldStop()) {
+            m_logger->warn("Agent 模式最终 {} reconcile 已暂停，剩余 {} 条重翻请求。", modeText, remainingRequests);
+        }
+        else {
+            m_logger->warn("Agent 模式最终 {} reconcile 未完成，剩余 {} 条重翻请求。", modeText, remainingRequests);
+        }
+    }
 }

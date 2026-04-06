@@ -53,6 +53,7 @@ NormalJsonTranslator::NormalJsonTranslator(
     m_agentRunStatePath = m_agentRootDir / L"run_state.json";
     m_agentTermLedgerPath = m_agentRootDir / L"term_ledger.json";
     m_agentRewriteQueuePath = m_agentRootDir / L"rewrite_queue.json";
+    m_agentTermConflictPath = m_agentRootDir / L"term_conflicts.json";
     m_agentFileNotesDir = m_agentRootDir / L"file_notes";
     m_agentSearchCatalogPath = m_agentRootDir / L"search_catalog.json";
     try {
@@ -129,12 +130,12 @@ void NormalJsonTranslator::init()
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "agent", "enabled", false);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 6);
-        m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 48000);
-        m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 64000);
+        m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
+        m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
         m_agentLookaheadLines = toml::find_or(configData, "agent", "lookaheadLines", 80);
-        m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 40);
+        m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 80);
         m_agentAllowCrossFileSearch = toml::find_or(configData, "agent", "allowCrossFileSearch", true);
-        m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", true);
+        m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", false);
         m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
 
         if (m_agentEnabled) {
@@ -146,6 +147,9 @@ void NormalJsonTranslator::init()
             }
             if (m_agentSoftContextChars > m_agentHardContextChars) {
                 std::swap(m_agentSoftContextChars, m_agentHardContextChars);
+            }
+            if (m_agentRewriteMode != "queue_retranslate" && m_agentRewriteMode != "mark_only") {
+                throw std::invalid_argument("Agent rewriteMode 当前仅支持 queue_retranslate / mark_only");
             }
         }
 

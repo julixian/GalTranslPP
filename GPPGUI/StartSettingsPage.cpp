@@ -387,9 +387,9 @@ void StartSettingsPage::_setupUI()
 	buttonLayout->addWidget(translateModeLabel);
 	ElaComboBox* translateMode = new NoWheelComboBox(buttonArea);
 	// 不要被鼠标滚轮的滚动改变选项
-	translateMode->addItem("ForGalJson");
 	translateMode->addItem("ForGalTsv");
 	translateMode->addItem("ForNovelTsv");
+	translateMode->addItem("ForGalJson");
 	translateMode->addItem("Sakura");
 	translateMode->addItem("DumpName");
 	translateMode->addItem("NameTrans");

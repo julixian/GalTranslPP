@@ -129,7 +129,7 @@ void NormalJsonTranslator::init()
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "agent", "enabled", false);
-        m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 6);
+        m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 20);
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
         m_agentLookaheadLines = toml::find_or(configData, "agent", "lookaheadLines", 80);

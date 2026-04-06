@@ -1044,7 +1044,7 @@ json collectLoadedDictionaryEntries(const AgentToolExecutionEnv& env) {
     return entries;
 }
 
-std::vector<std::string> collectAgentDictionaryQueries(const json& arguments) {
+std::vector<std::string> collectAgentQueries(const json& arguments) {
     std::vector<std::string> queries;
     if (const auto it = arguments.find("queries"); it != arguments.end() && it->is_array()) {
         for (const auto& query : *it) {
@@ -1181,7 +1181,7 @@ json runAgentGetDictionaryEntriesTool(const AgentToolExecutionEnv& env, const js
 }
 
 json runAgentSearchDictionaryTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::vector<std::string> queries = collectAgentDictionaryQueries(arguments);
+    const std::vector<std::string> queries = collectAgentQueries(arguments);
     const std::string mode = str2Lower(arguments.value("mode", "fuzzy"));
     const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit, 200);
     json matches = json::array();
@@ -1228,8 +1228,10 @@ json runAgentGetProjectNoteTool(const AgentToolExecutionEnv& env, const json& ar
 }
 
 json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::string query = arguments.value("query", "");
-    const std::string queryLower = str2Lower(query);
+    const std::vector<std::string> queries = collectAgentQueries(arguments);
+    const std::vector<std::string> queryLowers = queries
+        | std::views::transform([](const std::string& query) { return str2Lower(query); })
+        | std::ranges::to<std::vector>();
     const std::string scope = arguments.value("scope", "current_file");
     const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     std::vector<fs::path> targetFiles;
@@ -1260,7 +1262,12 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         const std::string term = item.key();
         const json& entry = item.value();
         const std::string targetTerm = entry.value("target_term", "");
-        if (str2Lower(term).contains(queryLower) || str2Lower(targetTerm).contains(queryLower)) {
+        const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+            {
+                return !queryLower.empty() &&
+                    (str2Lower(term).contains(queryLower) || str2Lower(targetTerm).contains(queryLower));
+            });
+        if (matched) {
             matches.push_back(json{
                 {"type", "term"},
                 {"term", term},
@@ -1288,7 +1295,12 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                 if (const auto it = cacheMap.find((int)index); it != cacheMap.end()) {
                     dst = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
                 }
-                if (!str2Lower(src).contains(queryLower) && !str2Lower(dst).contains(queryLower)) {
+                const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+                    {
+                        return !queryLower.empty() &&
+                            (str2Lower(src).contains(queryLower) || str2Lower(dst).contains(queryLower));
+                    });
+                if (!matched) {
                     continue;
                 }
                 matches.push_back(json{
@@ -1304,7 +1316,11 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                 continue;
             }
             const json fileNote = env.loadFileNote(targetRelPath);
-            if (!fileNote.empty() && str2Lower(fileNote.dump()).contains(queryLower)) {
+            const bool noteMatched = !fileNote.empty() && (queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+                {
+                    return !queryLower.empty() && str2Lower(fileNote.dump()).contains(queryLower);
+                }));
+            if (noteMatched) {
                 matches.push_back(json{
                     {"type", "file_note"},
                     {"file", wide2Ascii(targetRelPath)},
@@ -1315,7 +1331,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         catch (...) { }
     }
 
-    return json{ {"matches", matches} };
+    return json{ {"queries", queries}, {"matches", matches} };
 }
 
 json runAgentGetTermTool(const AgentToolExecutionEnv& env, const json& arguments) {

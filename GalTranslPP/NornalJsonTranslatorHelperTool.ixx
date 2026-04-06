@@ -16,6 +16,7 @@ export {
     std::string generateCacheKey(const json& jsonArr, size_t i);
 
     std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);
+    std::string lightRepairJsonText(std::string text);
 
     void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, std::string& inputBlock, TransEngine transEngine);
 

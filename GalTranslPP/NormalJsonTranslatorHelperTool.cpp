@@ -10,6 +10,115 @@ module NormalJsonTranslatorHelperTool;
 import Tool;
 namespace fs = std::filesystem;
 
+bool isEscapedJsonQuote(std::string_view text, size_t pos) {
+    if (pos == 0 || pos >= text.size()) {
+        return false;
+    }
+    size_t slashCount = 0;
+    for (size_t i = pos; i > 0;) {
+        --i;
+        if (text[i] != '\\') {
+            break;
+        }
+        ++slashCount;
+    }
+    return slashCount % 2 == 1;
+}
+
+bool isLikelyJsonKeyPosition(std::string_view text, size_t keyPos) {
+    if (keyPos == std::string::npos) {
+        return false;
+    }
+    for (size_t i = keyPos; i > 0;) {
+        --i;
+        const unsigned char ch = (unsigned char)text[i];
+        if (std::isspace(ch)) {
+            continue;
+        }
+        return text[i] == '{' || text[i] == ',' || text[i] == '[';
+    }
+    return true;
+}
+
+bool isLikelyJsonStringSuffix(std::string_view text, size_t posAfterQuote) {
+    for (size_t i = posAfterQuote; i < text.size(); ++i) {
+        const unsigned char ch = (unsigned char)text[i];
+        if (std::isspace(ch)) {
+            continue;
+        }
+        return text[i] == ',' || text[i] == '}' || text[i] == ']';
+    }
+    return true;
+}
+
+size_t findLikelyJsonStringClosingQuote(std::string_view text, size_t openingQuotePos) {
+    for (size_t pos = openingQuotePos + 1; pos < text.size(); ++pos) {
+        if (text[pos] != '"' || isEscapedJsonQuote(text, pos)) {
+            continue;
+        }
+        if (isLikelyJsonStringSuffix(text, pos + 1)) {
+            return pos;
+        }
+    }
+    return std::string::npos;
+}
+
+std::string repairLikelyJsonStringFieldsInText(std::string text) {
+    static constexpr std::array<std::string_view, 5> repairableFields = {
+        "\"dst\":",
+        "\"note\":",
+        "\"rolling_context\":",
+        "\"context\":",
+        "\"reason\":"
+    };
+
+    bool repaired = false;
+    for (std::string_view field : repairableFields) {
+        size_t searchPos = 0;
+        while (searchPos < text.size()) {
+            const size_t fieldPos = text.find(field, searchPos);
+            if (fieldPos == std::string::npos) {
+                break;
+            }
+            searchPos = fieldPos + field.size();
+            if (!isLikelyJsonKeyPosition(text, fieldPos)) {
+                continue;
+            }
+
+            size_t openingQuotePos = searchPos;
+            while (openingQuotePos < text.size() && std::isspace((unsigned char)text[openingQuotePos])) {
+                ++openingQuotePos;
+            }
+            if (openingQuotePos >= text.size() || text[openingQuotePos] != '"') {
+                continue;
+            }
+
+            const size_t closingQuotePos = findLikelyJsonStringClosingQuote(text, openingQuotePos);
+            if (closingQuotePos == std::string::npos || closingQuotePos <= openingQuotePos) {
+                continue;
+            }
+
+            std::string repairedValue;
+            repairedValue.reserve(closingQuotePos - openingQuotePos);
+            for (size_t pos = openingQuotePos + 1; pos < closingQuotePos; ++pos) {
+                if (text[pos] == '"' && !isEscapedJsonQuote(text, pos)) {
+                    repairedValue.push_back('\\');
+                }
+                repairedValue.push_back(text[pos]);
+            }
+
+            const std::string originalValue = text.substr(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1);
+            if (repairedValue != originalValue) {
+                text.replace(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1, repairedValue);
+                searchPos = openingQuotePos + 1 + repairedValue.size() + 1;
+                repaired = true;
+            }
+        }
+    }
+
+    return repaired ? text : std::move(text);
+}
+
 int getSplittedFileIndex(const std::wstring& path) {
     const size_t pos1 = path.find_last_of(L'_') + 1;
     const size_t pos2 = path.find_last_of(L'.');
@@ -161,6 +270,13 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         history.replace(0, i, "...");
     }
     return history;
+}
+
+std::string lightRepairJsonText(std::string text) {
+    if (text.empty()) {
+        return text;
+    }
+    return repairLikelyJsonStringFieldsInText(std::move(text));
 }
 
 void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, std::string& inputBlock, TransEngine transEngine) {
@@ -354,7 +470,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
             break;
         }
 
-        const auto lines = splitStringView(std::string_view(content).substr(start), '\n');
+        std::string repairedContent = lightRepairJsonText(std::string(std::string_view(content).substr(start)));
+        const auto lines = splitStringView(repairedContent, '\n');
         for (const auto& line : lines) {
             if (parsedCount == batchToTransThisRound.size()) {
                 break;
@@ -373,7 +490,20 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     ++parsedCount;
                 }
             }
-            catch (...) { }
+            catch (...) {
+                try {
+                    json item = json::parse(lightRepairJsonText(std::string(line)));
+                    const int id = item["id"];
+                    const std::string dst = item["dst"].get<std::string>();
+                    if (const auto it = id2SentenceMap.find(id); it != id2SentenceMap.end() && !it->second->complete) {
+                        it->second->pre_translated_text = dst;
+                        it->second->translated_by = modelName;
+                        it->second->complete = true;
+                        ++parsedCount;
+                    }
+                }
+                catch (...) {}
+            }
         }
     }
     break;

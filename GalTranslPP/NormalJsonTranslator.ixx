@@ -20,6 +20,23 @@ import ITranslator;
 
 namespace fs = std::filesystem;
 
+struct AgentToolCallRequest {
+    std::string id;
+    std::string name;
+    json arguments = json::object();
+};
+
+struct AgentProtocolResponse {
+    std::string action;
+    std::vector<AgentToolCallRequest> calls;
+    json translations = json::array();
+    json termUpdates = json::array();
+    json rewriteRequests = json::array();
+    json fileNotePatch = json::object();
+    std::string rollingContext;
+    std::string rawContent;
+};
+
 export {
 
     class NormalJsonTranslator : public ITranslator {
@@ -156,6 +173,10 @@ export {
         void updateAgentRunStateEntry(const fs::path& relInputPath, const std::string& status,
             int lastCommittedIndex = -1, const std::string& leaseOwner = {});
         void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue)>& mutator);
+        std::string buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
+        json buildAgentBaseMessages(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
+        void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,
+            int threadId, const AgentProtocolResponse& protocol, const std::string& modelName, int& committedCount);
 
         void processFile(const fs::path& relInputPath, int threadId);
         // 在线程池处理完成后执行一次最终 reconcile。

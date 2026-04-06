@@ -320,61 +320,50 @@ void NormalJsonTranslator::init()
                 throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", key));
             };
 
-            std::string systemKey;
-            std::string userKey;
+            std::string systemPromptKey;
+            std::string userPromptKey;
 
             switch (m_transEngine)
             {
             case TransEngine::ForGalJson:
-                systemKey = "FORGALJSON_SYSTEM";
-                userKey = "FORGALJSON_TRANS_PROMPT_EN";
+                systemPromptKey = "FORGALJSON_SYSTEM";
+                userPromptKey = "FORGALJSON_TRANS_PROMPT_EN";
                 break;
             case TransEngine::ForGalTsv:
-                systemKey = "FORGALTSV_SYSTEM";
-                userKey = "FORGALTSV_TRANS_PROMPT_EN";
+                systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
+                userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_PROMPT_EN" : "FORGALTSV_TRANS_PROMPT_EN";
                 break;
             case TransEngine::ForNovelTsv:
-                systemKey = "FORNOVELTSV_SYSTEM";
-                userKey = "FORNOVELTSV_TRANS_PROMPT_EN";
+                systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
+                userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_PROMPT_EN" : "FORNOVELTSV_TRANS_PROMPT_EN";
                 break;
             case TransEngine::DeepseekJson:
-                systemKey = "DEEPSEEKJSON_SYSTEM_PROMPT";
-                userKey = "DEEPSEEKJSON_TRANS_PROMPT";
+                systemPromptKey = "DEEPSEEKJSON_SYSTEM_PROMPT";
+                userPromptKey = "DEEPSEEKJSON_TRANS_PROMPT";
                 break;
             case TransEngine::Sakura:
-                systemKey = "SAKURA_SYSTEM_PROMPT";
-                userKey = "SAKURA_TRANS_PROMPT";
+                systemPromptKey = "SAKURA_SYSTEM_PROMPT";
+                userPromptKey = "SAKURA_TRANS_PROMPT";
                 break;
             case TransEngine::GenDict:
-                systemKey = "GENDIC_SYSTEM";
-                userKey = "GENDIC_PROMPT";
+                systemPromptKey = "GENDIC_SYSTEM";
+                userPromptKey = "GENDIC_PROMPT";
                 break;
             case TransEngine::NameTrans:
-                systemKey = "NAMETRANS_SYSTEM";
-                userKey = "NAMETRANS_PROMPT";
+                systemPromptKey = "NAMETRANS_SYSTEM";
+                userPromptKey = "NAMETRANS_PROMPT";
                 break;
             default:
                 throw std::invalid_argument("未知的 TransEngine");
             }
 
-            m_systemPrompt = readPromptString(systemKey);
-            m_userPrompt = readPromptString(userKey);
-
             if (m_agentEnabled) {
-                switch (m_transEngine) {
-                case TransEngine::ForGalTsv:
-                    m_agentSystemPrompt = readPromptString("FORGALTSV_AGENT_SYSTEM");
-                    m_agentUserPrompt = readPromptString("FORGALTSV_AGENT_PROMPT_EN");
-                    m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORGALTSV_AGENT_SYSTEM / FORGALTSV_AGENT_PROMPT_EN。");
-                    break;
-                case TransEngine::ForNovelTsv:
-                    m_agentSystemPrompt = readPromptString("FORNOVELTSV_AGENT_SYSTEM");
-                    m_agentUserPrompt = readPromptString("FORNOVELTSV_AGENT_PROMPT_EN");
-                    m_logger->info("Agent 模式提示词已加载，将使用 Prompt.toml 中的 FORNOVELTSV_AGENT_SYSTEM / FORNOVELTSV_AGENT_PROMPT_EN。");
-                    break;
-                default:
-                    break;
-                }
+                m_agentSystemPrompt = readPromptString(systemPromptKey);
+                m_agentUserPrompt = readPromptString(userPromptKey);
+            }
+            else {
+                m_systemPrompt = readPromptString(systemPromptKey);
+                m_userPrompt = readPromptString(userPromptKey);
             }
         }
 

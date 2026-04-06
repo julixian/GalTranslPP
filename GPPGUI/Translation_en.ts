@@ -3079,7 +3079,7 @@
     <message>
         <location filename="StartSettingsPage.cpp" line="410"/>
         <source>实验性: Agent 模式</source>
-        <translation type="unfinished"></translation>
+        <translation>Exp: Agent mode</translation>
     </message>
     <message>
         <location filename="StartSettingsPage.cpp" line="430"/>

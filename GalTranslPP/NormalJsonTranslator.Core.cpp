@@ -164,9 +164,7 @@ void NormalJsonTranslator::normalJsonInit()
         const auto registerAgentDictionaryPath = [&](const fs::path& dictPath)
             {
                 const fs::path normalized = fs::canonical(dictPath);
-                if (!std::ranges::contains(m_agentDictionaryPaths, normalized)) {
-                    m_agentDictionaryPaths.push_back(normalized);
-                }
+                m_agentDictionaryPaths.push_back(normalized);
             };
 
         auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)

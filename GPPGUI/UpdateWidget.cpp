@@ -16,6 +16,15 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+        "1. 规范化了 agent 模式下的一些缓存行为",
+		"2. 额外说明: agent 模式下程序会按顺序自动检索项目根目录中的以下文件，如果找到会增加一个 agentTool 给模型则并停止检索，模型将获得读取此文件的能力:",
+        "脚本说明.md",
+        "剧情说明.md",
+        "设定补充.md",
+        "script_info.md",
+        "story_info.md",
+        "project_note.md",
+		"v2.5.0更新",
         "1. 新增实验性的 agent 模式，目前只支持 ForGalTsv/ForNovelTsv。会增加 token 消耗，理论上更推荐单线程使用，且最好中途不要改原文件/分割方式，可以大幅提高翻译一致性。增加了专门的提示词键。",
 		"2. 为 ForGalJson 下英文引号的转义增加修复尝试环节",
 

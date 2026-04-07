@@ -28,12 +28,6 @@ json loadJsonFileOr(const fs::path& path, const json& fallback = json::object())
     }
 }
 
-fs::path buildAgentFileNotePath(const fs::path& root, const fs::path& relInputPath) {
-    fs::path notePath = root / relInputPath;
-    notePath += L".json";
-    return notePath;
-}
-
 std::string trimCopy(const std::string& value) {
     const auto isNotSpace = [](unsigned char ch) { return !std::isspace(ch); };
     const auto begin = std::ranges::find_if(value, isNotSpace);
@@ -228,10 +222,10 @@ std::string jsonStringOr(const json& obj, std::string_view key, const std::strin
 }
 
 size_t approximateMessagesChars(const json& messages) {
-    size_t total = 0;
-    for (const auto& item : messages) {
-        total += item.dump().size();
-    }
+    size_t total = std::ranges::fold_left(messages, 0uz, [](size_t acc, const auto& item)
+        {
+            return acc + item.dump().size();
+        });
     return total;
 }
 
@@ -258,7 +252,6 @@ std::string buildAgentTermLedgerExcerpt(
         const json& entry = item.value();
         const json normalizedEntry = {
             {"source_term", term},
-            {"term", term},
             {"target_term", entry.value("target_term", "")},
             {"status", entry.value("status", "tentative")},
             {"category", entry.value("category", "")},
@@ -321,6 +314,13 @@ void mergeAgentFileNotePatch(json& note, const json& patch) {
     }
 }
 
+// term_ledger.occurrences 的语义说明：
+// 1. 它不是“程序已经全局精确扫描出这个术语出现过的所有位置”；
+// 2. 它记录的是“某次处理某个 file/id 的 chunk 时，这条术语在该 chunk 内被提交/确认过”；
+// 3. 因而它更接近“术语提交命中位置的累积账本”，而不是全文检索索引；
+// 4. 目前 occurrence 只会在 commit 时追加，不会自动全局重建，也不会因源文件变化自动清除；
+// 5. 后续若该术语 target_term 发生变化，程序会基于这些 occurrence 去登记 rewrite_queue /
+//    term_conflicts，所以它承担的是“术语回改候选位置索引”的职责。
 void appendAgentOccurrence(json& entry, const fs::path& file, int id) {
     if (!entry.contains("occurrences") || !entry["occurrences"].is_array()) {
         entry["occurrences"] = json::array();
@@ -543,12 +543,12 @@ json NormalJsonTranslator::loadAgentTermConflicts() {
 
 json NormalJsonTranslator::loadAgentFileNote(const fs::path& targetRelPath) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    return loadJsonFileOr(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
+    return loadJsonFileOr(m_agentFileNotesDir / targetRelPath, json::object());
 }
 
 void NormalJsonTranslator::saveAgentFileNote(const fs::path& targetRelPath, const json& note) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    saveJsonFile(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), note);
+    saveJsonFile(m_agentFileNotesDir / targetRelPath, note);
 }
 
 // 共享 Agent 状态文件的强串行修改入口。
@@ -674,9 +674,6 @@ void NormalJsonTranslator::applyAgentCommit(
     }
 
     const std::vector<Sentence*> pending = ::collectAgentPendingSentences(batch);
-    if (translationMap.size() != pending.size()) {
-        throw std::runtime_error("commit 未覆盖当前 chunk 的全部句子");
-    }
 
     struct PendingSentencePatch {
         Sentence* sentence = nullptr;
@@ -708,9 +705,9 @@ void NormalJsonTranslator::applyAgentCommit(
     }
     nextFileNote["updated_at"] = nowTimestampString();
 
-    const std::vector<int> currentChunkIds = pending
+    const absl::flat_hash_set<int> currentChunkIds = pending
         | std::views::transform([](const Sentence* se) { return se->index; })
-        | std::ranges::to<std::vector>();
+        | std::ranges::to<absl::flat_hash_set<int>>();
 
     int appliedTermUpdateCount = 0;
     int recordedTermConflictCount = 0;
@@ -720,8 +717,8 @@ void NormalJsonTranslator::applyAgentCommit(
                 if (!update.is_object()) {
                     continue;
                 }
-                const std::string sourceTerm = update.value("source_term", update.value("term", ""));
-                const std::string targetTerm = update.value("target_term", update.value("translation", ""));
+                const std::string sourceTerm = update.value("source_term", "");
+                const std::string targetTerm = update.value("target_term", "");
                 if (sourceTerm.empty() || targetTerm.empty()) {
                     continue;
                 }
@@ -735,10 +732,14 @@ void NormalJsonTranslator::applyAgentCommit(
                 entry["status"] = jsonStringOr(update, "status", jsonStringOr(entry, "status", "tentative"));
                 entry["category"] = jsonStringOr(update, "category", jsonStringOr(entry, "category"));
                 entry["note"] = jsonStringOr(update, "note", jsonStringOr(entry, "note"));
+                // occurrence 只记录“这次处理当前 chunk 时，术语在哪些句子里被提交命中”。
+                // 如果模型显式给了 line_ids，就只接受当前 chunk 内的那些 id；
+                // 否则退回到本地按 source_term 在当前 pending 句子中做一次轻量推断。
+                // 这里不会去跨文件全文扫描，也不会把 occurrence 当成严格完整的全局出现表。
                 if (update.contains("line_ids") && update["line_ids"].is_array()) {
                     for (const auto& idVal : update["line_ids"]) {
                         const int id = idVal.get<int>();
-                        if (std::ranges::contains(currentChunkIds, id)) {
+                        if (currentChunkIds.contains(id)) {
                             ::appendAgentOccurrence(entry, relInputPath, id);
                         }
                     }
@@ -759,14 +760,8 @@ void NormalJsonTranslator::applyAgentCommit(
                 }
 
                 if (!m_agentReconciling && !oldTarget.empty() && oldTarget != targetTerm) {
-                    json conflictRecord = {
-                        {"source_term", sourceTerm},
-                        {"old_target", oldTarget},
-                        {"new_target", targetTerm},
-                        {"status", entry.value("status", "tentative")},
-                        {"note", entry.value("note", "")},
-                        {"occurrences", entry.value("occurrences", json::array())}
-                    };
+                    // target_term 变更时，不重新搜索全文；
+                    // 直接使用 term_ledger 中已累计的 occurrence，作为后续回改/冲突记录的候选位置。
                     if (m_agentRewriteMode == "queue_retranslate") {
                         for (const auto& occurrence : entry["occurrences"]) {
                             ::enqueueAgentRewriteRequest(rewriteQueue, json{
@@ -779,6 +774,14 @@ void NormalJsonTranslator::applyAgentCommit(
                         }
                     }
                     else if (m_agentRewriteMode == "mark_only") {
+                        json conflictRecord = {
+                            {"source_term", sourceTerm},
+                            {"old_target", oldTarget},
+                            {"new_target", targetTerm},
+                            {"status", entry.value("status", "tentative")},
+                            {"note", entry.value("note", "")},
+                            {"occurrences", entry.value("occurrences", json::array())}
+                        };
                         ::upsertAgentTermConflict(termConflicts, conflictRecord);
                         ++recordedTermConflictCount;
                     }
@@ -1454,9 +1457,13 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                         truncateForAgentLog(protocol.rollingContext, 12000)
                     );
                 }
-                int committedCount = 0;
+
                 try {
+                    int committedCount = 0;
                     applyAgentCommit(relInputPath, batch, backgroundText, threadId, protocol, currentApi.modelName, committedCount);
+                    m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句，术语更新 {} 条，重翻请求 {} 条，新的 rolling_context 长度 {} 字符。",
+                        threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size(), protocol.rollingContext.size());
+                    return true;
                 }
                 catch (const std::exception& e) {
                     ++retryCount;
@@ -1464,9 +1471,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                         threadId, wide2Ascii(relInputPath), retryCount, e.what());
                     break;
                 }
-                m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句，术语更新 {} 条，重翻请求 {} 条，新的 rolling_context 长度 {} 字符。",
-                    threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size(), protocol.rollingContext.size());
-                return true;
             }
 
             ++retryCount;
@@ -1512,8 +1516,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
         m_controller->updateBar(-rollbackCount);
     }
 
-    const bool singleThreadMode = m_agentFinalReconcileSingleThread || fileToIds.size() <= 1;
-    const char* modeText = singleThreadMode ? "单线程" : "多线程";
+    const char* modeText = m_agentFinalReconcileSingleThread ? "单线程" : "多线程";
     m_logger->info(
         "Agent 模式开始最终 {} reconcile，共 {} 条重翻请求，涉及 {} 个文件，进度回退 {} 句。",
         modeText,
@@ -1559,7 +1562,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
             }
         };
 
-    if (singleThreadMode) {
+    if (m_agentFinalReconcileSingleThread) {
         m_controller->addThreadNum();
         for (const auto& [filePath, ids] : fileToIds) {
             if (m_controller->shouldStop()) {

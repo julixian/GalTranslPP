@@ -1281,6 +1281,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     };
 
     int retryCount = 0;
+    bool exceededTurnLimit = false;
     while (retryCount == 0 || retryCount < m_maxRetries) {
         if (m_controller->shouldStop()) {
             return false;
@@ -1317,6 +1318,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
+        bool turnLoopExitedByRetry = false;
         for (int turn = 0; turn < m_agentMaxTurnsPerChunk; ++turn) {
 
             const size_t messageChars = ::approximateMessagesChars(messages);
@@ -1361,6 +1363,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             if (!checkResponse(
                 response, m_apiPool, currentApi, relInputPath, m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
             )) {
+                turnLoopExitedByRetry = true;
                 break;
             }
 
@@ -1372,6 +1375,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 ++retryCount;
                 m_logger->warn("[线程 {}] [文件 {}] Agent 响应解析失败，第 {} 次重试。原始响应: {}\n错误: {}",
                     threadId, wide2Ascii(relInputPath), retryCount, response.content, e.what());
+                turnLoopExitedByRetry = true;
                 break;
             }
 
@@ -1469,12 +1473,28 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                     ++retryCount;
                     m_logger->warn("[线程 {}] [文件 {}] Agent commit 校验失败，第 {} 次重试。错误: {}",
                         threadId, wide2Ascii(relInputPath), retryCount, e.what());
+                    turnLoopExitedByRetry = true;
                     break;
                 }
             }
 
             ++retryCount;
             m_logger->warn("[线程 {}] [文件 {}] Agent 返回未知 action '{}'，第 {} 次重试。", threadId, wide2Ascii(relInputPath), protocol.action, retryCount);
+            turnLoopExitedByRetry = true;
+            break;
+        }
+
+        if (!turnLoopExitedByRetry) {
+            exceededTurnLimit = true;
+            m_logger->error(
+                "[线程 {}] [文件 {}] Agent 单个 chunk 在 {} 轮内仍未产出 commit，判定本批次失败，不再重试。当前 chunk {}-{}，待提交 {} 句。",
+                threadId,
+                wide2Ascii(relInputPath),
+                m_agentMaxTurnsPerChunk,
+                pending.front()->index,
+                pending.back()->index,
+                pending.size()
+            );
             break;
         }
     }
@@ -1487,8 +1507,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         ++m_completedSentences;
         m_controller->updateBar();
     }
-    m_logger->error("[线程 {}] [文件 {}] Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
-        threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size());
+    if (exceededTurnLimit) {
+        m_logger->error("[线程 {}] [文件 {}] Agent 批次因超过最大轮数而失败，共翻译 {} / {} 句。",
+            threadId, wide2Ascii(relInputPath), batch.size() - failedCount, batch.size());
+    }
+    else {
+        m_logger->error("[线程 {}] [文件 {}] Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
+            threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size());
+    }
     return false;
 }
 

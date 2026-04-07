@@ -139,68 +139,68 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         absl::flat_hash_map<std::string, json> cacheMap;
 
         auto insertJsonArrToCacheMap = [&](const json& jsonArr)
-        {
-            for (const auto& [index, item] : jsonArr | std::views::enumerate) {
-                std::string cacheKey = generateCacheKey(jsonArr, index);
-                cacheMap.insert({ std::move(cacheKey), item });
-            }
-        };
+            {
+                for (const auto& [index, item] : jsonArr | std::views::enumerate) {
+                    std::string cacheKey = generateCacheKey(jsonArr, index);
+                    cacheMap.insert({ std::move(cacheKey), item });
+                }
+            };
 
         auto usePotentialPartFileCacheToInsertCacheMap = [&](const fs::path& potentialCachePath)
-        {
-            try {
-                json jsonArr;
-                {
-                    std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
-                    ifs.open(potentialCachePath, std::ios::binary);
-                    jsonArr = json::parse(ifs);
-                    ifs.close();
+            {
+                try {
+                    json jsonArr;
+                    {
+                        std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
+                        ifs.open(potentialCachePath, std::ios::binary);
+                        jsonArr = json::parse(ifs);
+                        ifs.close();
+                    }
+                    insertJsonArrToCacheMap(jsonArr);
                 }
-                insertJsonArrToCacheMap(jsonArr);
-            }
-            catch (const json::exception& e) {
-                throw std::runtime_error(std::format(
-                    "[线程 {}] 缓存文件 {} 解析失败: {}",
-                    threadId, wide2Ascii(fs::relative(potentialCachePath, m_transCacheDir)), e.what()
-                ));
-            }
-        };
+                catch (const json::exception& e) {
+                    throw std::runtime_error(std::format(
+                        "[线程 {}] 缓存文件 {} 解析失败: {}",
+                        threadId, wide2Ascii(fs::relative(potentialCachePath, m_transCacheDir)), e.what()
+                    ));
+                }
+            };
 
         std::vector<fs::path> cachePaths;
 
         auto readAllPotentialPartFileCache = [&](const std::wstring& cacheSpec, const fs::path& specParentDir, const std::optional<fs::path>& additionalCachePath = std::nullopt)
-        {
-            for (const auto& entry : fs::directory_iterator(specParentDir)) {
-                if (!entry.is_regular_file()) {
-                    continue;
-                }
-#ifdef _WIN32
-                if (PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())) {
-                    if (m_needsCombining) {
-                        const int diff = calculateCachePartIndexDiff(relInputPath.wstring(), entry.path().wstring());
-                        if (std::abs(diff) > m_cacheSearchDistance) {
-                            continue;
+            {
+                for (const auto& entry : fs::directory_iterator(specParentDir)) {
+                    if (!entry.is_regular_file()) {
+                        continue;
+                    }
+    #ifdef _WIN32
+                    if (PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())) {
+                        if (m_needsCombining) {
+                            const int diff = calculateCachePartIndexDiff(relInputPath.wstring(), entry.path().wstring());
+                            if (std::abs(diff) > m_cacheSearchDistance) {
+                                continue;
+                            }
+                        }
+                        if (!std::ranges::contains(cachePaths, entry.path())) {
+                            cachePaths.push_back(entry.path());
                         }
                     }
-                    if (!std::ranges::contains(cachePaths, entry.path())) {
-                        cachePaths.push_back(entry.path());
-                    }
+    #endif
                 }
-#endif
-            }
-            if (additionalCachePath.has_value()) {
-                cachePaths.push_back(additionalCachePath.value());
-            }
-            for (const auto& cp : cachePaths) {
-                usePotentialPartFileCacheToInsertCacheMap(cp);
-            }
-        };
+                if (additionalCachePath.has_value()) {
+                    cachePaths.push_back(additionalCachePath.value());
+                }
+                for (const auto& cp : cachePaths) {
+                    usePotentialPartFileCacheToInsertCacheMap(cp);
+                }
+            };
 
         // 同名缓存优先级最高。
         if (fs::exists(cachePath)) {
             cachePaths.push_back(cachePath);
         }
-        if (m_transEngine != TransEngine::Rebuild) {
+        if (m_transEngine != TransEngine::Rebuild && !m_agentReconciling) {
             if (m_needsCombining) {
                 const std::optional<fs::path> additionalCachePath = [&]() -> std::optional<fs::path>
                 {

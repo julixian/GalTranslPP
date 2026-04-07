@@ -23,7 +23,7 @@ export {
         fs::path m_pdfOutputDir;
 
         // PDF 处理相关的配置
-        bool m_bilingualOutput;
+        bool m_bilingualOutput{};
 
         // 存储json文件相对路径到其所属PDF完整路径的映射
         absl::flat_hash_map<fs::path, fs::path> m_jsonToPDFPathMap;
@@ -35,8 +35,8 @@ export {
         virtual ~PDFTranslator() override;
 
 
-        void init();
-        void beforeRun();
+        void pdfInit();
+        void pdfBeforeRun();
 
         virtual void run() override;
     };

@@ -34,7 +34,7 @@ export {
         std::unique_ptr<jpc::RegexReplace> rep;
 
         absl::btree_multimap<int, CallbackPattern> callbackPatterns;
-        bool isCallback;
+        bool isCallback{};
 
         RegexPattern() {
             org = std::make_unique<jpc::Regex>();
@@ -66,7 +66,7 @@ export {
         fs::path m_tempRebuildDir;
 
         // EPUB 处理相关的配置
-        bool m_bilingualOutput;
+        bool m_bilingualOutput{};
         std::string m_originalTextColor;
         std::string m_originalTextScale;
 
@@ -87,8 +87,8 @@ export {
 
         virtual ~EpubTranslator() override;
 
-        void init();
-        void beforeRun();
+        void epubInit();
+        void epubBeforeRun();
 
         virtual void run() override;
     };

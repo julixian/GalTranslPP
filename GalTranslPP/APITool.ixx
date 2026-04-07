@@ -25,9 +25,6 @@ export {
         bool success = false;
         std::string content; // 成功时的内容 或 失败时的错误信息
         long statusCode = 0;   // HTTP 状态码
-        json message = json::object();
-        json toolCalls = json::array();
-        bool hasToolCalls = false;
     };
 
     ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string)>& onPerformApi,

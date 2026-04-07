@@ -521,10 +521,10 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"preProcess", &NormalJsonTranslator::preProcess,
 		"postProcess", &NormalJsonTranslator::postProcess,
 		"processFile", &NormalJsonTranslator::processFile,
-		"normalJsonTranslator_init", &NormalJsonTranslator::init,
-		"normalJsonTranslator_beforeRun", &NormalJsonTranslator::beforeRun,
-		"normalJsonTranslator_process", &NormalJsonTranslator::process,
-		"normalJsonTranslator_afterRun", &NormalJsonTranslator::afterRun,
+		"normalJsonTranslator_init", &NormalJsonTranslator::normalJsonInit,
+		"normalJsonTranslator_beforeRun", &NormalJsonTranslator::normalJsonBeforeRun,
+		"normalJsonTranslator_process", &NormalJsonTranslator::normalJsonProcess,
+		"normalJsonTranslator_afterRun", &NormalJsonTranslator::normalJsonAfterRun,
 		"normalJsonTranslator_run", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); }
 	);
 
@@ -552,8 +552,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_originalTextScale", &EpubTranslator::m_originalTextScale,
 		"m_jsonToInfoMap", NESTED_CVT(EpubTranslator, m_jsonToInfoMap),
 		"m_epubToJsonsMap", NESTED_CVT(EpubTranslator, m_epubToJsonsMap),
-		"epubTranslator_init", &EpubTranslator::init,
-		"epubTranslator_beforeRun", &EpubTranslator::beforeRun,
+		"epubTranslator_init", &EpubTranslator::epubInit,
+		"epubTranslator_beforeRun", &EpubTranslator::epubBeforeRun,
 		"epubTranslator_run", [](EpubTranslator& self) { self.EpubTranslator::run(); }
 	);
 
@@ -563,8 +563,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_pdfOutputDir", &PDFTranslator::m_pdfOutputDir,
 		"m_bilingualOutput", &PDFTranslator::m_bilingualOutput,
 		"m_jsonToPDFPathMap", NESTED_CVT(PDFTranslator, m_jsonToPDFPathMap),
-		"pdfTranslator_init", &PDFTranslator::init,
-		"pdfTranslator_beforeRun", &PDFTranslator::beforeRun,
+		"pdfTranslator_init", &PDFTranslator::pdfInit,
+		"pdfTranslator_beforeRun", &PDFTranslator::pdfBeforeRun,
 		"pdfTranslator_run", [](PDFTranslator& self) { self.PDFTranslator::run(); }
 	);
 	

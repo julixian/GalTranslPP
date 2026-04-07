@@ -39,7 +39,7 @@ export {
 
         Problems m_problems;
         std::vector<std::string> m_punctsToCheck;
-        double m_probabilityThreshold;
+        double m_probabilityThreshold{};
         std::string m_codePage;
         std::string m_targetLang;
         absl::btree_set<std::string_view> m_excludeTraditionalCharList;

@@ -45,7 +45,7 @@ export {
         friend class LuaManager;
 
     protected:
-        TransEngine m_transEngine;
+        TransEngine m_transEngine{};
         std::shared_ptr<IController> m_controller;
         std::shared_ptr<spdlog::logger> m_logger;
 
@@ -71,8 +71,6 @@ export {
 
         std::string m_systemPrompt;
         std::string m_userPrompt;
-        // Agent 模式单独维护一套提示词模板，便于从 Prompt.toml 外置配置，
-        // 而不是把协议和工作流硬编码在 C++ 里。
         std::string m_agentSystemPrompt;
         std::string m_agentUserPrompt;
         std::string m_targetLang;
@@ -82,41 +80,39 @@ export {
 
         bool m_pythonTranslator = false;
 
-        int m_threadsNum;
-        int m_batchSize;
-        int m_contextHistorySize;
-        int m_maxRetries;
-        int m_saveCacheInterval;
-        int m_apiTimeOutMs;
-        bool m_checkQuota;
-        bool m_smartRetry;
-        bool m_retransAllWhenFail;
-        bool m_usePreDictInName;
-        bool m_usePostDictInName;
-        bool m_usePreDictInMsg;
-        bool m_usePostDictInMsg;
-        bool m_useGptDictToReplaceName;
-        bool m_outputWithSrc;
-        bool m_agentEnabled = false;
-        bool m_agentAllowCrossFileSearch = true;
-        bool m_agentFinalReconcileSingleThread = true;
+        int m_threadsNum{};
+        int m_batchSize{};
+        int m_contextHistorySize{};
+        int m_maxRetries{};
+        int m_saveCacheInterval{};
+        int m_apiTimeOutMs{};
+        bool m_checkQuota{};
+        bool m_smartRetry{};
+        bool m_retransAllWhenFail{};
+        bool m_usePreDictInName{};
+        bool m_usePostDictInName{};
+        bool m_usePreDictInMsg{};
+        bool m_usePostDictInMsg{};
+        bool m_useGptDictToReplaceName{};
+        bool m_outputWithSrc{};
+        bool m_agentEnabled{};
+        bool m_agentAllowCrossFileSearch{};
+        bool m_agentFinalReconcileSingleThread{};
         // 仅在最终 reconcile 阶段为 true。
-        // 作用是避免“reconcile 触发的重翻”再次把术语改判回写成新的 rewrite_queue，
-        // 从而形成自我追加、难以收敛的循环。
         bool m_agentReconciling = false;
 
         std::string m_apiStrategy;
         std::string m_sortMethod;
         std::string m_splitFile;
-        int m_splitFileNum;
-        int m_cacheSearchDistance;
+        int m_splitFileNum{};
+        int m_cacheSearchDistance{};
         std::string m_linebreakSymbol;
-        std::string m_agentRewriteMode = "queue_retranslate";
-        int m_agentMaxTurnsPerChunk = 6;
-        int m_agentSoftContextChars = 48000;
-        int m_agentHardContextChars = 64000;
-        int m_agentLookaheadLines = 80;
-        int m_agentSearchResultLimit = 40;
+        std::string m_agentRewriteMode;
+        int m_agentMaxTurnsPerChunk{};
+        int m_agentSoftContextChars{};
+        int m_agentHardContextChars{};
+        int m_agentLookaheadLines{};
+        int m_agentSearchResultLimit{};
         std::vector<CheckSeCondFunc> m_retranslKeys;
         // first: 要忽略的问题正则表达式，second: 对应的忽略条件
         using SkipProblemCondition = std::pair<jpc::Regex, std::optional<CheckSeCondFunc>>;
@@ -172,10 +168,7 @@ export {
         json loadAgentTermConflicts();
         json loadAgentFileNote(const fs::path& targetRelPath);
         void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
-        void updateAgentRunStateEntry(const fs::path& relInputPath, const std::string& status,
-            int lastCommittedIndex = -1, const std::string& leaseOwner = {});
-        void updateAgentReconcileState(const std::string& status, int pendingRequests = -1, const std::string& note = {});
-        void mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
+        void mutateAgentState(const std::function<void(json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
         std::string buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         json buildAgentBaseMessages(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,
@@ -193,10 +186,10 @@ export {
 
         virtual ~NormalJsonTranslator() override;
 
-        void init();
-        std::optional<std::vector<fs::path>> beforeRun();
-        void process(std::vector<fs::path> relFilePaths);
-        void afterRun();
+        void normalJsonInit();
+        std::optional<std::vector<fs::path>> normalJsonBeforeRun();
+        void normalJsonProcess(std::vector<fs::path> relFilePaths);
+        void normalJsonAfterRun();
 
         virtual void run() override;
     };

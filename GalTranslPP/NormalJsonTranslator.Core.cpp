@@ -70,7 +70,7 @@ NormalJsonTranslator::NormalJsonTranslator(
     }
 }
 
-void NormalJsonTranslator::init()
+void NormalJsonTranslator::normalJsonInit()
 {
     const fs::path configPath = m_projectDir / L"config.toml";
     try {
@@ -160,48 +160,44 @@ void NormalJsonTranslator::init()
         m_useGptDictToReplaceName = toml::find_or(configData, "dictionary", "useGPTDictInName", false);
         const std::string defaultDictFolder = toml::find_or(configData, "dictionary", "defaultDictFolder", "BaseConfig/Dict");
         const fs::path defaultDictFolderPath = ascii2Wide(defaultDictFolder);
-        m_agentDictionaryPaths.clear();
-        m_agentProjectInfoPath.reset();
 
         const auto registerAgentDictionaryPath = [&](const fs::path& dictPath)
-        {
-            if (!m_agentEnabled || !fs::exists(dictPath)) {
-                return;
-            }
-            const fs::path normalized = fs::weakly_canonical(dictPath);
-            if (!std::ranges::contains(m_agentDictionaryPaths, normalized)) {
-                m_agentDictionaryPaths.push_back(normalized);
-            }
-        };
+            {
+                const fs::path normalized = fs::canonical(dictPath);
+                if (!std::ranges::contains(m_agentDictionaryPaths, normalized)) {
+                    m_agentDictionaryPaths.push_back(normalized);
+                }
+            };
 
         auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)
-        {
-            const auto dictFileNames = toml::find<
-                std::optional<std::vector<std::string>>
-            >(configData, "dictionary", dictType + "Dict");
-            if (!dictFileNames) {
-                return;
-            }
-            for (const auto& dictFileName : *dictFileNames) {
-                fs::path dictPath = m_projectDir / ascii2Wide(dictFileName);
-                if (fs::exists(dictPath)) {
-                    dict->loadFromFile(dictPath);
-                    if (dictType == "gpt") {
-                        registerAgentDictionaryPath(dictPath);
-                    }
+            {
+                const auto dictFileNames = toml::find<
+                    std::optional<std::vector<std::string>>
+                >(configData, "dictionary", dictType + "Dict");
+                if (!dictFileNames) {
+                    return;
                 }
-                else {
-                    dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
+                for (const auto& dictFileName : *dictFileNames) {
+                    fs::path dictPath = m_projectDir / ascii2Wide(dictFileName);
                     if (fs::exists(dictPath)) {
                         dict->loadFromFile(dictPath);
-                        if (dictType == "gpt") {
+                        if (m_agentEnabled && dictType == "gpt") {
                             registerAgentDictionaryPath(dictPath);
                         }
                     }
+                    else {
+                        dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
+                        if (fs::exists(dictPath)) {
+                            dict->loadFromFile(dictPath);
+                            if (m_agentEnabled && dictType == "gpt") {
+                                registerAgentDictionaryPath(dictPath);
+                            }
+                        }
+                    }
                 }
-            }
-            dict->sort();
-        };
+                dict->sort();
+            };
+
         if (m_agentEnabled) {
             static const std::array<fs::path, 6> agentProjectInfoCandidates = {
                 L"脚本说明.md",
@@ -214,7 +210,7 @@ void NormalJsonTranslator::init()
             for (const fs::path& candidate : agentProjectInfoCandidates) {
                 const fs::path fullPath = m_projectDir / candidate;
                 if (fs::exists(fullPath) && fs::is_regular_file(fullPath)) {
-                    m_agentProjectInfoPath = fs::weakly_canonical(fullPath);
+                    m_agentProjectInfoPath = fs::canonical(fullPath);
                     break;
                 }
             }
@@ -267,6 +263,9 @@ void NormalJsonTranslator::init()
                     continue;
                 }
                 api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
+                if (api.stream && m_agentEnabled) {
+                    throw std::invalid_argument("Agent 模式不支持流式 api 响应");
+                }
                 if (apiTbl.contains("temperature")) {
                     api.temperature = apiTbl.at("temperature").as_floating();
                 }

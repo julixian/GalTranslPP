@@ -605,10 +605,10 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("preProcess", &NormalJsonTranslator::preProcess)
         .def("postProcess", &NormalJsonTranslator::postProcess)
         .def("processFile", &NormalJsonTranslator::processFile)
-        .def("normalJsonTranslator_init", &NormalJsonTranslator::init)
-        .def("normalJsonTranslator_beforeRun", &NormalJsonTranslator::beforeRun)
-        .def("normalJsonTranslator_process", &NormalJsonTranslator::process)
-        .def("normalJsonTranslator_afterRun", &NormalJsonTranslator::afterRun)
+        .def("normalJsonTranslator_init", &NormalJsonTranslator::normalJsonInit)
+        .def("normalJsonTranslator_beforeRun", &NormalJsonTranslator::normalJsonBeforeRun)
+        .def("normalJsonTranslator_process", &NormalJsonTranslator::normalJsonProcess)
+        .def("normalJsonTranslator_afterRun", &NormalJsonTranslator::normalJsonAfterRun)
         .def("normalJsonTranslator_run", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); });
 
     py::class_<EpubTextNodeInfo>(m, "EpubTextNodeInfo")
@@ -634,8 +634,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_originalTextScale", &EpubTranslator::m_originalTextScale)
         .def_readwrite("m_jsonToInfoMap", &EpubTranslator::m_jsonToInfoMap)
         .def_readwrite("m_epubToJsonsMap", &EpubTranslator::m_epubToJsonsMap)
-        .def("epubTranslator_init", &EpubTranslator::init)
-        .def("epubTranslator_beforeRun", &EpubTranslator::beforeRun)
+        .def("epubTranslator_init", &EpubTranslator::epubInit)
+        .def("epubTranslator_beforeRun", &EpubTranslator::epubBeforeRun)
         .def("epubTranslator_run", [](EpubTranslator& self) { self.EpubTranslator::run(); });
 
     py::class_<PDFTranslator, NormalJsonTranslator>(m, "PDFTranslator")
@@ -643,8 +643,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_pdfOutputDir", &PDFTranslator::m_pdfOutputDir)
         .def_readwrite("m_bilingualOutput", &PDFTranslator::m_bilingualOutput)
         .def_readwrite("m_jsonToPDFPathMap", &PDFTranslator::m_jsonToPDFPathMap)
-        .def("pdfTranslator_init", &PDFTranslator::init)
-        .def("pdfTranslator_beforeRun", &PDFTranslator::beforeRun)
+        .def("pdfTranslator_init", &PDFTranslator::pdfInit)
+        .def("pdfTranslator_beforeRun", &PDFTranslator::pdfBeforeRun)
         .def("pdfTranslator_run", [](PDFTranslator& self) { self.PDFTranslator::run(); });
 
 }

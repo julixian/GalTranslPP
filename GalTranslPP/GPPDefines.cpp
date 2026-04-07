@@ -2,7 +2,7 @@
 
 namespace fs = std::filesystem;
 
-const std::string GPPVERSION = "2.5.0";
+const std::string GPPVERSION = "2.5.1";
 const std::string PYTHONVERSION = "1.0.0";
 const std::string PROMPTVERSION = "3.0.0";
 const std::string DICTVERSION = "1.0.3";

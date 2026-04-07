@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #define PYBIND11_HEADERS
 #define PCRE2_HEADERS
@@ -30,29 +30,6 @@ std::vector<std::string> collectRelFileStrings(const std::vector<fs::path>& relF
         | std::ranges::to<std::vector>();
 }
 
-std::string jsonStringFieldOr(const json& obj, std::string_view key, const std::string& fallback = {}) {
-    if (!obj.is_object()) {
-        return fallback;
-    }
-    const auto it = obj.find(std::string(key));
-    if (it != obj.end() && it->is_string()) {
-        return it->get<std::string>();
-    }
-    return fallback;
-}
-
-json buildReconcileStateForRunState(const std::string& status, int pendingRequests, const std::string& note = {}) {
-    json state = {
-        {"status", status},
-        {"pending_requests", std::max(pendingRequests, 0)},
-        {"updated_at", nowTimestampString()}
-    };
-    if (!note.empty()) {
-        state["note"] = note;
-    }
-    return state;
-}
-
 json buildInputFingerprintMap(const fs::path& inputRootDir, const std::vector<fs::path>& relFilePaths) {
     json fingerprints = json::object();
     for (const auto& relFilePath : relFilePaths) {
@@ -82,7 +59,40 @@ bool areInputFingerprintsEqual(const json& lhs, const json& rhs) {
     return true;
 }
 
-std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
+json filterRewriteQueueByInputFingerprints(
+    const json& rewriteQueue,
+    const json& oldInputFingerprints,
+    const json& currentInputFingerprints,
+    int& droppedCount
+) {
+    droppedCount = 0;
+    if (!rewriteQueue.is_array()) {
+        return json::array();
+    }
+
+    json filteredQueue = json::array();
+    for (const auto& request : rewriteQueue) {
+        if (!request.is_object()) {
+            ++droppedCount;
+            continue;
+        }
+        const std::string file = request.value("file", "");
+        if (file.empty()) {
+            ++droppedCount;
+            continue;
+        }
+        const auto oldIt = oldInputFingerprints.find(file);
+        const auto currentIt = currentInputFingerprints.find(file);
+        if (oldIt == oldInputFingerprints.end() || currentIt == currentInputFingerprints.end() || *oldIt != *currentIt) {
+            ++droppedCount;
+            continue;
+        }
+        filteredQueue.push_back(request);
+    }
+    return filteredQueue;
+}
+
+std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
 {
     if (fs::exists(m_transCacheDir)) {
         try {
@@ -331,58 +341,30 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
     }
 
     // 6. Agent 模式启动前初始化共享状态文件。
-    // 这里只做“建目录 + 建索引 + 写基础 run_state”，不再在这里做工作单元继承、
-    // 指纹对比、done 恢复等调度决策；句级是否需要重翻统一交给 processFile。
+    // run_state 现在极简化，只保留当前工作输入文件的指纹表；
+    // 旧 rewrite_queue 是否可复用，也只由这些指纹决定。
     if (m_agentEnabled) {
         m_agentKnownRelFiles = relFilePaths;
         createParent(m_agentRunStatePath);
         fs::create_directories(m_agentFileNotesDir);
         const json oldRunState = fs::exists(m_agentRunStatePath) ? loadAgentRunState() : json::object();
         const json oldRewriteQueue = fs::exists(m_agentRewriteQueuePath) ? loadAgentRewriteQueue() : json::array();
-        const std::string updatedAt = nowTimestampString();
-        json normalizedFiles = json::array();
-        for (const auto& relFilePath : relFilePaths) {
-            const std::string relFileStr = wide2Ascii(relFilePath);
-            json entry = {
-                {"file", relFileStr},
-                {"status", "pending"},
-                {"lease_owner", ""},
-                {"last_committed_index", -1},
-                {"updated_at", updatedAt}
-            };
-            normalizedFiles.push_back(std::move(entry));
-        }
-
         const std::vector<std::string> currentFileStrings = collectRelFileStrings(relFilePaths);
         const fs::path fingerprintRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
         const json currentInputFingerprints = buildInputFingerprintMap(fingerprintRootDir, relFilePaths);
         const json oldInputFingerprints = oldRunState.value("input_fingerprints", json::object());
-        const bool inputFingerprintsUnchanged = areInputFingerprintsEqual(oldInputFingerprints, currentInputFingerprints);
-        const int pendingRewriteRequests = oldRewriteQueue.is_array() ? (int)oldRewriteQueue.size() : 0;
-        json reconcileState = buildReconcileStateForRunState("idle", pendingRewriteRequests);
-        std::string rewriteQueueResetNote;
-        if (pendingRewriteRequests > 0 && !inputFingerprintsUnchanged) {
-            reconcileState = buildReconcileStateForRunState("invalidated", 0, "检测到工作输入文件指纹变化，旧的重翻队列已失效并被清空。");
-            rewriteQueueResetNote = std::format("检测到工作输入文件指纹变化，已丢弃 {} 条旧的 reconcile 重翻请求。", pendingRewriteRequests);
-        }
-        else if (pendingRewriteRequests > 0) {
-            const json oldReconcileState = oldRunState.value("reconcile", json::object());
-            const std::string oldStatus = jsonStringFieldOr(oldReconcileState, "status");
-            if (oldStatus == "paused" || oldStatus == "in_progress") {
-                reconcileState = buildReconcileStateForRunState("paused", pendingRewriteRequests, "检测到上次 reconcile 中断且输入未变，本次可继续恢复。");
-            }
-            else {
-                reconcileState = buildReconcileStateForRunState("idle", pendingRewriteRequests);
-            }
+        int droppedRewriteRequestCount = 0;
+        const json filteredRewriteQueue = filterRewriteQueueByInputFingerprints(
+            oldRewriteQueue,
+            oldInputFingerprints,
+            currentInputFingerprints,
+            droppedRewriteRequestCount
+        );
+        if (droppedRewriteRequestCount > 0) {
+            m_logger->warn("检测到 {} 条旧的 reconcile 重翻请求对应文件已变化，本次启动已按文件粒度丢弃这些请求。", droppedRewriteRequestCount);
         }
 
-        const json runState = {
-            {"updated_at", updatedAt},
-            {"files", normalizedFiles},
-            {"reconcile", reconcileState},
-            {"input_fingerprints", currentInputFingerprints}
-        };
-        saveJsonFile(m_agentRunStatePath, runState);
+        saveJsonFile(m_agentRunStatePath, json{ {"input_fingerprints", currentInputFingerprints} });
 
         saveJsonFile(m_agentSearchCatalogPath, json{
             {"updated_at", nowTimestampString()},
@@ -394,19 +376,18 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::beforeRun()
         if (!fs::exists(m_agentTermConflictPath)) {
             saveJsonFile(m_agentTermConflictPath, json::array());
         }
-        if (!rewriteQueueResetNote.empty()) {
+        if (!fs::exists(m_agentRewriteQueuePath)) {
             saveJsonFile(m_agentRewriteQueuePath, json::array());
-            m_logger->warn("{}", rewriteQueueResetNote);
         }
-        else if (!fs::exists(m_agentRewriteQueuePath)) {
-            saveJsonFile(m_agentRewriteQueuePath, json::array());
+        else {
+            saveJsonFile(m_agentRewriteQueuePath, filteredRewriteQueue);
         }
     }
 
     return relFilePaths;
 }
 
-void NormalJsonTranslator::afterRun()
+void NormalJsonTranslator::normalJsonAfterRun()
 {
     // 1. 汇总所有问题概览。
     if (m_problemOverview.as_array().empty()) {
@@ -487,40 +468,33 @@ void NormalJsonTranslator::afterRun()
     }
 }
 
-void NormalJsonTranslator::process(std::vector<fs::path> relFilePaths)
+void NormalJsonTranslator::normalJsonProcess(std::vector<fs::path> relFilePaths)
 {
-    // Agent 模式不再在调度前按“整文件 done”跳过任务。
-    // 是否需要重翻由 processFile 里的缓存命中 + retranslKeys 做句级判断，
-    // 这样能和普通模式保持一致，也避免 run_state 提前把整文件短路掉。
-
-    if (relFilePaths.empty()) {
-        m_logger->info("没有需要重新调度的文件任务。");
-        runAgentFinalReconcile();
-        return;
-    }
-
     std::vector<std::future<void>> results;
     m_threadPool.resize(std::min(m_threadsNum, (int)relFilePaths.size()));
     for (const auto& filePath : relFilePaths) {
         results.emplace_back(m_threadPool.push([=](const int id)
-        {
-            m_controller->addThreadNum();
-            this->processFile(filePath, id);
-            m_controller->reduceThreadNum();
-        }));
+            {
+                m_controller->addThreadNum();
+                this->processFile(filePath, id);
+                m_controller->reduceThreadNum();
+            }));
     }
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
     waitForThreads(m_threadPool, results);
-    runAgentFinalReconcile();
+
+    if (m_agentEnabled && !m_controller->shouldStop()) {
+        runAgentFinalReconcile();
+    }
 }
 
 void NormalJsonTranslator::run()
 {
-    NormalJsonTranslator::init();
-    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::beforeRun();
+    NormalJsonTranslator::normalJsonInit();
+    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::normalJsonBeforeRun();
     if (!relFilePathsOpt.has_value()) {
         return;
     }
-    NormalJsonTranslator::process(std::move(relFilePathsOpt.value()));
-    NormalJsonTranslator::afterRun();
+    NormalJsonTranslator::normalJsonProcess(std::move(relFilePathsOpt.value()));
+    NormalJsonTranslator::normalJsonAfterRun();
 }

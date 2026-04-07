@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #define PYBIND11_HEADERS
 #define PCRE2_HEADERS
@@ -41,9 +41,6 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     createParent(cachePath);
     ordered_json jSentences;
     std::vector<Sentence> sentences;
-
-    // 每个工作单元开始时先登记 lease，便于暂停恢复和断点续跑。
-    updateAgentRunStateEntry(relInputPath, "in_progress", -1, std::format("thread-{}", threadId));
 
     // 1. 读取输入文件并构造句子链表。
     try {
@@ -340,7 +337,6 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
                 saveProblemOverviewFunc();
-                updateAgentRunStateEntry(relInputPath, "paused", -1, {});
                 return;
             }
 
@@ -390,7 +386,6 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     std::ofstream ofs(outputPath, std::ios::binary);
     ofs << jSentences.dump(2);
     ofs.close();
-    updateAgentRunStateEntry(relInputPath, "done", sentences.empty() ? -1 : sentences.back().index, {});
 
     m_logger->info("[线程 {}] [文件 {}] 处理完成。", threadId, wide2Ascii(relInputPath));
 

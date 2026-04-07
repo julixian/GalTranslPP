@@ -28,20 +28,13 @@ json loadJsonFileOr(const fs::path& path, const json& fallback = json::object())
     }
 }
 
-json sanitizeAgentFileNote(json note) {
-    if (note.is_object()) {
-        note.erase("rolling_context");
-    }
-    return note;
-}
-
 fs::path buildAgentFileNotePath(const fs::path& root, const fs::path& relInputPath) {
     fs::path notePath = root / relInputPath;
     notePath += L".json";
     return notePath;
 }
 
-std::string trimCopy(std::string value) {
+std::string trimCopy(const std::string& value) {
     const auto isNotSpace = [](unsigned char ch) { return !std::isspace(ch); };
     const auto begin = std::ranges::find_if(value, isNotSpace);
     if (begin == value.end()) {
@@ -51,44 +44,44 @@ std::string trimCopy(std::string value) {
     return std::string(begin, end);
 }
 
-std::optional<json> tryParseJsonEnvelope(std::string text) {
-    text = trimCopy(std::move(text));
-    if (text.empty()) {
+std::optional<json> tryParseJsonEnvelope(const std::string& text) {
+    std::string newText = trimCopy(text);
+    if (newText.empty()) {
         return std::nullopt;
     }
 
-    const size_t fencedStart = text.find("```");
+    const size_t fencedStart = newText.find("```");
     if (fencedStart != std::string::npos) {
-        const size_t lineEnd = text.find('\n', fencedStart);
-        const size_t fencedEnd = text.rfind("```");
+        const size_t lineEnd = newText.find('\n', fencedStart);
+        const size_t fencedEnd = newText.rfind("```");
         if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
-            text = trimCopy(text.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
+            newText = trimCopy(newText.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
         }
     }
 
     try {
-        return json::parse(text);
+        return json::parse(newText);
     }
     catch (...) { }
 
-    text = lightRepairJsonText(text);
+    newText = lightRepairJsonText(newText);
     try {
-        return json::parse(text);
+        return json::parse(newText);
     }
     catch (...) { }
 
-    const size_t jsonStart = text.find('{');
-    const size_t jsonEnd = text.rfind('}');
+    const size_t jsonStart = newText.find('{');
+    const size_t jsonEnd = newText.rfind('}');
     if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
         return std::nullopt;
     }
 
     try {
-        return json::parse(text.substr(jsonStart, jsonEnd - jsonStart + 1));
+        return json::parse(newText.substr(jsonStart, jsonEnd - jsonStart + 1));
     }
     catch (...) {
         try {
-                return json::parse(lightRepairJsonText(text.substr(jsonStart, jsonEnd - jsonStart + 1)));
+            return json::parse(lightRepairJsonText(newText.substr(jsonStart, jsonEnd - jsonStart + 1)));
         }
         catch (...) {
             return std::nullopt;
@@ -113,7 +106,6 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
             }
             AgentToolCallRequest parsed;
             parsed.id = call.value("id", std::format("call_{}", result.calls.size()));
-            // 兼容历史/模型变体：
             // 首选 `name` + `arguments`，同时接受 `method` / `tool` / `function`
             // 以及 `params` 作为别名，避免模型因为字段漂移而整轮工具调用失效。
             parsed.name = call.value("name", "");
@@ -126,10 +118,10 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
             if (parsed.name.empty()) {
                 parsed.name = call.value("function", "");
             }
-            if (const auto argIt = call.find("arguments"); argIt != call.end()) {
+            if (auto argIt = call.find("arguments"); argIt != call.end()) {
                 parsed.arguments = *argIt;
             }
-            else if (const auto argIt = call.find("params"); argIt != call.end()) {
+            else if (argIt = call.find("params"); argIt != call.end()) {
                 parsed.arguments = *argIt;
             }
             result.calls.push_back(std::move(parsed));
@@ -476,21 +468,9 @@ bool invalidateAgentReconcileCacheForFile(
         return true;
     }
     catch (const std::exception& e) {
-        logger->error("reconcile 清理缓存 {} 失败: {}", wide2Ascii(relFilePath), e.what());
+        logger->error("reconcile 加载缓存 {} 失败: {}", wide2Ascii(relFilePath), e.what());
         return false;
     }
-}
-
-json buildAgentReconcileStateObject(const std::string& status, int pendingRequests, const std::string& note = {}) {
-    json state = {
-        {"status", status},
-        {"pending_requests", std::max(pendingRequests, 0)},
-        {"updated_at", nowTimestampString()}
-    };
-    if (!note.empty()) {
-        state["note"] = note;
-    }
-    return state;
 }
 
 json removeCompletedAgentRewriteRequests(const json& queue, const absl::flat_hash_set<std::string>& completedKeys) {
@@ -568,8 +548,6 @@ void upsertAgentTermConflict(json& termConflicts, const json& record) {
     }
 }
 
-// 只读运行状态加载函数，主要给恢复调度和启动检查使用。
-// 它通常每次运行只会调用少数几次，而不是按句子频繁调用。
 json NormalJsonTranslator::loadAgentRunState() {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
     return loadJsonFileOr(m_agentRunStatePath, json::object());
@@ -593,89 +571,24 @@ json NormalJsonTranslator::loadAgentTermConflicts() {
     return loadJsonFileOr(m_agentTermConflictPath, json::array());
 }
 
-// `file_note` 是按输入文件保存的持久化备注。
-// 它不再默认注入每轮提示词，而是作为：
-// 1. `get_file_note` 工具的读取源
-// 2. 术语筛选时的相关性参考
-// 3. `compact_context` / `commit` 的落盘目标
 json NormalJsonTranslator::loadAgentFileNote(const fs::path& targetRelPath) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    return sanitizeAgentFileNote(loadJsonFileOr(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object()));
+    return loadJsonFileOr(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), json::object());
 }
 
 void NormalJsonTranslator::saveAgentFileNote(const fs::path& targetRelPath, const json& note) {
     std::lock_guard<std::mutex> lock(m_agentFileNotesMutex);
-    saveJsonFile(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), sanitizeAgentFileNote(note));
-}
-
-// 轻量的 `run_state` 生命周期更新函数。
-// 通常在 worker 进入 `processFile`、处理中断、处理完成这几个时机调用。
-void NormalJsonTranslator::updateAgentRunStateEntry(
-    const fs::path& relInputPath,
-    const std::string& status,
-    int lastCommittedIndex,
-    const std::string& leaseOwner
-) {
-    if (!m_agentEnabled) {
-        return;
-    }
-    std::lock_guard<std::mutex> lock(m_agentStateMutex);
-    json state = loadJsonFileOr(m_agentRunStatePath, json::object());
-    if (!state.contains("files") || !state["files"].is_array()) {
-        state["files"] = json::array();
-    }
-    const std::string relPathStr = wide2Ascii(relInputPath);
-    const auto it = std::ranges::find_if(state["files"], [&](const json& item) 
-        {
-            return item.value("file", "") == relPathStr;
-        });
-    if (it == state["files"].end()) {
-        state["files"].push_back(json{
-            {"file", relPathStr},
-            {"status", status},
-            {"lease_owner", leaseOwner},
-            {"last_committed_index", lastCommittedIndex},
-            {"updated_at", nowTimestampString()}
-        });
-    }
-    else {
-        (*it)["status"] = status;
-        (*it)["lease_owner"] = leaseOwner;
-        if (lastCommittedIndex >= 0) {
-            (*it)["last_committed_index"] = lastCommittedIndex;
-        }
-        (*it)["updated_at"] = nowTimestampString();
-    }
-    state["updated_at"] = nowTimestampString();
-    saveJsonFile(m_agentRunStatePath, state);
-}
-
-void NormalJsonTranslator::updateAgentReconcileState(const std::string& status, int pendingRequests, const std::string& note) {
-    if (!m_agentEnabled) {
-        return;
-    }
-    std::lock_guard<std::mutex> lock(m_agentStateMutex);
-    json state = loadJsonFileOr(m_agentRunStatePath, json::object());
-    int finalPendingRequests = pendingRequests;
-    if (finalPendingRequests < 0) {
-        const json rewriteQueue = loadJsonFileOr(m_agentRewriteQueuePath, json::array());
-        finalPendingRequests = rewriteQueue.is_array() ? (int)rewriteQueue.size() : 0;
-    }
-    state["reconcile"] = buildAgentReconcileStateObject(status, finalPendingRequests, note);
-    state["updated_at"] = nowTimestampString();
-    saveJsonFile(m_agentRunStatePath, state);
+    saveJsonFile(buildAgentFileNotePath(m_agentFileNotesDir, targetRelPath), note);
 }
 
 // 共享 Agent 状态文件的强串行修改入口。
 // `commit` 路径必须走这里，避免多个 worker 在线程并发时发生 `load/save` 覆盖。
-void NormalJsonTranslator::mutateAgentState(const std::function<void(json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator) {
+void NormalJsonTranslator::mutateAgentState(const std::function<void(json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator) {
     std::lock_guard<std::mutex> lock(m_agentStateMutex);
-    json runState = loadJsonFileOr(m_agentRunStatePath, json::object());
     json termLedger = loadJsonFileOr(m_agentTermLedgerPath, json::object());
     json rewriteQueue = loadJsonFileOr(m_agentRewriteQueuePath, json::array());
     json termConflicts = loadJsonFileOr(m_agentTermConflictPath, json::array());
-    mutator(runState, termLedger, rewriteQueue, termConflicts);
-    saveJsonFile(m_agentRunStatePath, runState);
+    mutator(termLedger, rewriteQueue, termConflicts);
     saveJsonFile(m_agentTermLedgerPath, termLedger);
     saveJsonFile(m_agentRewriteQueuePath, rewriteQueue);
     saveJsonFile(m_agentTermConflictPath, termConflicts);
@@ -831,33 +744,8 @@ void NormalJsonTranslator::applyAgentCommit(
 
     int appliedTermUpdateCount = 0;
     int recordedTermConflictCount = 0;
-    mutateAgentState([&](json& runState, json& termLedger, json& rewriteQueue, json& termConflicts)
+    mutateAgentState([&](json& termLedger, json& rewriteQueue, json& termConflicts)
         {
-            if (!runState.contains("files") || !runState["files"].is_array()) {
-                runState["files"] = json::array();
-            }
-            const std::string relPathStr = wide2Ascii(relInputPath);
-            auto runStateIt = std::ranges::find_if(runState["files"], [&](const json& item) 
-                {
-                    return item.value("file", "") == relPathStr;
-                });
-            if (runStateIt == runState["files"].end()) {
-                runState["files"].push_back(json{
-                        {"file", relPathStr},
-                        {"status", "in_progress"},
-                        {"lease_owner", std::format("thread-{}", threadId)},
-                        {"last_committed_index", pending.back()->index},
-                        {"updated_at", nowTimestampString()}
-                    });
-            }
-            else {
-                (*runStateIt)["status"] = "in_progress";
-                (*runStateIt)["lease_owner"] = std::format("thread-{}", threadId);
-                (*runStateIt)["last_committed_index"] = pending.back()->index;
-                (*runStateIt)["updated_at"] = nowTimestampString();
-            }
-            runState["updated_at"] = nowTimestampString();
-
             for (const auto& update : protocol.termUpdates) {
                 if (!update.is_object()) {
                     continue;
@@ -1447,24 +1335,17 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             backgroundText.clear();
         }
 
-        m_logger->debug("[线程 {}] [文件 {}] Agent chunk 开始，当前待提交 {} 句，允许最多 {} 轮。", threadId, wide2Ascii(relInputPath), pending.size(), m_agentMaxTurnsPerChunk);
         json messages = buildAgentBaseMessages(relInputPath, batch, backgroundText);
         bool compactRequested = false;
+
         const std::string logBlock = buildAgentLogBlock(relInputPath, batch, backgroundText);
         m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句，最多 {} 轮:\n{}",
             threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size(), m_agentMaxTurnsPerChunk, logBlock);
-        if (m_logger->should_log(spdlog::level::trace)) {
-            m_logger->trace(
-                "[线程 {}] [文件 {}] Agent 初始请求消息（实际发送给模型）:\n{}",
-                threadId,
-                wide2Ascii(relInputPath),
-                truncateForAgentLog(messages.dump(2), 20000)
-            );
-        }
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
         for (int turn = 0; turn < m_agentMaxTurnsPerChunk; ++turn) {
+
             const size_t messageChars = ::approximateMessagesChars(messages);
             m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
                 threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars);
@@ -1638,13 +1519,9 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 }
 
 void NormalJsonTranslator::runAgentFinalReconcile() {
-    if (!m_agentEnabled) {
-        return;
-    }
 
     json rewriteQueue = loadAgentRewriteQueue();
     if (!rewriteQueue.is_array() || rewriteQueue.empty()) {
-        updateAgentReconcileState("idle", 0);
         return;
     }
 
@@ -1671,15 +1548,10 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
 
     if (fileToIds.empty()) {
         int remainingRequests = 0;
-        mutateAgentState([&](json& runState, json&, json& queue, json&)
+        mutateAgentState([&](json&, json& queue, json&)
             {
                 queue = removeCompletedAgentRewriteRequests(queue, removableKeys);
                 remainingRequests = queue.is_array() ? (int)queue.size() : 0;
-                const std::string note = invalidRequestCount > 0
-                    ? std::format("已丢弃 {} 条无法映射到当前工作单元的重翻请求。", invalidRequestCount)
-                    : std::string{};
-                runState["reconcile"] = buildAgentReconcileStateObject(remainingRequests == 0 ? "idle" : "paused", remainingRequests, note);
-                runState["updated_at"] = nowTimestampString();
             });
         if (invalidRequestCount > 0) {
             m_logger->warn("Agent reconcile 发现 {} 条重翻请求已无法映射到当前工作单元，已从队列移除。", invalidRequestCount);
@@ -1709,7 +1581,6 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
         fileToIds.size(),
         safeRollbackCount
     );
-    updateAgentReconcileState("in_progress", (int)rewriteQueue.size(), std::format("当前以{}模式执行。", modeText));
     m_agentReconciling = true;
 
     absl::flat_hash_set<std::string> completedKeys = removableKeys;
@@ -1774,31 +1645,10 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
     }
 
     int remainingRequests = 0;
-    std::string finalStatus;
-    std::string finalNote;
-    mutateAgentState([&](json& runState, json&, json& queue, json&)
+    mutateAgentState([&](json&, json& queue, json&)
         {
             queue = removeCompletedAgentRewriteRequests(queue, completedKeys);
             remainingRequests = queue.is_array() ? (int)queue.size() : 0;
-            finalStatus = remainingRequests == 0 ? "idle" : "paused";
-
-            if (m_controller->shouldStop()) {
-                finalStatus = remainingRequests == 0 ? "idle" : "paused";
-                finalNote = remainingRequests == 0
-                    ? std::format("{} reconcile 在暂停前已完成。", modeText)
-                    : std::format("reconcile 已暂停，剩余 {} 条重翻请求待下次继续。", remainingRequests);
-            }
-            else if (remainingRequests == 0) {
-                finalNote = std::format("{} reconcile 已完成。", modeText);
-            }
-            else if (sawFailure.load()) {
-                finalNote = std::format("reconcile 有部分文件失败，剩余 {} 条重翻请求保留待下次继续。", remainingRequests);
-            }
-            else {
-                finalNote = std::format("reconcile 未完全消费队列，剩余 {} 条重翻请求。", remainingRequests);
-            }
-            runState["reconcile"] = buildAgentReconcileStateObject(finalStatus, remainingRequests, finalNote);
-            runState["updated_at"] = nowTimestampString();
         });
 
     m_agentReconciling = false;

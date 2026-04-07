@@ -54,7 +54,7 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
     m_logger->info("GalTransl++ EpubTranslator 启动...");
 }
 
-void EpubTranslator::init()
+void EpubTranslator::epubInit()
 {
     m_epubInputDir = m_projectDir / L"gt_input";
     m_epubOutputDir = m_projectDir / L"gt_output";
@@ -139,7 +139,7 @@ void EpubTranslator::init()
 }
 
 
-void EpubTranslator::beforeRun()
+void EpubTranslator::epubBeforeRun()
 {
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
@@ -410,13 +410,13 @@ void EpubTranslator::beforeRun()
 }
 
 void EpubTranslator::run() {
-    NormalJsonTranslator::init();
-    EpubTranslator::init();
-    EpubTranslator::beforeRun();
-    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::beforeRun();
+    NormalJsonTranslator::normalJsonInit();
+    EpubTranslator::epubInit();
+    EpubTranslator::epubBeforeRun();
+    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::normalJsonBeforeRun();
     if (!relFilePathsOpt.has_value()) {
         return;
     }
-    NormalJsonTranslator::process(std::move(relFilePathsOpt.value()));
-    NormalJsonTranslator::afterRun();
+    NormalJsonTranslator::normalJsonProcess(std::move(relFilePathsOpt.value()));
+    NormalJsonTranslator::normalJsonAfterRun();
 }

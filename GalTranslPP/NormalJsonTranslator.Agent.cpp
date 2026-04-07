@@ -383,8 +383,8 @@ std::string buildAgentRewriteQueueKey(const std::string& file, int id) {
     return std::format("{}#{}", file, id);
 }
 
-absl::btree_map<fs::path, std::vector<int>> collectAgentReconcileTargets(const json& rewriteQueue) {
-    absl::btree_map<fs::path, std::vector<int>> fileToIds;
+absl::btree_map<fs::path, absl::flat_hash_set<int>> collectAgentReconcileTargets(const json& rewriteQueue) {
+    absl::btree_map<fs::path, absl::flat_hash_set<int>> fileToIds;
     if (!rewriteQueue.is_array()) {
         return fileToIds;
     }
@@ -398,45 +398,15 @@ absl::btree_map<fs::path, std::vector<int>> collectAgentReconcileTargets(const j
         if (file.empty() || id < 0) {
             continue;
         }
-        fileToIds[ascii2Wide(file)].push_back(id);
+        fileToIds[ascii2Wide(file)].insert(id);
     }
 
-    for (auto& ids : fileToIds | std::views::values) {
-        std::ranges::sort(ids);
-        ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
-    }
     return fileToIds;
-}
-
-int countAgentCachedRewriteHits(const fs::path& cachePath, const std::vector<int>& ids, std::shared_mutex& transCacheMutex) {
-    if (!fs::exists(cachePath) || ids.empty()) {
-        return 0;
-    }
-
-    try {
-        std::shared_lock<std::shared_mutex> lock(transCacheMutex);
-        std::ifstream ifs(cachePath, std::ios::binary);
-        json cacheJson = json::parse(ifs);
-        if (!cacheJson.is_array()) {
-            return 0;
-        }
-
-        int hits = 0;
-        for (const auto& item : cacheJson) {
-            if (std::ranges::contains(ids, item.value("index", -1))) {
-                ++hits;
-            }
-        }
-        return hits;
-    }
-    catch (...) {
-        return 0;
-    }
 }
 
 bool invalidateAgentReconcileCacheForFile(
     const fs::path& cachePath,
-    const std::vector<int>& ids,
+    const absl::flat_hash_set<int>& ids,
     std::shared_mutex& transCacheMutex,
     const std::shared_ptr<spdlog::logger>& logger,
     const fs::path& relFilePath
@@ -454,7 +424,7 @@ bool invalidateAgentReconcileCacheForFile(
         json filtered = json::array();
         if (cacheJson.is_array()) {
             for (const auto& item : cacheJson) {
-                if (!std::ranges::contains(ids, item.value("index", -1))) {
+                if (!ids.contains(item.value("index", -1))) {
                     filtered.push_back(item);
                 }
             }
@@ -1525,69 +1495,40 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
         return;
     }
 
-    const absl::btree_map<fs::path, std::vector<int>> rawFileToIds = collectAgentReconcileTargets(rewriteQueue);
-    absl::flat_hash_set<std::string> knownFiles;
-    for (const auto& relFilePath : m_agentKnownRelFiles) {
-        knownFiles.insert(wide2Ascii(relFilePath));
-    }
-
-    absl::btree_map<fs::path, std::vector<int>> fileToIds;
-    absl::flat_hash_set<std::string> removableKeys;
-    int invalidRequestCount = 0;
-    for (const auto& [filePath, ids] : rawFileToIds) {
-        const std::string fileStr = wide2Ascii(filePath);
-        if (!knownFiles.empty() && !knownFiles.contains(fileStr)) {
-            invalidRequestCount += (int)ids.size();
-            for (const int id : ids) {
-                removableKeys.insert(buildAgentRewriteQueueKey(fileStr, id));
-            }
-            continue;
-        }
-        fileToIds[filePath] = ids;
-    }
-
+    // 启动前已经按输入文件指纹清理过 rewrite_queue；
+    // 这里不再重复判断“请求是否有效”，而是直接按队列驱动最终重翻。
+    // 如果文件后来又被改动，交给 processFile 自己报错即可。
+    const absl::btree_map<fs::path, absl::flat_hash_set<int>> fileToIds = collectAgentReconcileTargets(rewriteQueue);
     if (fileToIds.empty()) {
-        int remainingRequests = 0;
-        mutateAgentState([&](json&, json& queue, json&)
-            {
-                queue = removeCompletedAgentRewriteRequests(queue, removableKeys);
-                remainingRequests = queue.is_array() ? (int)queue.size() : 0;
-            });
-        if (invalidRequestCount > 0) {
-            m_logger->warn("Agent reconcile 发现 {} 条重翻请求已无法映射到当前工作单元，已从队列移除。", invalidRequestCount);
-        }
         return;
     }
 
-    int rollbackCount = 0;
-    for (const auto& [filePath, ids] : fileToIds) {
-        rollbackCount += countAgentCachedRewriteHits(m_transCacheDir / filePath, ids, m_transCacheMutex);
-    }
-    const int safeRollbackCount = std::min(rollbackCount, m_completedSentences.load());
-    if (safeRollbackCount > 0) {
-        m_completedSentences -= safeRollbackCount;
-        m_controller->updateBar(-safeRollbackCount);
+    int rollbackCount = std::ranges::fold_left(fileToIds | std::views::values, 0, [](int acc, const absl::flat_hash_set<int>& ids)
+        {
+            return acc + (int)ids.size();
+        });
+    if (rollbackCount > 0) {
+        m_completedSentences -= rollbackCount;
+        m_controller->updateBar(-rollbackCount);
     }
 
     const bool singleThreadMode = m_agentFinalReconcileSingleThread || fileToIds.size() <= 1;
     const char* modeText = singleThreadMode ? "单线程" : "多线程";
-    if (invalidRequestCount > 0) {
-        m_logger->warn("Agent reconcile 有 {} 条旧请求无法映射到当前工作单元，将在本轮结束后从队列移除。", invalidRequestCount);
-    }
     m_logger->info(
         "Agent 模式开始最终 {} reconcile，共 {} 条重翻请求，涉及 {} 个文件，进度回退 {} 句。",
         modeText,
         rewriteQueue.size(),
         fileToIds.size(),
-        safeRollbackCount
+        rollbackCount
     );
     m_agentReconciling = true;
 
-    absl::flat_hash_set<std::string> completedKeys = removableKeys;
+    // completedKeys 只记录本轮真正已完成的请求；
+    // reconcile 结束后会把这些请求从 rewrite_queue 里删除。
+    absl::flat_hash_set<std::string> completedKeys;
     std::mutex completedKeysMutex;
-    std::atomic_bool sawFailure = false;
 
-    auto runOneFile = [&](const fs::path& filePath, const std::vector<int>& ids, int threadId)
+    auto runOneFile = [&](const fs::path& filePath, const absl::flat_hash_set<int>& ids, int threadId)
         {
             if (m_controller->shouldStop()) {
                 return;
@@ -1600,7 +1541,6 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
                 m_logger,
                 filePath
             )) {
-                sawFailure = true;
                 return;
             }
 
@@ -1615,7 +1555,6 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
                 }
             }
             catch (const std::exception& e) {
-                sawFailure = true;
                 m_logger->error("reconcile 重翻文件 {} 失败: {}", wide2Ascii(filePath), e.what());
             }
         };

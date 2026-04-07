@@ -404,45 +404,6 @@ absl::btree_map<fs::path, absl::flat_hash_set<int>> collectAgentReconcileTargets
     return fileToIds;
 }
 
-bool invalidateAgentReconcileCacheForFile(
-    const fs::path& cachePath,
-    const absl::flat_hash_set<int>& ids,
-    std::shared_mutex& transCacheMutex,
-    const std::shared_ptr<spdlog::logger>& logger,
-    const fs::path& relFilePath
-) {
-    if (!fs::exists(cachePath) || ids.empty()) {
-        return true;
-    }
-
-    try {
-        std::lock_guard<std::shared_mutex> lock(transCacheMutex);
-        std::ifstream ifs(cachePath, std::ios::binary);
-        json cacheJson = json::parse(ifs);
-        ifs.close();
-
-        json filtered = json::array();
-        if (cacheJson.is_array()) {
-            for (const auto& item : cacheJson) {
-                if (!ids.contains(item.value("index", -1))) {
-                    filtered.push_back(item);
-                }
-            }
-        }
-        else {
-            filtered = cacheJson;
-        }
-
-        std::ofstream ofs(cachePath, std::ios::binary);
-        ofs << filtered.dump(2);
-        return true;
-    }
-    catch (const std::exception& e) {
-        logger->error("reconcile 加载缓存 {} 失败: {}", wide2Ascii(relFilePath), e.what());
-        return false;
-    }
-}
-
 json removeCompletedAgentRewriteRequests(const json& queue, const absl::flat_hash_set<std::string>& completedKeys) {
     if (!queue.is_array() || completedKeys.empty()) {
         return queue;
@@ -1551,6 +1512,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
         rollbackCount
     );
     m_agentReconciling = true;
+    m_agentReconcileTargetsByFile = fileToIds;
 
     // completedKeys 只记录本轮真正已完成的请求；
     // reconcile 结束后会把这些请求从 rewrite_queue 里删除。
@@ -1560,16 +1522,6 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
     auto runOneFile = [&](const fs::path& filePath, const absl::flat_hash_set<int>& ids, int threadId)
         {
             if (m_controller->shouldStop()) {
-                return;
-            }
-
-            if (!invalidateAgentReconcileCacheForFile(
-                m_transCacheDir / filePath,
-                ids,
-                m_transCacheMutex,
-                m_logger,
-                filePath
-            )) {
                 return;
             }
 
@@ -1619,6 +1571,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
             remainingRequests = queue.is_array() ? (int)queue.size() : 0;
         });
 
+    m_agentReconcileTargetsByFile.clear();
     m_agentReconciling = false;
     if (remainingRequests == 0) {
         m_logger->info("Agent 模式最终 {} reconcile 完成。", modeText);

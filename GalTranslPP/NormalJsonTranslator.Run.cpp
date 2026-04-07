@@ -483,7 +483,7 @@ void NormalJsonTranslator::normalJsonProcess(std::vector<fs::path> relFilePaths)
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
     waitForThreads(m_threadPool, results);
 
-    if (m_agentEnabled && !m_controller->shouldStop()) {
+    if (m_agentEnabled && !m_controller->shouldStop() && m_transEngine != TransEngine::Rebuild) {
         runAgentFinalReconcile();
     }
 }

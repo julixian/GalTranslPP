@@ -130,6 +130,10 @@ export {
         absl::flat_hash_map<fs::path, fs::path> m_splitFilePartsToJson;
         // 原始json相对路径到多个输入分割文件相对路径及其有没有完成的映射
         absl::flat_hash_map<fs::path, absl::flat_hash_map<fs::path, bool>> m_jsonToSplitFileParts;
+        // 最终 reconcile 阶段要求强制重翻的 file/id 白名单。
+        // 这里不直接改写 trans_cache 文件，否则会破坏基于前后句生成的 cache key，
+        // 导致邻近句子也误判为 cache miss。
+        absl::btree_map<fs::path, absl::flat_hash_set<int>> m_agentReconcileTargetsByFile;
         std::vector<fs::path> m_agentKnownRelFiles;
         std::vector<fs::path> m_agentDictionaryPaths;
         std::optional<fs::path> m_agentProjectInfoPath;

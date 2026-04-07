@@ -200,7 +200,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         if (fs::exists(cachePath)) {
             cachePaths.push_back(cachePath);
         }
-        if (m_transEngine != TransEngine::Rebuild && !m_agentReconciling) {
+        if (m_transEngine != TransEngine::Rebuild && !m_agentReconciling) { // agentReconciling 时不应该读取其它 part 的缓存
             if (m_needsCombining) {
                 const std::optional<fs::path> additionalCachePath = [&]() -> std::optional<fs::path>
                 {
@@ -243,42 +243,49 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             insertJsonArrToCacheMap(totalCacheJsonList);
         }
 
-        for (Sentence& se : sentences) {
-            if (se.complete) {
-                // 最终 reconcile 重跑文件时，这些“已完成句”只是为了恢复文件结构，
-                // 不应再次计入进度，否则会把同文件里未受影响的句子也重复累计。
-                if (!m_agentReconciling) {
+        if (!m_agentReconciling) {
+            for (Sentence& se : sentences) {
+                if (se.complete) {
                     ++m_completedSentences;
                     m_controller->updateBar(); // 预处理已判定完成
+                    postProcess(&se);
+                    continue;
                 }
-                postProcess(&se);
-                continue;
-            }
-            const std::string key = generateCacheKey(&se);
-            const auto it = cacheMap.find(key);
-            if (it == cacheMap.end()) {
-                toTranslate.push_back(&se);
-                continue;
-            }
-            const auto& item = it->second;
-            if (auto jit = item.find("problems"); jit != item.end()) {
-                jit->get_to(se.problems);
-            }
-            if (m_transEngine != TransEngine::Rebuild && hasRetranslKey(m_retranslKeys, item, &se)) {
-                toTranslate.push_back(&se);
-                continue;
-            }
+                const std::string key = generateCacheKey(&se);
+                const auto it = cacheMap.find(key);
+                if (it == cacheMap.end()) {
+                    toTranslate.push_back(&se);
+                    continue;
+                }
+                const auto& item = it->second;
+                if (auto jit = item.find("problems"); jit != item.end()) {
+                    jit->get_to(se.problems);
+                }
+                if (m_transEngine != TransEngine::Rebuild && hasRetranslKey(m_retranslKeys, item, &se)) {
+                    toTranslate.push_back(&se);
+                    continue;
+                }
 
-            se.pre_translated_text = item.value("pre_translated_text", "");
-            se.translated_by = item.value("translated_by", "");
-            se.complete = true;
-            // reconcile 阶段只希望进度反映“真正需要重翻的句子”，
-            // 不能把同文件中仍然命中缓存的句子再次计入进度。
-            if (!m_agentReconciling) {
+                se.pre_translated_text = item.value("pre_translated_text", "");
+                se.translated_by = item.value("translated_by", "");
+                se.complete = true;
                 ++m_completedSentences;
                 m_controller->updateBar(); // 缓存命中
+                postProcess(&se);
             }
-            postProcess(&se);
+        }
+        else {
+            if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
+                const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
+                for (Sentence& se : sentences) {
+	                if (reconcileTargetIds.contains(se.index)) {
+                        toTranslate.push_back(&se);
+	                }
+                }
+            }
+            else {
+                throw std::runtime_error(std::format("Reconcile processFile 未在表中找到文件: {}", wide2Ascii(relInputPath)));
+            }
         }
 
         if (!toTranslate.empty()) {

@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 规范化了 agent 模式下的一些缓存行为，修复了超过轮数时无限重试，reconcile 时单文件分割仍尝试查找其它文件缓存 的 bug",
+        "1. 规范化了 agent 模式下的一些缓存行为，修复了超过轮数时无限重试，reconcile 文件缓存命中不精确 的 bug。 且 Rebuild 不会再进入 reconcile 阶段",
 		"2. 额外说明: agent 模式下程序会按顺序自动检索项目根目录中的以下文件，如果找到会增加一个 agentTool 给模型则并停止检索，模型将获得读取此文件的能力:",
         "脚本说明.md",
         "剧情说明.md",

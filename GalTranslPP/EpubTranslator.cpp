@@ -310,7 +310,7 @@ void EpubTranslator::epubBeforeRun()
                     newContent.append(originalContent.c_str() + lastPos, metadata.offset - lastPos);
                     const std::string translatedText = translatedData["message"].get<std::string>();
                     const std::string replacement = m_bilingualOutput ?
-                        std::format("<br/><span style=\"color:{}; font-size:{}em;\">{}</span>", m_originalTextColor, m_originalTextScale,
+                        std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>", translatedText, m_originalTextColor, m_originalTextScale,
                             std::string_view(originalContent.data() + metadata.offset, metadata.length))
                         : translatedText;
                     newContent.append(replacement);

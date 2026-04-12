@@ -17,7 +17,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. GUI 为 agent 模式增加提示词编辑界面。调整提示词。",
-
+		"2. 修复了 Epub 双语缺失翻译的 bug"
     };
 
     mainLayout->addWidget(updateTitle);

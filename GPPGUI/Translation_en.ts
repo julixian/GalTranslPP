@@ -1116,58 +1116,68 @@
 <context>
     <name>DefaultPromptPage</name>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="19"/>
+        <location filename="DefaultPromptPage.cpp" line="21"/>
         <source>默认提示词管理</source>
         <translation>Default Prompt manager</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="27"/>
+        <location filename="DefaultPromptPage.cpp" line="29"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="27"/>
+        <location filename="DefaultPromptPage.cpp" line="29"/>
         <source>默认提示词配置文件不符合 toml 规范</source>
         <translation>Default prompt config file is nonconforming</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="108"/>
-        <location filename="DefaultPromptPage.cpp" line="127"/>
+        <location filename="DefaultPromptPage.cpp" line="73"/>
+        <source>agent用户</source>
+        <translation>User-agent</translation>
+    </message>
+    <message>
+        <location filename="DefaultPromptPage.cpp" line="76"/>
+        <source>agent系统</source>
+        <translation>Sys-agent</translation>
+    </message>
+    <message>
+        <location filename="DefaultPromptPage.cpp" line="136"/>
+        <location filename="DefaultPromptPage.cpp" line="163"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="108"/>
+        <location filename="DefaultPromptPage.cpp" line="136"/>
         <source>所有默认提示词配置已保存。</source>
         <translation>All default prompt settings are saved.</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="127"/>
+        <location filename="DefaultPromptPage.cpp" line="163"/>
         <source>默认 </source>
         <translation>Default </translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="127"/>
+        <location filename="DefaultPromptPage.cpp" line="163"/>
         <source> 提示词配置已保存。</source>
         <translation> setting is saved.</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="58"/>
+        <location filename="DefaultPromptPage.cpp" line="62"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="61"/>
+        <location filename="DefaultPromptPage.cpp" line="65"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="64"/>
+        <location filename="DefaultPromptPage.cpp" line="83"/>
         <source>全部保存</source>
         <translation>Save all</translation>
     </message>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="66"/>
+        <location filename="DefaultPromptPage.cpp" line="85"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
@@ -2779,14 +2789,24 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="PromptSettingsPage.cpp" line="73"/>
+        <location filename="PromptSettingsPage.cpp" line="75"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location filename="PromptSettingsPage.cpp" line="76"/>
+        <location filename="PromptSettingsPage.cpp" line="78"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
+    </message>
+    <message>
+        <location filename="PromptSettingsPage.cpp" line="86"/>
+        <source>agent用户</source>
+        <translation>User-agent</translation>
+    </message>
+    <message>
+        <location filename="PromptSettingsPage.cpp" line="89"/>
+        <source>agent系统</source>
+        <translation>Sys-agent</translation>
     </message>
 </context>
 <context>

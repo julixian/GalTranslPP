@@ -2,7 +2,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QHeaderView>
+#include <QButtonGroup>
 #include <QStackedWidget>
 
 #include "ElaLineEdit.h"
@@ -62,8 +62,10 @@ void PromptSettingsPage::_setupUI()
 
 
 	auto createPromptWidgetFunc =
-		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey) -> std::function<void()>
+		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey, 
+			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
+			const bool hasAgentPrompt = agentUserPromptKey.has_value() && agentSystemPromptKey.has_value();
 			QWidget* promptWidget = new QWidget(mainWidget);
 			QVBoxLayout* promptLayout = new QVBoxLayout(promptWidget);
 			promptLayout->setContentsMargins(0, 0, 0, 0);
@@ -77,57 +79,88 @@ void PromptSettingsPage::_setupUI()
 			promptSystemModeButtom->setEnabled(true);
 			promptButtonLayout->addWidget(promptUserModeButtom);
 			promptButtonLayout->addWidget(promptSystemModeButtom);
+			ElaPushButton* agentPromptUserModeButtom = nullptr;
+			ElaPushButton* agentPromptSystemModeButtom = nullptr;
+			if (hasAgentPrompt) {
+				agentPromptUserModeButtom = new ElaPushButton(promptWidget);
+				agentPromptUserModeButtom->setText(tr("agent用户"));
+				agentPromptUserModeButtom->setEnabled(true);
+				agentPromptSystemModeButtom = new ElaPushButton(promptWidget);
+				agentPromptSystemModeButtom->setText(tr("agent系统"));
+				agentPromptSystemModeButtom->setEnabled(true);
+				promptButtonLayout->addWidget(agentPromptUserModeButtom);
+				promptButtonLayout->addWidget(agentPromptSystemModeButtom);
+			}
 			promptButtonLayout->addStretch();
 			promptLayout->addLayout(promptButtonLayout);
 
 			QStackedWidget* promptStackedWidget = new QStackedWidget(promptWidget);
-			// 用户提示词
-			ElaPlainTextEdit* promptUserModeEdit = new ElaPlainTextEdit(promptStackedWidget);
-			QFont plainTextFont = promptUserModeEdit->font();
-			plainTextFont.setPixelSize(15);
-			promptUserModeEdit->setFont(plainTextFont);
-			promptUserModeEdit->setPlainText(
-				QString::fromStdString(toml::find_or(_promptConfig, userPromptKey, ""))
-			);
-			promptStackedWidget->addWidget(promptUserModeEdit);
-			// 系统提示词
-			ElaPlainTextEdit* forgalJsonSystemModeEdit = new ElaPlainTextEdit(promptStackedWidget);
-			forgalJsonSystemModeEdit->setFont(plainTextFont);
-			forgalJsonSystemModeEdit->setPlainText(
-				QString::fromStdString(toml::find_or(_promptConfig, systemPromptKey, ""))
-			);
-			promptStackedWidget->addWidget(forgalJsonSystemModeEdit);
+			auto addPlainTextEditFunc = [=](const std::string& key)
+				{
+					ElaPlainTextEdit* promptTextEdit = new ElaPlainTextEdit(promptStackedWidget);
+					QFont plainTextFont = promptTextEdit->font();
+					plainTextFont.setPixelSize(15);
+					promptTextEdit->setFont(plainTextFont);
+					promptTextEdit->setPlainText(
+						QString::fromStdString(toml::find_or(_promptConfig, key, ""))
+					);
+					promptStackedWidget->addWidget(promptTextEdit);
+					return promptTextEdit;
+				};
+			ElaPlainTextEdit* promptUserModeEdit = addPlainTextEditFunc(userPromptKey);
+			ElaPlainTextEdit* promptSystemModeEdit = addPlainTextEditFunc(systemPromptKey);
+			ElaPlainTextEdit* agentPromptUserModeEdit = nullptr;
+			ElaPlainTextEdit* agentPromptSystemModeEdit = nullptr;
+			if (hasAgentPrompt) {
+				agentPromptUserModeEdit = addPlainTextEditFunc(agentUserPromptKey.value());
+				agentPromptSystemModeEdit = addPlainTextEditFunc(agentSystemPromptKey.value());
+			}
+
+			QButtonGroup* promptButtomGroup = new QButtonGroup(promptWidget);
+			promptButtomGroup->addButton(promptUserModeButtom, 0);
+			promptButtomGroup->addButton(promptSystemModeButtom, 1);
+			if (hasAgentPrompt) {
+				promptButtomGroup->addButton(agentPromptUserModeButtom, 2);
+				promptButtomGroup->addButton(agentPromptSystemModeButtom, 3);
+			}
+			connect(promptButtomGroup, &QButtonGroup::buttonClicked, this, [=](QAbstractButton* button)
+				{
+					for (const auto& b : promptButtomGroup->buttons()) {
+						b->setEnabled(true);
+					}
+					button->setEnabled(false);
+					promptStackedWidget->setCurrentIndex(promptButtomGroup->id(button));
+				});
+			
 			promptStackedWidget->setCurrentIndex(0);
 			promptLayout->addWidget(promptStackedWidget);
-			connect(promptUserModeButtom, &ElaPushButton::clicked, this, [=]()
-				{
-					promptStackedWidget->setCurrentIndex(0);
-					promptUserModeButtom->setEnabled(false);
-					promptSystemModeButtom->setEnabled(true);
-				});
-			connect(promptSystemModeButtom, &ElaPushButton::clicked, this, [=]()
-				{
-					promptStackedWidget->setCurrentIndex(1);
-					promptUserModeButtom->setEnabled(true);
-					promptSystemModeButtom->setEnabled(false);
-				});
 			tabWidget->addTab(promptWidget, promptName);
 
 			auto result = [=]()
 				{
 					toml::ordered_value userPromptVal = promptUserModeEdit->toPlainText().toStdString();
-					toml::ordered_value systemPromptVal = forgalJsonSystemModeEdit->toPlainText().toStdString();
+					toml::ordered_value systemPromptVal = promptSystemModeEdit->toPlainText().toStdString();
 					userPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 					systemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 					insertToml(_promptConfig, userPromptKey, userPromptVal);
 					insertToml(_promptConfig, systemPromptKey, systemPromptVal);
+					if (hasAgentPrompt) {
+						toml::ordered_value agentUserPromptVal = agentPromptUserModeEdit->toPlainText().toStdString();
+						toml::ordered_value agentSystemPromptVal = agentPromptSystemModeEdit->toPlainText().toStdString();
+						agentUserPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
+						agentSystemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
+						insertToml(_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
+						insertToml(_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
+					}
 				};
 			return result;
 		};
 
 	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_TRANS_PROMPT_EN", "FORGALJSON_SYSTEM");
-	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_TRANS_PROMPT_EN", "FORGALTSV_SYSTEM");
-	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_TRANS_PROMPT_EN", "FORNOVELTSV_SYSTEM");
+	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_TRANS_PROMPT_EN", "FORGALTSV_SYSTEM",
+		"FORGALTSV_AGENT_PROMPT_EN", "FORGALTSV_AGENT_SYSTEM");
+	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_TRANS_PROMPT_EN", "FORNOVELTSV_SYSTEM",
+		"FORNOVELTSV_AGENT_PROMPT_EN", "FORNOVELTSV_AGENT_SYSTEM");
 	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_TRANS_PROMPT", "SAKURA_SYSTEM_PROMPT");
 	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDIC_PROMPT", "GENDIC_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_PROMPT", "NAMETRANS_SYSTEM");

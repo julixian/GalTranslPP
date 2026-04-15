@@ -5,7 +5,7 @@
 在开始编译之前，请确保你的开发环境满足以下要求：
 
 - **操作系统**: Windows 10 或 Windows 11
-- **IDE**: [Visual Studio 2026](https://visualstudio.microsoft.com/insiders/?rwnlp=zh-hans)
+- **IDE**: [Visual Studio 2026](https://visualstudio.microsoft.com/zh-hans/downloads/)
   - **必需工作负载**: `使用 C++ 的桌面开发`
   - **必需工具集**: `MSVC v145`
 - **辅助构建工具**: [CMake](https://cmake.org/download/)

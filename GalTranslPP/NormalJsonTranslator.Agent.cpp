@@ -570,7 +570,7 @@ json NormalJsonTranslator::buildAgentBaseMessages(const fs::path& relInputPath, 
             wide2Ascii(fs::relative(m_agentProjectInfoPath.value(), m_projectDir)))
         : "";
 
-    const std::string schemaDescription =
+    constexpr std::string_view schemaDescription =
         "{"
         "\"schema\":\"gpp-agent-v1\","
         "\"action\":\"tool_calls|commit|compact_context\","

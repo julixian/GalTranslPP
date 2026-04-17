@@ -397,6 +397,7 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
 
 
 // 开启关闭 Python 解释器
+const fs::path pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt";
 bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
     if (fs::exists(pyEnvPath) && fs::exists(pyEnvPath / L"python.exe")) {
 
@@ -422,7 +423,7 @@ bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_
                 py::module_::import("importlib.metadata");
                 py::module_::import("sys").attr("path").attr("append")(wide2Ascii(fs::absolute(L"BaseConfig/pyScripts")));
                 py::list sysPaths = py::module_::import("sys").attr("path");
-                std::ofstream ofs(L"BaseConfig/pythonSysPaths.txt");
+                std::ofstream ofs(pythonSysPathsTxtPath);
                 if (ofs.is_open()) {
                     for (const auto& path : sysPaths) {
                         ofs << path.cast<std::string>() << "\n";
@@ -441,6 +442,9 @@ void shutDownPythonEnv(std::unique_ptr<py::gil_scoped_release>& release) {
         PythonMainInterpreterManager::getInstance().stop();
         release.reset();
         py::finalize_interpreter();
+    }
+    if (fs::exists(pythonSysPathsTxtPath)) {
+        fs::remove(pythonSysPathsTxtPath);
     }
 }
 

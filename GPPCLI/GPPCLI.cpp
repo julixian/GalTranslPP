@@ -64,7 +64,12 @@ int main(int argc, char* argv[])
         if (release) {
             py::gil_scoped_acquire acquire;
             auto builtins = py::module_::import("builtins");
-            inputPathStr = builtins.attr("input")("").cast<std::string>();
+            try {
+                inputPathStr = builtins.attr("input")("").cast<std::string>();
+            }
+            catch (...) {
+                break;
+            }
         }
         else {
             if (!std::getline(std::cin, inputPathStr)) {

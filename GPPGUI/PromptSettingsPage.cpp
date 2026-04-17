@@ -162,7 +162,8 @@ void PromptSettingsPage::_setupUI()
 	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_TRANS_PROMPT_EN", "FORNOVELTSV_SYSTEM",
 		"FORNOVELTSV_AGENT_PROMPT_EN", "FORNOVELTSV_AGENT_SYSTEM");
 	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_TRANS_PROMPT", "SAKURA_SYSTEM_PROMPT");
-	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDIC_PROMPT", "GENDIC_SYSTEM");
+	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_PROMPT", "GENDICT_SYSTEM",
+		"GENDICT_REVIEW_PROMPT", "GENDICT_REVIEW_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_PROMPT", "NAMETRANS_SYSTEM");
 
 	_applyFunc = [=]()

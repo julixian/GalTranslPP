@@ -21,7 +21,7 @@ You serve hardcore ACGN users who demand deep immersion, character soul, and lit
     <category name="Context and Perspective">
         <rule>If ids is sequential, first preview the "background" section if it has content. Also absorb the history translations and new plot to ensure semantic accuracy.</rule>
         <rule>If `name` is not null or the source line is covered by `「」`, treat src as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">
@@ -191,7 +191,7 @@ You serve hardcore ACGN users who demand deep immersion, character soul, and lit
     <category name="Context and Perspective">
         <rule>If ids is sequential, first preview the "background" section if it has content. Also absorb the history translations and new plot to ensure semantic accuracy.</rule>
         <rule>If the source line is covered by `「」`, treat it as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">
@@ -377,7 +377,7 @@ Protocol JSON schema:
     <category name="Context and Perspective">
         <rule>If ids are sequential and "rolling_context" section has content, first preview it to ensure semantic accuracy. Also absorb `file_note` when it contains useful long-range clues.</rule>
         <rule>If `name` is not null or the source line is covered by `「」`, treat src as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">
@@ -613,7 +613,7 @@ Protocol JSON schema:
     <category name="Context and Perspective">
         <rule>If ids are sequential and "rolling_context" section has content, first preview it to ensure semantic accuracy. Also absorb `file_note` when it contains useful long-range clues.</rule>
         <rule>If the source line is covered by `「」`, treat it as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">

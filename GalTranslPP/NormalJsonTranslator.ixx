@@ -10,6 +10,7 @@
 export module NormalJsonTranslator;
 
 import APIPool;
+import AgentSourceView;
 import Dictionary;
 import IPlugin;
 import GPPDefines;
@@ -135,10 +136,11 @@ export {
         // 最终 reconcile 阶段要求强制重翻的 file/id 白名单。
         // 这里不直接改写 trans_cache 文件，否则会破坏基于前后句生成的 cache key，
         // 导致邻近句子也误判为 cache miss。
-        absl::btree_map<fs::path, absl::flat_hash_set<int>> m_agentReconcileTargetsByFile;
+        absl::flat_hash_map<fs::path, absl::flat_hash_set<int>> m_agentReconcileTargetsByFile;
         std::vector<fs::path> m_agentKnownRelFiles;
         std::vector<fs::path> m_agentDictionaryPaths;
         std::optional<fs::path> m_agentProjectInfoPath;
+        absl::flat_hash_map<fs::path, AgentSourceFileView> m_agentSourceFileViews;
 
         absl::flat_hash_map<std::string, std::string> m_nameMap;
         toml::ordered_value m_problemOverview = toml::array{};

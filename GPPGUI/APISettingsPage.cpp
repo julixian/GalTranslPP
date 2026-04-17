@@ -174,7 +174,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
     formLayout->setContentsMargins(0, 10, 0, 10);
 
     QHBoxLayout* apiKeyLayout = new QHBoxLayout(formWidget);
-    ElaText* apiKeyLabel = new ElaText("API Key", formWidget);
+    ElaText* apiKeyLabel = new ElaText("API key", formWidget);
     apiKeyLabel->setTextPixelSize(13);
     apiKeyLabel->setFixedWidth(100);
     apiKeyLayout->addWidget(apiKeyLabel);
@@ -183,13 +183,13 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
         keyEdit->setText(QString::fromStdString(key));
     }
     else {
-        keyEdit->setPlaceholderText(tr("请输入 API Key(Sakura引擎或有Extra Keys时可不填)"));
+        keyEdit->setPlaceholderText(tr("请输入 API key(Sakura引擎或有Extra keys时可不填)"));
     }
     apiKeyLayout->addWidget(keyEdit);
     formLayout->addLayout(apiKeyLayout);
 
     QHBoxLayout* apiSecretLayout = new QHBoxLayout(formWidget);
-    ElaText* apiUrlLabel = new ElaText("API Url", formWidget);
+    ElaText* apiUrlLabel = new ElaText("API url", formWidget);
     apiUrlLabel->setTextPixelSize(13);
     apiUrlLabel->setFixedWidth(100);
     apiSecretLayout->addWidget(apiUrlLabel);
@@ -198,7 +198,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
         urlEdit->setText(QString::fromStdString(url));
     }
     else {
-        urlEdit->setPlaceholderText(tr("请输入 API Url"));
+        urlEdit->setPlaceholderText(tr("请输入 API url"));
     }
     apiSecretLayout->addWidget(urlEdit);
     formLayout->addLayout(apiSecretLayout);
@@ -346,7 +346,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
 
     configLayout->addSpacing(10);
     ElaDoubleText* extraKeysTitle = new ElaDoubleText(configWidget,
-        tr("Extra Keys"), 18, "", 0, "一行一个 key");
+        tr("Extra keys"), 18, "", 0, "一行一个 key");
     configLayout->addWidget(extraKeysTitle);
     ElaPlainTextEdit* extraKeysEdit = new ElaPlainTextEdit(configWidget);
     if (api.contains("extraKeys") && api.at("extraKeys").is_array()) {

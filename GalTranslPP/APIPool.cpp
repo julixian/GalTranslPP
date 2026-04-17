@@ -19,7 +19,7 @@ void APIPool::loadApis(const std::vector<TranslationApi>& apis) {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     m_apis.insert(m_apis.end(), apis.begin(), apis.end());
-    m_logger->info("令牌池新加载 {} 个 API Keys， 现共有 {} 个API Keys", apis.size(), m_apis.size());
+    m_logger->info("令牌池新加载 {} 个 API keys， 现共有 {} 个API keys", apis.size(), m_apis.size());
 }
 
 std::optional<TranslationApi> APIPool::getApi() {
@@ -74,7 +74,7 @@ void APIPool::reportProblem(const TranslationApi& badAPI) {
     }
     it->lastReportTime = std::chrono::steady_clock::now();
     if (it->reportCount >= 30) {
-        m_logger->warn("API Key [{}] 已被标记为不可用。", it->apikey);
+        m_logger->warn("API key [{}] 已被标记为不可用。", it->apikey);
         m_apis.erase(it);
     }
 }
@@ -103,7 +103,7 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
             lowerErrorMsg.contains("invalid tokens"))
         )
     {
-        logger->error("[线程 {}] API Key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", threadId, currentAPI.apikey);
+        logger->error("[线程 {}] API key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", threadId, currentAPI.apikey);
         apiPool->reportProblem(currentAPI);
         // 不需要增加 retryCount
         return false;
@@ -111,7 +111,7 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
 
     // key 没有这个模型
     if (lowerErrorMsg.contains("no available")) {
-        logger->error("[线程 {}] API Key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
+        logger->error("[线程 {}] API key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
         apiPool->reportProblem(currentAPI);
         return false;
     }
@@ -136,7 +136,7 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
     ++retryCount;
     logger->warn("[线程 {}] [文件 {}] 遇到未知API错误，进行第 {} 次重试...", threadId, wide2Ascii(relInputPath), retryCount);
     if (apiStrategy == "fallback") {
-        logger->warn("[线程 {}] 将切换到下一个 API Key(如果有多个API Key的话)", threadId);
+        logger->warn("[线程 {}] 将切换到下一个 API key(如果有多个API key的话)", threadId);
         apiPool->resortTokens();
     }
     std::this_thread::sleep_for(std::chrono::seconds(2)); // 简单等待

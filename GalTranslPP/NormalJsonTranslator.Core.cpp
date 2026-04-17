@@ -14,6 +14,7 @@
 
 module NormalJsonTranslator;
 
+import AgentSourceView;
 import ConditionTool;
 import DictionaryGenerator;
 import NameTranslator;
@@ -308,7 +309,7 @@ void NormalJsonTranslator::normalJsonInit()
                 apis.push_back(std::move(api));
             }
             if (apis.empty()) {
-                throw std::invalid_argument("找不到可用的 apikey ");
+                throw std::invalid_argument("找不到可用的 API key ");
             }
             else {
                 m_apiPool = std::make_unique<APIPool>(m_logger);
@@ -537,7 +538,6 @@ void NormalJsonTranslator::normalJsonInit()
 
 void NormalJsonTranslator::preProcess(Sentence* se)
 {
-    // name_org 不会输出到缓存，因此这里直接把 name 看作预处理后的版本。
     se->pre_processed_text = se->original_text;
 
     for (auto& plugin : m_textPlugins) {

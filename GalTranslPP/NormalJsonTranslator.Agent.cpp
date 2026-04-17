@@ -11,6 +11,7 @@
 module NormalJsonTranslator;
 
 import AgentToolCommon;
+import AgentSourceView;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -29,65 +30,10 @@ json loadJsonFileOr(const fs::path& path, const json& fallback = json::object())
     }
 }
 
-std::string trimCopy(const std::string& value) {
-    const auto isNotSpace = [](unsigned char ch) { return !std::isspace(ch); };
-    const auto begin = std::ranges::find_if(value, isNotSpace);
-    if (begin == value.end()) {
-        return {};
-    }
-    const auto end = std::ranges::find_if(value | std::views::reverse, isNotSpace).base();
-    return std::string(begin, end);
-}
-
-std::optional<json> tryParseJsonEnvelope(const std::string& text) {
-    std::string newText = trimCopy(text);
-    if (newText.empty()) {
-        return std::nullopt;
-    }
-
-    const size_t fencedStart = newText.find("```");
-    if (fencedStart != std::string::npos) {
-        const size_t lineEnd = newText.find('\n', fencedStart);
-        const size_t fencedEnd = newText.rfind("```");
-        if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
-            newText = trimCopy(newText.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
-        }
-    }
-
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
-    newText = lightRepairJsonText(newText);
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
-    const size_t jsonStart = newText.find('{');
-    const size_t jsonEnd = newText.rfind('}');
-    if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
-        return std::nullopt;
-    }
-
-    try {
-        return json::parse(newText.substr(jsonStart, jsonEnd - jsonStart + 1));
-    }
-    catch (...) {
-        try {
-            return json::parse(lightRepairJsonText(newText.substr(jsonStart, jsonEnd - jsonStart + 1)));
-        }
-        catch (...) {
-            return std::nullopt;
-        }
-    }
-}
-
 AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
     AgentProtocolResponse result;
     result.rawContent = content;
-    const std::optional<json> payloadOpt = tryParseJsonEnvelope(content);
+    const std::optional<json> payloadOpt = tryParseAgentJsonEnvelope(content);
     if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
         throw std::runtime_error("Agent 响应不是合法 JSON 对象");
     }
@@ -161,13 +107,6 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
         result.rollingContext = it->get<std::string>();
     }
     return result;
-}
-
-int sanitizeToolLimit(int requested, int fallback, int maxLimit = 200) {
-    if (requested <= 0) {
-        return fallback;
-    }
-    return std::min(requested, maxLimit);
 }
 
 // Agent 调试日志只记录“真实交互链路”上的内容：
@@ -384,8 +323,8 @@ std::string buildAgentRewriteQueueKey(const std::string& file, int id) {
     return std::format("{}#{}", file, id);
 }
 
-absl::btree_map<fs::path, absl::flat_hash_set<int>> collectAgentReconcileTargets(const json& rewriteQueue) {
-    absl::btree_map<fs::path, absl::flat_hash_set<int>> fileToIds;
+absl::flat_hash_map<fs::path, absl::flat_hash_set<int>> collectAgentReconcileTargets(const json& rewriteQueue) {
+    absl::flat_hash_map<fs::path, absl::flat_hash_set<int>> fileToIds;
     if (!rewriteQueue.is_array()) {
         return fileToIds;
     }
@@ -797,6 +736,7 @@ struct AgentToolExecutionEnv {
     std::shared_mutex* transCacheMutex = nullptr;
     const std::vector<fs::path>* knownRelFiles = nullptr;
     const std::vector<fs::path>* dictionaryPaths = nullptr;
+    const absl::flat_hash_map<fs::path, AgentSourceFileView>* sourceFileViews = nullptr;
     std::optional<fs::path> projectInfoPath;
     std::function<json()> loadTermLedger;
     std::function<json(const fs::path&)> loadFileNote;
@@ -830,54 +770,15 @@ absl::flat_hash_map<int, json> loadAgentCacheDstMap(const AgentToolExecutionEnv&
     return cacheMap;
 }
 
-int sanitizeAgentSearchContextLines(int requested, int maxLimit = 20) {
-    if (requested < 0) {
-        return 0;
+const AgentSourceFileView* findAgentSourceFileView(const AgentToolExecutionEnv& env, const fs::path& relPath) {
+    if (env.sourceFileViews == nullptr) {
+        return nullptr;
     }
-    return std::min(requested, maxLimit);
-}
-
-json buildAgentSearchNearbyLine(
-    const ordered_json& inputJson,
-    const absl::flat_hash_map<int, json>& cacheMap,
-    int lineIndex,
-    bool isMatch
-) {
-    json line = {
-        {"id", lineIndex},
-        {"is_match", isMatch}
-    };
-    const auto cacheIt = cacheMap.find(lineIndex);
-    if (inputJson[lineIndex].contains("name")) {
-        line["name"] = inputJson[lineIndex]["name"];
+    const auto it = env.sourceFileViews->find(relPath);
+    if (it == env.sourceFileViews->end()) {
+        return nullptr;
     }
-    if (inputJson[lineIndex].contains("names")) {
-        line["names"] = inputJson[lineIndex]["names"];
-    }
-    std::string src = inputJson[lineIndex].value("message", "");
-    if (cacheIt != cacheMap.end()) {
-        src = cacheIt->second.value("pre_processed_text", src);
-    }
-    line["src"] = src;
-    if (cacheIt != cacheMap.end()) {
-        line["dst"] = cacheIt->second.value("pre_translated_text", cacheIt->second.value("translated_preview", ""));
-    }
-    return line;
-}
-
-json buildAgentSearchNearbyLines(
-    const ordered_json& inputJson,
-    const absl::flat_hash_map<int, json>& cacheMap,
-    int matchIndex,
-    int contextLines
-) {
-    json nearbyLines = json::array();
-    const int start = std::max(0, matchIndex - contextLines);
-    const int end = std::min((int)inputJson.size() - 1, matchIndex + contextLines);
-    for (int i = start; i <= end; ++i) {
-        nearbyLines.push_back(buildAgentSearchNearbyLine(inputJson, cacheMap, i, i == matchIndex));
-    }
-    return nearbyLines;
+    return &it->second;
 }
 
 json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& arguments) {
@@ -888,24 +789,22 @@ json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& argumen
     const bool includeDst = arguments.value("include_dst", true);
     json result = { {"file", wide2Ascii(targetRelPath)}, {"lines", json::array()} };
     try {
-        std::ifstream ifs(resolveAgentInputPath(env, targetRelPath), std::ios::binary);
-        ordered_json inputJson = ordered_json::parse(ifs);
+        const AgentSourceFileView* sourceView = findAgentSourceFileView(env, targetRelPath);
         const auto cacheMap = loadAgentCacheDstMap(env, targetRelPath);
-        for (int i = start; i < (int)inputJson.size() && i < start + count; ++i) {
+        if (sourceView == nullptr) {
+            result["error"] = std::format("Source view not found for {}", wide2Ascii(targetRelPath));
+            return result;
+        }
+        for (int i = start; i < (int)sourceView->lines.size() && i < start + count; ++i) {
             json line = { {"id", i} };
             const auto cacheIt = cacheMap.find(i);
-            if (inputJson[i].contains("name")) {
-                line["name"] = inputJson[i]["name"];
-            }
-            if (inputJson[i].contains("names")) {
-                line["names"] = inputJson[i]["names"];
+            const AgentSourceLineView& sourceLine = sourceView->lines[i];
+            if (!sourceLine.speaker.empty()) {
+                line["name"] = sourceLine.speaker;
             }
             if (includeSrc) {
-                std::string src = inputJson[i].value("message", "");
-                if (cacheIt != cacheMap.end()) {
-                    src = cacheIt->second.value("pre_processed_text", src);
-                }
-                line["src"] = src;
+                line["src"] = sourceLine.toolText;
+                line["src_original"] = sourceLine.originalText;
             }
             if (includeDst && cacheIt != cacheMap.end()) {
                 line["dst"] = cacheIt->second.value("pre_translated_text", cacheIt->second.value("translated_preview", ""));
@@ -925,9 +824,9 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         | std::views::transform([](const std::string& query) { return str2Lower(query); })
         | std::ranges::to<std::vector>();
     const std::string scope = arguments.value("scope", "current_file");
-    const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
+    const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     const int contextLines = arguments.contains("context_lines")
-        ? sanitizeAgentSearchContextLines(arguments.value("context_lines", 0))
+        ? sanitizeAgentContextLines(arguments.value("context_lines", 0))
         : 2;
     std::vector<fs::path> targetFiles;
 
@@ -978,14 +877,16 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
             break;
         }
         try {
-            std::ifstream ifs(resolveAgentInputPath(env, targetRelPath), std::ios::binary);
-            ordered_json inputJson = ordered_json::parse(ifs);
+            const AgentSourceFileView* sourceView = findAgentSourceFileView(env, targetRelPath);
             const auto cacheMap = loadAgentCacheDstMap(env, targetRelPath);
-            for (const auto& [index, item] : inputJson | std::views::enumerate) {
+            if (sourceView == nullptr) {
+                continue;
+            }
+            for (const auto& [index, line] : sourceView->lines | std::views::enumerate) {
                 if ((int)matches.size() >= limit) {
                     break;
                 }
-                const std::string src = item.value("message", "");
+                const std::string& src = line.toolText;
                 std::string dst;
                 if (const auto it = cacheMap.find((int)index); it != cacheMap.end()) {
                     dst = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
@@ -1003,8 +904,9 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                     {"file", wide2Ascii(targetRelPath)},
                     {"id", (int)index},
                     {"src", src},
+                    {"src_original", line.originalText},
                     {"dst", dst},
-                    {"nearby_lines", buildAgentSearchNearbyLines(inputJson, cacheMap, (int)index, contextLines)}
+                    {"nearby_lines", buildAgentSourceNearbyLines(sourceView->lines, (int)index, contextLines)}
                 });
             }
 
@@ -1125,6 +1027,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         .transCacheMutex = &m_transCacheMutex,
         .knownRelFiles = &m_agentKnownRelFiles,
         .dictionaryPaths = &m_agentDictionaryPaths,
+        .sourceFileViews = &m_agentSourceFileViews,
         .projectInfoPath = m_agentProjectInfoPath,
         .loadTermLedger = [&]() { return loadAgentTermLedger(); },
         .loadFileNote = [&](const fs::path& targetRelPath) { return loadAgentFileNote(targetRelPath); }
@@ -1201,7 +1104,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
             if (!apiOpt.has_value()) {
-                throw std::runtime_error("没有可用的API Key了");
+                throw std::runtime_error("没有可用的 API key 了");
             }
             const TranslationApi& currentApi = apiOpt.value();
 
@@ -1378,7 +1281,7 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
     // 启动前已经按输入文件指纹清理过 rewrite_queue；
     // 这里不再重复判断“请求是否有效”，而是直接按队列驱动最终重翻。
     // 如果文件后来又被改动，交给 processFile 自己报错即可。
-    const absl::btree_map<fs::path, absl::flat_hash_set<int>> fileToIds = collectAgentReconcileTargets(rewriteQueue);
+    const absl::flat_hash_map<fs::path, absl::flat_hash_set<int>> fileToIds = collectAgentReconcileTargets(rewriteQueue);
     if (fileToIds.empty()) {
         return;
     }

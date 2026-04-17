@@ -5,6 +5,7 @@
 export module DictionaryGenerator;
 
 import APIPool;
+import AgentSourceView;
 import GPPDefines;
 import ITranslator;
 
@@ -55,6 +56,7 @@ export {
         std::vector<absl::flat_hash_set<std::string>> m_segmentWords;
         absl::flat_hash_map<std::string, int> m_wordCounter;
         absl::flat_hash_set<std::string> m_nameSet;
+        std::vector<AgentSourceFileView> m_reviewSourceFiles;
 
         // 阶段四的结果 (线程安全)
         DictList m_finalDict;

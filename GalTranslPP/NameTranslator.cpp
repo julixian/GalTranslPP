@@ -72,7 +72,7 @@ void NameTranslator::translateBatch(std::span<std::string> batchNames, absl::fla
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
         if (!apiOpt) {
-            throw std::runtime_error("NameTrans: 没有可用的API Key了");
+            throw std::runtime_error("NameTrans: 没有可用的 API key 了");
         }
         const TranslationApi& currentApi = apiOpt.value();
 

@@ -5,6 +5,7 @@ module;
 export module DictionaryReviewAgent;
 
 import APIPool;
+import AgentSourceView;
 import DictionaryReviewIndex;
 import GPPDefines;
 import ITranslator;
@@ -14,7 +15,6 @@ namespace fs = std::filesystem;
 export {
     struct DictionaryReviewAgentConfig {
         fs::path projectDir;
-        fs::path inputDir;
         std::vector<fs::path> relInputFiles;
         std::optional<fs::path> projectNotePath;
         std::string systemPrompt;
@@ -39,7 +39,7 @@ export {
             const DictionaryReviewAgentConfig& config
         );
 
-        DictList review(const std::vector<DictionaryReviewTermGroup>& groups);
+        DictList review(const std::vector<DictionaryReviewTermGroup>& groups, const std::vector<AgentSourceFileView>& sourceFiles);
 
     private:
         const std::unique_ptr<APIPool>& m_apiPool;

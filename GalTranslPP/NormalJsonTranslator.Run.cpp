@@ -14,6 +14,7 @@
 
 module NormalJsonTranslator;
 
+import AgentSourceView;
 import ConditionTool;
 import DictionaryGenerator;
 import NameTranslator;
@@ -23,6 +24,38 @@ import Tool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;
+
+AgentSourceFileView buildAgentSourceFileViewFromJson(
+    const ordered_json& data,
+    const std::function<void(Sentence*)>& preProcessFunc,
+    const fs::path& relPath = {}
+) {
+    std::vector<Sentence> sentences;
+    sentences.reserve(data.size());
+    for (const auto& [index, item] : data | std::views::enumerate) {
+        Sentence se;
+        se.index = (int)index;
+        if (auto jit = item.find("name"); jit != item.end()) {
+            se.nameType = NameType::Single;
+            jit->get_to(se.name);
+        }
+        else if (jit = item.find("names"); jit != item.end()) {
+            se.nameType = NameType::Multiple;
+            jit->get_to(se.names);
+        }
+        se.original_text = item.value("message", "");
+        sentences.push_back(std::move(se));
+    }
+    for (auto [se1, se2] : std::views::adjacent<2>(sentences)) {
+        se1.next = &se2;
+        se2.prev = &se1;
+    }
+
+    for (Sentence& se : sentences) {
+        preProcessFunc(&se);
+    }
+    return buildAgentSourceFileViewFromSentences(sentences, relPath);
+}
 
 std::vector<std::string> collectRelFileStrings(const std::vector<fs::path>& relFilePaths) {
     return relFilePaths
@@ -383,6 +416,24 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
             {"updated_at", nowTimestampString()},
             {"files", currentFileStrings}
         });
+        
+        for (const fs::path& relFilePath : relFilePaths) {
+            const fs::path absPath = fingerprintRootDir / relFilePath;
+            if (!fs::exists(absPath)) {
+                continue;
+            }
+            std::ifstream sourceIfs(absPath, std::ios::binary);
+            const ordered_json data = ordered_json::parse(sourceIfs);
+            AgentSourceFileView fileView = buildAgentSourceFileViewFromJson(
+                data,
+                [this](Sentence* se)
+                {
+                    this->preProcess(se);
+                },
+                relFilePath
+            );
+            m_agentSourceFileViews.insert_or_assign(relFilePath, fileView);
+        }
         if (!fs::exists(m_agentTermLedgerPath)) {
             saveJsonFile(m_agentTermLedgerPath, json::object());
         }

@@ -9,6 +9,12 @@ import GPPDefines;
 namespace fs = std::filesystem;
 
 export {
+    struct AgentToolJsonEnvelopeParseOptions {
+        bool allowCodeFence = true;
+        bool allowLightRepair = true;
+        bool allowSubstringFallback = true;
+    };
+
     struct AgentSharedToolEnv {
         fs::path projectDir;
         const std::vector<fs::path>* relFiles = nullptr;
@@ -24,6 +30,10 @@ export {
     };
 
     std::string safeRelativePath(const fs::path& path, const fs::path& root);
+    std::string trimAgentToolValue(const std::string& value);
+    std::optional<json> tryParseAgentJsonEnvelope(const std::string& text, const AgentToolJsonEnvelopeParseOptions& options = {});
+    int sanitizeAgentToolLimit(int requested, int fallback, int maxLimit = 200);
+    int sanitizeAgentContextLines(int requested, int maxLimit = 20);
     std::vector<std::string> collectAgentToolQueries(const json& arguments);
     json agentToolLedgerEntryToJson(const std::string& sourceTerm, const json& entry, std::string_view entryType = "term_ledger");
 

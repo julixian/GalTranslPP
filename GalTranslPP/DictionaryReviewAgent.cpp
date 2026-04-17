@@ -5,6 +5,7 @@ module;
 module DictionaryReviewAgent;
 
 import AgentToolCommon;
+import AgentSourceView;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -32,89 +33,21 @@ struct ReviewProtocolResponse {
     std::string rawContent;
 };
 
-struct ReviewSourceLine {
-    int index = -1;
-    std::string speaker;
-    std::string message;
-    std::string joinedText;
-    std::string joinedTextLower;
-};
-
-struct ReviewSourceFile {
-    fs::path relPath;
-    std::vector<ReviewSourceLine> lines;
-};
-
 struct ReviewToolExecutionEnv {
     fs::path projectDir;
     fs::path currentFile;
     const std::vector<fs::path>* relFiles = nullptr;
-    const std::vector<ReviewSourceFile>* sourceFiles = nullptr;
+    const std::vector<AgentSourceFileView>* sourceFiles = nullptr;
     const absl::btree_map<std::string, json>* ledger = nullptr;
     int searchResultLimit = 80;
     bool allowCrossFileSearch = true;
     std::optional<fs::path> projectNotePath;
 };
 
-std::string trimReviewCopy(const std::string& value) {
-    const auto isNotSpace = [](unsigned char ch) { return !std::isspace(ch); };
-    const auto begin = std::ranges::find_if(value, isNotSpace);
-    if (begin == value.end()) {
-        return {};
-    }
-    const auto end = std::ranges::find_if(value | std::views::reverse, isNotSpace).base();
-    return std::string(begin, end);
-}
-
-std::optional<json> tryParseReviewJsonEnvelope(const std::string& text) {
-    std::string newText = trimReviewCopy(text);
-    if (newText.empty()) {
-        return std::nullopt;
-    }
-
-    const size_t fencedStart = newText.find("```");
-    if (fencedStart != std::string::npos) {
-        const size_t lineEnd = newText.find('\n', fencedStart);
-        const size_t fencedEnd = newText.rfind("```");
-        if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
-            newText = trimReviewCopy(newText.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
-        }
-    }
-
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
-    newText = lightRepairJsonText(newText);
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
-    const size_t jsonStart = newText.find('{');
-    const size_t jsonEnd = newText.rfind('}');
-    if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
-        return std::nullopt;
-    }
-
-    try {
-        return json::parse(newText.substr(jsonStart, jsonEnd - jsonStart + 1));
-    }
-    catch (...) {
-        try {
-            return json::parse(lightRepairJsonText(newText.substr(jsonStart, jsonEnd - jsonStart + 1)));
-        }
-        catch (...) {
-            return std::nullopt;
-        }
-    }
-}
-
 ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     ReviewProtocolResponse result;
     result.rawContent = content;
-    const std::optional<json> payloadOpt = tryParseReviewJsonEnvelope(content);
+    const std::optional<json> payloadOpt = tryParseAgentJsonEnvelope(content);
     if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
         throw std::runtime_error("Review agent response is not a valid JSON object");
     }
@@ -154,24 +87,17 @@ ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     }
 
     if (const auto it = payload.find("result"); it != payload.end() && it->is_object()) {
-        result.result.sourceTerm = trimReviewCopy(it->value("source_term", ""));
-        result.result.finalTarget = trimReviewCopy(it->value("final_target", ""));
-        result.result.finalNote = trimReviewCopy(it->value("final_note", ""));
-        result.result.status = trimReviewCopy(it->value("status", ""));
-        result.result.mergeInto = trimReviewCopy(it->value("merge_into", ""));
+        result.result.sourceTerm = trimAgentToolValue(it->value("source_term", ""));
+        result.result.finalTarget = trimAgentToolValue(it->value("final_target", ""));
+        result.result.finalNote = trimAgentToolValue(it->value("final_note", ""));
+        result.result.status = trimAgentToolValue(it->value("status", ""));
+        result.result.mergeInto = trimAgentToolValue(it->value("merge_into", ""));
         if (const auto addIt = it->find("add_terms"); addIt != it->end() && addIt->is_array()) {
             result.result.addTerms = *addIt;
         }
     }
 
     return result;
-}
-
-int sanitizeReviewToolLimit(int requested, int fallback, int maxLimit = 200) {
-    if (requested <= 0) {
-        return fallback;
-    }
-    return std::min(requested, maxLimit);
 }
 
 std::string truncateReviewLog(std::string text, size_t maxChars = 4000) {
@@ -230,13 +156,6 @@ json groupToJson(const DictionaryReviewTermGroup& group) {
     };
 }
 
-int sanitizeReviewSearchContextLines(int requested, int maxLimit = 20) {
-    if (requested < 0) {
-        return 0;
-    }
-    return std::min(requested, maxLimit);
-}
-
 std::string buildReviewSchemaDescription() {
     return
 	"{"
@@ -254,56 +173,15 @@ std::string buildReviewSchemaDescription() {
     "}";
 }
 
-std::vector<ReviewSourceFile> loadReviewSourceFiles(const DictionaryReviewAgentConfig& config) {
-    std::vector<ReviewSourceFile> files;
-    files.reserve(config.relInputFiles.size());
-    for (const fs::path& relPath : config.relInputFiles) {
-        std::ifstream ifs(config.inputDir / relPath, std::ios::binary);
-        json inputJson = json::parse(ifs);
-
-        ReviewSourceFile file;
-        file.relPath = relPath;
-        file.lines.reserve(inputJson.size());
-        for (const auto& [index, item] : inputJson | std::views::enumerate) {
-            std::string speaker;
-            if (item.contains("name")) {
-                speaker = item.value("name", "");
-            }
-            else if (item.contains("names")) {
-                const std::vector<std::string> names = item["names"].get<std::vector<std::string>>();
-                for (size_t nameIndex = 0; nameIndex < names.size(); ++nameIndex) {
-                    if (nameIndex > 0) {
-                        speaker += '/';
-                    }
-                    speaker += names[nameIndex];
-                }
-            }
-            const std::string message = item.value("message", "");
-            const std::string joinedText = speaker.empty()
-                ? message
-                : std::format("{}: {}", speaker, message);
-            file.lines.push_back({
-                .index = (int)index,
-                .speaker = speaker,
-                .message = message,
-                .joinedText = joinedText,
-                .joinedTextLower = str2Lower(joinedText)
-            });
-        }
-        files.push_back(std::move(file));
-    }
-    return files;
-}
-
 fs::path guessCurrentFileForTerm(
     const std::string& sourceTerm,
-    const std::vector<ReviewSourceFile>& sourceFiles,
+    const std::vector<AgentSourceFileView>& sourceFiles,
     const std::vector<fs::path>& fallbackRelFiles
 ) {
-    for (const ReviewSourceFile& file : sourceFiles) {
-        const bool matched = std::ranges::any_of(file.lines, [&](const ReviewSourceLine& line)
+    for (const AgentSourceFileView& file : sourceFiles) {
+        const bool matched = std::ranges::any_of(file.lines, [&](const AgentSourceLineView& line)
             {
-                return line.joinedText.contains(sourceTerm);
+                return line.toolText.contains(sourceTerm) || line.originalText.contains(sourceTerm);
             });
         if (matched) {
             return file.relPath;
@@ -332,23 +210,6 @@ std::string fallbackNoteForGroup(const DictionaryReviewTermGroup& group) {
     return bestNote;
 }
 
-json buildReviewSearchNearbyLines(const ReviewSourceFile& file, int matchIndex, int contextLines) {
-    json nearbyLines = json::array();
-    const int start = std::max(0, matchIndex - contextLines);
-    const int end = std::min((int)file.lines.size() - 1, matchIndex + contextLines);
-    for (int i = start; i <= end; ++i) {
-        const ReviewSourceLine& line = file.lines[i];
-        nearbyLines.push_back({
-            {"id", line.index},
-            {"speaker", line.speaker},
-            {"message", line.message},
-            {"joined_text", line.joinedText},
-            {"is_match", line.index == matchIndex}
-        });
-    }
-    return nearbyLines;
-}
-
 json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& arguments) {
     const std::vector<std::string> queries = collectAgentToolQueries(arguments);
     if (queries.empty()) {
@@ -374,7 +235,7 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
     else if (scope == "all_files" && env.allowCrossFileSearch) {
         if (env.sourceFiles != nullptr) {
             targetFiles = *env.sourceFiles
-                | std::views::transform([](const ReviewSourceFile& file) { return file.relPath; })
+                | std::views::transform([](const AgentSourceFileView& file) { return file.relPath; })
                 | std::ranges::to<std::vector>();
         }
     }
@@ -383,16 +244,16 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
     }
 
     json matches = json::array();
-    const int limit = sanitizeReviewToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
+    const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     const int contextLines = arguments.contains("context_lines")
-        ? sanitizeReviewSearchContextLines(arguments.value("context_lines", 0))
+        ? sanitizeAgentContextLines(arguments.value("context_lines", 0))
         : 2;
     if (env.sourceFiles == nullptr) {
         return { {"queries", queries}, {"context_lines", contextLines}, {"matches", matches} };
     }
 
     for (const fs::path& targetFile : targetFiles) {
-        const auto fileIt = std::ranges::find_if(*env.sourceFiles, [&](const ReviewSourceFile& file)
+        const auto fileIt = std::ranges::find_if(*env.sourceFiles, [&](const AgentSourceFileView& file)
             {
                 return file.relPath == targetFile;
             });
@@ -400,14 +261,17 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
             continue;
         }
 
-        for (const ReviewSourceLine& line : fileIt->lines) {
+        for (const AgentSourceLineView& line : fileIt->lines) {
             if ((int)matches.size() >= limit) {
                 break;
             }
 
             std::string matchedQuery;
             for (const auto& [index, queryLower] : queryLowers | std::views::enumerate) {
-                if (!queryLower.empty() && line.joinedTextLower.contains(queryLower)) {
+                const std::string joinedTextLower = line.speaker.empty()
+                    ? line.toolTextLower
+                    : str2Lower(std::format("{}: {}", line.speaker, line.toolText));
+                if (!queryLower.empty() && joinedTextLower.contains(queryLower)) {
                     matchedQuery = queries[index];
                     break;
                 }
@@ -418,12 +282,13 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
 
             matches.push_back({
                 {"file", wide2Ascii(fileIt->relPath)},
-                {"id", line.index},
+                {"id", line.id},
                 {"speaker", line.speaker},
-                {"message", line.message},
-                {"joined_text", line.joinedText},
+                {"message", line.toolText},
+                {"joined_text", line.speaker.empty() ? line.toolText : std::format("{}: {}", line.speaker, line.toolText)},
+                {"original_text", line.originalText},
                 {"matched_query", matchedQuery},
-                {"nearby_lines", buildReviewSearchNearbyLines(*fileIt, line.index, contextLines)}
+                {"nearby_lines", buildAgentSourceNearbyLines(fileIt->lines, line.id, contextLines)}
             });
         }
 
@@ -456,9 +321,9 @@ AgentSharedToolEnv buildReviewSharedToolEnv(const ReviewToolExecutionEnv& env) {
         .dictionaryPaths = nullptr,
         .projectNotePath = env.projectNotePath,
         .loadTermLedger = [ledger = env.ledger]()
-        {
-            return ledger == nullptr ? json::object() : buildReviewLedgerJson(*ledger);
-        },
+            {
+                return ledger == nullptr ? json::object() : buildReviewLedgerJson(*ledger);
+            },
         .searchResultLimit = env.searchResultLimit,
         .includeLoadedDictionaryEntriesInSearch = false,
         .includeLoadedDictionaryEntriesInGetEntries = false,
@@ -575,9 +440,7 @@ DictionaryReviewAgent::DictionaryReviewAgent(
 	
 }
 
-DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGroup>& groups) {
-    std::vector<ReviewSourceFile> sourceFiles = loadReviewSourceFiles(m_config);
-
+DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGroup>& groups, const std::vector<AgentSourceFileView>& sourceFiles) {
     absl::btree_map<std::string, json> ledger;
     std::vector<std::string> entryOrder;
     entryOrder.reserve(groups.size());
@@ -714,9 +577,9 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 if (!addTerm.is_object()) {
                     continue;
                 }
-                const std::string sourceTerm = trimReviewCopy(addTerm.value("source_term", ""));
-                const std::string targetTerm = trimReviewCopy(addTerm.value("target_term", ""));
-                const std::string note = trimReviewCopy(addTerm.value("note", ""));
+                const std::string sourceTerm = trimAgentToolValue(addTerm.value("source_term", ""));
+                const std::string targetTerm = trimAgentToolValue(addTerm.value("target_term", ""));
+                const std::string note = trimAgentToolValue(addTerm.value("note", ""));
                 if (sourceTerm.empty() || targetTerm.empty()) {
                     continue;
                 }
@@ -786,7 +649,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     ? m_apiPool->getApi()
                     : m_apiPool->getFirstApi();
                 if (!apiOpt.has_value()) {
-                    throw std::runtime_error("没有可用的API Key了");
+                    throw std::runtime_error("没有可用的 API key 了");
                 }
                 const TranslationApi& currentApi = apiOpt.value();
 

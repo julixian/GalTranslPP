@@ -5,6 +5,7 @@ module;
 
 module AgentToolCommon;
 
+import NormalJsonTranslatorHelperTool;
 import Tool;
 
 namespace fs = std::filesystem;
@@ -29,9 +30,73 @@ std::string trimAgentToolValue(const std::string& value) {
     return std::string(begin, end);
 }
 
-int sanitizeAgentToolLimit(int requested, int fallback, int maxLimit = 200) {
+std::optional<json> tryParseAgentJsonEnvelope(const std::string& text, const AgentToolJsonEnvelopeParseOptions& options) {
+    std::string newText = trimAgentToolValue(text);
+    if (newText.empty()) {
+        return std::nullopt;
+    }
+
+    if (options.allowCodeFence) {
+        const size_t fencedStart = newText.find("```");
+        if (fencedStart != std::string::npos) {
+            const size_t lineEnd = newText.find('\n', fencedStart);
+            const size_t fencedEnd = newText.rfind("```");
+            if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
+                newText = trimAgentToolValue(newText.substr(lineEnd + 1, fencedEnd - lineEnd - 1));
+            }
+        }
+    }
+
+    try {
+        return json::parse(newText);
+    }
+    catch (...) { }
+
+    if (options.allowLightRepair) {
+        newText = lightRepairJsonText(newText);
+        try {
+            return json::parse(newText);
+        }
+        catch (...) { }
+    }
+
+    if (!options.allowSubstringFallback) {
+        return std::nullopt;
+    }
+
+    const size_t jsonStart = newText.find('{');
+    const size_t jsonEnd = newText.rfind('}');
+    if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {
+        return std::nullopt;
+    }
+
+    const std::string jsonSlice = newText.substr(jsonStart, jsonEnd - jsonStart + 1);
+    try {
+        return json::parse(jsonSlice);
+    }
+    catch (...) {
+        if (!options.allowLightRepair) {
+            return std::nullopt;
+        }
+        try {
+            return json::parse(lightRepairJsonText(jsonSlice));
+        }
+        catch (...) {
+            return std::nullopt;
+        }
+    }
+}
+
+int sanitizeAgentToolLimit(int requested, int fallback, int maxLimit) {
     if (requested <= 0) {
         return fallback;
+    }
+    return std::min(requested, maxLimit);
+}
+
+int sanitizeAgentContextLines(int requested, int maxLimit) {
+    if (requested < 0) {
+        return 0;
     }
     return std::min(requested, maxLimit);
 }
@@ -218,7 +283,7 @@ json runAgentCommonSearchDictionaryTool(const AgentSharedToolEnv& env, const jso
 
 json runAgentCommonGetDictionaryEntriesTool(const AgentSharedToolEnv& env, const json& arguments) {
     std::vector<std::string> terms;
-    if (const auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
+    if (auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
         for (const auto& term : *it) {
             if (term.is_string()) {
                 const std::string value = trimAgentToolValue(term.get<std::string>());
@@ -228,7 +293,7 @@ json runAgentCommonGetDictionaryEntriesTool(const AgentSharedToolEnv& env, const
             }
         }
     }
-    else if (const auto it = arguments.find("term"); it != arguments.end() && it->is_string()) {
+    else if (it = arguments.find("term"); it != arguments.end() && it->is_string()) {
         const std::string value = trimAgentToolValue(it->get<std::string>());
         if (!value.empty()) {
             terms.push_back(value);
@@ -304,7 +369,7 @@ json runAgentCommonGetTermTool(const AgentSharedToolEnv& env, const json& argume
     const json ledger = loadAgentToolLedger(env);
     return {
         {"term", term},
-        {"entry", ledger.contains(term) ? ledger.at(term) : json(nullptr)}
+        {"entry", ledger.contains(term) ? ledger.at(term) : json()}
     };
 }
 

@@ -6,6 +6,7 @@
 
 module DictionaryGenerator;
 
+import AgentSourceView;
 import DictionaryReviewAgent;
 import DictionaryReviewIndex;
 import Tool;
@@ -43,9 +44,13 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
         json data = json::parse(ifs);
         ifs.close();
 
-        for (const auto& item : data) {
+        std::vector<Sentence> sourceSentences;
+        sourceSentences.reserve(data.size());
+
+        for (const auto& [index, item] : data | std::views::enumerate) {
             ++m_totalSentences;
             Sentence se;
+            se.index = (int)index;
             if (item.contains("name")) {
                 se.nameType = NameType::Single;
                 se.name = item.value("name", "");
@@ -65,6 +70,8 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             }
             replaceStrInplace(se.pre_processed_text, "<br>", "");
             replaceStrInplace(se.pre_processed_text, "<tab>", "");
+
+            sourceSentences.push_back(se);
 
             if (se.nameType == NameType::Single && !se.name.empty()) {
                 m_nameSet.insert(se.name);
@@ -93,6 +100,8 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             m_segments.push_back(std::move(currentSegment));
             currentSegment.clear();
         }
+
+        m_reviewSourceFiles.push_back(buildAgentSourceFileViewFromSentences(sourceSentences, fs::relative(jsonFile, m_reviewOptions.inputDir)));
     }
 
     if (!currentSegment.empty()) {
@@ -261,7 +270,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
         if (!apiOpt) {
-            throw std::runtime_error("没有可用的API Key了");
+            throw std::runtime_error("没有可用的 API key 了");
         }
         const TranslationApi& currentApi = apiOpt.value();
 
@@ -399,7 +408,6 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
             );
             DictionaryReviewAgentConfig reviewConfig{
                 .projectDir = m_reviewOptions.projectDir,
-                .inputDir = m_reviewOptions.inputDir,
                 .relInputFiles = m_reviewOptions.relInputFiles,
                 .projectNotePath = m_reviewOptions.projectNotePath,
                 .systemPrompt = m_reviewOptions.systemPrompt,
@@ -414,7 +422,7 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
                 .allowCrossFileSearch = m_reviewOptions.allowCrossFileSearch
             };
             DictionaryReviewAgent reviewAgent(m_controller, m_logger, m_apiPool, m_onPerformApi, std::move(reviewConfig));
-            DictList reviewedList = reviewAgent.review(termGroups);
+            DictList reviewedList = reviewAgent.review(termGroups, m_reviewSourceFiles);
             finalList = m_onDictProcessed ? m_onDictProcessed(std::move(reviewedList)) : std::move(reviewedList);
             m_logger->info("阶段四：Review Agent 审校完成，使用审校后的字典结果。");
         }

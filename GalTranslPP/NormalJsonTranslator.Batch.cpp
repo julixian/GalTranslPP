@@ -120,7 +120,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
         if (!apiOpt.has_value()) {
-            throw std::runtime_error("没有可用的API Key了");
+            throw std::runtime_error("没有可用的 API key 了");
         }
         const TranslationApi& currentApi = apiOpt.value();
 

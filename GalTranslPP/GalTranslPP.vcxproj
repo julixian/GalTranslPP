@@ -173,6 +173,8 @@
     <ClCompile Include="APITool.ixx" />
     <ClCompile Include="AgentToolCommon.cpp" />
     <ClCompile Include="AgentToolCommon.ixx" />
+    <ClCompile Include="AgentSourceView.cpp" />
+    <ClCompile Include="AgentSourceView.ixx" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />
     <ClCompile Include="Dictionary.cpp" />

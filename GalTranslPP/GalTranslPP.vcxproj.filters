@@ -34,6 +34,12 @@
     <ClCompile Include="AgentToolCommon.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="AgentSourceView.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="AgentSourceView.ixx">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
     <ClCompile Include="PDFTranslator.ixx">
       <Filter>filePlugins</Filter>
     </ClCompile>

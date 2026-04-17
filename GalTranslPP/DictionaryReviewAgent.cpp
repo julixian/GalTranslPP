@@ -227,31 +227,31 @@ json groupToJson(const DictionaryReviewTermGroup& group) {
         {"sampleSegments", sampleSegmentsToJson(group.sampleSegments)},
         {"isNameHint", group.isNameHint},
         {"isTokenizerWord", group.isTokenizerWord}
-        };
-    }
+    };
+}
 
-    int sanitizeReviewSearchContextLines(int requested, int maxLimit = 20) {
-        if (requested < 0) {
-            return 0;
-        }
-        return std::min(requested, maxLimit);
+int sanitizeReviewSearchContextLines(int requested, int maxLimit = 20) {
+    if (requested < 0) {
+        return 0;
     }
+    return std::min(requested, maxLimit);
+}
 
-    std::string buildReviewSchemaDescription() {
-        return
-            "{"
-        "\"schema\":\"gpp-gendict-review-v1\","
-        "\"action\":\"tool_calls|commit|skip\","
-        "\"calls\":[],"
-        "\"result\":{"
-        "\"source_term\":\"\","
-        "\"final_target\":\"\","
-        "\"final_note\":\"\","
-        "\"status\":\"accepted|merged|deprecated|conflict\","
-        "\"merge_into\":\"\","
-        "\"add_terms\":[]"
-        "}"
-        "}";
+std::string buildReviewSchemaDescription() {
+    return
+	"{"
+    "\"schema\":\"gpp-gendict-review-v1\","
+    "\"action\":\"tool_calls|commit|skip\","
+    "\"calls\":[],"
+    "\"result\":{"
+    "\"source_term\":\"\","
+    "\"final_target\":\"\","
+    "\"final_note\":\"\","
+    "\"status\":\"accepted|merged|deprecated|conflict\","
+    "\"merge_into\":\"\","
+    "\"add_terms\":[]"
+    "}"
+    "}";
 }
 
 std::vector<ReviewSourceFile> loadReviewSourceFiles(const DictionaryReviewAgentConfig& config) {
@@ -322,38 +322,39 @@ std::string fallbackTargetForGroup(const DictionaryReviewTermGroup& group) {
     return {};
 }
 
-    std::string fallbackNoteForGroup(const DictionaryReviewTermGroup& group) {
-        std::string bestNote;
-        for (const auto& note : group.candidateNotes) {
-            if (note.value.size() > bestNote.size()) {
-                bestNote = note.value;
-            }
+std::string fallbackNoteForGroup(const DictionaryReviewTermGroup& group) {
+    std::string bestNote;
+    for (const auto& note : group.candidateNotes) {
+        if (note.value.size() > bestNote.size()) {
+            bestNote = note.value;
         }
-        return bestNote;
+    }
+    return bestNote;
+}
+
+json buildReviewSearchNearbyLines(const ReviewSourceFile& file, int matchIndex, int contextLines) {
+    json nearbyLines = json::array();
+    const int start = std::max(0, matchIndex - contextLines);
+    const int end = std::min((int)file.lines.size() - 1, matchIndex + contextLines);
+    for (int i = start; i <= end; ++i) {
+        const ReviewSourceLine& line = file.lines[i];
+        nearbyLines.push_back({
+            {"id", line.index},
+            {"speaker", line.speaker},
+            {"message", line.message},
+            {"joined_text", line.joinedText},
+            {"is_match", line.index == matchIndex}
+        });
+    }
+    return nearbyLines;
+}
+
+json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& arguments) {
+    const std::vector<std::string> queries = collectAgentToolQueries(arguments);
+    if (queries.empty()) {
+        return { {"error", "search_text requires query or queries"} };
     }
 
-    json buildReviewSearchNearbyLines(const ReviewSourceFile& file, int matchIndex, int contextLines) {
-        json nearbyLines = json::array();
-        const int start = std::max(0, matchIndex - contextLines);
-        const int end = std::min((int)file.lines.size() - 1, matchIndex + contextLines);
-        for (int i = start; i <= end; ++i) {
-            const ReviewSourceLine& line = file.lines[i];
-            nearbyLines.push_back({
-                {"id", line.index},
-                {"speaker", line.speaker},
-                {"message", line.message},
-                {"joined_text", line.joinedText},
-                {"is_match", line.index == matchIndex}
-            });
-        }
-        return nearbyLines;
-    }
-
-    json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& arguments) {
-        const std::vector<std::string> queries = collectAgentToolQueries(arguments);
-        if (queries.empty()) {
-            return { {"error", "search_text requires query or queries"} };
-        }
     const std::vector<std::string> queryLowers = queries
         | std::views::transform([](const std::string& query) { return str2Lower(query); })
         | std::ranges::to<std::vector>();
@@ -381,14 +382,14 @@ std::string fallbackTargetForGroup(const DictionaryReviewTermGroup& group) {
         targetFiles.push_back(env.currentFile);
     }
 
-        json matches = json::array();
-        const int limit = sanitizeReviewToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
-        const int contextLines = arguments.contains("context_lines")
-            ? sanitizeReviewSearchContextLines(arguments.value("context_lines", 0))
-            : 2;
-        if (env.sourceFiles == nullptr) {
-            return { {"queries", queries}, {"context_lines", contextLines}, {"matches", matches} };
-        }
+    json matches = json::array();
+    const int limit = sanitizeReviewToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
+    const int contextLines = arguments.contains("context_lines")
+        ? sanitizeReviewSearchContextLines(arguments.value("context_lines", 0))
+        : 2;
+    if (env.sourceFiles == nullptr) {
+        return { {"queries", queries}, {"context_lines", contextLines}, {"matches", matches} };
+    }
 
     for (const fs::path& targetFile : targetFiles) {
         const auto fileIt = std::ranges::find_if(*env.sourceFiles, [&](const ReviewSourceFile& file)
@@ -415,30 +416,30 @@ std::string fallbackTargetForGroup(const DictionaryReviewTermGroup& group) {
                 continue;
             }
 
-                matches.push_back({
-                    {"file", wide2Ascii(fileIt->relPath)},
-                    {"id", line.index},
-                    {"speaker", line.speaker},
-                    {"message", line.message},
-                    {"joined_text", line.joinedText},
-                    {"matched_query", matchedQuery},
-                    {"nearby_lines", buildReviewSearchNearbyLines(*fileIt, line.index, contextLines)}
-                });
-            }
+            matches.push_back({
+                {"file", wide2Ascii(fileIt->relPath)},
+                {"id", line.index},
+                {"speaker", line.speaker},
+                {"message", line.message},
+                {"joined_text", line.joinedText},
+                {"matched_query", matchedQuery},
+                {"nearby_lines", buildReviewSearchNearbyLines(*fileIt, line.index, contextLines)}
+            });
+        }
 
         if ((int)matches.size() >= limit) {
             break;
         }
     }
 
-        return {
-            {"queries", queries},
-            {"scope", scope},
-            {"current_file", wide2Ascii(env.currentFile)},
-            {"context_lines", contextLines},
-            {"matches", matches}
-        };
-    }
+    return {
+        {"queries", queries},
+        {"scope", scope},
+        {"current_file", wide2Ascii(env.currentFile)},
+        {"context_lines", contextLines},
+        {"matches", matches}
+    };
+}
 
 json buildReviewLedgerJson(const absl::btree_map<std::string, json>& ledger) {
     json result = json::object();
@@ -569,7 +570,10 @@ DictionaryReviewAgent::DictionaryReviewAgent(
     const std::unique_ptr<APIPool>& apiPool,
     const std::function<std::string(std::string)>& onPerformApi,
     const DictionaryReviewAgentConfig& config
-) : m_apiPool(apiPool), m_controller(controller), m_logger(logger), m_onPerformApi(onPerformApi), m_config(config) {}
+) : m_apiPool(apiPool), m_controller(controller), m_logger(logger), m_onPerformApi(onPerformApi), m_config(config) 
+{
+	
+}
 
 DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGroup>& groups) {
     std::vector<ReviewSourceFile> sourceFiles = loadReviewSourceFiles(m_config);

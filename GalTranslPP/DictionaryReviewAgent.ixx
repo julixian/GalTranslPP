@@ -22,7 +22,7 @@ export {
         std::string apiStrategy;
         std::string targetLang;
         int maxRetries = 5;
-        int maxTurnsPerTerm = 20;
+        int maxTurnsPerTerm = 6;
         int searchResultLimit = 80;
         int apiTimeoutMs = 120000;
         bool checkQuota = true;

@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. GenDict 允许启用 agent 模式，会在提取后 Review 一遍字典列表。挺耗时的，不建议日常使用",
+        "1. GenDict 允许启用 agent 模式，作用是在提取后 Review 一遍字典列表，尽可能地统一、纠正和补充词条内容。挺耗时的，不建议日常使用",
 		"2. 调整提示词",
     };
 

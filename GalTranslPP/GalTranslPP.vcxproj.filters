@@ -19,14 +19,8 @@
     <ClCompile Include="ProblemAnalyzer.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="NornalJsonTranslatorHelperTool.ixx">
-      <Filter>Tools\Utils\specialized</Filter>
-    </ClCompile>
     <ClCompile Include="GPPDefines.ixx">
       <Filter>Tools\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="APITool.ixx">
-      <Filter>Tools\Utils\specialized</Filter>
     </ClCompile>
     <ClCompile Include="AgentToolCommon.cpp">
       <Filter>Tools\Utils</Filter>
@@ -73,9 +67,6 @@
     <ClCompile Include="NLPTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="PDFTool.ixx">
-      <Filter>Tools\Utils\specialized</Filter>
-    </ClCompile>
     <ClCompile Include="LuaTextPlugin.ixx">
       <Filter>textPlugins</Filter>
     </ClCompile>
@@ -112,17 +103,8 @@
     <ClCompile Include="NLPTool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="PDFTool.cpp">
-      <Filter>Tools\Utils\specialized</Filter>
-    </ClCompile>
     <ClCompile Include="TextLinebreakFix.cpp">
       <Filter>textPlugins</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalJsonTranslatorHelperTool.cpp">
-      <Filter>Tools\Utils\specialized</Filter>
-    </ClCompile>
-    <ClCompile Include="APITool.cpp">
-      <Filter>Tools\Utils\specialized</Filter>
     </ClCompile>
     <ClCompile Include="APIPool.cpp">
       <Filter>Tools</Filter>
@@ -193,6 +175,24 @@
     <ClCompile Include="DictionaryReviewIndex.ixx">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
+    <ClCompile Include="APITool.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="APITool.ixx">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslatorHelperTool.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="NornalJsonTranslatorHelperTool.ixx">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="PDFTool.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="PDFTool.ixx">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -206,9 +206,6 @@
     </Filter>
     <Filter Include="Tools\Utils">
       <UniqueIdentifier>{a59529ed-a8a2-4ef2-810b-aeeefe790343}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Tools\Utils\specialized">
-      <UniqueIdentifier>{cb1a4c6b-be5d-4d19-bbc5-3de2ec63f522}</UniqueIdentifier>
     </Filter>
     <Filter Include="filePlugins\NormalJsonTranslator">
       <UniqueIdentifier>{a41ce28e-4b90-422b-afee-9f30153d608d}</UniqueIdentifier>

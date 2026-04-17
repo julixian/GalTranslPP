@@ -955,7 +955,7 @@ json runAgentListFilesTool(const AgentToolExecutionEnv& env, const json& argumen
 json runAgentGetDictionaryEntriesTool(const AgentToolExecutionEnv& env, const json& arguments) {
     const int limit = sanitizeToolLimit(arguments.value("limit", 200), 200, 2000);
     std::vector<std::string> terms;
-    if (const auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
+    if (auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
         for (const auto& term : *it) {
             if (term.is_string()) {
                 const std::string value = trimCopy(term.get<std::string>());
@@ -965,7 +965,7 @@ json runAgentGetDictionaryEntriesTool(const AgentToolExecutionEnv& env, const js
             }
         }
     }
-    else if (const auto it = arguments.find("term"); it != arguments.end() && it->is_string()) {
+    else if (it = arguments.find("term"); it != arguments.end() && it->is_string()) {
         const std::string value = trimCopy(it->get<std::string>());
         if (!value.empty()) {
             terms.push_back(value);

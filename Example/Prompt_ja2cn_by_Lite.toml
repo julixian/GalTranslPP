@@ -165,8 +165,6 @@ NAME\tSRC\tID
 </input>
 
 <output>
-```
-NAME\tDST\tID
 """
 FORNOVELTSV_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
 FORNOVELTSV_TRANS_PROMPT_EN =  """<system_instructions>
@@ -334,8 +332,6 @@ SRC\tID
 </input>
 
 <output>
-```
-DST\tID
 """
 FORGALTSV_AGENT_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
 FORGALTSV_AGENT_PROMPT_EN = """<ciallo_agent_info>

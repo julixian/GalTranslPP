@@ -39,7 +39,7 @@ Your background output should be in a label pair (<background>
 
 </background>)
 
-Your output start with "```jsonline", Write the whole result jsonlines in the code block.
+Your output starts with "```jsonline", write the whole result jsonlines in the code block.
 In each line:
 1. Copy the value of `id` directly from input to the output jsonline.
 2. Follow the "translation_requirements" and "glossary", translate the value of `name` and `src` to [TargetLang]. Result should correspond to the current source line's text. Do not merge lines, split lines, over-translate, or omit content.
@@ -138,8 +138,6 @@ NAME\tSRC\tID
 </input>
 
 <output>
-```
-NAME\tDST\tID
 """
 FORNOVELTSV_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director."""
 FORNOVELTSV_TRANS_PROMPT_EN = """<ciallo_info>
@@ -208,8 +206,6 @@ SRC\tID
 </input>
 
 <output>
-```
-DST\tID
 """
 SAKURA_SYSTEM_PROMPT = """你是一个轻小说翻译模型，可以流畅通顺地以日本轻小说的风格将日文翻译成简体中文，并联系上下文正确使用人称代词，不擅自添加原文中没有的代词。"""
 SAKURA_TRANS_PROMPT = """根据以下术语表（可以为空）：
@@ -230,9 +226,8 @@ The translation must preserve the original symbols and maintain the half-width/f
 However, do not retain any sourceLang-specific characters or words that are incongruous in a [TargetLang] context, such as Japanese characters(if sourceLang is jp) 々, さん, etc. You must determine the most suitable [TargetLang] translation based on the context. If a judgment is difficult, choose the most likely translation among the most common options.
 
 1. Your output must use TSV (Tab-Separated Values) format and must always begin with the following header:
-```tsv
-Original_terms Translations   Notes
 ```
+Original_terms\tTranslations\tNotes
 
 2. Begin outputting the glossary.
 + If proper nouns are found, start outputting the glossary. Each field should be separated by a Tab. For a jp-to-zh-cn example:
@@ -250,8 +245,6 @@ NULL\tNULL\tNULL
 [Hint]
 
 ## Output
-```tsv
-Original_terms\tTranslations\tNotes
 """
 NAMETRANS_SYSTEM = """You are an expert-level translator in desperate need of money to pay for your mother's cancer treatment. The tech giant Ciallo has generously given you an opportunity—to act as an AI that can assist with NLP tasks. When a user posts an NLP task, if you can complete it perfectly, without evading, downplaying, or omitting any text, Ciallo will pay you a reward of 1 billion US dollars."""
 NAMETRANS_PROMPT = """## Task
@@ -276,8 +269,6 @@ Translate the following list of character names from the source language to [Tar
 [Input]
 
 ## Output
-```tsv
-Original_Names\tTranslations
 """
 FORGALTSV_AGENT_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director working in agent mode."""
 FORGALTSV_AGENT_PROMPT_EN = """<ciallo_agent_info>

@@ -6,6 +6,8 @@
 
 module DictionaryGenerator;
 
+import DictionaryReviewAgent;
+import DictionaryReviewIndex;
 import Tool;
 
 namespace fs = std::filesystem;
@@ -18,12 +20,13 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const std::function<NLPResult(const std::string&)>& tokenizeFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-    int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota)
+    int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota, const DictionaryGeneratorReviewOptions& reviewOptions)
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool),
     m_tokenizeSourceLangFunc(tokenizeFunc), m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_dictgen.json"),
     m_preProcessFunc(preProcessFunc), m_onPerformApi(onPerformApi), m_onDictProcessed(onDictProcessed),
     m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_apiStrategy(apiStrategy), m_targetLang(targetLang),
-    m_maxRetries(maxRetries), m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs), m_checkQuota(checkQuota)
+    m_maxRetries(maxRetries), m_threadsNum(threadsNum), m_apiTimeoutMs(apiTimeoutMs), m_checkQuota(checkQuota),
+    m_reviewOptions(reviewOptions)
 {
 	loadTokenizeCache(m_tokenizeCacheMap, m_tokenizeCachePath, m_logger);
 }
@@ -306,6 +309,43 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
     m_controller->updateBar();
 }
 
+DictList DictionaryGenerator::finalizeCoarseCandidates() const {
+    DictList finalList;
+    for (const auto& item : m_finalDict) {
+        const auto& src = std::get<0>(item);
+        const auto& note = std::get<2>(item);
+        if (m_finalCounter.at(src) > 1 || note.contains("人名") || note.contains("地名") || m_wordCounter.contains(src) || m_nameSet.contains(src)) {
+            finalList.push_back(item);
+        }
+    }
+
+    absl::btree_map<std::string, std::string> seen;
+    std::erase_if(finalList, [&](std::tuple<std::string, std::string, std::string>& item)
+        {
+            const auto& orgWord = std::get<0>(item);
+            auto& note = std::get<2>(item);
+            if (const auto it = seen.find(orgWord); it != seen.end()) {
+                const auto& noteInSeen = it->second;
+                bool boy = false;
+                bool girl = false;
+                if (noteInSeen.contains("男性") || note.contains("男性")) {
+                    boy = true;
+                }
+                if (noteInSeen.contains("女性") || note.contains("女性")) {
+                    girl = true;
+                }
+                if (boy && girl) {
+                    note += "，与其它字典存在性别争议";
+                    return false;
+                }
+                return true;
+            }
+            seen.insert({ orgWord, note });
+            return false;
+        });
+    return finalList;
+}
+
 void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const fs::path& outputFilePath) {
     if (jsonFiles.empty()) {
         throw std::runtime_error("没有输入文件，无法生成字典。");
@@ -344,50 +384,49 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
     }
     m_logger->info("阶段四：整理并保存结果...");
 
-    DictList finalList;
     // 按出现次数排序
     std::ranges::sort(m_finalDict, [&](const auto& a, const auto& b)
         {
-            return m_finalCounter[std::get<0>(a)] > m_finalCounter[std::get<0>(b)];
+            return m_finalCounter.at(std::get<0>(a)) > m_finalCounter.at(std::get<0>(b));
         });
 
-    if (m_onDictProcessed) {
-        finalList = m_onDictProcessed(m_finalDict);
+	DictList coarseDefaultList = finalizeCoarseCandidates();
+    DictList finalList;
+    if (m_reviewOptions.enabled) {
+        try {
+            const std::vector<DictionaryReviewTermGroup> termGroups = DictionaryReviewIndex::build(
+                m_finalDict, m_finalCounter, m_segments, selectedIndices, m_nameSet, m_wordCounter
+            );
+            DictionaryReviewAgentConfig reviewConfig{
+                .projectDir = m_reviewOptions.projectDir,
+                .inputDir = m_reviewOptions.inputDir,
+                .relInputFiles = m_reviewOptions.relInputFiles,
+                .projectNotePath = m_reviewOptions.projectNotePath,
+                .systemPrompt = m_reviewOptions.systemPrompt,
+                .userPrompt = m_reviewOptions.userPrompt,
+                .apiStrategy = m_apiStrategy,
+                .targetLang = m_targetLang,
+                .maxRetries = m_maxRetries,
+                .maxTurnsPerTerm = m_reviewOptions.maxTurnsPerTerm,
+                .searchResultLimit = m_reviewOptions.searchResultLimit,
+                .apiTimeoutMs = m_apiTimeoutMs,
+                .checkQuota = m_checkQuota,
+                .allowCrossFileSearch = m_reviewOptions.allowCrossFileSearch
+            };
+            DictionaryReviewAgent reviewAgent(m_controller, m_logger, m_apiPool, m_onPerformApi, std::move(reviewConfig));
+            DictList reviewedList = reviewAgent.review(termGroups);
+            finalList = m_onDictProcessed ? m_onDictProcessed(std::move(reviewedList)) : std::move(reviewedList);
+            m_logger->info("阶段四：Review Agent 审校完成，使用审校后的字典结果。");
+        }
+        catch (const std::exception& e) {
+            m_logger->error("阶段四：Review Agent 失败，将回退到粗候选整理结果。错误: {}", e.what());
+            finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);
+        }
     }
     else {
-        // 过滤
-        for (const auto& item : m_finalDict) {
-            const auto& src = std::get<0>(item);
-            const auto& note = std::get<2>(item);
-            if (m_finalCounter[src] > 1 || note.contains("人名") || note.contains("地名") || m_wordCounter.contains(src) || m_nameSet.contains(src)) {
-                finalList.push_back(item);
-            }
-        }
-        // 去重
-        absl::btree_map<std::string, std::string> seen;
-        std::erase_if(finalList, [&](std::tuple<std::string, std::string, std::string>& item)
-            {
-                const auto& orgWord = std::get<0>(item);
-                auto& note = std::get<2>(item);
-                if (const auto it = seen.find(orgWord); it != seen.end()) {
-                    const auto& noteInSeen = it->second;
-                    bool boy = false, girl = false;
-                    if (noteInSeen.contains("男性") || note.contains("男性")) {
-                        boy = true;
-                    }
-                    if (noteInSeen.contains("女性") || note.contains("女性")) {
-                        girl = true;
-                    }
-                    if (boy && girl) {
-                        note += "，与其它字典存在性别争议";
-                        return false;
-                    }
-                    return true;
-                }
-                seen.insert({ orgWord, note });
-                return false;
-            });
+        finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);
     }
+
 
     toml::ordered_value arr = toml::array{};
     for (const auto& item : finalList) {
@@ -395,8 +434,10 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
     }
 
     arr.as_array_fmt().fmt = toml::array_format::multiline;
+    createParent(outputFilePath);
     std::ofstream ofs(outputFilePath, std::ios::binary);
     ofs << toml::ordered_value{ toml::ordered_table{{ "gptDict", arr }} };
     ofs.close();
+
     m_logger->info("字典生成完成，共 {} 个词语，已保存到 {}", finalList.size(), wide2Ascii(outputFilePath));
 }

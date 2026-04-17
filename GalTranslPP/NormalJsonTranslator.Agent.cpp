@@ -10,6 +10,7 @@
 
 module NormalJsonTranslator;
 
+import AgentToolCommon;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -829,68 +830,54 @@ absl::flat_hash_map<int, json> loadAgentCacheDstMap(const AgentToolExecutionEnv&
     return cacheMap;
 }
 
-json collectLoadedDictionaryEntries(const AgentToolExecutionEnv& env) {
-    json entries = json::array();
-    if (env.dictionaryPaths == nullptr) {
-        return entries;
+int sanitizeAgentSearchContextLines(int requested, int maxLimit = 20) {
+    if (requested < 0) {
+        return 0;
     }
-    for (const fs::path& dictPath : *env.dictionaryPaths) {
-        try {
-            const auto dictData = toml::uparse(dictPath);
-            const fs::path relPath = fs::relative(dictPath, env.projectDir);
-            const std::string relPathStr = wide2Ascii(relPath);
-            if (!dictData.contains("gptDict")) {
-                continue;
-            }
-            const auto& dictTbls = dictData.at("gptDict").as_array();
-            for (const auto& el : dictTbls) {
-                const std::string sourceTerm = el.contains("org") ? el.at("org").as_string() :
-                    (el.contains("searchStr") ? el.at("searchStr").as_string() : "");
-                const std::string targetTerm = el.contains("rep") ? el.at("rep").as_string() :
-                    (el.contains("replaceStr") ? el.at("replaceStr").as_string() : "");
-                const std::string note = el.contains("note") ? el.at("note").as_string() : "";
-                if (sourceTerm.empty() && targetTerm.empty() && note.empty()) {
-                    continue;
-                }
-                entries.push_back(json{
-                        {"type", "gpt_dict"},
-                        {"file", relPathStr},
-                        {"source_term", sourceTerm},
-                        {"target_term", targetTerm},
-                        {"note", note}
-                    });
-            }
-        }
-        catch (...) { }
-    }
-    return entries;
+    return std::min(requested, maxLimit);
 }
 
-std::vector<std::string> collectAgentQueries(const json& arguments) {
-    std::vector<std::string> queries;
-    if (const auto it = arguments.find("queries"); it != arguments.end() && it->is_array()) {
-        for (const auto& query : *it) {
-            if (query.is_string()) {
-                const std::string value = trimCopy(query.get<std::string>());
-                if (!value.empty()) {
-                    queries.push_back(value);
-                }
-            }
-        }
+json buildAgentSearchNearbyLine(
+    const ordered_json& inputJson,
+    const absl::flat_hash_map<int, json>& cacheMap,
+    int lineIndex,
+    bool isMatch
+) {
+    json line = {
+        {"id", lineIndex},
+        {"is_match", isMatch}
+    };
+    const auto cacheIt = cacheMap.find(lineIndex);
+    if (inputJson[lineIndex].contains("name")) {
+        line["name"] = inputJson[lineIndex]["name"];
     }
-    if (queries.empty()) {
-        const std::string query = trimCopy(arguments.value("query", ""));
-        if (!query.empty()) {
-            std::istringstream iss(query);
-            for (std::string token; iss >> token;) {
-                queries.push_back(token);
-            }
-            if (queries.empty()) {
-                queries.push_back(query);
-            }
-        }
+    if (inputJson[lineIndex].contains("names")) {
+        line["names"] = inputJson[lineIndex]["names"];
     }
-    return queries;
+    std::string src = inputJson[lineIndex].value("message", "");
+    if (cacheIt != cacheMap.end()) {
+        src = cacheIt->second.value("pre_processed_text", src);
+    }
+    line["src"] = src;
+    if (cacheIt != cacheMap.end()) {
+        line["dst"] = cacheIt->second.value("pre_translated_text", cacheIt->second.value("translated_preview", ""));
+    }
+    return line;
+}
+
+json buildAgentSearchNearbyLines(
+    const ordered_json& inputJson,
+    const absl::flat_hash_map<int, json>& cacheMap,
+    int matchIndex,
+    int contextLines
+) {
+    json nearbyLines = json::array();
+    const int start = std::max(0, matchIndex - contextLines);
+    const int end = std::min((int)inputJson.size() - 1, matchIndex + contextLines);
+    for (int i = start; i <= end; ++i) {
+        nearbyLines.push_back(buildAgentSearchNearbyLine(inputJson, cacheMap, i, i == matchIndex));
+    }
+    return nearbyLines;
 }
 
 json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& arguments) {
@@ -932,130 +919,16 @@ json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& argumen
     return result;
 }
 
-json runAgentListFilesTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::string pattern = str2Lower(arguments.value("pattern", ""));
-    const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
-    json files = json::array();
-    if (env.knownRelFiles == nullptr) {
-        return json{ {"files", files} };
-    }
-    for (const auto& relFile : *env.knownRelFiles) {
-        const std::string relFileStr = wide2Ascii(relFile);
-        if (!pattern.empty() && !str2Lower(relFileStr).contains(pattern)) {
-            continue;
-        }
-        files.push_back(relFileStr);
-        if ((int)files.size() >= limit) {
-            break;
-        }
-    }
-    return json{ {"files", files} };
-}
-
-json runAgentGetDictionaryEntriesTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const int limit = sanitizeToolLimit(arguments.value("limit", 200), 200, 2000);
-    std::vector<std::string> terms;
-    if (auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
-        for (const auto& term : *it) {
-            if (term.is_string()) {
-                const std::string value = trimCopy(term.get<std::string>());
-                if (!value.empty()) {
-                    terms.push_back(value);
-                }
-            }
-        }
-    }
-    else if (it = arguments.find("term"); it != arguments.end() && it->is_string()) {
-        const std::string value = trimCopy(it->get<std::string>());
-        if (!value.empty()) {
-            terms.push_back(value);
-        }
-    }
-
-    const json allEntries = collectLoadedDictionaryEntries(env);
-    json entries = json::array();
-    int matchedTotal = 0;
-    for (const auto& entry : allEntries) {
-        bool matched = terms.empty();
-        if (!matched) {
-            const std::string sourceTerm = entry.value("source_term", "");
-            const std::string targetTerm = entry.value("target_term", "");
-            matched = std::ranges::any_of(terms, [&](const std::string& term) {
-                return sourceTerm == term || targetTerm == term;
-            });
-        }
-        if (!matched) {
-            continue;
-        }
-        ++matchedTotal;
-        if ((int)entries.size() < limit) {
-            entries.push_back(entry);
-        }
-    }
-
-    return json{
-        {"entries", entries},
-        {"total_entries", (int)allEntries.size()},
-        {"returned_entries", (int)entries.size()},
-        {"matched_entries", matchedTotal},
-        {"truncated", (int)entries.size() < matchedTotal}
-    };
-}
-
-json runAgentSearchDictionaryTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::vector<std::string> queries = collectAgentQueries(arguments);
-    const std::string mode = str2Lower(arguments.value("mode", "fuzzy"));
-    const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit, 200);
-    json matches = json::array();
-    const json allEntries = collectLoadedDictionaryEntries(env);
-    for (const auto& entry : allEntries) {
-        if ((int)matches.size() >= limit) {
-            break;
-        }
-        const std::string sourceTerm = entry.value("source_term", "");
-        const std::string targetTerm = entry.value("target_term", "");
-        const std::string note = entry.value("note", "");
-        const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + entry.value("file", ""));
-        const bool matched = std::ranges::any_of(queries, [&](const std::string& query) {
-            if (query.empty()) {
-                return false;
-            }
-            if (mode == "exact") {
-                return sourceTerm == query || targetTerm == query;
-            }
-            return haystack.contains(str2Lower(query));
-        });
-        if (matched) {
-            matches.push_back(entry);
-        }
-    }
-    return json{ {"queries", queries}, {"mode", mode}, {"matches", matches} };
-}
-
-json runAgentGetProjectNoteTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    if (!env.projectInfoPath.has_value()) {
-        return json{ {"available", false}, {"file", nullptr}, {"content", ""} };
-    }
-    const int maxChars = sanitizeToolLimit(arguments.value("max_chars", 20000), 20000, 120000);
-    std::ifstream ifs(env.projectInfoPath.value(), std::ios::binary);
-    const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    const bool truncated = (int)content.size() > maxChars;
-    return json{
-        {"available", true},
-        {"file", wide2Ascii(fs::relative(env.projectInfoPath.value(), env.projectDir))},
-        {"content", truncated ? content.substr(0, maxChars) : content},
-        {"truncated", truncated},
-        {"total_chars", (int)content.size()}
-    };
-}
-
 json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::vector<std::string> queries = collectAgentQueries(arguments);
+    const std::vector<std::string> queries = collectAgentToolQueries(arguments);
     const std::vector<std::string> queryLowers = queries
         | std::views::transform([](const std::string& query) { return str2Lower(query); })
         | std::ranges::to<std::vector>();
     const std::string scope = arguments.value("scope", "current_file");
     const int limit = sanitizeToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
+    const int contextLines = arguments.contains("context_lines")
+        ? sanitizeAgentSearchContextLines(arguments.value("context_lines", 0))
+        : 2;
     std::vector<fs::path> targetFiles;
 
     if (scope != "current_file" && scope != "all_files" && scope != "specified_file") {
@@ -1130,7 +1003,8 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                     {"file", wide2Ascii(targetRelPath)},
                     {"id", (int)index},
                     {"src", src},
-                    {"dst", dst}
+                    {"dst", dst},
+                    {"nearby_lines", buildAgentSearchNearbyLines(inputJson, cacheMap, (int)index, contextLines)}
                 });
             }
 
@@ -1153,13 +1027,11 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         catch (...) { }
     }
 
-    return json{ {"queries", queries}, {"matches", matches} };
-}
-
-json runAgentGetTermTool(const AgentToolExecutionEnv& env, const json& arguments) {
-    const std::string term = arguments.value("term", "");
-    const json ledger = env.loadTermLedger ? env.loadTermLedger() : json::object();
-    return json{ {"term", term}, {"entry", ledger.contains(term) ? ledger.at(term) : json(nullptr)} };
+    return json{
+        {"queries", queries},
+        {"context_lines", contextLines},
+        {"matches", matches}
+    };
 }
 
 json runAgentGetFileNoteTool(const AgentToolExecutionEnv& env, const json& arguments) {
@@ -1170,13 +1042,30 @@ json runAgentGetFileNoteTool(const AgentToolExecutionEnv& env, const json& argum
     };
 }
 
+AgentSharedToolEnv buildNormalAgentSharedToolEnv(const AgentToolExecutionEnv& env) {
+    return {
+        .projectDir = env.projectDir,
+        .relFiles = env.knownRelFiles,
+        .dictionaryPaths = env.dictionaryPaths,
+        .projectNotePath = env.projectInfoPath,
+        .loadTermLedger = env.loadTermLedger,
+        .searchResultLimit = env.searchResultLimit,
+        .includeLoadedDictionaryEntriesInSearch = true,
+        .includeLoadedDictionaryEntriesInGetEntries = true,
+        .includeTermLedgerInSearchDictionary = false,
+        .includeTermLedgerInGetDictionaryEntries = false,
+        .ledgerEntryType = "term_ledger"
+    };
+}
+
 json executeAgentToolCalls(const AgentToolExecutionEnv& env, const std::vector<AgentToolCallRequest>& calls) {
     json toolResults = json::array();
+    const AgentSharedToolEnv sharedEnv = buildNormalAgentSharedToolEnv(env);
     for (const auto& call : calls) {
         json result = { {"id", call.id}, {"name", call.name} };
         try {
             if (call.name == "list_files") {
-                result["result"] = runAgentListFilesTool(env, call.arguments);
+                result["result"] = runAgentCommonListFilesTool(sharedEnv, call.arguments);
             }
             else if (call.name == "read_lines") {
                 result["result"] = runAgentReadLinesTool(env, call.arguments);
@@ -1185,19 +1074,19 @@ json executeAgentToolCalls(const AgentToolExecutionEnv& env, const std::vector<A
                 result["result"] = runAgentSearchTextTool(env, call.arguments);
             }
             else if (call.name == "search_dictionary") {
-                result["result"] = runAgentSearchDictionaryTool(env, call.arguments);
+                result["result"] = runAgentCommonSearchDictionaryTool(sharedEnv, call.arguments);
             }
             else if (call.name == "get_dictionary_entries") {
-                result["result"] = runAgentGetDictionaryEntriesTool(env, call.arguments);
+                result["result"] = runAgentCommonGetDictionaryEntriesTool(sharedEnv, call.arguments);
             }
             else if (call.name == "get_term") {
-                result["result"] = runAgentGetTermTool(env, call.arguments);
+                result["result"] = runAgentCommonGetTermTool(sharedEnv, call.arguments);
             }
             else if (call.name == "get_file_note") {
                 result["result"] = runAgentGetFileNoteTool(env, call.arguments);
             }
             else if (call.name == "get_project_note") {
-                result["result"] = runAgentGetProjectNoteTool(env, call.arguments);
+                result["result"] = runAgentCommonGetProjectNoteTool(sharedEnv, call.arguments);
             }
             else {
                 result["error"] = std::format("未知工具: {}", call.name);

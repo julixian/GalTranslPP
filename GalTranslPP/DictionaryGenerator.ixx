@@ -11,6 +11,19 @@ import ITranslator;
 namespace fs = std::filesystem;
 
 export {
+    struct DictionaryGeneratorReviewOptions {
+        bool enabled = false;
+        fs::path projectDir;
+        fs::path inputDir;
+        std::vector<fs::path> relInputFiles;
+        std::optional<fs::path> projectNotePath;
+        std::string systemPrompt;
+        std::string userPrompt;
+        int maxTurnsPerTerm = 20;
+        int searchResultLimit = 80;
+        bool allowCrossFileSearch = true;
+    };
+
     class DictionaryGenerator {
 
     private:
@@ -32,6 +45,7 @@ export {
         int m_maxRetries;
         bool m_checkQuota;
         int m_totalSentences = 0;
+        DictionaryGeneratorReviewOptions m_reviewOptions;
 
         // 阶段一和二的结果
         fs::path m_tokenizeCachePath;
@@ -50,13 +64,15 @@ export {
         void preprocessAndTokenize(const std::vector<fs::path>& jsonFiles);
         std::vector<int> solveSentenceSelection();
         void callLLMToGenerate(int segmentIndex, int threadId);
+        DictList finalizeCoarseCandidates() const;
 
     public:
         DictionaryGenerator(const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, const std::unique_ptr<APIPool>& apiPool, 
             const std::function<NLPResult(const std::string&)>& tokenizeFunc, const fs::path& otherCacheDir,
             const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-            int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota);
+            int maxRetries, int threadsNum, int apiTimeoutMs, bool checkQuota,
+            const DictionaryGeneratorReviewOptions& reviewOptions = {});
 
         ~DictionaryGenerator();
 

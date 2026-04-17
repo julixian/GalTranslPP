@@ -139,17 +139,24 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
 
         if (m_agentEnabled) {
-            if (m_transEngine != TransEngine::ForGalTsv && m_transEngine != TransEngine::ForNovelTsv) {
-                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv");
+            if (m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv) {
+                if (m_agentMaxTurnsPerChunk <= 0 || m_agentSearchResultLimit <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
+                    throw std::invalid_argument("Agent 模式配置无效");
+                }
+                if (m_agentSoftContextChars > m_agentHardContextChars) {
+                    std::swap(m_agentSoftContextChars, m_agentHardContextChars);
+                }
+                if (m_agentRewriteMode != "queue_retranslate" && m_agentRewriteMode != "mark_only") {
+                    throw std::invalid_argument("Agent rewriteMode 当前仅支持 queue_retranslate / mark_only");
+                }
             }
-            if (m_agentMaxTurnsPerChunk <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
-                throw std::invalid_argument("Agent 模式配置无效");
+            else if (m_transEngine == TransEngine::GenDict) {
+                if (m_agentMaxTurnsPerChunk <= 0 || m_agentSearchResultLimit <= 0) {
+                    throw std::invalid_argument("GenDict Review Agent 配置无效");
+                }
             }
-            if (m_agentSoftContextChars > m_agentHardContextChars) {
-                std::swap(m_agentSoftContextChars, m_agentHardContextChars);
-            }
-            if (m_agentRewriteMode != "queue_retranslate" && m_agentRewriteMode != "mark_only") {
-                throw std::invalid_argument("Agent rewriteMode 当前仅支持 queue_retranslate / mark_only");
+            else {
+                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict");
             }
         }
 
@@ -164,33 +171,41 @@ void NormalJsonTranslator::normalJsonInit()
         const auto registerAgentDictionaryPath = [&](const fs::path& dictPath)
             {
                 const fs::path normalized = fs::canonical(dictPath);
-                m_agentDictionaryPaths.push_back(normalized);
+                if (std::ranges::find(m_agentDictionaryPaths, normalized) == m_agentDictionaryPaths.end()) {
+                    m_agentDictionaryPaths.push_back(normalized);
+                }
             };
 
-        auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)
+        const auto resolveDictPaths = [&](const std::string& dictType)
             {
+                std::vector<fs::path> dictPaths;
                 const auto dictFileNames = toml::find<
                     std::optional<std::vector<std::string>>
                 >(configData, "dictionary", dictType + "Dict");
                 if (!dictFileNames) {
-                    return;
+                    return dictPaths;
                 }
                 for (const auto& dictFileName : *dictFileNames) {
                     fs::path dictPath = m_projectDir / ascii2Wide(dictFileName);
                     if (fs::exists(dictPath)) {
-                        dict->loadFromFile(dictPath);
-                        if (m_agentEnabled && dictType == "gpt") {
-                            registerAgentDictionaryPath(dictPath);
-                        }
+                        dictPaths.push_back(dictPath);
+                        continue;
                     }
-                    else {
-                        dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
-                        if (fs::exists(dictPath)) {
-                            dict->loadFromFile(dictPath);
-                            if (m_agentEnabled && dictType == "gpt") {
-                                registerAgentDictionaryPath(dictPath);
-                            }
-                        }
+
+                    dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
+                    if (fs::exists(dictPath)) {
+                        dictPaths.push_back(dictPath);
+                    }
+                }
+                return dictPaths;
+            };
+
+        auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)
+            {
+                for (const fs::path& dictPath : resolveDictPaths(dictType)) {
+                    dict->loadFromFile(dictPath);
+                    if (m_agentEnabled && dictType == "gpt") {
+                        registerAgentDictionaryPath(dictPath);
                     }
                 }
                 dict->sort();
@@ -321,50 +336,56 @@ void NormalJsonTranslator::normalJsonInit()
                 throw std::invalid_argument(std::format("Prompt.toml 中缺少 {} 键", key));
             };
 
-            std::string systemPromptKey;
-            std::string userPromptKey;
-
-            switch (m_transEngine)
-            {
-            case TransEngine::ForGalJson:
-                systemPromptKey = "FORGALJSON_SYSTEM";
-                userPromptKey = "FORGALJSON_TRANS_PROMPT_EN";
-                break;
-            case TransEngine::ForGalTsv:
-                systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
-                userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_PROMPT_EN" : "FORGALTSV_TRANS_PROMPT_EN";
-                break;
-            case TransEngine::ForNovelTsv:
-                systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
-                userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_PROMPT_EN" : "FORNOVELTSV_TRANS_PROMPT_EN";
-                break;
-            case TransEngine::DeepseekJson:
-                systemPromptKey = "DEEPSEEKJSON_SYSTEM_PROMPT";
-                userPromptKey = "DEEPSEEKJSON_TRANS_PROMPT";
-                break;
-            case TransEngine::Sakura:
-                systemPromptKey = "SAKURA_SYSTEM_PROMPT";
-                userPromptKey = "SAKURA_TRANS_PROMPT";
-                break;
-            case TransEngine::GenDict:
-                systemPromptKey = "GENDIC_SYSTEM";
-                userPromptKey = "GENDIC_PROMPT";
-                break;
-            case TransEngine::NameTrans:
-                systemPromptKey = "NAMETRANS_SYSTEM";
-                userPromptKey = "NAMETRANS_PROMPT";
-                break;
-            default:
-                throw std::invalid_argument("未知的 TransEngine");
-            }
-
-            if (m_agentEnabled) {
-                m_agentSystemPrompt = readPromptString(systemPromptKey);
-                m_agentUserPrompt = readPromptString(userPromptKey);
+            if (m_transEngine == TransEngine::GenDict) {
+                m_systemPrompt = readPromptString("GENDICT_SYSTEM");
+                m_userPrompt = readPromptString("GENDICT_PROMPT");
+                if (m_agentEnabled) {
+                    m_genDictReviewSystemPrompt = readPromptString("GENDICT_REVIEW_SYSTEM");
+                    m_genDictReviewUserPrompt = readPromptString("GENDICT_REVIEW_PROMPT");
+                }
             }
             else {
-                m_systemPrompt = readPromptString(systemPromptKey);
-                m_userPrompt = readPromptString(userPromptKey);
+                std::string systemPromptKey;
+                std::string userPromptKey;
+
+                switch (m_transEngine)
+                {
+                case TransEngine::ForGalJson:
+                    systemPromptKey = "FORGALJSON_SYSTEM";
+                    userPromptKey = "FORGALJSON_TRANS_PROMPT_EN";
+                    break;
+                case TransEngine::ForGalTsv:
+                    systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_PROMPT_EN" : "FORGALTSV_TRANS_PROMPT_EN";
+                    break;
+                case TransEngine::ForNovelTsv:
+                    systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_PROMPT_EN" : "FORNOVELTSV_TRANS_PROMPT_EN";
+                    break;
+                case TransEngine::DeepseekJson:
+                    systemPromptKey = "DEEPSEEKJSON_SYSTEM_PROMPT";
+                    userPromptKey = "DEEPSEEKJSON_TRANS_PROMPT";
+                    break;
+                case TransEngine::Sakura:
+                    systemPromptKey = "SAKURA_SYSTEM_PROMPT";
+                    userPromptKey = "SAKURA_TRANS_PROMPT";
+                    break;
+                case TransEngine::NameTrans:
+                    systemPromptKey = "NAMETRANS_SYSTEM";
+                    userPromptKey = "NAMETRANS_PROMPT";
+                    break;
+                default:
+                    throw std::invalid_argument("未知的 TransEngine");
+                }
+
+                if (m_agentEnabled) {
+                    m_agentSystemPrompt = readPromptString(systemPromptKey);
+                    m_agentUserPrompt = readPromptString(userPromptKey);
+                }
+                else {
+                    m_systemPrompt = readPromptString(systemPromptKey);
+                    m_userPrompt = readPromptString(userPromptKey);
+                }
             }
         }
 

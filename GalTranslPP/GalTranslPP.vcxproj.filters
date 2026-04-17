@@ -16,9 +16,6 @@
     <ClCompile Include="Dictionary.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="DictionaryGenerator.ixx">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="ProblemAnalyzer.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -30,6 +27,12 @@
     </ClCompile>
     <ClCompile Include="APITool.ixx">
       <Filter>Tools\Utils\specialized</Filter>
+    </ClCompile>
+    <ClCompile Include="AgentToolCommon.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="AgentToolCommon.ixx">
+      <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="PDFTranslator.ixx">
       <Filter>filePlugins</Filter>
@@ -121,9 +124,6 @@
     <ClCompile Include="EpubTranslator.cpp">
       <Filter>filePlugins</Filter>
     </ClCompile>
-    <ClCompile Include="DictionaryGenerator.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="ProblemAnalyzer.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -169,6 +169,24 @@
     <ClCompile Include="NormalJsonTranslator.ixx">
       <Filter>filePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
+    <ClCompile Include="DictionaryGenerator.cpp">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryGenerator.ixx">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryReviewAgent.cpp">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryReviewAgent.ixx">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryReviewIndex.cpp">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryReviewIndex.ixx">
+      <Filter>Tools\DictionaryGenerator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -188,6 +206,9 @@
     </Filter>
     <Filter Include="filePlugins\NormalJsonTranslator">
       <UniqueIdentifier>{a41ce28e-4b90-422b-afee-9f30153d608d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools\DictionaryGenerator">
+      <UniqueIdentifier>{ccbf815e-31b1-4b96-9a48-a775c055245b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

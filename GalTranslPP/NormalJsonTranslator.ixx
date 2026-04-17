@@ -73,6 +73,8 @@ export {
         std::string m_userPrompt;
         std::string m_agentSystemPrompt;
         std::string m_agentUserPrompt;
+        std::string m_genDictReviewSystemPrompt;
+        std::string m_genDictReviewUserPrompt;
         std::string m_targetLang;
 
         int m_totalSentences = 0;

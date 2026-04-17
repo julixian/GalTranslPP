@@ -236,11 +236,24 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
         {
             this->preProcess(se);
         };
+        DictionaryGeneratorReviewOptions reviewOptions;
+        if (m_agentEnabled) {
+            reviewOptions.enabled = true;
+            reviewOptions.projectDir = m_projectDir;
+            reviewOptions.inputDir = m_inputDir;
+            reviewOptions.relInputFiles = relJsonPaths;
+            reviewOptions.projectNotePath = m_agentProjectInfoPath;
+            reviewOptions.systemPrompt = m_genDictReviewSystemPrompt;
+            reviewOptions.userPrompt = m_genDictReviewUserPrompt;
+            reviewOptions.maxTurnsPerTerm = m_agentMaxTurnsPerChunk;
+            reviewOptions.searchResultLimit = m_agentSearchResultLimit;
+            reviewOptions.allowCrossFileSearch = m_agentAllowCrossFileSearch;
+        }
         DictionaryGenerator generator(
             m_controller, m_logger, m_apiPool, m_tokenizeSourceLangFunc, m_otherCacheDir,
             std::move(preProcessFunc), m_onPerformApi, m_onDictProcessed,
             m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang,
-            m_maxRetries, m_threadsNum, m_apiTimeOutMs, m_checkQuota
+            m_maxRetries, m_threadsNum, m_apiTimeOutMs, m_checkQuota, std::move(reviewOptions)
         );
         const fs::path outputFilePath = m_projectDir / L"项目GPT字典-生成.toml";
         const std::vector<fs::path> inputPaths = relJsonPaths

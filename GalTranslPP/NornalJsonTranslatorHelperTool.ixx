@@ -18,9 +18,14 @@ export {
     std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);
     std::string lightRepairJsonText(const std::string& text);
 
-    void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, std::string& inputBlock, TransEngine transEngine);
+    void fillBlockAndMap(
+        std::span<Sentence*> batchToTransThisRound,
+        std::string& inputBlock,
+        TransEngine transEngine,
+        absl::flat_hash_map<int, Sentence*>* id2SentenceMap = nullptr
+    );
 
-    int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
+    int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
         const std::shared_ptr<IController>& controller, std::string& backgroudText, std::atomic<int>& completedSentences, 
         TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail);
 

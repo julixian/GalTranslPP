@@ -113,6 +113,8 @@ export {
 
     size_t countGraphemes(std::string_view sourceString);
     size_t countGraphemes(const std::string& sourceString);
+    std::string truncateUtf8Prefix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis = "...");
+    std::string truncateUtf8Suffix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis = "...");
 
     int countSubstring(const std::string& text, std::string_view sub);
 

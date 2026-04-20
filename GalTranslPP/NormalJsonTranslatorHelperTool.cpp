@@ -3,7 +3,6 @@
 #define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
-#include <unicode/unistr.h>
 
 module NormalJsonTranslatorHelperTool;
 
@@ -254,27 +253,15 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         throw std::runtime_error("未知的 PromptType");
     }
 
-    // 缺tiktoken这一块
-    const uint8_t* s = (uint8_t*)history.c_str();
-    int32_t i = (int32_t)history.length();
-    int32_t count = 0;
-
-    // 从后往前数 maxChars 个码点
-    // U8_BACK_1 宏会自动处理 UTF-8 的多字节边界，并将 idx 向前移动
-    while (i > 0 && count < maxChars) {
-        U8_BACK_1(s, 0, i);
-        ++count;
-    }
-
-    // 如果 idx > 0，说明字符串长度超过了 maxChars，需要截断
-    if (i > 0) {
-        // 此时 idx 正好指向截断位置的开头
-        history.replace(0, i, "...");
-    }
-    return history;
+    return truncateUtf8Suffix(history, maxChars);
 }
 
-void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, std::string& inputBlock, TransEngine transEngine) {
+void fillBlockAndMap(
+    std::span<Sentence*> batchToTransThisRound,
+    std::string& inputBlock,
+    TransEngine transEngine,
+    absl::flat_hash_map<int, Sentence*>* id2SentenceMap
+) {
     switch (transEngine)
     {
     case TransEngine::ForGalTsv:
@@ -282,7 +269,9 @@ void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map
         for (const auto& se : batchToTransThisRound) {
             const std::string name = se->nameType == NameType::None ? "null" : getNameString(se);
             inputBlock += std::format("{}\t{}\t{}\n", name, se->pre_processed_text, se->index);
-            id2SentenceMap[se->index] = se;
+            if (id2SentenceMap != nullptr) {
+                (*id2SentenceMap)[se->index] = se;
+            }
         }
     }
     break;
@@ -291,7 +280,9 @@ void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map
     {
         for (const auto& se : batchToTransThisRound) {
             inputBlock += std::format("{}\t{}\n", se->pre_processed_text, se->index);
-            id2SentenceMap[se->index] = se;
+            if (id2SentenceMap != nullptr) {
+                (*id2SentenceMap)[se->index] = se;
+            }
         }
     }
     break;
@@ -307,7 +298,9 @@ void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map
             }
             item["src"] = se->pre_processed_text;
             inputBlock += item.dump() + "\n";
-            id2SentenceMap[se->index] = se;
+            if (id2SentenceMap != nullptr) {
+                (*id2SentenceMap)[se->index] = se;
+            }
         }
     }
     break;
@@ -333,7 +326,7 @@ void fillBlockAndMap(std::span<Sentence*> batchToTransThisRound, absl::btree_map
     }
 }
 
-int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, absl::btree_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
+int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
     const std::shared_ptr<IController>& controller, std::string& backgroudText, std::atomic<int>& completedSentences, 
     TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail) 
 {
@@ -359,23 +352,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 backgroudText.clear();
             }
             else {
-                uint8_t* s = (uint8_t*)backgroudText.c_str();
-                int32_t length = (int32_t)backgroudText.length();
-                int32_t i = 0;
-                int32_t count = 0;
-                constexpr int32_t limit = 256;
-
-                // 从前往后数 256 个码点
-                // U8_FWD_1 宏会自动将 i 移动到下一个字符的开始位置
-                while (i < length && count < limit) {
-                    U8_FWD_1(s, i, length);
-                    ++count;
-                }
-
-                // 如果 idx < len，说明字符串比 256 个码点长
-                if (i < length) {
-                    backgroudText.replace(i, std::string::npos, "...");
-                }
+                backgroudText = truncateUtf8Prefix(backgroudText, 256);
             }
 
             if (!showBackgroundText && vecNum.size() == vecOff.size()) {

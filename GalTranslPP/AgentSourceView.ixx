@@ -14,6 +14,7 @@ export {
         std::string speaker;
         std::string toolText;
         std::string toolTextLower;
+        std::string speakerToolTextLower;
     };
 
     struct AgentSourceFileView {

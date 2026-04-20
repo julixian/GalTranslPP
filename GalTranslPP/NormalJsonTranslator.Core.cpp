@@ -4,7 +4,6 @@
 #define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlwapi.h>
 #endif
 #include <toml.hpp>
@@ -119,7 +118,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_threadsNum = toml::find_or(configData, "common", "threadsNum", 1);
         m_sortMethod = toml::find_or(configData, "common", "sortMethod", "name");
         m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
-        m_splitFile = toml::find_or(configData, "common", "splitFile", "no");
+        m_splitFile = toml::find_or(configData, "common", "splitFile", "No");
         m_splitFileNum = toml::find_or(configData, "common", "splitFileNum", 10);
         m_cacheSearchDistance = toml::find_or(configData, "common", "cacheSearchDistance", 5);
         m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
@@ -133,7 +132,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "agent", "maxTurnsPerChunk", 20);
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
-        m_agentLookaheadLines = toml::find_or(configData, "agent", "lookaheadLines", 80);
         m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 80);
         m_agentAllowCrossFileSearch = toml::find_or(configData, "agent", "allowCrossFileSearch", true);
         m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", false);

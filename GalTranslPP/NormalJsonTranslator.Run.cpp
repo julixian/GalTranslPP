@@ -4,7 +4,6 @@
 #define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #ifdef _WIN32
-#include <Windows.h>
 #include <Shlwapi.h>
 #endif
 #include <toml.hpp>
@@ -24,6 +23,19 @@ import Tool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;
+
+json loadJsonFileOrFromDisk(const fs::path& path, const json& fallback = json::object()) {
+    try {
+        if (!fs::exists(path)) {
+            return fallback;
+        }
+        std::ifstream ifs(path, std::ios::binary);
+        return json::parse(ifs);
+    }
+    catch (...) {
+        return fallback;
+    }
+}
 
 AgentSourceFileView buildAgentSourceFileViewFromJson(
     const ordered_json& data,
@@ -266,9 +278,9 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
     // 3. GPT 字典生成模式直接交给 DictionaryGenerator。
     if (m_transEngine == TransEngine::GenDict) {
         auto preProcessFunc = [this](Sentence* se)
-        {
-            this->preProcess(se);
-        };
+            {
+                this->preProcess(se);
+            };
         DictionaryGeneratorReviewOptions reviewOptions;
         if (m_agentEnabled) {
             reviewOptions.enabled = true;
@@ -367,17 +379,17 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
 
     if (m_sortMethod == "size") {
         std::ranges::sort(relFilePaths, [&](const fs::path& a, const fs::path& b)
-        {
-            return m_needsCombining ? (fs::file_size(m_inputCacheDir / a) > fs::file_size(m_inputCacheDir / b))
-                                    : (fs::file_size(m_inputDir / a) > fs::file_size(m_inputDir / b));
-        });
+            {
+                return m_needsCombining ? (fs::file_size(m_inputCacheDir / a) > fs::file_size(m_inputCacheDir / b))
+                                        : (fs::file_size(m_inputDir / a) > fs::file_size(m_inputDir / b));
+            });
     }
     else if (m_sortMethod == "name") {
 #ifdef _WIN32
         std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
-        {
-            return str2Lower(a) < str2Lower(b);
-        });
+            {
+                return str2Lower(a) < str2Lower(b);
+            });
 #else
         std::ranges::sort(relFilePaths);
 #endif
@@ -387,14 +399,16 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
     }
 
     // 6. Agent 模式启动前初始化共享状态文件。
-    // run_state 现在极简化，只保留当前工作输入文件的指纹表；
-    // 旧 rewrite_queue 是否可复用，也只由这些指纹决定。
     if (m_agentEnabled) {
         m_agentKnownRelFiles = relFilePaths;
         createParent(m_agentRunStatePath);
         fs::create_directories(m_agentFileNotesDir);
-        const json oldRunState = fs::exists(m_agentRunStatePath) ? loadAgentRunState() : json::object();
-        const json oldRewriteQueue = fs::exists(m_agentRewriteQueuePath) ? loadAgentRewriteQueue() : json::array();
+        m_agentRunStateCache = fs::exists(m_agentRunStatePath) ? loadJsonFileOrFromDisk(m_agentRunStatePath, json::object()) : json::object();
+        m_agentTermLedgerCache = fs::exists(m_agentTermLedgerPath) ? loadJsonFileOrFromDisk(m_agentTermLedgerPath, json::object()) : json::object();
+        m_agentRewriteQueueCache = fs::exists(m_agentRewriteQueuePath) ? loadJsonFileOrFromDisk(m_agentRewriteQueuePath, json::array()) : json::array();
+        m_agentTermConflictCache = fs::exists(m_agentTermConflictPath) ? loadJsonFileOrFromDisk(m_agentTermConflictPath, json::array()) : json::array();
+        const json oldRunState = m_agentRunStateCache;
+        const json oldRewriteQueue = m_agentRewriteQueueCache;
         const std::vector<std::string> currentFileStrings = collectRelFileStrings(relFilePaths);
         const fs::path fingerprintRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
         const json currentInputFingerprints = buildInputFingerprintMap(fingerprintRootDir, relFilePaths);
@@ -410,7 +424,8 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
             m_logger->warn("检测到 {} 条旧的 reconcile 重翻请求对应文件已变化，本次启动已按文件粒度丢弃这些请求。", droppedRewriteRequestCount);
         }
 
-        saveJsonFile(m_agentRunStatePath, json{ {"input_fingerprints", currentInputFingerprints} });
+        m_agentRunStateCache = json{ {"input_fingerprints", currentInputFingerprints} };
+        saveJsonFile(m_agentRunStatePath, m_agentRunStateCache);
 
         saveJsonFile(m_agentSearchCatalogPath, json{
             {"updated_at", nowTimestampString()},
@@ -435,16 +450,20 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
             m_agentSourceFileViews.insert_or_assign(relFilePath, fileView);
         }
         if (!fs::exists(m_agentTermLedgerPath)) {
-            saveJsonFile(m_agentTermLedgerPath, json::object());
+            m_agentTermLedgerCache = json::object();
+            saveJsonFile(m_agentTermLedgerPath, m_agentTermLedgerCache);
         }
         if (!fs::exists(m_agentTermConflictPath)) {
-            saveJsonFile(m_agentTermConflictPath, json::array());
+            m_agentTermConflictCache = json::array();
+            saveJsonFile(m_agentTermConflictPath, m_agentTermConflictCache);
         }
         if (!fs::exists(m_agentRewriteQueuePath)) {
-            saveJsonFile(m_agentRewriteQueuePath, json::array());
+            m_agentRewriteQueueCache = json::array();
+            saveJsonFile(m_agentRewriteQueuePath, m_agentRewriteQueueCache);
         }
         else {
-            saveJsonFile(m_agentRewriteQueuePath, filteredRewriteQueue);
+            m_agentRewriteQueueCache = filteredRewriteQueue;
+            saveJsonFile(m_agentRewriteQueuePath, m_agentRewriteQueueCache);
         }
     }
 
@@ -547,7 +566,7 @@ void NormalJsonTranslator::normalJsonProcess(std::vector<fs::path> relFilePaths)
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
     waitForThreads(m_threadPool, results);
 
-    if (m_agentEnabled && !m_controller->shouldStop() && m_transEngine != TransEngine::Rebuild) {
+    if (m_agentEnabled && !m_controller->shouldStop()) {
         runAgentFinalReconcile();
     }
 }

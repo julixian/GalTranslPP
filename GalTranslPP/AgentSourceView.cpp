@@ -14,11 +14,15 @@ AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sent
     fileView.lines.reserve(sentences.size());
     for (const Sentence& se : sentences) {
         const std::string speaker = getNameString(&se);
+        const std::string toolTextLower = str2Lower(se.pre_processed_text);
         fileView.lines.push_back({
             .id = se.index,
             .speaker = speaker,
             .toolText = se.pre_processed_text,
-            .toolTextLower = str2Lower(se.pre_processed_text)
+            .toolTextLower = toolTextLower,
+            .speakerToolTextLower = speaker.empty()
+                ? toolTextLower
+                : str2Lower(speaker + "\n" + se.pre_processed_text)
         });
     }
     return fileView;

@@ -328,7 +328,8 @@ DictList DictionaryGenerator::finalizeCoarseCandidates() const {
         }
     }
 
-    absl::btree_map<std::string, std::string> seen;
+    absl::flat_hash_map<std::string, std::string> seen;
+    seen.reserve(finalList.size());
     std::erase_if(finalList, [&](std::tuple<std::string, std::string, std::string>& item)
         {
             const auto& orgWord = std::get<0>(item);

@@ -437,6 +437,51 @@ size_t countGraphemes(const std::string& sourceString) {
     return countGraphemesImpl(sourceString);
 }
 
+std::string truncateUtf8Prefix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
+    if (text.empty()) {
+        return std::string(text);
+    }
+    if (maxCodepoints == 0) {
+        return std::string(ellipsis);
+    }
+    const uint8_t* s = (const uint8_t*)text.data();
+    const int32_t length = (int32_t)text.size();
+    int32_t i = 0;
+    size_t count = 0;
+    while (i < length && count < maxCodepoints) {
+        U8_FWD_1(s, i, length);
+        ++count;
+    }
+    if (i >= length) {
+        return std::string(text);
+    }
+    std::string result(text.substr(0, (size_t)i));
+    result += ellipsis;
+    return result;
+}
+
+std::string truncateUtf8Suffix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
+    if (text.empty()) {
+        return std::string(text);
+    }
+    if (maxCodepoints == 0) {
+        return std::string(ellipsis);
+    }
+    const uint8_t* s = (const uint8_t*)text.data();
+    int32_t i = (int32_t)text.size();
+    size_t count = 0;
+    while (i > 0 && count < maxCodepoints) {
+        U8_BACK_1(s, 0, i);
+        ++count;
+    }
+    if (i <= 0) {
+        return std::string(text);
+    }
+    std::string result(ellipsis);
+    result += text.substr((size_t)i);
+    return result;
+}
+
 std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, const std::string& text)
 {
     std::vector<std::string> tokens;

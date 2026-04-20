@@ -269,13 +269,13 @@ Protocol JSON schema:
 </protocol_rules>
 
 <review_requirements>
-1. Work on the current term group only, unless using `add_terms` to supplement up to 3 high-confidence entries.
+1. Work on the current term group first. Use `term_updates` to upsert any additional high-confidence glossary entries or to refine existing ledger entries when evidence justifies it.
 2. Prefer one stable translation consistent with previous reviewed terms.
 3. Fix shallow or wrong notes using global evidence from `search_text`.
 4. Delete obvious false positives with `deprecated`.
 5. Use `merged` only when `merge_into` names another source term entry, not a target translation.
 6. If the term is ambiguous but should stay, use `conflict` and explain the ambiguity in `final_note`.
-7. `accepted` requires `final_target`; `merged` requires `merge_into`; `add_terms` items require `source_term`, `target_term`, and `note`.
+7. `accepted` requires `final_target`; `merged` requires `merge_into`; `term_updates` items require `source_term`, `status`, and the fields needed by that status (`target_term` for `accepted|conflict`, `merge_into` for `merged`, optional `note`).
 </review_requirements>
 
 <decision_flow>
@@ -397,7 +397,7 @@ Protocol JSON schema:
 </translation_requirements>
 
 <commit_output_format>
-1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(integer type) and `dst`.
+1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id` and `dst`.
 2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
 3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.
@@ -527,7 +527,7 @@ Protocol JSON schema:
 </translation_requirements>
 
 <commit_output_format>
-1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id`(integer type) and `dst`.
+1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id` and `dst`.
 2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
 3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "...", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.

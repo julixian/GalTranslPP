@@ -2,8 +2,6 @@ module;
 
 #include "GPPMacros.hpp"
 
-#include <unicode/utf8.h>
-
 module DictionaryReviewAgent;
 
 import AgentToolCommon;
@@ -25,14 +23,13 @@ struct ReviewCommitResult {
     std::string finalNote;
     std::string status;
     std::string mergeInto;
-    json addTerms = json::array();
+    json termUpdates = json::array();
 };
 
 struct ReviewProtocolResponse {
     std::string action;
     std::vector<ReviewToolCallRequest> calls;
     ReviewCommitResult result;
-    std::string rawContent;
 };
 
 struct ReviewToolExecutionEnv {
@@ -40,7 +37,9 @@ struct ReviewToolExecutionEnv {
     fs::path currentFile;
     const std::vector<fs::path>* relFiles = nullptr;
     const std::vector<AgentSourceFileView>* sourceFiles = nullptr;
-    const absl::btree_map<std::string, json>* ledgerMap = nullptr;
+    const absl::flat_hash_map<fs::path, const AgentSourceFileView*>* sourceFileLookup = nullptr;
+    const absl::flat_hash_map<std::string, json>* ledgerMap = nullptr;
+    const std::vector<std::string>* ledgerOrder = nullptr;
     int searchResultLimit = 80;
     bool allowCrossFileSearch = true;
     std::optional<fs::path> projectNotePath;
@@ -48,7 +47,6 @@ struct ReviewToolExecutionEnv {
 
 ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     ReviewProtocolResponse result;
-    result.rawContent = content;
     const std::optional<json> payloadOpt = tryParseAgentJsonEnvelope(content);
     if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
         throw std::runtime_error("Review agent response is not a valid JSON object");
@@ -77,33 +75,17 @@ ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     }
 
     if (const auto it = payload.find("result"); it != payload.end() && it->is_object()) {
-        result.result.sourceTerm = trimAgentToolValue(it->value("source_term", ""));
-        result.result.finalTarget = trimAgentToolValue(it->value("final_target", ""));
-        result.result.finalNote = trimAgentToolValue(it->value("final_note", ""));
-        result.result.status = trimAgentToolValue(it->value("status", ""));
-        result.result.mergeInto = trimAgentToolValue(it->value("merge_into", ""));
-        if (const auto addIt = it->find("add_terms"); addIt != it->end() && addIt->is_array()) {
-            result.result.addTerms = *addIt;
+        result.result.sourceTerm = it->value("source_term", "");
+        result.result.finalTarget = it->value("final_target", "");
+        result.result.finalNote = it->value("final_note", "");
+        result.result.status = it->value("status", "");
+        result.result.mergeInto = it->value("merge_into", "");
+        if (const auto updatesIt = it->find("term_updates"); updatesIt != it->end() && updatesIt->is_array()) {
+            result.result.termUpdates = *updatesIt;
         }
     }
 
     return result;
-}
-
-std::string truncateReviewLog(std::string text, size_t maxChars = 4000) {
-    uint8_t* s = (uint8_t*)text.c_str();
-    int32_t length = (int32_t)text.length();
-    int32_t i = 0;
-    int32_t count = 0;
-    const int32_t limit = (int32_t)maxChars;
-    while (i < length && count < limit) {
-        U8_FWD_1(s, i, length);
-        ++count;
-    }
-    if (i < length) {
-        return text.replace(i, std::string::npos, "...");
-    }
-    return text;
 }
 
 std::string formatToolCallSummary(const std::vector<ReviewToolCallRequest>& calls) {
@@ -155,7 +137,7 @@ std::string buildReviewSchemaDescription() {
     "\"final_note\":\"\","
     "\"status\":\"accepted|merged|deprecated|conflict\","
     "\"merge_into\":\"\","
-    "\"add_terms\":[]"
+    "\"term_updates\":[]"
     "}"
     "}";
 }
@@ -168,7 +150,7 @@ fs::path guessCurrentFileForTerm(
     for (const AgentSourceFileView& file : sourceFiles) {
         const bool matched = std::ranges::any_of(file.lines, [&](const AgentSourceLineView& line)
             {
-                return line.toolText.contains(sourceTerm);
+                return line.speaker.contains(sourceTerm) || line.toolText.contains(sourceTerm);
             });
         if (matched) {
             return file.relPath;
@@ -181,17 +163,14 @@ fs::path guessCurrentFileForTerm(
 }
 
 std::optional<int> getReviewSourceFileLineCount(const ReviewToolExecutionEnv& env, const fs::path& relPath) {
-    if (env.sourceFiles == nullptr) {
+    if (env.sourceFileLookup == nullptr) {
         return std::nullopt;
     }
-    const auto fileIt = std::ranges::find_if(*env.sourceFiles, [&](const AgentSourceFileView& file)
-        {
-            return file.relPath == relPath;
-        });
-    if (fileIt == env.sourceFiles->end()) {
+    const auto fileIt = env.sourceFileLookup->find(relPath);
+    if (fileIt == env.sourceFileLookup->end() || fileIt->second == nullptr) {
         return std::nullopt;
     }
-    return (int)fileIt->lines.size();
+    return (int)fileIt->second->lines.size();
 }
 
 std::string fallbackTargetForGroup(const DictionaryReviewTermGroup& group) {
@@ -248,7 +227,7 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
     const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 2));
-    if (env.sourceFiles == nullptr) {
+    if (env.sourceFileLookup == nullptr) {
         return {
             {"queries", queries},
             {"start", start},
@@ -261,21 +240,16 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
 
     int matchCount = 0;
     for (const fs::path& targetFile : targetFiles) {
-        const auto fileIt = std::ranges::find_if(*env.sourceFiles, [&](const AgentSourceFileView& file)
-            {
-                return file.relPath == targetFile;
-            });
-        if (fileIt == env.sourceFiles->end()) {
+        const auto fileIt = env.sourceFileLookup->find(targetFile);
+        if (fileIt == env.sourceFileLookup->end() || fileIt->second == nullptr) {
             continue;
         }
+        const AgentSourceFileView& sourceFile = *fileIt->second;
 
-        for (const auto& [lineIndex, line] : fileIt->lines | std::views::enumerate) {
+        for (const auto& [lineIndex, line] : sourceFile.lines | std::views::enumerate) {
             std::string matchedQuery;
-            const std::string joinedTextLower = line.speaker.empty()
-                ? line.toolTextLower
-                : str2Lower(line.speaker + "\n" + line.toolText);
             for (const auto& [index, queryLower] : queryLowers | std::views::enumerate) {
-                if (!queryLower.empty() && joinedTextLower.contains(queryLower)) {
+                if (!queryLower.empty() && line.speakerToolTextLower.contains(queryLower)) {
                     matchedQuery = queries[index];
                     break;
                 }
@@ -289,12 +263,12 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
                 continue;
             }
             matches.push_back({
-                {"file", wide2Ascii(fileIt->relPath)},
+                {"file", wide2Ascii(sourceFile.relPath)},
                 {"id", line.id},
                 {"speaker", line.speaker},
                 {"message", line.toolText},
                 {"matched_query", matchedQuery},
-                {"nearby_lines", buildAgentSourceNearbyLines(fileIt->lines, (int)lineIndex, contextLines)}
+                {"nearby_lines", buildAgentSourceNearbyLines(sourceFile.lines, (int)lineIndex, contextLines)}
             });
         }
     }
@@ -331,24 +305,40 @@ json runReviewSearchDictionaryTool(const ReviewToolExecutionEnv& env, const json
     }
 
     int matchCount = 0;
-    for (const auto& [sourceTerm, entry] : *env.ledgerMap) {
-        const std::string haystack = str2Lower(
-            sourceTerm + "\n" +
-            entry.value("target_term", "") + "\n" +
-            entry.value("note", "") + "\n" +
-            entry.value("status", "") + "\n" +
-            entry.value("merge_into", "")
-        );
-        const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
-            {
-                return !queryLower.empty() && haystack.contains(queryLower);
-            });
-        if (matched) {
+    const auto appendMatchedEntry = [&](const std::string& sourceTerm, const json& entry)
+        {
+            const std::string haystack = str2Lower(
+                sourceTerm + "\n" +
+                entry.value("target_term", "") + "\n" +
+                entry.value("note", "") + "\n" +
+                entry.value("status", "") + "\n" +
+                entry.value("merge_into", "")
+            );
+            const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+                {
+                    return !queryLower.empty() && haystack.contains(queryLower);
+                });
+            if (!matched) {
+                return;
+            }
             ++matchCount;
             if (matchCount <= start || (int)matches.size() >= limit) {
-                continue;
+                return;
             }
             matches.push_back(agentToolLedgerEntryToJson(sourceTerm, entry));
+        };
+    if (env.ledgerOrder != nullptr) {
+        for (const std::string& sourceTerm : *env.ledgerOrder) {
+            const auto it = env.ledgerMap->find(sourceTerm);
+            if (it == env.ledgerMap->end()) {
+                continue;
+            }
+            appendMatchedEntry(sourceTerm, it->second);
+        }
+    }
+    else {
+        for (const auto& [sourceTerm, entry] : *env.ledgerMap) {
+            appendMatchedEntry(sourceTerm, entry);
         }
     }
 
@@ -364,18 +354,13 @@ json runReviewSearchDictionaryTool(const ReviewToolExecutionEnv& env, const json
 AgentSharedToolEnv buildReviewSharedToolEnv(const ReviewToolExecutionEnv& env) {
     return {
         .projectDir = env.projectDir,
-        .currentFile = env.currentFile,
         .relFiles = env.relFiles,
-        .dictionaryPaths = nullptr,
         .projectNotePath = env.projectNotePath,
-        .loadTermLedger = {},
         .getFileLineCount = [&](const fs::path& relPath)
             {
                 return getReviewSourceFileLineCount(env, relPath);
             },
         .searchResultLimit = env.searchResultLimit,
-        .includeLoadedDictionaryEntriesInSearchDictionary = false,
-        .includeTermLedgerInSearchDictionary = false
     };
 }
 
@@ -412,7 +397,7 @@ json executeReviewToolCalls(const ReviewToolExecutionEnv& env, const std::vector
     return toolResults;
 }
 
-json buildLedgerExcerpt(const std::vector<std::string>& entriesVec, const absl::btree_map<std::string, json>& ledgerMap, int limit = 12) {
+json buildLedgerExcerpt(const std::vector<std::string>& entriesVec, const absl::flat_hash_map<std::string, json>& ledgerMap, int limit = 12) {
     json excerpt = json::array();
     if (entriesVec.empty()) {
         return excerpt;
@@ -442,7 +427,7 @@ json buildReviewBaseMessages(
     const DictionaryReviewTermGroup& group,
     const fs::path& currentFile,
     const std::vector<std::string>& entriesVec,
-    const absl::btree_map<std::string, json>& ledgerMap
+    const absl::flat_hash_map<std::string, json>& ledgerMap
 ) {
     std::string prompt = config.userPrompt;
     replaceStrInplace(prompt, "[TargetLang]", config.targetLang);
@@ -470,27 +455,86 @@ DictionaryReviewAgent::DictionaryReviewAgent(
 }
 
 DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGroup>& groups, const std::vector<AgentSourceFileView>& sourceFiles) {
-    absl::btree_map<std::string, json> ledgerMap;
+    //ledgerMap: sourceTerm->review decision json
+    //entriesVec: ledger 输出顺序
+    //groupLookup: sourceTerm->group
+    //knownSourceTerms: 当前 ledger 可引用的 term，初始为原始 group，随后随 term_updates 扩展
+    //sourceFileLookup : relPath->AgentSourceFileView*
+
+    absl::flat_hash_map<std::string, json> ledgerMap;
+    absl::flat_hash_map<fs::path, const AgentSourceFileView*> sourceFileLookup;
     std::vector<std::string> entriesVec;
     entriesVec.reserve(groups.size());
     absl::flat_hash_map<std::string, const DictionaryReviewTermGroup*> groupLookup;
-    absl::flat_hash_set<std::string> groupSourceTerms;
+    absl::flat_hash_set<std::string> knownSourceTerms;
+    absl::flat_hash_set<std::string> entryOrderSeen;
+    sourceFileLookup.reserve(sourceFiles.size());
     groupLookup.reserve(groups.size());
-    groupSourceTerms.reserve(groups.size());
+    knownSourceTerms.reserve(groups.size() * 2);
+    entryOrderSeen.reserve(groups.size() * 2);
+    ledgerMap.reserve(groups.size() * 2);
+    for (const AgentSourceFileView& sourceFile : sourceFiles) {
+        sourceFileLookup.insert_or_assign(sourceFile.relPath, &sourceFile);
+    }
     for (const DictionaryReviewTermGroup& group : groups) {
         groupLookup.insert_or_assign(group.sourceTerm, &group);
-        groupSourceTerms.insert(group.sourceTerm);
+        knownSourceTerms.insert(group.sourceTerm);
     }
-    absl::flat_hash_set<std::string>& allKnownTerms = groupSourceTerms;
 
     auto pushBackEntryWithOrderFunc = [&](const std::string& sourceTerm)
         {
             if (sourceTerm.empty()) {
                 return;
             }
-            if (std::ranges::find(entriesVec, sourceTerm) == entriesVec.end()) {
+            if (entryOrderSeen.insert(sourceTerm).second) {
                 entriesVec.push_back(sourceTerm);
             }
+        };
+
+    auto applyReviewTermUpdateFunc = [&](const json& update)
+        {
+            if (!update.is_object()) {
+                return;
+            }
+            const std::string sourceTerm = update.value("source_term", "");
+            const std::string status = update.value("status", "accepted");
+            if (sourceTerm.empty()) {
+                return;
+            }
+            if (status != "accepted" && status != "merged" && status != "deprecated" && status != "conflict") {
+                return;
+            }
+
+            const std::string targetTerm = update.value("target_term", "");
+            const std::string note = update.value("note", "");
+            const std::string mergeInto = update.value("merge_into", "");
+
+            json& entry = ledgerMap[sourceTerm];
+            if (!entry.is_object()) {
+                entry = json::object();
+            }
+            const std::string existingTarget = entry.value("target_term", "");
+            if ((status == "accepted" || status == "conflict") && targetTerm.empty() && existingTarget.empty()) {
+                return;
+            }
+            if (status == "merged" && mergeInto.empty()) {
+                return;
+            }
+            if (status == "merged" || status == "deprecated") {
+                entry["target_term"] = "";
+            }
+            else if (update.contains("target_term") || !entry.contains("target_term")) {
+                entry["target_term"] = targetTerm.empty() ? existingTarget : targetTerm;
+            }
+            if (update.contains("note") || !entry.contains("note")) {
+                entry["note"] = note;
+            }
+            entry["status"] = status;
+            entry["merge_into"] = status == "merged" ? mergeInto : "";
+            entry["origin"] = update.value("origin", entry.value("origin", "term_update"));
+            entry["updated_at"] = nowTimestampString();
+            knownSourceTerms.insert(sourceTerm);
+            pushBackEntryWithOrderFunc(sourceTerm);
         };
 
     auto applyFallbackForGroupFunc = [&](const DictionaryReviewTermGroup& group, std::string_view reason)
@@ -521,6 +565,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 };
             }
             pushBackEntryWithOrderFunc(group.sourceTerm);
+            knownSourceTerms.insert(group.sourceTerm);
         };
 
     const auto applyDecisionEntry = [&](const DictionaryReviewTermGroup& group, ReviewCommitResult decision)
@@ -529,6 +574,16 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             const std::string fallbackNote = fallbackNoteForGroup(group);
             if (decision.sourceTerm != group.sourceTerm) {
                 throw std::runtime_error(std::format("commit.source_term={} does not match current term {}", decision.sourceTerm, group.sourceTerm));
+            }
+            if (decision.termUpdates.is_array()) {
+                for (const auto& update : decision.termUpdates) {
+                    if (update.is_object()) {
+                        const std::string sourceTerm = update.value("source_term", "");
+                        if (!sourceTerm.empty()) {
+                            knownSourceTerms.insert(sourceTerm);
+                        }
+                    }
+                }
             }
             if (decision.status != "accepted" && decision.status != "merged" &&
                 decision.status != "deprecated" && decision.status != "conflict") {
@@ -570,7 +625,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 pushBackEntryWithOrderFunc(group.sourceTerm);
             }
             else {
-                if (!allKnownTerms.contains(decision.mergeInto)) {
+                if (!knownSourceTerms.contains(decision.mergeInto)) {
                     entry = {
                         {"target_term", decision.finalTarget.empty() ? fallbackTarget : decision.finalTarget},
                         {"note", decision.finalNote.empty()
@@ -595,46 +650,12 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 pushBackEntryWithOrderFunc(group.sourceTerm);
             }
 
-            if (!decision.addTerms.is_array()) {
+            if (!decision.termUpdates.is_array()) {
                 return;
             }
 
-            int acceptedAddTerms = 0;
-            for (const auto& addTerm : decision.addTerms) {
-                if (acceptedAddTerms >= 3) {
-                    break;
-                }
-                if (!addTerm.is_object()) {
-                    continue;
-                }
-                const std::string sourceTerm = trimAgentToolValue(addTerm.value("source_term", ""));
-                const std::string targetTerm = trimAgentToolValue(addTerm.value("target_term", ""));
-                const std::string note = trimAgentToolValue(addTerm.value("note", ""));
-                if (sourceTerm.empty() || targetTerm.empty()) {
-                    continue;
-                }
-                ++acceptedAddTerms;
-                allKnownTerms.insert(sourceTerm);
-                json& addEntry = ledgerMap[sourceTerm];
-                if (addEntry.is_object()) {
-                    if (addEntry.value("note", "").empty() && !note.empty()) {
-                        addEntry["note"] = note;
-                    }
-                    if (addEntry.value("origin", "").empty()) {
-                        addEntry["origin"] = "add_term";
-                    }
-                    continue;
-                }
-
-                addEntry = {
-                    {"target_term", targetTerm},
-                    {"note", note},
-                    {"status", "accepted"},
-                    {"merge_into", ""},
-                    {"origin", "add_term"},
-                    {"updated_at", nowTimestampString()}
-                };
-                pushBackEntryWithOrderFunc(sourceTerm);
+            for (const auto& update : decision.termUpdates) {
+                applyReviewTermUpdateFunc(update);
             }
         };
 
@@ -706,7 +727,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         retryCount,
                         m_config.maxRetries,
                         e.what(),
-                        truncateReviewLog(response.content, 6000)
+                        truncateUtf8Prefix(response.content, 6000)
                     );
                     turnLoopExitedByRetry = true;
                     break;
@@ -740,7 +761,9 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         .currentFile = currentFile,
                         .relFiles = &m_config.relInputFiles,
                         .sourceFiles = &sourceFiles,
+                        .sourceFileLookup = &sourceFileLookup,
                         .ledgerMap = &ledgerMap,
+                        .ledgerOrder = &entriesVec,
                         .searchResultLimit = m_config.searchResultLimit,
                         .allowCrossFileSearch = m_config.allowCrossFileSearch,
                         .projectNotePath = m_config.projectNotePath
@@ -757,7 +780,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         m_logger->debug(
                             "GenDict Review Agent term {} tool results:\n{}",
                             group.sourceTerm,
-                            truncateReviewLog(toolResults.dump(2), 12000)
+                            truncateUtf8Prefix(toolResults.dump(2), 12000)
                         );
                     }
 
@@ -784,7 +807,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                             m_logger->debug(
                                 "GenDict Review Agent term {} commit succeeded:\n{}",
                                 group.sourceTerm,
-                                truncateReviewLog(response.content, 12000)
+                                truncateUtf8Prefix(response.content, 12000)
                             );
                         }
                     }
@@ -796,7 +819,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                             retryCount,
                             m_config.maxRetries,
                             e.what(),
-                            truncateReviewLog(response.content, 6000)
+                            truncateUtf8Prefix(response.content, 6000)
                         );
                         turnLoopExitedByRetry = true;
                     }

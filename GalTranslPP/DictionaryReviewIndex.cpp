@@ -46,7 +46,8 @@ std::vector<DictionaryReviewTermGroup> DictionaryReviewIndex::build(
     const absl::flat_hash_set<std::string>& nameSet,
     const absl::flat_hash_map<std::string, int>& wordCounter
 ) {
-    absl::btree_map<std::string, ReviewBucket> grouped;
+    absl::flat_hash_map<std::string, ReviewBucket> grouped;
+    grouped.reserve(coarseCandidates.size());
     for (const auto& [sourceTerm, targetTerm, note] : coarseCandidates) {
         if (sourceTerm.empty()) {
             continue;

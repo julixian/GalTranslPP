@@ -113,7 +113,6 @@ enabled = false
 maxTurnsPerChunk = 20
 softContextChars = 75000
 hardContextChars = 100000
-lookaheadLines = 80
 searchResultLimit = 80
 allowCrossFileSearch = true
 finalReconcileSingleThread = false

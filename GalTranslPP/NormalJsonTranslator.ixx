@@ -37,7 +37,6 @@ export {
         json rewriteRequests = json::array();
         json fileNotePatch = json::object();
         std::string rollingContext;
-        std::string rawContent;
     };
 
     class NormalJsonTranslator : public ITranslator {
@@ -68,7 +67,7 @@ export {
 
         // 键为相对路径字符串，值为该文件对应的背景摘要文本
         std::shared_mutex m_backgroundTextCacheMapMutex;
-        absl::btree_map<std::string, std::string> m_backgroundTextCacheMap;
+        absl::flat_hash_map<std::string, std::string> m_backgroundTextCacheMap;
 
         std::string m_systemPrompt;
         std::string m_userPrompt;
@@ -114,7 +113,6 @@ export {
         int m_agentMaxTurnsPerChunk{};
         int m_agentSoftContextChars{};
         int m_agentHardContextChars{};
-        int m_agentLookaheadLines{};
         int m_agentSearchResultLimit{};
         std::vector<CheckSeCondFunc> m_retranslKeys;
         // first: 要忽略的问题正则表达式，second: 对应的忽略条件
@@ -129,6 +127,13 @@ export {
         std::mutex m_outputMutex;
         std::mutex m_agentStateMutex;
         std::mutex m_agentFileNotesMutex;
+        json m_agentRunStateCache = json::object();
+        json m_agentTermLedgerCache = json::object();
+        json m_agentRewriteQueueCache = json::array();
+        json m_agentTermConflictCache = json::array();
+        absl::flat_hash_map<fs::path, json> m_agentFileNoteCache;
+        std::shared_mutex m_agentLoadedDictionaryEntriesCacheMutex;
+        std::shared_ptr<const json> m_agentLoadedDictionaryEntriesCache;
         // 输入分割文件相对路径到原始json相对路径的映射
         absl::flat_hash_map<fs::path, fs::path> m_splitFilePartsToJson;
         // 原始json相对路径到多个输入分割文件相对路径及其有没有完成的映射
@@ -168,15 +173,12 @@ export {
         // 则会按现有重试逻辑再次进入。
         bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
 
-        // Agent 模式共享持久化状态的辅助函数。
-        // 所有写路径都应经过这些函数，避免 worker 线程在 load-modify-save 窗口内互相覆盖。
-        json loadAgentRunState();
-        json loadAgentTermLedger();
-        json loadAgentRewriteQueue();
-        json loadAgentTermConflicts();
-        json loadAgentFileNote(const fs::path& targetRelPath);
-        void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
-        void mutateAgentState(const std::function<void(json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
+	    // Agent 模式共享持久化状态的辅助函数。
+	    // 所有写路径都应经过这些函数，避免 worker 线程在 load-modify-save 窗口内互相覆盖。
+	    json loadAgentTermLedger();
+	    json loadAgentFileNote(const fs::path& targetRelPath);
+	    void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
+	    void mutateAgentState(const std::function<void(json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
         std::string buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         json buildAgentBaseMessages(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,

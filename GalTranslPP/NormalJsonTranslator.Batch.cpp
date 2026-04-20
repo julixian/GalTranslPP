@@ -85,8 +85,8 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         );
 
         std::string inputBlock;
-        absl::btree_map<int, Sentence*> id2SentenceMap; // TSV/JSON 解析需要的索引表
-        fillBlockAndMap(batchToTransThisRound, id2SentenceMap, inputBlock, m_transEngine);
+        absl::flat_hash_map<int, Sentence*> id2SentenceMap; // TSV/JSON 解析需要的索引表
+        fillBlockAndMap(batchToTransThisRound, inputBlock, m_transEngine, &id2SentenceMap);
 
         std::string logBlock;
         if (!inputProblems.empty()) {

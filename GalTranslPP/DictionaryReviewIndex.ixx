@@ -14,18 +14,12 @@ export {
         int count = 0;
     };
 
-    struct DictionaryReviewSampleSegment {
-        int segmentId = -1;
-        std::string text;
-    };
-
     struct DictionaryReviewTermGroup {
         std::string sourceTerm;
         std::vector<DictionaryReviewValueFrequency> candidateTargets;
         std::vector<DictionaryReviewValueFrequency> candidateNotes;
+        std::vector<std::string> sampleSegments;
         int occurrenceCount = 0;
-        std::vector<int> segmentIds;
-        std::vector<DictionaryReviewSampleSegment> sampleSegments;
         bool isNameHint = false;
         bool isTokenizerWord = false;
     };

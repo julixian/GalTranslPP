@@ -17,8 +17,6 @@ AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sent
         fileView.lines.push_back({
             .id = se.index,
             .speaker = speaker,
-            .originalText = se.original_text,
-            .preProcessedText = se.pre_processed_text,
             .toolText = se.pre_processed_text,
             .toolTextLower = str2Lower(se.pre_processed_text)
         });
@@ -26,21 +24,17 @@ AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sent
     return fileView;
 }
 
-json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch, bool includeOriginalText) {
+json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch) {
     json result = {
         {"id", line.id},
         {"speaker", line.speaker},
         {"message", line.toolText},
-        {"joined_text", line.speaker.empty() ? line.toolText : std::format("{}: {}", line.speaker, line.toolText)},
         {"is_match", isMatch}
     };
-    if (includeOriginalText) {
-        result["original_text"] = line.originalText;
-    }
     return result;
 }
 
-json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines, bool includeOriginalText) {
+json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines) {
     json nearbyLines = json::array();
     if (lines.empty()) {
         return nearbyLines;
@@ -48,7 +42,7 @@ json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, 
     const int start = std::max(0, matchIndex - contextLines);
     const int end = std::min((int)lines.size() - 1, matchIndex + contextLines);
     for (int i = start; i <= end; ++i) {
-        nearbyLines.push_back(agentSourceLineToJson(lines[i], i == matchIndex, includeOriginalText));
+        nearbyLines.push_back(agentSourceLineToJson(lines[i], i == matchIndex));
     }
     return nearbyLines;
 }

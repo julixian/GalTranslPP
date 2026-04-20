@@ -1,5 +1,7 @@
 module;
 
+#include <Shlwapi.h>
+
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
@@ -11,13 +13,9 @@ import Tool;
 namespace fs = std::filesystem;
 
 struct AgentLoadedDictionaryEntry {
-    std::string type;
-    std::string file;
     std::string sourceTerm;
     std::string targetTerm;
     std::string note;
-    std::string status;
-    std::string mergeInto;
 };
 
 std::string trimAgentToolValue(const std::string& value) {
@@ -87,9 +85,9 @@ std::optional<json> tryParseAgentJsonEnvelope(const std::string& text, const Age
     }
 }
 
-int sanitizeAgentToolLimit(int requested, int fallback, int maxLimit) {
+int sanitizeAgentToolLimit(int requested, int maxLimit) {
     if (requested <= 0) {
-        return fallback;
+        return maxLimit;
     }
     return std::min(requested, maxLimit);
 }
@@ -125,13 +123,9 @@ std::vector<AgentLoadedDictionaryEntry> loadAgentDictionaryEntries(const AgentSh
                     continue;
                 }
                 entries.push_back({
-                    .type = "gpt_dict",
-                    .file = safeRelativePath(dictPath, env.projectDir),
                     .sourceTerm = sourceTerm,
                     .targetTerm = targetTerm,
-                    .note = note,
-                    .status = "loaded",
-                    .mergeInto = ""
+                    .note = note
                 });
             }
         }
@@ -159,7 +153,7 @@ std::string safeRelativePath(const fs::path& path, const fs::path& root) {
 
 std::vector<std::string> collectAgentToolQueries(const json& arguments) {
     std::vector<std::string> queries;
-    if (const auto it = arguments.find("queries"); it != arguments.end() && it->is_array()) {
+    if (auto it = arguments.find("queries"); it != arguments.end() && it->is_array()) {
         for (const auto& query : *it) {
             if (query.is_string()) {
                 const std::string value = trimAgentToolValue(query.get<std::string>());
@@ -169,93 +163,141 @@ std::vector<std::string> collectAgentToolQueries(const json& arguments) {
             }
         }
     }
-    if (queries.empty()) {
-        const std::string query = trimAgentToolValue(arguments.value("query", ""));
+    else if (it = arguments.find("query"); it != arguments.end() && it->is_string()) {
+        std::string query = it->get<std::string>();
         if (!query.empty()) {
-            std::istringstream iss(query);
-            for (std::string token; iss >> token;) {
-                queries.push_back(token);
-            }
-            if (queries.empty()) {
-                queries.push_back(query);
-            }
+            queries.push_back(std::move(query));
         }
     }
     return queries;
 }
 
-json agentToolLedgerEntryToJson(const std::string& sourceTerm, const json& entry, std::string_view entryType) {
-    return {
-        {"type", entryType},
+json agentToolLedgerEntryToJson(const std::string& sourceTerm, const json& entry) {
+    return json{
         {"source_term", sourceTerm},
         {"target_term", entry.value("target_term", "")},
+        {"category", entry.value("category", "")},
         {"note", entry.value("note", "")},
         {"status", entry.value("status", "")},
         {"merge_into", entry.value("merge_into", "")},
-        {"origin", entry.value("origin", "")}
+        {"origin", entry.value("origin", "")},
+        {"occurrences", entry.value("occurrences", json::array())}
     };
 }
 
 json runAgentCommonListFilesTool(const AgentSharedToolEnv& env, const json& arguments) {
-    const std::string pattern = str2Lower(arguments.value("pattern", ""));
+    const std::wstring spec = str2Lower(ascii2Wide(arguments.value("spec", "")));
+    const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     json files = json::array();
     if (env.relFiles == nullptr) {
-        return { {"files", files} };
+        return json{
+            {"files", files},
+            {"start", start},
+            {"limit", limit},
+            {"total", 0}
+        };
     }
+
+    int matchCount = 0;
     for (const fs::path& relFile : *env.relFiles) {
-        const std::string relFileStr = wide2Ascii(relFile);
-        if (!pattern.empty() && !str2Lower(relFileStr).contains(pattern)) {
+        if (!spec.empty()) {
+            if (!str2Lower(relFile.wstring()).contains(spec) &&
+                !PathMatchSpecW(relFile.c_str(), spec.c_str())
+                )
+            {
+                continue;
+            }
+        }
+        ++matchCount;
+        if (matchCount <= start || (int)files.size() >= limit) {
             continue;
         }
-        files.push_back(relFileStr);
-        if ((int)files.size() >= limit) {
-            break;
+
+        json fileInfo = {
+            {"file", wide2Ascii(relFile)}
+        };
+        if (env.getFileLineCount) {
+            const std::optional<int> lineCount = env.getFileLineCount(relFile);
+            if (lineCount.has_value()) {
+                fileInfo["lines"] = lineCount.value();
+            }
         }
+        files.push_back(std::move(fileInfo));
     }
-    return { {"files", files} };
+    return json{
+        {"files", files},
+        {"start", start},
+        {"limit", limit},
+        {"total", matchCount}
+    };
 }
 
 json runAgentCommonSearchDictionaryTool(const AgentSharedToolEnv& env, const json& arguments) {
     const std::vector<std::string> queries = collectAgentToolQueries(arguments);
-    if (queries.empty()) {
-        return { {"error", "search_dictionary requires query or queries"} };
-    }
-    const std::string mode = str2Lower(arguments.value("mode", "fuzzy"));
-    const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit, 200);
+    const std::vector<std::string> queryLowers = queries
+        | std::views::transform([](const std::string& query) { return str2Lower(query); })
+        | std::ranges::to<std::vector>();
+    const int start = std::max(0, arguments.value("start", 0));
+    const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     json matches = json::array();
+    int matchCount = 0;
 
-    const auto matchedByQuery = [&](const std::string& sourceTerm, const std::string& targetTerm,
-        const std::string& note, const std::string& extra = {}) -> bool
+    auto matchedByQueryFunc = [&](const std::string& sourceTerm, const std::string& targetTerm, const std::string& note) -> bool
         {
-            const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note + "\n" + extra);
-            return std::ranges::any_of(queries, [&](const std::string& query)
+            if (queryLowers.empty()) {
+                return true;
+            }
+            const std::string haystack = str2Lower(sourceTerm + "\n" + targetTerm + "\n" + note);
+            return std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
                 {
-                    if (query.empty()) {
-                        return false;
-                    }
-                    if (mode == "exact") {
-                        return sourceTerm == query || targetTerm == query;
-                    }
-                    return haystack.contains(str2Lower(query));
+                    return !queryLower.empty() && haystack.contains(queryLower);
                 });
         };
 
-    if (env.includeLoadedDictionaryEntriesInSearch) {
-        for (const AgentLoadedDictionaryEntry& entry : loadAgentDictionaryEntries(env)) {
-            if ((int)matches.size() >= limit) {
-                break;
-            }
-            if (matchedByQuery(entry.sourceTerm, entry.targetTerm, entry.note, entry.file)) {
-                matches.push_back({
-                    {"type", entry.type},
-                    {"file", entry.file},
+    if (env.includeLoadedDictionaryEntriesInSearchDictionary) {
+        if (env.loadedDictionaryEntriesCache && env.loadedDictionaryEntriesCache->is_null()) {
+            *env.loadedDictionaryEntriesCache = json::array();
+            for (const AgentLoadedDictionaryEntry& entry : loadAgentDictionaryEntries(env)) {
+                env.loadedDictionaryEntriesCache->push_back({
                     {"source_term", entry.sourceTerm},
                     {"target_term", entry.targetTerm},
-                    {"note", entry.note},
-                    {"status", entry.status},
-                    {"merge_into", entry.mergeInto}
+                    {"note", entry.note}
                 });
+            }
+        }
+        else if (env.loadedDictionaryEntriesCache && !env.loadedDictionaryEntriesCache->is_array()) {
+            *env.loadedDictionaryEntriesCache = json::array();
+        }
+
+        if (env.loadedDictionaryEntriesCache) {
+            for (const json& entry : *env.loadedDictionaryEntriesCache) {
+                if (matchedByQueryFunc(
+                    entry.value("source_term", ""),
+                    entry.value("target_term", ""),
+                    entry.value("note", "")
+                )) {
+                    ++matchCount;
+                    if (matchCount <= start || (int)matches.size() >= limit) {
+                        continue;
+                    }
+                    matches.push_back(entry);
+                }
+            }
+        }
+        else {
+            for (const AgentLoadedDictionaryEntry& entry : loadAgentDictionaryEntries(env)) {
+                if (matchedByQueryFunc(entry.sourceTerm, entry.targetTerm, entry.note)) {
+                    ++matchCount;
+                    if (matchCount <= start || (int)matches.size() >= limit) {
+                        continue;
+                    }
+                    matches.push_back({
+                        {"source_term", entry.sourceTerm},
+                        {"target_term", entry.targetTerm},
+                        {"note", entry.note}
+                    });
+                }
             }
         }
     }
@@ -263,115 +305,26 @@ json runAgentCommonSearchDictionaryTool(const AgentSharedToolEnv& env, const jso
     if (env.includeTermLedgerInSearchDictionary) {
         const json ledger = loadAgentToolLedger(env);
         for (const auto& item : ledger.items()) {
-            if ((int)matches.size() >= limit) {
-                break;
-            }
             const json& entry = item.value();
-            if (matchedByQuery(item.key(), entry.value("target_term", ""), entry.value("note", ""),
-                entry.value("status", "") + "\n" + entry.value("merge_into", ""))) {
-                matches.push_back(agentToolLedgerEntryToJson(item.key(), entry, env.ledgerEntryType));
+            if (matchedByQueryFunc(item.key(), entry.value("target_term", ""), entry.value("note", ""))) {
+                ++matchCount;
+                if (matchCount <= start || (int)matches.size() >= limit) {
+                    continue;
+                }
+                matches.push_back(agentToolLedgerEntryToJson(item.key(), entry));
             }
         }
     }
 
-    return {
+    return json{
         {"queries", queries},
-        {"mode", mode},
+        {"start", start},
+        {"limit", limit},
+        {"total", matchCount},
         {"matches", matches}
     };
 }
 
-json runAgentCommonGetDictionaryEntriesTool(const AgentSharedToolEnv& env, const json& arguments) {
-    std::vector<std::string> terms;
-    if (auto it = arguments.find("terms"); it != arguments.end() && it->is_array()) {
-        for (const auto& term : *it) {
-            if (term.is_string()) {
-                const std::string value = trimAgentToolValue(term.get<std::string>());
-                if (!value.empty()) {
-                    terms.push_back(value);
-                }
-            }
-        }
-    }
-    else if (it = arguments.find("term"); it != arguments.end() && it->is_string()) {
-        const std::string value = trimAgentToolValue(it->get<std::string>());
-        if (!value.empty()) {
-            terms.push_back(value);
-        }
-    }
-
-    const auto exactMatched = [&](const std::string& sourceTerm, const std::string& targetTerm) -> bool
-        {
-            if (terms.empty()) {
-                return true;
-            }
-            return std::ranges::any_of(terms, [&](const std::string& term)
-                {
-                    return sourceTerm == term || targetTerm == term;
-                });
-        };
-
-    const int limit = sanitizeAgentToolLimit(arguments.value("limit", 200), 200, 2000);
-    json entries = json::array();
-    int matchedEntries = 0;
-
-    if (env.includeLoadedDictionaryEntriesInGetEntries) {
-        for (const AgentLoadedDictionaryEntry& entry : loadAgentDictionaryEntries(env)) {
-            if (!exactMatched(entry.sourceTerm, entry.targetTerm)) {
-                continue;
-            }
-            ++matchedEntries;
-            if ((int)entries.size() < limit) {
-                entries.push_back({
-                    {"type", entry.type},
-                    {"file", entry.file},
-                    {"source_term", entry.sourceTerm},
-                    {"target_term", entry.targetTerm},
-                    {"note", entry.note},
-                    {"status", entry.status},
-                    {"merge_into", entry.mergeInto}
-                });
-            }
-        }
-    }
-
-    if (env.includeTermLedgerInGetDictionaryEntries) {
-        const json ledger = loadAgentToolLedger(env);
-        for (const auto& item : ledger.items()) {
-            const json& entry = item.value();
-            if (!exactMatched(item.key(), entry.value("target_term", ""))) {
-                continue;
-            }
-            ++matchedEntries;
-            if ((int)entries.size() < limit) {
-                entries.push_back(agentToolLedgerEntryToJson(item.key(), entry, env.ledgerEntryType));
-            }
-        }
-    }
-
-    return {
-        {"entries", entries},
-        {"matched_entries", matchedEntries},
-        {"returned_entries", (int)entries.size()},
-        {"truncated", (int)entries.size() < matchedEntries}
-    };
-}
-
-json runAgentCommonGetTermTool(const AgentSharedToolEnv& env, const json& arguments) {
-    const std::string term = trimAgentToolValue(arguments.value("term", ""));
-    if (term.empty()) {
-        return {
-            {"term", term},
-            {"entry", nullptr},
-            {"error", "get_term requires term"}
-        };
-    }
-    const json ledger = loadAgentToolLedger(env);
-    return {
-        {"term", term},
-        {"entry", ledger.contains(term) ? ledger.at(term) : json()}
-    };
-}
 
 json runAgentCommonGetProjectNoteTool(const AgentSharedToolEnv& env, const json& arguments) {
     if (!env.projectNotePath.has_value()) {
@@ -381,15 +334,10 @@ json runAgentCommonGetProjectNoteTool(const AgentSharedToolEnv& env, const json&
             {"content", ""}
         };
     }
-    const int maxChars = sanitizeAgentToolLimit(arguments.value("max_chars", 20000), 20000, 120000);
     std::ifstream ifs(env.projectNotePath.value(), std::ios::binary);
     const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    const bool truncated = (int)content.size() > maxChars;
-    return {
-        {"available", true},
+    return json{
         {"file", safeRelativePath(env.projectNotePath.value(), env.projectDir)},
-        {"content", truncated ? content.substr(0, maxChars) : content},
-        {"truncated", truncated},
-        {"total_chars", (int)content.size()}
+        {"content", content},
     };
 }

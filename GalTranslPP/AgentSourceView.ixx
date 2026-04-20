@@ -12,8 +12,6 @@ export {
     struct AgentSourceLineView {
         int id = -1;
         std::string speaker;
-        std::string originalText;
-        std::string preProcessedText;
         std::string toolText;
         std::string toolTextLower;
     };
@@ -24,6 +22,6 @@ export {
     };
 
     AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sentence>& sentences, const fs::path& relPath = {});
-    json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch = false, bool includeOriginalText = true);
-    json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines, bool includeOriginalText = true);
+    json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch = false);
+    json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines);
 }

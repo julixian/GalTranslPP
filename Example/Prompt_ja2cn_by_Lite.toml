@@ -373,7 +373,8 @@ Protocol JSON schema:
     <category name="Context and Perspective">
         <rule>If ids are sequential and "rolling_context" section has content, first preview it to ensure semantic accuracy. Also absorb `file_note` when it contains useful long-range clues.</rule>
         <rule>If `name` is not null or the source line is covered by `「」`, treat src as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>If there is any ambiguity in the personal reference, call tools to clarify. If you encounter a nickname or alias that is not covered by any reference, record the source term and your chosen translation in `term_updates`.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">
@@ -516,9 +517,9 @@ Step B. Choose the smallest necessary tool.
    use `search_text`
 3. Need long-range file memory such as foreshadowing, identity, scene state, or unresolved clues:
    use `get_file_note`
-4. Need to inspect loaded GPT dictionary entries themselves, or exact-check specific terms:
-   use `get_dictionary_entries`
-5. Need to search a clue that comes from `rolling_context`, `file_note`, or cross-file context, and that clue is definitely absent from the current chunk source:
+4. Need to inspect translator-maintained term ledger:
+   use `search_term`
+5. Need to search loaded GPT dictionary entries for an external clue that is definitely absent from current chunk `glossary`:
    use `search_dictionary`
 6. Need current chunk dictionary hits only:
    do not call dictionary tools; use `glossary`
@@ -550,18 +551,16 @@ Step C. After tool results.
 </known_terms>
 
 <tools>
-list_files: list available script files
-read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range
+list_files(spec?, start=0, limit?): list available script files as `{file, lines}` objects. `lines` is the valid translation index count: `read_lines.start`, search result `id`, and commit translation `id` use this same index space.
+read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range.
 example: { "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }
-search_text(query? | queries?, scope=current_file|all_files|specified_file, file?): search source, cached dst, term ledger, and file notes; prefer one clue per call or queries: [...]
+search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=2): search source and cached dst; text hits include nearby context lines.
 example: { "id": "search1", "name": "search_text", "arguments": { "queries": ["明日香"], "scope": "all_files" } }
-get_dictionary_entries(terms?, limit?): inspect loaded GPT dictionary entries; omit terms to inspect the whole dictionary, or pass terms for exact entry lookup
-example: { "id": "dict1", "name": "get_dictionary_entries", "arguments": { "terms": ["晶", "あきら"] } }
-search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or queries: [...]
-example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"], "mode": "fuzzy" } }
-get_term(term): read one term-ledger entry
-example: { "id": "term1", "name": "get_term", "arguments": { "term": "晶" } }
-get_file_note(file?): read durable file notes
+search_dictionary(query?|queries?, start=0, limit?): search loaded GPT dictionary entries for explicit external clues. Omit `query|queries` to inspect a dictionary snapshot.
+example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"] } }
+search_term(query?|queries?, start=0, limit?): search the translator-maintained term ledger; omit `query|queries` to inspect a ledger snapshot.
+example: { "id": "term1", "name": "search_term", "arguments": { "queries": ["晶"] } }
+get_file_note(file="[AgentCurrentFile]"): read durable file notes.
 example: { "id": "note1", "name": "get_file_note", "arguments": { "file": "[AgentCurrentFile]" } }
 [AgentExtraTools]</tools>
 
@@ -609,7 +608,8 @@ Protocol JSON schema:
     <category name="Context and Perspective">
         <rule>If ids are sequential and "rolling_context" section has content, first preview it to ensure semantic accuracy. Also absorb `file_note` when it contains useful long-range clues.</rule>
         <rule>If the source line is covered by `「」`, treat it as **Dialogue**. Omit Japanese sokuon (っ, ッ) unless it specifically signifies a glottal stop or sharp pause.</rule>
-        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed. If there is any ambiguity in the personal reference, call tools to clarify.</rule>
+        <rule>Otherwise treat it as **Monologue/Narration**. Translate monologue from the current character's perspective, and restore omitted subject/object only when needed.</rule>
+        <rule>If there is any ambiguity in the personal reference, call tools to clarify. If you encounter a nickname or alias that is not covered by any reference, record the source term and your chosen translation in `term_updates`.</rule>
     </category>
 
     <category name="Anti-Translationese (去翻译腔)">
@@ -751,9 +751,9 @@ Step B. Choose the smallest necessary tool.
    use `search_text`
 3. Need long-range file memory such as foreshadowing, identity, scene state, or unresolved clues:
    use `get_file_note`
-4. Need to inspect loaded GPT dictionary entries themselves, or exact-check specific terms:
-   use `get_dictionary_entries`
-5. Need to search a clue that comes from `rolling_context`, `file_note`, or cross-file context, and that clue is definitely absent from the current chunk source:
+4. Need to inspect translator-maintained term ledger:
+   use `search_term`
+5. Need to search loaded GPT dictionary entries for an external clue that is definitely absent from current chunk `glossary`:
    use `search_dictionary`
 6. Need current chunk dictionary hits only:
    do not call dictionary tools; use `glossary`
@@ -785,18 +785,16 @@ Step C. After tool results.
 </known_terms>
 
 <tools>
-list_files: list available script files
-read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range
+list_files(spec?, start=0, limit?): list available script files as `{file, lines}` objects. `lines` is the valid translation index count: `read_lines.start`, search result `id`, and commit translation `id` use this same index space.
+read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range.
 example: { "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }
-search_text(query? | queries?, scope=current_file|all_files|specified_file, file?): search source, cached dst, term ledger, and file notes; prefer one clue per call or queries: [...]
+search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=2): search source and cached dst; text hits include nearby context lines.
 example: { "id": "search1", "name": "search_text", "arguments": { "queries": ["明日香"], "scope": "all_files" } }
-get_dictionary_entries(terms?, limit?): inspect loaded GPT dictionary entries; omit terms to inspect the whole dictionary, or pass terms for exact entry lookup
-example: { "id": "dict1", "name": "get_dictionary_entries", "arguments": { "terms": ["晶", "あきら"] } }
-search_dictionary(query? | queries?, mode=fuzzy|exact, limit?): fuzzy-search loaded GPT dictionary entries for explicit external clues; prefer one term per call or queries: [...]
-example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"], "mode": "fuzzy" } }
-get_term(term): read one term-ledger entry
-example: { "id": "term1", "name": "get_term", "arguments": { "term": "晶" } }
-get_file_note(file?): read durable file notes
+search_dictionary(query?|queries?, start=0, limit?): search loaded GPT dictionary entries for explicit external clues. Omit `query|queries` to inspect a dictionary snapshot.
+example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"] } }
+search_term(query?|queries?, start=0, limit?): search the translator-maintained term ledger; omit `query|queries` to inspect a ledger snapshot.
+example: { "id": "term1", "name": "search_term", "arguments": { "queries": ["晶"] } }
+get_file_note(file="[AgentCurrentFile]"): read durable file notes.
 example: { "id": "note1", "name": "get_file_note", "arguments": { "file": "[AgentCurrentFile]" } }
 [AgentExtraTools]</tools>
 

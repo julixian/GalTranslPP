@@ -91,12 +91,8 @@ std::vector<DictionaryReviewTermGroup> DictionaryReviewIndex::build(
             if (!segment.contains(sourceTerm)) {
                 continue;
             }
-            group.segmentIds.push_back(segmentId);
             if (group.sampleSegments.size() < 3) {
-                group.sampleSegments.push_back({
-                    .segmentId = segmentId,
-                    .text = segment
-                });
+                group.sampleSegments.push_back(segment);
             }
         }
 

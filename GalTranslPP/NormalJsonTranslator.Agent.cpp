@@ -8,6 +8,8 @@
 #include <Shlwapi.h>
 #endif
 
+#include <unicode/utf8.h>
+
 module NormalJsonTranslator;
 
 import AgentToolCommon;
@@ -47,22 +49,8 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
             }
             AgentToolCallRequest parsed;
             parsed.id = call.value("id", std::format("call_{}", result.calls.size()));
-            // 首选 `name` + `arguments`，同时接受 `method` / `tool` / `function`
-            // 以及 `params` 作为别名，避免模型因为字段漂移而整轮工具调用失效。
             parsed.name = call.value("name", "");
-            if (parsed.name.empty()) {
-                parsed.name = call.value("method", "");
-            }
-            if (parsed.name.empty()) {
-                parsed.name = call.value("tool", "");
-            }
-            if (parsed.name.empty()) {
-                parsed.name = call.value("function", "");
-            }
-            if (auto argIt = call.find("arguments"); argIt != call.end()) {
-                parsed.arguments = *argIt;
-            }
-            else if (argIt = call.find("params"); argIt != call.end()) {
+            if (const auto argIt = call.find("arguments"); argIt != call.end()) {
                 parsed.arguments = *argIt;
             }
             result.calls.push_back(std::move(parsed));
@@ -104,7 +92,7 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
         result.fileNotePatch = *it;
     }
     if (const auto it = payload.find("rolling_context"); it != payload.end() && it->is_string()) {
-        result.rollingContext = it->get<std::string>();
+        it->get_to(result.rollingContext);
     }
     return result;
 }
@@ -117,10 +105,19 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
 // 5. commit 中真正提交的协议内容
 // 这些日志不会再回流给模型，只用于人工排错。
 std::string truncateForAgentLog(std::string text, size_t maxChars = 4000) {
-    if (text.size() <= maxChars) {
-        return text;
+    uint8_t* s = (uint8_t*)text.c_str();
+    int32_t length = (int32_t)text.length();
+    int32_t i = 0;
+    int32_t count = 0;
+    const int32_t limit = (int32_t)maxChars;
+    while (i < length && count < limit) {
+        U8_FWD_1(s, i, length);
+        ++count;
     }
-    return text.substr(0, maxChars) + std::format("\n...(truncated, total {} chars)", text.size());
+    if (i < length) {
+        return text.replace(i, std::string::npos, "...");
+    }
+    return text;
 }
 
 std::string formatToolCallRequestsForLog(const std::vector<AgentToolCallRequest>& calls) {
@@ -506,7 +503,7 @@ json NormalJsonTranslator::buildAgentBaseMessages(const fs::path& relInputPath, 
     const json currentFileNote = loadAgentFileNote(relInputPath);
     const std::string knownTerms = ::buildAgentTermLedgerExcerpt(loadAgentTermLedger(), inputBlock, rollingSummary, currentFileNote, m_agentSearchResultLimit);
     const std::string extraTools = m_agentProjectInfoPath.has_value()
-        ? std::format("get_project_note: read optional user-provided script note file `{}`\n", 
+        ? std::format("get_project_note: read optional user-provided script note file `{}`.\n",
             wide2Ascii(fs::relative(m_agentProjectInfoPath.value(), m_projectDir)))
         : "";
 
@@ -740,6 +737,7 @@ struct AgentToolExecutionEnv {
     std::optional<fs::path> projectInfoPath;
     std::function<json()> loadTermLedger;
     std::function<json(const fs::path&)> loadFileNote;
+    std::shared_ptr<json> loadedDictionaryEntriesCache;
 };
 
 fs::path resolveAgentInputPath(const AgentToolExecutionEnv& env, const fs::path& relPath) {
@@ -781,6 +779,14 @@ const AgentSourceFileView* findAgentSourceFileView(const AgentToolExecutionEnv& 
     return &it->second;
 }
 
+std::optional<int> getAgentSourceFileLineCount(const AgentToolExecutionEnv& env, const fs::path& relPath) {
+    const AgentSourceFileView* sourceView = findAgentSourceFileView(env, relPath);
+    if (sourceView == nullptr) {
+        return std::nullopt;
+    }
+    return (int)sourceView->lines.size();
+}
+
 json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& arguments) {
     const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(env.relInputPath)));
     const int start = std::max(0, arguments.value("start", 0));
@@ -796,15 +802,14 @@ json runAgentReadLinesTool(const AgentToolExecutionEnv& env, const json& argumen
             return result;
         }
         for (int i = start; i < (int)sourceView->lines.size() && i < start + count; ++i) {
-            json line = { {"id", i} };
-            const auto cacheIt = cacheMap.find(i);
             const AgentSourceLineView& sourceLine = sourceView->lines[i];
+            json line = { {"id", sourceLine.id} };
+            const auto cacheIt = cacheMap.find(sourceLine.id);
             if (!sourceLine.speaker.empty()) {
                 line["name"] = sourceLine.speaker;
             }
             if (includeSrc) {
                 line["src"] = sourceLine.toolText;
-                line["src_original"] = sourceLine.originalText;
             }
             if (includeDst && cacheIt != cacheMap.end()) {
                 line["dst"] = cacheIt->second.value("pre_translated_text", cacheIt->second.value("translated_preview", ""));
@@ -824,10 +829,9 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         | std::views::transform([](const std::string& query) { return str2Lower(query); })
         | std::ranges::to<std::vector>();
     const std::string scope = arguments.value("scope", "current_file");
+    const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
-    const int contextLines = arguments.contains("context_lines")
-        ? sanitizeAgentContextLines(arguments.value("context_lines", 0))
-        : 2;
+    const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 2));
     std::vector<fs::path> targetFiles;
 
     if (scope != "current_file" && scope != "all_files" && scope != "specified_file") {
@@ -848,34 +852,8 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
     }
 
     json matches = json::array();
-    const json termLedger = env.loadTermLedger ? env.loadTermLedger() : json::object();
-    for (const auto& item : termLedger.items()) {
-        if ((int)matches.size() >= limit) {
-            break;
-        }
-        const std::string term = item.key();
-        const json& entry = item.value();
-        const std::string targetTerm = entry.value("target_term", "");
-        const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
-            {
-                return !queryLower.empty() &&
-                    (str2Lower(term).contains(queryLower) || str2Lower(targetTerm).contains(queryLower));
-            });
-        if (matched) {
-            matches.push_back(json{
-                {"type", "term"},
-                {"term", term},
-                {"target_term", targetTerm},
-                {"status", entry.value("status", "tentative")},
-                {"note", entry.value("note", "")}
-            });
-        }
-    }
-
+    int matchCount = 0;
     for (const auto& targetRelPath : targetFiles) {
-        if ((int)matches.size() >= limit) {
-            break;
-        }
         try {
             const AgentSourceFileView* sourceView = findAgentSourceFileView(env, targetRelPath);
             const auto cacheMap = loadAgentCacheDstMap(env, targetRelPath);
@@ -883,46 +861,31 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                 continue;
             }
             for (const auto& [index, line] : sourceView->lines | std::views::enumerate) {
-                if ((int)matches.size() >= limit) {
-                    break;
-                }
                 const std::string& src = line.toolText;
                 std::string dst;
-                if (const auto it = cacheMap.find((int)index); it != cacheMap.end()) {
+                if (const auto it = cacheMap.find(line.id); it != cacheMap.end()) {
                     dst = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
                 }
+                const std::string dstLower = dst.empty() ? std::string{} : str2Lower(dst);
                 const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
                     {
                         return !queryLower.empty() &&
-                            (str2Lower(src).contains(queryLower) || str2Lower(dst).contains(queryLower));
+                            (line.toolTextLower.contains(queryLower) || (!dstLower.empty() && dstLower.contains(queryLower)));
                     });
                 if (!matched) {
+                    continue;
+                }
+                ++matchCount;
+                if (matchCount <= start || (int)matches.size() >= limit) {
                     continue;
                 }
                 matches.push_back(json{
                     {"type", "line"},
                     {"file", wide2Ascii(targetRelPath)},
-                    {"id", (int)index},
+                    {"id", line.id},
                     {"src", src},
-                    {"src_original", line.originalText},
                     {"dst", dst},
                     {"nearby_lines", buildAgentSourceNearbyLines(sourceView->lines, (int)index, contextLines)}
-                });
-            }
-
-            if ((int)matches.size() >= limit || !env.loadFileNote) {
-                continue;
-            }
-            const json fileNote = env.loadFileNote(targetRelPath);
-            const bool noteMatched = !fileNote.empty() && (queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
-                {
-                    return !queryLower.empty() && str2Lower(fileNote.dump()).contains(queryLower);
-                }));
-            if (noteMatched) {
-                matches.push_back(json{
-                    {"type", "file_note"},
-                    {"file", wide2Ascii(targetRelPath)},
-                    {"note", fileNote}
                 });
             }
         }
@@ -931,7 +894,71 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
 
     return json{
         {"queries", queries},
+        {"start", start},
+        {"limit", limit},
+        {"total", matchCount},
         {"context_lines", contextLines},
+        {"matches", matches}
+    };
+}
+
+json runAgentSearchTermTool(const AgentToolExecutionEnv& env, const json& arguments) {
+    const std::vector<std::string> queries = collectAgentToolQueries(arguments);
+    const std::vector<std::string> queryLowers = queries
+        | std::views::transform([](const std::string& query) { return str2Lower(query); })
+        | std::ranges::to<std::vector>();
+    const int start = std::max(0, arguments.value("start", 0));
+    const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
+    const json termLedger = env.loadTermLedger ? env.loadTermLedger() : json::object();
+    json matches = json::array();
+
+    if (!termLedger.is_object()) {
+        return json{
+            {"queries", queries},
+            {"start", start},
+            {"limit", limit},
+            {"total", 0},
+            {"matches", matches}
+        };
+    }
+
+    int matchCount = 0;
+    for (const auto& item : termLedger.items()) {
+        const json& entry = item.value();
+        const std::string sourceTerm = item.key();
+        const std::string targetTerm = entry.value("target_term", "");
+        const std::string category = entry.value("category", "");
+        const std::string note = entry.value("note", "");
+        const std::string haystack = queryLowers.empty()
+            ? std::string{}
+            : str2Lower(sourceTerm + "\n" + targetTerm + "\n" + category + "\n" + note);
+        const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+            {
+                return !queryLower.empty() && haystack.contains(queryLower);
+            });
+        if (!matched) {
+            continue;
+        }
+
+        ++matchCount;
+        if (matchCount <= start || (int)matches.size() >= limit) {
+            continue;
+        }
+        matches.push_back(json{
+            {"source_term", sourceTerm},
+            {"target_term", targetTerm},
+            {"status", entry.value("status", "tentative")},
+            {"category", category},
+            {"note", note},
+            {"occurrences", entry.value("occurrences", json::array())}
+        });
+    }
+
+    return json{
+        {"queries", queries},
+        {"start", start},
+        {"limit", limit},
+        {"total", matchCount},
         {"matches", matches}
     };
 }
@@ -947,16 +974,19 @@ json runAgentGetFileNoteTool(const AgentToolExecutionEnv& env, const json& argum
 AgentSharedToolEnv buildNormalAgentSharedToolEnv(const AgentToolExecutionEnv& env) {
     return {
         .projectDir = env.projectDir,
+        .currentFile = env.relInputPath,
         .relFiles = env.knownRelFiles,
         .dictionaryPaths = env.dictionaryPaths,
         .projectNotePath = env.projectInfoPath,
         .loadTermLedger = env.loadTermLedger,
+        .getFileLineCount = [&](const fs::path& relPath)
+            {
+                return getAgentSourceFileLineCount(env, relPath);
+            },
+        .loadedDictionaryEntriesCache = env.loadedDictionaryEntriesCache,
         .searchResultLimit = env.searchResultLimit,
-        .includeLoadedDictionaryEntriesInSearch = true,
-        .includeLoadedDictionaryEntriesInGetEntries = true,
+        .includeLoadedDictionaryEntriesInSearchDictionary = true,
         .includeTermLedgerInSearchDictionary = false,
-        .includeTermLedgerInGetDictionaryEntries = false,
-        .ledgerEntryType = "term_ledger"
     };
 }
 
@@ -978,11 +1008,8 @@ json executeAgentToolCalls(const AgentToolExecutionEnv& env, const std::vector<A
             else if (call.name == "search_dictionary") {
                 result["result"] = runAgentCommonSearchDictionaryTool(sharedEnv, call.arguments);
             }
-            else if (call.name == "get_dictionary_entries") {
-                result["result"] = runAgentCommonGetDictionaryEntriesTool(sharedEnv, call.arguments);
-            }
-            else if (call.name == "get_term") {
-                result["result"] = runAgentCommonGetTermTool(sharedEnv, call.arguments);
+            else if (call.name == "search_term") {
+                result["result"] = runAgentSearchTermTool(env, call.arguments);
             }
             else if (call.name == "get_file_note") {
                 result["result"] = runAgentGetFileNoteTool(env, call.arguments);
@@ -1030,7 +1057,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         .sourceFileViews = &m_agentSourceFileViews,
         .projectInfoPath = m_agentProjectInfoPath,
         .loadTermLedger = [&]() { return loadAgentTermLedger(); },
-        .loadFileNote = [&](const fs::path& targetRelPath) { return loadAgentFileNote(targetRelPath); }
+        .loadFileNote = [&](const fs::path& targetRelPath) { return loadAgentFileNote(targetRelPath); },
+        .loadedDictionaryEntriesCache = std::make_shared<json>(nullptr)
     };
 
     int retryCount = 0;

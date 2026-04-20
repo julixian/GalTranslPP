@@ -302,8 +302,8 @@ void CommonGptDictPage::_setupUI()
 					if (gptTabEntry.withdrawList->empty()) {
 						return;
 					}
-					GptDictEntry entry = gptTabEntry.withdrawList->front();
-					gptTabEntry.withdrawList->pop_front();
+					GptDictEntry entry = gptTabEntry.withdrawList->back();
+					gptTabEntry.withdrawList->pop_back();
 					model->insertRow(0, entry);
 					if (gptTabEntry.withdrawList->empty()) {
 						withdrawButton->setEnabled(false);

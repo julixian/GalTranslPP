@@ -403,10 +403,12 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
 	DictList coarseDefaultList = finalizeCoarseCandidates();
     DictList finalList;
     if (m_reviewOptions.enabled) {
+        const std::vector<DictionaryReviewTermGroup> termGroups = DictionaryReviewIndex::build(
+            m_finalDict, m_finalCounter, m_segments, selectedIndices, m_nameSet, m_wordCounter
+        );
+        m_controller->makeBar((int)termGroups.size(), 1);
+        m_controller->addThreadNum();
         try {
-            const std::vector<DictionaryReviewTermGroup> termGroups = DictionaryReviewIndex::build(
-                m_finalDict, m_finalCounter, m_segments, selectedIndices, m_nameSet, m_wordCounter
-            );
             DictionaryReviewAgentConfig reviewConfig{
                 .projectDir = m_reviewOptions.projectDir,
                 .relInputFiles = m_reviewOptions.relInputFiles,
@@ -431,6 +433,7 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
             m_logger->error("阶段四：Review Agent 失败，将回退到粗候选整理结果。错误: {}", e.what());
             finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);
         }
+        m_controller->reduceThreadNum();
     }
     else {
         finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);

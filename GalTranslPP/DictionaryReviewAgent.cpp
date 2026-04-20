@@ -822,7 +822,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
 
     for (const auto& [groupIndex, group] : groups | std::views::enumerate) {
         if (m_controller->shouldStop()) {
-            m_logger->info("GenDict Review Agent received stop signal; remaining terms will use local fallback.");
+            m_logger->debug("GenDict Review Agent received stop signal; remaining terms will use local fallback.");
             applyFallbackForGroupFunc(group, "stopped");
             continue;
         }
@@ -1033,6 +1033,9 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
 
         if (!completed) {
             applyFallbackForGroupFunc(group, exceededTurnLimit ? "max_turns" : "retry_exhausted");
+        }
+        if (!m_controller->shouldStop()) {
+            m_controller->updateBar();
         }
     }
 

@@ -17,6 +17,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. 修正许多 vibe coding  时 ai 留下的狗屁逻辑，大幅优化 agent 模式",
+		"2. 撤回删除改为从最后一条被删除的行开始倒序撤回",
     };
 
     mainLayout->addWidget(updateTitle);

@@ -333,8 +333,8 @@ void CommonNormalDictPage::_setupUI()
 					if (normalTabEntry.withdrawList->empty()) {
 						return;
 					}
-					NormalDictEntry entry = normalTabEntry.withdrawList->front();
-					normalTabEntry.withdrawList->pop_front();
+					NormalDictEntry entry = normalTabEntry.withdrawList->back();
+					normalTabEntry.withdrawList->pop_back();
 					model->insertRow(0, entry);
 					if (normalTabEntry.withdrawList->empty()) {
 						withdrawButton->setEnabled(false);

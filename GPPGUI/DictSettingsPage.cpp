@@ -320,8 +320,8 @@ void DictSettingsPage::_setupUI()
 				if (withdrawList.empty()) {
 					return;
 				}
-				EntryType entry = withdrawList.front();
-				withdrawList.pop_front();
+				EntryType entry = withdrawList.back();
+				withdrawList.pop_back();
 				dictModel->insertRow(0, entry);
 				if (withdrawList.empty()) {
 					withdrawDictButton->setEnabled(false);

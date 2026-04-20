@@ -297,7 +297,7 @@ void ProjectSettingsPage::_onStartTranslating()
 void ProjectSettingsPage::_onFinishTranslating(const QString& transEngine, int exitCode)
 {
     if (
-        exitCode == 0 &&
+        exitCode >= 0 &&
         toml::find_or(_globalConfig, "autoRefreshAfterTranslate", true)
         ) {
         if (transEngine == "DumpName" || transEngine == "NameTrans") {

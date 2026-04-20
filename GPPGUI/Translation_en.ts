@@ -803,8 +803,9 @@
     </message>
     <message>
         <location filename="CommonSettingsPage.cpp" line="49"/>
-        <source>推荐值 &lt; 15</source>
-        <translation>Recommend &lt; 15</translation>
+        <source>推荐值 &lt;= 16</source>
+        <oldsource>推荐值 &lt; 15</oldsource>
+        <translation>Recommend &lt;= 16</translation>
     </message>
     <message>
         <location filename="CommonSettingsPage.cpp" line="63"/>

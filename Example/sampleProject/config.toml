@@ -88,7 +88,7 @@ skipKeys = [
 "是否反向替换" = false  # false=全角->半角，true=半角->全角
 
 [common]
-numPerRequestTranslate = 10 # 单次请求翻译句子数量，推荐值 < 15
+numPerRequestTranslate = 16 # 单次请求翻译句子数量，推荐值 <= 16
 threadsNum = 5              # 最大线程数
 sortMethod = "size"         # 翻译顺序，name为文件名，size为大文件优先，多线程时大文件优先可以提高整体速度[name/size]
 targetLang = "zh-cn"        # 翻译到的目标语言，包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr]

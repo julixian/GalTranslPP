@@ -115,7 +115,7 @@ void NormalJsonTranslator::normalJsonInit()
         const auto pluginConfigData = toml::uparse(filePluginConfigPath / L"NormalJson.toml");
         m_outputWithSrc = parseToml<bool>(configData, pluginConfigData, "plugins.NormalJson.output_with_src");
 
-        m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 14);
+        m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
         m_threadsNum = toml::find_or(configData, "common", "threadsNum", 1);
         m_sortMethod = toml::find_or(configData, "common", "sortMethod", "name");
         m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");

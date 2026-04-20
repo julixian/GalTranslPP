@@ -41,12 +41,12 @@ void CommonSettingsPage::_setupUI()
 	mainLayout->setContentsMargins(20, 15, 15, 0);
 
 	// 单次请求翻译句子数量
-	int requestNum = toml::find_or(_projectConfig, "common", "numPerRequestTranslate", 10);
+	int requestNum = toml::find_or(_projectConfig, "common", "numPerRequestTranslate", 16);
 	ElaScrollPageArea* requestNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* requestNumLayout = new QHBoxLayout(requestNumArea);
 	ElaDoubleText* requestNumText = new ElaDoubleText(requestNumArea,
 		tr("单次请求翻译句子数量"), 16, 
-		tr("推荐值 < 15"), 10, "");
+		tr("推荐值 <= 16"), 10, "");
 	requestNumLayout->addWidget(requestNumText);
 	requestNumLayout->addStretch();
 	ElaSpinBox* requestNumSpinBox = new ElaSpinBox(requestNumArea);

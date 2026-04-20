@@ -88,18 +88,154 @@ ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     return result;
 }
 
-std::string formatToolCallSummary(const std::vector<ReviewToolCallRequest>& calls) {
+std::string formatReviewToolCallDetailsForInfo(const std::vector<ReviewToolCallRequest>& calls) {
     if (calls.empty()) {
         return "None";
     }
     std::string result;
     for (const auto& [index, call] : calls | std::views::enumerate) {
         if (index > 0) {
-            result += ", ";
+            result += "; ";
         }
-        result += call.name.empty() ? "<unknown>" : call.name;
+        result += std::format(
+            "{}({})",
+            call.name.empty() ? "<unknown>" : call.name,
+            truncateUtf8Prefix(call.arguments.dump(), 360)
+        );
     }
     return result;
+}
+
+std::string jsonStringForInfo(const json& object, std::string_view key) {
+    if (!object.is_object()) {
+        return {};
+    }
+    const auto it = object.find(std::string(key));
+    return it != object.end() && it->is_string() ? it->get<std::string>() : std::string{};
+}
+
+json jsonValueForInfo(const json& object, std::string_view key, json fallback = json::object()) {
+    if (!object.is_object()) {
+        return fallback;
+    }
+    const auto it = object.find(std::string(key));
+    return it != object.end() ? *it : fallback;
+}
+
+std::string summarizeReviewToolResultsForInfo(const json& toolResults) {
+    if (!toolResults.is_array() || toolResults.empty()) {
+        return "None";
+    }
+
+    std::string result;
+    for (const auto& [index, item] : toolResults | std::views::enumerate) {
+        if (index > 0) {
+            result += "; ";
+        }
+        std::string name = jsonStringForInfo(item, "name");
+        if (name.empty()) {
+            name = "<unknown>";
+        }
+        if (item.contains("error")) {
+            result += std::format("{} error={}", name, truncateUtf8Prefix(jsonStringForInfo(item, "error"), 240));
+            continue;
+        }
+
+        const json payload = jsonValueForInfo(item, "result");
+        if (!payload.is_object()) {
+            result += std::format("{} result={}", name, truncateUtf8Prefix(payload.dump(), 360));
+            continue;
+        }
+        if (name == "search_text" || name == "search_dictionary") {
+            const int returned = payload.contains("matches") && payload["matches"].is_array()
+                ? (int)payload["matches"].size()
+                : 0;
+            result += std::format(
+                "{} queries={} start={} limit={} total={} returned={}",
+                name,
+                truncateUtf8Prefix(jsonValueForInfo(payload, "queries", json::array()).dump(), 240),
+                payload.value("start", 0),
+                payload.value("limit", 0),
+                payload.value("total", 0),
+                returned
+            );
+        }
+        else if (name == "list_files") {
+            const int returned = payload.contains("files") && payload["files"].is_array()
+                ? (int)payload["files"].size()
+                : 0;
+            result += std::format(
+                "list_files start={} limit={} total={} returned={}",
+                payload.value("start", 0),
+                payload.value("limit", 0),
+                payload.value("total", 0),
+                returned
+            );
+        }
+        else if (name == "get_project_note") {
+            const std::string content = jsonStringForInfo(payload, "content");
+            result += std::format(
+                "get_project_note file={} content_chars={}",
+                jsonStringForInfo(payload, "file"),
+                content.size()
+            );
+        }
+        else {
+            result += std::format("{} result={}", name, truncateUtf8Prefix(payload.dump(), 360));
+        }
+    }
+    return result;
+}
+
+std::string summarizeReviewTermUpdatesForInfo(const json& termUpdates) {
+    if (!termUpdates.is_array() || termUpdates.empty()) {
+        return "[]";
+    }
+
+    json compact = json::array();
+    int emitted = 0;
+    for (const auto& update : termUpdates) {
+        if (emitted >= 6) {
+            break;
+        }
+        if (!update.is_object()) {
+            continue;
+        }
+        compact.push_back({
+            {"source_term", update.value("source_term", "")},
+            {"status", update.value("status", "")},
+            {"target_term", update.value("target_term", "")},
+            {"merge_into", update.value("merge_into", "")}
+        });
+        ++emitted;
+    }
+    if (termUpdates.size() > compact.size()) {
+        compact.push_back({ {"more", termUpdates.size() - compact.size()} });
+    }
+    return truncateUtf8Prefix(compact.dump(), 720);
+}
+
+std::string formatReviewAppliedEntryForInfo(
+    const std::string& sourceTerm,
+    const json& entry,
+    const json& termUpdates
+) {
+    if (!entry.is_object()) {
+        return std::format(
+            "source_term='{}', status=<missing>, term_updates={}",
+            truncateUtf8Prefix(sourceTerm, 180),
+            summarizeReviewTermUpdatesForInfo(termUpdates)
+        );
+    }
+    return std::format(
+        "source_term='{}', status={}, target='{}', merge_into='{}', note_chars={}, term_updates={}",
+        truncateUtf8Prefix(sourceTerm, 180),
+        jsonStringForInfo(entry, "status"),
+        truncateUtf8Prefix(jsonStringForInfo(entry, "target_term"), 180),
+        truncateUtf8Prefix(jsonStringForInfo(entry, "merge_into"), 180),
+        jsonStringForInfo(entry, "note").size(),
+        summarizeReviewTermUpdatesForInfo(termUpdates)
+    );
 }
 
 json valueFrequenciesToJson(const std::vector<DictionaryReviewValueFrequency>& values) {
@@ -460,6 +596,26 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
     //groupLookup: sourceTerm->group
     //knownSourceTerms: 当前 ledger 可引用的 term，初始为原始 group，随后随 term_updates 扩展
     //sourceFileLookup : relPath->AgentSourceFileView*
+    //
+    // GenDict Review Agent 流程导览（示例）：
+    // 1. DictionaryGenerator 先把粗提取结果聚合成 DictionaryReviewTermGroup，例如：
+    //    音夢 -> candidateTargets=[{value:"音梦",count:55}], sampleSegments=[...]。
+    // 2. review() 逐个 term group 运行一个小型工具循环。ledgerMap 保存已经确认的 review 决策；
+    //    entriesVec 只负责稳定输出/展示顺序；knownSourceTerms 表示当前允许 merge_into 引用的 source term。
+    // 3. 每个 term 开始时用 guessCurrentFileForTerm() 找 anchor file；它会同时查 speaker 和 message，
+    //    所以角色名只出现在说话人字段时也能定位到文件。
+    // 4. buildReviewBaseMessages() 把当前 term group、最近已确认 ledger 摘要、anchor file 和工具说明发给模型。
+    // 5. 模型如果不确定，可以返回 tool_calls，例如：
+    //    { "action":"tool_calls", "calls":[
+    //      { "name":"search_text", "arguments":{"query":"音夢","scope":"all_files","limit":10} },
+    //      { "name":"search_dictionary", "arguments":{"query":"音夢","start":0,"limit":10} }
+    //    ] }
+    //    search_text 查 sourceFiles；search_dictionary 查 review ledger。工具结果回填给模型进入下一轮。
+    // 6. 模型最终返回 commit。result 决定当前 term 的 accepted/merged/deprecated/conflict；
+    //    result.term_updates 是通用 upsert：可新增 term，也可修改已有 ledger entry 的 target/note/status/merge_into，
+    //    例如把别名标成 merged，或者补充一个当前 group 没出现但从上下文确认了的昵称。
+    // 7. 全部 term 处理完后，merged 项会做一次 merge target 保留性检查；最后只输出 accepted/conflict，
+    //    原始 group 按原顺序输出，term_updates 新增的非 group 项再按 entriesVec 顺序追加。
 
     absl::flat_hash_map<std::string, json> ledgerMap;
     absl::flat_hash_map<fs::path, const AgentSourceFileView*> sourceFileLookup;
@@ -769,12 +925,17 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         .projectNotePath = m_config.projectNotePath
                     };
 
-                    const json toolResults = ::executeReviewToolCalls(env, protocol.calls);
                     m_logger->info(
-                        "GenDict Review Agent term {} executed {} tool calls: {}.",
+                        "GenDict Review Agent term {} requested {} tool calls: {}.",
                         group.sourceTerm,
                         protocol.calls.size(),
-                        formatToolCallSummary(protocol.calls)
+                        formatReviewToolCallDetailsForInfo(protocol.calls)
+                    );
+                    const json toolResults = ::executeReviewToolCalls(env, protocol.calls);
+                    m_logger->info(
+                        "GenDict Review Agent term {} tool results: {}.",
+                        group.sourceTerm,
+                        summarizeReviewToolResultsForInfo(toolResults)
                     );
                     if (m_logger->should_log(spdlog::level::debug)) {
                         m_logger->debug(
@@ -793,7 +954,12 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 }
 
                 if (protocol.action == "skip") {
-                    m_logger->info("GenDict Review Agent term {} chose skip, using local fallback.", group.sourceTerm);
+                    m_logger->info(
+                        "GenDict Review Agent term {} chose skip, using local fallback target='{}', note_chars={}.",
+                        group.sourceTerm,
+                        truncateUtf8Prefix(fallbackTargetForGroup(group), 180),
+                        fallbackNoteForGroup(group).size()
+                    );
                     applyFallbackForGroupFunc(group, "skip");
                     completed = true;
                     break;
@@ -803,6 +969,19 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     try {
                         applyDecisionEntry(group, protocol.result);
                         completed = true;
+                        const auto appliedEntryIt = ledgerMap.find(group.sourceTerm);
+                        const json appliedEntry = appliedEntryIt != ledgerMap.end()
+                            ? appliedEntryIt->second
+                            : json::object();
+                        m_logger->info(
+                            "GenDict Review Agent term {} commit accepted: {}.",
+                            group.sourceTerm,
+                            formatReviewAppliedEntryForInfo(
+                                group.sourceTerm,
+                                appliedEntry,
+                                protocol.result.termUpdates
+                            )
+                        );
                         if (m_logger->should_log(spdlog::level::debug)) {
                             m_logger->debug(
                                 "GenDict Review Agent term {} commit succeeded:\n{}",

@@ -1147,6 +1147,31 @@ json executeAgentToolCalls(const AgentToolExecutionEnv& env, const std::vector<A
 bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId) {
     // Agent 模式复用外层 batch 调度，但单个 chunk 内可能进行多轮交互：
     // 先发起工具调用，再按需压缩上下文，最后提交通过校验的 `commit`。
+    //
+    // 流程导览（示例）：
+    // 1. normalJsonBeforeRun() 已经把 gt_input/chapter01.json 解析成 AgentSourceFileView：
+    //    lines[20] == { id:20, speaker:"アリス", toolText:"おはよう" }。
+    //    list_files 的 lines 就来自 sourceView.lines.size()，search/read 工具都读这份只读视图。
+    // 2. processFile() 按 m_batchSize 把待翻译句子切成 chunk；例如当前 chunk 是 id 20-39。
+    //    本函数只处理这个 chunk，外层文件内 batch 仍然顺序执行，backgroundText 作为 rolling context 传入/带出。
+    // 3. buildAgentBaseMessages() 把当前 chunk TSV、file_note、term_ledger 摘要、rolling context 和工具说明拼成 messages。
+    // 4. 模型可以先返回 tool_calls：
+    //    { "action":"tool_calls", "calls":[
+    //      { "name":"list_files", "arguments":{"start":0,"limit":20} },
+    //      { "name":"read_lines", "arguments":{"file":"chapter01.json","start":40,"count":5} },
+    //      { "name":"search_term", "arguments":{"query":"アリス","limit":5} }
+    //    ] }
+    //    executeAgentToolCalls() 会同步执行这些只读工具，把结果作为新的 user message 回填给下一轮模型。
+    // 5. 模型最终必须返回 commit：
+    //    { "action":"commit", "translations":[{"id":20,"translation":"早上好"}],
+    //      "term_updates":[{"source_term":"アリス","target_term":"爱丽丝","line_ids":[20]}],
+    //      "file_note_patch":{"summary":"..."},"rolling_context":"..." }
+    //    translations 的 id 可以是数字或数字字符串；它和 sourceView.lines 的 id、list_files 的 lines 范围、
+    //    read_lines.start / search result id 都在同一个翻译索引空间内。
+    //    term_updates 写入共享 term_ledger；file_note_patch 合并到 file_notes/chapter01.json；
+    //    rolling_context 更新 backgroundText。
+    // 6. 若某个 term 的 target_term 变化，applyAgentCommit() 会基于 term_ledger 里已有 occurrences
+    //    写 rewrite_queue 或 term_conflicts。runAgentFinalReconcile() 在所有文件完成后再按 rewrite_queue 重翻受影响句子。
     for (Sentence* se : batch) {
         if (se->pre_processed_text.empty()) {
             se->complete = true;

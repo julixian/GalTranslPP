@@ -402,7 +402,7 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
 
 	DictList coarseDefaultList = finalizeCoarseCandidates();
     DictList finalList;
-    if (m_reviewOptions.enabled) {
+    if (m_reviewOptions.enabled && !m_controller->shouldStop() && !m_finalDict.empty()) {
         const std::vector<DictionaryReviewTermGroup> termGroups = DictionaryReviewIndex::build(
             m_finalDict, m_finalCounter, m_segments, selectedIndices, m_nameSet, m_wordCounter
         );

@@ -249,7 +249,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
     std::string hint = m_nameSet | std::views::filter([&](const auto& name) { return text.contains(name); }) 
 	    | std::views::join_with('\n') | std::ranges::to<std::string>();
     if (!hint.empty()) {
-        hint = "These words in the input text should always be added into glossary: \n" + hint;
+        hint = "The real names in this list should always be added into glossary:\n" + hint;
     }
 
     std::string prompt = m_userPrompt;

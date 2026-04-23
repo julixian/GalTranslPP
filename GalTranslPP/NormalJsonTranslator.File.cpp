@@ -274,28 +274,30 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
         }
         else {
-            if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
-                const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
-                for (Sentence& se : sentences) {
-	                if (reconcileTargetIds.contains(se.index)) {
-                        se.complete = false;
-                        toTranslate.push_back(&se);
+	            if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
+	                const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
+	                for (Sentence& se : sentences) {
+		                if (reconcileTargetIds.contains(se.index)) {
+	                        se.complete = false;
+	                        toTranslate.push_back(&se);
+	                    }
+	                    else {
+	                        const std::string key = generateCacheKey(&se);
+	                        const auto cacheIt = cacheMap.find(key);
+	                        if (cacheIt == cacheMap.end()) {
+	                            throw std::runtime_error(std::format("Reconcile processFile 未在 cacheMap 中找到缓存: {}", se.original_text));
+	                        }
+	                        const auto& item = cacheIt->second;
+	                        if (auto jit = item.find("problems"); jit != item.end()) {
+	                            jit->get_to(se.problems);
+	                        }
+	                        se.pre_translated_text = item.value("pre_translated_text", "");
+	                        se.translated_by = item.value("translated_by", "");
+	                        se.complete = true;
+	                        postProcess(&se);
+	                    }
 	                }
-                    else {
-                        const std::string key = generateCacheKey(&se);
-                        const auto cacheIt = cacheMap.find(key);
-                        if (cacheIt == cacheMap.end()) {
-                            throw std::runtime_error(std::format("Reconcile processFile 未在 cacheMap 中找到缓存: {}", se.original_text));
-                        }
-                        const auto& item = cacheIt->second;
-                        if (auto jit = item.find("problems"); jit != item.end()) {
-                            jit->get_to(se.problems);
-                        }
-                        se.pre_translated_text = item.value("pre_translated_text", "");
-                        se.translated_by = item.value("translated_by", "");
-                    }
-                }
-            }
+	            }
             else {
                 throw std::runtime_error(std::format("Reconcile processFile 未在表中找到文件: {}", wide2Ascii(relInputPath)));
             }

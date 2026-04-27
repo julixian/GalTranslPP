@@ -169,12 +169,12 @@ void MainWindow::initWindow()
     setUserInfoCardSubTitle("tianquyesss@gmail.com");
     connect(this, &MainWindow::userInfoCardClicked, this, [=]()
         {
-            this->navigation(_homePage->property("ElaPageKey").toString());
+            QDesktopServices::openUrl(QUrl("https://github.com/julixian"));
         });
 
     setWindowTitle("Galtransl++");
 
-    setNavigationBarWidth(275);
+    setNavigationBarWidth(250);
 }
 
 void MainWindow::initEdgeLayout()

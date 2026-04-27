@@ -26,6 +26,7 @@
 #include "NameTableSettingsPage.h"
 #include "OtherSettingsPage.h"
 #include "PromptSettingsPage.h"
+#include "ProjectCachePage.h"
 
 import Tool;
 
@@ -95,7 +96,7 @@ fs::path ProjectSettingsPage::getProjectDir()
 }
 
 void ProjectSettingsPage::clearLog(bool forceClear) {
-    if (forceClear || _stackedWidget->currentIndex() == 8) {
+    if (forceClear || _stackedWidget->currentWidget() == _startSettingsPage) {
         _startSettingsPage->clearLog();
         ElaMessageBar::success(ElaMessageBarType::Bottom, 
             tr("清理成功"), tr("已清空项目 ") + getProjectName() + tr(" 的日志输出窗口"), 3000);
@@ -144,6 +145,7 @@ void ProjectSettingsPage::_setupUI()
 
     ElaMenuBar* menuBar = new ElaMenuBar(centralWidget);
     QAction* pluginSettingAction = menuBar->addElaIconAction(ElaIconType::Plug, tr("插件管理"));
+    QAction* cacheProblemAction = menuBar->addElaIconAction(ElaIconType::BoxArchive, tr("缓存与问题"));
     QAction* startTransAction = menuBar->addElaIconAction(ElaIconType::Play, tr("开始翻译"));
     QAction* otherSettingAction = menuBar->addElaIconAction(ElaIconType::Copy, tr("其他设置"));
 
@@ -207,17 +209,23 @@ void ProjectSettingsPage::_setupUI()
             _stackedWidget->setCurrentIndex(7);
             _settingsTitle->setText(tr("插件管理"));
         });
+    connect(cacheProblemAction, &QAction::triggered, this, [=]()
+        {
+            _stackedWidget->setCurrentIndex(8);
+            _projectCachePage->refreshCacheFiles();
+            _settingsTitle->setText(tr("缓存与问题"));
+        });
     connect(startTransAction, &QAction::triggered, this, [=]()
         {
-            if (_stackedWidget->currentIndex() == 8) {
+            if (_stackedWidget->currentIndex() == 9) {
                 pageNavigation();
             }
-            _stackedWidget->setCurrentIndex(8);
+            _stackedWidget->setCurrentIndex(9);
             _settingsTitle->setText(tr("开始翻译"));
         });
     connect(otherSettingAction, &QAction::triggered, this, [=]()
         {
-            _stackedWidget->setCurrentIndex(9);
+            _stackedWidget->setCurrentIndex(10);
             _settingsTitle->setText(tr("其他设置"));
         });
 
@@ -238,6 +246,7 @@ void ProjectSettingsPage::_createPages()
     _dictExSettingsPage = new DictExSettingsPage(_globalConfig, _projectConfig, _stackedWidget);
     _promptSettingsPage = new PromptSettingsPage(_projectDir, _projectConfig, _stackedWidget);
     _pluginSettingsPage = new PluginSettingsPage(_mainWindow, _projectDir, _projectConfig, _stackedWidget);
+    _projectCachePage = new ProjectCachePage(_projectDir, _projectConfig, _stackedWidget);
     _startSettingsPage = new StartSettingsPage(_mainWindow, _projectDir, _globalConfig, _projectConfig, _stackedWidget);
     _otherSettingsPage = new OtherSettingsPage(_mainWindow, _projectDir, _globalConfig, _projectConfig, _stackedWidget);
 
@@ -249,6 +258,7 @@ void ProjectSettingsPage::_createPages()
     _stackedWidget->addWidget(_dictExSettingsPage);
     _stackedWidget->addWidget(_promptSettingsPage);
     _stackedWidget->addWidget(_pluginSettingsPage);
+    _stackedWidget->addWidget(_projectCachePage);
     _stackedWidget->addWidget(_startSettingsPage);
     _stackedWidget->addWidget(_otherSettingsPage);
 
@@ -284,7 +294,7 @@ void ProjectSettingsPage::_onRefreshProjectConfig()
         widget->deleteLater();
     }
     _createPages();
-    _stackedWidget->setCurrentIndex(9);
+    _stackedWidget->setCurrentIndex(10);
     ElaMessageBar::success(ElaMessageBarType::TopRight, tr("刷新成功"), tr("项目配置刷新成功"), 3000);
 }
 

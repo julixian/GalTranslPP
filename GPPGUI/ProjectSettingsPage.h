@@ -22,6 +22,7 @@ class DictExSettingsPage;
 class StartSettingsPage;
 class OtherSettingsPage;
 class PromptSettingsPage;
+class ProjectCachePage;
 
 class ProjectSettingsPage : public BasePage
 {
@@ -60,6 +61,7 @@ private:
     StartSettingsPage* _startSettingsPage;
     OtherSettingsPage* _otherSettingsPage;
     PromptSettingsPage* _promptSettingsPage;
+    ProjectCachePage* _projectCachePage;
     ElaText* _settingsTitle;
 
     QWidget* _mainWindow;

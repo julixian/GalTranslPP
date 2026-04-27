@@ -61,6 +61,9 @@
     <ClCompile Include="ProjectSettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
+    <ClCompile Include="ProjectCachePage.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
     <ClCompile Include="PASettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
@@ -172,6 +175,9 @@
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
     <QtMoc Include="ProjectSettingsPage.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
+    </QtMoc>
+    <QtMoc Include="ProjectCachePage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
     <QtMoc Include="PASettingsPage.h">

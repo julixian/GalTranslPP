@@ -16,8 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 修复 GenDict 开启 agent 模式时暂停导致进度条失效的 bug",
-		"2. 修复 agent 模式 reconsile 后丢缓存的恶性 bug",
+        "1. [GUI] 新增缓存编辑与问题查找页面",
     };
 
     mainLayout->addWidget(updateTitle);

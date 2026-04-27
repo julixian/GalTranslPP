@@ -1,6 +1,4 @@
-﻿// ProjectSettingsPage.cpp
-
-#include "ProjectSettingsPage.h"
+﻿#include "ProjectSettingsPage.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -145,7 +143,7 @@ void ProjectSettingsPage::_setupUI()
 
     ElaMenuBar* menuBar = new ElaMenuBar(centralWidget);
     QAction* pluginSettingAction = menuBar->addElaIconAction(ElaIconType::Plug, tr("插件管理"));
-    QAction* cacheProblemAction = menuBar->addElaIconAction(ElaIconType::BoxArchive, tr("缓存与问题"));
+    QAction* cacheProblemAction = menuBar->addElaIconAction(ElaIconType::BoxArchive, tr("缓存管理"));
     QAction* startTransAction = menuBar->addElaIconAction(ElaIconType::Play, tr("开始翻译"));
     QAction* otherSettingAction = menuBar->addElaIconAction(ElaIconType::Copy, tr("其他设置"));
 
@@ -213,7 +211,7 @@ void ProjectSettingsPage::_setupUI()
         {
             _stackedWidget->setCurrentIndex(8);
             _projectCachePage->refreshCacheFiles();
-            _settingsTitle->setText(tr("缓存与问题"));
+            _settingsTitle->setText(tr("缓存管理"));
         });
     connect(startTransAction, &QAction::triggered, this, [=]()
         {

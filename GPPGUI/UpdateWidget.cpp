@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 新增缓存编辑与问题查找页面",
+        "1. [GUI] 新增缓存管理页面",
     };
 
     mainLayout->addWidget(updateTitle);

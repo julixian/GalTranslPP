@@ -6,21 +6,26 @@
 #include <QAbstractButton>
 #include <QAbstractItemView>
 #include <QButtonGroup>
+#include <QCollator>
 #include <QDesktopServices>
 #include <QFileInfo>
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
 #include <QMessageBox>
+#include <QPainter>
+#include <QPainterPath>
 #include <QSignalBlocker>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
+#include <QStyledItemDelegate>
 #include <QUrl>
 #include <QVBoxLayout>
 
 #include "ElaCheckBox.h"
 #include "ElaComboBox.h"
 #include "ElaDialog.h"
+#include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaMessageBar.h"
@@ -28,6 +33,7 @@
 #include "ElaPushButton.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
+#include "ElaToolTip.h"
 
 import Tool;
 
@@ -35,6 +41,12 @@ namespace {
     constexpr int JsonRowRole = Qt::UserRole + 1;
     constexpr int HitIndexRole = Qt::UserRole + 2;
     constexpr int ProblemTextRole = Qt::UserRole + 3;
+    constexpr int EntryIndexRole = Qt::UserRole + 4;
+    constexpr int EntrySpeakerRole = Qt::UserRole + 5;
+    constexpr int EntryProblemRole = Qt::UserRole + 6;
+    constexpr int EntryEngineRole = Qt::UserRole + 7;
+    constexpr int EntrySourceRole = Qt::UserRole + 8;
+    constexpr int EntryDstRole = Qt::UserRole + 9;
 
     constexpr int LabelFontPx = 12;
     constexpr int BodyFontPx = 13;
@@ -108,12 +120,128 @@ namespace {
         font.setPixelSize(px);
         item->setFont(font);
     }
+
+    ElaIconButton* createHeaderIconButton(ElaIconType::IconName icon, const QString& toolTip, QWidget* parent)
+    {
+        ElaIconButton* button = new ElaIconButton(icon, 22, 42, 38, parent);
+        button->setBorderRadius(6);
+        ElaToolTip* tip = new ElaToolTip(button);
+        tip->setToolTip(toolTip);
+        return button;
+    }
+
+    class CacheEntryDelegate : public QStyledItemDelegate
+    {
+    public:
+        explicit CacheEntryDelegate(QObject* parent = nullptr)
+            : QStyledItemDelegate(parent)
+        {
+        }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            painter->save();
+            painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
+            const bool selected = option.state.testFlag(QStyle::State_Selected);
+            const bool hovered = option.state.testFlag(QStyle::State_MouseOver);
+            const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
+            const QString problem = index.data(EntryProblemRole).toString();
+
+            QRectF cardRect = option.rect.adjusted(6, 4, -6, -5);
+            QColor cardColor = themeColor(ElaThemeType::BasicBaseAlpha);
+            if (selected) {
+                cardColor = themeColor(ElaThemeType::BasicSelectedAlpha);
+            }
+            else if (hovered) {
+                cardColor = themeColor(ElaThemeType::BasicHoverAlpha);
+            }
+
+            QColor borderColor = problem.isEmpty()
+                ? themeColor(ElaThemeType::BasicBorder)
+                : QColor(dark ? 143 : 207, dark ? 111 : 166, dark ? 45 : 65);
+            painter->setPen(QPen(borderColor, problem.isEmpty() ? 1.0 : 1.3));
+            painter->setBrush(cardColor);
+            painter->drawRoundedRect(cardRect, 7, 7);
+
+            if (selected) {
+                QRectF indicator(cardRect.left() + 7, cardRect.top() + 14, 3, cardRect.height() - 28);
+                painter->setPen(Qt::NoPen);
+                painter->setBrush(themeColor(ElaThemeType::PrimaryNormal));
+                painter->drawRoundedRect(indicator, 2, 2);
+            }
+
+            QRect contentRect = cardRect.toRect().adjusted(18, 8, -14, -8);
+            int x = contentRect.left();
+            int y = contentRect.top();
+
+            auto drawPill = [&](QString text, const QColor& fill, const QColor& penColor, bool bold)
+                {
+                    if (text.trimmed().isEmpty() || x >= contentRect.right() - 24) {
+                        return;
+                    }
+                    QFont font = option.font;
+                    font.setPixelSize(12);
+                    font.setBold(bold);
+                    painter->setFont(font);
+                    QFontMetrics fm(font);
+
+                    const int maxWidth = contentRect.right() - x;
+                    text = fm.elidedText(text, Qt::ElideRight, qMax(36, maxWidth - 12));
+                    const int width = qMin(maxWidth, fm.horizontalAdvance(text) + 18);
+                    QRectF pillRect(x, y, width, 23);
+                    painter->setPen(Qt::NoPen);
+                    painter->setBrush(fill);
+                    painter->drawRoundedRect(pillRect, 11, 11);
+                    painter->setPen(penColor);
+                    painter->drawText(pillRect.adjusted(9, 0, -9, 0), Qt::AlignVCenter | Qt::AlignLeft, text);
+                    x += width + 8;
+                };
+
+            const QColor textColor = themeColor(ElaThemeType::BasicText);
+            const QColor detailColor = themeColor(ElaThemeType::BasicDetailsText);
+            QColor subtleFill = themeColor(ElaThemeType::BasicHoverAlpha);
+            QColor problemFill = dark ? QColor(86, 66, 28) : QColor(247, 232, 181);
+            QColor problemText = dark ? QColor(248, 219, 139) : QColor(105, 75, 15);
+            QColor engineFill = themeColor(ElaThemeType::PrimaryNormal);
+            engineFill.setAlpha(dark ? 65 : 32);
+
+            drawPill(QString("#%1").arg(index.data(EntryIndexRole).toInt()), subtleFill, detailColor, true);
+            drawPill(index.data(EntrySpeakerRole).toString(), subtleFill, textColor, true);
+            drawPill(problem, problemFill, problemText, true);
+            drawPill(index.data(EntryEngineRole).toString(), engineFill, themeColor(ElaThemeType::PrimaryNormal), true);
+
+            auto drawLine = [&](int lineY, const QString& label, const QString& text)
+                {
+                    QFont labelFont = option.font;
+                    labelFont.setPixelSize(12);
+                    painter->setFont(labelFont);
+                    painter->setPen(detailColor);
+                    QRect labelRect(contentRect.left(), lineY, 42, 22);
+                    painter->drawText(labelRect, Qt::AlignVCenter | Qt::AlignLeft, label);
+
+                    QFont bodyFont = option.font;
+                    bodyFont.setPixelSize(BodyFontPx);
+                    painter->setFont(bodyFont);
+                    painter->setPen(textColor);
+                    QFontMetrics fm(bodyFont);
+                    QRect textRect(contentRect.left() + 46, lineY, contentRect.width() - 46, 22);
+                    painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
+                        fm.elidedText(text, Qt::ElideRight, textRect.width()));
+                };
+
+            drawLine(contentRect.top() + 29, QObject::tr("原文"), index.data(EntrySourceRole).toString());
+            drawLine(contentRect.top() + 53, QObject::tr("译文"), index.data(EntryDstRole).toString());
+
+            painter->restore();
+        }
+    };
 }
 
 ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent)
     : BasePage(parent), _projectDir(projectDir), _projectConfig(projectConfig)
 {
-    setWindowTitle(tr("缓存与问题"));
+    setWindowTitle(tr("缓存管理"));
     setTitleVisible(false);
     _setupUI();
     _loadCacheFiles();
@@ -141,19 +269,19 @@ void ProjectCachePage::_setupUI()
     _cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
     topLayout->addWidget(_cacheDirLabel, 1);
 
-    ElaPushButton* openCacheButton = new ElaPushButton(tr("打开缓存文件夹"), mainWidget);
-    connect(openCacheButton, &ElaPushButton::clicked, this, [=]()
+    ElaIconButton* openCacheButton = createHeaderIconButton(ElaIconType::FolderOpen, tr("打开缓存文件夹"), mainWidget);
+    connect(openCacheButton, &ElaIconButton::clicked, this, [=]()
         {
             QDesktopServices::openUrl(QUrl::fromLocalFile(QString(_cacheDir().wstring())));
         });
     topLayout->addWidget(openCacheButton);
 
-    ElaPushButton* refreshButton = new ElaPushButton(tr("刷新"), mainWidget);
-    connect(refreshButton, &ElaPushButton::clicked, this, &ProjectCachePage::_loadCacheFiles);
+    ElaIconButton* refreshButton = createHeaderIconButton(ElaIconType::Rotate, tr("刷新"), mainWidget);
+    connect(refreshButton, &ElaIconButton::clicked, this, &ProjectCachePage::_loadCacheFiles);
     topLayout->addWidget(refreshButton);
 
-    _saveButton = new ElaPushButton(tr("保存当前文件"), mainWidget);
-    connect(_saveButton, &ElaPushButton::clicked, this, [=]()
+    _saveButton = createHeaderIconButton(ElaIconType::FloppyDisk, tr("保存当前文件"), mainWidget);
+    connect(_saveButton, &ElaIconButton::clicked, this, [=]()
         {
             if (!_ensureWritableAction(tr("保存缓存"))) {
                 return;
@@ -173,8 +301,8 @@ void ProjectCachePage::_setupUI()
         });
     topLayout->addWidget(_saveButton);
 
-    _saveAllButton = new ElaPushButton(tr("保存全部"), mainWidget);
-    connect(_saveAllButton, &ElaPushButton::clicked, this, [=]()
+    _saveAllButton = createHeaderIconButton(ElaIconType::FloppyDisks, tr("保存全部"), mainWidget);
+    connect(_saveAllButton, &ElaIconButton::clicked, this, [=]()
         {
             if (!_ensureWritableAction(tr("保存缓存"))) {
                 return;
@@ -386,6 +514,7 @@ void ProjectCachePage::_setupUI()
     _searchResultList->setSelectionMode(QAbstractItemView::SingleSelection);
     _searchResultList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _searchResultList->setItemHeight(72);
+    _searchResultList->setMinimumHeight(520);
     connect(_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             if (index.isValid()) {
@@ -439,6 +568,9 @@ void ProjectCachePage::_setupUI()
     currentLayout->addWidget(_currentFileLabel, 1);
     _currentSummaryLabel = new ElaText("", BodyFontPx, editorWidget);
     _currentSummaryLabel->setStyleSheet(auxiliaryTextStyle());
+    _currentSummaryLabel->setWordWrap(false);
+    _currentSummaryLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    _currentSummaryLabel->setMinimumWidth(360);
     currentLayout->addWidget(_currentSummaryLabel);
     editorLayout->addLayout(currentLayout);
 
@@ -490,7 +622,8 @@ void ProjectCachePage::_setupUI()
     _entryList->setModel(_entryModel);
     _entryList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _entryList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _entryList->setItemHeight(98);
+    _entryList->setItemHeight(112);
+    _entryList->setItemDelegate(new CacheEntryDelegate(_entryList));
     connect(_entryList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
         {
             _syncSelectedEntryRows();
@@ -559,9 +692,12 @@ void ProjectCachePage::_loadCacheFiles()
         }
     }
 
-    std::sort(_cacheFiles.begin(), _cacheFiles.end(), [](const CacheFileInfo& a, const CacheFileInfo& b)
+    QCollator collator;
+    collator.setNumericMode(true);
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+    std::sort(_cacheFiles.begin(), _cacheFiles.end(), [&collator](const CacheFileInfo& a, const CacheFileInfo& b)
         {
-            return a.relativeName.localeAwareCompare(b.relativeName) < 0;
+            return collator.compare(a.relativeName, b.relativeName) < 0;
         });
 
     _cacheDirLabel->setText(QString(cacheDir.wstring()));
@@ -627,7 +763,6 @@ void ProjectCachePage::_loadCacheFile(const QString& filename, bool forceReload)
     }
     _currentFileLabel->setText((_dirtyFiles.contains(filename) ? "*" : "") + filename);
     _renderEntries();
-    _setInfo(tr("已加载 ") + filename);
     _updateCurrentSummary();
     _updateActionStates();
 }
@@ -671,11 +806,14 @@ void ProjectCachePage::_renderEntries()
         }
         QStandardItem* itemRow = new QStandardItem(_entryListText(item, i));
         itemRow->setData(i, JsonRowRole);
+        itemRow->setData(sentenceIndexOf(item, i), EntryIndexRole);
+        itemRow->setData(_speakerString(item), EntrySpeakerRole);
+        itemRow->setData(problems, EntryProblemRole);
+        itemRow->setData(_entryTranslatedBy(item), EntryEngineRole);
+        itemRow->setData(source, EntrySourceRole);
+        itemRow->setData(dst, EntryDstRole);
         itemRow->setEditable(false);
         setModelItemFont(itemRow, BodyFontPx);
-        if (!problems.isEmpty()) {
-            itemRow->setBackground(themeColor(ElaThemeType::PrimaryNormal).lighter(185));
-        }
         _entryModel->appendRow(itemRow);
     }
 
@@ -709,7 +847,12 @@ void ProjectCachePage::_updateEntryListItem(int row)
         QStandardItem* item = _entryModel->item(modelRow);
         if (item && item->data(JsonRowRole).toInt() == row) {
             item->setText(_entryListText(_entries[row], row));
-            item->setBackground(_problemString(_entries[row]).isEmpty() ? QBrush() : QBrush(themeColor(ElaThemeType::PrimaryNormal).lighter(185)));
+            item->setData(sentenceIndexOf(_entries[row], row), EntryIndexRole);
+            item->setData(_speakerString(_entries[row]), EntrySpeakerRole);
+            item->setData(_problemString(_entries[row], " | "), EntryProblemRole);
+            item->setData(_entryTranslatedBy(_entries[row]), EntryEngineRole);
+            item->setData(_entrySource(_entries[row]), EntrySourceRole);
+            item->setData(_entryDst(_entries[row]), EntryDstRole);
             return;
         }
     }
@@ -732,33 +875,6 @@ void ProjectCachePage::_updateEntryField(int row, const char* key, const QString
     _updateCurrentSummary();
 }
 
-void ProjectCachePage::_updateEntryProblems(int row, const QString& value)
-{
-    if (_isProjectRunning() || _currentFile.isEmpty()) {
-        return;
-    }
-    if (row < 0 || row >= (int)_entries.size() || !_entries[row].is_object()) {
-        return;
-    }
-    const QStringList problems = _problemsFromEditorText(value);
-    if (_problemString(_entries[row]) == problems.join("\n")) {
-        return;
-    }
-    if (problems.isEmpty()) {
-        _entries[row].erase("problems");
-    }
-    else {
-        nlohmann::json arr = nlohmann::json::array();
-        for (const QString& problem : problems) {
-            arr.push_back(problem.toStdString());
-        }
-        _entries[row]["problems"] = std::move(arr);
-    }
-    _markDirty(_currentFile);
-    _updateEntryListItem(row);
-    _updateCurrentSummary();
-}
-
 void ProjectCachePage::_openEntryEditor(int row)
 {
     if (_currentFile.isEmpty() || row < 0 || row >= (int)_entries.size() || !_entries[row].is_object()) {
@@ -769,20 +885,17 @@ void ProjectCachePage::_openEntryEditor(int row)
     const bool writable = !_isProjectRunning();
 
     ElaDialog dialog(this);
-    dialog.setWindowTitle(QString("#%1  %2").arg(sentenceIndexOf(item, row)).arg(_speakerString(item)));
+    const QString speaker = _speakerString(item);
+    dialog.setWindowTitle(speaker.isEmpty()
+        ? QString("#%1").arg(sentenceIndexOf(item, row))
+        : QString("#%1  %2").arg(sentenceIndexOf(item, row)).arg(speaker));
     dialog.setWindowModality(Qt::ApplicationModal);
     dialog.setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
-    dialog.resize(900, 720);
+    dialog.resize(860, 430);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(&dialog);
-    mainLayout->setContentsMargins(18, 48, 18, 18);
-    mainLayout->setSpacing(6);
-
-    ElaText* titleLabel = new ElaText(dialog.windowTitle(), TitleFontPx, &dialog);
-    QFont titleFont = titleLabel->font();
-    titleFont.setBold(true);
-    titleLabel->setFont(titleFont);
-    mainLayout->addWidget(titleLabel);
+    mainLayout->setContentsMargins(16, 34, 16, 14);
+    mainLayout->setSpacing(5);
 
     auto addEditor = [&](const QString& labelText, const QString& value, bool readOnly, int height)
         {
@@ -797,28 +910,14 @@ void ProjectCachePage::_openEntryEditor(int row)
             return edit;
         };
 
-    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), _entryOriginal(item), true, 56);
+    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), _entryOriginal(item), true, 48);
     Q_UNUSED(originalEdit);
-    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), _entrySource(item), !writable, 86);
-    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), _entryDst(item), !writable, 86);
-    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（一行一个，可编辑）"), _problemString(item), !writable, 68);
-    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), _entryPreview(item), true, 62);
+    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), _entrySource(item), !writable, 58);
+    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), _entryDst(item), !writable, 58);
+    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), _problemString(item), true, 46);
+    Q_UNUSED(problemsEdit);
+    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), _entryPreview(item), true, 46);
     Q_UNUSED(previewEdit);
-
-    nlohmann::json meta = item;
-    meta.erase("index");
-    meta.erase("name");
-    meta.erase("names");
-    meta.erase("name_preview");
-    meta.erase("original_text");
-    meta.erase("pre_processed_text");
-    meta.erase("pre_translated_text");
-    meta.erase("problems");
-    meta.erase("translated_preview");
-    meta.erase("translated_by");
-    ElaPlainTextEdit* metaEdit = addEditor(tr("其它元信息（只读）"),
-        meta.empty() ? QString() : QString::fromStdString(meta.dump(2)), true, 90);
-    Q_UNUSED(metaEdit);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
@@ -832,7 +931,6 @@ void ProjectCachePage::_openEntryEditor(int row)
         {
             _updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
             _updateEntryField(row, "pre_translated_text", dstEdit->toPlainText());
-            _updateEntryProblems(row, problemsEdit->toPlainText());
             dialog.accept();
         });
     buttonLayout->addWidget(saveButton);

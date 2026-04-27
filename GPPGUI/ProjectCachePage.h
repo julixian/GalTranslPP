@@ -17,6 +17,7 @@
 #include "BasePage.h"
 
 class ElaPlainTextEdit;
+class ElaIconButton;
 class ElaPushButton;
 class ElaText;
 class ElaListView;
@@ -76,7 +77,6 @@ private:
     void _syncSelectedEntryRows();
     void _updateEntryListItem(int row);
     void _updateEntryField(int row, const char* key, const QString& value);
-    void _updateEntryProblems(int row, const QString& value);
     void _openEntryEditor(int row);
     void _deleteEntryRows(QList<int> rows);
     void _markDirty(const QString& filename);
@@ -161,8 +161,8 @@ private:
     ElaText* _replacePreviewLabel{nullptr};
     ElaText* _messageLabel{nullptr};
 
-    ElaPushButton* _saveButton{nullptr};
-    ElaPushButton* _saveAllButton{nullptr};
+    ElaIconButton* _saveButton{nullptr};
+    ElaIconButton* _saveAllButton{nullptr};
     ElaPushButton* _deleteEntriesButton{nullptr};
     ElaPushButton* _deleteFilesButton{nullptr};
     ElaPushButton* _editEntryButton{nullptr};

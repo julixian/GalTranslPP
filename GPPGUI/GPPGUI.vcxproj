@@ -174,7 +174,12 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
     <ClCompile Include="PDFCfgPage.cpp" />
     <ClCompile Include="PluginItemWidget.cpp" />
     <ClCompile Include="PluginSettingsPage.cpp" />
+    <ClCompile Include="ProjectCachePageActions.cpp" />
     <ClCompile Include="ProjectCachePage.cpp" />
+    <ClCompile Include="ProjectCachePageDelegates.cpp" />
+    <ClCompile Include="ProjectCachePageEntries.cpp" />
+    <ClCompile Include="ProjectCachePageFiles.cpp" />
+    <ClCompile Include="ProjectCachePageSearch.cpp" />
     <ClCompile Include="PromptSettingsPage.cpp" />
     <ClCompile Include="ReadDicts.cpp" />
     <ClCompile Include="SettingPage.cpp" />
@@ -301,6 +306,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
     <QtMoc Include="CommonGptDictPage.h" />
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
+    <ClInclude Include="ProjectCachePage_p.h" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="Translation_en.ts" />

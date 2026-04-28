@@ -70,32 +70,25 @@ private:
     };
 
     void _setupUI();
+
+    // ProjectCachePageFiles.cpp: discover cache JSON files, keep Windows-style
+    // natural ordering, and read/write the backing UTF-8 JSON arrays.
     void _loadCacheFiles();
     void _loadCacheFile(const QString& filename, bool forceReload = false);
     void _renderFileList();
+    fs::path _cacheDir() const;
+    fs::path _cachePathForRelativeName(const QString& filename) const;
+    bool _readCacheFile(const QString& filename, nlohmann::json& entries, QString* errorMessage = nullptr) const;
+    bool _writeCacheFile(const QString& filename, const nlohmann::json& entries, QString* errorMessage = nullptr) const;
+
+    // ProjectCachePageEntries.cpp: populate the right-side overview and edit a
+    // single sentence while preserving row mappings back to the JSON array.
     void _renderEntries();
     void _syncSelectedEntryRows();
     void _updateEntryListItem(int row);
     void _updateEntryField(int row, const char* key, const QString& value);
     void _openEntryEditor(int row);
     void _deleteEntryRows(QList<int> rows);
-    void _markDirty(const QString& filename);
-    void _setInfo(const QString& message);
-    void _setError(const QString& message);
-    void _updateCurrentSummary();
-    void _updateActionStates();
-    void _setSidebarPage(int index);
-    void _refreshThemeStyles();
-    void _setReplacePanelVisible(bool visible);
-
-    bool _isProjectRunning() const;
-    bool _ensureWritableAction(const QString& actionName) const;
-    bool _confirmAction(const QString& title, const QString& message);
-    fs::path _cacheDir() const;
-    fs::path _cachePathForRelativeName(const QString& filename) const;
-    bool _readCacheFile(const QString& filename, nlohmann::json& entries, QString* errorMessage = nullptr) const;
-    bool _writeCacheFile(const QString& filename, const nlohmann::json& entries, QString* errorMessage = nullptr) const;
-
     static QString _jsonString(const nlohmann::json& object, const char* key);
     static QString _speakerString(const nlohmann::json& object);
     static QString _problemString(const nlohmann::json& object, const QString& separator = "\n");
@@ -110,6 +103,8 @@ private:
     static int _countOccurrences(const QString& text, const QString& query);
     static int _replaceInString(QString& text, const QString& query, const QString& replacement);
 
+    // ProjectCachePageSearch.cpp: global search, problem aggregation, and batch
+    // replace. Search reads cached in-memory edits first, then falls back to disk.
     QList<ReplaceDetail> _collectReplaceDetails(const QString& query, const QString& field, int* totalMatches = nullptr) const;
     int _applyReplaceToEntries(nlohmann::json& entries, const QString& query, const QString& replacement, const QString& field) const;
     void _runGlobalSearch();
@@ -119,6 +114,20 @@ private:
     void _jumpToHit(int hitIndex);
     void _selectEntryByRow(int row);
     int _currentJsonRow() const;
+
+    // ProjectCachePageActions.cpp: shared page state, themed feedback, locking
+    // while the project is running, and ElaContentDialog confirmations.
+    void _markDirty(const QString& filename);
+    void _setInfo(const QString& message);
+    void _setError(const QString& message);
+    void _updateCurrentSummary();
+    void _updateActionStates();
+    void _setSidebarPage(int index);
+    void _refreshThemeStyles();
+    void _setReplacePanelVisible(bool visible);
+    bool _isProjectRunning() const;
+    bool _ensureWritableAction(const QString& actionName) const;
+    bool _confirmAction(const QString& title, const QString& message);
 
 private:
     fs::path& _projectDir;

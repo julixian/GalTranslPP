@@ -64,6 +64,21 @@
     <ClCompile Include="ProjectCachePage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
+    <ClCompile Include="ProjectCachePageActions.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectCachePageDelegates.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectCachePageEntries.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectCachePageFiles.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectCachePageSearch.cpp">
+      <Filter>Source Files\ProjectSettingImpl</Filter>
+    </ClCompile>
     <ClCompile Include="PASettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
@@ -294,6 +309,9 @@
     </ClInclude>
     <ClInclude Include="ExponentialMovingAverageEstimator.hpp">
       <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectCachePage_p.h">
+      <Filter>Header Files\ProjectSettingH</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

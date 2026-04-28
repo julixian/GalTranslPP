@@ -743,8 +743,6 @@ void NormalJsonTranslator::applyAgentCommit(
         ++committedCount;
     }
     if (committedCount > 0) {
-        m_completedSentences += committedCount;
-        m_controller->updateBar(committedCount);
     }
 
     if (!protocol.termUpdates.empty()) {
@@ -1175,8 +1173,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
     for (Sentence* se : batch) {
         if (se->pre_processed_text.empty()) {
             se->complete = true;
-            ++m_completedSentences;
-            m_controller->updateBar();
         }
     }
 
@@ -1291,6 +1287,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
             catch (const std::exception& e) {
                 ++retryCount;
+                recordRuntimeError("agent",
+                    std::format("Agent 响应解析失败: {}", e.what()),
+                    relInputPath,
+                    pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
+                    retryCount,
+                    currentApi.modelName,
+                    -1.0,
+                    "warning");
                 m_logger->warn("[线程 {}] [文件 {}] Agent 响应解析失败，第 {} 次重试。原始响应: {}\n错误: {}",
                     threadId, wide2Ascii(relInputPath), retryCount, response.content, e.what());
                 turnLoopExitedByRetry = true;
@@ -1389,6 +1393,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 }
                 catch (const std::exception& e) {
                     ++retryCount;
+                    recordRuntimeError("agent",
+                        std::format("Agent commit 校验失败: {}", e.what()),
+                        relInputPath,
+                        pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
+                        retryCount,
+                        currentApi.modelName,
+                        -1.0,
+                        "warning");
                     m_logger->warn("[线程 {}] [文件 {}] Agent commit 校验失败，第 {} 次重试。错误: {}",
                         threadId, wide2Ascii(relInputPath), retryCount, e.what());
                     turnLoopExitedByRetry = true;
@@ -1397,6 +1409,14 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             }
 
             ++retryCount;
+            recordRuntimeError("agent",
+                std::format("Agent 返回未知 action '{}'", protocol.action),
+                relInputPath,
+                pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
+                retryCount,
+                currentApi.modelName,
+                -1.0,
+                "warning");
             m_logger->warn("[线程 {}] [文件 {}] Agent 返回未知 action '{}'，第 {} 次重试。", threadId, wide2Ascii(relInputPath), protocol.action, retryCount);
             turnLoopExitedByRetry = true;
             break;
@@ -1422,16 +1442,23 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         ++failedCount;
         se->pre_translated_text = "(Failed to translate)" + se->pre_processed_text;
         se->complete = true;
-        ++m_completedSentences;
-        m_controller->updateBar();
     }
     if (exceededTurnLimit) {
         m_logger->error("[线程 {}] [文件 {}] Agent 批次因超过最大轮数而失败，共翻译 {} / {} 句。",
             threadId, wide2Ascii(relInputPath), batch.size() - failedCount, batch.size());
+        recordRuntimeError("agent",
+            std::format("Agent 批次因超过最大轮数而失败，共翻译 {} / {} 句。", batch.size() - failedCount, batch.size()),
+            relInputPath,
+            batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index));
     }
     else {
         m_logger->error("[线程 {}] [文件 {}] Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
             threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size());
+        recordRuntimeError("agent",
+            std::format("Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。", retryCount, batch.size() - failedCount, batch.size()),
+            relInputPath,
+            batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index),
+            retryCount);
     }
     return false;
 }
@@ -1460,7 +1487,6 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
             return acc + (int)ids.size();
         });
     if (rollbackCount > 0) {
-        m_completedSentences -= rollbackCount;
         m_controller->updateBar(-rollbackCount);
     }
 

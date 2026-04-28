@@ -57,7 +57,7 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(
     QList<ReplaceDetail> details;
     for (const CacheFileInfo& file : _cacheFiles) {
         nlohmann::json entries;
-        const auto loaded = _loadedEntriesByFile.find(file.relativeName);
+        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
@@ -138,7 +138,7 @@ void ProjectCachePage::_runGlobalSearch()
     constexpr int maxResults = 2000;
     for (const CacheFileInfo& file : _cacheFiles) {
         nlohmann::json entries;
-        const auto loaded = _loadedEntriesByFile.find(file.relativeName);
+        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
@@ -253,7 +253,7 @@ void ProjectCachePage::_executeReplace()
     int changedMatches = 0;
     for (const ReplaceDetail& detail : details) {
         nlohmann::json entries;
-        const auto loaded = _loadedEntriesByFile.find(detail.filename);
+        const auto loaded = _dirtyFiles.contains(detail.filename) ? _loadedEntriesByFile.find(detail.filename) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
@@ -285,11 +285,12 @@ void ProjectCachePage::_loadProblems()
     if (!_problemList) {
         return;
     }
+    _problemsLoaded = true;
     // The problem list is derived from GalTranslPP's problems array only.
     QMap<QString, int> counts;
     for (const CacheFileInfo& file : _cacheFiles) {
         nlohmann::json entries;
-        const auto loaded = _loadedEntriesByFile.find(file.relativeName);
+        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
         }

@@ -327,8 +327,7 @@ void fillBlockAndMap(
 }
 
 int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
-    const std::shared_ptr<IController>& controller, std::string& backgroudText, std::atomic<int>& completedSentences, 
-    TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail) 
+    std::string& backgroudText, TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail) 
 {
     int parsedCount = 0;
 
@@ -509,11 +508,6 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
             se->complete = false;
 	    }
     }
-    else if (parsedCount != 0) {
-        completedSentences += parsedCount;
-        controller->updateBar(parsedCount);
-    }
-
     return parsedCount;
 }
 

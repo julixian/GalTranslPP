@@ -220,7 +220,9 @@ void ProjectCachePage::_deleteEntryRows(QList<int> rows)
     _markDirty(_currentFile);
     _renderEntries();
     _runGlobalSearch();
-    _loadProblems();
+    if (_problemsLoaded) {
+        _loadProblems();
+    }
     _setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个条目，保存后生效"));
 }
 

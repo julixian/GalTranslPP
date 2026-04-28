@@ -142,6 +142,12 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
             apiResponse.success = false;
             apiResponse.content = response.text;
             logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
+            controller->recordRuntimeError(RuntimeErrorEvent{
+                .kind = "api",
+                .level = "error",
+                .message = std::format("API 流式请求失败，状态码: {}, 错误: {}", response.status_code, response.text),
+                .model = api.modelName
+            });
         }
     }
     else {
@@ -167,11 +173,23 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
             }
             catch (const json::exception& e) {
                 logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
+                controller->recordRuntimeError(RuntimeErrorEvent{
+                    .kind = "api",
+                    .level = "error",
+                    .message = std::format("成功响应但 JSON 解析失败: {}", e.what()),
+                    .model = api.modelName
+                });
                 apiResponse.success = false;
             }
         }
         else {
             logger->error("[线程 {}] API 非流请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
+            controller->recordRuntimeError(RuntimeErrorEvent{
+                .kind = "api",
+                .level = "error",
+                .message = std::format("API 非流请求失败，状态码: {}, 错误: {}", response.status_code, response.text),
+                .model = api.modelName
+            });
             apiResponse.success = false;
         }
     }

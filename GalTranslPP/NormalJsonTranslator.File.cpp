@@ -28,6 +28,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     if (m_controller->shouldStop()) {
         return;
     }
+    if (shouldReportRuntimeWorkbench()) {
+        m_controller->setRuntimeStage("处理文件", wide2Ascii(relInputPath));
+    }
     m_logger->debug("[线程 {}] 开始处理文件: {}", threadId, wide2Ascii(relInputPath));
 
     std::ifstream ifs;
@@ -89,8 +92,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
             showNormalObj["pre_processed_text"] = se.pre_processed_text;
             showNormalJson.push_back(std::move(showNormalObj));
-            ++m_completedSentences;
-            m_controller->updateBar(); // ShowNormal 不调用模型
+            recordSentenceDone(relInputPath, se);
         }
         createParent(showNormalPath);
         std::ofstream ofs(showNormalPath, std::ios::binary);
@@ -245,9 +247,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         if (!m_agentReconciling) {
             for (Sentence& se : sentences) {
                 if (se.complete) {
-                    ++m_completedSentences;
-                    m_controller->updateBar(); // 预处理已判定完成
                     postProcess(&se);
+                    recordSentenceDone(relInputPath, se);
                     continue;
                 }
                 const std::string key = generateCacheKey(&se);
@@ -268,36 +269,35 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 se.pre_translated_text = item.value("pre_translated_text", "");
                 se.translated_by = item.value("translated_by", "");
                 se.complete = true;
-                ++m_completedSentences;
-                m_controller->updateBar(); // 缓存命中
                 postProcess(&se);
+                recordSentenceDone(relInputPath, se);
             }
         }
         else {
-	            if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
-	                const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
-	                for (Sentence& se : sentences) {
-		                if (reconcileTargetIds.contains(se.index)) {
-	                        se.complete = false;
-	                        toTranslate.push_back(&se);
+	        if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
+	            const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
+	            for (Sentence& se : sentences) {
+		            if (reconcileTargetIds.contains(se.index)) {
+	                    se.complete = false;
+	                    toTranslate.push_back(&se);
+	                }
+	                else {
+	                    const std::string key = generateCacheKey(&se);
+	                    const auto cacheIt = cacheMap.find(key);
+	                    if (cacheIt == cacheMap.end()) {
+	                        throw std::runtime_error(std::format("Reconcile processFile 未在 cacheMap 中找到缓存: {}", se.original_text));
 	                    }
-	                    else {
-	                        const std::string key = generateCacheKey(&se);
-	                        const auto cacheIt = cacheMap.find(key);
-	                        if (cacheIt == cacheMap.end()) {
-	                            throw std::runtime_error(std::format("Reconcile processFile 未在 cacheMap 中找到缓存: {}", se.original_text));
-	                        }
-	                        const auto& item = cacheIt->second;
-	                        if (auto jit = item.find("problems"); jit != item.end()) {
-	                            jit->get_to(se.problems);
-	                        }
-	                        se.pre_translated_text = item.value("pre_translated_text", "");
-	                        se.translated_by = item.value("translated_by", "");
-	                        se.complete = true;
-	                        postProcess(&se);
+	                    const auto& item = cacheIt->second;
+	                    if (auto jit = item.find("problems"); jit != item.end()) {
+	                        jit->get_to(se.problems);
 	                    }
+	                    se.pre_translated_text = item.value("pre_translated_text", "");
+	                    se.translated_by = item.value("translated_by", "");
+	                    se.complete = true;
+	                    postProcess(&se);
 	                }
 	            }
+	        }
             else {
                 throw std::runtime_error(std::format("Reconcile processFile 未在表中找到文件: {}", wide2Ascii(relInputPath)));
             }
@@ -370,6 +370,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
             for (Sentence* se : batchView) {
                 postProcess(se);
+                if (se->complete) {
+                    recordSentenceDone(relInputPath, *se, true);
+                }
             }
 
             if (++batchCount % m_saveCacheInterval == 0) {

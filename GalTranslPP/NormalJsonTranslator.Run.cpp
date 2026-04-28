@@ -139,6 +139,11 @@ json filterRewriteQueueByInputFingerprints(
 
 std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
 {
+    const bool reportRuntimeWorkbench = shouldReportRuntimeWorkbench();
+    int totalSentences = 0;
+    std::map<std::string, int> runtimeFileTotals;
+    std::map<std::string, int> originalRuntimeFileTotals;
+
     if (fs::exists(m_transCacheDir)) {
         try {
             fs::copy(
@@ -191,7 +196,10 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
                     if (!item.contains("message")) {
                         throw std::runtime_error(std::format("[文件 {}] 第 {} 个对象缺少 message 字段。", wide2Ascii(relInputPath), index));
                     }
-                    ++m_totalSentences;
+                    ++totalSentences;
+                    if (reportRuntimeWorkbench) {
+                        ++originalRuntimeFileTotals[wide2Ascii(relInputPath)];
+                    }
                     if (auto jit = item.find("name"); jit != item.end()) {
                         jit->get_to(se.name);
                         if (m_usePreDictInName) {
@@ -218,10 +226,15 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
             }
         }
 
-        if (m_totalSentences == 0) {
+        if (totalSentences == 0) {
             throw std::runtime_error("未找到有效的 Sentence");
         }
-        m_controller->makeBar(m_totalSentences, m_threadsNum);
+        m_lastRuntimeFileTotal = totalSentences;
+        if (reportRuntimeWorkbench) {
+            runtimeFileTotals = originalRuntimeFileTotals;
+            m_controller->setRuntimeFiles(runtimeFileTotals);
+        }
+        m_controller->makeBar(totalSentences, m_threadsNum);
 
         toml::value orgNameTable = toml::table{};
         try {
@@ -259,8 +272,12 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
         ofs.close();
         m_logger->info("已更新 人名替换表.toml 文件");
         if (m_transEngine == TransEngine::DumpName) {
-            m_completedSentences += m_totalSentences;
-            m_controller->updateBar(m_totalSentences);
+            for (const auto& [filename, count] : runtimeFileTotals) {
+                for (int i = 0; i < count; ++i) {
+                    m_controller->recordFileSentenceDone(filename, false);
+                }
+            }
+            m_controller->updateBar(totalSentences);
             return std::nullopt;
         }
     }
@@ -336,6 +353,9 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
                 throw std::invalid_argument("文件分割数必须大于 0");
             }
             m_needsCombining = true;
+            if (reportRuntimeWorkbench) {
+                runtimeFileTotals.clear();
+            }
             m_logger->info("检测到文件分割模式 ({})，开始预处理输入文件...", m_splitFile);
             for (const auto& relJsonPath : relJsonPaths) {
                 try {
@@ -347,6 +367,9 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
                     for (const auto& [index, part] : parts | std::views::enumerate) {
                         const fs::path relPartPath = std::format(L"{}_part_{}{}", relStem, index, relJsonPath.extension().wstring());
                         m_splitFilePartsToJson[relPartPath] = relJsonPath;
+                        if (reportRuntimeWorkbench) {
+                            runtimeFileTotals[wide2Ascii(relPartPath)] = (int)part.size();
+                        }
                         m_jsonToSplitFileParts[relJsonPath].insert({ relPartPath, false });
                         const fs::path partPath = m_inputCacheDir / relPartPath;
                         createParent(partPath);
@@ -376,6 +399,10 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
     std::vector<fs::path> relFilePaths = m_needsCombining
         ? (m_splitFilePartsToJson | std::views::keys | std::ranges::to<std::vector>())
         : std::move(relJsonPaths);
+
+    if (m_needsCombining && reportRuntimeWorkbench) {
+        m_controller->setRuntimeFiles(runtimeFileTotals);
+    }
 
     if (m_sortMethod == "size") {
         std::ranges::sort(relFilePaths, [&](const fs::path& a, const fs::path& b)
@@ -546,8 +573,9 @@ void NormalJsonTranslator::normalJsonAfterRun()
         fs::remove_all(m_inputCacheDir);
         fs::remove_all(m_outputCacheDir);
     }
-    if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild && m_completedSentences != m_totalSentences) {
-        m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。", m_completedSentences.load(), m_totalSentences);
+    if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild && m_controller->m_completedSentences != m_controller->m_totalSentences) {
+        m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。",
+            m_controller->m_completedSentences.load(), m_controller->m_totalSentences.load());
     }
 }
 
@@ -559,7 +587,14 @@ void NormalJsonTranslator::normalJsonProcess(std::vector<fs::path> relFilePaths)
         results.emplace_back(m_threadPool.push([=](const int id)
             {
                 m_controller->addThreadNum();
-                this->processFile(filePath, id);
+                try {
+                    this->processFile(filePath, id);
+                }
+                catch (const std::exception& e) {
+                    this->recordRuntimeError("file", e.what(), filePath);
+                    m_controller->reduceThreadNum();
+                    throw;
+                }
                 m_controller->reduceThreadNum();
             }));
     }

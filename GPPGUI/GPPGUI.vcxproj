@@ -185,6 +185,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
     <ClCompile Include="SettingPage.cpp" />
     <ClCompile Include="SkipTransCfgPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
+    <ClCompile Include="TranslationWorkbenchPage.cpp" />
     <ClCompile Include="TranslatorWorker.cpp" />
     <ClCompile Include="UpdateChecker.cpp" />
     <QtMoc Include="UpdateChecker.h" />
@@ -235,6 +236,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="StartSettingsPage.h" />
+    <QtMoc Include="TranslationWorkbenchPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="NJCfgPage.h" />

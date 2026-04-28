@@ -29,10 +29,17 @@ ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& pr
     setWindowTitle(tr("缓存管理"));
     setTitleVisible(false);
     _setupUI();
-    _loadCacheFiles();
 }
 
 ProjectCachePage::~ProjectCachePage() = default;
+
+void ProjectCachePage::ensureCacheFilesLoaded()
+{
+    if (_cacheFilesLoaded) {
+        return;
+    }
+    _loadCacheFiles();
+}
 
 void ProjectCachePage::refreshCacheFiles()
 {

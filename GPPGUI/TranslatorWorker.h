@@ -3,8 +3,44 @@
 
 #include <QObject>
 #include <filesystem>
+#include <QStringList>
+#include <QVector>
 
 namespace fs = std::filesystem;
+
+struct GuiRuntimeSuccessEvent {
+    QString id;
+    QString timestamp;
+    QString filename;
+    int index{0};
+    QStringList speakers;
+    QString sourcePreview;
+    QString translationPreview;
+    QString translatedBy;
+};
+Q_DECLARE_METATYPE(GuiRuntimeSuccessEvent)
+
+struct GuiRuntimeErrorEvent {
+    QString id;
+    QString timestamp;
+    QString kind;
+    QString level;
+    QString message;
+    QString filename;
+    QString indexRange;
+    int retryCount{-1};
+    QString model;
+    double sleepSeconds{-1.0};
+};
+Q_DECLARE_METATYPE(GuiRuntimeErrorEvent)
+
+struct GuiRuntimeFileProgress {
+    QString filename;
+    int total{0};
+    int completed{0};
+    int problems{0};
+};
+Q_DECLARE_METATYPE(GuiRuntimeFileProgress)
 
 class TranslatorWorker : public QObject
 {
@@ -29,6 +65,14 @@ Q_SIGNALS:
     void addThreadNumSignal();
     void reduceThreadNumSignal();
     void updateBarSignal(int ticks);
+    void runtimeFilesResetSignal(const QVector<GuiRuntimeFileProgress>& files);
+    void runtimeFileProgressSignal(const GuiRuntimeFileProgress& file);
+    void runtimeFileProgressBatchSignal(const QVector<GuiRuntimeFileProgress>& files);
+    void runtimeSuccessSignal(const GuiRuntimeSuccessEvent& event);
+    void runtimeSuccessBatchSignal(const QVector<GuiRuntimeSuccessEvent>& events);
+    void runtimeErrorSignal(const GuiRuntimeErrorEvent& event);
+    void runtimeErrorBatchSignal(const QVector<GuiRuntimeErrorEvent>& events);
+    void runtimeStageChangedSignal(const QString& stage, const QString& currentFile);
 
 private:
     fs::path _projectDir;

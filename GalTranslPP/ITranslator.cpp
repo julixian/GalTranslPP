@@ -16,6 +16,26 @@ import PythonTranslator;
 
 namespace fs = std::filesystem;
 
+namespace {
+    std::string compactRuntimePreview(std::string text, size_t limit)
+    {
+        for (char& ch : text) {
+            if (ch == '\r' || ch == '\n' || ch == '\t') {
+                ch = ' ';
+            }
+        }
+        if (text.size() <= limit) {
+            return text;
+        }
+
+        size_t cut = limit > 3 ? limit - 3 : limit;
+        while (cut > 0 && (static_cast<unsigned char>(text[cut]) & 0xC0) == 0x80) {
+            --cut;
+        }
+        return text.substr(0, cut) + "...";
+    }
+}
+
 IController::IController()
 {
 
@@ -24,6 +44,113 @@ IController::IController()
 IController::~IController()
 {
 
+}
+
+void IController::makeBar(int totalSentences, int totalThreads)
+{
+    flush();
+    m_totalSentences = totalSentences;
+    m_completedSentences = 0;
+    m_workersConfigured = totalThreads;
+    m_workersActive = 0;
+    onMakeBar(totalSentences, totalThreads);
+}
+
+void IController::addThreadNum()
+{
+    const int workersActive = ++m_workersActive;
+    onAddThreadNum(workersActive);
+}
+
+void IController::reduceThreadNum()
+{
+    int workersActive = --m_workersActive;
+    if (workersActive < 0) {
+        m_workersActive = 0;
+        workersActive = 0;
+    }
+    onReduceThreadNum(workersActive);
+}
+
+void IController::updateBar(int ticks)
+{
+    const int completed = (m_completedSentences += ticks);
+    onUpdateBar(ticks, completed, m_totalSentences.load());
+}
+
+void IController::setRuntimeFiles(const std::map<std::string, int>& fileTotals)
+{
+    std::vector<RuntimeFileProgress> files;
+    {
+        std::lock_guard<std::mutex> lock(m_runtimeMutex);
+        m_runtimeFiles.clear();
+        for (const auto& [filename, total] : fileTotals) {
+            RuntimeFileProgress progress;
+            progress.filename = filename;
+            progress.total = total;
+            m_runtimeFiles[filename] = progress;
+            files.push_back(progress);
+        }
+    }
+    onRuntimeFilesReset(files);
+}
+
+void IController::setRuntimeStage(const std::string& stage, const std::string& currentFile)
+{
+    {
+        std::lock_guard<std::mutex> lock(m_runtimeMutex);
+        m_runtimeStage = stage;
+        m_runtimeCurrentFile = currentFile;
+    }
+    onRuntimeStageChanged(stage, currentFile);
+}
+
+void IController::recordFileSentenceDone(const std::string& runtimeFile, bool hasProblem)
+{
+    RuntimeFileProgress progress;
+    bool hasProgress = false;
+    {
+        std::lock_guard<std::mutex> lock(m_runtimeMutex);
+        if (runtimeFile.empty()) {
+            return;
+        }
+        RuntimeFileProgress& target = m_runtimeFiles[runtimeFile];
+        target.filename = runtimeFile;
+        ++target.completed;
+        if (hasProblem) {
+            ++target.problems;
+        }
+        progress = target;
+        hasProgress = true;
+    }
+    if (hasProgress) {
+        onRuntimeFileProgress(progress);
+    }
+}
+
+void IController::recordRuntimeSuccess(RuntimeSuccessEvent event)
+{
+    event.sourcePreview = compactRuntimePreview(std::move(event.sourcePreview), 180);
+    event.translationPreview = compactRuntimePreview(std::move(event.translationPreview), 180);
+    if (event.timestamp.empty()) {
+        event.timestamp = nowTimestampString();
+    }
+    if (event.id.empty()) {
+        event.id = std::format("success:{}:{}:{}", event.filename, event.index, ++m_runtimeEventCounter);
+    }
+    onRuntimeSuccess(event);
+}
+
+void IController::recordRuntimeError(RuntimeErrorEvent event)
+{
+    event.message = compactRuntimePreview(std::move(event.message), 240);
+    if (event.timestamp.empty()) {
+        event.timestamp = nowTimestampString();
+    }
+    if (event.id.empty()) {
+        event.id = std::format("error:{}:{}:{}", event.kind, event.filename, ++m_runtimeEventCounter);
+    }
+    onRuntimeError(event);
 }
 
 ITranslator::ITranslator()

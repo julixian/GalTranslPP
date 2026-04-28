@@ -534,6 +534,53 @@ void NormalJsonTranslator::normalJsonInit()
     }
 }
 
+bool NormalJsonTranslator::shouldReportRuntimeWorkbench() const
+{
+    return m_transEngine != TransEngine::Rebuild;
+}
+
+void NormalJsonTranslator::recordSentenceDone(const fs::path& relInputPath, const Sentence& se, bool addToSuccessStream) const
+{
+    m_controller->updateBar();
+    if (!shouldReportRuntimeWorkbench()) {
+        return;
+    }
+    m_controller->recordFileSentenceDone(wide2Ascii(relInputPath), !se.problems.empty());
+    if (addToSuccessStream && !std::ranges::contains(se.problems, "翻译失败")) {
+        RuntimeSuccessEvent event;
+        event.filename = wide2Ascii(relInputPath);
+        event.index = se.index;
+        if (se.nameType == NameType::Single && !se.name_preview.empty()) {
+            event.speakers.push_back(se.name_preview);
+        }
+        else if (se.nameType == NameType::Multiple) {
+            event.speakers = se.names_preview;
+        }
+        event.sourcePreview = se.pre_processed_text;
+        event.translationPreview = se.pre_translated_text;
+        event.translatedBy = se.translated_by;
+        m_controller->recordRuntimeSuccess(std::move(event));
+    }
+}
+
+void NormalJsonTranslator::recordRuntimeError(const std::string& kind, const std::string& message, const fs::path& relInputPath,
+    const std::string& indexRange, int retryCount, const std::string& model, double sleepSeconds, const std::string& level) const
+{
+    if (!shouldReportRuntimeWorkbench()) {
+        return;
+    }
+    RuntimeErrorEvent event;
+    event.kind = kind;
+    event.level = level;
+    event.message = message;
+    event.filename = relInputPath.empty() ? std::string{} : wide2Ascii(relInputPath);
+    event.indexRange = indexRange;
+    event.retryCount = retryCount;
+    event.model = model;
+    event.sleepSeconds = sleepSeconds;
+    m_controller->recordRuntimeError(std::move(event));
+}
+
 void NormalJsonTranslator::preProcess(Sentence* se)
 {
     se->pre_processed_text = se->original_text;
@@ -639,20 +686,20 @@ void NormalJsonTranslator::postProcess(Sentence* se)
     }
 
     auto replaceName = [&]()
-    {
-        if (m_useGptDictToReplaceName) {
-            se->name_preview = m_gptDictionary->doReplace(se, CachePart::NamePreview);
-        }
-        if (!se->name_preview.empty()) {
-            const auto it = m_nameMap.find(se->name_preview);
-            if (it != m_nameMap.end() && !it->second.empty()) {
-                se->name_preview = it->second;
+        {
+            if (m_useGptDictToReplaceName) {
+                se->name_preview = m_gptDictionary->doReplace(se, CachePart::NamePreview);
             }
-        }
-        if (m_usePostDictInName) {
-            se->name_preview = m_postDictionary->doReplace(se, CachePart::NamePreview);
-        }
-    };
+            if (!se->name_preview.empty()) {
+                const auto it = m_nameMap.find(se->name_preview);
+                if (it != m_nameMap.end() && !it->second.empty()) {
+                    se->name_preview = it->second;
+                }
+            }
+            if (m_usePostDictInName) {
+                se->name_preview = m_postDictionary->doReplace(se, CachePart::NamePreview);
+            }
+        };
 
     if (se->nameType != NameType::None) {
         if (se->nameType == NameType::Single) {
@@ -676,23 +723,23 @@ void NormalJsonTranslator::postProcess(Sentence* se)
     }
 
     std::erase_if(se->problems, [&](std::string& problem)
-    {
-        return std::ranges::any_of(m_skipProblems, [&](const SkipProblemCondition& skipProblemCondition)
         {
-            const bool problemMatch = checkString(skipProblemCondition.first, problem);
-            if (!problemMatch) {
-                return false;
-            }
-            if (!skipProblemCondition.second.has_value()) {
-                return true;
-            }
-            return [&]()
-            {
-                problem = "Current problem:" + problem;
-                const bool result = skipProblemCondition.second.value()(se);
-                problem = problem.substr(16);
-                return result;
-            }();
+            return std::ranges::any_of(m_skipProblems, [&](const SkipProblemCondition& skipProblemCondition)
+                {
+                    const bool problemMatch = checkString(skipProblemCondition.first, problem);
+                    if (!problemMatch) {
+                        return false;
+                    }
+                    if (!skipProblemCondition.second.has_value()) {
+                        return true;
+                    }
+                    return [&]()
+                        {
+                            problem = "Current problem:" + problem;
+                            const bool result = skipProblemCondition.second.value()(se);
+                            problem = problem.substr(16);
+                            return result;
+                        }();
+                });
         });
-    });
 }

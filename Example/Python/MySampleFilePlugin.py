@@ -45,7 +45,7 @@ def multi_threads_run(relFilePaths):
     # 因为子解释器里用 多进程 或 ThreadPoolExecutor 会有一些妙妙小问题
     # 在不进行大模型翻译时行为趋近于单线程，因为我只在大模型翻译部分释放了 C++ 侧占有的 GIL，否则又会有一些妙妙小问题
     MAX_WORKERS = pythonTranslator.m_threadsNum
-    pythonTranslator.m_controller.makeBar(pythonTranslator.m_totalSentences, MAX_WORKERS)
+    pythonTranslator.m_controller.makeBar(pythonTranslator.m_controller.m_totalSentences, MAX_WORKERS)
     task_queue = queue.Queue()
     threads = []
     

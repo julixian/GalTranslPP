@@ -210,7 +210,7 @@ void ProjectSettingsPage::_setupUI()
     connect(cacheProblemAction, &QAction::triggered, this, [=]()
         {
             _stackedWidget->setCurrentIndex(8);
-            _projectCachePage->refreshCacheFiles();
+            _projectCachePage->ensureCacheFilesLoaded();
             _settingsTitle->setText(tr("缓存管理"));
         });
     connect(startTransAction, &QAction::triggered, this, [=]()

@@ -29,8 +29,6 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     for (Sentence* se : batch) {
         if (se->pre_processed_text.empty()) {
             se->complete = true;
-            ++m_completedSentences;
-            m_controller->updateBar(); // 空句直接跳过
         }
     }
 
@@ -140,9 +138,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             batchToTransThisRound,
             id2SentenceMap,
             currentApi.modelName,
-            m_controller,
             backgroundText,
-            m_completedSentences,
             m_transEngine,
             m_logger->should_log(spdlog::level::debug),
             m_retransAllWhenFail
@@ -151,10 +147,16 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         if (parsedCount != batchToTransThisRound.size()) {
             ++retryCount;
             if (!m_controller->shouldStop()) {
-                m_logger->warn(
-                    "[线程 {}] [文件 {}] 解析失败或不完整 ({} / {}), 进行第 {} 次重试..., 解析结果: \n{}",
-                    threadId, wide2Ascii(relInputPath), parsedCount, batchToTransThisRound.size(), retryCount, response.content
-                );
+                recordRuntimeError("parse",
+                    std::format("解析失败或不完整 ({} / {})", parsedCount, batchToTransThisRound.size()),
+                    relInputPath,
+                    std::format("{}-{}", batchToTransThisRound.front()->index, batchToTransThisRound.back()->index),
+                    retryCount,
+                    currentApi.modelName,
+                    -1.0,
+                    "warning");
+                m_logger->warn("[线程 {}] [文件 {}] 解析失败或不完整 ({} / {}), 进行第 {} 次重试..., 解析结果: \n{}",
+                    threadId, wide2Ascii(relInputPath), parsedCount, batchToTransThisRound.size(), retryCount, response.content);
             }
             continue;
         }
@@ -168,12 +170,15 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         ++failedCount;
         se->pre_translated_text = "(Failed to translate)" + se->pre_processed_text;
         se->complete = true;
-        ++m_completedSentences;
-        m_controller->updateBar(); // 标记失败句
     }
     m_logger->error(
         "[线程 {}] [文件 {}] 批次翻译在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
         threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size()
     );
+    recordRuntimeError("parse",
+        std::format("批次翻译在 {} 次重试后彻底失败，共翻译 {} / {} 句。", retryCount, batch.size() - failedCount, batch.size()),
+        relInputPath,
+        batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index),
+        retryCount);
     return false;
 }

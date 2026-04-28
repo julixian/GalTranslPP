@@ -39,6 +39,7 @@ public:
     explicit ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     ~ProjectCachePage() override;
 
+    void ensureCacheFilesLoaded();
     void refreshCacheFiles();
 
 private:
@@ -140,6 +141,8 @@ private:
     QString _currentFile;
     nlohmann::json _entries = nlohmann::json::array();
 
+    bool _cacheFilesLoaded{false};
+    bool _problemsLoaded{false};
     bool _renderingEntries{false};
     QSet<int> _selectedEntryRows;
 

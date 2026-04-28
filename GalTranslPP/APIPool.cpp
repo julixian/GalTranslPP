@@ -104,6 +104,13 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
         )
     {
         logger->error("[线程 {}] API key [{}] 疑似额度用尽，短期内多次报告将从池中移除。", threadId, currentAPI.apikey);
+        controller->recordRuntimeError(RuntimeErrorEvent{
+            .kind = "api",
+            .level = "error",
+            .message = std::format("API key 疑似额度用尽: {}", response.content),
+            .filename = wide2Ascii(relInputPath),
+            .model = currentAPI.modelName
+        });
         apiPool->reportProblem(currentAPI);
         // 不需要增加 retryCount
         return false;
@@ -112,6 +119,13 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
     // key 没有这个模型
     if (lowerErrorMsg.contains("no available")) {
         logger->error("[线程 {}] API key [{}] 没有 [{}] 模型，短期内多次报告将从池中移除。", threadId, currentAPI.apikey, currentAPI.modelName);
+        controller->recordRuntimeError(RuntimeErrorEvent{
+            .kind = "api",
+            .level = "error",
+            .message = std::format("API key 没有模型 {}: {}", currentAPI.modelName, response.content),
+            .filename = wide2Ascii(relInputPath),
+            .model = currentAPI.modelName
+        });
         apiPool->reportProblem(currentAPI);
         return false;
     }
@@ -125,6 +139,14 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
         // 实现指数退避与抖动
         const int maxSleepSeconds = (int)std::pow(2, 6);
         const int sleepSeconds = std::rand() % maxSleepSeconds;
+        controller->recordRuntimeError(RuntimeErrorEvent{
+            .kind = "api",
+            .level = "warning",
+            .message = response.content.empty() ? "遇到频率限制或可重试错误" : response.content,
+            .filename = wide2Ascii(relInputPath),
+            .model = currentAPI.modelName,
+            .sleepSeconds = (double)sleepSeconds
+        });
         logger->debug("[线程 {}] [文件 {}] 将等待 {} 秒后重试...", threadId, wide2Ascii(relInputPath), sleepSeconds);
         if (sleepSeconds > 0 && !controller->shouldStop()) {
             std::this_thread::sleep_for(std::chrono::seconds(sleepSeconds));
@@ -134,6 +156,15 @@ bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& 
 
     // 其他无法识别的硬性错误
     ++retryCount;
+    controller->recordRuntimeError(RuntimeErrorEvent{
+        .kind = "api",
+        .level = "warning",
+        .message = response.content.empty() ? "未知 API 错误" : response.content,
+        .filename = wide2Ascii(relInputPath),
+        .retryCount = retryCount,
+        .model = currentAPI.modelName,
+        .sleepSeconds = 2.0
+    });
     logger->warn("[线程 {}] [文件 {}] 遇到未知API错误，进行第 {} 次重试...", threadId, wide2Ascii(relInputPath), retryCount);
     if (apiStrategy == "fallback") {
         logger->warn("[线程 {}] 将切换到下一个 API key(如果有多个API key的话)", threadId);

@@ -12,6 +12,7 @@
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaPushButton.h"
+#include "ElaIconButton.h"
 #include "ElaProgressRing.h"
 #include "NoWheelComboBox.h"
 #include "ElaMessageBar.h"
@@ -23,6 +24,7 @@
 #include "EpubCfgPage.h"
 #include "PDFCfgPage.h"
 #include "CustomFilePluginCfgPage.h"
+#include "TranslationWorkbenchPage.h"
 
 import Tool;
 
@@ -46,11 +48,10 @@ StartSettingsPage::StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, 
 StartSettingsPage::~StartSettingsPage()
 {
 	_trayIcon = nullptr;
-	if (_workThread && _workThread->isRunning()) {
+	if (_worker && _workThread && _workThread->isRunning()) {
 		_worker->stopTranslation();
-		_workThread->quit();
-		_workThread->wait();
 	}
+	_disposeWorkerThread();
 }
 
 void StartSettingsPage::apply2Config()
@@ -72,6 +73,126 @@ bool StartSettingsPage::_isLogScrollAtBottom() const
 {
 	const QScrollBar* scrollBar = _logOutput->verticalScrollBar();
 	return scrollBar->value() >= scrollBar->maximum() - 4;
+}
+
+void StartSettingsPage::_ensureWorkerThread()
+{
+	if (_workThread) {
+		return;
+	}
+
+	_workThread = new QThread(this);
+	_worker = new TranslatorWorker(_projectDir);
+	_worker->moveToThread(_workThread);
+	connect(_workThread, &QThread::finished, _worker, &TranslatorWorker::deleteLater);
+	connect(this, &StartSettingsPage::startWork, _worker, &TranslatorWorker::doTranslation);
+	connect(_worker, &TranslatorWorker::translationFinished, this, &StartSettingsPage::_workFinished);
+
+	connect(_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
+		{
+			_progressBar->setRange(0, totalSentences);
+			_progressBar->setValue(0);
+			_threadNumRing->setRange(0, totalThreads);
+			_threadNumRing->setValue(0);
+			_progressBar->setFormat("%v/%m lines [%p%]");
+			_startTime = std::chrono::high_resolution_clock::now();
+			_usedTimeLabel->display("00:00:00");
+			_remainTimeLabel->display("--:--");
+			_estimator.reset();
+			if (_translationWorkbenchPage && _transEngine != "Rebuild") {
+				_translationWorkbenchPage->updateStage(tr("翻译中"), QString());
+			}
+		});
+	connect(_worker, &TranslatorWorker::writeLogSignal, this, [this](const QString& log)
+		{
+			if (_isLogScrollAtBottom() && !_logPaused && !_logResumeInProgress && _pendingLog.isEmpty() && !_pendingOverflowed) {
+				_appendLogChunkToView(log);
+				return;
+			}
+			if (!_isLogScrollAtBottom()) {
+				_setLogPaused(true);
+			}
+			_enqueuePendingLog(log);
+		});
+	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
+		{
+			_threadNumRing->setValue(_threadNumRing->getValue() + 1);
+		});
+	connect(_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
+		{
+			_threadNumRing->setValue(_threadNumRing->getValue() - 1);
+		});
+	connect(_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
+		{
+			_progressBar->setValue(_progressBar->value() + ticks);
+			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - _startTime);
+			_usedTimeLabel->display(QString::fromStdString(
+				std::format("{:%T}", elapsedSeconds)
+			));
+			if (ticks <= 0) {
+				return;
+			}
+			const auto etaWithSpeed = _estimator.updateAndGetSpeedWithEta(_progressBar->value(), _progressBar->maximum());
+			const double& speed = etaWithSpeed.first;
+			const Duration& eta = etaWithSpeed.second;
+			if (_speedLabel) {
+				_speedLabel->setText(QString::fromStdString(
+					std::format("{:.2f} lines/s", speed == 0.0 ? (double)_progressBar->maximum() / (elapsedSeconds.count() + 1) : speed)
+				));
+			}
+			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {
+				_remainTimeLabel->display("--:--");
+				return;
+			}
+			_remainTimeLabel->display(QString::fromStdString(
+				std::format("{:%T}", eta)
+			));
+		});
+	connect(_worker, &TranslatorWorker::runtimeFilesResetSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+		{
+			_translationWorkbenchPage->resetRuntimeFiles(files);
+		});
+	connect(_worker, &TranslatorWorker::runtimeFileProgressSignal, this, [=](const GuiRuntimeFileProgress& file)
+		{
+			_translationWorkbenchPage->updateRuntimeFile(file);
+		});
+	connect(_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+		{
+			_translationWorkbenchPage->updateRuntimeFiles(files);
+		});
+	connect(_worker, &TranslatorWorker::runtimeSuccessSignal, this, [=](const GuiRuntimeSuccessEvent& event)
+		{
+			_translationWorkbenchPage->appendSuccess(event);
+		});
+	connect(_worker, &TranslatorWorker::runtimeSuccessBatchSignal, this, [=](const QVector<GuiRuntimeSuccessEvent>& events)
+		{
+			_translationWorkbenchPage->appendSuccesses(events);
+		});
+	connect(_worker, &TranslatorWorker::runtimeErrorSignal, this, [=](const GuiRuntimeErrorEvent& event)
+		{
+			_translationWorkbenchPage->appendError(event);
+		});
+	connect(_worker, &TranslatorWorker::runtimeErrorBatchSignal, this, [=](const QVector<GuiRuntimeErrorEvent>& events)
+		{
+			_translationWorkbenchPage->appendErrors(events);
+		});
+	connect(_worker, &TranslatorWorker::runtimeStageChangedSignal, this, [=](const QString& stage, const QString& currentFile)
+		{
+			_translationWorkbenchPage->updateStage(stage, currentFile);
+		});
+	_workThread->start();
+}
+
+void StartSettingsPage::_disposeWorkerThread()
+{
+	if (!_workThread) {
+		return;
+	}
+	_workThread->quit();
+	_workThread->wait();
+	_workThread->deleteLater();
+	_workThread = nullptr;
+	_worker = nullptr;
 }
 
 void StartSettingsPage::_setLogPaused(bool paused)
@@ -354,10 +475,10 @@ void StartSettingsPage::_setupUI()
 	QHBoxLayout* threadNumLayout = new QHBoxLayout(threadNumWidget);
 	_threadNumRing = new ElaProgressRing(buttonArea);
 	threadNumLayout->addWidget(_threadNumRing);
-	ElaText* speedLabel = new ElaText(buttonArea);
-	speedLabel->setTextPixelSize(12);
-	speedLabel->setText("0 lines/s");
-	threadNumLayout->addWidget(speedLabel);
+	_speedLabel = new ElaText(buttonArea);
+	_speedLabel->setTextPixelSize(12);
+	_speedLabel->setText("0 lines/s");
+	threadNumLayout->addWidget(_speedLabel);
 	buttonLayout->addWidget(threadNumWidget);
 
 	// 已用时间
@@ -456,78 +577,25 @@ void StartSettingsPage::_setupUI()
 
 
 	// 进度条
+	QWidget* progressRow = new QWidget(mainWidget);
+	QHBoxLayout* progressLayout = new QHBoxLayout(progressRow);
+	progressLayout->setContentsMargins(0, 0, 0, 0);
+	progressLayout->setSpacing(8);
 	_progressBar = new ElaProgressBar(mainWidget);
 	_progressBar->setRange(0, 100);
 	_progressBar->setValue(0);
-	mainLayout->addWidget(_progressBar);
+	progressLayout->addWidget(_progressBar, 1);
+	_workbenchButton = new ElaIconButton(ElaIconType::ChartSimple, 16, 35, 35, progressRow);
+	_workbenchButton->setToolTip(tr("详情"));
+	connect(_workbenchButton, &QPushButton::clicked, this, [=]()
+		{
+			this->navigation(5);
+		});
+	progressLayout->addWidget(_workbenchButton);
+	mainLayout->addWidget(progressRow);
 
+	_translationWorkbenchPage = new TranslationWorkbenchPage(this);
 
-	// 翻译线程
-	_workThread = new QThread(this);
-	_worker = new TranslatorWorker(_projectDir);
-	_worker->moveToThread(_workThread);
-	connect(_workThread, &QThread::finished, _worker, &TranslatorWorker::deleteLater);
-	connect(this, &StartSettingsPage::startWork, _worker, &TranslatorWorker::doTranslation);
-	connect(_worker, &TranslatorWorker::translationFinished, this, &StartSettingsPage::_workFinished);
-
-	connect(_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
-		{
-			_progressBar->setRange(0, totalSentences);
-			_progressBar->setValue(0);
-			_threadNumRing->setRange(0, totalThreads);
-			_threadNumRing->setValue(0);
-			_progressBar->setFormat("%v/%m lines [%p%]");
-			_startTime = std::chrono::high_resolution_clock::now();
-			_usedTimeLabel->display("00:00:00");
-			_remainTimeLabel->display("--:--");
-			_estimator.reset();
-			
-		});
-	connect(_worker, &TranslatorWorker::writeLogSignal, this, [this](const QString& log)
-		{
-			if (_isLogScrollAtBottom() && !_logPaused && !_logResumeInProgress && _pendingLog.isEmpty() && !_pendingOverflowed) {
-				_appendLogChunkToView(log);
-				return;
-			}
-			if (!_isLogScrollAtBottom()) {
-				_setLogPaused(true);
-			}
-			_enqueuePendingLog(log);
-		});
-	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
-		{
-			_threadNumRing->setValue(_threadNumRing->getValue() + 1);
-		});
-	connect(_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
-		{
-			_threadNumRing->setValue(_threadNumRing->getValue() - 1);
-		});
-	connect(_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
-		{
-			_progressBar->setValue(_progressBar->value() + ticks);
-			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - _startTime);
-			_usedTimeLabel->display(QString::fromStdString(
-				std::format("{:%T}", elapsedSeconds)
-			));
-			if (ticks <= 0) {
-				return;
-			}
-			const auto etaWithSpeed = _estimator.updateAndGetSpeedWithEta(_progressBar->value(), _progressBar->maximum());
-			const double& speed = etaWithSpeed.first;
-			const Duration& eta = etaWithSpeed.second;
-			speedLabel->setText(QString::fromStdString(
-				std::format("{:.2f} lines/s", speed == 0.0 ? (double)_progressBar->maximum() / (elapsedSeconds.count() + 1) : speed)
-			));
-			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {
-				_remainTimeLabel->display("--:--");
-				return;
-			}
-			_remainTimeLabel->display(QString::fromStdString(
-				std::format("{:%T}", eta)
-			));
-		});
-
-	_workThread->start();
 	// 这个的 isVerticalGrabGesture 保持为 true 主要是方便随便拉一下看进度条而不必非要转鼠标滚轮或者侧边滚动条
 	addCentralWidget(mainWidget, true, true, 0);
 
@@ -561,6 +629,7 @@ void StartSettingsPage::_setupUI()
 	addCentralWidget(_pdfCfgPage, true, false, 0);
 	_customFilePluginCfgPage = new CustomFilePluginCfgPage(_projectDir, _globalConfig, _projectConfig, this);
 	addCentralWidget(_customFilePluginCfgPage, true, false, 0);
+	addCentralWidget(_translationWorkbenchPage, true, false, 0);
 }
 
 void StartSettingsPage::_onOutputSettingClicked()
@@ -586,22 +655,28 @@ void StartSettingsPage::_onOutputSettingClicked()
 void StartSettingsPage::_onStartTranslatingClicked()
 {
 	_resetLogBufferState(true);
+	if (_translationWorkbenchPage) {
+		_translationWorkbenchPage->clearRuntime();
+	}
 	Q_EMIT startTranslating();
+	_transEngine = QString::fromStdString(toml::find_or(_projectConfig, "plugins", "transEngine", ""));
 
 	_startTime = std::chrono::high_resolution_clock::now();
 	_usedTimeLabel->display("00:00:00");
 	_startTranslateButton->setEnabled(false);
 	_progressBar->setValue(0);
+	_ensureWorkerThread();
 
 	Q_EMIT startWork();
-	_transEngine = QString::fromStdString(toml::find_or(_projectConfig, "plugins", "transEngine", ""));
 	_stopTranslateButton->setEnabled(true);
 }
 
 void StartSettingsPage::_onStopTranslatingClicked()
 {
 	_stopTranslateButton->setEnabled(false);
-	_worker->stopTranslation();
+	if (_worker) {
+		_worker->stopTranslation();
+	}
 	ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止中"), tr("正在等待最后一批翻译完成，请稍候..."), 3000);
 }
 
@@ -685,4 +760,5 @@ void StartSettingsPage::_workFinished(int exitCode)
 	Q_EMIT finishTranslatingSignal(_transEngine, exitCode);
 	_startTranslateButton->setEnabled(true);
 	_stopTranslateButton->setEnabled(false);
+	_disposeWorkerThread();
 }

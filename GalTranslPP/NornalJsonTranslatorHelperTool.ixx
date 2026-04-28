@@ -26,8 +26,7 @@ export {
     );
 
     int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
-        const std::shared_ptr<IController>& controller, std::string& backgroudText, std::atomic<int>& completedSentences, 
-        TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail);
+        std::string& backgroudText, TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail);
 
     void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
         const fs::path& outputCacheDir, const fs::path& outputDir, std::shared_ptr<spdlog::logger>& logger);

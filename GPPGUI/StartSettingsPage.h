@@ -14,6 +14,7 @@
 namespace fs = std::filesystem;
 
 class ElaPushButton;
+class ElaIconButton;
 class ElaProgressBar;
 class ElaComboBox;
 class ElaPlainTextEdit;
@@ -24,6 +25,7 @@ class NJCfgPage;
 class EpubCfgPage;
 class PDFCfgPage;
 class CustomFilePluginCfgPage;
+class TranslationWorkbenchPage;
 
 class StartSettingsPage : public BasePage
 {
@@ -48,6 +50,8 @@ private:
     static constexpr int MAX_LOG_LINE_COUNT = 10000;
 
     bool _isLogScrollAtBottom() const;
+    void _ensureWorkerThread();
+    void _disposeWorkerThread();
     void _setLogPaused(bool paused);
     void _enqueuePendingLog(const QString& chunk);
     void _flushPendingLogToView();
@@ -57,8 +61,8 @@ private:
 private:
 
     fs::path& _projectDir;
-    QThread* _workThread;
-    TranslatorWorker* _worker;
+    QThread* _workThread{nullptr};
+    TranslatorWorker* _worker{nullptr};
 
     void _setupUI();
     toml::ordered_value& _projectConfig;
@@ -67,6 +71,7 @@ private:
 
     ElaPushButton* _startTranslateButton;
     ElaPushButton* _stopTranslateButton;
+    ElaIconButton* _workbenchButton{nullptr};
     ElaProgressBar* _progressBar;
 
     ElaPlainTextEdit* _logOutput;
@@ -85,6 +90,7 @@ private:
 
     QString _transEngine;
     ElaProgressRing* _threadNumRing;
+    ElaText* _speedLabel{nullptr};
     ElaLCDNumber* _usedTimeLabel;
     ElaLCDNumber* _remainTimeLabel;
     QSystemTrayIcon* _trayIcon;
@@ -104,6 +110,7 @@ private:
     EpubCfgPage* _epubCfgPage;
     PDFCfgPage* _pdfCfgPage;
     CustomFilePluginCfgPage* _customFilePluginCfgPage;
+    TranslationWorkbenchPage* _translationWorkbenchPage{nullptr};
 };
 
 #endif // STARTSETTINGSPAGE_H

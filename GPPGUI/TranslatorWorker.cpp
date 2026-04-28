@@ -1,43 +1,70 @@
 ﻿#include "TranslatorWorker.h"
+#include <QMetaType>
 #include <QThread>
 #include <QTimer>
 
 import std;
 import ITranslator;
 
+namespace {
+    QString qstr(const std::string& value)
+    {
+        return QString::fromStdString(value);
+    }
+
+    GuiRuntimeFileProgress toGuiFileProgress(const RuntimeFileProgress& file)
+    {
+        return {
+            qstr(file.filename),
+            file.total,
+            file.completed,
+            file.problems
+        };
+    }
+
+    GuiRuntimeSuccessEvent toGuiSuccessEvent(const RuntimeSuccessEvent& event)
+    {
+        QStringList speakers;
+        for (const std::string& speaker : event.speakers) {
+            speakers.push_back(qstr(speaker));
+        }
+        return {
+            qstr(event.id),
+            qstr(event.timestamp),
+            qstr(event.filename),
+            event.index,
+            speakers,
+            qstr(event.sourcePreview),
+            qstr(event.translationPreview),
+            qstr(event.translatedBy)
+        };
+    }
+
+    GuiRuntimeErrorEvent toGuiErrorEvent(const RuntimeErrorEvent& event)
+    {
+        return {
+            qstr(event.id),
+            qstr(event.timestamp),
+            qstr(event.kind),
+            qstr(event.level),
+            qstr(event.message),
+            qstr(event.filename),
+            qstr(event.indexRange),
+            event.retryCount,
+            qstr(event.model),
+            event.sleepSeconds
+        };
+    }
+}
+
 class GUIController : public IController
 {
 
 public:
-    virtual void makeBar(int totalSentences, int totalThreads) override
-    {
-        this->flush();
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->makeBarSignal(totalSentences, totalThreads);
-    }
-
     virtual void writeLog(const std::string& log) override
     {
         std::lock_guard<std::mutex> lock(_mutex);
         _log += log;
-    }
-
-    virtual void addThreadNum() override
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->addThreadNumSignal();
-    }
-
-    virtual void reduceThreadNum() override
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->reduceThreadNumSignal();
-    }
-
-    virtual void updateBar(int ticks) override
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _progress += ticks;
     }
 
     virtual bool shouldStop() override
@@ -62,8 +89,85 @@ public:
         }
         Q_EMIT _worker->updateBarSignal(_progress);
         _progress = 0;
+        if (!_pendingRuntimeFiles.empty()) {
+            QVector<GuiRuntimeFileProgress> files;
+            files.reserve((qsizetype)_pendingRuntimeFiles.size());
+            for (const auto& [filename, file] : _pendingRuntimeFiles) {
+                files.push_back(file);
+            }
+            Q_EMIT _worker->runtimeFileProgressBatchSignal(files);
+            _pendingRuntimeFiles.clear();
+        }
+        if (!_pendingRuntimeSuccesses.empty()) {
+            Q_EMIT _worker->runtimeSuccessBatchSignal(_pendingRuntimeSuccesses);
+            _pendingRuntimeSuccesses.clear();
+        }
+        if (!_pendingRuntimeErrors.empty()) {
+            Q_EMIT _worker->runtimeErrorBatchSignal(_pendingRuntimeErrors);
+            _pendingRuntimeErrors.clear();
+        }
     }
 
+protected:
+    virtual void onMakeBar(int totalSentences, int totalThreads) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        Q_EMIT _worker->makeBarSignal(totalSentences, totalThreads);
+    }
+
+    virtual void onAddThreadNum(int) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        Q_EMIT _worker->addThreadNumSignal();
+    }
+
+    virtual void onReduceThreadNum(int) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        Q_EMIT _worker->reduceThreadNumSignal();
+    }
+
+    virtual void onUpdateBar(int ticks, int, int) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _progress += ticks;
+    }
+
+    virtual void onRuntimeFilesReset(const std::vector<RuntimeFileProgress>& files) override
+    {
+        QVector<GuiRuntimeFileProgress> guiFiles;
+        guiFiles.reserve((qsizetype)files.size());
+        for (const RuntimeFileProgress& file : files) {
+            guiFiles.push_back(toGuiFileProgress(file));
+        }
+        Q_EMIT _worker->runtimeFilesResetSignal(guiFiles);
+    }
+
+    virtual void onRuntimeStageChanged(const std::string& stage, const std::string& currentFile) override
+    {
+        Q_EMIT _worker->runtimeStageChangedSignal(qstr(stage), qstr(currentFile));
+    }
+
+    virtual void onRuntimeFileProgress(const RuntimeFileProgress& file) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        GuiRuntimeFileProgress guiFile = toGuiFileProgress(file);
+        _pendingRuntimeFiles[guiFile.filename.toStdString()] = std::move(guiFile);
+    }
+
+    virtual void onRuntimeSuccess(const RuntimeSuccessEvent& event) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _pendingRuntimeSuccesses.push_back(toGuiSuccessEvent(event));
+    }
+
+    virtual void onRuntimeError(const RuntimeErrorEvent& event) override
+    {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _pendingRuntimeErrors.push_back(toGuiErrorEvent(event));
+    }
+
+public:
     explicit GUIController(TranslatorWorker* worker)
 	    : _worker(worker)
     {
@@ -92,11 +196,20 @@ private:
     TranslatorWorker* _worker;
     bool _controlling = true;
     int _progress = 0;
+    std::map<std::string, GuiRuntimeFileProgress> _pendingRuntimeFiles;
+    QVector<GuiRuntimeSuccessEvent> _pendingRuntimeSuccesses;
+    QVector<GuiRuntimeErrorEvent> _pendingRuntimeErrors;
 };
 
 TranslatorWorker::TranslatorWorker(const fs::path& projectDir, QObject* parent)
     : QObject(parent), _projectDir(projectDir)
 {
+    qRegisterMetaType<GuiRuntimeSuccessEvent>("GuiRuntimeSuccessEvent");
+    qRegisterMetaType<GuiRuntimeErrorEvent>("GuiRuntimeErrorEvent");
+    qRegisterMetaType<GuiRuntimeFileProgress>("GuiRuntimeFileProgress");
+    qRegisterMetaType<QVector<GuiRuntimeFileProgress>>("QVector<GuiRuntimeFileProgress>");
+    qRegisterMetaType<QVector<GuiRuntimeSuccessEvent>>("QVector<GuiRuntimeSuccessEvent>");
+    qRegisterMetaType<QVector<GuiRuntimeErrorEvent>>("QVector<GuiRuntimeErrorEvent>");
 }
 
 void TranslatorWorker::doTranslation()

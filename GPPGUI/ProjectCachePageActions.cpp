@@ -110,7 +110,7 @@ void ProjectCachePage::_setSidebarPage(int index)
     tuneNavButton(_filesNavButton, index == 0);
     tuneNavButton(_searchNavButton, index == 1);
     tuneNavButton(_problemsNavButton, index == 2);
-    if (index == 2) {
+    if (index == 2 && !_problemsLoaded) {
         _loadProblems();
     }
 }

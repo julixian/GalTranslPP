@@ -77,9 +77,6 @@ export {
         std::string m_genDictReviewUserPrompt;
         std::string m_targetLang;
 
-        int m_totalSentences = 0;
-        std::atomic<int> m_completedSentences = 0;
-
         bool m_pythonTranslator = false;
 
         int m_threadsNum{};
@@ -102,6 +99,7 @@ export {
         bool m_agentFinalReconcileSingleThread{};
         // 仅在最终 reconcile 阶段为 true。
         bool m_agentReconciling = false;
+        int m_lastRuntimeFileTotal = 0;
 
         std::string m_apiStrategy;
         std::string m_sortMethod;
@@ -185,6 +183,11 @@ export {
             int threadId, const AgentProtocolResponse& protocol, const std::string& modelName, int& committedCount);
 
         void processFile(const fs::path& relInputPath, int threadId);
+        bool shouldReportRuntimeWorkbench() const;
+        void recordSentenceDone(const fs::path& relInputPath, const Sentence& se, bool addToSuccessStream = false) const;
+        void recordRuntimeError(const std::string& kind, const std::string& message, const fs::path& relInputPath = {},
+            const std::string& indexRange = {}, int retryCount = -1, const std::string& model = {},
+            double sleepSeconds = -1.0, const std::string& level = "error") const;
         // 在线程池处理完成后执行一次最终 reconcile。
         // `m_agentFinalReconcileSingleThread=true` 时走单线程，否则按文件并行。
         void runAgentFinalReconcile();

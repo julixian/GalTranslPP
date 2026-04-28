@@ -544,6 +544,10 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor);
 
     py::class_<IController, std::shared_ptr<IController>>(m, "IController")
+        .def_property("m_totalSentences", [](IController& self) { return self.m_totalSentences.load(); },
+            [](IController& self, int val) { self.m_totalSentences = val; })
+        .def_property("m_completedSentences", [](IController& self) { return self.m_completedSentences.load(); },
+            [](IController& self, int val) { self.m_completedSentences = val; })
         .def("makeBar", &IController::makeBar)
         .def("writeLog", &IController::writeLog)
         .def("addThreadNum", &IController::addThreadNum)
@@ -575,9 +579,6 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_systemPrompt", &NormalJsonTranslator::m_systemPrompt)
         .def_readwrite("m_userPrompt", &NormalJsonTranslator::m_userPrompt)
         .def_readwrite("m_targetLang", &NormalJsonTranslator::m_targetLang)
-        .def_readwrite("m_totalSentences", &NormalJsonTranslator::m_totalSentences)
-        .def_property("m_completedSentences", [](NormalJsonTranslator& self) {return self.m_completedSentences.load(); },
-            [](NormalJsonTranslator& self, int val) { self.m_completedSentences = val; })
         .def_readwrite("m_threadsNum", &NormalJsonTranslator::m_threadsNum)
         .def_readwrite("m_batchSize", &NormalJsonTranslator::m_batchSize)
         .def_readwrite("m_contextHistorySize", &NormalJsonTranslator::m_contextHistorySize)

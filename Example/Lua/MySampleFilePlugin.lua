@@ -20,7 +20,7 @@ function run()
     end
     utils.logger:info("relFilePaths: \n" .. table.concat(relFilePathsStr, "\n"))
     luaTranslator.m_threadPool:resize(35)
-    luaTranslator.m_controller:makeBar(luaTranslator.m_totalSentences, 35)
+    luaTranslator.m_controller:makeBar(luaTranslator.m_controller.m_totalSentences, 35)
     luaTranslator.m_threadPool:push(luaTranslator, relFilePaths)
     luaTranslator:normalJsonTranslator_afterRun()
     return

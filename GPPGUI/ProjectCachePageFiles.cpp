@@ -8,7 +8,9 @@
 #include <QFileInfo>
 #include <QItemSelectionModel>
 #include <QStandardItem>
+#include <QStackedWidget>
 
+#include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
@@ -20,6 +22,10 @@ using namespace ProjectCachePagePrivate;
 void ProjectCachePage::_loadCacheFiles()
 {
     _cacheFiles.clear();
+    _cacheFilesLoaded = true;
+    _problemsLoaded = false;
+    const QString previousFile = _currentFile;
+    const bool keepPreviousFromMemory = !previousFile.isEmpty() && _dirtyFiles.contains(previousFile);
     const fs::path cacheDir = _cacheDir();
     if (!fs::exists(cacheDir)) {
         std::error_code ec;
@@ -33,6 +39,9 @@ void ProjectCachePage::_loadCacheFiles()
             }
             CacheFileInfo info;
             info.relativeName = QString(fs::relative(entry.path(), cacheDir).generic_wstring());
+            if (!_dirtyFiles.contains(info.relativeName)) {
+                _loadedEntriesByFile.remove(info.relativeName);
+            }
             std::error_code ec;
             info.size = entry.file_size(ec);
             QFileInfo fileInfo(QString(entry.path().wstring()));
@@ -67,8 +76,27 @@ void ProjectCachePage::_loadCacheFiles()
 
     _cacheDirLabel->setText(QString(cacheDir.wstring()));
     _renderFileList();
-    _loadProblems();
-    _runGlobalSearch();
+    const bool previousStillExists = std::any_of(_cacheFiles.begin(), _cacheFiles.end(), [&](const CacheFileInfo& file)
+        {
+            return file.relativeName == previousFile && file.parseOk;
+        });
+    if (!previousFile.isEmpty()) {
+        if (previousStillExists) {
+            _loadCacheFile(previousFile, !keepPreviousFromMemory);
+        }
+        else {
+            _currentFile.clear();
+            _entries = nlohmann::json::array();
+            _selectedEntryRows.clear();
+            _renderEntries();
+        }
+    }
+    if (_sidebarStack && _sidebarStack->currentIndex() == 2) {
+        _loadProblems();
+    }
+    if (_globalSearchEdit && !_globalSearchEdit->text().trimmed().isEmpty()) {
+        _runGlobalSearch();
+    }
     _updateActionStates();
 }
 

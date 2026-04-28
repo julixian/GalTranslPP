@@ -452,6 +452,10 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			waitForThreads(self, results);
 		};
 	lua.new_usertype<IController>("IController",
+		"m_totalSentences", sol::property([](IController& self) { return self.m_totalSentences.load(); },
+			[](IController& self, int value) { self.m_totalSentences = value; }),
+		"m_completedSentences", sol::property([](IController& self) { return self.m_completedSentences.load(); },
+			[](IController& self, int value) { self.m_completedSentences = value; }),
 		"makeBar", &IController::makeBar,
 		"writeLog", &IController::writeLog,
 		"addThreadNum", &IController::addThreadNum,
@@ -488,8 +492,6 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_systemPrompt", &NormalJsonTranslator::m_systemPrompt,
 		"m_userPrompt", &NormalJsonTranslator::m_userPrompt,
 		"m_targetLang", &NormalJsonTranslator::m_targetLang,
-		"m_totalSentences", &NormalJsonTranslator::m_totalSentences,
-		"m_completedSentences", &NormalJsonTranslator::m_completedSentences,
 		"m_threadsNum", &NormalJsonTranslator::m_threadsNum,
 		"m_batchSize", &NormalJsonTranslator::m_batchSize,
 		"m_contextHistorySize", &NormalJsonTranslator::m_contextHistorySize,

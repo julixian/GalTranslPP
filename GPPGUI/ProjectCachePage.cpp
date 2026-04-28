@@ -3,27 +3,21 @@
 #include <algorithm>
 #include <fstream>
 
-#include <QAbstractButton>
-#include <QAbstractItemView>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QButtonGroup>
 #include <QCollator>
 #include <QDesktopServices>
 #include <QFileInfo>
-#include <QHBoxLayout>
-#include <QItemSelectionModel>
-#include <QMessageBox>
 #include <QPainter>
-#include <QPainterPath>
 #include <QSignalBlocker>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
-#include <QUrl>
-#include <QVBoxLayout>
 
 #include "ElaCheckBox.h"
-#include "ElaComboBox.h"
+#include "ElaContentDialog.h"
 #include "ElaDialog.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
@@ -34,6 +28,8 @@
 #include "ElaText.h"
 #include "ElaTheme.h"
 #include "ElaToolTip.h"
+#include "ElaComboBox.h"
+#include "NoWheelComboBox.h"
 
 import Tool;
 
@@ -47,6 +43,12 @@ namespace {
     constexpr int EntryEngineRole = Qt::UserRole + 7;
     constexpr int EntrySourceRole = Qt::UserRole + 8;
     constexpr int EntryDstRole = Qt::UserRole + 9;
+    constexpr int HitFileRole = Qt::UserRole + 10;
+    constexpr int HitSentenceRole = Qt::UserRole + 11;
+    constexpr int HitBadgesRole = Qt::UserRole + 12;
+    constexpr int HitSourceRole = Qt::UserRole + 13;
+    constexpr int HitDstRole = Qt::UserRole + 14;
+    constexpr int HitProblemRole = Qt::UserRole + 15;
 
     constexpr int LabelFontPx = 12;
     constexpr int BodyFontPx = 13;
@@ -83,6 +85,26 @@ namespace {
     QString auxiliaryTextStyle()
     {
         return QString("color:%1;").arg(colorName(ElaThemeType::BasicDetailsText));
+    }
+
+    QString splitterStyle()
+    {
+        return QString(
+            "QSplitter::handle:horizontal{"
+            "background:transparent;"
+            "border:none;"
+            "border-left:1px solid %1;"
+            "margin:10px 4px;"
+            "}"
+            "QSplitter::handle:horizontal:hover{"
+            "background:%2;"
+            "border-left:1px solid %3;"
+            "border-radius:3px;"
+            "margin:6px 2px;"
+            "}")
+            .arg(colorName(ElaThemeType::BasicBaseLine),
+                colorName(ElaThemeType::BasicHoverAlpha),
+                colorName(ElaThemeType::BasicBorderHover));
     }
 
     void tuneTextEdit(ElaPlainTextEdit* edit, bool readOnly, int height)
@@ -236,6 +258,112 @@ namespace {
             painter->restore();
         }
     };
+
+    class CacheSearchDelegate : public QStyledItemDelegate
+    {
+    public:
+        explicit CacheSearchDelegate(QObject* parent = nullptr)
+            : QStyledItemDelegate(parent)
+        {
+        }
+
+        void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+        {
+            painter->save();
+            painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+
+            const bool selected = option.state.testFlag(QStyle::State_Selected);
+            const bool hovered = option.state.testFlag(QStyle::State_MouseOver);
+            QRectF cardRect = option.rect.adjusted(5, 4, -5, -5);
+            QColor cardColor = selected ? themeColor(ElaThemeType::BasicSelectedAlpha)
+                : hovered ? themeColor(ElaThemeType::BasicHoverAlpha)
+                : themeColor(ElaThemeType::BasicBaseAlpha);
+            painter->setPen(QPen(selected ? themeColor(ElaThemeType::PrimaryNormal) : themeColor(ElaThemeType::BasicBorder), selected ? 1.3 : 1.0));
+            painter->setBrush(cardColor);
+            painter->drawRoundedRect(cardRect, 6, 6);
+
+            QRect contentRect = cardRect.toRect().adjusted(12, 7, -10, -7);
+            const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
+            const QColor textColor = themeColor(ElaThemeType::BasicText);
+            const QColor detailColor = themeColor(ElaThemeType::BasicDetailsText);
+            const QColor primaryColor = themeColor(ElaThemeType::PrimaryNormal);
+            const QString problemText = index.data(HitProblemRole).toString();
+            const QStringList badges = index.data(HitBadgesRole).toStringList();
+            const bool hasProblem = !problemText.isEmpty();
+            const QColor problemColor = dark ? QColor(255, 96, 96) : QColor(190, 38, 38);
+            const QColor problemFill = dark ? QColor(92, 32, 36, 170) : QColor(255, 225, 225, 210);
+            const QColor accentColor = dark ? QColor(249, 209, 125) : QColor(146, 93, 18);
+            QColor matchFill = primaryColor;
+            matchFill.setAlpha(dark ? 70 : 30);
+
+            QFont tagFont = option.font;
+            tagFont.setPixelSize(11);
+            tagFont.setBold(true);
+            painter->setFont(tagFont);
+            QFontMetrics tagMetrics(tagFont);
+            const QString tag = hasProblem ? QObject::tr("问题") : (badges.isEmpty() ? QObject::tr("匹配") : badges.first());
+            const int tagWidth = tagMetrics.horizontalAdvance(tag) + 18;
+            QRectF tagRect(contentRect.left(), contentRect.top() + 1, tagWidth, 22);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(hasProblem ? problemFill : matchFill);
+            painter->drawRoundedRect(tagRect, 11, 11);
+            painter->setPen(hasProblem ? problemColor : primaryColor);
+            painter->drawText(tagRect, Qt::AlignCenter, tag);
+
+            QFont titleFont = option.font;
+            titleFont.setPixelSize(12);
+            titleFont.setBold(true);
+            painter->setFont(titleFont);
+            painter->setPen(primaryColor);
+            QFontMetrics titleMetrics(titleFont);
+            QRect titleRect(contentRect.left() + tagWidth + 8, contentRect.top(), contentRect.width() - tagWidth - 8, 24);
+            const QString title = index.data(HitFileRole).toString();
+            painter->drawText(titleRect, Qt::AlignVCenter | Qt::AlignLeft,
+                titleMetrics.elidedText(title, Qt::ElideMiddle, titleRect.width()));
+
+            QFont problemFont = option.font;
+            problemFont.setPixelSize(12);
+            problemFont.setBold(true);
+            painter->setFont(problemFont);
+            QFontMetrics problemMetrics(problemFont);
+            QRect problemRect(contentRect.left(), contentRect.top() + 29, contentRect.width(), 20);
+            const QString problemLine = QString("#%1  %2")
+                .arg(index.data(HitSentenceRole).toInt())
+                .arg(hasProblem ? problemText : badges.join("/"));
+            painter->setPen(hasProblem ? accentColor : detailColor);
+            painter->drawText(problemRect, Qt::AlignVCenter | Qt::AlignLeft,
+                problemMetrics.elidedText(problemLine, Qt::ElideRight, problemRect.width()));
+
+            auto drawLine = [&](int lineY, const QString& label, const QString& text)
+                {
+                    QFont labelFont = option.font;
+                    labelFont.setPixelSize(11);
+                    labelFont.setBold(true);
+                    painter->setFont(labelFont);
+                    QRectF labelRect(contentRect.left(), lineY + 1, 34, 18);
+                    painter->setPen(Qt::NoPen);
+                    QColor labelFill = themeColor(ElaThemeType::BasicHoverAlpha);
+                    painter->setBrush(labelFill);
+                    painter->drawRoundedRect(labelRect, 5, 5);
+                    painter->setPen(detailColor);
+                    painter->drawText(labelRect, Qt::AlignCenter, label);
+
+                    QFont bodyFont = option.font;
+                    bodyFont.setPixelSize(12);
+                    painter->setFont(bodyFont);
+                    painter->setPen(textColor);
+                    QFontMetrics fm(bodyFont);
+                    QRect textRect(contentRect.left() + 42, lineY, contentRect.width() - 42, 20);
+                    painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft,
+                        fm.elidedText(text, Qt::ElideRight, textRect.width()));
+                };
+
+            drawLine(contentRect.top() + 56, QObject::tr("原文"), index.data(HitSourceRole).toString());
+            drawLine(contentRect.top() + 79, QObject::tr("译文"), index.data(HitDstRole).toString());
+
+            painter->restore();
+        }
+    };
 }
 
 ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent)
@@ -339,18 +467,14 @@ void ProjectCachePage::_setupUI()
     topLayout->addWidget(_saveAllButton);
     mainLayout->addLayout(topLayout);
 
-    _messageLabel = new ElaText("", BodyFontPx, mainWidget);
-    _messageLabel->setVisible(false);
-    _messageLabel->setWordWrap(true);
-    _messageLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    mainLayout->addWidget(_messageLabel);
+    _mainSplitter = new QSplitter(Qt::Horizontal, mainWidget);
+    _mainSplitter->setChildrenCollapsible(false);
+    _mainSplitter->setHandleWidth(8);
+    _mainSplitter->setStyleSheet(splitterStyle());
 
-    QSplitter* mainSplitter = new QSplitter(Qt::Horizontal, mainWidget);
-    mainSplitter->setChildrenCollapsible(false);
-
-    QWidget* sidebarWidget = new QWidget(mainSplitter);
-    sidebarWidget->setMinimumWidth(280);
-    sidebarWidget->setMaximumWidth(360);
+    QWidget* sidebarWidget = new QWidget(_mainSplitter);
+    sidebarWidget->setMinimumWidth(260);
+    sidebarWidget->setMaximumWidth(330);
     QVBoxLayout* sidebarLayout = new QVBoxLayout(sidebarWidget);
     sidebarLayout->setContentsMargins(0, 0, 6, 0);
     sidebarLayout->setSpacing(5);
@@ -398,8 +522,8 @@ void ProjectCachePage::_setupUI()
             if (selected.empty()) {
                 return;
             }
-            if (QMessageBox::question(this, tr("确认删除"),
-                tr("确定要删除选中的 ") + QString::number(selected.size()) + tr(" 个缓存文件吗？")) != QMessageBox::Yes) {
+            if (!_confirmAction(tr("确认删除"),
+                tr("确定要删除选中的 ") + QString::number(selected.size()) + tr(" 个缓存文件吗？"))) {
                 return;
             }
             int deleted = 0;
@@ -460,7 +584,7 @@ void ProjectCachePage::_setupUI()
         });
     searchLayout->addWidget(_globalSearchEdit);
 
-    _globalSearchField = new ElaComboBox(searchTab);
+    _globalSearchField = new NoWheelComboBox(searchTab);
     _globalSearchField->addItem(tr("全部"), "all");
     _globalSearchField->addItem(tr("原文 pre_processed_text"), "src");
     _globalSearchField->addItem(tr("译文 pre_translated_text"), "dst");
@@ -471,24 +595,34 @@ void ProjectCachePage::_setupUI()
         });
     searchLayout->addWidget(_globalSearchField);
 
-    ElaText* replaceTitle = new ElaText(tr("批量替换"), LabelFontPx, searchTab);
-    searchLayout->addWidget(replaceTitle);
+    _replaceToggleButton = new ElaPushButton(tr("展开批量替换"), searchTab);
+    _replaceToggleButton->setCheckable(true);
+    connect(_replaceToggleButton, &ElaPushButton::toggled, this, [=](bool checked)
+        {
+            _setReplacePanelVisible(checked);
+        });
+    searchLayout->addWidget(_replaceToggleButton);
+
+    _replacePanel = new QWidget(searchTab);
+    QVBoxLayout* replaceLayout = new QVBoxLayout(_replacePanel);
+    replaceLayout->setContentsMargins(0, 0, 0, 0);
+    replaceLayout->setSpacing(4);
 
     _replaceQueryEdit = new ElaLineEdit(searchTab);
     _replaceQueryEdit->setPlaceholderText(tr("查找"));
     _replaceQueryEdit->setIsClearButtonEnable(true);
-    searchLayout->addWidget(_replaceQueryEdit);
+    replaceLayout->addWidget(_replaceQueryEdit);
 
     _replaceWithEdit = new ElaLineEdit(searchTab);
     _replaceWithEdit->setPlaceholderText(tr("替换为"));
     _replaceWithEdit->setIsClearButtonEnable(true);
-    searchLayout->addWidget(_replaceWithEdit);
+    replaceLayout->addWidget(_replaceWithEdit);
 
     _replaceField = new ElaComboBox(searchTab);
     _replaceField->addItem(tr("译文 pre_translated_text"), "dst");
     _replaceField->addItem(tr("原文 pre_processed_text"), "src");
     _replaceField->addItem(tr("全部"), "all");
-    searchLayout->addWidget(_replaceField);
+    replaceLayout->addWidget(_replaceField);
 
     QHBoxLayout* replaceButtonLayout = new QHBoxLayout();
     ElaPushButton* replacePreviewButton = new ElaPushButton(tr("预览"), searchTab);
@@ -497,12 +631,13 @@ void ProjectCachePage::_setupUI()
     _replaceExecuteButton = new ElaPushButton(tr("替换"), searchTab);
     connect(_replaceExecuteButton, &ElaPushButton::clicked, this, &ProjectCachePage::_executeReplace);
     replaceButtonLayout->addWidget(_replaceExecuteButton);
-    searchLayout->addLayout(replaceButtonLayout);
+    replaceLayout->addLayout(replaceButtonLayout);
 
     _replacePreviewLabel = new ElaText("", BodyFontPx, searchTab);
     _replacePreviewLabel->setWordWrap(true);
     _replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
-    searchLayout->addWidget(_replacePreviewLabel);
+    replaceLayout->addWidget(_replacePreviewLabel);
+    searchLayout->addWidget(_replacePanel);
 
     _searchStatusLabel = new ElaText("", BodyFontPx, searchTab);
     _searchStatusLabel->setStyleSheet(auxiliaryTextStyle());
@@ -513,7 +648,8 @@ void ProjectCachePage::_setupUI()
     _searchResultList->setModel(_searchModel);
     _searchResultList->setSelectionMode(QAbstractItemView::SingleSelection);
     _searchResultList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _searchResultList->setItemHeight(72);
+    _searchResultList->setItemHeight(120);
+    _searchResultList->setItemDelegate(new CacheSearchDelegate(_searchResultList));
     _searchResultList->setMinimumHeight(520);
     connect(_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
@@ -552,9 +688,9 @@ void ProjectCachePage::_setupUI()
     _sidebarStack->addWidget(problemsTab);
 
     sidebarLayout->addWidget(_sidebarStack, 1);
-    mainSplitter->addWidget(sidebarWidget);
+    _mainSplitter->addWidget(sidebarWidget);
 
-    QWidget* editorWidget = new QWidget(mainSplitter);
+    QWidget* editorWidget = new QWidget(_mainSplitter);
     QVBoxLayout* editorLayout = new QVBoxLayout(editorWidget);
     editorLayout->setContentsMargins(8, 0, 0, 0);
     editorLayout->setSpacing(8);
@@ -608,8 +744,8 @@ void ProjectCachePage::_setupUI()
             if (_selectedEntryRows.isEmpty()) {
                 return;
             }
-            if (QMessageBox::question(this, tr("确认删除"),
-                tr("确定要删除选中的 ") + QString::number(_selectedEntryRows.size()) + tr(" 个缓存条目吗？")) != QMessageBox::Yes) {
+            if (!_confirmAction(tr("确认删除"),
+                tr("确定要删除选中的 ") + QString::number(_selectedEntryRows.size()) + tr(" 个缓存条目吗？"))) {
                 return;
             }
             _deleteEntryRows(_selectedEntryRows.values());
@@ -638,10 +774,10 @@ void ProjectCachePage::_setupUI()
         });
     editorLayout->addWidget(_entryList, 1);
 
-    mainSplitter->addWidget(editorWidget);
-    mainSplitter->setSizes({ 320, 1140 });
+    _mainSplitter->addWidget(editorWidget);
+    _mainSplitter->setSizes({ 300, 1160 });
 
-    mainLayout->addWidget(mainSplitter, 1);
+    mainLayout->addWidget(_mainSplitter, 1);
     addCentralWidget(mainWidget, true, false, 0);
     connect(eTheme, &ElaTheme::themeModeChanged, this, [=](ElaThemeType::ThemeMode)
         {
@@ -650,6 +786,7 @@ void ProjectCachePage::_setupUI()
     });
     _setSidebarPage(0);
     _refreshThemeStyles();
+    _setReplacePanelVisible(false);
     _updateActionStates();
 }
 
@@ -984,9 +1121,6 @@ void ProjectCachePage::_markDirty(const QString& filename)
 
 void ProjectCachePage::_setInfo(const QString& message)
 {
-    _messageLabel->setText(message);
-    _messageLabel->setStyleSheet("color:#127a36;");
-    _messageLabel->setVisible(!message.isEmpty());
     if (!message.isEmpty()) {
         ElaMessageBar::success(ElaMessageBarType::TopRight, tr("完成"), message, 2500);
     }
@@ -994,9 +1128,6 @@ void ProjectCachePage::_setInfo(const QString& message)
 
 void ProjectCachePage::_setError(const QString& message)
 {
-    _messageLabel->setText(message);
-    _messageLabel->setStyleSheet("color:#b00020;");
-    _messageLabel->setVisible(!message.isEmpty());
     if (!message.isEmpty()) {
         ElaMessageBar::error(ElaMessageBarType::TopRight, tr("失败"), message, 4000);
     }
@@ -1082,8 +1213,25 @@ void ProjectCachePage::_refreshThemeStyles()
     if (_currentSummaryLabel) {
         _currentSummaryLabel->setStyleSheet(auxiliaryTextStyle());
     }
+    if (_mainSplitter) {
+        _mainSplitter->setStyleSheet(splitterStyle());
+    }
     if (_sidebarStack && _sidebarButtonGroup) {
         _setSidebarPage(_sidebarStack->currentIndex());
+    }
+}
+
+void ProjectCachePage::_setReplacePanelVisible(bool visible)
+{
+    if (_replacePanel) {
+        _replacePanel->setVisible(visible);
+    }
+    if (_replaceToggleButton) {
+        if (_replaceToggleButton->isChecked() != visible) {
+            QSignalBlocker blocker(_replaceToggleButton);
+            _replaceToggleButton->setChecked(visible);
+        }
+        _replaceToggleButton->setText(visible ? tr("收起批量替换") : tr("展开批量替换"));
     }
 }
 
@@ -1099,6 +1247,34 @@ bool ProjectCachePage::_ensureWritableAction(const QString& actionName) const
         return false;
     }
     return true;
+}
+
+bool ProjectCachePage::_confirmAction(const QString& title, const QString& message)
+{
+    ElaContentDialog dialog(this);
+    dialog.setLeftButtonText(tr("否"));
+    dialog.setMiddleButtonText(tr("思考人生"));
+    dialog.setRightButtonText(tr("是"));
+
+    QWidget* widget = new QWidget(&dialog);
+    QVBoxLayout* layout = new QVBoxLayout(widget);
+    layout->setContentsMargins(15, 25, 15, 10);
+
+    ElaText* titleText = new ElaText(title, widget);
+    titleText->setTextStyle(ElaTextType::Title);
+    titleText->setWordWrap(false);
+    layout->addWidget(titleText);
+    layout->addSpacing(2);
+
+    ElaText* messageText = new ElaText(message, 16, widget);
+    messageText->setTextStyle(ElaTextType::Body);
+    messageText->setWordWrap(true);
+    layout->addWidget(messageText);
+    layout->addStretch();
+
+    dialog.setCentralWidget(widget);
+    connect(&dialog, &ElaContentDialog::middleButtonClicked, &dialog, &ElaContentDialog::close);
+    return dialog.exec() == QDialog::Accepted;
 }
 
 fs::path ProjectCachePage::_cacheDir() const
@@ -1429,16 +1605,14 @@ void ProjectCachePage::_runGlobalSearch()
         if (hit.matchSrc) badges << tr("原文");
         if (hit.matchDst) badges << tr("译文");
         if (hit.matchProblem) badges << tr("问题");
-        QString text = QString("[%1] %2 #%3\n%4\n%5")
-            .arg(badges.join("/"), hit.filename)
-            .arg(hit.sentenceIndex)
-            .arg(hit.sourcePreview)
-            .arg(hit.dstPreview);
-        if (!hit.problemPreview.isEmpty()) {
-            text += "\n" + hit.problemPreview;
-        }
-        QStandardItem* item = new QStandardItem(text);
+        QStandardItem* item = new QStandardItem(hit.filename);
         item->setData(i, HitIndexRole);
+        item->setData(hit.filename, HitFileRole);
+        item->setData(hit.sentenceIndex, HitSentenceRole);
+        item->setData(badges, HitBadgesRole);
+        item->setData(hit.sourcePreview, HitSourceRole);
+        item->setData(hit.dstPreview, HitDstRole);
+        item->setData(hit.problemPreview, HitProblemRole);
         item->setEditable(false);
         setModelItemFont(item, BodyFontPx);
         _searchModel->appendRow(item);
@@ -1488,8 +1662,7 @@ void ProjectCachePage::_executeReplace()
         _replacePreviewLabel->setText(tr("无匹配内容"));
         return;
     }
-    if (QMessageBox::question(this, tr("确认替换"),
-        tr("确定要替换 %1 处内容吗？").arg(total)) != QMessageBox::Yes) {
+    if (!_confirmAction(tr("确认替换"), tr("确定要替换 %1 处内容吗？").arg(total))) {
         return;
     }
 

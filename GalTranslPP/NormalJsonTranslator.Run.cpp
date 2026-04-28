@@ -489,14 +489,14 @@ void NormalJsonTranslator::normalJsonAfterRun()
         absl::btree_map<std::string, absl::flat_hash_set<std::string>> problemMap;
         for (const auto& [problem, filename] : m_problemOverview.as_array()
             | std::views::transform([](const auto& tbl)
-            {
-                const auto& problemsArr = tbl.at("problems").as_array();
-                const auto problemsWithFileNameView = problemsArr | std::views::transform([&](const auto& prob)
                 {
-                    return std::make_pair(prob.as_string(), tbl.at("filename").as_string());
-                });
-                return problemsWithFileNameView;
-            })
+                    const auto& problemsArr = tbl.at("problems").as_array();
+                    const auto problemsWithFileNameView = problemsArr | std::views::transform([&](const auto& prob)
+                        {
+                            return std::make_pair(prob.as_string(), tbl.at("filename").as_string());
+                        });
+                    return problemsWithFileNameView;
+                })
             | std::views::join)
         {
             problemMap[problem].insert(filename);

@@ -204,9 +204,15 @@ void EpubTranslator::epubBeforeRun()
         createParent(bookRebuildPath);
         fs::copy(bookUnpackPath, bookRebuildPath, fs::copy_options::recursive);
         const fs::path relBookDir = relEpubPath.parent_path() / relEpubPath.stem(); // dir1/book1
+        const std::vector<std::wstring> extensionsToProcess{ L".html", L".xhtml", L".htm", L".xhtm" };
         for (const auto& htmlEntry : fs::recursive_directory_iterator(bookUnpackPath)) {
-            if (htmlEntry.is_regular_file() && (isSameExtension(htmlEntry.path(), L".html") || isSameExtension(htmlEntry.path(), L".xhtml"))) {
-
+            if (htmlEntry.is_regular_file() &&
+                std::ranges::any_of(extensionsToProcess, [&](const std::wstring& ext)
+	                {
+                        return isSameExtension(htmlEntry.path(), ext);
+	                })
+                ) 
+            {
                 std::ifstream ifs(htmlEntry.path(), std::ios::binary);
                 std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 

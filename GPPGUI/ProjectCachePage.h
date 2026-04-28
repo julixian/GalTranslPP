@@ -8,7 +8,6 @@
 #include <QDateTime>
 #include <QList>
 #include <QMap>
-#include <QModelIndex>
 #include <QStandardItemModel>
 #include <QSet>
 
@@ -25,6 +24,7 @@ class ElaLineEdit;
 class ElaComboBox;
 class ElaCheckBox;
 class QButtonGroup;
+class QSplitter;
 class QStackedWidget;
 class QVBoxLayout;
 class QWidget;
@@ -86,9 +86,11 @@ private:
     void _updateActionStates();
     void _setSidebarPage(int index);
     void _refreshThemeStyles();
+    void _setReplacePanelVisible(bool visible);
 
     bool _isProjectRunning() const;
     bool _ensureWritableAction(const QString& actionName) const;
+    bool _confirmAction(const QString& title, const QString& message);
     fs::path _cacheDir() const;
     fs::path _cachePathForRelativeName(const QString& filename) const;
     bool _readCacheFile(const QString& filename, nlohmann::json& entries, QString* errorMessage = nullptr) const;
@@ -159,13 +161,15 @@ private:
     ElaText* _currentSummaryLabel{nullptr};
     ElaText* _searchStatusLabel{nullptr};
     ElaText* _replacePreviewLabel{nullptr};
-    ElaText* _messageLabel{nullptr};
+    QSplitter* _mainSplitter{nullptr};
+    QWidget* _replacePanel{nullptr};
 
     ElaIconButton* _saveButton{nullptr};
     ElaIconButton* _saveAllButton{nullptr};
     ElaPushButton* _deleteEntriesButton{nullptr};
     ElaPushButton* _deleteFilesButton{nullptr};
     ElaPushButton* _editEntryButton{nullptr};
+    ElaPushButton* _replaceToggleButton{nullptr};
     ElaPushButton* _replaceExecuteButton{nullptr};
 };
 

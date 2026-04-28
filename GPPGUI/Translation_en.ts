@@ -1561,9 +1561,9 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="100"/>
-        <location filename="mainwindow.cpp" line="589"/>
-        <location filename="mainwindow.cpp" line="651"/>
-        <location filename="mainwindow.cpp" line="670"/>
+        <location filename="mainwindow.cpp" line="596"/>
+        <location filename="mainwindow.cpp" line="658"/>
+        <location filename="mainwindow.cpp" line="677"/>
         <source>项目 </source>
         <translation>Project </translation>
     </message>
@@ -1583,322 +1583,332 @@
         <translation>Initialized successfully!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="192"/>
-        <location filename="mainwindow.cpp" line="391"/>
+        <location filename="mainwindow.cpp" line="133"/>
+        <source>检测到异常退出</source>
+        <translation>Abnormal exit detected</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="134"/>
+        <source>请注意备份相关翻译缓存</source>
+        <translation>Please back up the related translation cache</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="199"/>
+        <location filename="mainwindow.cpp" line="398"/>
         <source>新建项目</source>
         <translation>New project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="193"/>
+        <location filename="mainwindow.cpp" line="200"/>
         <source>打开项目</source>
         <translation>Open project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="194"/>
+        <location filename="mainwindow.cpp" line="201"/>
         <source>保存项目配置</source>
         <translation>Save project settings</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="195"/>
+        <location filename="mainwindow.cpp" line="202"/>
         <source>移除项目</source>
         <translation>Remove project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="196"/>
+        <location filename="mainwindow.cpp" line="203"/>
         <source>删除项目</source>
         <translation>Delete project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="206"/>
+        <location filename="mainwindow.cpp" line="213"/>
         <source>初始化成功！</source>
         <translation>Initialized successfully!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="215"/>
+        <location filename="mainwindow.cpp" line="222"/>
         <source>更新内容</source>
         <translation>Update content</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="234"/>
+        <location filename="mainwindow.cpp" line="241"/>
         <source>召唤停靠窗口</source>
         <translation>Show dock widget</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="238"/>
-        <location filename="mainwindow.cpp" line="319"/>
+        <location filename="mainwindow.cpp" line="245"/>
+        <location filename="mainwindow.cpp" line="326"/>
         <source>设置</source>
         <translation>Setting</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="242"/>
+        <location filename="mainwindow.cpp" line="249"/>
         <source>更改程序主题</source>
         <translation>Change theme</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="246"/>
+        <location filename="mainwindow.cpp" line="253"/>
         <source>清空当前项目翻译日志</source>
         <translation>Clear current project&apos;s log output</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="284"/>
+        <location filename="mainwindow.cpp" line="291"/>
         <source>主页</source>
         <translation>Home page</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="286"/>
+        <location filename="mainwindow.cpp" line="293"/>
         <source>默认提示词管理</source>
         <translation>Default prompt management</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="288"/>
+        <location filename="mainwindow.cpp" line="295"/>
         <source>通用字典管理</source>
         <translation>Common dict management</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="295"/>
+        <location filename="mainwindow.cpp" line="302"/>
         <source>通用译前字典</source>
         <translation>Common preDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="297"/>
+        <location filename="mainwindow.cpp" line="304"/>
         <source>通用GPT字典</source>
         <translation>Common gptDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="299"/>
+        <location filename="mainwindow.cpp" line="306"/>
         <source>通用译后字典</source>
         <translation>Common postDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="302"/>
+        <location filename="mainwindow.cpp" line="309"/>
         <source>项目管理</source>
         <translation>Project management</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="315"/>
+        <location filename="mainwindow.cpp" line="322"/>
         <source>使用说明</source>
         <translation>Instructions</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="316"/>
+        <location filename="mainwindow.cpp" line="323"/>
         <source>关于</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="323"/>
-        <location filename="mainwindow.cpp" line="329"/>
+        <location filename="mainwindow.cpp" line="330"/>
+        <location filename="mainwindow.cpp" line="336"/>
         <source>请稍候</source>
         <translation>Wait a minute</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="323"/>
+        <location filename="mainwindow.cpp" line="330"/>
         <source>正在检查更新...</source>
         <translation>Checking upate...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="329"/>
+        <location filename="mainwindow.cpp" line="336"/>
         <source>正在下载更新...</source>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="382"/>
+        <location filename="mainwindow.cpp" line="389"/>
         <source>选择新项目的存放位置</source>
         <translation>Choose new dir to store project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="391"/>
+        <location filename="mainwindow.cpp" line="398"/>
         <source>请输入项目名称</source>
         <translation>Please type in project name</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="403"/>
-        <location filename="mainwindow.cpp" line="409"/>
-        <location filename="mainwindow.cpp" line="415"/>
-        <location filename="mainwindow.cpp" line="429"/>
-        <location filename="mainwindow.cpp" line="434"/>
-        <location filename="mainwindow.cpp" line="478"/>
+        <location filename="mainwindow.cpp" line="410"/>
+        <location filename="mainwindow.cpp" line="416"/>
+        <location filename="mainwindow.cpp" line="422"/>
+        <location filename="mainwindow.cpp" line="436"/>
+        <location filename="mainwindow.cpp" line="441"/>
+        <location filename="mainwindow.cpp" line="485"/>
         <source>创建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="403"/>
-        <location filename="mainwindow.cpp" line="527"/>
+        <location filename="mainwindow.cpp" line="410"/>
+        <location filename="mainwindow.cpp" line="534"/>
         <source>已存在同名项目！</source>
         <translation>Project with the same name has already existed!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="409"/>
+        <location filename="mainwindow.cpp" line="416"/>
         <source>项目名称不能为空，且不能包含斜杠或反斜杠！</source>
         <translation>Project name can not be empty or contain slash/backslash!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="415"/>
+        <location filename="mainwindow.cpp" line="422"/>
         <source>目录下存在同名文件或文件夹！</source>
         <translation>File/dir with the same name has already existed!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="429"/>
+        <location filename="mainwindow.cpp" line="436"/>
         <source>无法创建新文件！</source>
         <translation>Can not create new file!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="434"/>
+        <location filename="mainwindow.cpp" line="441"/>
         <source>无法读取模板文件！</source>
         <translation>Can not read template file!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="478"/>
+        <location filename="mainwindow.cpp" line="485"/>
         <source>无法写入配置文件！</source>
         <translation>Can not write into config file!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="494"/>
+        <location filename="mainwindow.cpp" line="501"/>
         <source>项目GPT字典</source>
         <translation>Project GptDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="495"/>
+        <location filename="mainwindow.cpp" line="502"/>
         <source>项目译前字典</source>
         <translation>Project PreDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="496"/>
+        <location filename="mainwindow.cpp" line="503"/>
         <source>项目译后字典</source>
         <translation>Project PostDict</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="503"/>
+        <location filename="mainwindow.cpp" line="510"/>
         <source>创建成功</source>
         <translation>Created successfully</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="503"/>
+        <location filename="mainwindow.cpp" line="510"/>
         <source>请将待翻译的文件放入 gt_input 中！</source>
         <translation>Please put files you want to translate into gt_input dir!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="508"/>
+        <location filename="mainwindow.cpp" line="515"/>
         <source>选择已有项目的文件夹路径</source>
         <translation>Choose a dir of an existed project</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="516"/>
-        <location filename="mainwindow.cpp" line="527"/>
+        <location filename="mainwindow.cpp" line="523"/>
+        <location filename="mainwindow.cpp" line="534"/>
         <source>打开失败</source>
         <translation>Fail to open</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="516"/>
+        <location filename="mainwindow.cpp" line="523"/>
         <source>目录下不存在 config.toml 文件！</source>
         <translation>There is no config.toml in the dir!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="536"/>
+        <location filename="mainwindow.cpp" line="543"/>
         <source>打开成功</source>
         <translation>Opened successfully</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="536"/>
+        <location filename="mainwindow.cpp" line="543"/>
         <source> 已纳入项目管理！</source>
         <translation> has added into project management!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="547"/>
-        <location filename="mainwindow.cpp" line="551"/>
+        <location filename="mainwindow.cpp" line="554"/>
+        <location filename="mainwindow.cpp" line="558"/>
         <source>移除失败</source>
         <translation>Fail to remove</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="547"/>
-        <location filename="mainwindow.cpp" line="602"/>
-        <location filename="mainwindow.cpp" line="664"/>
+        <location filename="mainwindow.cpp" line="554"/>
+        <location filename="mainwindow.cpp" line="609"/>
+        <location filename="mainwindow.cpp" line="671"/>
         <source>当前页面不是项目页面！</source>
         <translation>Current page is not a project page!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="551"/>
-        <location filename="mainwindow.cpp" line="606"/>
+        <location filename="mainwindow.cpp" line="558"/>
+        <location filename="mainwindow.cpp" line="613"/>
         <source>当前项目正在运行，请先停止运行！</source>
         <translation>Current project is still running, please stop it first!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="556"/>
-        <location filename="mainwindow.cpp" line="611"/>
+        <location filename="mainwindow.cpp" line="563"/>
+        <location filename="mainwindow.cpp" line="618"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="557"/>
-        <location filename="mainwindow.cpp" line="612"/>
+        <location filename="mainwindow.cpp" line="564"/>
+        <location filename="mainwindow.cpp" line="619"/>
         <source>思考人生</source>
         <translation>Thinking of life</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="558"/>
-        <location filename="mainwindow.cpp" line="613"/>
+        <location filename="mainwindow.cpp" line="565"/>
+        <location filename="mainwindow.cpp" line="620"/>
         <source>否</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="563"/>
+        <location filename="mainwindow.cpp" line="570"/>
         <source>你确定要移除当前项目吗？</source>
         <translation>Are you sure to remove current project?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="568"/>
+        <location filename="mainwindow.cpp" line="575"/>
         <source>从项目管理中移除该项目，但不会删除其项目文件夹</source>
         <translation>Remove from project management, but won&apos;t delete its project dir</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="588"/>
+        <location filename="mainwindow.cpp" line="595"/>
         <source>移除成功</source>
         <translation>Removed successfully</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="589"/>
+        <location filename="mainwindow.cpp" line="596"/>
         <source> 已从项目管理中移除！</source>
         <translation> has been removed from project management!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="602"/>
-        <location filename="mainwindow.cpp" line="606"/>
-        <location filename="mainwindow.cpp" line="637"/>
+        <location filename="mainwindow.cpp" line="609"/>
+        <location filename="mainwindow.cpp" line="613"/>
+        <location filename="mainwindow.cpp" line="644"/>
         <source>删除失败</source>
         <translation>Fail to delete</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="618"/>
+        <location filename="mainwindow.cpp" line="625"/>
         <source>你确定要删除当前项目吗？                </source>
         <oldsource>你确定要删除当前项目吗？</oldsource>
         <translation>Are you sure to delete current project?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="623"/>
+        <location filename="mainwindow.cpp" line="630"/>
         <source>将删除该项目的项目文件夹，如果不备份，再次翻译将必须从头开始！</source>
         <translation>Delete project dir of this project, you will lost all translation cache!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="650"/>
+        <location filename="mainwindow.cpp" line="657"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="651"/>
+        <location filename="mainwindow.cpp" line="658"/>
         <source> 已从项目管理和磁盘中移除！</source>
         <translation> has been removed from project management and disk!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="664"/>
+        <location filename="mainwindow.cpp" line="671"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="669"/>
+        <location filename="mainwindow.cpp" line="676"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="670"/>
+        <location filename="mainwindow.cpp" line="677"/>
         <source> 配置信息已保存！</source>
         <translation> &apos;s config info has saved!</translation>
     </message>
@@ -2624,194 +2634,193 @@
 <context>
     <name>ProjectCachePage</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="244"/>
+        <location filename="ProjectCachePage.cpp" line="372"/>
         <source>缓存管理</source>
         <oldsource>缓存与问题</oldsource>
         <translation>Cache Management</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="272"/>
+        <location filename="ProjectCachePage.cpp" line="400"/>
         <source>打开缓存文件夹</source>
         <translation>Open Cache Folder</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="283"/>
+        <location filename="ProjectCachePage.cpp" line="411"/>
         <source>保存当前文件</source>
         <translation>Save Current File</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="286"/>
-        <location filename="ProjectCachePage.cpp" line="307"/>
+        <location filename="ProjectCachePage.cpp" line="414"/>
+        <location filename="ProjectCachePage.cpp" line="435"/>
         <source>保存缓存</source>
         <translation>Save Cache</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="295"/>
-        <location filename="ProjectCachePage.cpp" line="335"/>
+        <location filename="ProjectCachePage.cpp" line="423"/>
+        <location filename="ProjectCachePage.cpp" line="463"/>
         <source>已保存 </source>
         <translation>Saved </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="304"/>
+        <location filename="ProjectCachePage.cpp" line="432"/>
         <source>保存全部</source>
         <translation>Save All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="335"/>
-        <location filename="ProjectCachePage.cpp" line="423"/>
+        <location filename="ProjectCachePage.cpp" line="463"/>
+        <location filename="ProjectCachePage.cpp" line="547"/>
         <source> 个缓存文件</source>
         <translation> cache file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="391"/>
+        <location filename="ProjectCachePage.cpp" line="515"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="394"/>
+        <location filename="ProjectCachePage.cpp" line="518"/>
         <source>删除缓存文件</source>
         <translation>Delete Cache Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="401"/>
-        <location filename="ProjectCachePage.cpp" line="611"/>
+        <location filename="ProjectCachePage.cpp" line="525"/>
+        <location filename="ProjectCachePage.cpp" line="747"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="402"/>
-        <location filename="ProjectCachePage.cpp" line="612"/>
+        <location filename="ProjectCachePage.cpp" line="526"/>
+        <location filename="ProjectCachePage.cpp" line="748"/>
         <source>确定要删除选中的 </source>
         <translation>Delete selected </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="402"/>
+        <location filename="ProjectCachePage.cpp" line="526"/>
         <source> 个缓存文件吗？</source>
         <translation> cache file(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="423"/>
-        <location filename="ProjectCachePage.cpp" line="967"/>
+        <location filename="ProjectCachePage.cpp" line="547"/>
+        <location filename="ProjectCachePage.cpp" line="1104"/>
         <source>已删除 </source>
         <translation>Deleted </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="375"/>
+        <location filename="ProjectCachePage.cpp" line="499"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="279"/>
+        <location filename="ProjectCachePage.cpp" line="407"/>
         <source>刷新</source>
         <translation>Refresh</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="454"/>
+        <location filename="ProjectCachePage.cpp" line="578"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="464"/>
-        <location filename="ProjectCachePage.cpp" line="490"/>
+        <location filename="ProjectCachePage.cpp" line="588"/>
+        <location filename="ProjectCachePage.cpp" line="624"/>
         <source>全部</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="465"/>
-        <location filename="ProjectCachePage.cpp" line="489"/>
+        <location filename="ProjectCachePage.cpp" line="589"/>
+        <location filename="ProjectCachePage.cpp" line="623"/>
         <source>原文 pre_processed_text</source>
         <translation>Source pre_processed_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="466"/>
-        <location filename="ProjectCachePage.cpp" line="488"/>
+        <location filename="ProjectCachePage.cpp" line="590"/>
+        <location filename="ProjectCachePage.cpp" line="622"/>
         <source>译文 pre_translated_text</source>
         <translation>Translation pre_translated_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="467"/>
+        <location filename="ProjectCachePage.cpp" line="591"/>
         <source>问题 problems</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="474"/>
-        <location filename="ProjectCachePage.cpp" line="1474"/>
+        <location filename="ProjectCachePage.cpp" line="1648"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="478"/>
+        <location filename="ProjectCachePage.cpp" line="612"/>
         <source>查找</source>
         <translation>Find</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="483"/>
+        <location filename="ProjectCachePage.cpp" line="617"/>
         <source>替换为</source>
         <translation>Replace with</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="494"/>
+        <location filename="ProjectCachePage.cpp" line="628"/>
         <source>预览</source>
         <translation>Preview</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="497"/>
+        <location filename="ProjectCachePage.cpp" line="631"/>
         <source>替换</source>
         <translation>Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="376"/>
-        <location filename="ProjectCachePage.cpp" line="1374"/>
+        <location filename="ProjectCachePage.cpp" line="500"/>
+        <location filename="ProjectCachePage.cpp" line="1550"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="532"/>
+        <location filename="ProjectCachePage.cpp" line="668"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="377"/>
-        <location filename="ProjectCachePage.cpp" line="1431"/>
-        <location filename="ProjectCachePage.cpp" line="1576"/>
+        <location filename="ProjectCachePage.cpp" line="501"/>
+        <location filename="ProjectCachePage.cpp" line="1607"/>
+        <location filename="ProjectCachePage.cpp" line="1749"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="563"/>
-        <location filename="ProjectCachePage.cpp" line="780"/>
-        <location filename="ProjectCachePage.cpp" line="821"/>
+        <location filename="ProjectCachePage.cpp" line="699"/>
+        <location filename="ProjectCachePage.cpp" line="917"/>
+        <location filename="ProjectCachePage.cpp" line="958"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="580"/>
+        <location filename="ProjectCachePage.cpp" line="716"/>
         <source>在当前文件中搜索 pre_processed_text / pre_translated_text / problems...</source>
         <translation>Search pre_processed_text / pre_translated_text / problems in current file...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="587"/>
+        <location filename="ProjectCachePage.cpp" line="723"/>
         <source>只看问题句</source>
         <translation>Problems only</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="601"/>
-        <location filename="ProjectCachePage.cpp" line="1040"/>
+        <location filename="ProjectCachePage.cpp" line="737"/>
+        <location filename="ProjectCachePage.cpp" line="1171"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="604"/>
+        <location filename="ProjectCachePage.cpp" line="740"/>
         <source>删除缓存条目</source>
         <translation>Delete Cache Entries</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="612"/>
+        <location filename="ProjectCachePage.cpp" line="748"/>
         <source> 个缓存条目吗？</source>
         <translation> cache entry(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="735"/>
+        <location filename="ProjectCachePage.cpp" line="872"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -2824,195 +2833,221 @@
         <translation type="obsolete">Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="919"/>
+        <location filename="ProjectCachePage.cpp" line="1056"/>
         <source>translated_preview（只读）</source>
         <translation>translated_preview (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="967"/>
+        <location filename="ProjectCachePage.cpp" line="1104"/>
         <source> 个条目，保存后生效</source>
         <translation> entries. Save to apply.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1024"/>
+        <location filename="ProjectCachePage.cpp" line="1155"/>
         <source>%1 句 · %2 已翻译 · %3 有问题 · %4 已选择</source>
         <translation>%1 lines · %2 translated · %3 with problems · %4 selected</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1040"/>
+        <location filename="ProjectCachePage.cpp" line="1171"/>
         <source>删除选中条目 (%1)</source>
         <translation>Delete Selected Entries (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1576"/>
+        <location filename="ProjectCachePage.cpp" line="1749"/>
         <source>问题 (%1)</source>
         <translation>Problems (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="913"/>
+        <location filename="ProjectCachePage.cpp" line="1050"/>
         <source>original_text（元信息，只读）</source>
         <translation>original_text (metadata, read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="915"/>
+        <location filename="ProjectCachePage.cpp" line="1052"/>
         <source>pre_processed_text（原文，可编辑）</source>
         <translation>pre_processed_text (source, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="916"/>
+        <location filename="ProjectCachePage.cpp" line="1053"/>
         <source>pre_translated_text（译文，可编辑）</source>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="718"/>
+        <location filename="ProjectCachePage.cpp" line="855"/>
         <source>%1 句 · %2 问题</source>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="594"/>
+        <location filename="ProjectCachePage.cpp" line="598"/>
+        <location filename="ProjectCachePage.cpp" line="1234"/>
+        <source>展开批量替换</source>
+        <translation>Expand Batch Replace</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="730"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="720"/>
+        <location filename="ProjectCachePage.cpp" line="857"/>
         <source>解析失败</source>
         <translation>Parse failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="755"/>
+        <location filename="ProjectCachePage.cpp" line="892"/>
         <source>缓存文件不是 JSON 数组: </source>
         <translation>Cache file is not a JSON array: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="917"/>
+        <location filename="ProjectCachePage.cpp" line="1054"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="924"/>
+        <location filename="ProjectCachePage.cpp" line="1061"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="928"/>
+        <location filename="ProjectCachePage.cpp" line="1065"/>
         <source>保存修改</source>
         <translation>Save Changes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="991"/>
+        <location filename="ProjectCachePage.cpp" line="1125"/>
         <source>完成</source>
         <translation>Done</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1001"/>
+        <location filename="ProjectCachePage.cpp" line="1132"/>
         <source>失败</source>
         <translation>Failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1098"/>
+        <location filename="ProjectCachePage.cpp" line="1234"/>
+        <source>收起批量替换</source>
+        <translation>Collapse Batch Replace</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="1246"/>
         <source>项目正在运行中，只允许查看缓存。</source>
         <translation>The project is running. Cache is read-only.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1120"/>
+        <location filename="ProjectCachePage.cpp" line="1255"/>
+        <source>否</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="1256"/>
+        <source>思考人生</source>
+        <translation>Think it over</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="1257"/>
+        <source>是</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="1296"/>
         <source>无法打开缓存文件: </source>
         <translation>Cannot open cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1129"/>
+        <location filename="ProjectCachePage.cpp" line="1305"/>
         <source>解析缓存失败: </source>
         <translation>Failed to parse cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1143"/>
+        <location filename="ProjectCachePage.cpp" line="1319"/>
         <source>无法写入缓存文件: </source>
         <translation>Cannot write cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1152"/>
+        <location filename="ProjectCachePage.cpp" line="1328"/>
         <source>写入缓存失败: </source>
         <translation>Failed to write cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1253"/>
+        <location filename="ProjectCachePage.cpp" line="1429"/>
         <source>问题: </source>
         <translation>Problem: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1260"/>
+        <location filename="ProjectCachePage.cpp" line="1436"/>
         <source>原文: </source>
         <translation>Source: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1261"/>
+        <location filename="ProjectCachePage.cpp" line="1437"/>
         <source>译文: </source>
         <translation>Translation: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1429"/>
+        <location filename="ProjectCachePage.cpp" line="1605"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1430"/>
+        <location filename="ProjectCachePage.cpp" line="1606"/>
         <source>译文</source>
         <translation>Translation</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1446"/>
+        <location filename="ProjectCachePage.cpp" line="1620"/>
         <source>%1 条结果</source>
         <translation>%1 result(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1448"/>
+        <location filename="ProjectCachePage.cpp" line="1622"/>
         <source>搜索 (%1)</source>
         <translation>Search (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1456"/>
-        <location filename="ProjectCachePage.cpp" line="1481"/>
+        <location filename="ProjectCachePage.cpp" line="1630"/>
+        <location filename="ProjectCachePage.cpp" line="1655"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1461"/>
+        <location filename="ProjectCachePage.cpp" line="1635"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1467"/>
+        <location filename="ProjectCachePage.cpp" line="1641"/>
         <source>
 ...</source>
         <translation>
 ...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1488"/>
+        <location filename="ProjectCachePage.cpp" line="1662"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1491"/>
+        <location filename="ProjectCachePage.cpp" line="1665"/>
         <source>确认替换</source>
         <translation>Confirm Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1492"/>
+        <location filename="ProjectCachePage.cpp" line="1665"/>
         <source>确定要替换 %1 处内容吗？</source>
         <translation>Replace %1 occurrence(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1522"/>
+        <location filename="ProjectCachePage.cpp" line="1695"/>
         <source>已替换 %1 处，涉及 %2 个文件；保存后落盘。</source>
         <translation>Replaced %1 occurrence(s) across %2 file(s). Save to write changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1523"/>
+        <location filename="ProjectCachePage.cpp" line="1696"/>
         <source>批量替换完成，记得保存修改</source>
         <translation>Batch replace completed. Remember to save changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="1570"/>
+        <location filename="ProjectCachePage.cpp" line="1743"/>
         <source>点击搜索此问题</source>
         <translation>Click to search this problem</translation>
     </message>
@@ -3218,14 +3253,26 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="233"/>
+        <location filename="ProjectCachePage.cpp" line="255"/>
+        <location filename="ProjectCachePage.cpp" line="361"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="234"/>
+        <location filename="ProjectCachePage.cpp" line="256"/>
+        <location filename="ProjectCachePage.cpp" line="362"/>
         <source>译文</source>
         <translation>Translation</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="304"/>
+        <source>问题</source>
+        <translation>Problem</translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="304"/>
+        <source>匹配</source>
+        <translation>Match</translation>
     </message>
 </context>
 <context>

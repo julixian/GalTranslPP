@@ -459,6 +459,7 @@ void TranslationWorkbenchPage::clearRuntime()
     _errors.clear();
     _files.clear();
     _successFileFilters.clear();
+    _successTotal = 0;
     _stage.clear();
     _currentFile.clear();
     _renderSuccesses();
@@ -511,6 +512,7 @@ void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFilePr
 void TranslationWorkbenchPage::appendSuccess(const GuiRuntimeSuccessEvent& event)
 {
     _successes.push_front(event);
+    ++_successTotal;
     _trimSuccesses();
     _renderSuccesses();
     _refreshHeader();
@@ -521,10 +523,11 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
     if (events.isEmpty()) {
         return;
     }
+    _successTotal += events.size();
     for (const auto& event : events) {
         _successes.push_front(event);
     }
-    // 内存保留最近 500 条，但实际只渲染最近 100 条，和 GalTransl 的句流策略接近。
+    // 内存保留最近 500 条，但摘要里的成功事件统计使用 _successTotal 累计值。
     _trimSuccesses();
     _renderSuccesses();
     _refreshHeader();
@@ -598,7 +601,7 @@ void TranslationWorkbenchPage::_renderSuccesses()
 
 void TranslationWorkbenchPage::_renderErrors()
 {
-    // 错误列表不做复杂展开，保持短卡片 + tooltip；切换标签页时模型已经准备好。
+    // 错误列表不做复杂展开，保持短卡片 + tooltip。
     if (_errorList) {
         _errorList->setUpdatesEnabled(false);
     }
@@ -641,7 +644,7 @@ void TranslationWorkbenchPage::_renderFiles()
 
 void TranslationWorkbenchPage::_refreshHeader()
 {
-    // 顶部摘要从三个运行期集合即时汇总，不依赖进度条信号本身。
+    // 顶部摘要从运行期文件进度和错误集合即时汇总，不依赖进度条信号本身。
     int total = 0;
     int completed = 0;
     int problems = 0;
@@ -654,7 +657,7 @@ void TranslationWorkbenchPage::_refreshHeader()
     const QString current = _currentFile.isEmpty() ? QString() : tr(" · 当前文件: ") + _currentFile;
     _summaryText->setText(tr("%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误")
         .arg(stage, current)
-        .arg(completed).arg(total).arg(problems).arg(_successes.size()).arg(_errors.size()));
+        .arg(completed).arg(total).arg(problems).arg(_successTotal).arg(_errors.size()));
     if (_successFileFilters.isEmpty()) {
         _filterText->clear();
         _clearFilterButton->setVisible(false);
@@ -673,7 +676,7 @@ void TranslationWorkbenchPage::_refreshHeader()
 
 void TranslationWorkbenchPage::_trimSuccesses()
 {
-    // 保留上限控制在追加阶段做，渲染阶段只负责当前可见窗口。
+    // 保留上限控制在追加阶段做；_successTotal 不裁剪，用于展示本轮累计进入句流的总数。
     while (_successes.size() > MaxSuccessEvents) {
         _successes.pop_back();
     }

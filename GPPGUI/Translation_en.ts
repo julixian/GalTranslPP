@@ -3943,43 +3943,43 @@
     </message>
     <message>
         <location filename="TranslationWorkbenchPage.cpp" line="394"/>
-        <location filename="TranslationWorkbenchPage.cpp" line="666"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="669"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
         <location filename="TranslationWorkbenchPage.cpp" line="396"/>
-        <location filename="TranslationWorkbenchPage.cpp" line="671"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="674"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="653"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="656"/>
         <source>空闲</source>
         <translation>Idle</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="654"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="657"/>
         <source> · 当前文件: </source>
         <translation> · Current file: </translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="655"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="658"/>
         <source>%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误</source>
         <translation>%1%2 · %3/%4 lines · %5 problem(s) · %6 success event(s) · %7 error(s)</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="663"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="666"/>
         <source>已筛选文件: </source>
         <translation>Filtered file(s): </translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="666"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="669"/>
         <source>最近错误 (%1)</source>
         <translation>Recent Errors (%1)</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="671"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="674"/>
         <source>文件进度 (%1)</source>
         <translation>File Progress (%1)</translation>
     </message>

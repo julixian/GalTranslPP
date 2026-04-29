@@ -46,6 +46,7 @@ private:
     QVector<GuiRuntimeErrorEvent> _errors;
     QMap<QString, GuiRuntimeFileProgress> _files;
     QSet<QString> _successFileFilters;
+    int _successTotal{0};
     QString _stage;
     QString _currentFile;
 

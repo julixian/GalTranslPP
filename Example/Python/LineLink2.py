@@ -19,7 +19,7 @@ targetLang_spaCyModelName = "zh_core_web_trf"
 # sourceLang_tokenizeFunc = None
 # ...
 
-tokenizeCachePath = Path(r"D:\GALGAME\GALGAMETOOLS\AIGC\GPPGUI\Projects\DaunyaSanToKainushiKun\other_cache\tokenizeCache_linelink.json")
+tokenizeCachePath = Path(__file__).resolve().parent / Path(r"other_cache\tokenizeCache_linelink.json")
 tokenizeCache = {}
 if tokenizeCachePath.exists():
     with open(tokenizeCachePath, 'r', encoding='utf-8') as f:

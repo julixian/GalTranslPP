@@ -156,11 +156,11 @@ void PromptSettingsPage::_setupUI()
 			return result;
 		};
 
-	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_TRANS_PROMPT_EN", "FORGALJSON_SYSTEM");
 	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_TRANS_PROMPT_EN", "FORGALTSV_SYSTEM",
 		"FORGALTSV_AGENT_PROMPT_EN", "FORGALTSV_AGENT_SYSTEM");
 	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_TRANS_PROMPT_EN", "FORNOVELTSV_SYSTEM",
 		"FORNOVELTSV_AGENT_PROMPT_EN", "FORNOVELTSV_AGENT_SYSTEM");
+	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_TRANS_PROMPT_EN", "FORGALJSON_SYSTEM");
 	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_TRANS_PROMPT", "SAKURA_SYSTEM_PROMPT");
 	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_PROMPT", "GENDICT_SYSTEM",
 		"GENDICT_REVIEW_PROMPT", "GENDICT_REVIEW_SYSTEM");

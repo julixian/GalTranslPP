@@ -2804,7 +2804,7 @@
         <translation>Problems only</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="89"/>
+        <location filename="ProjectCachePageActions.cpp" line="90"/>
         <location filename="ProjectCachePage.cpp" line="406"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
@@ -2843,12 +2843,12 @@
         <translation> entries. Save to apply.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="71"/>
+        <location filename="ProjectCachePageActions.cpp" line="72"/>
         <source>%1 句 · %2 已翻译 · %3 有问题 · %4 已选择</source>
         <translation>%1 lines · %2 translated · %3 with problems · %4 selected</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="89"/>
+        <location filename="ProjectCachePageActions.cpp" line="90"/>
         <source>删除选中条目 (%1)</source>
         <translation>Delete Selected Entries (%1)</translation>
     </message>
@@ -2878,7 +2878,7 @@
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="153"/>
+        <location filename="ProjectCachePageActions.cpp" line="154"/>
         <location filename="ProjectCachePage.cpp" line="266"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
@@ -2914,37 +2914,37 @@
         <translation>Save Changes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="40"/>
+        <location filename="ProjectCachePageActions.cpp" line="41"/>
         <source>完成</source>
         <translation>Done</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="47"/>
+        <location filename="ProjectCachePageActions.cpp" line="48"/>
         <source>失败</source>
         <translation>Failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="153"/>
+        <location filename="ProjectCachePageActions.cpp" line="154"/>
         <source>收起批量替换</source>
         <translation>Collapse Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="165"/>
+        <location filename="ProjectCachePageActions.cpp" line="166"/>
         <source>项目正在运行中，只允许查看缓存。</source>
         <translation>The project is running. Cache is read-only.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="175"/>
+        <location filename="ProjectCachePageActions.cpp" line="177"/>
         <source>否</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="176"/>
+        <location filename="ProjectCachePageActions.cpp" line="178"/>
         <source>思考人生</source>
         <translation>Think it over</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="177"/>
+        <location filename="ProjectCachePageActions.cpp" line="179"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>

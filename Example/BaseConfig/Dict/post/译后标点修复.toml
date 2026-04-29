@@ -4,7 +4,7 @@ rep = '『$1』'
 conditionTarget = 'preproc_text'
 conditionReg = '\A『[\S\s]*』\z'
 isReg = true
-priority = 1
+priority = 99
 
 [[normalDict]]
 org = '\A“([\S\s]*)”\z'
@@ -12,5 +12,21 @@ rep = '「$1」'
 conditionTarget = 'preproc_text'
 conditionReg = '\A「[\S\s]*」\z'
 isReg = true
-priority = 1
+priority = 99
+
+[[normalDict]]
+org = '\A"([\S\s]*)"\z'
+rep = '『$1』'
+conditionTarget = 'preproc_text'
+conditionReg = '\A『[\S\s]*』\z'
+isReg = true
+priority = 99
+
+[[normalDict]]
+org = '\A"([\S\s]*)"\z'
+rep = '「$1」'
+conditionTarget = 'preproc_text'
+conditionReg = '\A「[\S\s]*」\z'
+isReg = true
+priority = 99
 

@@ -103,7 +103,7 @@ isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'チ[○●〇]([コチポ])'
+org = 'チ[○●〇◯]([コチポ])'
 rep = 'チン$1'
 conditionTarget = ''
 conditionReg = ''
@@ -111,7 +111,7 @@ isReg = true
 priority = 1
 
 [[normalDict]]
-org = 'ち[○●〇]([こちぽ])'
+org = 'ち[○●〇◯]([こちぽ])'
 rep = 'ちん$1'
 conditionTarget = ''
 conditionReg = ''
@@ -119,7 +119,7 @@ isReg = true
 priority = 1
 
 [[normalDict]]
-org = 'おぢ[○●〇]ぢん'
+org = 'おぢ[○●〇◯]ぢん'
 rep = 'おぢんぢん'
 conditionTarget = ''
 conditionReg = ''
@@ -127,7 +127,7 @@ isReg = true
 priority = 1
 
 [[normalDict]]
-org = 'マ[○●〇]コ'
+org = 'マ[○●〇◯]コ'
 rep = 'マンコ'
 conditionTarget = ''
 conditionReg = ''
@@ -135,7 +135,7 @@ isReg = true
 priority = 1
 
 [[normalDict]]
-org = 'ま[○●〇]こ'
+org = 'ま[○●〇◯]こ'
 rep = 'まんこ'
 conditionTarget = ''
 conditionReg = ''

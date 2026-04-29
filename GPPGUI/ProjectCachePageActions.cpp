@@ -8,6 +8,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QVBoxLayout>
+#include <QWidget>
 
 #include "ElaContentDialog.h"
 #include "ElaIconButton.h"
@@ -171,7 +172,8 @@ bool ProjectCachePage::_ensureWritableAction(const QString& actionName) const
 bool ProjectCachePage::_confirmAction(const QString& title, const QString& message)
 {
     // 破坏性操作统一走 ElaContentDialog，避免混入 QMessageBox 的样式。
-    ElaContentDialog dialog(this);
+    QWidget* dialogParent = window();
+    ElaContentDialog dialog(dialogParent ? dialogParent : this);
     dialog.setLeftButtonText(tr("否"));
     dialog.setMiddleButtonText(tr("思考人生"));
     dialog.setRightButtonText(tr("是"));

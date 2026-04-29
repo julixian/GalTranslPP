@@ -309,7 +309,6 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
             reviewOptions.userPrompt = m_genDictReviewUserPrompt;
             reviewOptions.maxTurnsPerTerm = m_agentMaxTurnsPerChunk;
             reviewOptions.searchResultLimit = m_agentSearchResultLimit;
-            reviewOptions.allowCrossFileSearch = m_agentAllowCrossFileSearch;
         }
         DictionaryGenerator generator(
             m_controller, m_logger, m_apiPool, m_tokenizeSourceLangFunc, m_otherCacheDir,

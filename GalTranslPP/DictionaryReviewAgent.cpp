@@ -1,6 +1,7 @@
 module;
 
 #include "GPPMacros.hpp"
+#include <ctpl_stl.h>
 
 module DictionaryReviewAgent;
 
@@ -38,10 +39,11 @@ struct ReviewToolExecutionEnv {
     const std::vector<fs::path>* relFiles = nullptr;
     const std::vector<AgentSourceFileView>* sourceFiles = nullptr;
     const absl::flat_hash_map<fs::path, const AgentSourceFileView*>* sourceFileLookup = nullptr;
+    const std::vector<DictionaryReviewTermGroup>* termGroups = nullptr;
+    const absl::flat_hash_map<std::string, const DictionaryReviewTermGroup*>* groupLookup = nullptr;
     const absl::flat_hash_map<std::string, json>* ledgerMap = nullptr;
     const std::vector<std::string>* ledgerOrder = nullptr;
     int searchResultLimit = 80;
-    bool allowCrossFileSearch = true;
     std::optional<fs::path> projectNotePath;
 };
 
@@ -261,6 +263,85 @@ json groupToJson(const DictionaryReviewTermGroup& group) {
     };
 }
 
+std::string fallbackTargetForGroup(const DictionaryReviewTermGroup& group);
+std::string fallbackNoteForGroup(const DictionaryReviewTermGroup& group);
+
+json reviewCandidateToDictionarySearchJson(
+    const DictionaryReviewTermGroup& group,
+    const json* reviewedEntry
+) {
+    json result = {
+        {"source_term", group.sourceTerm},
+        {"reviewed", reviewedEntry != nullptr},
+        {"candidate_targets", valueFrequenciesToJson(group.candidateTargets)},
+        {"candidate_notes", valueFrequenciesToJson(group.candidateNotes)},
+        {"occurrence_count", group.occurrenceCount},
+        {"is_name_hint", group.isNameHint},
+        {"is_tokenizer_word", group.isTokenizerWord}
+    };
+
+    if (reviewedEntry != nullptr && reviewedEntry->is_object()) {
+        result["target_term"] = reviewedEntry->value("target_term", "");
+        result["note"] = reviewedEntry->value("note", "");
+        result["status"] = reviewedEntry->value("status", "");
+        result["merge_into"] = reviewedEntry->value("merge_into", "");
+        result["origin"] = reviewedEntry->value("origin", "");
+    }
+    else {
+        result["target_term"] = fallbackTargetForGroup(group);
+        result["note"] = fallbackNoteForGroup(group);
+        result["status"] = "pending";
+        result["merge_into"] = "";
+        result["origin"] = "candidate";
+    }
+
+    return result;
+}
+
+json reviewLedgerOnlyToDictionarySearchJson(const std::string& sourceTerm, const json& entry) {
+    return json{
+        {"source_term", sourceTerm},
+        {"reviewed", true},
+        {"candidate_targets", json::array()},
+        {"candidate_notes", json::array()},
+        {"occurrence_count", 0},
+        {"is_name_hint", false},
+        {"is_tokenizer_word", false},
+        {"target_term", entry.value("target_term", "")},
+        {"note", entry.value("note", "")},
+        {"status", entry.value("status", "")},
+        {"merge_into", entry.value("merge_into", "")},
+        {"origin", entry.value("origin", "")}
+    };
+}
+
+std::string reviewCandidateSearchHaystack(const DictionaryReviewTermGroup& group, const json* reviewedEntry) {
+    std::string haystack = group.sourceTerm + "\n";
+    if (reviewedEntry != nullptr && reviewedEntry->is_object()) {
+        haystack += reviewedEntry->value("target_term", "") + "\n";
+        haystack += reviewedEntry->value("note", "") + "\n";
+        haystack += reviewedEntry->value("status", "") + "\n";
+        haystack += reviewedEntry->value("merge_into", "") + "\n";
+    }
+    for (const DictionaryReviewValueFrequency& candidate : group.candidateTargets) {
+        haystack += candidate.value + "\n";
+    }
+    for (const DictionaryReviewValueFrequency& candidate : group.candidateNotes) {
+        haystack += candidate.value + "\n";
+    }
+    return str2Lower(haystack);
+}
+
+std::string reviewLedgerOnlySearchHaystack(const std::string& sourceTerm, const json& entry) {
+    return str2Lower(
+        sourceTerm + "\n" +
+        entry.value("target_term", "") + "\n" +
+        entry.value("note", "") + "\n" +
+        entry.value("status", "") + "\n" +
+        entry.value("merge_into", "")
+    );
+}
+
 std::string buildReviewSchemaDescription() {
     return
 	"{"
@@ -348,7 +429,7 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
     if (scope == "specified_file") {
         targetFiles.push_back(ascii2Wide(arguments.value("file", wide2Ascii(env.currentFile))));
     }
-    else if (scope == "all_files" && env.allowCrossFileSearch) {
+    else if (scope == "all_files") {
         if (env.sourceFiles != nullptr) {
             targetFiles = *env.sourceFiles
                 | std::views::transform([](const AgentSourceFileView& file) { return file.relPath; })
@@ -430,26 +511,42 @@ json runReviewSearchDictionaryTool(const ReviewToolExecutionEnv& env, const json
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
     json matches = json::array();
 
-    if (env.ledgerMap == nullptr) {
+    if (env.termGroups == nullptr || env.ledgerMap == nullptr) {
         return json{
             {"queries", queries},
             {"start", start},
             {"limit", limit},
             {"total", 0},
+            {"reviewed_total", 0},
+            {"pending_total", 0},
             {"matches", matches}
         };
     }
 
     int matchCount = 0;
-    const auto appendMatchedEntry = [&](const std::string& sourceTerm, const json& entry)
+    int reviewedTotal = 0;
+    int pendingTotal = 0;
+    absl::flat_hash_set<std::string> processedSourceTerms;
+    processedSourceTerms.reserve(env.termGroups->size());
+    for (const DictionaryReviewTermGroup& group : *env.termGroups) {
+        if (env.ledgerMap->contains(group.sourceTerm)) {
+            ++reviewedTotal;
+        }
+        else {
+            ++pendingTotal;
+        }
+    }
+    for (const auto& sourceTerm : *env.ledgerMap | std::views::keys) {
+        if (env.groupLookup == nullptr || !env.groupLookup->contains(sourceTerm)) {
+            ++reviewedTotal;
+        }
+    }
+
+    const auto appendMatchedEntry = [&](const DictionaryReviewTermGroup& group)
         {
-            const std::string haystack = str2Lower(
-                sourceTerm + "\n" +
-                entry.value("target_term", "") + "\n" +
-                entry.value("note", "") + "\n" +
-                entry.value("status", "") + "\n" +
-                entry.value("merge_into", "")
-            );
+            const auto ledgerIt = env.ledgerMap->find(group.sourceTerm);
+            const json* reviewedEntry = ledgerIt != env.ledgerMap->end() ? &ledgerIt->second : nullptr;
+            const std::string haystack = reviewCandidateSearchHaystack(group, reviewedEntry);
             const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
                 {
                     return !queryLower.empty() && haystack.contains(queryLower);
@@ -461,20 +558,59 @@ json runReviewSearchDictionaryTool(const ReviewToolExecutionEnv& env, const json
             if (matchCount <= start || (int)matches.size() >= limit) {
                 return;
             }
-            matches.push_back(agentToolLedgerEntryToJson(sourceTerm, entry));
+            matches.push_back(reviewCandidateToDictionarySearchJson(group, reviewedEntry));
         };
+
+    const auto appendMatchedLedgerOnlyEntry = [&](const std::string& sourceTerm, const json& entry)
+        {
+            const std::string haystack = reviewLedgerOnlySearchHaystack(sourceTerm, entry);
+            const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
+                {
+                    return !queryLower.empty() && haystack.contains(queryLower);
+                });
+            if (!matched) {
+                return;
+            }
+            ++matchCount;
+            if (matchCount <= start || (int)matches.size() >= limit) {
+                return;
+            }
+            matches.push_back(reviewLedgerOnlyToDictionarySearchJson(sourceTerm, entry));
+        };
+
     if (env.ledgerOrder != nullptr) {
         for (const std::string& sourceTerm : *env.ledgerOrder) {
-            const auto it = env.ledgerMap->find(sourceTerm);
-            if (it == env.ledgerMap->end()) {
+            if (!processedSourceTerms.insert(sourceTerm).second) {
                 continue;
             }
-            appendMatchedEntry(sourceTerm, it->second);
+            const auto ledgerIt = env.ledgerMap->find(sourceTerm);
+            const DictionaryReviewTermGroup* group = nullptr;
+            if (env.groupLookup != nullptr) {
+                const auto groupIt = env.groupLookup->find(sourceTerm);
+                if (groupIt != env.groupLookup->end()) {
+                    group = groupIt->second;
+                }
+            }
+            if (group != nullptr) {
+                appendMatchedEntry(*group);
+            }
+            else if (ledgerIt != env.ledgerMap->end()) {
+                appendMatchedLedgerOnlyEntry(sourceTerm, ledgerIt->second);
+            }
         }
     }
-    else {
+    for (const DictionaryReviewTermGroup& group : *env.termGroups) {
+        if (processedSourceTerms.contains(group.sourceTerm)) {
+            continue;
+        }
+        appendMatchedEntry(group);
+    }
+    if (env.ledgerOrder == nullptr) {
         for (const auto& [sourceTerm, entry] : *env.ledgerMap) {
-            appendMatchedEntry(sourceTerm, entry);
+            if (env.groupLookup != nullptr && env.groupLookup->contains(sourceTerm)) {
+                continue;
+            }
+            appendMatchedLedgerOnlyEntry(sourceTerm, entry);
         }
     }
 
@@ -483,6 +619,8 @@ json runReviewSearchDictionaryTool(const ReviewToolExecutionEnv& env, const json
         {"start", start},
         {"limit", limit},
         {"total", matchCount},
+        {"reviewed_total", reviewedTotal},
+        {"pending_total", pendingTotal},
         {"matches", matches}
     };
 }
@@ -548,6 +686,16 @@ json buildLedgerExcerpt(const std::vector<std::string>& entriesVec, const absl::
     return excerpt;
 }
 
+json buildLedgerExcerptWithLock(
+    const std::vector<std::string>& entriesVec,
+    const absl::flat_hash_map<std::string, json>& ledgerMap,
+    std::mutex& mutex,
+    int limit = 12
+) {
+    std::lock_guard<std::mutex> lock(mutex);
+    return buildLedgerExcerpt(entriesVec, ledgerMap, limit);
+}
+
 std::string buildReviewExtraTools(const DictionaryReviewAgentConfig& config) {
     if (!config.projectNotePath.has_value()) {
         return {};
@@ -570,6 +718,26 @@ json buildReviewBaseMessages(
     replaceStrInplace(prompt, "[ReviewSchemaDescription]", buildReviewSchemaDescription());
     replaceStrInplace(prompt, "[ReviewCurrentTerm]", groupToJson(group).dump(2));
     replaceStrInplace(prompt, "[ReviewRecentTermsExcerpt]", buildLedgerExcerpt(entriesVec, ledgerMap).dump(2));
+    replaceStrInplace(prompt, "[ReviewExtraTools]", buildReviewExtraTools(config));
+    replaceStrInplace(prompt, "[ReviewAnchorFile]", currentFile.empty() ? "None" : wide2Ascii(currentFile));
+
+    return json::array({
+        {{"role", "system"}, {"content", config.systemPrompt}},
+        {{"role", "user"}, {"content", prompt}}
+    });
+}
+
+json buildReviewBaseMessagesWithLedgerExcerpt(
+    const DictionaryReviewAgentConfig& config,
+    const DictionaryReviewTermGroup& group,
+    const fs::path& currentFile,
+    const json& ledgerExcerpt
+) {
+    std::string prompt = config.userPrompt;
+    replaceStrInplace(prompt, "[TargetLang]", config.targetLang);
+    replaceStrInplace(prompt, "[ReviewSchemaDescription]", buildReviewSchemaDescription());
+    replaceStrInplace(prompt, "[ReviewCurrentTerm]", groupToJson(group).dump(2));
+    replaceStrInplace(prompt, "[ReviewRecentTermsExcerpt]", ledgerExcerpt.dump(2));
     replaceStrInplace(prompt, "[ReviewExtraTools]", buildReviewExtraTools(config));
     replaceStrInplace(prompt, "[ReviewAnchorFile]", currentFile.empty() ? "None" : wide2Ascii(currentFile));
 
@@ -610,7 +778,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
     //      { "name":"search_text", "arguments":{"query":"音夢","scope":"all_files","limit":10} },
     //      { "name":"search_dictionary", "arguments":{"query":"音夢","start":0,"limit":10} }
     //    ] }
-    //    search_text 查 sourceFiles；search_dictionary 查 review ledger。工具结果回填给模型进入下一轮。
+    //    search_text 查 sourceFiles；search_dictionary 查完整候选词表并标记 reviewed/pending。工具结果回填给模型进入下一轮。
     // 6. 模型最终返回 commit。result 决定当前 term 的 accepted/merged/deprecated/conflict；
     //    result.term_updates 是通用 upsert：可新增 term，也可修改已有 ledger entry 的 target/note/status/merge_into，
     //    例如把别名标成 merged，或者补充一个当前 group 没出现但从上下文确认了的昵称。
@@ -624,6 +792,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
     absl::flat_hash_map<std::string, const DictionaryReviewTermGroup*> groupLookup;
     absl::flat_hash_set<std::string> knownSourceTerms;
     absl::flat_hash_set<std::string> entryOrderSeen;
+    std::mutex ledgerMutex;
     sourceFileLookup.reserve(sourceFiles.size());
     groupLookup.reserve(groups.size());
     knownSourceTerms.reserve(groups.size() * 2);
@@ -637,7 +806,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         knownSourceTerms.insert(group.sourceTerm);
     }
 
-    auto pushBackEntryWithOrderFunc = [&](const std::string& sourceTerm)
+    auto pushBackEntryWithOrderUnlockedFunc = [&](const std::string& sourceTerm)
         {
             if (sourceTerm.empty()) {
                 return;
@@ -647,7 +816,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             }
         };
 
-    auto applyReviewTermUpdateFunc = [&](const json& update)
+    auto applyReviewTermUpdateUnlockedFunc = [&](const json& update)
         {
             if (!update.is_object()) {
                 return;
@@ -690,10 +859,10 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             entry["origin"] = update.value("origin", entry.value("origin", "term_update"));
             entry["updated_at"] = nowTimestampString();
             knownSourceTerms.insert(sourceTerm);
-            pushBackEntryWithOrderFunc(sourceTerm);
+            pushBackEntryWithOrderUnlockedFunc(sourceTerm);
         };
 
-    auto applyFallbackForGroupFunc = [&](const DictionaryReviewTermGroup& group, std::string_view reason)
+    auto applyFallbackForGroupUnlockedFunc = [&](const DictionaryReviewTermGroup& group, std::string_view reason)
         {
             const std::string fallbackTarget = fallbackTargetForGroup(group);
             const std::string fallbackNote = fallbackNoteForGroup(group);
@@ -720,11 +889,11 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     {"updated_at", nowTimestampString()}
                 };
             }
-            pushBackEntryWithOrderFunc(group.sourceTerm);
+            pushBackEntryWithOrderUnlockedFunc(group.sourceTerm);
             knownSourceTerms.insert(group.sourceTerm);
         };
 
-    const auto applyDecisionEntry = [&](const DictionaryReviewTermGroup& group, ReviewCommitResult decision)
+    const auto applyDecisionEntryUnlocked = [&](const DictionaryReviewTermGroup& group, ReviewCommitResult decision)
         {
             const std::string fallbackTarget = fallbackTargetForGroup(group);
             const std::string fallbackNote = fallbackNoteForGroup(group);
@@ -767,7 +936,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     {"origin", "group"},
                     {"updated_at", nowTimestampString()}
                 };
-                pushBackEntryWithOrderFunc(group.sourceTerm);
+                pushBackEntryWithOrderUnlockedFunc(group.sourceTerm);
             }
             else if (decision.status == "deprecated") {
                 entry = {
@@ -778,7 +947,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     {"origin", "group"},
                     {"updated_at", nowTimestampString()}
                 };
-                pushBackEntryWithOrderFunc(group.sourceTerm);
+                pushBackEntryWithOrderUnlockedFunc(group.sourceTerm);
             }
             else {
                 if (!knownSourceTerms.contains(decision.mergeInto)) {
@@ -803,7 +972,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         {"updated_at", nowTimestampString()}
                     };
                 }
-                pushBackEntryWithOrderFunc(group.sourceTerm);
+                pushBackEntryWithOrderUnlockedFunc(group.sourceTerm);
             }
 
             if (!decision.termUpdates.is_array()) {
@@ -811,7 +980,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             }
 
             for (const auto& update : decision.termUpdates) {
-                applyReviewTermUpdateFunc(update);
+                applyReviewTermUpdateUnlockedFunc(update);
             }
         };
 
@@ -820,16 +989,27 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             return status == "accepted" || status == "conflict";
         };
 
-    for (const auto& [groupIndex, group] : groups | std::views::enumerate) {
+    auto snapshotLedgerFunc = [&]()
+        {
+            std::lock_guard<std::mutex> lock(ledgerMutex);
+            return std::make_pair(entriesVec, ledgerMap);
+        };
+
+    auto reviewGroupFunc = [&](int groupIndex, const DictionaryReviewTermGroup& group, int threadId)
+        {
         if (m_controller->shouldStop()) {
             m_logger->debug("GenDict Review Agent received stop signal; remaining terms will use local fallback.");
-            applyFallbackForGroupFunc(group, "stopped");
-            continue;
+            {
+                std::lock_guard<std::mutex> lock(ledgerMutex);
+                applyFallbackForGroupUnlockedFunc(group, "stopped");
+            }
+            return;
         }
 
         const fs::path currentFile = guessCurrentFileForTerm(group.sourceTerm, sourceFiles, m_config.relInputFiles);
         m_logger->info(
-            "GenDict Review Agent reviewing term {}/{}: {}, {} target candidates, {} note candidates, {} occurrences.",
+            "[线程 {}] GenDict Review Agent reviewing term {}/{}: {}, {} target candidates, {} note candidates, {} occurrences.",
+            threadId,
             groupIndex + 1,
             groups.size(),
             group.sourceTerm,
@@ -843,12 +1023,18 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         bool exceededTurnLimit = false;
         while (!completed && (retryCount == 0 || retryCount < m_config.maxRetries)) {
             if (m_controller->shouldStop()) {
-                applyFallbackForGroupFunc(group, "stopped");
+                std::lock_guard<std::mutex> lock(ledgerMutex);
+                applyFallbackForGroupUnlockedFunc(group, "stopped");
                 completed = true;
                 break;
             }
 
-            json messages = buildReviewBaseMessages(m_config, group, currentFile, entriesVec, ledgerMap);
+            json messages = buildReviewBaseMessagesWithLedgerExcerpt(
+                m_config,
+                group,
+                currentFile,
+                buildLedgerExcerptWithLock(entriesVec, ledgerMap, ledgerMutex)
+            );
             bool turnLoopExitedByRetry = false;
             for (int turn = 0; turn < m_config.maxTurnsPerTerm; ++turn) {
                 const std::optional<TranslationApi> apiOpt = m_config.apiStrategy == "random"
@@ -860,10 +1046,10 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 const TranslationApi& currentApi = apiOpt.value();
 
                 json payload = { {"messages", messages} };
-                ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, 0, m_config.apiTimeoutMs);
+                ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_config.apiTimeoutMs);
                 if (!checkResponse(
                     response, m_apiPool, currentApi, L"GenDict review agent", m_config.apiStrategy,
-                    m_controller, m_logger, retryCount, 0, m_config.checkQuota
+                    m_controller, m_logger, retryCount, threadId, m_config.checkQuota
                 )) {
                     turnLoopExitedByRetry = true;
                     break;
@@ -918,12 +1104,16 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         .relFiles = &m_config.relInputFiles,
                         .sourceFiles = &sourceFiles,
                         .sourceFileLookup = &sourceFileLookup,
-                        .ledgerMap = &ledgerMap,
-                        .ledgerOrder = &entriesVec,
+                        .termGroups = &groups,
+                        .groupLookup = &groupLookup,
+                        .ledgerMap = nullptr,
+                        .ledgerOrder = nullptr,
                         .searchResultLimit = m_config.searchResultLimit,
-                        .allowCrossFileSearch = m_config.allowCrossFileSearch,
                         .projectNotePath = m_config.projectNotePath
                     };
+                    auto [toolEntriesSnapshot, toolLedgerSnapshot] = snapshotLedgerFunc();
+                    env.ledgerMap = &toolLedgerSnapshot;
+                    env.ledgerOrder = &toolEntriesSnapshot;
 
                     m_logger->info(
                         "GenDict Review Agent term {} requested {} tool calls: {}.",
@@ -960,19 +1150,26 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                         truncateUtf8Prefix(fallbackTargetForGroup(group), 180),
                         fallbackNoteForGroup(group).size()
                     );
-                    applyFallbackForGroupFunc(group, "skip");
+                    {
+                        std::lock_guard<std::mutex> lock(ledgerMutex);
+                        applyFallbackForGroupUnlockedFunc(group, "skip");
+                    }
                     completed = true;
                     break;
                 }
 
                 if (protocol.action == "commit") {
                     try {
-                        applyDecisionEntry(group, protocol.result);
+                        json appliedEntry = json::object();
+                        {
+                            std::lock_guard<std::mutex> lock(ledgerMutex);
+                            applyDecisionEntryUnlocked(group, protocol.result);
+                            const auto appliedEntryIt = ledgerMap.find(group.sourceTerm);
+                            appliedEntry = appliedEntryIt != ledgerMap.end()
+                                ? appliedEntryIt->second
+                                : json::object();
+                        }
                         completed = true;
-                        const auto appliedEntryIt = ledgerMap.find(group.sourceTerm);
-                        const json appliedEntry = appliedEntryIt != ledgerMap.end()
-                            ? appliedEntryIt->second
-                            : json::object();
                         m_logger->info(
                             "GenDict Review Agent term {} commit accepted: {}.",
                             group.sourceTerm,
@@ -1032,12 +1229,37 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         }
 
         if (!completed) {
-            applyFallbackForGroupFunc(group, exceededTurnLimit ? "max_turns" : "retry_exhausted");
+            std::lock_guard<std::mutex> lock(ledgerMutex);
+            applyFallbackForGroupUnlockedFunc(group, exceededTurnLimit ? "max_turns" : "retry_exhausted");
         }
         if (!m_controller->shouldStop()) {
             m_controller->updateBar();
         }
+        };
+
+    const int reviewThreads = std::max(1, std::min(m_config.threadsNum, (int)groups.size()));
+    m_logger->info("GenDict Review Agent starting {} review workers for {} terms.", reviewThreads, groups.size());
+    ctpl::thread_pool pool(reviewThreads);
+    std::vector<std::future<void>> results;
+    results.reserve(groups.size());
+    for (int groupIndex = 0; groupIndex < (int)groups.size(); ++groupIndex) {
+        results.emplace_back(pool.push([&, groupIndex](int threadId)
+            {
+                struct ActiveWorkerGuard {
+                    std::shared_ptr<IController> controller;
+                    explicit ActiveWorkerGuard(std::shared_ptr<IController> controller) : controller(std::move(controller))
+                    {
+                        this->controller->addThreadNum();
+                    }
+                    ~ActiveWorkerGuard()
+                    {
+                        controller->reduceThreadNum();
+                    }
+                } workerGuard(m_controller);
+                reviewGroupFunc(groupIndex, groups[groupIndex], threadId);
+            }));
     }
+    waitForThreads(pool, results);
 
     for (auto& [sourceTerm, entry] : ledgerMap) {
         if (entry.value("status", "") != "merged") {

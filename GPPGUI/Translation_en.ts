@@ -2634,117 +2634,117 @@
 <context>
     <name>ProjectCachePage</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="29"/>
+        <location filename="ProjectCachePage.cpp" line="30"/>
         <source>缓存管理</source>
         <oldsource>缓存与问题</oldsource>
         <translation>Cache Management</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="66"/>
+        <location filename="ProjectCachePage.cpp" line="67"/>
         <source>打开缓存文件夹</source>
         <translation>Open Cache Folder</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="77"/>
+        <location filename="ProjectCachePage.cpp" line="78"/>
         <source>保存当前文件</source>
         <translation>Save Current File</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="80"/>
-        <location filename="ProjectCachePage.cpp" line="101"/>
+        <location filename="ProjectCachePage.cpp" line="81"/>
+        <location filename="ProjectCachePage.cpp" line="102"/>
         <source>保存缓存</source>
         <translation>Save Cache</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="89"/>
-        <location filename="ProjectCachePage.cpp" line="129"/>
+        <location filename="ProjectCachePage.cpp" line="90"/>
+        <location filename="ProjectCachePage.cpp" line="130"/>
         <source>已保存 </source>
         <translation>Saved </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="98"/>
+        <location filename="ProjectCachePage.cpp" line="99"/>
         <source>保存全部</source>
         <translation>Save All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="129"/>
-        <location filename="ProjectCachePage.cpp" line="213"/>
+        <location filename="ProjectCachePage.cpp" line="130"/>
+        <location filename="ProjectCachePage.cpp" line="214"/>
         <source> 个缓存文件</source>
         <translation> cache file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="181"/>
+        <location filename="ProjectCachePage.cpp" line="182"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="184"/>
+        <location filename="ProjectCachePage.cpp" line="185"/>
         <source>删除缓存文件</source>
         <translation>Delete Cache Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="191"/>
+        <location filename="ProjectCachePage.cpp" line="192"/>
         <location filename="ProjectCachePage.cpp" line="416"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="192"/>
+        <location filename="ProjectCachePage.cpp" line="193"/>
         <location filename="ProjectCachePage.cpp" line="417"/>
         <source>确定要删除选中的 </source>
         <translation>Delete selected </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="192"/>
+        <location filename="ProjectCachePage.cpp" line="193"/>
         <source> 个缓存文件吗？</source>
         <translation> cache file(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="213"/>
-        <location filename="ProjectCachePageEntries.cpp" line="226"/>
+        <location filename="ProjectCachePage.cpp" line="214"/>
+        <location filename="ProjectCachePageEntries.cpp" line="230"/>
         <source>已删除 </source>
         <translation>Deleted </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="165"/>
+        <location filename="ProjectCachePage.cpp" line="166"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="73"/>
+        <location filename="ProjectCachePage.cpp" line="74"/>
         <source>刷新</source>
         <translation>Refresh</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="244"/>
+        <location filename="ProjectCachePage.cpp" line="245"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="254"/>
+        <location filename="ProjectCachePage.cpp" line="255"/>
         <location filename="ProjectCachePage.cpp" line="292"/>
         <source>全部</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="255"/>
+        <location filename="ProjectCachePage.cpp" line="256"/>
         <location filename="ProjectCachePage.cpp" line="291"/>
         <source>原文 pre_processed_text</source>
         <translation>Source pre_processed_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="256"/>
+        <location filename="ProjectCachePage.cpp" line="257"/>
         <location filename="ProjectCachePage.cpp" line="290"/>
         <source>译文 pre_translated_text</source>
         <translation>Translation pre_translated_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="257"/>
+        <location filename="ProjectCachePage.cpp" line="258"/>
         <source>问题 problems</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="231"/>
+        <location filename="ProjectCachePageSearch.cpp" line="232"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
@@ -2769,8 +2769,8 @@
         <translation>Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="166"/>
-        <location filename="ProjectCachePageSearch.cpp" line="131"/>
+        <location filename="ProjectCachePage.cpp" line="167"/>
+        <location filename="ProjectCachePageSearch.cpp" line="133"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
@@ -2780,15 +2780,15 @@
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="167"/>
-        <location filename="ProjectCachePageSearch.cpp" line="190"/>
-        <location filename="ProjectCachePageSearch.cpp" line="334"/>
+        <location filename="ProjectCachePage.cpp" line="168"/>
+        <location filename="ProjectCachePageSearch.cpp" line="191"/>
+        <location filename="ProjectCachePageSearch.cpp" line="336"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="368"/>
-        <location filename="ProjectCachePageEntries.cpp" line="33"/>
+        <location filename="ProjectCachePageEntries.cpp" line="35"/>
         <location filename="ProjectCachePageEntries.cpp" line="76"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
@@ -2804,7 +2804,7 @@
         <translation>Problems only</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="87"/>
+        <location filename="ProjectCachePageActions.cpp" line="89"/>
         <location filename="ProjectCachePage.cpp" line="406"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
@@ -2820,7 +2820,7 @@
         <translation> cache entry(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="128"/>
+        <location filename="ProjectCachePageFiles.cpp" line="133"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -2833,12 +2833,12 @@
         <translation type="obsolete">Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="176"/>
+        <location filename="ProjectCachePageEntries.cpp" line="178"/>
         <source>translated_preview（只读）</source>
         <translation>translated_preview (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="226"/>
+        <location filename="ProjectCachePageEntries.cpp" line="230"/>
         <source> 个条目，保存后生效</source>
         <translation> entries. Save to apply.</translation>
     </message>
@@ -2848,37 +2848,37 @@
         <translation>%1 lines · %2 translated · %3 with problems · %4 selected</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="87"/>
+        <location filename="ProjectCachePageActions.cpp" line="89"/>
         <source>删除选中条目 (%1)</source>
         <translation>Delete Selected Entries (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="334"/>
+        <location filename="ProjectCachePageSearch.cpp" line="336"/>
         <source>问题 (%1)</source>
         <translation>Problems (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="170"/>
+        <location filename="ProjectCachePageEntries.cpp" line="172"/>
         <source>original_text（元信息，只读）</source>
         <translation>original_text (metadata, read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="172"/>
+        <location filename="ProjectCachePageEntries.cpp" line="174"/>
         <source>pre_processed_text（原文，可编辑）</source>
         <translation>pre_processed_text (source, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="173"/>
+        <location filename="ProjectCachePageEntries.cpp" line="175"/>
         <source>pre_translated_text（译文，可编辑）</source>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="111"/>
+        <location filename="ProjectCachePageFiles.cpp" line="116"/>
         <source>%1 句 · %2 问题</source>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="150"/>
+        <location filename="ProjectCachePageActions.cpp" line="153"/>
         <location filename="ProjectCachePage.cpp" line="266"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
@@ -2889,165 +2889,165 @@
         <translation>Edit Selected Entry</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="113"/>
+        <location filename="ProjectCachePageFiles.cpp" line="118"/>
         <source>解析失败</source>
         <translation>Parse failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="148"/>
+        <location filename="ProjectCachePageFiles.cpp" line="155"/>
         <source>缓存文件不是 JSON 数组: </source>
         <translation>Cache file is not a JSON array: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="174"/>
+        <location filename="ProjectCachePageEntries.cpp" line="176"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="181"/>
+        <location filename="ProjectCachePageEntries.cpp" line="183"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="185"/>
+        <location filename="ProjectCachePageEntries.cpp" line="187"/>
         <source>保存修改</source>
         <translation>Save Changes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="41"/>
+        <location filename="ProjectCachePageActions.cpp" line="40"/>
         <source>完成</source>
         <translation>Done</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="48"/>
+        <location filename="ProjectCachePageActions.cpp" line="47"/>
         <source>失败</source>
         <translation>Failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="150"/>
+        <location filename="ProjectCachePageActions.cpp" line="153"/>
         <source>收起批量替换</source>
         <translation>Collapse Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="162"/>
+        <location filename="ProjectCachePageActions.cpp" line="165"/>
         <source>项目正在运行中，只允许查看缓存。</source>
         <translation>The project is running. Cache is read-only.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="173"/>
+        <location filename="ProjectCachePageActions.cpp" line="175"/>
         <source>否</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="174"/>
+        <location filename="ProjectCachePageActions.cpp" line="176"/>
         <source>思考人生</source>
         <translation>Think it over</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="175"/>
+        <location filename="ProjectCachePageActions.cpp" line="177"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="180"/>
+        <location filename="ProjectCachePageFiles.cpp" line="187"/>
         <source>无法打开缓存文件: </source>
         <translation>Cannot open cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="189"/>
+        <location filename="ProjectCachePageFiles.cpp" line="196"/>
         <source>解析缓存失败: </source>
         <translation>Failed to parse cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="203"/>
+        <location filename="ProjectCachePageFiles.cpp" line="210"/>
         <source>无法写入缓存文件: </source>
         <translation>Cannot write cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="212"/>
+        <location filename="ProjectCachePageFiles.cpp" line="219"/>
         <source>写入缓存失败: </source>
         <translation>Failed to write cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="324"/>
+        <location filename="ProjectCachePageEntries.cpp" line="328"/>
         <source>问题: </source>
         <translation>Problem: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="331"/>
+        <location filename="ProjectCachePageEntries.cpp" line="335"/>
         <source>原文: </source>
         <translation>Source: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="332"/>
+        <location filename="ProjectCachePageEntries.cpp" line="336"/>
         <source>译文: </source>
         <translation>Translation: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="188"/>
+        <location filename="ProjectCachePageSearch.cpp" line="189"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="189"/>
+        <location filename="ProjectCachePageSearch.cpp" line="190"/>
         <source>译文</source>
         <translation>Translation</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="203"/>
+        <location filename="ProjectCachePageSearch.cpp" line="204"/>
         <source>%1 条结果</source>
         <translation>%1 result(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="205"/>
+        <location filename="ProjectCachePageSearch.cpp" line="206"/>
         <source>搜索 (%1)</source>
         <translation>Search (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="213"/>
-        <location filename="ProjectCachePageSearch.cpp" line="238"/>
+        <location filename="ProjectCachePageSearch.cpp" line="214"/>
+        <location filename="ProjectCachePageSearch.cpp" line="239"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="218"/>
+        <location filename="ProjectCachePageSearch.cpp" line="219"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="224"/>
+        <location filename="ProjectCachePageSearch.cpp" line="225"/>
         <source>
 ...</source>
         <translation>
 ...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="245"/>
+        <location filename="ProjectCachePageSearch.cpp" line="246"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="248"/>
+        <location filename="ProjectCachePageSearch.cpp" line="249"/>
         <source>确认替换</source>
         <translation>Confirm Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="248"/>
+        <location filename="ProjectCachePageSearch.cpp" line="249"/>
         <source>确定要替换 %1 处内容吗？</source>
         <translation>Replace %1 occurrence(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="278"/>
+        <location filename="ProjectCachePageSearch.cpp" line="280"/>
         <source>已替换 %1 处，涉及 %2 个文件；保存后落盘。</source>
         <translation>Replaced %1 occurrence(s) across %2 file(s). Save to write changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="279"/>
+        <location filename="ProjectCachePageSearch.cpp" line="281"/>
         <source>批量替换完成，记得保存修改</source>
         <translation>Batch replace completed. Remember to save changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="328"/>
+        <location filename="ProjectCachePageSearch.cpp" line="330"/>
         <source>点击搜索此问题</source>
         <translation>Click to search this problem</translation>
     </message>
@@ -3275,33 +3275,33 @@
         <translation>Match</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="201"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="204"/>
         <source>结果解析</source>
         <translation>Parse Result</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="204"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="207"/>
         <source>模型请求</source>
         <translation>Model Request</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="207"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="210"/>
         <source>Agent</source>
         <translation>Agent</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="210"/>
-        <location filename="TranslationWorkbenchPage.cpp" line="265"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="213"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="268"/>
         <source>文件</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="216"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="219"/>
         <source>重试 %1</source>
         <translation>Retry %1</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="266"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="269"/>
         <source>模型</source>
         <translation>Model</translation>
     </message>
@@ -3922,64 +3922,64 @@
 <context>
     <name>TranslationWorkbenchPage</name>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="329"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="333"/>
         <source>翻译工作台</source>
         <translation>Translation Workbench</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="342"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="348"/>
         <source>等待翻译任务</source>
         <translation>Waiting for translation task</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="347"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="353"/>
         <source>清除筛选</source>
         <translation>Clear Filter</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="364"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="371"/>
         <source>成功句流</source>
         <translation>Success Stream</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="387"/>
-        <location filename="TranslationWorkbenchPage.cpp" line="647"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="394"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="666"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="389"/>
-        <location filename="TranslationWorkbenchPage.cpp" line="652"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="396"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="671"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="634"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="653"/>
         <source>空闲</source>
         <translation>Idle</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="635"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="654"/>
         <source> · 当前文件: </source>
         <translation> · Current file: </translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="636"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="655"/>
         <source>%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误</source>
         <translation>%1%2 · %3/%4 lines · %5 problem(s) · %6 success event(s) · %7 error(s)</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="644"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="663"/>
         <source>已筛选文件: </source>
         <translation>Filtered file(s): </translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="647"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="666"/>
         <source>最近错误 (%1)</source>
         <translation>Recent Errors (%1)</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="652"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="671"/>
         <source>文件进度 (%1)</source>
         <translation>File Progress (%1)</translation>
     </message>

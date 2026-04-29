@@ -22,7 +22,6 @@ export {
         std::string userPrompt;
         int maxTurnsPerTerm = 20;
         int searchResultLimit = 80;
-        bool allowCrossFileSearch = true;
     };
 
     class DictionaryGenerator {

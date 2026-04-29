@@ -18,7 +18,9 @@ class QStyledItemDelegate;
 class QWidget;
 
 namespace ProjectCachePagePrivate {
-    // Shared model roles. Delegates and model-population code must agree on these values.
+    using json = nlohmann::json;
+
+    // Model 和自绘 delegate 共用的 role，新增展示字段时两边要一起更新。
     constexpr int JsonRowRole = Qt::UserRole + 1;
     constexpr int HitIndexRole = Qt::UserRole + 2;
     constexpr int ProblemTextRole = Qt::UserRole + 3;
@@ -39,7 +41,7 @@ namespace ProjectCachePagePrivate {
     constexpr int BodyFontPx = 13;
     constexpr int TitleFontPx = 15;
 
-    int sentenceIndexOf(const nlohmann::json& object, int fallback);
+    int sentenceIndexOf(const json& object, int fallback);
     QString compactPreview(QString text, int maxChars = 160);
 
     QColor themeColor(ElaThemeType::ThemeColor color);

@@ -114,8 +114,6 @@ maxTurnsPerChunk = 20
 softContextChars = 75000
 hardContextChars = 100000
 searchResultLimit = 80
-allowCrossFileSearch = true
-finalReconcileSingleThread = false
 rewriteMode = "queue_retranslate" # queue_retranslate / mark_only
 
 # 用于生成字典和查错的分词器后端及其设置 (除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的)

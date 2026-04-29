@@ -24,8 +24,7 @@ void ProjectCachePage::_markDirty(const QString& filename)
         return;
     }
     const bool wasClean = !_dirtyFiles.contains(filename);
-    // Dirty files are tracked per relative cache path. Saving can flush just the
-    // current file or all modified files without re-reading disk state.
+    // 所有编辑都先进入内存缓存和脏文件集合；只有保存按钮才真正写回磁盘。
     _dirtyFiles.insert(filename);
     _loadedEntriesByFile[filename] = _entries;
     _currentFileLabel->setText("*" + filename);
@@ -57,6 +56,7 @@ void ProjectCachePage::_updateCurrentSummary()
     }
     int translated = 0;
     int problemCount = 0;
+    // 摘要按当前内存 JSON 计算，因此未保存的编辑也会立即反映到右上角。
     for (const auto& item : _entries) {
         if (!item.is_object()) {
             continue;
@@ -74,6 +74,8 @@ void ProjectCachePage::_updateCurrentSummary()
 
 void ProjectCachePage::_updateActionStates()
 {
+    // 按“是否有当前文件 / 是否运行中 / 是否选中条目”集中刷新按钮状态，
+    // 避免各个信号槽里散落一堆 enabled 判断。
     const bool hasFile = !_currentFile.isEmpty();
     const bool writable = !_isProjectRunning();
     if (_saveButton) {
@@ -110,6 +112,7 @@ void ProjectCachePage::_setSidebarPage(int index)
     tuneNavButton(_filesNavButton, index == 0);
     tuneNavButton(_searchNavButton, index == 1);
     tuneNavButton(_problemsNavButton, index == 2);
+    // 问题聚合比较重，首次切到问题页时才做。
     if (index == 2 && !_problemsLoaded) {
         _loadProblems();
     }
@@ -167,8 +170,7 @@ bool ProjectCachePage::_ensureWritableAction(const QString& actionName) const
 
 bool ProjectCachePage::_confirmAction(const QString& title, const QString& message)
 {
-    // Keep confirmations on ElaContentDialog so the cache page matches the rest
-    // of the Ela-themed settings UI.
+    // 破坏性操作统一走 ElaContentDialog，避免混入 QMessageBox 的样式。
     ElaContentDialog dialog(this);
     dialog.setLeftButtonText(tr("否"));
     dialog.setMiddleButtonText(tr("思考人生"));

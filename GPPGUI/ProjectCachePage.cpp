@@ -3,12 +3,13 @@
 #include <QButtonGroup>
 #include <QDesktopServices>
 #include <QHBoxLayout>
+#include <QItemSelectionModel>
+#include <QVBoxLayout>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
 #include <QUrl>
-#include <QVBoxLayout>
 
 #include "ElaCheckBox.h"
 #include "ElaComboBox.h"
@@ -48,8 +49,8 @@ void ProjectCachePage::refreshCacheFiles()
 
 void ProjectCachePage::_setupUI()
 {
-    // The cache page is a dense work surface: navigation and batch tools stay
-    // on the left, while the right pane is reserved for fast entry scanning.
+    // 缓存页是一个偏高密度的工具界面：左侧放文件/搜索/问题导航和批量操作，
+    // 右侧留给当前缓存文件的句子概览，便于快速扫描和跳转编辑。
     QWidget* mainWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(14, 12, 14, 0);
@@ -202,7 +203,7 @@ void ProjectCachePage::_setupUI()
                     _dirtyFiles.remove(filename);
                     if (_currentFile == filename) {
                         _currentFile.clear();
-                        _entries = nlohmann::json::array();
+                        _entries = json::array();
                         _selectedEntryRows.clear();
                         _renderEntries();
                     }
@@ -261,8 +262,7 @@ void ProjectCachePage::_setupUI()
         });
     searchLayout->addWidget(_globalSearchField);
 
-    // Keep batch replace collapsed by default so search results are not pushed
-    // below the fold during normal browsing.
+    // 批量替换默认收起，日常浏览时优先把空间留给搜索结果列表。
     _replaceToggleButton = new ElaPushButton(tr("展开批量替换"), searchTab);
     _replaceToggleButton->setCheckable(true);
     connect(_replaceToggleButton, &ElaPushButton::toggled, this, [=](bool checked)
@@ -316,7 +316,7 @@ void ProjectCachePage::_setupUI()
     _searchResultList->setModel(_searchModel);
     _searchResultList->setSelectionMode(QAbstractItemView::SingleSelection);
     _searchResultList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    // Must stay in sync with CacheSearchDelegate's four-row card layout.
+    // 高度需要和 CacheSearchDelegate 的四行卡片布局保持同步。
     _searchResultList->setItemHeight(120);
     _searchResultList->setItemDelegate(createCacheSearchDelegate(_searchResultList));
     _searchResultList->setMinimumHeight(520);

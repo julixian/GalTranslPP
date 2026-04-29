@@ -406,8 +406,8 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
         const std::vector<DictionaryReviewTermGroup> termGroups = DictionaryReviewIndex::build(
             m_finalDict, m_finalCounter, m_segments, selectedIndices, m_nameSet, m_wordCounter
         );
-        m_controller->makeBar((int)termGroups.size(), 1);
-        m_controller->addThreadNum();
+        const int reviewThreads = termGroups.empty() ? 1 : std::max(1, std::min(m_threadsNum, (int)termGroups.size()));
+        m_controller->makeBar((int)termGroups.size(), reviewThreads);
         try {
             DictionaryReviewAgentConfig reviewConfig{
                 .projectDir = m_reviewOptions.projectDir,
@@ -418,11 +418,11 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
                 .apiStrategy = m_apiStrategy,
                 .targetLang = m_targetLang,
                 .maxRetries = m_maxRetries,
+                .threadsNum = reviewThreads,
                 .maxTurnsPerTerm = m_reviewOptions.maxTurnsPerTerm,
                 .searchResultLimit = m_reviewOptions.searchResultLimit,
                 .apiTimeoutMs = m_apiTimeoutMs,
-                .checkQuota = m_checkQuota,
-                .allowCrossFileSearch = m_reviewOptions.allowCrossFileSearch
+                .checkQuota = m_checkQuota
             };
             DictionaryReviewAgent reviewAgent(m_controller, m_logger, m_apiPool, m_onPerformApi, std::move(reviewConfig));
             DictList reviewedList = reviewAgent.review(termGroups, m_reviewSourceFiles);
@@ -433,7 +433,6 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
             m_logger->error("阶段四：Review Agent 失败，将回退到粗候选整理结果。错误: {}", e.what());
             finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);
         }
-        m_controller->reduceThreadNum();
     }
     else {
         finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);

@@ -15,7 +15,7 @@
 namespace ProjectCachePagePrivate {
 
 
-    int sentenceIndexOf(const nlohmann::json& object, int fallback)
+    int sentenceIndexOf(const json& object, int fallback)
     {
         if (object.is_object() && object.contains("index") && object["index"].is_number_integer()) {
             return object["index"].get<int>();
@@ -123,8 +123,8 @@ namespace ProjectCachePagePrivate {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
-            // Custom painting keeps the right-side overview fast: one delegate
-            // paints compact pills and two text rows instead of creating widgets.
+            // 缓存条目右侧概览完全自绘：model 只提供 role 数据，
+            // delegate 负责把序号、人名、问题、模型、原文和译文画成紧凑卡片。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
@@ -232,8 +232,8 @@ namespace ProjectCachePagePrivate {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
-            // The search card mirrors GalTransl's order:
-            // problem/match + filename, #index + problem text, source, translation.
+            // 搜索结果按 GalTransl 风格组织：
+            // 问题/匹配标签 + 文件名、#index + 问题文本、原文、译文。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 

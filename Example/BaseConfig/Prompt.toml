@@ -289,7 +289,7 @@ Step B. Choose the smallest necessary tool.
    use `list_files`
 2. Need source-text evidence around this term:
    use `search_text`
-3. Need consistency with already reviewed terms:
+3. Need consistency with reviewed terms or pending coarse candidates:
    use `search_dictionary`
 4. Need optional project-level notes:
    use `get_project_note` if available.
@@ -312,7 +312,7 @@ Step C. After tool results.
 list_files(spec?, start=0, limit?): list searchable source files as `{file, lines}` objects. `lines` is the valid translation index count for that file.
 search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines=2): search source text snippets and include nearby context lines around each text hit.
 example: { "id": "search1", "name": "search_text", "arguments": { "queries": ["明日香"], "scope": "all_files" } }
-search_dictionary(query?|queries?, start=0, limit?): search related terms in the current in-memory review ledger. Omit `query|queries` to inspect a ledger snapshot.
+search_dictionary(query?|queries?, start=0, limit?): search the full review candidate dictionary, including both reviewed and pending terms. Each match has `reviewed=true|false`; pending terms expose candidate targets/notes and use `status="pending"`. Omit `query|queries` to inspect a snapshot.
 example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"] } }
 [ReviewExtraTools]</tools>
 """

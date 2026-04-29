@@ -30,6 +30,7 @@ class QVBoxLayout;
 class QWidget;
 
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
 class ProjectCachePage : public BasePage
 {
@@ -72,42 +73,42 @@ private:
 
     void _setupUI();
 
-    // ProjectCachePageFiles.cpp: discover cache JSON files, keep Windows-style
-    // natural ordering, and read/write the backing UTF-8 JSON arrays.
+    // ProjectCachePageFiles.cpp：发现缓存 JSON 文件、按 Windows 自然顺序排序，
+    // 并负责 UTF-8 JSON 数组的读写。
     void _loadCacheFiles();
     void _loadCacheFile(const QString& filename, bool forceReload = false);
     void _renderFileList();
     fs::path _cacheDir() const;
     fs::path _cachePathForRelativeName(const QString& filename) const;
-    bool _readCacheFile(const QString& filename, nlohmann::json& entries, QString* errorMessage = nullptr) const;
-    bool _writeCacheFile(const QString& filename, const nlohmann::json& entries, QString* errorMessage = nullptr) const;
+    bool _readCacheFile(const QString& filename, json& entries, QString* errorMessage = nullptr) const;
+    bool _writeCacheFile(const QString& filename, const json& entries, QString* errorMessage = nullptr) const;
 
-    // ProjectCachePageEntries.cpp: populate the right-side overview and edit a
-    // single sentence while preserving row mappings back to the JSON array.
+    // ProjectCachePageEntries.cpp：构建右侧句子概览和单句编辑弹窗；
+    // 可见模型里的行号始终映射回原始 JSON 数组行。
     void _renderEntries();
     void _syncSelectedEntryRows();
     void _updateEntryListItem(int row);
     void _updateEntryField(int row, const char* key, const QString& value);
     void _openEntryEditor(int row);
     void _deleteEntryRows(QList<int> rows);
-    static QString _jsonString(const nlohmann::json& object, const char* key);
-    static QString _speakerString(const nlohmann::json& object);
-    static QString _problemString(const nlohmann::json& object, const QString& separator = "\n");
-    static QString _entrySource(const nlohmann::json& object);
-    static QString _entryDst(const nlohmann::json& object);
-    static QString _entryOriginal(const nlohmann::json& object);
-    static QString _entryPreview(const nlohmann::json& object);
-    static QString _entryTranslatedBy(const nlohmann::json& object);
+    static QString _jsonString(const json& object, const char* key);
+    static QString _speakerString(const json& object);
+    static QString _problemString(const json& object, const QString& separator = "\n");
+    static QString _entrySource(const json& object);
+    static QString _entryDst(const json& object);
+    static QString _entryOriginal(const json& object);
+    static QString _entryPreview(const json& object);
+    static QString _entryTranslatedBy(const json& object);
     static QString _truncateForList(const QString& text, int maxChars = 120);
-    QString _entryListText(const nlohmann::json& object, int row) const;
+    QString _entryListText(const json& object, int row) const;
     static QStringList _problemsFromEditorText(const QString& text);
     static int _countOccurrences(const QString& text, const QString& query);
     static int _replaceInString(QString& text, const QString& query, const QString& replacement);
 
-    // ProjectCachePageSearch.cpp: global search, problem aggregation, and batch
-    // replace. Search reads cached in-memory edits first, then falls back to disk.
+    // ProjectCachePageSearch.cpp：全局搜索、问题聚合和批量替换；
+    // 搜索优先读取内存中的未保存编辑，再回退到磁盘文件。
     QList<ReplaceDetail> _collectReplaceDetails(const QString& query, const QString& field, int* totalMatches = nullptr) const;
-    int _applyReplaceToEntries(nlohmann::json& entries, const QString& query, const QString& replacement, const QString& field) const;
+    int _applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const;
     void _runGlobalSearch();
     void _previewReplace();
     void _executeReplace();
@@ -116,8 +117,8 @@ private:
     void _selectEntryByRow(int row);
     int _currentJsonRow() const;
 
-    // ProjectCachePageActions.cpp: shared page state, themed feedback, locking
-    // while the project is running, and ElaContentDialog confirmations.
+    // ProjectCachePageActions.cpp：集中维护页面状态、Ela 风格反馈、
+    // 项目运行时的只读锁定，以及 ElaContentDialog 确认框。
     void _markDirty(const QString& filename);
     void _setInfo(const QString& message);
     void _setError(const QString& message);
@@ -135,11 +136,11 @@ private:
     toml::ordered_value& _projectConfig;
 
     QList<CacheFileInfo> _cacheFiles;
-    QMap<QString, nlohmann::json> _loadedEntriesByFile;
+    QMap<QString, json> _loadedEntriesByFile;
     QSet<QString> _dirtyFiles;
     QList<SearchHit> _searchHits;
     QString _currentFile;
-    nlohmann::json _entries = nlohmann::json::array();
+    json _entries = json::array();
 
     bool _cacheFilesLoaded{false};
     bool _problemsLoaded{false};

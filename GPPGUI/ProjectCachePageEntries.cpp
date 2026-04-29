@@ -2,12 +2,13 @@
 #include "ProjectCachePage_p.h"
 
 #include <algorithm>
+#include <functional>
 
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
+#include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <QStandardItem>
-#include <QVBoxLayout>
 
 #include "ElaCheckBox.h"
 #include "ElaDialog.h"
@@ -16,12 +17,13 @@
 #include "ElaPlainTextEdit.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
-#include "ElaTheme.h"
 
 using namespace ProjectCachePagePrivate;
 
 void ProjectCachePage::_renderEntries()
 {
+    // 右侧概览列表是当前文件 JSON 的“视图层”：本地搜索和只看问题句
+    // 只影响 QStandardItemModel，不改变 _entries 的真实行号和顺序。
     if (!_entryModel) {
         return;
     }
@@ -37,8 +39,6 @@ void ProjectCachePage::_renderEntries()
         return;
     }
 
-    // Local filtering only affects the visible model. The backing JSON array
-    // remains in original order so selected rows can still map back to cache rows.
     const QString query = _localSearchEdit ? _localSearchEdit->text().trimmed() : QString();
     const bool onlyProblems = _filterProblemsCheck && _filterProblemsCheck->isChecked();
 
@@ -80,6 +80,7 @@ void ProjectCachePage::_renderEntries()
 
 void ProjectCachePage::_syncSelectedEntryRows()
 {
+    // UI 里选中的是可见模型行，真正执行删除/编辑时必须先还原成 JSON 行号。
     _selectedEntryRows.clear();
     if (!_entryList || !_entryList->selectionModel()) {
         return;
@@ -124,8 +125,8 @@ void ProjectCachePage::_updateEntryField(int row, const char* key, const QString
     if (_jsonString(_entries[row], key) == value) {
         return;
     }
-    // Editors are intentionally limited to pre_processed_text and
-    // pre_translated_text; original_text stays metadata-only.
+    // 编辑窗口只允许写回 pre_processed_text / pre_translated_text；
+    // original_text 在这个页面始终当作元信息。
     _entries[row][key] = value.toStdString();
     _markDirty(_currentFile);
     _updateEntryListItem(row);
@@ -138,6 +139,7 @@ void ProjectCachePage::_openEntryEditor(int row)
         return;
     }
 
+    // 弹窗内使用当前条目的快照展示；保存时通过 row 写回 _entries。
     const auto item = _entries[row];
     const bool writable = !_isProjectRunning();
 
@@ -202,11 +204,13 @@ void ProjectCachePage::_deleteEntryRows(QList<int> rows)
     if (_currentFile.isEmpty() || rows.isEmpty()) {
         return;
     }
-    std::sort(rows.begin(), rows.end());
-    rows.erase(std::unique(rows.begin(), rows.end()), rows.end());
-    std::sort(rows.begin(), rows.end(), std::greater<int>());
+    std::ranges::sort(rows);
+    const auto duplicatedRows = std::ranges::unique(rows);
+    rows.erase(duplicatedRows.begin(), duplicatedRows.end());
+    std::ranges::sort(rows, std::greater<>());
 
     int deleted = 0;
+    // 从后往前删，避免前面的 erase 改变后续行号。
     for (int row : rows) {
         if (row >= 0 && row < (int)_entries.size()) {
             _entries.erase(_entries.begin() + row);
@@ -226,7 +230,7 @@ void ProjectCachePage::_deleteEntryRows(QList<int> rows)
     _setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个条目，保存后生效"));
 }
 
-QString ProjectCachePage::_jsonString(const nlohmann::json& object, const char* key)
+QString ProjectCachePage::_jsonString(const json& object, const char* key)
 {
     if (!object.is_object() || !object.contains(key)) {
         return {};
@@ -241,7 +245,7 @@ QString ProjectCachePage::_jsonString(const nlohmann::json& object, const char* 
     return QString::fromStdString(value.dump());
 }
 
-QString ProjectCachePage::_speakerString(const nlohmann::json& object)
+QString ProjectCachePage::_speakerString(const json& object)
 {
     if (object.contains("name_preview")) {
         const QString preview = _jsonString(object, "name_preview");
@@ -264,7 +268,7 @@ QString ProjectCachePage::_speakerString(const nlohmann::json& object)
     return {};
 }
 
-QString ProjectCachePage::_problemString(const nlohmann::json& object, const QString& separator)
+QString ProjectCachePage::_problemString(const json& object, const QString& separator)
 {
     if (!object.contains("problems") || !object["problems"].is_array()) {
         return {};
@@ -281,27 +285,27 @@ QString ProjectCachePage::_problemString(const nlohmann::json& object, const QSt
     return problems.join(separator);
 }
 
-QString ProjectCachePage::_entrySource(const nlohmann::json& object)
+QString ProjectCachePage::_entrySource(const json& object)
 {
     return _jsonString(object, "pre_processed_text");
 }
 
-QString ProjectCachePage::_entryDst(const nlohmann::json& object)
+QString ProjectCachePage::_entryDst(const json& object)
 {
     return _jsonString(object, "pre_translated_text");
 }
 
-QString ProjectCachePage::_entryOriginal(const nlohmann::json& object)
+QString ProjectCachePage::_entryOriginal(const json& object)
 {
     return _jsonString(object, "original_text");
 }
 
-QString ProjectCachePage::_entryPreview(const nlohmann::json& object)
+QString ProjectCachePage::_entryPreview(const json& object)
 {
     return _jsonString(object, "translated_preview");
 }
 
-QString ProjectCachePage::_entryTranslatedBy(const nlohmann::json& object)
+QString ProjectCachePage::_entryTranslatedBy(const json& object)
 {
     return _jsonString(object, "translated_by");
 }
@@ -311,7 +315,7 @@ QString ProjectCachePage::_truncateForList(const QString& text, int maxChars)
     return compactPreview(text, maxChars);
 }
 
-QString ProjectCachePage::_entryListText(const nlohmann::json& object, int row) const
+QString ProjectCachePage::_entryListText(const json& object, int row) const
 {
     QStringList header;
     header << QString("#%1").arg(sentenceIndexOf(object, row));

@@ -133,8 +133,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
         m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 80);
-        m_agentAllowCrossFileSearch = toml::find_or(configData, "agent", "allowCrossFileSearch", true);
-        m_agentFinalReconcileSingleThread = toml::find_or(configData, "agent", "finalReconcileSingleThread", false);
         m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
 
         if (m_agentEnabled) {

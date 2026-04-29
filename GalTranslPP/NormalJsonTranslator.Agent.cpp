@@ -6,7 +6,6 @@
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
-
 #include <toml.hpp>
 
 module NormalJsonTranslator;
@@ -762,7 +761,6 @@ struct AgentToolExecutionEnv {
     fs::path projectDir;
     fs::path transCacheDir;
     int searchResultLimit = 80;
-    bool allowCrossFileSearch = true;
     std::shared_mutex* transCacheMutex = nullptr;
     const std::vector<fs::path>* knownRelFiles = nullptr;
     const std::vector<fs::path>* dictionaryPaths = nullptr;
@@ -871,7 +869,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
     if (scope == "specified_file") {
         targetFiles.push_back(ascii2Wide(arguments.value("file", wide2Ascii(env.relInputPath))));
     }
-    else if (scope == "all_files" && env.allowCrossFileSearch && env.knownRelFiles != nullptr) {
+    else if (scope == "all_files" && env.knownRelFiles != nullptr) {
         targetFiles = *env.knownRelFiles;
     }
     else {
@@ -1182,7 +1180,6 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         .projectDir = m_projectDir,
         .transCacheDir = m_transCacheDir,
         .searchResultLimit = m_agentSearchResultLimit,
-        .allowCrossFileSearch = m_agentAllowCrossFileSearch,
         .transCacheMutex = &m_transCacheMutex,
         .knownRelFiles = &m_agentKnownRelFiles,
         .dictionaryPaths = &m_agentDictionaryPaths,
@@ -1490,10 +1487,8 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
         m_controller->updateBar(-rollbackCount);
     }
 
-    const char* modeText = m_agentFinalReconcileSingleThread ? "单线程" : "多线程";
     m_logger->info(
-        "Agent 模式开始最终 {} reconcile，共 {} 条重翻请求，涉及 {} 个文件，进度回退 {} 句。",
-        modeText,
+        "Agent 模式开始最终 reconcile，共 {} 条重翻请求，涉及 {} 个文件，进度回退 {} 句。",
         rewriteQueue.size(),
         fileToIds.size(),
         rollbackCount
@@ -1527,29 +1522,17 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
             }
         };
 
-    if (m_agentFinalReconcileSingleThread) {
-        m_controller->addThreadNum();
-        for (const auto& [filePath, ids] : fileToIds) {
-            if (m_controller->shouldStop()) {
-                break;
-            }
-            runOneFile(filePath, ids, 0);
-        }
-        m_controller->reduceThreadNum();
+    std::vector<std::future<void>> results;
+    m_threadPool.resize(std::max(1, std::min(m_threadsNum, (int)fileToIds.size())));
+    for (const auto& [filePath, ids] : fileToIds) {
+        results.emplace_back(m_threadPool.push([&, filePath, ids](const int id)
+            {
+                m_controller->addThreadNum();
+                runOneFile(filePath, ids, id);
+                m_controller->reduceThreadNum();
+            }));
     }
-    else {
-        std::vector<std::future<void>> results;
-        m_threadPool.resize(std::min(m_threadsNum, (int)fileToIds.size()));
-        for (const auto& [filePath, ids] : fileToIds) {
-            results.emplace_back(m_threadPool.push([&, filePath, ids](const int id)
-                {
-                    m_controller->addThreadNum();
-                    runOneFile(filePath, ids, id);
-                    m_controller->reduceThreadNum();
-                }));
-        }
-        waitForThreads(m_threadPool, results);
-    }
+    waitForThreads(m_threadPool, results);
 
     int remainingRequests = 0;
     mutateAgentState([&](json&, json& queue, json&)
@@ -1561,14 +1544,14 @@ void NormalJsonTranslator::runAgentFinalReconcile() {
     m_agentReconcileTargetsByFile.clear();
     m_agentReconciling = false;
     if (remainingRequests == 0) {
-        m_logger->info("Agent 模式最终 {} reconcile 完成。", modeText);
+        m_logger->info("Agent 模式最终 reconcile 完成。");
     }
     else {
         if (m_controller->shouldStop()) {
-            m_logger->warn("Agent 模式最终 {} reconcile 已暂停，剩余 {} 条重翻请求。", modeText, remainingRequests);
+            m_logger->warn("Agent 模式最终 reconcile 已暂停，剩余 {} 条重翻请求。", remainingRequests);
         }
         else {
-            m_logger->warn("Agent 模式最终 {} reconcile 未完成，剩余 {} 条重翻请求。", modeText, remainingRequests);
+            m_logger->warn("Agent 模式最终 reconcile 未完成，剩余 {} 条重翻请求。", remainingRequests);
         }
     }
 }

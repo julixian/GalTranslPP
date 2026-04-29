@@ -75,6 +75,8 @@ namespace {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
+            // 成功句流只保存轻量事件，实际布局在 delegate 中绘制，
+            // 这样高频追加时不会为每一条创建 QWidget。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
@@ -170,6 +172,7 @@ namespace {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
+            // 错误卡片默认只展示短摘要，完整错误放 tooltip，避免 API 长报文拖慢绘制。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
             const auto event = index.data(ErrorRole).value<GuiRuntimeErrorEvent>();
@@ -276,6 +279,7 @@ namespace {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
+            // 文件进度卡片是右侧的可点击筛选入口；点击后会过滤左侧成功句流。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
             const auto file = index.data(FileRole).value<GuiRuntimeFileProgress>();
@@ -333,6 +337,8 @@ TranslationWorkbenchPage::TranslationWorkbenchPage(QWidget* parent)
 
 void TranslationWorkbenchPage::_setupUI()
 {
+    // 工作台分成两块：左侧是按时间流动的成功句，右侧在“最近错误”和“文件进度”之间切换。
+    // 页面本身只维护内存态，所有数据都来自 TranslatorWorker 转发的 Controller 运行期事件。
     QWidget* mainWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
     mainLayout->setContentsMargins(18, 14, 16, 0);
@@ -347,6 +353,7 @@ void TranslationWorkbenchPage::_setupUI()
     _clearFilterButton = new ElaPushButton(tr("清除筛选"), mainWidget);
     connect(_clearFilterButton, &ElaPushButton::clicked, this, [=]()
         {
+            // 清除文件筛选后重新渲染句流；底层事件仍保留在 _successes 中。
             _successFileFilters.clear();
             _renderSuccesses();
             _refreshHeader();
@@ -414,6 +421,7 @@ void TranslationWorkbenchPage::_setupUI()
     _fileList->setItemDelegate(new FileDelegate(_fileList));
     connect(_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
+            // 文件进度项同时也是筛选开关：可快速只看某个文件产生的成功句。
             const auto file = index.data(FileRole).value<GuiRuntimeFileProgress>();
             if (!file.filename.isEmpty()) {
                 if (_successFileFilters.contains(file.filename)) {
@@ -438,6 +446,7 @@ void TranslationWorkbenchPage::_setupUI()
 
 void TranslationWorkbenchPage::_setSideTab(int index)
 {
+    // ElaPushButton 分段按钮不依赖额外导航控件，切换时只同步 stacked widget 和 checked 状态。
     _sideStack->setCurrentIndex(index);
     _errorsTabButton->setChecked(index == 0);
     _filesTabButton->setChecked(index == 1);
@@ -445,6 +454,7 @@ void TranslationWorkbenchPage::_setSideTab(int index)
 
 void TranslationWorkbenchPage::clearRuntime()
 {
+    // 新任务开始或手动清空时调用；页面不落盘保存历史，状态全部随 GUI 会话消失。
     _successes.clear();
     _errors.clear();
     _files.clear();
@@ -459,6 +469,7 @@ void TranslationWorkbenchPage::clearRuntime()
 
 void TranslationWorkbenchPage::resetRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files)
 {
+    // Controller 重新注册运行文件时，右侧文件表以这批数据为准，旧筛选也要清空。
     _files.clear();
     _successFileFilters.clear();
     for (const auto& file : files) {
@@ -481,6 +492,7 @@ void TranslationWorkbenchPage::updateRuntimeFile(const GuiRuntimeFileProgress& f
 
 void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files)
 {
+    // Worker 会批量合并高频文件进度事件，这里一次更新多项后只刷新一遍列表。
     bool changed = false;
     for (const auto& file : files) {
         if (file.filename.isEmpty()) {
@@ -512,6 +524,7 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
     for (const auto& event : events) {
         _successes.push_front(event);
     }
+    // 内存保留最近 500 条，但实际只渲染最近 100 条，和 GalTransl 的句流策略接近。
     _trimSuccesses();
     _renderSuccesses();
     _refreshHeader();
@@ -533,6 +546,7 @@ void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>&
     for (const auto& event : events) {
         _errors.push_front(event);
     }
+    // 错误只保留最近若干条，避免一次 API 风暴把 GUI 模型撑爆。
     _trimErrors();
     _renderErrors();
     _refreshHeader();
@@ -547,6 +561,8 @@ void TranslationWorkbenchPage::updateStage(const QString& stage, const QString& 
 
 void TranslationWorkbenchPage::_renderSuccesses()
 {
+    // _successes 内部是“最新在前”，渲染前取最近 N 条再反转，
+    // 让视觉顺序变成从上到下递增，最新事件贴近底部。
     const bool stickToBottom = _successList
         && (_successList->verticalScrollBar()->maximum() - _successList->verticalScrollBar()->value() <= 24);
     if (_successList) {
@@ -564,7 +580,7 @@ void TranslationWorkbenchPage::_renderSuccesses()
             break;
         }
     }
-    std::reverse(visible.begin(), visible.end());
+    std::ranges::reverse(visible);
 
     for (const auto& event : visible) {
         QStandardItem* item = new QStandardItem(event.filename);
@@ -582,6 +598,7 @@ void TranslationWorkbenchPage::_renderSuccesses()
 
 void TranslationWorkbenchPage::_renderErrors()
 {
+    // 错误列表不做复杂展开，保持短卡片 + tooltip；切换标签页时模型已经准备好。
     if (_errorList) {
         _errorList->setUpdatesEnabled(false);
     }
@@ -604,7 +621,8 @@ void TranslationWorkbenchPage::_renderFiles()
 {
     _fileModel->clear();
     QList<GuiRuntimeFileProgress> files = _files.values();
-    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b)
+    // 未完成文件排前面，文件名按 locale 排序，方便运行中扫进度。
+    std::ranges::sort(files, [](const auto& a, const auto& b)
         {
             const bool aDone = a.total > 0 && a.completed >= a.total;
             const bool bDone = b.total > 0 && b.completed >= b.total;
@@ -623,6 +641,7 @@ void TranslationWorkbenchPage::_renderFiles()
 
 void TranslationWorkbenchPage::_refreshHeader()
 {
+    // 顶部摘要从三个运行期集合即时汇总，不依赖进度条信号本身。
     int total = 0;
     int completed = 0;
     int problems = 0;
@@ -645,7 +664,7 @@ void TranslationWorkbenchPage::_refreshHeader()
         _clearFilterButton->setVisible(true);
     }
     _errorsTabButton->setText(_errors.isEmpty() ? tr("最近错误") : tr("最近错误 (%1)").arg(_errors.size()));
-    const int unfinished = std::count_if(_files.begin(), _files.end(), [](const auto& file)
+    const int unfinished = std::ranges::count_if(_files, [](const auto& file)
         {
             return file.total <= 0 || file.completed < file.total;
         });
@@ -654,6 +673,7 @@ void TranslationWorkbenchPage::_refreshHeader()
 
 void TranslationWorkbenchPage::_trimSuccesses()
 {
+    // 保留上限控制在追加阶段做，渲染阶段只负责当前可见窗口。
     while (_successes.size() > MaxSuccessEvents) {
         _successes.pop_back();
     }
@@ -661,6 +681,7 @@ void TranslationWorkbenchPage::_trimSuccesses()
 
 void TranslationWorkbenchPage::_trimErrors()
 {
+    // 错误多为诊断入口，保留最近即可。
     while (_errors.size() > MaxErrorEvents) {
         _errors.pop_back();
     }

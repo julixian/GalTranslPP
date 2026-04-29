@@ -53,10 +53,12 @@ int ProjectCachePage::_replaceInString(QString& text, const QString& query, cons
 
 QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(const QString& query, const QString& field, int* totalMatches) const
 {
+    // 替换预览和实际替换共用同一套收集逻辑，避免“预览命中”和“实际修改”
+    // 因字段范围不同步而产生偏差。
     int total = 0;
     QList<ReplaceDetail> details;
     for (const CacheFileInfo& file : _cacheFiles) {
-        nlohmann::json entries;
+        json entries;
         const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
@@ -69,8 +71,8 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(
             if (!item.is_object()) {
                 continue;
             }
-            // Replacement follows the same fields the translator edits:
-            // src -> pre_processed_text, dst -> pre_translated_text.
+            // 替换字段和翻译缓存实际字段保持一致：
+            // src -> pre_processed_text，dst -> pre_translated_text。
             if (field == "src" || field == "all") {
                 fileMatches += _countOccurrences(_entrySource(item), query);
             }
@@ -89,7 +91,7 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(
     return details;
 }
 
-int ProjectCachePage::_applyReplaceToEntries(nlohmann::json& entries, const QString& query, const QString& replacement, const QString& field) const
+int ProjectCachePage::_applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const
 {
     int total = 0;
     for (auto& item : entries) {
@@ -133,11 +135,10 @@ void ProjectCachePage::_runGlobalSearch()
         return;
     }
 
-    // Cap global results so repeatedly typing in the search box stays responsive
-    // on large cache folders.
+    // 搜索框 textChanged 会频繁触发，这里限制结果数，避免大缓存目录里边输入边卡死。
     constexpr int maxResults = 2000;
     for (const CacheFileInfo& file : _cacheFiles) {
-        nlohmann::json entries;
+        json entries;
         const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
@@ -252,7 +253,7 @@ void ProjectCachePage::_executeReplace()
     int changedFiles = 0;
     int changedMatches = 0;
     for (const ReplaceDetail& detail : details) {
-        nlohmann::json entries;
+        json entries;
         const auto loaded = _dirtyFiles.contains(detail.filename) ? _loadedEntriesByFile.find(detail.filename) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
@@ -272,6 +273,7 @@ void ProjectCachePage::_executeReplace()
         }
     }
 
+    // 替换只改内存副本并标脏；刷新三个视图让用户立刻看到待保存状态。
     _renderFileList();
     _renderEntries();
     _runGlobalSearch();
@@ -286,10 +288,10 @@ void ProjectCachePage::_loadProblems()
         return;
     }
     _problemsLoaded = true;
-    // The problem list is derived from GalTranslPP's problems array only.
+    // 问题页只聚合 GalTranslPP 的 problems 数组；这里不兼容 GalTransl 旧 problem 字段。
     QMap<QString, int> counts;
     for (const CacheFileInfo& file : _cacheFiles) {
-        nlohmann::json entries;
+        json entries;
         const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
         if (loaded != _loadedEntriesByFile.end()) {
             entries = loaded.value();
@@ -311,7 +313,7 @@ void ProjectCachePage::_loadProblems()
     for (auto it = counts.begin(); it != counts.end(); ++it) {
         items.push_back({ it.key(), it.value() });
     }
-    std::sort(items.begin(), items.end(), [](const auto& a, const auto& b)
+    std::ranges::sort(items, [](const auto& a, const auto& b)
         {
             if (a.second != b.second) {
                 return a.second > b.second;
@@ -358,6 +360,7 @@ void ProjectCachePage::_selectEntryByRow(int row)
         QSignalBlocker blocker(_filterProblemsCheck);
         _filterProblemsCheck->setChecked(false);
     }
+    // 命中搜索结果后清掉右侧局部过滤，再重新渲染，保证目标行一定可见。
     _renderEntries();
     for (int modelRow = 0; modelRow < _entryModel->rowCount(); ++modelRow) {
         const QModelIndex index = _entryModel->index(modelRow, 0);

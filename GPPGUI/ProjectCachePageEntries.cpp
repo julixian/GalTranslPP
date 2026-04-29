@@ -150,7 +150,7 @@ void ProjectCachePage::_openEntryEditor(int row)
         : QString("#%1  %2").arg(sentenceIndexOf(item, row)).arg(speaker));
     dialog.setWindowModality(Qt::ApplicationModal);
     dialog.setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
-    dialog.resize(860, 430);
+    dialog.resize(860, 480);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(&dialog);
     mainLayout->setContentsMargins(16, 34, 16, 14);

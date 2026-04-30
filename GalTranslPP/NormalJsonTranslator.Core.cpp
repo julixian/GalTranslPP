@@ -238,7 +238,7 @@ void NormalJsonTranslator::normalJsonInit()
             if (m_apiStrategy != "random" && m_apiStrategy != "fallback") {
                 throw std::invalid_argument("apiStrategy must be random or fallback");
             }
-            int apiTimeOutSecond = toml::find_or(configData, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 120);
+            int apiTimeOutSecond = toml::find_or(configData, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 300);
             m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
             const auto apisArr = toml::find<

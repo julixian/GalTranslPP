@@ -1,6 +1,6 @@
 [backendSpecific.OpenAI-Compatible]
 apiStrategy = "random" # 令牌策略，random随机轮询，fallback优先第一个，出现[请求错误]时使用下一个
-apiTimeout = 120 # 请求超时时间，单位秒
+apiTimeout = 300 # 请求超时时间，单位秒
 
   [[backendSpecific.OpenAI-Compatible.apis]]
   apikey = ""             # sk-example-key | sakura引擎可不填

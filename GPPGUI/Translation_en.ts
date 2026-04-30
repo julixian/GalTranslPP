@@ -2646,67 +2646,77 @@
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="78"/>
+        <source>确认刷新</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="78"/>
+        <source>刷新会放弃所有未保存的缓存修改，确定要继续吗？</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="ProjectCachePage.cpp" line="85"/>
         <source>保存当前文件</source>
         <translation>Save Current File</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="81"/>
-        <location filename="ProjectCachePage.cpp" line="102"/>
+        <location filename="ProjectCachePage.cpp" line="88"/>
+        <location filename="ProjectCachePage.cpp" line="109"/>
         <source>保存缓存</source>
         <translation>Save Cache</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="90"/>
-        <location filename="ProjectCachePage.cpp" line="130"/>
+        <location filename="ProjectCachePage.cpp" line="97"/>
+        <location filename="ProjectCachePage.cpp" line="137"/>
         <source>已保存 </source>
         <translation>Saved </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="99"/>
+        <location filename="ProjectCachePage.cpp" line="106"/>
         <source>保存全部</source>
         <translation>Save All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="130"/>
-        <location filename="ProjectCachePage.cpp" line="214"/>
+        <location filename="ProjectCachePage.cpp" line="137"/>
+        <location filename="ProjectCachePage.cpp" line="221"/>
         <source> 个缓存文件</source>
         <translation> cache file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="182"/>
+        <location filename="ProjectCachePage.cpp" line="189"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="185"/>
+        <location filename="ProjectCachePage.cpp" line="192"/>
         <source>删除缓存文件</source>
         <translation>Delete Cache Files</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="192"/>
-        <location filename="ProjectCachePage.cpp" line="416"/>
+        <location filename="ProjectCachePage.cpp" line="199"/>
+        <location filename="ProjectCachePage.cpp" line="423"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="193"/>
-        <location filename="ProjectCachePage.cpp" line="417"/>
+        <location filename="ProjectCachePage.cpp" line="200"/>
+        <location filename="ProjectCachePage.cpp" line="424"/>
         <source>确定要删除选中的 </source>
         <translation>Delete selected </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="193"/>
+        <location filename="ProjectCachePage.cpp" line="200"/>
         <source> 个缓存文件吗？</source>
         <translation> cache file(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="214"/>
+        <location filename="ProjectCachePage.cpp" line="221"/>
         <location filename="ProjectCachePageEntries.cpp" line="230"/>
         <source>已删除 </source>
         <translation>Deleted </translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="166"/>
+        <location filename="ProjectCachePage.cpp" line="173"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
@@ -2716,30 +2726,30 @@
         <translation>Refresh</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="245"/>
+        <location filename="ProjectCachePage.cpp" line="252"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="255"/>
-        <location filename="ProjectCachePage.cpp" line="292"/>
+        <location filename="ProjectCachePage.cpp" line="262"/>
+        <location filename="ProjectCachePage.cpp" line="299"/>
         <source>全部</source>
         <translation>All</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="256"/>
-        <location filename="ProjectCachePage.cpp" line="291"/>
+        <location filename="ProjectCachePage.cpp" line="263"/>
+        <location filename="ProjectCachePage.cpp" line="298"/>
         <source>原文 pre_processed_text</source>
         <translation>Source pre_processed_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="257"/>
-        <location filename="ProjectCachePage.cpp" line="290"/>
+        <location filename="ProjectCachePage.cpp" line="264"/>
+        <location filename="ProjectCachePage.cpp" line="297"/>
         <source>译文 pre_translated_text</source>
         <translation>Translation pre_translated_text</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="258"/>
+        <location filename="ProjectCachePage.cpp" line="265"/>
         <source>问题 problems</source>
         <translation>Problems</translation>
     </message>
@@ -2749,78 +2759,78 @@
         <translation>Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="280"/>
+        <location filename="ProjectCachePage.cpp" line="287"/>
         <source>查找</source>
         <translation>Find</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="285"/>
+        <location filename="ProjectCachePage.cpp" line="292"/>
         <source>替换为</source>
         <translation>Replace with</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="296"/>
+        <location filename="ProjectCachePage.cpp" line="303"/>
         <source>预览</source>
         <translation>Preview</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="299"/>
+        <location filename="ProjectCachePage.cpp" line="306"/>
         <source>替换</source>
         <translation>Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="167"/>
+        <location filename="ProjectCachePage.cpp" line="174"/>
         <location filename="ProjectCachePageSearch.cpp" line="133"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="337"/>
+        <location filename="ProjectCachePage.cpp" line="344"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="168"/>
+        <location filename="ProjectCachePage.cpp" line="175"/>
         <location filename="ProjectCachePageSearch.cpp" line="191"/>
         <location filename="ProjectCachePageSearch.cpp" line="336"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="368"/>
+        <location filename="ProjectCachePage.cpp" line="375"/>
         <location filename="ProjectCachePageEntries.cpp" line="35"/>
         <location filename="ProjectCachePageEntries.cpp" line="76"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="385"/>
+        <location filename="ProjectCachePage.cpp" line="392"/>
         <source>在当前文件中搜索 pre_processed_text / pre_translated_text / problems...</source>
         <translation>Search pre_processed_text / pre_translated_text / problems in current file...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="392"/>
+        <location filename="ProjectCachePage.cpp" line="399"/>
         <source>只看问题句</source>
         <translation>Problems only</translation>
     </message>
     <message>
         <location filename="ProjectCachePageActions.cpp" line="90"/>
-        <location filename="ProjectCachePage.cpp" line="406"/>
+        <location filename="ProjectCachePage.cpp" line="413"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="409"/>
+        <location filename="ProjectCachePage.cpp" line="416"/>
         <source>删除缓存条目</source>
         <translation>Delete Cache Entries</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="417"/>
+        <location filename="ProjectCachePage.cpp" line="424"/>
         <source> 个缓存条目吗？</source>
         <translation> cache entry(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="133"/>
+        <location filename="ProjectCachePageFiles.cpp" line="137"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -2873,28 +2883,28 @@
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="116"/>
+        <location filename="ProjectCachePageFiles.cpp" line="120"/>
         <source>%1 句 · %2 问题</source>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
         <location filename="ProjectCachePageActions.cpp" line="154"/>
-        <location filename="ProjectCachePage.cpp" line="266"/>
+        <location filename="ProjectCachePage.cpp" line="273"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="399"/>
+        <location filename="ProjectCachePage.cpp" line="406"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="118"/>
+        <location filename="ProjectCachePageFiles.cpp" line="122"/>
         <source>解析失败</source>
         <translation>Parse failed</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="155"/>
+        <location filename="ProjectCachePageFiles.cpp" line="159"/>
         <source>缓存文件不是 JSON 数组: </source>
         <translation>Cache file is not a JSON array: </translation>
     </message>
@@ -2949,22 +2959,22 @@
         <translation>Yes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="187"/>
+        <location filename="ProjectCachePageFiles.cpp" line="191"/>
         <source>无法打开缓存文件: </source>
         <translation>Cannot open cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="196"/>
+        <location filename="ProjectCachePageFiles.cpp" line="200"/>
         <source>解析缓存失败: </source>
         <translation>Failed to parse cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="210"/>
+        <location filename="ProjectCachePageFiles.cpp" line="214"/>
         <source>无法写入缓存文件: </source>
         <translation>Cannot write cache file: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="219"/>
+        <location filename="ProjectCachePageFiles.cpp" line="223"/>
         <source>写入缓存失败: </source>
         <translation>Failed to write cache: </translation>
     </message>

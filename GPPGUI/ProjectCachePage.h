@@ -75,7 +75,7 @@ private:
 
     // ProjectCachePageFiles.cpp：发现缓存 JSON 文件、按 Windows 自然顺序排序，
     // 并负责 UTF-8 JSON 数组的读写。
-    void _loadCacheFiles();
+    void _loadCacheFiles(bool discardDirty = false);
     void _loadCacheFile(const QString& filename, bool forceReload = false);
     void _renderFileList();
     fs::path _cacheDir() const;

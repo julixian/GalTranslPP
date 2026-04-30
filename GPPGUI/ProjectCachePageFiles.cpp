@@ -19,15 +19,19 @@ import Tool;
 
 using namespace ProjectCachePagePrivate;
 
-void ProjectCachePage::_loadCacheFiles()
+void ProjectCachePage::_loadCacheFiles(bool discardDirty)
 {
-    // 顶部“刷新”和首次进入页面都会走这里：以磁盘为准重建文件列表，
-    // 但保留脏文件的内存副本，避免用户未保存的编辑被刷新覆盖。
+    // 首次进入页面会保守保留脏文件内存副本；用户主动刷新时 discardDirty=true，
+    // 表示放弃未保存编辑并以磁盘内容为准，文件名前的 * 也会随之清掉。
     _cacheFiles.clear();
     _cacheFilesLoaded = true;
     _problemsLoaded = false;
     const QString previousFile = _currentFile;
-    const bool keepPreviousFromMemory = !previousFile.isEmpty() && _dirtyFiles.contains(previousFile);
+    if (discardDirty) {
+        _dirtyFiles.clear();
+        _loadedEntriesByFile.clear();
+    }
+    const bool keepPreviousFromMemory = !discardDirty && !previousFile.isEmpty() && _dirtyFiles.contains(previousFile);
     const fs::path cacheDir = _cacheDir();
     if (!fs::exists(cacheDir)) {
         std::error_code ec;
@@ -41,7 +45,7 @@ void ProjectCachePage::_loadCacheFiles()
             }
             CacheFileInfo info;
             info.relativeName = QString(fs::relative(entry.path(), cacheDir).generic_wstring());
-            if (!_dirtyFiles.contains(info.relativeName)) {
+            if (discardDirty || !_dirtyFiles.contains(info.relativeName)) {
                 _loadedEntriesByFile.remove(info.relativeName);
             }
             std::error_code ec;

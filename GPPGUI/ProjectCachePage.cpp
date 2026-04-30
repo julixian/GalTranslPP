@@ -44,7 +44,7 @@ void ProjectCachePage::ensureCacheFilesLoaded()
 
 void ProjectCachePage::refreshCacheFiles()
 {
-    _loadCacheFiles();
+    _loadCacheFiles(true);
 }
 
 void ProjectCachePage::_setupUI()
@@ -72,7 +72,14 @@ void ProjectCachePage::_setupUI()
     topLayout->addWidget(openCacheButton);
 
     ElaIconButton* refreshButton = createHeaderIconButton(ElaIconType::Rotate, tr("刷新"), mainWidget);
-    connect(refreshButton, &ElaIconButton::clicked, this, &ProjectCachePage::_loadCacheFiles);
+    connect(refreshButton, &ElaIconButton::clicked, this, [=]()
+        {
+            if (!_dirtyFiles.isEmpty()
+                && !_confirmAction(tr("确认刷新"), tr("刷新会放弃所有未保存的缓存修改，确定要继续吗？"))) {
+                return;
+            }
+            _loadCacheFiles(true);
+        });
     topLayout->addWidget(refreshButton);
 
     _saveButton = createHeaderIconButton(ElaIconType::FloppyDisk, tr("保存当前文件"), mainWidget);

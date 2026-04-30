@@ -16,9 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 新增缓存管理页面",
-        "2. [GUI] 新增翻译详情页面",
-		"3. GenDict Agent 模式允许多线程",
+        "1. [GUI] 缓存管理刷新时会丢弃未保存的修改了",
     };
 
     mainLayout->addWidget(updateTitle);

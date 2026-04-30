@@ -17,12 +17,6 @@
 import Tool;
 namespace fs = std::filesystem;
 
-
-template<typename FnCastTo>
-FnCastTo FnCast(uint64_t fnToCast, FnCastTo) {
-    return (FnCastTo)fnToCast;
-}
-
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
     HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
@@ -38,15 +32,6 @@ void waitForProcessToExit(qint64 pid) {
 
 
 int main(int argc, char* argv[]) {
-
-#ifdef Q_OS_WIN
-    if (HMODULE hUser32 = LoadLibraryW(L"User32.dll")) {
-        if (uint64_t orgSetProcessDpiAwarenessContext = (uint64_t)GetProcAddress(hUser32, "SetProcessDpiAwarenessContext")) {
-            FnCast(orgSetProcessDpiAwarenessContext, SetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-        }
-        FreeLibrary(hUser32);
-    }
-#endif
 
     QCoreApplication a(argc, argv);
     QCoreApplication::setApplicationName("GalTransl++ Updater");

@@ -87,6 +87,9 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>GPPGUI.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>if not exist "$(OutDir)translations" mkdir "$(OutDir)translations"</Command>
     </PreBuildEvent>
@@ -293,6 +296,9 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GPPGUI.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="GPPGUI.manifest" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CommonNormalDictPage.h" />

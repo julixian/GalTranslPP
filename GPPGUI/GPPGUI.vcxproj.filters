@@ -307,6 +307,11 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <Manifest Include="GPPGUI.manifest">
+      <Filter>Resource Files</Filter>
+    </Manifest>
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="NormalTabEntry.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>

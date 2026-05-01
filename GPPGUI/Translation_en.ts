@@ -421,7 +421,7 @@
     <message>
         <location filename="CommonGptDictPage.cpp" line="561"/>
         <source> 文件</source>
-        <translation></translation>
+        <translation> file</translation>
     </message>
     <message>
         <source>请先选择一个字典页！</source>
@@ -742,7 +742,7 @@
     <message>
         <location filename="CommonNormalDictPage.cpp" line="592"/>
         <source> 文件</source>
-        <translation></translation>
+        <translation> file</translation>
     </message>
     <message>
         <location filename="CommonNormalDictPage.cpp" line="600"/>
@@ -2136,7 +2136,7 @@
     <message>
         <location filename="OtherSettingsPage.cpp" line="125"/>
         <source>项目名不能为空且不能包含斜杠</source>
-        <translation></translation>
+        <translation>Project name cannot be empty or contain slashes</translation>
     </message>
     <message>
         <location filename="OtherSettingsPage.cpp" line="91"/>
@@ -2647,12 +2647,12 @@
     <message>
         <location filename="ProjectCachePage.cpp" line="78"/>
         <source>确认刷新</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirm refresh</translation>
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="78"/>
         <source>刷新会放弃所有未保存的缓存修改，确定要继续吗？</source>
-        <translation type="unfinished"></translation>
+        <translation>Refreshing will discard all unsaved cache changes. Continue?</translation>
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="85"/>
@@ -2711,7 +2711,7 @@
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="221"/>
-        <location filename="ProjectCachePageEntries.cpp" line="230"/>
+        <location filename="ProjectCachePageEntries.cpp" line="229"/>
         <source>已删除 </source>
         <translation>Deleted </translation>
     </message>
@@ -2754,7 +2754,7 @@
         <translation>Problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="232"/>
+        <location filename="ProjectCachePageSearch.cpp" line="231"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
@@ -2780,7 +2780,7 @@
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="174"/>
-        <location filename="ProjectCachePageSearch.cpp" line="133"/>
+        <location filename="ProjectCachePageSearch.cpp" line="132"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
@@ -2791,8 +2791,8 @@
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="175"/>
-        <location filename="ProjectCachePageSearch.cpp" line="191"/>
-        <location filename="ProjectCachePageSearch.cpp" line="336"/>
+        <location filename="ProjectCachePageSearch.cpp" line="190"/>
+        <location filename="ProjectCachePageSearch.cpp" line="335"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
@@ -2843,12 +2843,12 @@
         <translation type="obsolete">Delete</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="178"/>
+        <location filename="ProjectCachePageEntries.cpp" line="177"/>
         <source>translated_preview（只读）</source>
         <translation>translated_preview (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="230"/>
+        <location filename="ProjectCachePageEntries.cpp" line="229"/>
         <source> 个条目，保存后生效</source>
         <translation> entries. Save to apply.</translation>
     </message>
@@ -2863,22 +2863,22 @@
         <translation>Delete Selected Entries (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="336"/>
+        <location filename="ProjectCachePageSearch.cpp" line="335"/>
         <source>问题 (%1)</source>
         <translation>Problems (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="172"/>
+        <location filename="ProjectCachePageEntries.cpp" line="171"/>
         <source>original_text（元信息，只读）</source>
         <translation>original_text (metadata, read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="174"/>
+        <location filename="ProjectCachePageEntries.cpp" line="173"/>
         <source>pre_processed_text（原文，可编辑）</source>
         <translation>pre_processed_text (source, editable)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="175"/>
+        <location filename="ProjectCachePageEntries.cpp" line="174"/>
         <source>pre_translated_text（译文，可编辑）</source>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
@@ -2909,17 +2909,17 @@
         <translation>Cache file is not a JSON array: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="176"/>
+        <location filename="ProjectCachePageEntries.cpp" line="175"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="183"/>
+        <location filename="ProjectCachePageEntries.cpp" line="182"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="187"/>
+        <location filename="ProjectCachePageEntries.cpp" line="186"/>
         <source>保存修改</source>
         <translation>Save Changes</translation>
     </message>
@@ -2979,85 +2979,85 @@
         <translation>Failed to write cache: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="328"/>
+        <location filename="ProjectCachePageEntries.cpp" line="327"/>
         <source>问题: </source>
         <translation>Problem: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="335"/>
+        <location filename="ProjectCachePageEntries.cpp" line="334"/>
         <source>原文: </source>
         <translation>Source: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="336"/>
+        <location filename="ProjectCachePageEntries.cpp" line="335"/>
         <source>译文: </source>
         <translation>Translation: </translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="189"/>
+        <location filename="ProjectCachePageSearch.cpp" line="188"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="190"/>
+        <location filename="ProjectCachePageSearch.cpp" line="189"/>
         <source>译文</source>
         <translation>Translation</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="204"/>
+        <location filename="ProjectCachePageSearch.cpp" line="203"/>
         <source>%1 条结果</source>
         <translation>%1 result(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="206"/>
+        <location filename="ProjectCachePageSearch.cpp" line="205"/>
         <source>搜索 (%1)</source>
         <translation>Search (%1)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="214"/>
-        <location filename="ProjectCachePageSearch.cpp" line="239"/>
+        <location filename="ProjectCachePageSearch.cpp" line="213"/>
+        <location filename="ProjectCachePageSearch.cpp" line="238"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="219"/>
+        <location filename="ProjectCachePageSearch.cpp" line="218"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="225"/>
+        <location filename="ProjectCachePageSearch.cpp" line="224"/>
         <source>
 ...</source>
         <translation>
 ...</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="246"/>
+        <location filename="ProjectCachePageSearch.cpp" line="245"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="249"/>
+        <location filename="ProjectCachePageSearch.cpp" line="248"/>
         <source>确认替换</source>
         <translation>Confirm Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="249"/>
+        <location filename="ProjectCachePageSearch.cpp" line="248"/>
         <source>确定要替换 %1 处内容吗？</source>
         <translation>Replace %1 occurrence(s)?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="280"/>
+        <location filename="ProjectCachePageSearch.cpp" line="279"/>
         <source>已替换 %1 处，涉及 %2 个文件；保存后落盘。</source>
         <translation>Replaced %1 occurrence(s) across %2 file(s). Save to write changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="281"/>
+        <location filename="ProjectCachePageSearch.cpp" line="280"/>
         <source>批量替换完成，记得保存修改</source>
         <translation>Batch replace completed. Remember to save changes.</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="330"/>
+        <location filename="ProjectCachePageSearch.cpp" line="329"/>
         <source>点击搜索此问题</source>
         <translation>Click to search this problem</translation>
     </message>
@@ -3067,7 +3067,7 @@
     <message>
         <location filename="ProjectSettingsPage.cpp" line="34"/>
         <source>项目设置主页</source>
-        <translation></translation>
+        <translation>Project settings home</translation>
     </message>
     <message>
         <location filename="ProjectSettingsPage.cpp" line="43"/>
@@ -3078,7 +3078,7 @@
     <message>
         <location filename="ProjectSettingsPage.cpp" line="43"/>
         <source> 的配置文件不符合 toml 规范</source>
-        <translation></translation>
+        <translation> &apos;s config file does not conform to TOML specification</translation>
     </message>
     <message>
         <location filename="ProjectSettingsPage.cpp" line="43"/>
@@ -3192,7 +3192,7 @@
     <message>
         <location filename="ProjectSettingsPage.cpp" line="285"/>
         <source> 的配置文件不符合规范</source>
-        <translation></translation>
+        <translation> &apos;s config file is invalid</translation>
     </message>
     <message>
         <location filename="ProjectSettingsPage.cpp" line="296"/>
@@ -3227,7 +3227,7 @@
     <message>
         <location filename="PromptSettingsPage.cpp" line="29"/>
         <source> 的提示词配置文件不符合标准。</source>
-        <translation></translation>
+        <translation> &apos;s prompt config file does not meet the standard.</translation>
     </message>
     <message>
         <location filename="PromptSettingsPage.cpp" line="37"/>
@@ -3237,7 +3237,7 @@
     <message>
         <location filename="PromptSettingsPage.cpp" line="41"/>
         <source>找不到提示词文件</source>
-        <translation></translation>
+        <translation>Prompt file not found</translation>
     </message>
     <message>
         <location filename="PromptSettingsPage.cpp" line="75"/>
@@ -3675,7 +3675,7 @@
     <message>
         <location filename="StartSettingsPage.cpp" line="705"/>
         <source> 连工厂函数都失败了，玩毛啊</source>
-        <translation></translation>
+        <translation> even the factory function failed. What the hell?</translation>
     </message>
     <message>
         <location filename="StartSettingsPage.cpp" line="709"/>

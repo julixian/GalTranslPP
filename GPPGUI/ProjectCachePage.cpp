@@ -53,7 +53,7 @@ void ProjectCachePage::_setupUI()
     // 右侧留给当前缓存文件的句子概览，便于快速扫描和跳转编辑。
     QWidget* mainWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
-    mainLayout->setContentsMargins(14, 12, 14, 0);
+    mainLayout->setContentsMargins(10, 10, 10, 0);
     mainLayout->setSpacing(8);
 
     QHBoxLayout* topLayout = new QHBoxLayout();

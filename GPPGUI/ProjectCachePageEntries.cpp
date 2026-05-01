@@ -39,7 +39,7 @@ void ProjectCachePage::_renderEntries()
         return;
     }
 
-    const QString query = _localSearchEdit ? _localSearchEdit->text().trimmed() : QString();
+    const QString query = _localSearchEdit ? _localSearchEdit->text() : QString();
     const bool onlyProblems = _filterProblemsCheck && _filterProblemsCheck->isChecked();
 
     for (int i = 0; i < (int)_entries.size(); ++i) {
@@ -150,11 +150,10 @@ void ProjectCachePage::_openEntryEditor(int row)
         : QString("#%1  %2").arg(sentenceIndexOf(item, row)).arg(speaker));
     dialog.setWindowModality(Qt::ApplicationModal);
     dialog.setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
-    dialog.resize(860, 480);
+    dialog.resize(860, 540);
 
     QVBoxLayout* mainLayout = new QVBoxLayout(&dialog);
-    mainLayout->setContentsMargins(16, 34, 16, 14);
-    mainLayout->setSpacing(5);
+    mainLayout->setContentsMargins(16, 0, 16, 14);
 
     auto addEditor = [&](const QString& labelText, const QString& value, bool readOnly, int height)
         {
@@ -169,13 +168,13 @@ void ProjectCachePage::_openEntryEditor(int row)
             return edit;
         };
 
-    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), _entryOriginal(item), true, 48);
+    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), _entryOriginal(item), true, 60);
     Q_UNUSED(originalEdit);
-    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), _entrySource(item), !writable, 58);
-    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), _entryDst(item), !writable, 58);
-    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), _problemString(item), true, 46);
+    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), _entrySource(item), !writable, 80);
+    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), _entryDst(item), !writable, 80);
+    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), _problemString(item), true, 60);
     Q_UNUSED(problemsEdit);
-    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), _entryPreview(item), true, 46);
+    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), _entryPreview(item), true, 60);
     Q_UNUSED(previewEdit);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -276,7 +275,7 @@ QString ProjectCachePage::_problemString(const json& object, const QString& sepa
     QStringList problems;
     for (const auto& problem : object["problems"]) {
         if (problem.is_string()) {
-            const QString text = QString::fromStdString(problem.get<std::string>()).trimmed();
+            const QString text = QString::fromStdString(problem.get<std::string>());
             if (!text.isEmpty() && !problems.contains(text)) {
                 problems.push_back(text);
             }

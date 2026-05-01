@@ -25,7 +25,7 @@ std::string getSystemProxyUrl() {
             // 这里的 proxyUrl 可能是 "127.0.0.1:7890" 这种格式
             // 或者是 "http=127.0.0.1:7890;https=..." 这种复杂格式
             // 为了简单起见，如果包含分号，我们只取第一个
-            if (size_t pos = proxyUrl.find(';'); pos != std::string::npos) {
+            if (const size_t pos = proxyUrl.find(';'); pos != std::string::npos) {
                 proxyUrl = proxyUrl.substr(0, pos);
             }
             // 如果没有协议头，补上 http:// (cpr需要)

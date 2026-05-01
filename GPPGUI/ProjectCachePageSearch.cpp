@@ -20,7 +20,6 @@ QStringList ProjectCachePage::_problemsFromEditorText(const QString& text)
 {
     QStringList result;
     for (QString line : text.split('\n')) {
-        line = line.trimmed();
         if (!line.isEmpty()) {
             result.push_back(line);
         }
@@ -123,7 +122,7 @@ void ProjectCachePage::_runGlobalSearch()
     if (!_globalSearchEdit || !_searchResultList) {
         return;
     }
-    const QString query = _globalSearchEdit->text().trimmed();
+    const QString query = _globalSearchEdit->text();
     const QString field = _globalSearchField->currentData().toString();
     _searchHits.clear();
     _searchModel->clear();

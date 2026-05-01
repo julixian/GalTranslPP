@@ -40,11 +40,11 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
 
     if (fs::exists(cacheDir)) {
         for (const auto& entry : fs::recursive_directory_iterator(cacheDir)) {
-            if (!entry.is_regular_file() || entry.path().extension() != L".json") {
+            if (!entry.is_regular_file() || !isSameExtension(entry.path(), L".json")) {
                 continue;
             }
             CacheFileInfo info;
-            info.relativeName = QString(fs::relative(entry.path(), cacheDir).generic_wstring());
+            info.relativeName = QString(fs::relative(entry.path(), cacheDir).wstring());
             if (discardDirty || !_dirtyFiles.contains(info.relativeName)) {
                 _loadedEntriesByFile.remove(info.relativeName);
             }
@@ -101,7 +101,7 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
     if (_sidebarStack && _sidebarStack->currentIndex() == 2) {
         _loadProblems();
     }
-    if (_globalSearchEdit && !_globalSearchEdit->text().trimmed().isEmpty()) {
+    if (_globalSearchEdit && !_globalSearchEdit->text().isEmpty()) {
         _runGlobalSearch();
     }
     _updateActionStates();

@@ -16,9 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 优化界面布局",
-        "2. [GUI] 缓存管理扫描 .json 时不区分大小写",
-		"3. [GUI] 问题搜索时不再 trim",
+        "1. [GUI] 放宽各种设置上限",
     };
 
     mainLayout->addWidget(updateTitle);

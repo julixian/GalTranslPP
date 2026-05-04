@@ -51,7 +51,7 @@ void CommonSettingsPage::_setupUI()
 	requestNumLayout->addStretch();
 	ElaSpinBox* requestNumSpinBox = new ElaSpinBox(requestNumArea);
 	requestNumSpinBox->setFocus();
-	requestNumSpinBox->setRange(1, 100);
+	requestNumSpinBox->setRange(1, 9999);
 	requestNumSpinBox->setValue(requestNum);
 	requestNumLayout->addWidget(requestNumSpinBox);
 	mainLayout->addWidget(requestNumArea);
@@ -64,7 +64,7 @@ void CommonSettingsPage::_setupUI()
 	maxThreadLayout->addWidget(maxThreadText);
 	maxThreadLayout->addStretch();
 	ElaSpinBox* maxThreadSpinBox = new ElaSpinBox(maxThreadArea);
-	maxThreadSpinBox->setRange(1, 1000);
+	maxThreadSpinBox->setRange(1, 9999);
 	maxThreadSpinBox->setValue(maxThread);
 	maxThreadLayout->addWidget(maxThreadSpinBox);
 	mainLayout->addWidget(maxThreadArea);
@@ -173,7 +173,7 @@ void CommonSettingsPage::_setupUI()
 	cacheSearchDistanceLayout->addWidget(cacheSearchDistanceText);
 	cacheSearchDistanceLayout->addStretch();
 	ElaSpinBox* cacheSearchDistanceSpinBox = new ElaSpinBox(cacheSearchDistanceArea);
-	cacheSearchDistanceSpinBox->setRange(0, 10000);
+	cacheSearchDistanceSpinBox->setRange(0, 9999);
 	cacheSearchDistanceSpinBox->setValue(cacheSearchDistance);
 	cacheSearchDistanceLayout->addWidget(cacheSearchDistanceSpinBox);
 	splitSettingsDrawerArea->addDrawer(cacheSearchDistanceArea);
@@ -194,7 +194,7 @@ void CommonSettingsPage::_setupUI()
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalText);
 	cacheSaveIntervalLayout->addStretch();
 	ElaSpinBox* cacheSaveIntervalSpinBox = new ElaSpinBox(cacheSaveIntervalArea);
-	cacheSaveIntervalSpinBox->setRange(1, 10000);
+	cacheSaveIntervalSpinBox->setRange(1, 9999);
 	cacheSaveIntervalSpinBox->setValue(cacheSaveInterval);
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalSpinBox);
 	mainLayout->addWidget(cacheSaveIntervalArea);
@@ -207,7 +207,7 @@ void CommonSettingsPage::_setupUI()
 	maxRetryLayout->addWidget(retryText);
 	maxRetryLayout->addStretch();
 	ElaSpinBox* retrySpinBox = new ElaSpinBox(maxRetryArea);
-	retrySpinBox->setRange(1, 100);
+	retrySpinBox->setRange(1, 9999);
 	retrySpinBox->setValue(maxRetryNum);
 	maxRetryLayout->addWidget(retrySpinBox);
 	mainLayout->addWidget(maxRetryArea);
@@ -222,7 +222,7 @@ void CommonSettingsPage::_setupUI()
 	contextNumLayout->addWidget(contextNumText);
 	contextNumLayout->addStretch();
 	ElaSpinBox* contextNumSpinBox = new ElaSpinBox(contextNumArea);
-	contextNumSpinBox->setRange(1, 100);
+	contextNumSpinBox->setRange(1, 9999);
 	contextNumSpinBox->setValue(contextNum);
 	contextNumLayout->addWidget(contextNumSpinBox);
 	mainLayout->addWidget(contextNumArea);

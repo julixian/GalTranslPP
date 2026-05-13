@@ -483,4 +483,4 @@ GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除
 另外由于我所使用的环境较新，也可能会有一些比较罕见的问题。
 
 ~~目前已知项目依赖 `mecab:x64-windows` 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022。~~(此问题已修复)  
-由于 MSVC 的 [bug](https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&refTime=1777570126918&refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676)，目前本项目无法使用 VS2026 Insiders 构建。
+由于 MSVC 的 [bug](https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&refTime=1777570126918&refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676)，目前本项目无法使用最新 VS2026 默认的 v14.51 工具集构建。

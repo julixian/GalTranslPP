@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include "ElaText.h"
 
-import Tool;
+import GPPDefines;
 
 UpdateWidget::UpdateWidget(QWidget* parent)
     : QWidget(parent)

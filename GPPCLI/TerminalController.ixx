@@ -4,8 +4,8 @@ import Tool;
 import ProgressBar;
 export import ITranslator;
 
-export {
-
+export
+{
     class TerminalController : public IController {
     public:
         

@@ -7,7 +7,7 @@
 - **操作系统**: Windows 10 或 Windows 11
 - **IDE**: [Visual Studio 2026](https://visualstudio.microsoft.com/zh-hans/downloads/)
   - **必需工作负载**: `使用 C++ 的桌面开发`
-  - **必需工具集**: `MSVC v14.50`(v14.51 有 bug 会构建失败，需要自行在单个组件中勾选 v14.50 版本的工具集)
+  - **必需工具集**: `MSVC v14.50`(v14.51/v14.52预览 有 bug 会构建失败，需要自行在单个组件中勾选 v14.50 版本的工具集)
 - **辅助构建工具**: [CMake](https://cmake.org/download/)
 - **Python 3.12.10**: 本仓库中的 `python-3.12.10-embed-amd64.zip`
 - **7zip**: 本仓库中的 `7z.dll`

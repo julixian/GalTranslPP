@@ -59,7 +59,7 @@ void ProjectCachePage::_setupUI()
     QHBoxLayout* topLayout = new QHBoxLayout();
     topLayout->setSpacing(8);
 
-    _cacheDirLabel = new ElaText(QString(_cacheDir().wstring()), BodyFontPx, mainWidget);
+    _cacheDirLabel = new ElaText(QString::fromStdWString(_cacheDir().wstring()), BodyFontPx, mainWidget);
     _cacheDirLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     _cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
     topLayout->addWidget(_cacheDirLabel, 1);
@@ -67,7 +67,7 @@ void ProjectCachePage::_setupUI()
     ElaIconButton* openCacheButton = createHeaderIconButton(ElaIconType::FolderOpen, tr("打开缓存文件夹"), mainWidget);
     connect(openCacheButton, &ElaIconButton::clicked, this, [=]()
         {
-            QDesktopServices::openUrl(QUrl::fromLocalFile(QString(_cacheDir().wstring())));
+            QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(_cacheDir().wstring())));
         });
     topLayout->addWidget(openCacheButton);
 

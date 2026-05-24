@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
         std::string orgPythonVersion = parser.isSet("pythonVersion") ? parser.value("pythonVersion").toStdString() : "1.0.0";
         std::string orgPromptVersion = parser.isSet("promptVersion") ? parser.value("promptVersion").toStdString() : "1.0.0";
         std::string orgDictVersion = parser.isSet("dictVersion") ? parser.value("dictVersion").toStdString() : "1.0.0";
-        std::string orgQtVersion = parser.isSet("qtVersion") ? parser.value("qtVersion").toStdString() : "6.9.2";
+        std::string orgQtVersion = parser.isSet("qtVersion") ? parser.value("qtVersion").toStdString() : "6.5.3";
         std::string orgIcuVersion = parser.isSet("icuVersion") ? parser.value("icuVersion").toStdString() : "7.4.0";
 
         waitForProcessToExit(pid);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
         if (parser.isSet("restart")) {
             arguments << "--restart" << parser.value("restart");
         }
-        QProcess::startDetached("new/Updater_new.exe", arguments, QString(targetDir.toStdWString() + L"/new"));
+        QProcess::startDetached("new/Updater_new.exe", arguments, targetDir + "/new");
     }
     catch (const std::exception& e) {
 #ifdef Q_OS_WIN

@@ -26,7 +26,7 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("项目 ") +
-				QString(_projectDir.filename().wstring()) + tr(" 的提示词配置文件不符合标准。"), 3000);
+				QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的提示词配置文件不符合标准。"), 3000);
 		}
 	}
 	else if (fs::exists(defaultPromptPath)) {

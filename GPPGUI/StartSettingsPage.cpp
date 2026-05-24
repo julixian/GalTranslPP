@@ -38,7 +38,7 @@ StartSettingsPage::StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, 
 	_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
 	connect(_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
 		{
-			QUrl dirUrl = QUrl::fromLocalFile(QString(_projectDir.wstring()));
+			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
 		});
 
@@ -690,47 +690,47 @@ void StartSettingsPage::_workFinished(int exitCode)
 	{
 	case -2:
 		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") + 
-			QString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"), 3000);
+			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"), 3000);
 
 		// 显示通知消息
 		_trayIcon->showMessage(
 			tr("翻译失败"),                  // 标题
-				tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"),      // 内容
+				tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"),      // 内容
 			QSystemTrayIcon::Critical, // 图标类型 (Information, Warning, Critical)
 			5000                          // 显示时长 (毫秒)
 		);
 		break;
 	case -1:
 		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") + 
-			QString(_projectDir.filename().wstring()) + tr(" 连工厂函数都失败了，玩毛啊"), 3000);
+			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 连工厂函数都失败了，玩毛啊"), 3000);
 		break;
 	case 0:
 		if (_transEngine == "DumpName" || _transEngine == "GenDict") {
 			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), tr("项目 ") + 
-				QString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"), 3000);
+				QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"), 3000);
 			_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
-					tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"),      // 内容
+					tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
 		else if (_transEngine == "ShowNormal") {
 			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), 
-				tr("请在 show_normal 文件夹中查收项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"), 3000);
+				tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"), 3000);
 			_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
-					tr("请在 show_normal 文件夹中查收项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"),      // 内容
+					tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
 		else {
 			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("翻译完成"), 
-				tr("请在 gt_output 文件夹中查收项目 ") + QString(_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
+				tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
 			_trayIcon->showMessage(
 				tr("翻译完成"),                  // 标题
-					tr("请在 gt_output 文件夹中查收项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的翻译结果。"),      // 内容
+					tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译结果。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
@@ -739,12 +739,12 @@ void StartSettingsPage::_workFinished(int exitCode)
 	case 1:
 		_trayIcon->showMessage(
 			tr("翻译停止"),                  // 标题
-			tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的翻译任务停止成功。"),      // 内容
+			tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务停止成功。"),      // 内容
 			QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 			5000                          // 显示时长 (毫秒)
 		);
 		ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止成功"), tr("项目 ") + 
-			QString(_projectDir.filename().wstring()) + tr(" 的翻译任务已终止"), 3000);
+			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务已终止"), 3000);
 		break;
 	default:
 		break;

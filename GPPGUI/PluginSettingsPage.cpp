@@ -149,7 +149,7 @@ void PluginSettingsPage::_setupUI()
                     }
 
                     QString fileName = QFileDialog::getOpenFileName(this, tr("选择自定义文本处理插件"),
-                        QString(_projectDir.wstring()), "custom script (*.lua *.py)");
+                        QString::fromStdWString(_projectDir.wstring()), "custom script (*.lua *.py)");
                     if (!fileName.isEmpty()) {
                         newCustomPluginsArr.push_back(fileName.toStdString());
                         customPluginsEdit->setPlainText(QString::fromStdString(toml::format(newCustomPluginsTbl)));

@@ -155,7 +155,7 @@ void PASettingsPage::_setupUI()
 									if (!retranslKey.is_string()) {
 										continue;
 									}
-									int index = problemListToShow.indexOf(retranslKey.as_string());
+									int index = problemListToShow.indexOf(QString::fromStdString(retranslKey.as_string()));
 									if (index < 0) {
 										continue;
 									}

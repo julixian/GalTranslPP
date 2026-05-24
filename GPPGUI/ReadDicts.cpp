@@ -45,7 +45,7 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-				QString(dictPath.filename().wstring()) + tr(" 不符合 toml 规范"), 3000);
+				QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不符合 toml 规范"), 3000);
 			return result;
 		}
 	}
@@ -56,7 +56,7 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 			ifs.close();
 			if (!j.is_array()) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-					QString(dictPath.filename().wstring()) + tr(" 不是预期的 json 格式"), 3000);
+					QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不是预期的 json 格式"), 3000);
 				return result;
 			}
 			for (const auto& elem : j) {
@@ -73,7 +73,7 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-				QString(dictPath.filename().wstring()) + tr(" 不符合 json 规范"), 3000);
+				QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不符合 json 规范"), 3000);
 			return result;
 		}
 	}
@@ -101,7 +101,7 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 	}
 	else {
 		ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-			QString(dictPath.filename().wstring()) + tr(" 不是支持的格式"), 3000);
+			QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不是支持的格式"), 3000);
 		return result;
 	}
 
@@ -178,7 +178,7 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-				QString(dictPath.filename().wstring()) + tr(" 不符合 toml 规范"), 3000);
+				QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不符合 toml 规范"), 3000);
 			return result;
 		}
 	}
@@ -189,7 +189,7 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 			ifs.close();
 			if (!j.is_array()) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-					QString(dictPath.filename().wstring()) + tr(" 不是预期的 json 格式"), 3000);
+					QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不是预期的 json 格式"), 3000);
 				return result;
 			}
 			for (const auto& elem : j) {
@@ -210,13 +210,13 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-				QString(dictPath.filename().wstring()) + tr(" 不符合 json 规范"), 3000);
+				QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不符合 json 规范"), 3000);
 			return result;
 		}
 	}
 	else {
 		ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
-			QString(dictPath.filename().wstring()) + tr(" 不是支持的格式"), 3000);
+			QString::fromStdWString(dictPath.filename().wstring()) + tr(" 不是支持的格式"), 3000);
 	}
 
 	return result;

@@ -380,7 +380,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
                     ElaMessageBar::error(ElaMessageBarType::TopRight, tr("错误"), tr("目录下没有 python{ver}.zip 文件"), 3000);
                     return;
                 }
-                pyEnvPathLineEdit->setText(QString(newPyEnvPath.wstring()));
+                pyEnvPathLineEdit->setText(QString::fromStdWString(newPyEnvPath.wstring()));
             }
         });
     //ElaPushButton* pyEnvRestartButtom = new ElaPushButton(tr("重启环境"), pyEnvPathArea);

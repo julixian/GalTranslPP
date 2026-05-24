@@ -116,6 +116,13 @@ void NormalJsonTranslator::normalJsonInit()
 
         m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
         m_threadsNum = toml::find_or(configData, "common", "threadsNum", 1);
+        m_nameTransBatchSize = toml::find_or(configData, "common", "numPerRequestNameTranslate", 50);
+        if (m_threadsNum < 1) {
+            m_threadsNum = 1;
+        }
+        if (m_nameTransBatchSize < 1) {
+            m_nameTransBatchSize = 50;
+        }
         m_sortMethod = toml::find_or(configData, "common", "sortMethod", "name");
         m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
         m_splitFile = toml::find_or(configData, "common", "splitFile", "No");

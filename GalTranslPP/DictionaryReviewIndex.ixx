@@ -8,7 +8,8 @@ import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     struct DictionaryReviewValueFrequency {
         std::string value;
         int count = 0;

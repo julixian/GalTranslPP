@@ -11,7 +11,8 @@ import PythonManager;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     class SkipTrans {
     private:
         std::vector<std::string> m_hKeys;

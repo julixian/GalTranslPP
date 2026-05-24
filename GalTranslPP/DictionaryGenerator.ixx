@@ -11,7 +11,8 @@ import ITranslator;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     struct DictionaryGeneratorReviewOptions {
         bool enabled = false;
         fs::path projectDir;

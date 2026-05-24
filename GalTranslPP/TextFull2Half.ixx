@@ -10,7 +10,8 @@ import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     class TextFull2Half {
     private:
         absl::flat_hash_map<char32_t, char32_t> m_conversionMap;

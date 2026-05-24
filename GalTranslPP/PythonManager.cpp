@@ -580,6 +580,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_userPrompt", &NormalJsonTranslator::m_userPrompt)
         .def_readwrite("m_targetLang", &NormalJsonTranslator::m_targetLang)
         .def_readwrite("m_threadsNum", &NormalJsonTranslator::m_threadsNum)
+        .def_readwrite("m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize)
         .def_readwrite("m_batchSize", &NormalJsonTranslator::m_batchSize)
         .def_readwrite("m_contextHistorySize", &NormalJsonTranslator::m_contextHistorySize)
         .def_readwrite("m_maxRetries", &NormalJsonTranslator::m_maxRetries)

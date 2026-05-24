@@ -21,8 +21,8 @@ import ITranslator;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     struct AgentToolCallRequest {
         std::string id;
         std::string name;
@@ -80,6 +80,7 @@ export {
         bool m_pythonTranslator = false;
 
         int m_threadsNum{};
+        int m_nameTransBatchSize{};
         int m_batchSize{};
         int m_contextHistorySize{};
         int m_maxRetries{};

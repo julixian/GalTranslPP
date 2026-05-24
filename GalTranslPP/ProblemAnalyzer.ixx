@@ -7,8 +7,8 @@ export module ProblemAnalyzer;
 import Dictionary;
 import GPPDefines;
 
-export {
-
+export
+{
     struct ProblemCompareObj {
         bool use = false;
         CachePart base = CachePart::OrigText;

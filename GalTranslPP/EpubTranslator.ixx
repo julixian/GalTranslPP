@@ -12,8 +12,8 @@ import NormalJsonTranslator;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     struct EpubTextNodeInfo {
         size_t offset; // 节点在原始文件中的字节偏移量
         size_t length; // 节点内容的字节长度

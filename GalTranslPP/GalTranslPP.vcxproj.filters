@@ -19,9 +19,6 @@
     <ClCompile Include="ProblemAnalyzer.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="GPPDefines.ixx">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="AgentToolCommon.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
@@ -89,9 +86,6 @@
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="Tool.ixx">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="GPPDefines.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="TextFull2Half.ixx">
@@ -192,6 +186,12 @@
     </ClCompile>
     <ClCompile Include="PDFTool.ixx">
       <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GPPDefines.ixx">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="GPPDefines.cpp">
+      <Filter>Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

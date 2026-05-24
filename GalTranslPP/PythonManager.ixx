@@ -12,8 +12,8 @@ import spdlog;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-export {
-
+export
+{
     template <typename T>
     class SafeQueue {
     public:

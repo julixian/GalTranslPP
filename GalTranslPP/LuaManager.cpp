@@ -493,6 +493,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_userPrompt", &NormalJsonTranslator::m_userPrompt,
 		"m_targetLang", &NormalJsonTranslator::m_targetLang,
 		"m_threadsNum", &NormalJsonTranslator::m_threadsNum,
+		"m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize,
 		"m_batchSize", &NormalJsonTranslator::m_batchSize,
 		"m_contextHistorySize", &NormalJsonTranslator::m_contextHistorySize,
 		"m_maxRetries", &NormalJsonTranslator::m_maxRetries,

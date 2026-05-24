@@ -6,8 +6,8 @@ export import spdlog;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     extern const std::string GPPVERSION;
     extern const std::string PYTHONVERSION;
     extern const std::string PROMPTVERSION;

@@ -10,8 +10,8 @@ import LuaManager;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
 	class LuaTextPlugin {
 	private:
 		std::shared_ptr<LuaStateInstance> m_luaState;

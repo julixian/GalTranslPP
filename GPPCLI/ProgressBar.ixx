@@ -2,7 +2,8 @@
 
 import Tool;
 
-export {
+export
+{
     class ProgressBar {
 
     public:

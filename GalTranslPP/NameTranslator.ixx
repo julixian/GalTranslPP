@@ -11,7 +11,8 @@ import spdlog;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     class NameTranslator {
     private:
         std::shared_ptr<IController> m_controller;
@@ -27,10 +28,12 @@ export {
         std::string m_targetLang;
         int m_maxRetries;
         int m_apiTimeoutMs;
+        int m_threadsNum;
+        int m_batchSize;
         bool m_checkQuota;
 
         // 内部辅助函数
-        void translateBatch(std::span<std::string> batchNames, absl::flat_hash_map<std::string, std::string>& resultMap);
+        absl::flat_hash_map<std::string, std::string> translateBatch(std::span<const std::string> batchNames, int threadId);
 
     public:
         NameTranslator(
@@ -45,6 +48,8 @@ export {
             const std::string& targetLang,
             int maxRetries,
             int apiTimeoutMs,
+            int threadsNum,
+            int batchSize,
             bool checkQuota
         );
 

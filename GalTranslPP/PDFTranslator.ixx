@@ -11,8 +11,8 @@ import NormalJsonTranslator;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     class PDFTranslator : public NormalJsonTranslator {
 
         friend void pybind11_init_gpp_plugin_api(::pybind11::module_& m);

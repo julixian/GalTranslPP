@@ -56,6 +56,21 @@ void CommonSettingsPage::_setupUI()
 	requestNumLayout->addWidget(requestNumSpinBox);
 	mainLayout->addWidget(requestNumArea);
 
+	// 单次请求翻译人名数量
+	int requestNameNum = toml::find_or(_projectConfig, "common", "numPerRequestNameTranslate", 50);
+	ElaScrollPageArea* requestNameNumArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* requestNameNumLayout = new QHBoxLayout(requestNameNumArea);
+	ElaDoubleText* requestNameNumText = new ElaDoubleText(requestNameNumArea,
+		tr("单次请求翻译人名数量"), 16,
+		tr("NameTrans 每个线程单次处理的人名数量"), 10, "");
+	requestNameNumLayout->addWidget(requestNameNumText);
+	requestNameNumLayout->addStretch();
+	ElaSpinBox* requestNameNumSpinBox = new ElaSpinBox(requestNameNumArea);
+	requestNameNumSpinBox->setRange(1, 9999);
+	requestNameNumSpinBox->setValue(requestNameNum);
+	requestNameNumLayout->addWidget(requestNameNumSpinBox);
+	mainLayout->addWidget(requestNameNumArea);
+
 	// 最大线程数
 	int maxThread = toml::find_or(_projectConfig, "common", "threadsNum", 1);
 	ElaScrollPageArea* maxThreadArea = new ElaScrollPageArea(mainWidget);
@@ -462,6 +477,7 @@ void CommonSettingsPage::_setupUI()
 	_applyFunc = [=]()
 		{
 			insertToml(_projectConfig, "common.numPerRequestTranslate", requestNumSpinBox->value());
+			insertToml(_projectConfig, "common.numPerRequestNameTranslate", requestNameNumSpinBox->value());
 			insertToml(_projectConfig, "common.threadsNum", maxThreadSpinBox->value());
 			int orderValue = transOrderGroup->id(transOrderGroup->checkedButton());
 			QString orderValueStr;

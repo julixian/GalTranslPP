@@ -12,7 +12,8 @@ import ITranslator;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     struct DictionaryReviewAgentConfig {
         fs::path projectDir;
         std::vector<fs::path> relInputFiles;

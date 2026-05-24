@@ -286,7 +286,8 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
     if (m_transEngine == TransEngine::NameTrans) {
         NameTranslator nameTranslator(
             m_controller, m_logger, m_apiPool, m_gptDictionary, m_onPerformApi,
-            m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang, m_maxRetries, m_apiTimeOutMs, m_checkQuota
+            m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang, m_maxRetries, m_apiTimeOutMs,
+            m_threadsNum, m_nameTransBatchSize, m_checkQuota
         );
         nameTranslator.run(nameTablePath);
         return std::nullopt;

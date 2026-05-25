@@ -16,6 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+		"1. [GUI] 换回高版本 QT 风格",
+		"v2.6.4 更新",
         "1. NameTrans 支持多线程",
     };
 

@@ -32,7 +32,7 @@ cd vcpkg
 
 - 1、  访问 [Qt 官方网站](https://www.qt.io/download-qt-installer-oss)下载并运行Qt社区开源版本(LGPL协议)的在线安装器 (需要注册 Qt 账户)。
 - 2、  在安装器的组件选择页面，确保勾选以下组件:
-  - `Qt` → `Qt 6.5.3` → `MSVC 2019 64-bit`
+  - `Qt` → `Qt 6.11.1(或更高，但不保证兼容性)` → `MSVC 2022 64-bit`
 
 ## 3. 获取项目源码
 
@@ -53,12 +53,12 @@ cd GalTranslPP
   - 根据提示重启 Visual Studio 以完成安装。
 - 2、  **关联 Qt 版本**:
   - 重启后，在菜单栏选择 `扩展` → `Qt VS Tools` → `Qt Versions`。
-  - 点击 `Add New Qt Version`，将路径指向你安装的 Qt MSVC 目录 (例如: `D:\Qt\6.5.3\msvc2019_64`)，并将其设置为默认版本。
+  - 点击 `Add New Qt Version`，将路径指向你安装的 Qt MSVC 目录 (例如: `D:\Qt\6.11.1\msvc2022_64`)，并将其设置为默认版本。
 
 ### 4.2 编译 ElaWidgetTools
 
-- 1、  修改 `build_msvc_v145_x64_release_install.bat` 中的 `VS_ROOT` 和 `CMakeLists.txt` 中的 `QT_SDK_DIR` 为本机 Visual Studio 和 Qt 的安装目录。
-- 2、  运行 `build_msvc_v145_x64_release_install.bat`。
+- 1、  修改 `build.bat` 中的 `VS_ROOT` 和 `CMakeLists.txt` 中的 `QT_SDK_DIR` 为本机 Visual Studio 和 Qt 的安装目录。
+- 2、  运行 `build.bat`。
 - 3、  **确认编译产物**:
   - 确保 `3rdParty\ElaWidgetTools\Install\ElaWidgetTools\include` 文件夹存在，程序会用到里面的头文件
   - 确保 `3rdParty\ElaWidgetTools\Install\ElaWidgetTools\lib\ElaWidgetTools.lib` 文件存在
@@ -87,7 +87,7 @@ cd GalTranslPP
 ### 6.2 GPPGUI
 
 - 1、 运行项目根目录下的 `Release.bat`
-- 2、  打开 Qt专属控制台，如 Qt 6.5.3(MSVC 2019 64-bit)，输入命令 
+- 2、  打开 Qt专属控制台，如 Qt 6.11.1(MSVC 2022 64-bit)，输入命令 
 
 ```cmd
 windeployqt path/to/GalTranslPP_GUI.exe

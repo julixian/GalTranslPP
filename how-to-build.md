@@ -53,11 +53,11 @@ cd GalTranslPP
   - 根据提示重启 Visual Studio 以完成安装。
 - 2、  **关联 Qt 版本**:
   - 重启后，在菜单栏选择 `扩展` → `Qt VS Tools` → `Qt Versions`。
-  - 点击 `Add New Qt Version`，将路径指向你安装的 Qt MSVC 目录 (例如: `D:\Qt\6.11.1\msvc2022_64`)，并将其设置为默认版本。
+  - 点击 `Import`，并选择你安装的 Qt MSVC 目录 (例如: `D:\Qt\6.11.1\msvc2022_64`)，并将其设置为默认版本。
 
 ### 4.2 编译 ElaWidgetTools
 
-- 1、  修改 `build.bat` 中的 `VS_ROOT` 和 `CMakeLists.txt` 中的 `QT_SDK_DIR` 为本机 Visual Studio 和 Qt 的安装目录。
+- 1、  修改 `CMakeLists.txt` 中的 `QT_SDK_DIR` 为你安装的 Qt MSVC 目录。
 - 2、  运行 `build.bat`。
 - 3、  **确认编译产物**:
   - 确保 `3rdParty\ElaWidgetTools\Install\ElaWidgetTools\include` 文件夹存在，程序会用到里面的头文件

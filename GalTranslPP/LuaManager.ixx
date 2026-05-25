@@ -10,8 +10,8 @@ import spdlog;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
 	struct LuaStateInstance {
 		std::unique_ptr<sol::state> lua;
 		absl::btree_map<std::string, std::unique_ptr<sol::function>> functions;

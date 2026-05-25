@@ -2,6 +2,7 @@
 
 #include "GPPMacros.hpp"
 #include <toml.hpp>
+#include <ctpl_stl.h>
 
 module NameTranslator;
 
@@ -21,17 +22,21 @@ NameTranslator::NameTranslator(
     const std::string& targetLang,
     int maxRetries,
     int apiTimeoutMs,
+    int threadsNum,
+    int batchSize,
     bool checkQuota
 )
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool), m_gptDictionary(gptDictionary),
     m_onPerformApi(onPerformApi), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
     m_apiStrategy(apiStrategy), m_targetLang(targetLang), m_maxRetries(maxRetries),
-    m_apiTimeoutMs(apiTimeoutMs), m_checkQuota(checkQuota)
+    m_apiTimeoutMs(apiTimeoutMs), m_threadsNum(std::max(1, threadsNum)), m_batchSize(std::max(1, batchSize)),
+    m_checkQuota(checkQuota)
 {
 
 }
 
-void NameTranslator::translateBatch(std::span<std::string> batchNames, absl::flat_hash_map<std::string, std::string>& resultMap) {
+absl::flat_hash_map<std::string, std::string> NameTranslator::translateBatch(std::span<const std::string> batchNames, int threadId) {
+    absl::flat_hash_map<std::string, std::string> resultMap;
 
     // 1. 准备 Glossary
     // 为了利用 GptDictionary，我们需要构造假的 Sentence 对象
@@ -67,7 +72,7 @@ void NameTranslator::translateBatch(std::span<std::string> batchNames, absl::fla
     int retryCount = 0;
     while (retryCount == 0 || retryCount < m_maxRetries) {
         if (m_controller->shouldStop()) {
-            return;
+            return resultMap;
         }
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
@@ -83,21 +88,21 @@ void NameTranslator::translateBatch(std::span<std::string> batchNames, absl::fla
             logBlock += "\nDict:\n" + glossary;
         }
         logBlock += "\ninputBlock:\n" + inputBlock;
-        m_logger->info("正在翻译人名表:\n{}", logBlock);
+        m_logger->info("[线程 {}] 正在翻译人名表:\n{}", threadId, logBlock);
 
-        const ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, 0, m_apiTimeoutMs);
+        const ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeoutMs);
 
         /*bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& m_apiPool, const TranslationApi& currentAPI,
             const std::filesystem::path& relInputPath, const std::string& m_apiStrategy, const std::shared_ptr<spdlog::logger>& m_logger,
             int& retryCount, int threadId, bool m_checkQuota);*/
         if (!checkResponse(
-            response, m_apiPool, currentApi, L"人名表翻译", m_apiStrategy, m_controller, m_logger, retryCount, 0, m_checkQuota
+            response, m_apiPool, currentApi, L"人名表翻译", m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
         )) {
             continue;
         }
 
         // 4. 解析结果
-        m_logger->info("AI 翻译人名成功:\n{}", response.content);
+        m_logger->info("[线程 {}] AI 翻译人名成功:\n{}", threadId, response.content);
         const auto lines = splitStringView(response.content, '\n');
         for (const auto& line : lines) {
             const auto parts = splitStringView(line, '\t');
@@ -112,9 +117,10 @@ void NameTranslator::translateBatch(std::span<std::string> batchNames, absl::fla
                 resultMap[original] = translation;
             }
         }
-        return; // 成功则退出重试循环
+        return resultMap; // 成功则退出重试循环
     }
-    m_logger->error("NameTrans: 批次翻译失败，已达到最大重试次数。");
+    m_logger->error("[线程 {}] NameTrans: 批次翻译失败，已达到最大重试次数。", threadId);
+    return resultMap;
 }
 
 void NameTranslator::run(const fs::path& nameTablePath) {
@@ -154,21 +160,61 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     }
 
     m_logger->info("NameTrans: 共发现 {} 个待翻译的名字。", namesToTranslate.size());
-    m_controller->makeBar((int)namesToTranslate.size(), 1);
 
-    // 3. 分批处理 (单线程)
-    constexpr size_t BATCH_SIZE = 50; // 每批 50 个名字
+    // 3. 分批处理
     absl::flat_hash_map<std::string, std::string> translationResults;
+    const size_t batchCount = (namesToTranslate.size() + (size_t)m_batchSize - 1) / (size_t)m_batchSize;
+    const int workerCount = std::max(1, std::min(m_threadsNum, (int)batchCount));
+    m_logger->info("NameTrans: 启动 {} 个线程，每批处理 {} 个名字。", workerCount, m_batchSize);
+    m_controller->makeBar((int)namesToTranslate.size(), workerCount);
 
-    m_controller->addThreadNum();
-    for (auto batch : namesToTranslate | std::views::chunk(BATCH_SIZE)) {
-        if (m_controller->shouldStop()) {
-            break;
-        }
-        translateBatch(batch, translationResults);
-        m_controller->updateBar((int)batch.size());
+    ctpl::thread_pool pool(workerCount);
+    std::vector<std::future<absl::flat_hash_map<std::string, std::string>>> results;
+    std::atomic<size_t> nextNameIndex = 0;
+    for (int i = 0; i < workerCount; ++i) {
+        results.emplace_back(pool.push([this, &namesToTranslate, &nextNameIndex](const int threadId)
+            {
+                m_controller->addThreadNum();
+                try {
+                    absl::flat_hash_map<std::string, std::string> workerResults;
+                    while (!m_controller->shouldStop()) {
+                        const size_t start = nextNameIndex.fetch_add((size_t)m_batchSize);
+                        if (start >= namesToTranslate.size()) {
+                            break;
+                        }
+                        const size_t count = std::min((size_t)m_batchSize, namesToTranslate.size() - start);
+                        auto batchResults = translateBatch(std::span<const std::string>(namesToTranslate.data() + start, count), threadId);
+                        for (auto&& [name, trans] : batchResults) {
+                            workerResults.insert_or_assign(std::move(name), std::move(trans));
+                        }
+                        m_controller->updateBar((int)count);
+                    }
+                    m_controller->reduceThreadNum();
+                    return workerResults;
+                }
+                catch (...) {
+                    m_controller->reduceThreadNum();
+                    throw;
+                }
+            }));
     }
-    m_controller->reduceThreadNum();
+    std::exception_ptr firstException = nullptr;
+    for (auto& result : results) {
+        try {
+            for (auto&& [name, trans] : result.get()) {
+                translationResults.insert_or_assign(std::move(name), std::move(trans));
+            }
+        }
+        catch (...) {
+            if (!firstException) {
+                pool.stop();
+                firstException = std::current_exception();
+            }
+        }
+    }
+    if (firstException) {
+        std::rethrow_exception(firstException);
+    }
 
     // 4. 回写结果
     int updatedCount = 0;

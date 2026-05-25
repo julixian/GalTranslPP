@@ -63,7 +63,7 @@ void DictExSettingsPage::_setupUI()
 			QList<int> indexesToSelect;
 			for (const auto& dictName : projectConfigDictNames) {
 				if (dictName.is_string()) {
-					QString dictNameStr(fs::path(ascii2Wide(dictName.as_string())).stem().wstring());
+					QString dictNameStr = QString::fromStdWString(fs::path(ascii2Wide(dictName.as_string())).stem().wstring());
 					if (projectFixedDictNames.contains(dictNameStr)) {
 						dictNameStr = defaultItem;
 					}

@@ -49,14 +49,14 @@ void OtherSettingsPage::_setupUI()
 	pathLayout->addStretch();
 	ElaLineEdit* pathEdit = new ElaLineEdit(pathArea);
 	pathEdit->setReadOnly(true);
-	pathEdit->setText(QString(_projectDir.wstring()));
+	pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
 	pathEdit->setFixedWidth(650);
 	pathLayout->addWidget(pathEdit);
 	ElaPushButton* openButton = new ElaPushButton(pathArea);
 	openButton->setText(tr("打开文件夹"));
 	connect(openButton, &ElaPushButton::clicked, this, [=]()
 		{
-			QUrl dirUrl = QUrl::fromLocalFile(QString(_projectDir.wstring()));
+			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
 		});
 	pathLayout->addWidget(openButton);
@@ -100,8 +100,8 @@ void OtherSettingsPage::_setupUI()
 				return;
 			}
 			_projectDir = newProjectPath;
-			pathEdit->setText(QString(_projectDir.wstring()));
-			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移动成功"), QString(_projectDir.filename().wstring()) + tr(" 项目已移动到新文件夹"), 3000);
+			pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
+			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移动成功"), QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 项目已移动到新文件夹"), 3000);
 			Q_EMIT refreshProjectConfigSignal();
 		});
 	moveRenameLayout->addWidget(moveButton);
@@ -140,7 +140,7 @@ void OtherSettingsPage::_setupUI()
 				return;
 			}
 			_projectDir = newProjectPath;
-			pathEdit->setText(QString(_projectDir.wstring()));
+			pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
 			Q_EMIT changeProjectNameSignal(newProjectName);
 			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("更名成功"), tr("项目已更名为 ") + newProjectName, 3000);
 			Q_EMIT refreshProjectConfigSignal();
@@ -164,7 +164,7 @@ void OtherSettingsPage::_setupUI()
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入失败"), tr("项目仍在运行中，无法导入"), 3000);
 				return;
 			}
-			QString importOverviewPathStr = QFileDialog::getOpenFileName(this, tr("选择翻译问题概览文件"), QString(_projectDir.wstring()),
+			QString importOverviewPathStr = QFileDialog::getOpenFileName(this, tr("选择翻译问题概览文件"), QString::fromStdWString(_projectDir.wstring()),
 				"JSON files (*.json);;TOML files (*.toml)");
 			if (importOverviewPathStr.isEmpty()) {
 				return;
@@ -285,7 +285,7 @@ void OtherSettingsPage::_setupUI()
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			Q_EMIT saveConfigSignal();
-			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的配置信息已保存"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的配置信息已保存"), 3000);
 		});
 	saveLayout->addWidget(saveButton);
 	mainLayout->addWidget(saveArea);
@@ -381,7 +381,7 @@ void OtherSettingsPage::_setupUI()
 						ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), QString(e.what()), 3000);
 						return;
 					}
-					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的翻译缓存已删除"), 3000);
+					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译缓存已删除"), 3000);
 
 				});
 			helpDialog.exec();

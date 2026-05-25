@@ -260,7 +260,7 @@ void DictSettingsPage::_setupUI()
 				dictModel->loadData(entries);
 				saveDictFunc(true);
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("导入成功"), tr("从文件 ") +
-					QString(importDictPath.filename().wstring()) + tr(" 中导入了 ") + QString::number(entries.size()) + tr(" 个词条"), 3000);
+					QString::fromStdWString(importDictPath.filename().wstring()) + tr(" 中导入了 ") + QString::number(entries.size()) + tr(" 个词条"), 3000);
 			});
 		connect(plainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 			{
@@ -343,7 +343,7 @@ void DictSettingsPage::_setupUI()
 			return ReadDicts::readGptDicts(gptDictPaths);
 		};
 	auto refreshAndSaveGptDictFunc = 
-		createDictTabFunc(gptReadPlainTextFunc, gptReadEntriesFunc, _withdrawGptList, "gpt", QString(gptDictPaths.front().stem().wstring()));
+		createDictTabFunc(gptReadPlainTextFunc, gptReadEntriesFunc, _withdrawGptList, "gpt", QString::fromStdWString(gptDictPaths.front().stem().wstring()));
 
 
 	fs::path preDictPath = _projectDir / tr("项目译前字典.toml").toStdWString();
@@ -356,7 +356,7 @@ void DictSettingsPage::_setupUI()
 			return ReadDicts::readNormalDicts(preDictPath);
 		};
 	auto refreshAndSavePreDictFunc = 
-		createDictTabFunc(preReadPlainTextFunc, preReadEntriesFunc, _withdrawPreList, "pre", QString(preDictPath.stem().wstring()));
+		createDictTabFunc(preReadPlainTextFunc, preReadEntriesFunc, _withdrawPreList, "pre", QString::fromStdWString(preDictPath.stem().wstring()));
 	
 
 	fs::path postDictPath = _projectDir / tr("项目译后字典.toml").toStdWString();
@@ -369,7 +369,7 @@ void DictSettingsPage::_setupUI()
 			return ReadDicts::readNormalDicts(postDictPath);
 		};
 	auto refreshAndSavePostDictFunc = 
-		createDictTabFunc(postReadPlainTextFunc, postReadEntriesFunc, _withdrawPostList, "post", QString(postDictPath.stem().wstring()));
+		createDictTabFunc(postReadPlainTextFunc, postReadEntriesFunc, _withdrawPostList, "post", QString::fromStdWString(postDictPath.stem().wstring()));
 
 
 	_refreshFunc = [=]()

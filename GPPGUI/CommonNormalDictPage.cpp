@@ -226,7 +226,7 @@ void CommonNormalDictPage::_setupUI()
 					std::ofstream ofs(it->dictPath, std::ios::binary);
 					if (!ofs.is_open()) {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"), tr("无法打开字典: ") +
-							QString(dictPath.wstring()), 3000);
+							QString::fromStdWString(dictPath.wstring()), 3000);
 						return false;
 					}
 
@@ -296,7 +296,7 @@ void CommonNormalDictPage::_setupUI()
 					if (it->saveFunc(false)) {
 						Q_EMIT commonDictsChanged();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("字典 ") +
-							QString(it->dictPath.stem().wstring()) + tr(" 已保存"), 3000);
+							QString::fromStdWString(it->dictPath.stem().wstring()) + tr(" 已保存"), 3000);
 					}
 				});
 			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
@@ -352,7 +352,7 @@ void CommonNormalDictPage::_setupUI()
 					plainTextEdit->setPlainText(ReadDicts::readDictsStr(it->dictPath));
 					model->loadData(ReadDicts::readNormalDicts(it->dictPath));
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("字典 ") +
-						QString(it->dictPath.stem().wstring()) + tr(" 已刷新"), 3000);
+						QString::fromStdWString(it->dictPath.stem().wstring()) + tr(" 已刷新"), 3000);
 				});
 			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
 				{
@@ -415,11 +415,11 @@ void CommonNormalDictPage::_setupUI()
 						tabWidget->setTabText(tabWidget->indexOf(pageMainWidget), newDictName);
 						Q_EMIT commonDictsChanged();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("重命名成功"), tr("字典 ") +
-							QString(oldDictPath.stem().wstring()) + tr(" 已重命名为 ") + newDictName, 3000);
+							QString::fromStdWString(oldDictPath.stem().wstring()) + tr(" 已重命名为 ") + newDictName, 3000);
 					}
 					catch (...) {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("重命名失败"), tr("字典 ") +
-							QString(oldDictPath.stem().wstring()) + tr(" 重命名失败"), 3000);
+							QString::fromStdWString(oldDictPath.stem().wstring()) + tr(" 重命名失败"), 3000);
 						return;
 					}
 				});
@@ -549,14 +549,14 @@ void CommonNormalDictPage::_setupUI()
 				});
 			if (hasSameNameTab) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"), tr("字典 ") +
-					QString(importDictPath.stem().wstring()) + tr(" 已存在"), 3000);
+					QString::fromStdWString(importDictPath.stem().wstring()) + tr(" 已存在"), 3000);
 				return;
 			}
 			QWidget* pageMainWidget = createNormalTab(importDictPath);
-			tabWidget->addTab(pageMainWidget, QString(importDictPath.stem().wstring()));
+			tabWidget->addTab(pageMainWidget, QString::fromStdWString(importDictPath.stem().wstring()));
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"), tr("字典页 ") + 
-				QString(importDictPath.stem().wstring()) + tr(" 已创建"), 3000);
+				QString::fromStdWString(importDictPath.stem().wstring()) + tr(" 已创建"), 3000);
 		});
 
 	connect(addNewTabButton, &ElaPushButton::clicked, this, [=]()
@@ -582,14 +582,14 @@ void CommonNormalDictPage::_setupUI()
 				});
 			if (hasSameNameTab || dictName == "项目译前字典" || dictName == "项目译后字典") {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"), tr("字典 ") +
-					QString(newDictPath.stem().wstring()) + tr(" 已存在"), 3000);
+					QString::fromStdWString(newDictPath.stem().wstring()) + tr(" 已存在"), 3000);
 				return;
 			}
 
 			std::ofstream ofs(newDictPath, std::ios::binary);
 			if (!ofs.is_open()) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"), tr("无法创建 ") +
-					QString(newDictPath.wstring()) + tr(" 文件"), 3000);
+					QString::fromStdWString(newDictPath.wstring()) + tr(" 文件"), 3000);
 				return;
 			}
 			ofs.close();
@@ -598,7 +598,7 @@ void CommonNormalDictPage::_setupUI()
 			tabWidget->addTab(pageMainWidget, dictName);
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("新建成功"), tr("字典页 ") +
-				QString(newDictPath.stem().wstring()) + tr(" 已创建"), 3000);
+				QString::fromStdWString(newDictPath.stem().wstring()) + tr(" 已创建"), 3000);
 		});
 
 

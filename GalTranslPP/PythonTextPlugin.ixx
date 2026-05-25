@@ -11,8 +11,8 @@ import PythonManager;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-export {
-
+export
+{
     class PythonTextPlugin {
     private:
         std::shared_ptr<PythonInterpreterInstance> m_pythonInterpreter;

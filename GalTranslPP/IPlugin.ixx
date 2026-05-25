@@ -20,8 +20,8 @@ extern "C++" {
 	PRO_DEF_MEM_DISPATCH(MemDPostRun, dPostRun);
 }
 
-export {
-
+export
+{
 	template <>
 	struct pro::weak_dispatch<MemDPreRun> : MemDPreRun {
 		using MemDPreRun::operator();

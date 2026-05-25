@@ -40,7 +40,7 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     catch (...) {
         _projectConfig = toml::ordered_table{};
         ElaMessageBar::error(ElaMessageBarType::TopLeft, 
-            tr("解析失败"), tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的配置文件不符合 toml 规范"), 3000);
+            tr("解析失败"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的配置文件不符合 toml 规范"), 3000);
     }
     insertToml(_projectConfig, "GUIConfig.isRunning", false);
 
@@ -85,7 +85,7 @@ void ProjectSettingsPage::refreshCommonDicts()
 
 QString ProjectSettingsPage::getProjectName()
 {
-    return QString(_projectDir.filename().wstring());
+    return QString::fromStdWString(_projectDir.filename().wstring());
 }
 
 fs::path ProjectSettingsPage::getProjectDir()
@@ -282,7 +282,7 @@ void ProjectSettingsPage::_onRefreshProjectConfig()
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft, 
-            tr("解析失败"), tr("项目 ") + QString(_projectDir.filename().wstring()) + tr(" 的配置文件不符合规范"), 3000);
+            tr("解析失败"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的配置文件不符合规范"), 3000);
         return;
     }
     insertToml(_projectConfig, "GUIConfig.isRunning", false);

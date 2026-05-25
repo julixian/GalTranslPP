@@ -44,13 +44,13 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
                 continue;
             }
             CacheFileInfo info;
-            info.relativeName = QString(fs::relative(entry.path(), cacheDir).wstring());
+            info.relativeName = QString::fromStdWString(fs::relative(entry.path(), cacheDir).wstring());
             if (discardDirty || !_dirtyFiles.contains(info.relativeName)) {
                 _loadedEntriesByFile.remove(info.relativeName);
             }
             std::error_code ec;
             info.size = entry.file_size(ec);
-            QFileInfo fileInfo(QString(entry.path().wstring()));
+            QFileInfo fileInfo(QString::fromStdWString(entry.path().wstring()));
             info.modified = fileInfo.lastModified();
 
             json data;
@@ -80,7 +80,7 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
             return collator.compare(a.relativeName, b.relativeName) < 0;
         });
 
-    _cacheDirLabel->setText(QString(cacheDir.wstring()));
+    _cacheDirLabel->setText(QString::fromStdWString(cacheDir.wstring()));
     _renderFileList();
     const bool previousStillExists = std::ranges::any_of(_cacheFiles, [&](const CacheFileInfo& file)
         {

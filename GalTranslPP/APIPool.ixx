@@ -9,8 +9,8 @@ import spdlog;
 import ITranslator;
 export import APITool;
 
-export {
-
+export
+{
     class APIPool {
     private:
         std::vector<TranslationApi> m_apis;

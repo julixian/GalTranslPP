@@ -147,7 +147,7 @@ ProjectSettingsPage* MainWindow::_createProjectSettingsPage(const fs::path& proj
             setNavigationNodeTitle(nodeKey, newProjectName);
         });
     _projectPages.push_back(newPage);
-    addPageNode(QString(projectDir.filename().wstring()), newPage.get(), _projectExpanderKey, ElaIconType::Projector);
+    addPageNode(QString::fromStdWString(projectDir.filename().wstring()), newPage.get(), _projectExpanderKey, ElaIconType::Projector);
     return newPage.get();
 }
 
@@ -505,7 +505,7 @@ void MainWindow::_onNewProjectTriggered()
     ProjectSettingsPage* newPage = _createProjectSettingsPage(newProjectDir);
     this->navigation(newPage->property("ElaPageKey").toString());
 
-    QUrl dirUrl = QUrl::fromLocalFile(QString(newProjectDir.wstring()));
+    QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(newProjectDir.wstring()));
     QDesktopServices::openUrl(dirUrl);
     ElaMessageBar::success(ElaMessageBarType::TopRight, tr("创建成功"), tr("请将待翻译的文件放入 gt_input 中！"), 8000);
 }
@@ -524,7 +524,7 @@ void MainWindow::_onOpenProjectTriggered()
         return;
     }
 
-    QString projectName(projectDir.filename().wstring());
+    QString projectName = QString::fromStdWString(projectDir.filename().wstring());
 
     if (std::ranges::any_of(_projectPages, [&](auto& page)
         {
@@ -538,7 +538,7 @@ void MainWindow::_onOpenProjectTriggered()
     ProjectSettingsPage* newPage = _createProjectSettingsPage(projectDir);
     this->navigation(newPage->property("ElaPageKey").toString());
 
-    QUrl dirUrl = QUrl::fromLocalFile(QString(projectDir.wstring()));
+    QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring()));
     QDesktopServices::openUrl(dirUrl);
     ElaMessageBar::success(ElaMessageBarType::TopRight, tr("打开成功"), newPage->getProjectName() + tr(" 已纳入项目管理！"), 3000);
 }
@@ -713,7 +713,7 @@ void MainWindow::_onCloseWindowClicked(bool restart)
         }
         QProcess::startDetached("Updater.exe", arguments, QDir::currentPath());
     }
-    MainWindow::closeWindow();
+    MainWindow::close();
 }
 
 void MainWindow::checkUpdate()

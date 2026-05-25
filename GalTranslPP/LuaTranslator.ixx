@@ -13,8 +13,8 @@ import LuaManager;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
 	template<typename BaseTranslator>
 	class LuaTranslator : public BaseTranslator {
 

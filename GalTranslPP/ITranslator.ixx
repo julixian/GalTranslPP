@@ -4,8 +4,8 @@ import std;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     struct RuntimeSuccessEvent {
         std::string id;
         std::string timestamp;

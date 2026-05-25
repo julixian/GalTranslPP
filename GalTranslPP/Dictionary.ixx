@@ -11,8 +11,8 @@ import LuaManager;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     struct GptDictEntry {
         std::string searchStr;
         std::string replaceStr;

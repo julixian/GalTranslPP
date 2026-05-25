@@ -14,8 +14,8 @@ import PythonManager;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-export {
-
+export
+{
 	template<typename BaseTranslator>
 	class PythonTranslator : public BaseTranslator {
 

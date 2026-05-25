@@ -9,8 +9,8 @@ import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
 	enum class LinebreakFixMode
 	{
 		None, Average, FixCharCount, KeepPositions, PreferPunctuations, NotFix

@@ -713,7 +713,7 @@ void MainWindow::_onCloseWindowClicked(bool restart)
         }
         QProcess::startDetached("Updater.exe", arguments, QDir::currentPath());
     }
-    MainWindow::close();
+    MainWindow::closeWindow();
 }
 
 void MainWindow::checkUpdate()

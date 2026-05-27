@@ -12,7 +12,7 @@ using Duration = std::chrono::duration<double>; // 使用 double 类型的秒
 
 class EtaEstimator {
 private:
-    static constexpr double SpeedWindowSeconds = 60.0;
+    static constexpr double SpeedWindowSeconds = 120.0;
 
     struct ProgressEvent {
         TimePoint time;

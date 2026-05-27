@@ -29,7 +29,7 @@ targetLang_useTokenizer = True
 # 如果使用提供的分词器则必须先定义 tokenizeFunc
 targetLang_tokenizeFunc = None
 
-excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖" }
+excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
 
 def init(project_dir: Path):
     """
@@ -161,6 +161,8 @@ def dPostRun(se: gpp.Sentence):
     se 是一个 C++ Sentence 对象的代理。
     """
     try:
+        if not gpp.utils.extractCJK(se.translated_preview) or se.original_text.startswith("　　"):
+            return
         processSentence(se)
         linkLine(se)
         #se.translated_preview = se.translated_preview.replace(LINEBREAK_SYMBOL, "\n")

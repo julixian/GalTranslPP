@@ -1,12 +1,11 @@
 # 必须: 导入 C++ 绑定的模块
 import gpp_plugin_api as gpp
 from pathlib import Path
-import tomllib
 import threading
 import queue
-import time
 import shutil
 import subprocess
+import traceback
 
 # 所有已注册类型和函数详见 GalTranslPP/PythonManager.cpp
 
@@ -105,17 +104,19 @@ def unload():
     try:
         if runUnloadFunc and pythonTranslator.m_transEngine != gpp.ShowNormal:
 
+            gamePath = Path(r"D:\GALGAME\linshi\ココロネ＝ペンデュラム！")
+            targetTransPath = gamePath / "json_cn"
+            newFontFaceName = "korolum"
+
             fontChangerPath = pythonTranslator.m_projectDir / "DynamicFontChanger.exe"
-            gamePath = Path(r"D:\GALGAME\linshi\ボンボンカンパニー\貧は僕らの福の神")
-            targetTransPath = gamePath / "textproc" / "trans"
             charMapPath = pythonTranslator.m_projectDir / "charMap.json"
             charsNotMapPath = pythonTranslator.m_projectDir / "charsNotMap.json"
-            newFontPath = pythonTranslator.m_projectDir / "B  I  N  B  O_mjp.ttf"
+            newFontPath = pythonTranslator.m_projectDir / (newFontFaceName + "_mjp.ttf")
 
             result = subprocess.run(
-                [fontChangerPath, "-j", "gt_output", 
-                 "-i", "julixiansimhei-Regular.ttf", 
-                 "-f", "B  I  N  B  O",
+                [fontChangerPath, "-j", "gt_output",
+                 "-i", "julixiansimhei-Regular.ttf",
+                 "-f", "korolum",
                  "-e", "excludeList.json",
                  "-s"],
                 cwd=pythonTranslator.m_projectDir,

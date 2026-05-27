@@ -124,20 +124,22 @@ void StartSettingsPage::_ensureWorkerThread()
 		});
 	connect(_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
 		{
-			_progressBar->setValue(_progressBar->value() + ticks);
+			const int previousProgress = _progressBar->value();
+			_progressBar->setValue(previousProgress + ticks);
+			const int progressDelta = _progressBar->value() - previousProgress;
 			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - _startTime);
 			_usedTimeLabel->display(QString::fromStdString(
 				std::format("{:%T}", elapsedSeconds)
 			));
-			if (ticks <= 0) {
+			if (progressDelta <= 0) {
 				return;
 			}
-			const auto etaWithSpeed = _estimator.updateAndGetSpeedWithEta(_progressBar->value(), _progressBar->maximum());
+			const auto etaWithSpeed = _estimator.recordProgressAndGetSpeedWithEta(progressDelta, _progressBar->value(), _progressBar->maximum());
 			const double& speed = etaWithSpeed.first;
 			const Duration& eta = etaWithSpeed.second;
 			if (_speedLabel) {
 				_speedLabel->setText(QString::fromStdString(
-					std::format("{:.2f} lines/s", speed == 0.0 ? (double)_progressBar->maximum() / (elapsedSeconds.count() + 1) : speed)
+					std::format("{:.2f} lines/s", speed)
 				));
 			}
 			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {

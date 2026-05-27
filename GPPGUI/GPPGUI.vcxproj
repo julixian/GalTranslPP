@@ -308,7 +308,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
   <ItemGroup>
     <QtMoc Include="CustomFilePluginCfgPage.h" />
     <QtMoc Include="ElaDoubleText.h" />
-    <ClInclude Include="ExponentialMovingAverageEstimator.hpp" />
+    <ClInclude Include="EtaEstimator.hpp" />
     <ClInclude Include="NoWheelComboBox.h" />
     <QtMoc Include="SkipTransCfgPage.h" />
     <QtMoc Include="ReadDicts.h" />

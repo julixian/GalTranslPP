@@ -9,7 +9,7 @@
 #include <QSystemTrayIcon>
 #include "BasePage.h"
 #include "TranslatorWorker.h"
-#include "ExponentialMovingAverageEstimator.hpp"
+#include "EtaEstimator.hpp"
 
 namespace fs = std::filesystem;
 
@@ -94,7 +94,7 @@ private:
     ElaLCDNumber* _usedTimeLabel;
     ElaLCDNumber* _remainTimeLabel;
     QSystemTrayIcon* _trayIcon;
-    ExponentialMovingAverageEstimator _estimator;
+    EtaEstimator _estimator;
     std::chrono::high_resolution_clock::time_point _startTime;
 
 private Q_SLOTS:

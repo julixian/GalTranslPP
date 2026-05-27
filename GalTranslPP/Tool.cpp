@@ -800,7 +800,9 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 }
 
 std::string nowTimestampString() {
-	return std::format("{:%Y-%m-%d %H:%M:%S}", std::chrono::system_clock::now());
+    const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
+    return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
 }
 
 void saveJsonFile(const fs::path& path, const json& value) {

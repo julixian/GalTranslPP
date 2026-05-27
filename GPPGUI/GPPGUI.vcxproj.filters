@@ -318,7 +318,7 @@
     <ClInclude Include="NoWheelComboBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
-    <ClInclude Include="ExponentialMovingAverageEstimator.hpp">
+    <ClInclude Include="EtaEstimator.hpp">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <ClInclude Include="ProjectCachePage_p.h">

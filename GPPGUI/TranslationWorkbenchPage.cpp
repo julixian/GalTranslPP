@@ -460,6 +460,7 @@ void TranslationWorkbenchPage::clearRuntime()
     _files.clear();
     _successFileFilters.clear();
     _successTotal = 0;
+    _errorTotal = 0;
     _stage.clear();
     _currentFile.clear();
     _renderSuccesses();
@@ -536,6 +537,7 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
 void TranslationWorkbenchPage::appendError(const GuiRuntimeErrorEvent& event)
 {
     _errors.push_front(event);
+    ++_errorTotal;
     _trimErrors();
     _renderErrors();
     _refreshHeader();
@@ -546,6 +548,7 @@ void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>&
     if (events.isEmpty()) {
         return;
     }
+    _errorTotal += events.size();
     for (const auto& event : events) {
         _errors.push_front(event);
     }
@@ -657,7 +660,7 @@ void TranslationWorkbenchPage::_refreshHeader()
     const QString current = _currentFile.isEmpty() ? QString() : tr(" · 当前文件: ") + _currentFile;
     _summaryText->setText(tr("%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误")
         .arg(stage, current)
-        .arg(completed).arg(total).arg(problems).arg(_successTotal).arg(_errors.size()));
+        .arg(completed).arg(total).arg(problems).arg(_successTotal).arg(_errorTotal));
     if (_successFileFilters.isEmpty()) {
         _filterText->clear();
         _clearFilterButton->setVisible(false);
@@ -666,7 +669,7 @@ void TranslationWorkbenchPage::_refreshHeader()
         _filterText->setText(tr("已筛选文件: ") + QStringList(_successFileFilters.values()).join(", "));
         _clearFilterButton->setVisible(true);
     }
-    _errorsTabButton->setText(_errors.isEmpty() ? tr("最近错误") : tr("最近错误 (%1)").arg(_errors.size()));
+    _errorsTabButton->setText(_errorTotal <= 0 ? tr("最近错误") : tr("最近错误 (%1)").arg(_errorTotal));
     const int unfinished = std::ranges::count_if(_files, [](const auto& file)
         {
             return file.total <= 0 || file.completed < file.total;

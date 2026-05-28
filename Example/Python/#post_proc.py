@@ -17,27 +17,21 @@ def wait_for_exit(sec):
     input_thread.join(timeout=sec)
 
 try:
-    projectPath = Path(r"D:\VSProj\JLXHP\Release\DimensionToTsuLovers")
+    projectPath = Path(r"D:\VSProj\JLXHP\Release\korolum")
     packPyScript = projectPath / "pack.py"
-    newScPath = projectPath / "DimensionToTsuLovers_cn_script"
-    basePath = projectPath / "DimensionToTsuLovers_cn_base"
+    newScPath = projectPath / "korolum_cn_script"
+    basePath = projectPath / "korolum_cn_base"
     newCharMapPath = basePath / "base"
 
-    shutil.copy2(r"#Script\textproc\new\text.txt", r"#Script")
+    shutil.copytree("scene_rep", newScPath / "scene", dirs_exist_ok=True)
 
     subprocess.run(
-                [sys.executable, r"pac_text_ju.py", "-i"],
-                cwd=r"#Script"
-            )
-    shutil.copy2(r"#Script\TEXT.DAT_NEW", r"data_patched\TEXT_GEMINI.DAT")
-    shutil.copy2(r"#Script\SCRIPT.SRC_NEW", r"data_patched\SCRIPT_GEMINI.SRC")
-    shutil.copytree("data_patched", newScPath / "patch", dirs_exist_ok=True)
-
-    subprocess.run(
-                ["MergeJsonTransMap.exe", "#Script\\textproc\\trans", "#Script\\textproc\\orig", newCharMapPath / "transMap_gemini.json"]
+                ["MergeJsonTransMap.exe", "json_cn", "json_jp", newCharMapPath / "transMap.json"]
             )
 
-    shutil.copy2("DimensionToTsuLovers_mjp.ttf", basePath / "DimensionToTsuLovers_cn" / "Font")
+    shutil.copy2("korolum_mjp.ttf", basePath / "korolum_cn" / "Font")
+    shutil.copy2("charMap.json", newCharMapPath)
+    shutil.copy2("charsNotMap.json", newCharMapPath)
 
     subprocess.run(
                 [sys.executable, packPyScript],

@@ -116,7 +116,7 @@ def unload():
             result = subprocess.run(
                 [fontChangerPath, "-j", "gt_output",
                  "-i", "julixiansimhei-Regular.ttf",
-                 "-f", "korolum",
+                 "-f", newFontFaceName,
                  "-e", "excludeList.json",
                  "-s"],
                 cwd=pythonTranslator.m_projectDir,

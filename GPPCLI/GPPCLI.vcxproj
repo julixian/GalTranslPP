@@ -156,6 +156,9 @@ copy "$(TargetPath)" "$(TargetDir)..\GPPCLI_PRIVATE\$(TargetName)$(TargetExt)"
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPCLI_PRIVATE\"
 )</Command>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>GPPCLI.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GPPCLI.cpp" />
@@ -166,6 +169,9 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPCLI_PRIVATE\"
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
       <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="GPPCLI.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

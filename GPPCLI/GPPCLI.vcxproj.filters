@@ -19,10 +19,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ProgressBar.ixx">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="TerminalController.ixx">
-      <Filter>源文件</Filter>
+      <Filter>头文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="GPPCLI.manifest">
+      <Filter>资源文件</Filter>
+    </Manifest>
   </ItemGroup>
 </Project>

@@ -3,9 +3,9 @@
   <assemblyIdentity
     version="2.6.8.0"
     processorArchitecture="*"
-    name="GalTranslPP.GPPGUI"
+    name="GalTranslPP.GPPCLI"
     type="win32" />
-  <description>GalTransl++ GUI</description>
+  <description>GalTransl++ CLI</description>
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
     <security>
       <requestedPrivileges>

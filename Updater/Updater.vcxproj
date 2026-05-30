@@ -125,12 +125,12 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="Updater.manifest" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
       <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Updater.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

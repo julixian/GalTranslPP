@@ -629,7 +629,7 @@ std::move_only_function<std::string(const std::string&)> getTraditionalChineseEx
     try {
         auto converter = std::make_unique<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
         absl::btree_set<std::string_view> excludeList = {
-            "乾", "阪"
+            "乾", "阪", "篠", "塚"
         };
         std::move_only_function<std::string(const std::string&)> result = [excludeListR = std::move(excludeList), converterR = std::move(converter)](const std::string& sourceString)
             {
@@ -647,25 +647,25 @@ std::move_only_function<std::string(const std::string&)> getTraditionalChineseEx
                 }
                 return resultStr;
             };
-        logger->info("OpenCC is usable for traditional Chinese conversion");
+        logger->info("Use OpenCC for traditional Chinese detection");
         return result;
     }
     catch (...) {
-        logger->error("OpenCC is not usable, falling back to ICU-based traditional Chinese conversion");
+        logger->error("OpenCC is not usable, try falling back to ICU-based traditional Chinese detection");
         UErrorCode status = U_ZERO_ERROR;
         auto toSimplified = std::unique_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error("ICU-based traditional Chinese conversion is not available");
+            throw std::runtime_error("ICU-based traditional Chinese detection is not available");
         }
         auto toTraditional = std::unique_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error("ICU-based simplified Chinese conversion is not available");
+            throw std::runtime_error("ICU-based simplified Chinese detection is not available");
         }
 
         // 白名单/排除列表：用于解决简繁转换中的歧义问题。
         // "著" (U+8457) 是一个典型例子，它在简体中文里也是合法字符，但T->S的转换规则可能导致误判。
         absl::btree_set<UChar32> excludeList = {
-            U'著', U'乾', U'阪',
+            U'著', U'乾', U'阪', U'篠', U'塚'
         };
         std::move_only_function<std::string(const std::string&)>result = [excludeListR = std::move(excludeList), toSimplifiedR = std::move(toSimplified),
             toTraditionalR = std::move(toTraditional)](const std::string& sourceString)
@@ -727,7 +727,7 @@ std::move_only_function<std::string(const std::string&)> getTraditionalChineseEx
                 std::string resultStr;
                 return resultUStr.toUTF8String(resultStr);
             };
-        logger->info("ICU-based traditional Chinese conversion is available");
+        logger->info("Use ICU-based traditional Chinese detection");
         return result;
     }
     return {};

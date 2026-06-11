@@ -204,14 +204,14 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         if (m_transEngine != TransEngine::Rebuild && !m_agentReconciling) { // agentReconciling 时不应该读取其它 part 的缓存
             if (m_needsCombining) {
                 const std::optional<fs::path> additionalCachePath = [&]() -> std::optional<fs::path>
-                {
-                    if (const auto it = m_splitFilePartsToJson.find(relInputPath);
-                        it != m_splitFilePartsToJson.end() && fs::exists(m_transCacheDir / it->second))
                     {
-                        return m_transCacheDir / it->second;
-                    }
-                    return std::nullopt;
-                }();
+                        if (const auto it = m_splitFilePartsToJson.find(relInputPath);
+                            it != m_splitFilePartsToJson.end() && fs::exists(m_transCacheDir / it->second))
+                        {
+                            return m_transCacheDir / it->second;
+                        }
+                        return std::nullopt;
+                    }();
                 const size_t pos = relInputPath.filename().wstring().rfind(L"_part_");
                 const std::wstring orgStem = relInputPath.filename().wstring().substr(0, pos);
                 const std::wstring cacheSpec = orgStem + L"_part_*.json";

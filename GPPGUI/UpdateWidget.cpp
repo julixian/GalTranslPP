@@ -16,15 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 修正时间区域记录。",
-        "2. [GUI] 句子完成详情界面错误数改为与成功时间同类语义的总错误计数",
-        "3. 优化预计完成时间算法",
-        "v2.6.6 更新",
-		"1. [GUI] 修复创建/删除项目时闪退的 bug",
-		"v2.6.5 更新",
-		"1. [GUI] 换回高版本 QT 风格",
-		"v2.6.4 更新",
-        "1. NameTrans 支持多线程",
+        "1. ",
     };
 
     mainLayout->addWidget(updateTitle);

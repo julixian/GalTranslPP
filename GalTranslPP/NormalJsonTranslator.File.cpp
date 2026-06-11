@@ -333,13 +333,13 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         int batchCount = 0;
         const std::string filePathWithHash = std::format("{}{:08X}", wide2Ascii(relInputPath), calculateFileCRC64(inputPath));
         std::string backgroundText = [&]()
-        {
-            std::shared_lock<std::shared_mutex> lock(m_backgroundTextCacheMapMutex);
-            if (const auto it = m_backgroundTextCacheMap.find(filePathWithHash); it != m_backgroundTextCacheMap.end()) {
-                return it->second;
-            }
-            return std::string{};
-        }();
+            {
+                std::shared_lock<std::shared_mutex> lock(m_backgroundTextCacheMapMutex);
+                if (const auto it = m_backgroundTextCacheMap.find(filePathWithHash); it != m_backgroundTextCacheMap.end()) {
+                    return it->second;
+                }
+                return std::string{};
+            }();
 
         const Sentence* pLastSentence = nullptr;
         for (auto batchView : toTranslate | std::views::chunk(m_batchSize)) {

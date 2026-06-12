@@ -34,7 +34,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     m_logger->debug("[线程 {}] 开始处理文件: {}", threadId, wide2Ascii(relInputPath));
 
     std::ifstream ifs;
-    const fs::path inputPath = m_needsCombining ? (m_inputCacheDir / relInputPath) : (m_inputDir / relInputPath);
+    const fs::path inputPath = (m_needsCombining || m_useRepeatedBlockInputCache)
+	                            ? (m_inputCacheDir / relInputPath)
+	                            : (m_inputDir / relInputPath);
     const fs::path outputPath = m_needsCombining ? (m_outputCacheDir / relInputPath) : (m_outputDir / relInputPath);
     const fs::path cachePath = m_transCacheDir / relInputPath;
     const fs::path showNormalPath = m_projectDir / L"gt_show_normal" / relInputPath;
@@ -61,6 +63,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 jit->get_to(se.names);
             }
             item["message"].get_to(se.original_text);
+            readRepeatedBlockReferenceInfo(item, se);
             sentences.push_back(std::move(se));
         }
         for (auto [se1, se2] : std::views::adjacent<2>(sentences)) {
@@ -90,6 +93,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             if (!se.other_info.empty()) {
                 showNormalObj["other_info"] = se.other_info;
             }
+            writeRepeatedBlockReferenceInfo(showNormalObj, se, false);
             showNormalObj["pre_processed_text"] = se.pre_processed_text;
             showNormalJson.push_back(std::move(showNormalObj));
             recordSentenceDone(relInputPath, se);
@@ -103,35 +107,35 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
     // 3. 保存问题概览，供 afterRun 汇总。
     auto saveProblemOverviewFunc = [&]()
-    {
-        const std::string relInputPathStr = wide2Ascii(relInputPath);
-        for (const auto& se : sentences) {
-            if (se.problems.empty() || !se.complete) {
-                continue;
+        {
+            const std::string relInputPathStr = wide2Ascii(relInputPath);
+            for (const auto& se : sentences) {
+                if (se.problems.empty() || !se.complete) {
+                    continue;
+                }
+                toml::ordered_table tbl;
+                tbl["filename"] = relInputPathStr;
+                tbl["index"] = se.index;
+                if (se.nameType == NameType::Single) {
+                    tbl["name"] = se.name;
+                    tbl["name_preview"] = se.name_preview;
+                }
+                else if (se.nameType == NameType::Multiple) {
+                    tbl["names"] = se.names;
+                    tbl["names_preview"] = se.names_preview;
+                }
+                tbl["original_text"] = se.original_text;
+                if (!se.other_info.empty()) {
+                    tbl["other_info"] = se.other_info;
+                }
+                tbl["pre_processed_text"] = se.pre_processed_text;
+                tbl["pre_translated_text"] = se.pre_translated_text;
+                tbl["problems"] = se.problems;
+                tbl["translated_by"] = se.translated_by;
+                tbl["translated_preview"] = se.translated_preview;
+                m_problemOverview.push_back(std::move(tbl));
             }
-            toml::ordered_table tbl;
-            tbl["filename"] = relInputPathStr;
-            tbl["index"] = se.index;
-            if (se.nameType == NameType::Single) {
-                tbl["name"] = se.name;
-                tbl["name_preview"] = se.name_preview;
-            }
-            else if (se.nameType == NameType::Multiple) {
-                tbl["names"] = se.names;
-                tbl["names_preview"] = se.names_preview;
-            }
-            tbl["original_text"] = se.original_text;
-            if (!se.other_info.empty()) {
-                tbl["other_info"] = se.other_info;
-            }
-            tbl["pre_processed_text"] = se.pre_processed_text;
-            tbl["pre_translated_text"] = se.pre_translated_text;
-            tbl["problems"] = se.problems;
-            tbl["translated_by"] = se.translated_by;
-            tbl["translated_preview"] = se.translated_preview;
-            m_problemOverview.push_back(std::move(tbl));
-        }
-    };
+        };
 
     std::vector<Sentence*> toTranslate;
 
@@ -142,6 +146,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         auto insertJsonArrToCacheMap = [&](const json& jsonArr)
             {
                 for (const auto& [index, item] : jsonArr | std::views::enumerate) {
+                    if (isRepeatedBlockRefPendingCache(item)) {
+                        continue;
+                    }
                     std::string cacheKey = generateCacheKey(jsonArr, index);
                     cacheMap.insert({ std::move(cacheKey), item });
                 }
@@ -201,7 +208,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         if (fs::exists(cachePath)) {
             cachePaths.push_back(cachePath);
         }
-        if (m_transEngine != TransEngine::Rebuild && !m_agentReconciling) { // agentReconciling 时不应该读取其它 part 的缓存
+        if (m_transEngine != TransEngine::Rebuild) {
             if (m_needsCombining) {
                 const std::optional<fs::path> additionalCachePath = [&]() -> std::optional<fs::path>
                     {
@@ -244,63 +251,44 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             insertJsonArrToCacheMap(totalCacheJsonList);
         }
 
-        if (!m_agentReconciling) {
-            for (Sentence& se : sentences) {
-                if (se.complete) {
-                    postProcess(&se);
-                    recordSentenceDone(relInputPath, se);
-                    continue;
-                }
-                const std::string key = generateCacheKey(&se);
-                const auto it = cacheMap.find(key);
-                if (it == cacheMap.end()) {
-                    toTranslate.push_back(&se);
-                    continue;
-                }
-                const auto& item = it->second;
-                if (auto jit = item.find("problems"); jit != item.end()) {
-                    jit->get_to(se.problems);
-                }
-                if (m_transEngine != TransEngine::Rebuild && hasRetranslKey(m_retranslKeys, item, &se)) {
-                    toTranslate.push_back(&se);
-                    continue;
-                }
-
-                se.pre_translated_text = item.value("pre_translated_text", "");
-                se.translated_by = item.value("translated_by", "");
+        for (Sentence& se : sentences) {
+            if (se.repeatedBlockRefTo.has_value()) {
+                se.pre_translated_text = se.pre_processed_text;
+                se.translated_preview = se.pre_processed_text;
+                se.translated_by = "GPP-Reference";
+                se.name_preview = se.name;
+                se.names_preview = se.names;
                 se.complete = true;
+                se.notAnalyzeProblem = true;
+                se.repeatedBlockRefPending = true;
+                recordSentenceDone(relInputPath, se, true);
+                continue;
+            }
+            if (se.complete) {
                 postProcess(&se);
                 recordSentenceDone(relInputPath, se);
+                continue;
             }
-        }
-        else {
-	        if (const auto it = m_agentReconcileTargetsByFile.find(relInputPath); it != m_agentReconcileTargetsByFile.end()) {
-	            const absl::flat_hash_set<int>& reconcileTargetIds = it->second;
-	            for (Sentence& se : sentences) {
-		            if (reconcileTargetIds.contains(se.index)) {
-	                    se.complete = false;
-	                    toTranslate.push_back(&se);
-	                }
-	                else {
-	                    const std::string key = generateCacheKey(&se);
-	                    const auto cacheIt = cacheMap.find(key);
-	                    if (cacheIt == cacheMap.end()) {
-	                        throw std::runtime_error(std::format("Reconcile processFile 未在 cacheMap 中找到缓存: {}", se.original_text));
-	                    }
-	                    const auto& item = cacheIt->second;
-	                    if (auto jit = item.find("problems"); jit != item.end()) {
-	                        jit->get_to(se.problems);
-	                    }
-	                    se.pre_translated_text = item.value("pre_translated_text", "");
-	                    se.translated_by = item.value("translated_by", "");
-	                    se.complete = true;
-	                    postProcess(&se);
-	                }
-	            }
-	        }
-            else {
-                throw std::runtime_error(std::format("Reconcile processFile 未在表中找到文件: {}", wide2Ascii(relInputPath)));
+            const std::string key = generateCacheKey(&se);
+            const auto it = cacheMap.find(key);
+            if (it == cacheMap.end()) {
+                toTranslate.push_back(&se);
+                continue;
             }
+            const auto& item = it->second;
+            if (auto jit = item.find("problems"); jit != item.end()) {
+                jit->get_to(se.problems);
+            }
+            if (m_transEngine != TransEngine::Rebuild && hasRetranslKey(m_retranslKeys, item, &se)) {
+                toTranslate.push_back(&se);
+                continue;
+            }
+
+            se.pre_translated_text = item.value("pre_translated_text", "");
+            se.translated_by = item.value("translated_by", "");
+            se.complete = true;
+            postProcess(&se);
+            recordSentenceDone(relInputPath, se);
         }
 
         if (!toTranslate.empty()) {
@@ -396,6 +384,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
     // 7. 组装最终输出文件。
     for (auto [se, item] : std::views::zip(sentences, jSentences)) {
+        eraseRepeatedBlockReferenceInfo(item);
         if (se.nameType == NameType::Single) {
             item["name"] = se.name_preview;
         }
@@ -413,6 +402,11 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     ofs.close();
 
     m_logger->info("[线程 {}] [文件 {}] 处理完成。", threadId, wide2Ascii(relInputPath));
+
+    if (m_useRepeatedBlockInputCache) {
+        m_logger->debug("[线程 {}] [文件 {}] 连续重复块引用模式启用，延后最终输出回填与文件回调。", threadId, wide2Ascii(relInputPath));
+        return;
+    }
 
     // 8. 分割文件模式下，最后一个 part 负责触发合并。
     if (m_needsCombining) {

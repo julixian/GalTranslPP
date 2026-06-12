@@ -50,10 +50,7 @@ NormalJsonTranslator::NormalJsonTranslator(
     m_otherCacheDir = m_projectDir / otherCacheDirName;
     m_backgroundTextCachePath = m_otherCacheDir / L"backgroundTextCache.json";
     m_agentRootDir = m_otherCacheDir / L"agent";
-    m_agentRunStatePath = m_agentRootDir / L"run_state.json";
     m_agentTermLedgerPath = m_agentRootDir / L"term_ledger.json";
-    m_agentRewriteQueuePath = m_agentRootDir / L"rewrite_queue.json";
-    m_agentTermConflictPath = m_agentRootDir / L"term_conflicts.json";
     m_agentFileNotesDir = m_agentRootDir / L"file_notes";
     m_agentSearchCatalogPath = m_agentRootDir / L"search_catalog.json";
     try {
@@ -127,6 +124,8 @@ void NormalJsonTranslator::normalJsonInit()
         m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
         m_splitFile = toml::find_or(configData, "common", "splitFile", "No");
         m_splitFileNum = toml::find_or(configData, "common", "splitFileNum", 10);
+        m_reuseRepeatedBlocks = toml::find_or(configData, "common", "reuseRepeatedBlocks", false);
+        m_repeatedBlockMinSize = toml::find_or(configData, "common", "repeatedBlockMinSize", 5);
         m_cacheSearchDistance = toml::find_or(configData, "common", "cacheSearchDistance", 5);
         m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
         m_linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
@@ -140,7 +139,9 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
         m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 80);
-        m_agentRewriteMode = toml::find_or(configData, "agent", "rewriteMode", "queue_retranslate");
+        if (m_repeatedBlockMinSize < 2) {
+            m_repeatedBlockMinSize = 2;
+        }
 
         if (m_agentEnabled) {
             if (m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv) {
@@ -149,9 +150,6 @@ void NormalJsonTranslator::normalJsonInit()
                 }
                 if (m_agentSoftContextChars > m_agentHardContextChars) {
                     std::swap(m_agentSoftContextChars, m_agentHardContextChars);
-                }
-                if (m_agentRewriteMode != "queue_retranslate" && m_agentRewriteMode != "mark_only") {
-                    throw std::invalid_argument("Agent rewriteMode 当前仅支持 queue_retranslate / mark_only");
                 }
             }
             else if (m_transEngine == TransEngine::GenDict) {

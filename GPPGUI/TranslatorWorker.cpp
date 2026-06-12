@@ -6,7 +6,8 @@
 import std;
 import ITranslator;
 
-namespace {
+namespace
+{
     QString qstr(const std::string& value)
     {
         return QString::fromStdString(value);

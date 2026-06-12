@@ -508,6 +508,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_usePostDictInMsg", &NormalJsonTranslator::m_usePostDictInMsg,
 		"m_useGptDictToReplaceName", &NormalJsonTranslator::m_useGptDictToReplaceName,
 		"m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc,
+		"m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks,
+		"m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize,
 		"m_apiStrategy", &NormalJsonTranslator::m_apiStrategy,
 		"m_sortMethod", &NormalJsonTranslator::m_sortMethod,
 		"m_splitFile", &NormalJsonTranslator::m_splitFile,

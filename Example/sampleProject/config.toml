@@ -96,6 +96,8 @@ targetLang = "zh-cn"            # 翻译到的目标语言，包括但不限于[
 splitFile = "No"                # 是否启用单文件分割。Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割。[No/Num/Equal]
 splitFileNum = 10               # Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分
 cacheSearchDistance = 5         # [仅在开启单文件分割时生效]将自身索引 ±N 的分割文件均视为当前分割文件的缓存，数值越大可能占用更多内存
+reuseRepeatedBlocks = false     # 启用连续重复块引用复用，只翻译首次出现的重复句子块
+repeatedBlockMinSize = 5        # 连续 n 句的 name/names 和 message 都相同时建立引用
 saveCacheInterval = 1           # 每翻译n次保存一次缓存
 linebreakSymbol = "auto"        # 这个项目在json中使用的换行符
 maxRetries = 5                  # 最大重试次数
@@ -115,7 +117,6 @@ maxTurnsPerChunk = 20
 softContextChars = 75000
 hardContextChars = 100000
 searchResultLimit = 80
-rewriteMode = "queue_retranslate" # queue_retranslate / mark_only
 
 # 用于生成字典和查错的分词器后端及其设置 (除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的)
 # 但 MeCab 只限于日文分词，如果想分词其它语言需要使用别的分词器并指定对应语言的模型

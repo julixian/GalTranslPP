@@ -75,66 +75,18 @@ std::vector<std::string> collectRelFileStrings(const std::vector<fs::path>& relF
         | std::ranges::to<std::vector>();
 }
 
-json buildInputFingerprintMap(const fs::path& inputRootDir, const std::vector<fs::path>& relFilePaths) {
-    json fingerprints = json::object();
-    for (const auto& relFilePath : relFilePaths) {
-        const fs::path absPath = inputRootDir / relFilePath;
-        if (!fs::exists(absPath) || !fs::is_regular_file(absPath)) {
-            fingerprints[wide2Ascii(relFilePath)] = "";
-            continue;
-        }
-        fingerprints[wide2Ascii(relFilePath)] = std::format("{:016X}", calculateFileCRC64(absPath));
-    }
-    return fingerprints;
-}
-
-bool areInputFingerprintsEqual(const json& lhs, const json& rhs) {
-    if (!lhs.is_object() || !rhs.is_object()) {
+bool isApiTranslationEngine(TransEngine transEngine) {
+    switch (transEngine)
+    {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForGalTsv:
+    case TransEngine::ForNovelTsv:
+    case TransEngine::DeepseekJson:
+    case TransEngine::Sakura:
+        return true;
+    default:
         return false;
     }
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
-    for (const auto& item : lhs.items()) {
-        const auto it = rhs.find(item.key());
-        if (it == rhs.end() || *it != item.value()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-json filterRewriteQueueByInputFingerprints(
-    const json& rewriteQueue,
-    const json& oldInputFingerprints,
-    const json& currentInputFingerprints,
-    int& droppedCount
-) {
-    droppedCount = 0;
-    if (!rewriteQueue.is_array()) {
-        return json::array();
-    }
-
-    json filteredQueue = json::array();
-    for (const auto& request : rewriteQueue) {
-        if (!request.is_object()) {
-            ++droppedCount;
-            continue;
-        }
-        const std::string file = request.value("file", "");
-        if (file.empty()) {
-            ++droppedCount;
-            continue;
-        }
-        const auto oldIt = oldInputFingerprints.find(file);
-        const auto currentIt = currentInputFingerprints.find(file);
-        if (oldIt == oldInputFingerprints.end() || currentIt == currentInputFingerprints.end() || *oldIt != *currentIt) {
-            ++droppedCount;
-            continue;
-        }
-        filteredQueue.push_back(request);
-    }
-    return filteredQueue;
 }
 
 std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
@@ -425,34 +377,54 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
         throw std::invalid_argument(std::format("未知的排序模式: {}", m_sortMethod));
     }
 
-    // 6. Agent 模式启动前初始化共享状态文件。
-    if (m_agentEnabled) {
-        m_agentKnownRelFiles = relFilePaths;
-        createParent(m_agentRunStatePath);
-        fs::create_directories(m_agentFileNotesDir);
-        m_agentRunStateCache = fs::exists(m_agentRunStatePath) ? loadJsonFileOrFromDisk(m_agentRunStatePath, json::object()) : json::object();
-        m_agentTermLedgerCache = fs::exists(m_agentTermLedgerPath) ? loadJsonFileOrFromDisk(m_agentTermLedgerPath, json::object()) : json::object();
-        m_agentRewriteQueueCache = fs::exists(m_agentRewriteQueuePath) ? loadJsonFileOrFromDisk(m_agentRewriteQueuePath, json::array()) : json::array();
-        m_agentTermConflictCache = fs::exists(m_agentTermConflictPath) ? loadJsonFileOrFromDisk(m_agentTermConflictPath, json::array()) : json::array();
-        const json oldRunState = m_agentRunStateCache;
-        const json oldRewriteQueue = m_agentRewriteQueueCache;
-        const std::vector<std::string> currentFileStrings = collectRelFileStrings(relFilePaths);
-        const fs::path fingerprintRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
-        const json currentInputFingerprints = buildInputFingerprintMap(fingerprintRootDir, relFilePaths);
-        const json oldInputFingerprints = oldRunState.value("input_fingerprints", json::object());
-        int droppedRewriteRequestCount = 0;
-        const json filteredRewriteQueue = filterRewriteQueueByInputFingerprints(
-            oldRewriteQueue,
-            oldInputFingerprints,
-            currentInputFingerprints,
-            droppedRewriteRequestCount
-        );
-        if (droppedRewriteRequestCount > 0) {
-            m_logger->warn("检测到 {} 条旧的 reconcile 重翻请求对应文件已变化，本次启动已按文件粒度丢弃这些请求。", droppedRewriteRequestCount);
+    // 6. 可选：分析跨文件连续重复块，并将带引用信息的输入统一写入 inputCacheDir。
+    if (m_reuseRepeatedBlocks && (isApiTranslationEngine(m_transEngine) || m_transEngine == TransEngine::ShowNormal)) {
+        const fs::path& sourceRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
+        std::vector<std::pair<fs::path, ordered_json>> filesWithData;
+        filesWithData.reserve(relFilePaths.size());
+
+        for (const fs::path& relFilePath : relFilePaths) {
+            try {
+                ifs.open(sourceRootDir / relFilePath, std::ios::binary);
+                ordered_json data = ordered_json::parse(ifs);
+                ifs.close();
+                filesWithData.emplace_back(relFilePath, std::move(data));
+            }
+            catch (const json::exception& e) {
+                m_logger->critical("分析连续重复块时读取文件 {} 失败", wide2Ascii(relFilePath));
+                throw std::runtime_error(e.what());
+            }
         }
 
-        m_agentRunStateCache = json{ {"input_fingerprints", currentInputFingerprints} };
-        saveJsonFile(m_agentRunStatePath, m_agentRunStateCache);
+        RepeatedBlockPlan repeatedBlockPlan = analyzeRepeatedBlocks(filesWithData, m_repeatedBlockMinSize);
+        if (!repeatedBlockPlan.refToByTarget.empty()) {
+            m_useRepeatedBlockInputCache = true;
+            for (auto& [relFilePath, data] : filesWithData) {
+                applyRepeatedBlockPlanToJson(relFilePath, data, repeatedBlockPlan);
+                const fs::path cachedInputPath = m_inputCacheDir / relFilePath;
+                createParent(cachedInputPath);
+                ofs.open(cachedInputPath, std::ios::binary);
+                ofs << data.dump(2);
+                ofs.close();
+            }
+            m_logger->info(
+                "连续重复块引用分析完成，阈值 {}，引用 {} 句。",
+                m_repeatedBlockMinSize,
+                repeatedBlockPlan.refToByTarget.size()
+            );
+        }
+        else {
+            m_logger->info("连续重复块引用分析完成，未发现长度不小于 {} 的重复块。", m_repeatedBlockMinSize);
+        }
+    }
+
+    // 7. Agent 模式启动前初始化共享状态文件。
+    if (m_agentEnabled) {
+        m_agentKnownRelFiles = relFilePaths;
+        fs::create_directories(m_agentFileNotesDir);
+        m_agentTermLedgerCache = fs::exists(m_agentTermLedgerPath) ? loadJsonFileOrFromDisk(m_agentTermLedgerPath, json::object()) : json::object();
+        const std::vector<std::string> currentFileStrings = collectRelFileStrings(relFilePaths);
+        const fs::path fingerprintRootDir = m_needsCombining ? m_inputCacheDir : m_inputDir;
 
         saveJsonFile(m_agentSearchCatalogPath, json{
             {"updated_at", nowTimestampString()},
@@ -479,18 +451,6 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
         if (!fs::exists(m_agentTermLedgerPath)) {
             m_agentTermLedgerCache = json::object();
             saveJsonFile(m_agentTermLedgerPath, m_agentTermLedgerCache);
-        }
-        if (!fs::exists(m_agentTermConflictPath)) {
-            m_agentTermConflictCache = json::array();
-            saveJsonFile(m_agentTermConflictPath, m_agentTermConflictCache);
-        }
-        if (!fs::exists(m_agentRewriteQueuePath)) {
-            m_agentRewriteQueueCache = json::array();
-            saveJsonFile(m_agentRewriteQueuePath, m_agentRewriteQueueCache);
-        }
-        else {
-            m_agentRewriteQueueCache = filteredRewriteQueue;
-            saveJsonFile(m_agentRewriteQueuePath, m_agentRewriteQueueCache);
         }
     }
 
@@ -573,6 +533,9 @@ void NormalJsonTranslator::normalJsonAfterRun()
         fs::remove_all(m_inputCacheDir);
         fs::remove_all(m_outputCacheDir);
     }
+    else if (m_useRepeatedBlockInputCache) {
+        fs::remove_all(m_inputCacheDir);
+    }
     if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild && m_controller->m_completedSentences != m_controller->m_totalSentences) {
         m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。",
             m_controller->m_completedSentences.load(), m_controller->m_totalSentences.load());
@@ -601,8 +564,159 @@ void NormalJsonTranslator::normalJsonProcess(std::vector<fs::path> relFilePaths)
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
     waitForThreads(m_threadPool, results);
 
-    if (m_agentEnabled && !m_controller->shouldStop()) {
-        runAgentFinalReconcile();
+    if (m_useRepeatedBlockInputCache && isApiTranslationEngine(m_transEngine)) {
+        resolveRepeatedBlockReferences(relFilePaths);
+    }
+    if (m_agentEnabled) {
+        applyAgentRetranslateSuggestions();
+    }
+}
+
+void NormalJsonTranslator::resolveRepeatedBlockReferences(const std::vector<fs::path>& relFilePaths)
+{
+    struct FileBundle {
+        ordered_json input = ordered_json::array();
+        json cache = json::array();
+    };
+
+    absl::flat_hash_map<fs::path, FileBundle> fileBundles;
+    std::ifstream ifs;
+    std::ofstream ofs;
+
+    for (const fs::path& relFilePath : relFilePaths) {
+        FileBundle bundle;
+        try {
+            ifs.open(m_inputCacheDir / relFilePath, std::ios::binary);
+            bundle.input = ordered_json::parse(ifs);
+            ifs.close();
+
+            const fs::path cachePath = m_transCacheDir / relFilePath;
+            if (fs::exists(cachePath)) {
+                ifs.open(cachePath, std::ios::binary);
+                bundle.cache = json::parse(ifs);
+                ifs.close();
+            }
+        }
+        catch (const json::exception& e) {
+            m_logger->critical("连续重复块引用回填读取 {} 失败", wide2Ascii(relFilePath));
+            throw std::runtime_error(e.what());
+        }
+        fileBundles.emplace(relFilePath, std::move(bundle));
+    }
+
+    absl::flat_hash_map<RepeatedBlockReferenceTarget, json*> cacheByPosition;
+    for (auto& [relFilePath, bundle] : fileBundles) {
+        for (json& item : bundle.cache) {
+            const int index = item.value("index", -1);
+            if (index >= 0) {
+                cacheByPosition[{ relFilePath, index }] = &item;
+            }
+        }
+    }
+
+    int resolvedCount = 0;
+    int missingCount = 0;
+
+    for (auto& [relFilePath, bundle] : fileBundles) {
+        for (json& cacheItem : bundle.cache) {
+            const auto refTo = getRepeatedBlockRefTo(cacheItem);
+            if (!refTo.has_value()) {
+                continue;
+            }
+            const auto sourceIt = cacheByPosition.find({ ascii2Wide(refTo->file), refTo->index });
+            if (sourceIt == cacheByPosition.end()) {
+                ++missingCount;
+                continue;
+            }
+            const json& sourceItem = *sourceIt->second;
+            cacheItem["pre_translated_text"] = sourceItem.value("pre_translated_text", "");
+            cacheItem["translated_by"] = sourceItem.value("translated_by", "");
+            cacheItem["translated_preview"] = sourceItem.value("translated_preview", "");
+            if (sourceItem.contains("problems")) {
+                cacheItem["problems"] = sourceItem["problems"];
+            }
+            else {
+                cacheItem.erase("problems");
+            }
+            if (sourceItem.contains("name_preview")) {
+                cacheItem["name_preview"] = sourceItem["name_preview"];
+            }
+            if (sourceItem.contains("names_preview")) {
+                cacheItem["names_preview"] = sourceItem["names_preview"];
+            }
+            cacheItem.erase(std::string(repeatedBlockRefPendingKey));
+            ++resolvedCount;
+        }
+
+        absl::flat_hash_map<int, const json*> cacheByIndex;
+        for (const json& cacheItem : bundle.cache) {
+            const int index = cacheItem.value("index", -1);
+            if (index >= 0) {
+                cacheByIndex[index] = &cacheItem;
+            }
+        }
+
+        for (auto [index, item] : bundle.input | std::views::enumerate) {
+            eraseRepeatedBlockReferenceInfo(item);
+            const auto cacheIt = cacheByIndex.find((int)index);
+            if (cacheIt == cacheByIndex.end()) {
+                continue;
+            }
+            const json& cacheItem = *cacheIt->second;
+            if (cacheItem.contains("name_preview")) {
+                item["name"] = cacheItem["name_preview"];
+            }
+            else if (cacheItem.contains("names_preview")) {
+                item["names"] = cacheItem["names_preview"];
+            }
+            item["message"] = cacheItem.value("translated_preview", "");
+            if (m_outputWithSrc && cacheItem.contains("original_text")) {
+                item["src_msg"] = cacheItem["original_text"];
+            }
+        }
+
+        const fs::path cachePath = m_transCacheDir / relFilePath;
+        createParent(cachePath);
+        ofs.open(cachePath, std::ios::binary);
+        ofs << bundle.cache.dump(2);
+        ofs.close();
+
+        const fs::path outputPath = m_needsCombining ? (m_outputCacheDir / relFilePath) : (m_outputDir / relFilePath);
+        createParent(outputPath);
+        ofs.open(outputPath, std::ios::binary);
+        ofs << bundle.input.dump(2);
+        ofs.close();
+    }
+
+    if (missingCount > 0) {
+        m_logger->warn("连续重复块引用回填完成，共复制 {} 句。但有 {} 句未找到被引用缓存，已保留占位结果。",
+            resolvedCount, missingCount);
+    }
+    else {
+        m_logger->info("连续重复块引用回填完成，共复制 {} 句。", resolvedCount);
+    }
+
+    if (m_needsCombining) {
+        for (const fs::path& originalRelFilePath : m_jsonToSplitFileParts | std::views::keys) {
+            combineOutputFiles(originalRelFilePath, m_jsonToSplitFileParts[originalRelFilePath],
+                m_outputCacheDir, m_outputDir, m_logger);
+            if (m_onFileProcessed) {
+                std::unique_lock<std::mutex> lock(m_outputMutex, std::defer_lock);
+                if (!m_pythonTranslator) {
+                    lock.lock();
+                }
+                m_onFileProcessed(originalRelFilePath);
+            }
+        }
+    }
+    else if (m_onFileProcessed) {
+        for (const fs::path& relFilePath : relFilePaths) {
+            std::unique_lock<std::mutex> lock(m_outputMutex, std::defer_lock);
+            if (!m_pythonTranslator) {
+                lock.lock();
+            }
+            m_onFileProcessed(relFilePath);
+        }
     }
 }
 

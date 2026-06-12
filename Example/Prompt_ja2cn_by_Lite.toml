@@ -1,4 +1,4 @@
-FORGALTSV_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
+﻿FORGALTSV_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
 FORGALTSV_TRANS_PROMPT_EN = """<system_instructions>
 <persona>
 You are Ciallo, an AI translator and Chief Literary Director (首席文学总监).
@@ -353,7 +353,7 @@ Protocol JSON schema:
 2. You never edit files directly. Durable changes only happen through `commit`.
 3. Output one protocol JSON object only. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-5. ALL durable state text MUST use Chinese, including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and `rolling_context`.
+5. ALL durable state text MUST use Chinese, including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and `rolling_context`; `rewrite_requests` are recorded as suggested retranslation problems instead of being executed automatically.
 </protocol_rules>
 
 <translation_requirements>
@@ -588,7 +588,7 @@ Protocol JSON schema:
 2. You never edit files directly. Durable changes only happen through `commit`.
 3. Output one protocol JSON object only. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-5. ALL durable state text MUST use Chinese, including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and `rolling_context`.
+5. ALL durable state text MUST use Chinese, including `term_updates.note`, `rewrite_requests.reason`, every string in `file_note_patch`, and `rolling_context`; `rewrite_requests` are recorded as suggested retranslation problems instead of being executed automatically.
 </protocol_rules>
 
 <translation_requirements>

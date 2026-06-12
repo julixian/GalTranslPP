@@ -199,6 +199,51 @@ void CommonSettingsPage::_setupUI()
 		splitSettingsDrawerArea->expand();
 	}
 
+	// 连续重复块引用复用
+	bool reuseRepeatedBlocks = toml::find_or(_projectConfig, "common", "reuseRepeatedBlocks", false);
+	ElaDrawerArea* repeatedBlockDrawerArea = new ElaDrawerArea(mainWidget);
+	QWidget* repeatedBlockArea = new QWidget(repeatedBlockDrawerArea);
+	repeatedBlockDrawerArea->setDrawerHeader(repeatedBlockArea);
+	QHBoxLayout* repeatedBlockLayout = new QHBoxLayout(repeatedBlockArea);
+	ElaDoubleText* repeatedBlockText = new ElaDoubleText(repeatedBlockArea,
+		tr("连续重复块引用复用"), 16,
+		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10, "");
+	repeatedBlockLayout->addWidget(repeatedBlockText);
+	repeatedBlockLayout->addStretch();
+	ElaToggleSwitch* repeatedBlockToggle = new ElaToggleSwitch(repeatedBlockArea);
+	repeatedBlockToggle->setIsToggled(reuseRepeatedBlocks);
+	repeatedBlockLayout->addWidget(repeatedBlockToggle);
+	mainLayout->addWidget(repeatedBlockDrawerArea);
+
+	int repeatedBlockMinSize = toml::find_or(_projectConfig, "common", "repeatedBlockMinSize", 5);
+	ElaScrollPageArea* repeatedBlockMinSizeArea = new ElaScrollPageArea(repeatedBlockDrawerArea);
+	QHBoxLayout* repeatedBlockMinSizeLayout = new QHBoxLayout(repeatedBlockMinSizeArea);
+	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(repeatedBlockMinSizeArea,
+		tr("重复块最小句数"), 16,
+		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10, "");
+	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeText);
+	repeatedBlockMinSizeLayout->addStretch();
+	ElaSpinBox* repeatedBlockMinSizeSpinBox = new ElaSpinBox(repeatedBlockMinSizeArea);
+	repeatedBlockMinSizeSpinBox->setRange(2, 10000);
+	repeatedBlockMinSizeSpinBox->setValue(repeatedBlockMinSize);
+	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeSpinBox);
+	repeatedBlockDrawerArea->addDrawer(repeatedBlockMinSizeArea);
+	if (reuseRepeatedBlocks) {
+		repeatedBlockDrawerArea->expand();
+	}
+	else {
+		repeatedBlockDrawerArea->collapse();
+	}
+	connect(repeatedBlockToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
+		{
+			if (checked) {
+				repeatedBlockDrawerArea->expand();
+			}
+			else {
+				repeatedBlockDrawerArea->collapse();
+			}
+		});
+
 	// 每翻译n次保存一次缓存
 	int cacheSaveInterval = toml::find_or(_projectConfig, "common", "saveCacheInterval", 1);
 	ElaScrollPageArea* cacheSaveIntervalArea = new ElaScrollPageArea(mainWidget);
@@ -492,6 +537,8 @@ void CommonSettingsPage::_setupUI()
 			insertToml(_projectConfig, "common.splitFile", splitSettingsGroup->checkedButton()->text().toStdString());
 			insertToml(_projectConfig, "common.splitFileNum", splitNumSpinBox->value());
 			insertToml(_projectConfig, "common.cacheSearchDistance", cacheSearchDistanceSpinBox->value());
+			insertToml(_projectConfig, "common.reuseRepeatedBlocks", repeatedBlockToggle->getIsToggled());
+			insertToml(_projectConfig, "common.repeatedBlockMinSize", repeatedBlockMinSizeSpinBox->value());
 			insertToml(_projectConfig, "common.saveCacheInterval", cacheSaveIntervalSpinBox->value());
 			insertToml(_projectConfig, "common.maxRetries", retrySpinBox->value());
 			insertToml(_projectConfig, "common.contextHistorySize", contextNumSpinBox->value());

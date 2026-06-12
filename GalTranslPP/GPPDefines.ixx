@@ -36,6 +36,11 @@ export
         None, Single, Multiple
     };
 
+    struct SentenceReference {
+        std::string file;
+        int index = -1;
+    };
+
     struct Sentence {
         int index;
         std::string name;
@@ -50,12 +55,15 @@ export
         std::string translated_preview;
         std::string originalLinebreak;
         std::map<std::string, std::string> other_info;
+        std::optional<SentenceReference> repeatedBlockRefTo;
+        std::vector<SentenceReference> repeatedBlockRefBy;
 
         NameType nameType = NameType::None;
         Sentence* prev = nullptr;
         Sentence* next = nullptr;
         bool complete = false;
         bool notAnalyzeProblem = false;
+        bool repeatedBlockRefPending = false;
 
         std::optional<std::string> problems_get_by_index(int index) {
             if (index < 0 || index >= problems.size()) {

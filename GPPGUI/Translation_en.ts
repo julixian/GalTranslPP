@@ -861,32 +861,32 @@
         <translation type="vanished">n.</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="207"/>
+        <location filename="CommonSettingsPage.cpp" line="252"/>
         <source>缓存保存间隔</source>
         <translation>Save interval</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="208"/>
+        <location filename="CommonSettingsPage.cpp" line="253"/>
         <source>每翻译n次保存一次缓存</source>
         <translation>Save cache after every n translation rounds</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="221"/>
+        <location filename="CommonSettingsPage.cpp" line="266"/>
         <source>最大重试次数</source>
         <translation>Max retry count</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="235"/>
+        <location filename="CommonSettingsPage.cpp" line="280"/>
         <source>携带上文数量</source>
         <translation>Num of context to attached</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="250"/>
+        <location filename="CommonSettingsPage.cpp" line="295"/>
         <source>智能重试</source>
         <translation>Smart retry</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="265"/>
+        <location filename="CommonSettingsPage.cpp" line="310"/>
         <source>运行时动态检测 key 额度，自动从 API 池中删除额度不足的 key</source>
         <oldsource>运行时动态检测key额度，自动从 API 池中删除额度不足的 key</oldsource>
         <translation>Check quota dynamically during running, removing expired key from Api pool automatically</translation>
@@ -896,7 +896,7 @@
         <translation type="vanished">If parsing the result fails, try re-translating by halving the content and clearing the context to avoid ineffective retries.</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="264"/>
+        <location filename="CommonSettingsPage.cpp" line="309"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -931,17 +931,17 @@
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="251"/>
+        <location filename="CommonSettingsPage.cpp" line="296"/>
         <source>解析结果失败时尝试折半重翻与清空上下文</source>
         <translation>If parsing the result fails, try re-translating by halving the content and clearing the context</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="311"/>
+        <location filename="CommonSettingsPage.cpp" line="356"/>
         <source>日志级别</source>
         <translation>Log level</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="297"/>
+        <location filename="CommonSettingsPage.cpp" line="342"/>
         <source>保存项目日志</source>
         <translation>Save project logs</translation>
     </message>
@@ -956,104 +956,124 @@
         <translation>Number of names processed per request by each NameTrans thread</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="236"/>
+        <location filename="CommonSettingsPage.cpp" line="209"/>
+        <source>连续重复块引用复用</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="CommonSettingsPage.cpp" line="210"/>
+        <source>重复脚本块只翻译首次出现的片段，后续句子引用复制结果</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="CommonSettingsPage.cpp" line="222"/>
+        <source>重复块最小句数</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="CommonSettingsPage.cpp" line="223"/>
+        <source>连续 n 句的说话人和原文完全相同才建立引用</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="CommonSettingsPage.cpp" line="281"/>
         <source>推荐值 ≤ 10</source>
         <translation>Recommend ≤ 10</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="278"/>
+        <location filename="CommonSettingsPage.cpp" line="323"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retranslate all content when failing to analyze the batch</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="279"/>
+        <location filename="CommonSettingsPage.cpp" line="324"/>
         <source>不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错</source>
         <translation>Only retranslate omitted parts when disabled. Enabling it can increase fault tolerance in case of parsing failure due to serialization</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="280"/>
+        <location filename="CommonSettingsPage.cpp" line="325"/>
         <source>默认关闭以节省token/防止因模型截断造成无限循环</source>
         <translation>Disabled by default to save tokens/prevent infinite loops caused by model truncation</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="294"/>
+        <location filename="CommonSettingsPage.cpp" line="339"/>
         <source>项目日志设置</source>
         <translation>Project logging settings</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="338"/>
+        <location filename="CommonSettingsPage.cpp" line="383"/>
         <source>单个 log 文件大小限制</source>
         <oldsource>log 文件大小限制</oldsource>
         <translation>Single log file size limit</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="357"/>
+        <location filename="CommonSettingsPage.cpp" line="402"/>
         <source>log 文件滚动数量上限</source>
         <translation>Maximum rolling quantity of log files</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="369"/>
+        <location filename="CommonSettingsPage.cpp" line="414"/>
         <source>分词器设置</source>
         <translation>Tokenizer settings</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="371"/>
+        <location filename="CommonSettingsPage.cpp" line="416"/>
         <source>用于生成字典和查错的分词器后端及其设置(应选择适合原文的后端/模型/字典)</source>
         <oldsource>用于生成字典和查错的分词器后端及其设置(针对原文)</oldsource>
         <translation>Tokenizer used to generate dict and analyze problems with its configs(should choose a backend/model/dict fit to source lang)</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="379"/>
+        <location filename="CommonSettingsPage.cpp" line="424"/>
         <source>分词器后端</source>
         <translation>Tokenizer backend</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="380"/>
+        <location filename="CommonSettingsPage.cpp" line="425"/>
         <source>除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的</source>
         <translation>spaCy and Stanza depend on Python</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="398"/>
+        <location filename="CommonSettingsPage.cpp" line="443"/>
         <source>MeCab词典目录</source>
         <translation>MeCab dict dir</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="399"/>
+        <location filename="CommonSettingsPage.cpp" line="444"/>
         <source>MeCab词典目录，程序自带一个</source>
         <translation>Dir of MeCab&apos;s dictionary</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="411"/>
+        <location filename="CommonSettingsPage.cpp" line="456"/>
         <source>选择MeCab词典目录</source>
         <translation>Choose MeCab dict dir</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="422"/>
+        <location filename="CommonSettingsPage.cpp" line="467"/>
         <source>spaCy模型名称</source>
         <translation>spaCy model name</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="423"/>
+        <location filename="CommonSettingsPage.cpp" line="468"/>
         <source>spaCy模型名称，新模型下载后需重启程序</source>
         <translation>spaCy model name, you need reboot app after downloading a new model</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="424"/>
+        <location filename="CommonSettingsPage.cpp" line="469"/>
         <source>sm模型的效果有点一言难尽，有条件的建议上trf模型</source>
         <translation>sm model is not so satisfying, use trf model if conditions allowing</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="444"/>
+        <location filename="CommonSettingsPage.cpp" line="489"/>
         <source>Stanza语言ID</source>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="445"/>
+        <location filename="CommonSettingsPage.cpp" line="490"/>
         <source>Stanza语言ID，新模型下载后需重启程序</source>
         <translation>Stanza lang id, you need reboot app after downloading a new model</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="523"/>
+        <location filename="CommonSettingsPage.cpp" line="570"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
@@ -1066,9 +1086,9 @@
         <translation type="vanished">can use relative path</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="407"/>
-        <location filename="CommonSettingsPage.cpp" line="432"/>
-        <location filename="CommonSettingsPage.cpp" line="453"/>
+        <location filename="CommonSettingsPage.cpp" line="452"/>
+        <location filename="CommonSettingsPage.cpp" line="477"/>
+        <location filename="CommonSettingsPage.cpp" line="498"/>
         <source>浏览</source>
         <translation>browse</translation>
     </message>
@@ -1077,18 +1097,18 @@
         <translation type="vanished">Choose dict dir</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="467"/>
+        <location filename="CommonSettingsPage.cpp" line="512"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="469"/>
+        <location filename="CommonSettingsPage.cpp" line="514"/>
         <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。&lt;br&gt;具体替换时机详见使用说明，auto为自动检测</source>
         <oldsource>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行，具体替换时机详见使用说明，auto为自动检测</oldsource>
         <translation>All linebreak symbols will be replaced to &amp;lt;br&amp;gt; for programming use</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="523"/>
+        <location filename="CommonSettingsPage.cpp" line="570"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

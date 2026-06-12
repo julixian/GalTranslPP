@@ -16,7 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. ",
+        "1. 实际翻译模式 Agent 去掉 Reconcile 流程，改为在对应句子里加 problem",
+		"2. 新增文本块级去重功能，仅在 实际翻译模式/ShowNormal 下生效",
     };
 
     mainLayout->addWidget(updateTitle);

@@ -9,6 +9,270 @@ module NormalJsonTranslatorHelperTool;
 import Tool;
 namespace fs = std::filesystem;
 
+namespace
+{
+
+struct RepeatedBlockOccurrence {
+    int start = 0;
+    int length = 0;
+};
+
+template <typename JsonT>
+std::string buildRepeatedBlockSpeakerKey(const JsonT& item) {
+    if (auto it = item.find("name"); it != item.end()) {
+        return "name:" + it->get<std::string>();
+    }
+    if (auto it = item.find("names"); it != item.end()) {
+        return "names:" + it->dump();
+    }
+    return "none:";
+}
+
+template <typename JsonT>
+std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
+    return buildRepeatedBlockSpeakerKey(item) + "\nmessage:" + item.value("message", "");
+}
+
+template <typename JsonT>
+JsonT referenceTargetToJson(const RepeatedBlockReferenceTarget& target) {
+    return JsonT{
+        {"file", wide2Ascii(target.file)},
+        {"index", target.index}
+    };
+}
+
+std::vector<int> buildSuffixArray(const std::vector<int>& tokens) {
+    const int n = (int)tokens.size();
+    std::vector<int> suffixArray(n);
+    std::iota(suffixArray.begin(), suffixArray.end(), 0);
+    if (n <= 1) {
+        return suffixArray;
+    }
+
+    std::vector<int> rank = tokens;
+    std::vector<int> nextRank(n);
+    for (int k = 1;; k <<= 1) {
+        std::ranges::sort(suffixArray, [&](int lhs, int rhs)
+            {
+                if (rank[lhs] != rank[rhs]) {
+                    return rank[lhs] < rank[rhs];
+                }
+                const int lhsNext = lhs + k < n ? rank[lhs + k] : -1;
+                const int rhsNext = rhs + k < n ? rank[rhs + k] : -1;
+                return lhsNext < rhsNext;
+            });
+
+        nextRank[suffixArray.front()] = 0;
+        for (int i = 1; i < n; ++i) {
+            const int prev = suffixArray[i - 1];
+            const int current = suffixArray[i];
+            const bool different =
+                rank[prev] != rank[current] ||
+                (prev + k < n ? rank[prev + k] : -1) != (current + k < n ? rank[current + k] : -1);
+            nextRank[current] = nextRank[prev] + (different ? 1 : 0);
+        }
+        rank.swap(nextRank);
+        if (rank[suffixArray.back()] == n - 1) {
+            break;
+        }
+    }
+    return suffixArray;
+}
+
+std::vector<int> buildLcpArray(const std::vector<int>& tokens, const std::vector<int>& suffixArray) {
+    const int n = (int)tokens.size();
+    std::vector<int> rank(n);
+    for (int i = 0; i < n; ++i) {
+        rank[suffixArray[i]] = i;
+    }
+
+    std::vector<int> lcp(std::max(0, n - 1));
+    int h = 0;
+    for (int i = 0; i < n; ++i) {
+        const int r = rank[i];
+        if (r == 0) {
+            continue;
+        }
+        const int j = suffixArray[r - 1];
+        while (i + h < n && j + h < n && tokens[i + h] == tokens[j + h]) {
+            ++h;
+        }
+        lcp[r - 1] = h;
+        if (h > 0) {
+            --h;
+        }
+    }
+    return lcp;
+}
+
+std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::vector<int>& tokens, int minBlockSize) {
+    std::vector<RepeatedBlockOccurrence> occurrences;
+    if ((int)tokens.size() < minBlockSize * 2) {
+        return occurrences;
+    }
+
+    const std::vector<int> suffixArray = buildSuffixArray(tokens);
+    const std::vector<int> lcp = buildLcpArray(tokens, suffixArray);
+
+    absl::flat_hash_set<int> starts;
+    for (const auto& [i, commonLength] : lcp | std::views::enumerate) {
+        if (commonLength < minBlockSize) {
+            continue;
+        }
+        const size_t suffixIndex = (size_t)i;
+        const int lhs = suffixArray[suffixIndex];
+        const int rhs = suffixArray[suffixIndex + 1];
+        const int length = std::min(commonLength, std::abs(lhs - rhs));
+        if (length < minBlockSize) {
+            continue;
+        }
+        if (starts.insert(lhs).second) {
+            occurrences.push_back({ lhs, length });
+        }
+        if (starts.insert(rhs).second) {
+            occurrences.push_back({ rhs, length });
+        }
+    }
+
+    std::ranges::sort(occurrences, [](const RepeatedBlockOccurrence& a, const RepeatedBlockOccurrence& b)
+        {
+            if (a.start != b.start) {
+                return a.start < b.start;
+            }
+            return a.length > b.length;
+        });
+    return occurrences;
+}
+
+} // namespace
+
+RepeatedBlockPlan analyzeRepeatedBlocks(
+    const std::vector<std::pair<fs::path, ordered_json>>& files,
+    int minBlockSize
+) {
+    RepeatedBlockPlan plan;
+    if (minBlockSize <= 1) {
+        minBlockSize = 2;
+    }
+
+    std::vector<int> tokens;
+    std::vector<RepeatedBlockReferenceTarget> positions;
+    absl::flat_hash_map<std::string, int> tokenIds;
+    int nextTokenId = 1;
+
+    for (const auto& [relFilePath, data] : files) {
+        for (const auto& [index, item] : data | std::views::enumerate) {
+            const std::string key = buildRepeatedBlockSentenceKey(item);
+            const auto [it, inserted] = tokenIds.emplace(key, nextTokenId);
+            if (inserted) {
+                ++nextTokenId;
+            }
+            tokens.push_back(it->second);
+            positions.push_back({ relFilePath, (int)index });
+        }
+    }
+
+    const std::vector<RepeatedBlockOccurrence> occurrences = collectRepeatedBlockOccurrences(tokens, minBlockSize);
+    if (occurrences.size() < 2) {
+        return plan;
+    }
+
+    std::vector<uint64_t> hashPrefix(tokens.size() + 1);
+    std::vector<uint64_t> hashPower(tokens.size() + 1, 1);
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        constexpr uint64_t hashBase = 11400714819323198485ull;
+        hashPrefix[i + 1] = hashPrefix[i] * hashBase + (uint64_t)tokens[i] + 0x9E3779B97F4A7C15ull;
+        hashPower[i + 1] = hashPower[i] * hashBase;
+    }
+    auto windowHash = [&](int start, int length)
+        {
+            return hashPrefix[start + length] - hashPrefix[start] * hashPower[length];
+        };
+    auto sameMinWindow = [&](int lhs, int rhs)
+        {
+            return std::ranges::equal(
+                tokens.begin() + lhs,
+                tokens.begin() + lhs + minBlockSize,
+                tokens.begin() + rhs,
+                tokens.begin() + rhs + minBlockSize
+            );
+        };
+
+    absl::flat_hash_map<uint64_t, std::vector<int>> sourceByBlockHash;
+    absl::flat_hash_set<int> referencedPositions;
+
+    for (const RepeatedBlockOccurrence& occurrence : occurrences) {
+        if (occurrence.start + minBlockSize > (int)tokens.size()) {
+            continue;
+        }
+        std::vector<int>& sourceStarts = sourceByBlockHash[windowHash(occurrence.start, minBlockSize)];
+        const auto sourceIt = std::ranges::find_if(sourceStarts, [&](int candidateStart)
+            {
+                return sameMinWindow(candidateStart, occurrence.start);
+            });
+        if (sourceIt == sourceStarts.end()) {
+            sourceStarts.push_back(occurrence.start);
+            continue;
+        }
+
+        const int sourceStart = *sourceIt;
+        if (occurrence.start == sourceStart || std::abs(occurrence.start - sourceStart) < minBlockSize) {
+            continue;
+        }
+        int length = 0;
+        const int maxLength = std::min((int)tokens.size() - occurrence.start, (int)tokens.size() - sourceStart);
+        while (length < maxLength && tokens[sourceStart + length] == tokens[occurrence.start + length]) {
+            ++length;
+        }
+        length = std::min(length, std::abs(occurrence.start - sourceStart));
+        if (length < minBlockSize) {
+            continue;
+        }
+
+        bool overlapsExistingReference = false;
+        for (int offset = 0; offset < length; ++offset) {
+            if (referencedPositions.contains(occurrence.start + offset)) {
+                overlapsExistingReference = true;
+                break;
+            }
+        }
+        if (overlapsExistingReference) {
+            continue;
+        }
+
+        for (int offset = 0; offset < length; ++offset) {
+            const RepeatedBlockReferenceTarget source = positions[sourceStart + offset];
+            const RepeatedBlockReferenceTarget target = positions[occurrence.start + offset];
+            plan.refToByTarget[target] = source;
+            plan.refBySource[source].push_back(target);
+            referencedPositions.insert(occurrence.start + offset);
+        }
+    }
+
+    return plan;
+}
+
+void applyRepeatedBlockPlanToJson(
+    const fs::path& relFilePath,
+    ordered_json& data,
+    const RepeatedBlockPlan& plan
+) {
+    for (auto [index, item] : data | std::views::enumerate) {
+        eraseRepeatedBlockReferenceInfo(item);
+        const RepeatedBlockReferenceTarget target{ relFilePath, (int)index };
+        if (const auto it = plan.refToByTarget.find(target); it != plan.refToByTarget.end()) {
+            item[std::string(repeatedBlockRefToKey)] = referenceTargetToJson<ordered_json>(it->second);
+        }
+        if (const auto it = plan.refBySource.find(target); it != plan.refBySource.end()) {
+            ordered_json refs = ordered_json::array();
+            for (const RepeatedBlockReferenceTarget& refBy : it->second) {
+                refs.push_back(referenceTargetToJson<ordered_json>(refBy));
+            }
+            item[std::string(repeatedBlockRefByKey)] = std::move(refs);
+        }
+    }
+}
+
 bool isEscapedJsonQuote(const std::string& text, size_t pos) {
     if (pos == 0 || pos >= text.size()) {
         return false;
@@ -617,6 +881,7 @@ void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cacheP
         }
         cacheObj["translated_by"] = se.translated_by;
         cacheObj["translated_preview"] = se.translated_preview;
+        writeRepeatedBlockReferenceInfo(cacheObj, se, true);
         cacheJson.push_back(std::move(cacheObj));
     }
     std::ofstream ofs(cachePath, std::ios::binary);

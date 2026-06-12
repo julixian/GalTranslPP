@@ -58,10 +58,7 @@ export
         fs::path m_backgroundTextCachePath;
         fs::path m_projectDir;
         fs::path m_agentRootDir;
-        fs::path m_agentRunStatePath;
         fs::path m_agentTermLedgerPath;
-        fs::path m_agentRewriteQueuePath;
-        fs::path m_agentTermConflictPath;
         fs::path m_agentFileNotesDir;
         fs::path m_agentSearchCatalogPath;
 
@@ -96,17 +93,17 @@ export
         bool m_useGptDictToReplaceName{};
         bool m_outputWithSrc{};
         bool m_agentEnabled{};
-        // 仅在最终 reconcile 阶段为 true。
-        bool m_agentReconciling = false;
+        bool m_reuseRepeatedBlocks{};
+        bool m_useRepeatedBlockInputCache = false;
         int m_lastRuntimeFileTotal = 0;
 
         std::string m_apiStrategy;
         std::string m_sortMethod;
         std::string m_splitFile;
         int m_splitFileNum{};
+        int m_repeatedBlockMinSize{};
         int m_cacheSearchDistance{};
         std::string m_linebreakSymbol;
-        std::string m_agentRewriteMode;
         int m_agentMaxTurnsPerChunk{};
         int m_agentSoftContextChars{};
         int m_agentHardContextChars{};
@@ -124,21 +121,15 @@ export
         std::mutex m_outputMutex;
         std::mutex m_agentStateMutex;
         std::mutex m_agentFileNotesMutex;
-        json m_agentRunStateCache = json::object();
         json m_agentTermLedgerCache = json::object();
-        json m_agentRewriteQueueCache = json::array();
-        json m_agentTermConflictCache = json::array();
         absl::flat_hash_map<fs::path, json> m_agentFileNoteCache;
+        absl::flat_hash_map<fs::path, absl::flat_hash_map<int, std::vector<std::string>>> m_agentRetranslateSuggestions;
         std::shared_mutex m_agentLoadedDictionaryEntriesCacheMutex;
         std::shared_ptr<const json> m_agentLoadedDictionaryEntriesCache;
         // 输入分割文件相对路径到原始json相对路径的映射
         absl::flat_hash_map<fs::path, fs::path> m_splitFilePartsToJson;
         // 原始json相对路径到多个输入分割文件相对路径及其有没有完成的映射
         absl::flat_hash_map<fs::path, absl::flat_hash_map<fs::path, bool>> m_jsonToSplitFileParts;
-        // 最终 reconcile 阶段要求强制重翻的 file/id 白名单。
-        // 这里不直接改写 trans_cache 文件，否则会破坏基于前后句生成的 cache key，
-        // 导致邻近句子也误判为 cache miss。
-        absl::flat_hash_map<fs::path, absl::flat_hash_set<int>> m_agentReconcileTargetsByFile;
         std::vector<fs::path> m_agentKnownRelFiles;
         std::vector<fs::path> m_agentDictionaryPaths;
         std::optional<fs::path> m_agentProjectInfoPath;
@@ -165,9 +156,7 @@ export
         void postProcess(Sentence* se);
 
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
-        // Agent 模式会在单个 chunk 内运行一个小型多轮循环。
-        // 正常情况下每个 chunk 只会进入一次；如果 commit 校验失败或响应解析失败，
-        // 则会按现有重试逻辑再次进入。
+        
         bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
 
 	    // Agent 模式共享持久化状态的辅助函数。
@@ -175,7 +164,7 @@ export
 	    json loadAgentTermLedger();
 	    json loadAgentFileNote(const fs::path& targetRelPath);
 	    void saveAgentFileNote(const fs::path& targetRelPath, const json& note);
-	    void mutateAgentState(const std::function<void(json& termLedger, json& rewriteQueue, json& termConflicts)>& mutator);
+	    void mutateAgentState(const std::function<void(json& termLedger)>& mutator);
         std::string buildAgentLogBlock(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         json buildAgentBaseMessages(const fs::path& relInputPath, std::span<Sentence*> batch, const std::string& rollingSummary);
         void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,
@@ -188,7 +177,8 @@ export
             const std::string& indexRange = {}, int retryCount = -1, const std::string& model = {},
             double sleepSeconds = -1.0, const std::string& level = "error") const;
 
-        void runAgentFinalReconcile();
+        void applyAgentRetranslateSuggestions();
+        void resolveRepeatedBlockReferences(const std::vector<fs::path>& relFilePaths);
 
     public:
         NormalJsonTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,

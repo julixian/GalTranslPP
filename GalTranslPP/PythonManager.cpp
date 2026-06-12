@@ -595,6 +595,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_usePostDictInMsg", &NormalJsonTranslator::m_usePostDictInMsg)
         .def_readwrite("m_useGptDictToReplaceName", &NormalJsonTranslator::m_useGptDictToReplaceName)
         .def_readwrite("m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc)
+        .def_readwrite("m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks)
+        .def_readwrite("m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize)
         .def_readwrite("m_apiStrategy", &NormalJsonTranslator::m_apiStrategy)
         .def_readwrite("m_sortMethod", &NormalJsonTranslator::m_sortMethod)
         .def_readwrite("m_splitFile", &NormalJsonTranslator::m_splitFile)

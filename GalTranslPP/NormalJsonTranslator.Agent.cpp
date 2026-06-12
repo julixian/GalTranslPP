@@ -1370,18 +1370,12 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 }
 
 void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
-    absl::flat_hash_map<fs::path, absl::flat_hash_map<int, std::vector<std::string>>> suggestions;
-    {
-        std::lock_guard<std::mutex> lock(m_agentStateMutex);
-        suggestions = std::move(m_agentRetranslateSuggestions);
-        m_agentRetranslateSuggestions.clear();
-    }
-    if (suggestions.empty()) {
+    if (m_agentRetranslateSuggestions.empty()) {
         return;
     }
 
     int markedCount = 0;
-    for (const auto& [relFilePath, suggestionsByIndex] : suggestions) {
+    for (const auto& [relFilePath, suggestionsByIndex] : m_agentRetranslateSuggestions) {
         const fs::path cachePath = m_transCacheDir / relFilePath;
         if (!fs::exists(cachePath)) {
             m_logger->warn("Agent 建议重翻目标 {} 没有缓存文件，已跳过。", wide2Ascii(relFilePath));
@@ -1390,7 +1384,6 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
 
         json cacheJson;
         try {
-            std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
             std::ifstream ifs(cachePath, std::ios::binary);
             cacheJson = json::parse(ifs);
         }
@@ -1451,11 +1444,8 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
             continue;
         }
 
-        {
-            std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
-            std::ofstream ofs(cachePath, std::ios::binary);
-            ofs << cacheJson.dump(2);
-        }
+        std::ofstream ofs(cachePath, std::ios::binary);
+        ofs << cacheJson.dump(2);
     }
 
     if (markedCount > 0) {

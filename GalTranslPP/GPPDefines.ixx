@@ -36,10 +36,17 @@ export
         None, Single, Multiple
     };
 
-    struct SentenceReference {
+    struct SentencePosition {
         std::string file;
         int index = -1;
+
+        friend bool operator==(const SentencePosition&, const SentencePosition&) = default;
     };
+
+    template <typename H>
+    H AbslHashValue(H h, const SentencePosition& position) {
+        return H::combine(std::move(h), position.file, position.index);
+    }
 
     struct Sentence {
         int index;
@@ -55,8 +62,8 @@ export
         std::string translated_preview;
         std::string originalLinebreak;
         std::map<std::string, std::string> other_info;
-        std::optional<SentenceReference> repeatedBlockRefTo;
-        std::vector<SentenceReference> repeatedBlockRefBy;
+        std::optional<SentencePosition> repeatedBlockRefTo;
+        std::vector<SentencePosition> repeatedBlockRefBy;
 
         NameType nameType = NameType::None;
         Sentence* prev = nullptr;

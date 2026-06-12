@@ -34,9 +34,9 @@ std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
 }
 
 template <typename JsonT>
-JsonT referenceTargetToJson(const RepeatedBlockReferenceTarget& target) {
+JsonT referenceTargetToJson(const SentencePosition& target) {
     return JsonT{
-        {"file", wide2Ascii(target.file)},
+        {"file", target.file},
         {"index", target.index}
     };
 }
@@ -156,7 +156,7 @@ RepeatedBlockPlan analyzeRepeatedBlocks(
     }
 
     std::vector<int> tokens;
-    std::vector<RepeatedBlockReferenceTarget> positions;
+    std::vector<SentencePosition> positions;
     absl::flat_hash_map<std::string, int> tokenIds;
     int nextTokenId = 1;
 
@@ -168,7 +168,7 @@ RepeatedBlockPlan analyzeRepeatedBlocks(
                 ++nextTokenId;
             }
             tokens.push_back(it->second);
-            positions.push_back({ relFilePath, (int)index });
+            positions.push_back({ wide2Ascii(relFilePath), (int)index });
         }
     }
 
@@ -241,8 +241,8 @@ RepeatedBlockPlan analyzeRepeatedBlocks(
         }
 
         for (int offset = 0; offset < length; ++offset) {
-            const RepeatedBlockReferenceTarget source = positions[sourceStart + offset];
-            const RepeatedBlockReferenceTarget target = positions[occurrence.start + offset];
+            const SentencePosition source = positions[sourceStart + offset];
+            const SentencePosition target = positions[occurrence.start + offset];
             plan.refToByTarget[target] = source;
             plan.refBySource[source].push_back(target);
             referencedPositions.insert(occurrence.start + offset);
@@ -259,13 +259,13 @@ void applyRepeatedBlockPlanToJson(
 ) {
     for (auto [index, item] : data | std::views::enumerate) {
         eraseRepeatedBlockReferenceInfo(item);
-        const RepeatedBlockReferenceTarget target{ relFilePath, (int)index };
+        const SentencePosition target{ wide2Ascii(relFilePath), (int)index };
         if (const auto it = plan.refToByTarget.find(target); it != plan.refToByTarget.end()) {
             item[std::string(repeatedBlockRefToKey)] = referenceTargetToJson<ordered_json>(it->second);
         }
         if (const auto it = plan.refBySource.find(target); it != plan.refBySource.end()) {
             ordered_json refs = ordered_json::array();
-            for (const RepeatedBlockReferenceTarget& refBy : it->second) {
+            for (const SentencePosition& refBy : it->second) {
                 refs.push_back(referenceTargetToJson<ordered_json>(refBy));
             }
             item[std::string(repeatedBlockRefByKey)] = std::move(refs);

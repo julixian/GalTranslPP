@@ -367,7 +367,7 @@ std::optional<std::vector<fs::path>> NormalJsonTranslator::normalJsonBeforeRun()
 #ifdef _WIN32
         std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
             {
-                return str2Lower(a) < str2Lower(b);
+                return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
             });
 #else
         std::ranges::sort(relFilePaths);
@@ -604,12 +604,12 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences(const std::vector<fs::
         fileBundles.emplace(relFilePath, std::move(bundle));
     }
 
-    absl::flat_hash_map<RepeatedBlockReferenceTarget, json*> cacheByPosition;
+    absl::flat_hash_map<SentencePosition, json*> cacheByPosition;
     for (auto& [relFilePath, bundle] : fileBundles) {
         for (json& item : bundle.cache) {
             const int index = item.value("index", -1);
             if (index >= 0) {
-                cacheByPosition[{ relFilePath, index }] = &item;
+                cacheByPosition[{ wide2Ascii(relFilePath), index }] = &item;
             }
         }
     }
@@ -623,7 +623,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences(const std::vector<fs::
             if (!refTo.has_value()) {
                 continue;
             }
-            const auto sourceIt = cacheByPosition.find({ ascii2Wide(refTo->file), refTo->index });
+            const auto sourceIt = cacheByPosition.find({ refTo->file, refTo->index });
             if (sourceIt == cacheByPosition.end()) {
                 ++missingCount;
                 continue;

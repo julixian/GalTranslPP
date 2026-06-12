@@ -16,21 +16,9 @@ export
     constexpr std::string_view repeatedBlockRefByKey = "_gpp_ref_by";
     constexpr std::string_view repeatedBlockRefPendingKey = "_gpp_ref_pending";
 
-    struct RepeatedBlockReferenceTarget {
-        fs::path file;
-        int index = -1;
-
-        friend bool operator==(const RepeatedBlockReferenceTarget&, const RepeatedBlockReferenceTarget&) = default;
-    };
-
-    template <typename H>
-    H AbslHashValue(H h, const RepeatedBlockReferenceTarget& target) {
-        return H::combine(std::move(h), target.file, target.index);
-    }
-
     struct RepeatedBlockPlan {
-        absl::flat_hash_map<RepeatedBlockReferenceTarget, RepeatedBlockReferenceTarget> refToByTarget;
-        absl::flat_hash_map<RepeatedBlockReferenceTarget, std::vector<RepeatedBlockReferenceTarget>> refBySource;
+        absl::flat_hash_map<SentencePosition, SentencePosition> refToByTarget;
+        absl::flat_hash_map<SentencePosition, std::vector<SentencePosition>> refBySource;
     };
 
     template <typename JsonT>
@@ -39,7 +27,7 @@ export
     }
 
     template <typename JsonT>
-    std::optional<SentenceReference> getRepeatedBlockRefTo(const JsonT& item) {
+    std::optional<SentencePosition> getRepeatedBlockRefTo(const JsonT& item) {
         const auto it = item.find(std::string(repeatedBlockRefToKey));
         if (it == item.end() || !it->is_object()) {
             return std::nullopt;
@@ -49,12 +37,12 @@ export
         if (file.empty() || index < 0) {
             return std::nullopt;
         }
-        return SentenceReference{ file, index };
+        return SentencePosition{ file, index };
     }
 
     template <typename JsonT>
-    std::vector<SentenceReference> getRepeatedBlockRefBy(const JsonT& item) {
-        std::vector<SentenceReference> refs;
+    std::vector<SentencePosition> getRepeatedBlockRefBy(const JsonT& item) {
+        std::vector<SentencePosition> refs;
         const auto it = item.find(std::string(repeatedBlockRefByKey));
         if (it == item.end() || !it->is_array()) {
             return refs;

@@ -970,17 +970,17 @@
         <translation>Translate only the first occurrence of repeated script blocks; later sentences copy the referenced result</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="222"/>
+        <location filename="CommonSettingsPage.cpp" line="223"/>
         <source>重复块最小句数</source>
         <translation>Minimum repeated block size</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="223"/>
+        <location filename="CommonSettingsPage.cpp" line="224"/>
         <source>连续 n 句的说话人和原文完全相同才建立引用</source>
         <translation>Create references only when n consecutive sentences have identical speakers and source text</translation>
     </message>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="224"/>
+        <location filename="CommonSettingsPage.cpp" line="211"/>
         <source>启用时建议将翻译顺序改为文件名排序</source>
         <translation>When enabled, use filename sorting for the translation order</translation>
     </message>

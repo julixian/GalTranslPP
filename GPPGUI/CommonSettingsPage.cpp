@@ -207,7 +207,8 @@ void CommonSettingsPage::_setupUI()
 	QHBoxLayout* repeatedBlockLayout = new QHBoxLayout(repeatedBlockArea);
 	ElaDoubleText* repeatedBlockText = new ElaDoubleText(repeatedBlockArea,
 		tr("连续重复块引用复用"), 16,
-		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10, "");
+		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10,
+		tr("启用时建议将翻译顺序改为文件名排序"));
 	repeatedBlockLayout->addWidget(repeatedBlockText);
 	repeatedBlockLayout->addStretch();
 	ElaToggleSwitch* repeatedBlockToggle = new ElaToggleSwitch(repeatedBlockArea);
@@ -220,8 +221,7 @@ void CommonSettingsPage::_setupUI()
 	QHBoxLayout* repeatedBlockMinSizeLayout = new QHBoxLayout(repeatedBlockMinSizeArea);
 	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(repeatedBlockMinSizeArea,
 		tr("重复块最小句数"), 16,
-		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10,
-		tr("启用时建议将翻译顺序改为文件名排序"));
+		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10, "");
 	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeText);
 	repeatedBlockMinSizeLayout->addStretch();
 	ElaSpinBox* repeatedBlockMinSizeSpinBox = new ElaSpinBox(repeatedBlockMinSizeArea);

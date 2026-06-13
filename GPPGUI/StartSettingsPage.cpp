@@ -154,25 +154,13 @@ void StartSettingsPage::_ensureWorkerThread()
 		{
 			_translationWorkbenchPage->resetRuntimeFiles(files);
 		});
-	connect(_worker, &TranslatorWorker::runtimeFileProgressSignal, this, [=](const GuiRuntimeFileProgress& file)
-		{
-			_translationWorkbenchPage->updateRuntimeFile(file);
-		});
 	connect(_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
 		{
 			_translationWorkbenchPage->updateRuntimeFiles(files);
 		});
-	connect(_worker, &TranslatorWorker::runtimeSuccessSignal, this, [=](const GuiRuntimeSuccessEvent& event)
-		{
-			_translationWorkbenchPage->appendSuccess(event);
-		});
 	connect(_worker, &TranslatorWorker::runtimeSuccessBatchSignal, this, [=](const QVector<GuiRuntimeSuccessEvent>& events)
 		{
 			_translationWorkbenchPage->appendSuccesses(events);
-		});
-	connect(_worker, &TranslatorWorker::runtimeErrorSignal, this, [=](const GuiRuntimeErrorEvent& event)
-		{
-			_translationWorkbenchPage->appendError(event);
 		});
 	connect(_worker, &TranslatorWorker::runtimeErrorBatchSignal, this, [=](const QVector<GuiRuntimeErrorEvent>& events)
 		{

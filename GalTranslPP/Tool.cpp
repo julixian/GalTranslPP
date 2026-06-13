@@ -438,7 +438,7 @@ size_t countGraphemes(const std::string& sourceString) {
 }
 
 std::string truncateUtf8Prefix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
-    if (text.empty()) {
+    if (text.empty() || text.length() < maxCodepoints) {
         return std::string(text);
     }
     if (maxCodepoints == 0) {
@@ -461,7 +461,7 @@ std::string truncateUtf8Prefix(std::string_view text, size_t maxCodepoints, std:
 }
 
 std::string truncateUtf8Suffix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
-    if (text.empty()) {
+    if (text.empty() || text.length() < maxCodepoints) {
         return std::string(text);
     }
     if (maxCodepoints == 0) {

@@ -124,10 +124,7 @@ void PDFTranslator::run() {
     NormalJsonTranslator::normalJsonInit();
     PDFTranslator::pdfInit();
     PDFTranslator::pdfBeforeRun();
-    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::normalJsonBeforeRun();
-    if (!relFilePathsOpt.has_value()) {
-        return;
-    }
-    NormalJsonTranslator::normalJsonProcess(std::move(relFilePathsOpt.value()));
+    NormalJsonTranslator::normalJsonBeforeRun();
+    NormalJsonTranslator::normalJsonProcess();
     NormalJsonTranslator::normalJsonAfterRun();
 }

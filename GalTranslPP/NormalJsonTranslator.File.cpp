@@ -105,9 +105,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         return;
     }
 
-    // 3. 保存问题概览，供 afterRun 汇总。
-    auto saveProblemOverviewFunc = [&]()
+    // 3. Rebuild 模式预收集问题概览，避免重建输出时再读一遍缓存。
+    auto saveRebuildProblemOverviewFunc = [&]()
         {
+            if (m_transEngine != TransEngine::Rebuild) {
+                return;
+            }
             const std::string relInputPathStr = wide2Ascii(relInputPath);
             for (const auto& se : sentences) {
                 if (se.problems.empty() || !se.complete) {
@@ -261,7 +264,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 se.complete = true;
                 se.notAnalyzeProblem = true;
                 se.repeatedBlockRefPending = true;
-                recordSentenceDone(relInputPath, se, true);
+                recordSentenceDone(relInputPath, se, false);
                 continue;
             }
             if (se.complete) {
@@ -309,7 +312,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             );
             saveCache(sentences, cachePath);
             std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
-            saveProblemOverviewFunc();
+            saveRebuildProblemOverviewFunc();
             return;
         }
     }
@@ -346,7 +349,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 m_logger->debug("[线程 {}] [文件 {}] 已停止翻译", threadId, wide2Ascii(relInputPath));
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
-                saveProblemOverviewFunc();
+                saveRebuildProblemOverviewFunc();
                 return;
             }
 
@@ -379,7 +382,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
         m_logger->debug("[线程 {}] [文件 {}] 翻译完成，正在进行最终保存...", threadId, wide2Ascii(relInputPath));
         saveCache(sentences, cachePath);
-        saveProblemOverviewFunc();
+        saveRebuildProblemOverviewFunc();
     }
 
     // 7. 组装最终输出文件。

@@ -7,7 +7,6 @@ namespace fs = std::filesystem;
 export
 {
     struct RuntimeSuccessEvent {
-        std::string id;
         std::string timestamp;
         std::string filename;
         int index{0};
@@ -18,7 +17,6 @@ export
     };
 
     struct RuntimeErrorEvent {
-        std::string id;
         std::string timestamp;
         std::string kind;
         std::string level{"error"};
@@ -87,9 +85,6 @@ export
 	private:
 		mutable std::mutex m_runtimeMutex;
 		std::map<std::string, RuntimeFileProgress> m_runtimeFiles;
-		std::string m_runtimeStage;
-		std::string m_runtimeCurrentFile;
-		std::atomic<unsigned long long> m_runtimeEventCounter{ 0 };
 	};
 
 	class ITranslator {

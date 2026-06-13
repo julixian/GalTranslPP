@@ -23,11 +23,8 @@ public:
     explicit TranslationWorkbenchPage(QWidget* parent = nullptr);
 
     void resetRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files);
-    void updateRuntimeFile(const GuiRuntimeFileProgress& file);
     void updateRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files);
-    void appendSuccess(const GuiRuntimeSuccessEvent& event);
     void appendSuccesses(const QVector<GuiRuntimeSuccessEvent>& events);
-    void appendError(const GuiRuntimeErrorEvent& event);
     void appendErrors(const QVector<GuiRuntimeErrorEvent>& events);
     void updateStage(const QString& stage, const QString& currentFile);
     void clearRuntime();

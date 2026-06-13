@@ -35,7 +35,7 @@ export
         bool isEmpty();
     };
 
-    bool checkResponse(const ApiResponse& response, const std::unique_ptr<APIPool>& apiPool, const TranslationApi& currentAPI,
+    bool checkResponse(ApiResponse& response, const std::unique_ptr<APIPool>& apiPool, const TranslationApi& currentAPI,
         const std::filesystem::path& relInputPath, const std::string& apiStrategy, 
         const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
         int& retryCount, int threadId, bool m_checkQuota);

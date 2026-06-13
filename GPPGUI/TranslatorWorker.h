@@ -9,7 +9,6 @@
 namespace fs = std::filesystem;
 
 struct GuiRuntimeSuccessEvent {
-    QString id;
     QString timestamp;
     QString filename;
     int index{0};
@@ -21,7 +20,6 @@ struct GuiRuntimeSuccessEvent {
 Q_DECLARE_METATYPE(GuiRuntimeSuccessEvent)
 
 struct GuiRuntimeErrorEvent {
-    QString id;
     QString timestamp;
     QString kind;
     QString level;
@@ -66,11 +64,8 @@ Q_SIGNALS:
     void reduceThreadNumSignal();
     void updateBarSignal(int ticks);
     void runtimeFilesResetSignal(const QVector<GuiRuntimeFileProgress>& files);
-    void runtimeFileProgressSignal(const GuiRuntimeFileProgress& file);
     void runtimeFileProgressBatchSignal(const QVector<GuiRuntimeFileProgress>& files);
-    void runtimeSuccessSignal(const GuiRuntimeSuccessEvent& event);
     void runtimeSuccessBatchSignal(const QVector<GuiRuntimeSuccessEvent>& events);
-    void runtimeErrorSignal(const GuiRuntimeErrorEvent& event);
     void runtimeErrorBatchSignal(const QVector<GuiRuntimeErrorEvent>& events);
     void runtimeStageChangedSignal(const QString& stage, const QString& currentFile);
 

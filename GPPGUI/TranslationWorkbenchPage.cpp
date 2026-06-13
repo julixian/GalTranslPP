@@ -482,16 +482,6 @@ void TranslationWorkbenchPage::resetRuntimeFiles(const QVector<GuiRuntimeFilePro
     _refreshHeader();
 }
 
-void TranslationWorkbenchPage::updateRuntimeFile(const GuiRuntimeFileProgress& file)
-{
-    if (file.filename.isEmpty()) {
-        return;
-    }
-    _files[file.filename] = file;
-    _renderFiles();
-    _refreshHeader();
-}
-
 void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files)
 {
     // Worker 会批量合并高频文件进度事件，这里一次更新多项后只刷新一遍列表。
@@ -510,15 +500,6 @@ void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFilePr
     _refreshHeader();
 }
 
-void TranslationWorkbenchPage::appendSuccess(const GuiRuntimeSuccessEvent& event)
-{
-    _successes.push_front(event);
-    ++_successTotal;
-    _trimSuccesses();
-    _renderSuccesses();
-    _refreshHeader();
-}
-
 void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEvent>& events)
 {
     if (events.isEmpty()) {
@@ -531,15 +512,6 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
     // 内存保留最近 500 条，但摘要里的成功事件统计使用 _successTotal 累计值。
     _trimSuccesses();
     _renderSuccesses();
-    _refreshHeader();
-}
-
-void TranslationWorkbenchPage::appendError(const GuiRuntimeErrorEvent& event)
-{
-    _errors.push_front(event);
-    ++_errorTotal;
-    _trimErrors();
-    _renderErrors();
     _refreshHeader();
 }
 
@@ -569,8 +541,6 @@ void TranslationWorkbenchPage::_renderSuccesses()
 {
     // _successes 内部是“最新在前”，渲染前取最近 N 条再反转，
     // 让视觉顺序变成从上到下递增，最新事件贴近底部。
-    const bool stickToBottom = _successList
-        && (_successList->verticalScrollBar()->maximum() - _successList->verticalScrollBar()->value() <= 24);
     if (_successList) {
         _successList->setUpdatesEnabled(false);
     }
@@ -586,8 +556,6 @@ void TranslationWorkbenchPage::_renderSuccesses()
             break;
         }
     }
-    std::ranges::reverse(visible);
-
     for (const auto& event : visible) {
         QStandardItem* item = new QStandardItem(event.filename);
         item->setData(QVariant::fromValue(event), SuccessRole);
@@ -596,9 +564,6 @@ void TranslationWorkbenchPage::_renderSuccesses()
     }
     if (_successList) {
         _successList->setUpdatesEnabled(true);
-        if (stickToBottom) {
-            _successList->scrollToBottom();
-        }
     }
 }
 

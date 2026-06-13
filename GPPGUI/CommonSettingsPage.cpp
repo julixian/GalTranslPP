@@ -144,23 +144,23 @@ void CommonSettingsPage::_setupUI()
 	splitSettingsGroup->addButton(splitNoRadio, 0);
 	splitSettingsGroup->addButton(splitNumRadio, 1);
 	splitSettingsGroup->addButton(splitEqualRadio, 2);
-	connect(splitSettingsGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool checked)
-		{
-			if (checked) {
-				if (button->text() == "No") {
-					splitSettingsDrawerArea->collapse();
-				}
-				else {
-					splitSettingsDrawerArea->expand();
-				}
-			}
-		});
-	connect(splitSettingsDrawerArea, &ElaDrawerArea::expandStateChanged, this, [=](bool expanded)
-		{
-			if (expanded && splitSettingsGroup->button(0)->isChecked()) {
-				splitSettingsDrawerArea->collapse();
-			}
-		});
+	//connect(splitSettingsGroup, &QButtonGroup::buttonToggled, this, [=](QAbstractButton* button, bool checked)
+	//	{
+	//		if (checked) {
+	//			if (button->text() == "No") {
+	//				splitSettingsDrawerArea->collapse();
+	//			}
+	//			else {
+	//				splitSettingsDrawerArea->expand();
+	//			}
+	//		}
+	//	});
+	//connect(splitSettingsDrawerArea, &ElaDrawerArea::expandStateChanged, this, [=](bool expanded)
+	//	{
+	//		if (expanded && splitSettingsGroup->button(0)->isChecked()) {
+	//			splitSettingsDrawerArea->collapse();
+	//		}
+	//	});
 	mainLayout->addWidget(splitSettingsDrawerArea);
 
 	// Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分。
@@ -220,7 +220,8 @@ void CommonSettingsPage::_setupUI()
 	QHBoxLayout* repeatedBlockMinSizeLayout = new QHBoxLayout(repeatedBlockMinSizeArea);
 	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(repeatedBlockMinSizeArea,
 		tr("重复块最小句数"), 16,
-		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10, "");
+		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10,
+		tr("启用时建议将翻译顺序改为文件名排序"));
 	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeText);
 	repeatedBlockMinSizeLayout->addStretch();
 	ElaSpinBox* repeatedBlockMinSizeSpinBox = new ElaSpinBox(repeatedBlockMinSizeArea);
@@ -228,21 +229,6 @@ void CommonSettingsPage::_setupUI()
 	repeatedBlockMinSizeSpinBox->setValue(repeatedBlockMinSize);
 	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeSpinBox);
 	repeatedBlockDrawerArea->addDrawer(repeatedBlockMinSizeArea);
-	if (reuseRepeatedBlocks) {
-		repeatedBlockDrawerArea->expand();
-	}
-	else {
-		repeatedBlockDrawerArea->collapse();
-	}
-	connect(repeatedBlockToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
-		{
-			if (checked) {
-				repeatedBlockDrawerArea->expand();
-			}
-			else {
-				repeatedBlockDrawerArea->collapse();
-			}
-		});
 
 	// 每翻译n次保存一次缓存
 	int cacheSaveInterval = toml::find_or(_projectConfig, "common", "saveCacheInterval", 1);

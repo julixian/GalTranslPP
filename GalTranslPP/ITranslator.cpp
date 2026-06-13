@@ -16,7 +16,8 @@ import PythonTranslator;
 
 namespace fs = std::filesystem;
 
-namespace {
+namespace
+{
     std::string compactRuntimePreview(std::string text, size_t limit)
     {
         for (char& ch : text) {
@@ -24,15 +25,7 @@ namespace {
                 ch = ' ';
             }
         }
-        if (text.size() <= limit) {
-            return text;
-        }
-
-        size_t cut = limit > 3 ? limit - 3 : limit;
-        while (cut > 0 && (static_cast<unsigned char>(text[cut]) & 0xC0) == 0x80) {
-            --cut;
-        }
-        return text.substr(0, cut) + "...";
+        return truncateUtf8Prefix(text, limit);
     }
 }
 
@@ -80,7 +73,7 @@ void IController::updateBar(int ticks)
 
 void IController::setRuntimeFiles(const std::map<std::string, int>& fileTotals)
 {
-    std::vector<RuntimeFileProgress> files;
+    std::vector<RuntimeFileProgress> filesProgress;
     {
         std::lock_guard<std::mutex> lock(m_runtimeMutex);
         m_runtimeFiles.clear();
@@ -89,31 +82,25 @@ void IController::setRuntimeFiles(const std::map<std::string, int>& fileTotals)
             progress.filename = filename;
             progress.total = total;
             m_runtimeFiles[filename] = progress;
-            files.push_back(progress);
+            filesProgress.push_back(progress);
         }
     }
-    onRuntimeFilesReset(files);
+    onRuntimeFilesReset(filesProgress);
 }
 
 void IController::setRuntimeStage(const std::string& stage, const std::string& currentFile)
 {
-    {
-        std::lock_guard<std::mutex> lock(m_runtimeMutex);
-        m_runtimeStage = stage;
-        m_runtimeCurrentFile = currentFile;
-    }
     onRuntimeStageChanged(stage, currentFile);
 }
 
 void IController::recordFileSentenceDone(const std::string& runtimeFile, bool hasProblem)
 {
+    if (runtimeFile.empty()) {
+        return;
+    }
     RuntimeFileProgress progress;
-    bool hasProgress = false;
     {
         std::lock_guard<std::mutex> lock(m_runtimeMutex);
-        if (runtimeFile.empty()) {
-            return;
-        }
         RuntimeFileProgress& target = m_runtimeFiles[runtimeFile];
         target.filename = runtimeFile;
         ++target.completed;
@@ -121,34 +108,25 @@ void IController::recordFileSentenceDone(const std::string& runtimeFile, bool ha
             ++target.problems;
         }
         progress = target;
-        hasProgress = true;
     }
-    if (hasProgress) {
-        onRuntimeFileProgress(progress);
-    }
+    onRuntimeFileProgress(progress);
 }
 
 void IController::recordRuntimeSuccess(RuntimeSuccessEvent event)
 {
-    event.sourcePreview = compactRuntimePreview(std::move(event.sourcePreview), 180);
-    event.translationPreview = compactRuntimePreview(std::move(event.translationPreview), 180);
+    event.sourcePreview = compactRuntimePreview(std::move(event.sourcePreview), 60);
+    event.translationPreview = compactRuntimePreview(std::move(event.translationPreview), 60);
     if (event.timestamp.empty()) {
         event.timestamp = nowTimestampString();
-    }
-    if (event.id.empty()) {
-        event.id = std::format("success:{}:{}:{}", event.filename, event.index, ++m_runtimeEventCounter);
     }
     onRuntimeSuccess(event);
 }
 
 void IController::recordRuntimeError(RuntimeErrorEvent event)
 {
-    event.message = compactRuntimePreview(std::move(event.message), 240);
+    event.message = compactRuntimePreview(std::move(event.message), 180);
     if (event.timestamp.empty()) {
         event.timestamp = nowTimestampString();
-    }
-    if (event.id.empty()) {
-        event.id = std::format("error:{}:{}:{}", event.kind, event.filename, ++m_runtimeEventCounter);
     }
     onRuntimeError(event);
 }

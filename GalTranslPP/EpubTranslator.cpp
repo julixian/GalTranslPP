@@ -419,10 +419,7 @@ void EpubTranslator::run() {
     NormalJsonTranslator::normalJsonInit();
     EpubTranslator::epubInit();
     EpubTranslator::epubBeforeRun();
-    std::optional<std::vector<fs::path>> relFilePathsOpt = NormalJsonTranslator::normalJsonBeforeRun();
-    if (!relFilePathsOpt.has_value()) {
-        return;
-    }
-    NormalJsonTranslator::normalJsonProcess(std::move(relFilePathsOpt.value()));
+    NormalJsonTranslator::normalJsonBeforeRun();
+    NormalJsonTranslator::normalJsonProcess();
     NormalJsonTranslator::normalJsonAfterRun();
 }

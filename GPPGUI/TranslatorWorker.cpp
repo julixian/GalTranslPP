@@ -30,7 +30,6 @@ namespace
             speakers.push_back(qstr(speaker));
         }
         return {
-            qstr(event.id),
             qstr(event.timestamp),
             qstr(event.filename),
             event.index,
@@ -44,7 +43,6 @@ namespace
     GuiRuntimeErrorEvent toGuiErrorEvent(const RuntimeErrorEvent& event)
     {
         return {
-            qstr(event.id),
             qstr(event.timestamp),
             qstr(event.kind),
             qstr(event.level),
@@ -81,7 +79,7 @@ public:
             for (QString& line : lines) {
                 if (line.length() > 256) {
                     line.truncate(256);
-                    line += "(... truncated)";
+                    line += "(...line truncated)";
                 }
             }
             _log = lines.join('\n');
@@ -90,14 +88,14 @@ public:
         }
         Q_EMIT _worker->updateBarSignal(_progress);
         _progress = 0;
-        if (!_pendingRuntimeFiles.empty()) {
-            QVector<GuiRuntimeFileProgress> files;
-            files.reserve((qsizetype)_pendingRuntimeFiles.size());
-            for (const auto& [filename, file] : _pendingRuntimeFiles) {
-                files.push_back(file);
+        if (!_pendingRuntimeFilesProgress.empty()) {
+            QVector<GuiRuntimeFileProgress> runtimeFilesProgressVec;
+            runtimeFilesProgressVec.reserve((qsizetype)_pendingRuntimeFilesProgress.size());
+            for (const auto& runtimeFileProgress : _pendingRuntimeFilesProgress | std::views::values) {
+                runtimeFilesProgressVec.push_back(runtimeFileProgress);
             }
-            Q_EMIT _worker->runtimeFileProgressBatchSignal(files);
-            _pendingRuntimeFiles.clear();
+            Q_EMIT _worker->runtimeFileProgressBatchSignal(runtimeFilesProgressVec);
+            _pendingRuntimeFilesProgress.clear();
         }
         if (!_pendingRuntimeSuccesses.empty()) {
             Q_EMIT _worker->runtimeSuccessBatchSignal(_pendingRuntimeSuccesses);
@@ -153,7 +151,7 @@ protected:
     {
         std::lock_guard<std::mutex> lock(_mutex);
         GuiRuntimeFileProgress guiFile = toGuiFileProgress(file);
-        _pendingRuntimeFiles[guiFile.filename.toStdString()] = std::move(guiFile);
+        _pendingRuntimeFilesProgress[guiFile.filename.toStdString()] = std::move(guiFile);
     }
 
     virtual void onRuntimeSuccess(const RuntimeSuccessEvent& event) override
@@ -197,7 +195,7 @@ private:
     TranslatorWorker* _worker;
     bool _controlling = true;
     int _progress = 0;
-    std::map<std::string, GuiRuntimeFileProgress> _pendingRuntimeFiles;
+    std::map<std::string, GuiRuntimeFileProgress> _pendingRuntimeFilesProgress;
     QVector<GuiRuntimeSuccessEvent> _pendingRuntimeSuccesses;
     QVector<GuiRuntimeErrorEvent> _pendingRuntimeErrors;
 };

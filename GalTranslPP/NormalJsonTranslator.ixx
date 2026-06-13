@@ -95,7 +95,6 @@ export
         bool m_agentEnabled{};
         bool m_reuseRepeatedBlocks{};
         bool m_useRepeatedBlockInputCache = false;
-        int m_lastRuntimeFileTotal = 0;
 
         std::string m_apiStrategy;
         std::string m_sortMethod;
@@ -136,6 +135,7 @@ export
         absl::flat_hash_map<fs::path, AgentSourceFileView> m_agentSourceFileViews;
 
         absl::flat_hash_map<std::string, std::string> m_nameMap;
+        std::optional<std::vector<fs::path>> m_currentRunRelFilePaths;
         toml::ordered_value m_problemOverview = toml::array{};
         std::function<void(fs::path)> m_onFileProcessed;
         std::function<std::string(std::string)> m_onPerformApi;
@@ -151,13 +151,14 @@ export
         std::vector<pro::proxy<PPlugin>> m_textPlugins;
 
 
-        void preProcess(Sentence* se);
+        bool shouldReportRuntimeWorkbench() const;
 
+        void preProcess(Sentence* se);
         void postProcess(Sentence* se);
 
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
-        
         bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
+
 
 	    // Agent 模式共享持久化状态的辅助函数。
 	    // 所有写路径都应经过这些函数，避免 worker 线程在 load-modify-save 窗口内互相覆盖。
@@ -170,15 +171,16 @@ export
         void applyAgentCommit(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText,
             int threadId, const AgentProtocolResponse& protocol, const std::string& modelName, int& committedCount);
 
-        void processFile(const fs::path& relInputPath, int threadId);
-        bool shouldReportRuntimeWorkbench() const;
         void recordSentenceDone(const fs::path& relInputPath, const Sentence& se, bool addToSuccessStream = false) const;
         void recordRuntimeError(const std::string& kind, const std::string& message, const fs::path& relInputPath = {},
             const std::string& indexRange = {}, int retryCount = -1, const std::string& model = {},
             double sleepSeconds = -1.0, const std::string& level = "error") const;
 
         void applyAgentRetranslateSuggestions();
-        void resolveRepeatedBlockReferences(const std::vector<fs::path>& relFilePaths);
+        void resolveRepeatedBlockReferences();
+
+        void processFile(const fs::path& relInputPath, int threadId);
+        void normalJsonProcessFiles(const std::vector<fs::path>& relFilePaths);
 
     public:
         NormalJsonTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
@@ -188,8 +190,8 @@ export
         virtual ~NormalJsonTranslator() override;
 
         void normalJsonInit();
-        std::optional<std::vector<fs::path>> normalJsonBeforeRun();
-        void normalJsonProcess(std::vector<fs::path> relFilePaths);
+        void normalJsonBeforeRun();
+        void normalJsonProcess();
         void normalJsonAfterRun();
 
         virtual void run() override;

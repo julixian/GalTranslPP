@@ -1402,7 +1402,6 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
             if (!item.contains("problems") || !item["problems"].is_array()) {
                 item["problems"] = json::array();
             }
-            bool itemChanged = false;
             for (const std::string& problem : suggestionIt->second) {
                 const bool exists = std::ranges::any_of(item["problems"], [&](const json& existing)
                     {
@@ -1411,32 +1410,8 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
                 if (!exists) {
                     item["problems"].push_back(problem);
                     ++markedCount;
-                    itemChanged = true;
                     changed = true;
                 }
-            }
-            if (itemChanged) {
-                toml::ordered_table tbl;
-                tbl["filename"] = wide2Ascii(relFilePath);
-                tbl["index"] = index;
-                if (item.contains("name")) {
-                    tbl["name"] = item["name"].get<std::string>();
-                    tbl["name_preview"] = item.value("name_preview", "");
-                }
-                else if (item.contains("names")) {
-                    tbl["names"] = item["names"].get<std::vector<std::string>>();
-                    tbl["names_preview"] = item.value("names_preview", std::vector<std::string>{});
-                }
-                tbl["original_text"] = item.value("original_text", "");
-                if (item.contains("other_info")) {
-                    tbl["other_info"] = item["other_info"].get<std::map<std::string, std::string>>();
-                }
-                tbl["pre_processed_text"] = item.value("pre_processed_text", "");
-                tbl["pre_translated_text"] = item.value("pre_translated_text", "");
-                tbl["problems"] = item["problems"].get<std::vector<std::string>>();
-                tbl["translated_by"] = item.value("translated_by", "");
-                tbl["translated_preview"] = item.value("translated_preview", "");
-                m_problemOverview.push_back(std::move(tbl));
             }
         }
 

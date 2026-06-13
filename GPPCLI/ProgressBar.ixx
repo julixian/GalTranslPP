@@ -42,7 +42,6 @@ export
         int progress;
         int n_cycles;
 
-
         std::string done_char;
         std::string todo_char;
         std::string opening_bracket_char;
@@ -70,8 +69,9 @@ inline ProgressBar::ProgressBar(int n, int t) :
 
 inline void ProgressBar::update(int ticks, bool removeCurrentLine) {
 
-    if (n_cycles == 0) throw std::runtime_error(
-        "ProgressBar::update: number of cycles not set");
+    if (n_cycles == 0) {
+        throw std::runtime_error("ProgressBar::update: number of cycles not set");
+    }
 
     int consoleWidth = getConsoleWidth();
 

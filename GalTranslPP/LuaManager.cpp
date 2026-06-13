@@ -290,6 +290,12 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"ShowNormal", TransEngine::ShowNormal
 	);
 
+	lua.new_usertype<SentencePosition>("SentencePosition",
+		sol::constructors<SentencePosition()>(),
+		"file", &SentencePosition::file,
+		"index", &SentencePosition::index
+	);
+
 	// 绑定 Sentence 结构体
 	lua.new_usertype<Sentence>("Sentence",
 		sol::constructors<Sentence()>(), // 允许在 Lua 中创建 Sentence
@@ -305,10 +311,13 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"translated_by", &Sentence::translated_by,
 		"translated_preview", &Sentence::translated_preview,
 		"other_info", NESTED_CVT(Sentence, other_info),
+		"repeatedBlockRefTo", &Sentence::repeatedBlockRefTo,
+		"repeatedBlockRefBy", &Sentence::repeatedBlockRefBy,
 		"problems_get_by_index", &Sentence::problems_get_by_index,
 		"problems_set_by_index", &Sentence::problems_set_by_index,
 		"complete", &Sentence::complete,
 		"notAnalyzeProblem", &Sentence::notAnalyzeProblem,
+		"repeatedBlockRefPending", &Sentence::repeatedBlockRefPending,
 		"nameType", &Sentence::nameType,
 		"prev", &Sentence::prev,
 		"next", &Sentence::next,
@@ -438,42 +447,63 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		sol::no_constructor,
 		"run", &ITranslator::run
 	);
-	auto threadPoolPushFunc = [](ctpl::thread_pool& self, NormalJsonTranslator* classPtr, std::vector<fs::path> filePaths)
-		{
-			std::vector<std::future<void>> results;
-			for (const auto& filePath : filePaths) {
-				results.emplace_back(self.push([classPtr, filePath](const int id)
-					{
-						classPtr->m_controller->addThreadNum();
-						classPtr->processFile(filePath, id);
-						classPtr->m_controller->reduceThreadNum();
-					}));
-			}
-			waitForThreads(self, results);
-		};
+	lua.new_usertype<RuntimeSuccessEvent>("RuntimeSuccessEvent",
+		sol::constructors<RuntimeSuccessEvent()>(),
+		"timestamp", &RuntimeSuccessEvent::timestamp,
+		"filename", &RuntimeSuccessEvent::filename,
+		"index", &RuntimeSuccessEvent::index,
+		"speakers", &RuntimeSuccessEvent::speakers,
+		"sourcePreview", &RuntimeSuccessEvent::sourcePreview,
+		"translationPreview", &RuntimeSuccessEvent::translationPreview,
+		"translatedBy", &RuntimeSuccessEvent::translatedBy
+	);
+	lua.new_usertype<RuntimeErrorEvent>("RuntimeErrorEvent",
+		sol::constructors<RuntimeErrorEvent()>(),
+		"timestamp", &RuntimeErrorEvent::timestamp,
+		"kind", &RuntimeErrorEvent::kind,
+		"level", &RuntimeErrorEvent::level,
+		"message", &RuntimeErrorEvent::message,
+		"filename", &RuntimeErrorEvent::filename,
+		"indexRange", &RuntimeErrorEvent::indexRange,
+		"retryCount", &RuntimeErrorEvent::retryCount,
+		"model", &RuntimeErrorEvent::model,
+		"sleepSeconds", &RuntimeErrorEvent::sleepSeconds
+	);
+	lua.new_usertype<RuntimeFileProgress>("RuntimeFileProgress",
+		sol::constructors<RuntimeFileProgress()>(),
+		"filename", &RuntimeFileProgress::filename,
+		"total", &RuntimeFileProgress::total,
+		"completed", &RuntimeFileProgress::completed,
+		"problems", &RuntimeFileProgress::problems
+	);
 	lua.new_usertype<IController>("IController",
 		"m_totalSentences", sol::property([](IController& self) { return self.m_totalSentences.load(); },
 			[](IController& self, int value) { self.m_totalSentences = value; }),
 		"m_completedSentences", sol::property([](IController& self) { return self.m_completedSentences.load(); },
 			[](IController& self, int value) { self.m_completedSentences = value; }),
+		"m_workersActive", sol::property([](IController& self) { return self.m_workersActive.load(); },
+			[](IController& self, int value) { self.m_workersActive = value; }),
+		"m_workersConfigured", sol::property([](IController& self) { return self.m_workersConfigured.load(); },
+			[](IController& self, int value) { self.m_workersConfigured = value; }),
 		"makeBar", &IController::makeBar,
 		"writeLog", &IController::writeLog,
 		"addThreadNum", &IController::addThreadNum,
 		"reduceThreadNum", &IController::reduceThreadNum,
-		"updateBar", &IController::updateBar,
+		"updateBar", sol::overload(
+			[](IController& self) { self.updateBar(); },
+			[](IController& self, int ticks) { self.updateBar(ticks); }),
+		"setRuntimeFiles", &IController::setRuntimeFiles,
+		"setRuntimeStage", sol::overload(
+			[](IController& self, const std::string& stage) { self.setRuntimeStage(stage); },
+			[](IController& self, const std::string& stage, const std::string& currentFile) { self.setRuntimeStage(stage, currentFile); }),
+		"recordFileSentenceDone", &IController::recordFileSentenceDone,
+		"recordRuntimeSuccess", &IController::recordRuntimeSuccess,
+		"recordRuntimeError", &IController::recordRuntimeError,
 		"shouldStop", &IController::shouldStop,
 		"flush", &IController::flush
 	);
 	lua.new_usertype<ctpl::thread_pool>("ThreadPool",
 		sol::no_constructor,
-		"push", sol::overload(threadPoolPushFunc, [=](ctpl::thread_pool& self, NormalJsonTranslator* classPtr, std::vector<std::string> filePaths)
-			{
-				std::vector<fs::path> filePathsVec;
-				for (const auto& filePathStr : filePaths) {
-					filePathsVec.emplace_back(ascii2Wide(filePathStr));
-				}
-				threadPoolPushFunc(self, classPtr, filePathsVec);
-			}),
 		"resize", &ctpl::thread_pool::resize,
 		"size", &ctpl::thread_pool::size
 	);
@@ -481,17 +511,28 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		sol::base_classes, sol::bases<ITranslator>(),
 		"m_transEngine", &NormalJsonTranslator::m_transEngine,
 		"m_controller", &NormalJsonTranslator::m_controller,
-		"m_projectDir", &NormalJsonTranslator::m_projectDir,
+		"m_logger", &NormalJsonTranslator::m_logger,
 		"m_inputDir", &NormalJsonTranslator::m_inputDir,
 		"m_inputCacheDir", &NormalJsonTranslator::m_inputCacheDir,
 		"m_outputDir", &NormalJsonTranslator::m_outputDir,
 		"m_outputCacheDir", &NormalJsonTranslator::m_outputCacheDir,
 		"m_transCacheDir", &NormalJsonTranslator::m_transCacheDir,
 		"m_otherCacheDir", &NormalJsonTranslator::m_otherCacheDir,
+		"m_backgroundTextCachePath", &NormalJsonTranslator::m_backgroundTextCachePath,
+		"m_projectDir", &NormalJsonTranslator::m_projectDir,
+		"m_agentRootDir", &NormalJsonTranslator::m_agentRootDir,
+		"m_agentTermLedgerPath", &NormalJsonTranslator::m_agentTermLedgerPath,
+		"m_agentFileNotesDir", &NormalJsonTranslator::m_agentFileNotesDir,
+		"m_agentSearchCatalogPath", &NormalJsonTranslator::m_agentSearchCatalogPath,
 		"m_backgroundTextCacheMap", NESTED_CVT(NormalJsonTranslator, m_backgroundTextCacheMap),
 		"m_systemPrompt", &NormalJsonTranslator::m_systemPrompt,
 		"m_userPrompt", &NormalJsonTranslator::m_userPrompt,
+		"m_agentSystemPrompt", &NormalJsonTranslator::m_agentSystemPrompt,
+		"m_agentUserPrompt", &NormalJsonTranslator::m_agentUserPrompt,
+		"m_genDictReviewSystemPrompt", &NormalJsonTranslator::m_genDictReviewSystemPrompt,
+		"m_genDictReviewUserPrompt", &NormalJsonTranslator::m_genDictReviewUserPrompt,
 		"m_targetLang", &NormalJsonTranslator::m_targetLang,
+		"m_pythonTranslator", &NormalJsonTranslator::m_pythonTranslator,
 		"m_threadsNum", &NormalJsonTranslator::m_threadsNum,
 		"m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize,
 		"m_batchSize", &NormalJsonTranslator::m_batchSize,
@@ -508,17 +549,28 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_usePostDictInMsg", &NormalJsonTranslator::m_usePostDictInMsg,
 		"m_useGptDictToReplaceName", &NormalJsonTranslator::m_useGptDictToReplaceName,
 		"m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc,
+		"m_agentEnabled", &NormalJsonTranslator::m_agentEnabled,
 		"m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks,
-		"m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize,
+		"m_useRepeatedBlockInputCache", &NormalJsonTranslator::m_useRepeatedBlockInputCache,
 		"m_apiStrategy", &NormalJsonTranslator::m_apiStrategy,
 		"m_sortMethod", &NormalJsonTranslator::m_sortMethod,
 		"m_splitFile", &NormalJsonTranslator::m_splitFile,
 		"m_splitFileNum", &NormalJsonTranslator::m_splitFileNum,
+		"m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize,
 		"m_cacheSearchDistance", &NormalJsonTranslator::m_cacheSearchDistance,
 		"m_linebreakSymbol", &NormalJsonTranslator::m_linebreakSymbol,
+		"m_agentMaxTurnsPerChunk", &NormalJsonTranslator::m_agentMaxTurnsPerChunk,
+		"m_agentSoftContextChars", &NormalJsonTranslator::m_agentSoftContextChars,
+		"m_agentHardContextChars", &NormalJsonTranslator::m_agentHardContextChars,
+		"m_agentSearchResultLimit", &NormalJsonTranslator::m_agentSearchResultLimit,
 		"m_needsCombining", &NormalJsonTranslator::m_needsCombining,
 		"m_splitFilePartsToJson", NESTED_CVT(NormalJsonTranslator, m_splitFilePartsToJson),
 		"m_jsonToSplitFileParts", NESTED_CVT(NormalJsonTranslator, m_jsonToSplitFileParts),
+		"m_agentKnownRelFiles", &NormalJsonTranslator::m_agentKnownRelFiles,
+		"m_agentDictionaryPaths", &NormalJsonTranslator::m_agentDictionaryPaths,
+		"m_agentProjectInfoPath", &NormalJsonTranslator::m_agentProjectInfoPath,
+		"m_nameMap", NESTED_CVT(NormalJsonTranslator, m_nameMap),
+		"m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths,
 		"m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed,
 		"m_onPerformApi", &NormalJsonTranslator::m_onPerformApi,
 		"m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed,
@@ -526,11 +578,25 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"preProcess", &NormalJsonTranslator::preProcess,
 		"postProcess", &NormalJsonTranslator::postProcess,
 		"processFile", &NormalJsonTranslator::processFile,
-		"normalJsonTranslator_init", &NormalJsonTranslator::normalJsonInit,
-		"normalJsonTranslator_beforeRun", &NormalJsonTranslator::normalJsonBeforeRun,
-		"normalJsonTranslator_process", &NormalJsonTranslator::normalJsonProcess,
-		"normalJsonTranslator_afterRun", &NormalJsonTranslator::normalJsonAfterRun,
-		"normalJsonTranslator_run", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); }
+		"shouldReportRuntimeWorkbench", &NormalJsonTranslator::shouldReportRuntimeWorkbench,
+		"applyAgentRetranslateSuggestions", &NormalJsonTranslator::applyAgentRetranslateSuggestions,
+		"resolveRepeatedBlockReferences", &NormalJsonTranslator::resolveRepeatedBlockReferences,
+		"normalJsonInit", &NormalJsonTranslator::normalJsonInit,
+		"normalJsonBeforeRun", &NormalJsonTranslator::normalJsonBeforeRun,
+		"normalJsonProcessFiles", sol::overload(
+			&NormalJsonTranslator::normalJsonProcessFiles,
+			[](NormalJsonTranslator& self, const std::vector<std::string>& relFilePaths)
+			{
+				std::vector<fs::path> convertedRelFilePaths;
+				convertedRelFilePaths.reserve(relFilePaths.size());
+				for (const auto& relFilePath : relFilePaths) {
+					convertedRelFilePaths.emplace_back(ascii2Wide(relFilePath));
+				}
+				self.normalJsonProcessFiles(convertedRelFilePaths);
+			}),
+		"normalJsonProcess", &NormalJsonTranslator::normalJsonProcess,
+		"normalJsonAfterRun", &NormalJsonTranslator::normalJsonAfterRun,
+		"normalJsonRun", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); }
 	);
 
 	lua.new_usertype<EpubTextNodeInfo>("EpubTextNodeInfo",
@@ -557,9 +623,9 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_originalTextScale", &EpubTranslator::m_originalTextScale,
 		"m_jsonToInfoMap", NESTED_CVT(EpubTranslator, m_jsonToInfoMap),
 		"m_epubToJsonsMap", NESTED_CVT(EpubTranslator, m_epubToJsonsMap),
-		"epubTranslator_init", &EpubTranslator::epubInit,
-		"epubTranslator_beforeRun", &EpubTranslator::epubBeforeRun,
-		"epubTranslator_run", [](EpubTranslator& self) { self.EpubTranslator::run(); }
+		"epubInit", &EpubTranslator::epubInit,
+		"epubBeforeRun", &EpubTranslator::epubBeforeRun,
+		"epubRun", [](EpubTranslator& self) { self.EpubTranslator::run(); }
 	);
 
 	lua.new_usertype<PDFTranslator>("PDFTranslator",
@@ -568,9 +634,9 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_pdfOutputDir", &PDFTranslator::m_pdfOutputDir,
 		"m_bilingualOutput", &PDFTranslator::m_bilingualOutput,
 		"m_jsonToPDFPathMap", NESTED_CVT(PDFTranslator, m_jsonToPDFPathMap),
-		"pdfTranslator_init", &PDFTranslator::pdfInit,
-		"pdfTranslator_beforeRun", &PDFTranslator::pdfBeforeRun,
-		"pdfTranslator_run", [](PDFTranslator& self) { self.PDFTranslator::run(); }
+		"pdfInit", &PDFTranslator::pdfInit,
+		"pdfBeforeRun", &PDFTranslator::pdfBeforeRun,
+		"pdfRun", [](PDFTranslator& self) { self.PDFTranslator::run(); }
 	);
 	
 

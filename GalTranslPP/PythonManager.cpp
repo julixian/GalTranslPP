@@ -17,6 +17,13 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
+namespace pybind11::detail
+{
+    template <typename Key, typename Value, typename Hash, typename Equal, typename Alloc>
+    struct type_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>>
+        : map_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>, Key, Value> {};
+}
+
 static fs::path s_pythonExePath;
 
 // PythonMainInterpreterManager
@@ -478,6 +485,11 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .value("ShowNormal", TransEngine::ShowNormal)
         .export_values();
 
+    py::class_<SentencePosition>(m, "SentencePosition")
+        .def(py::init<>())
+        .def_readwrite("file", &SentencePosition::file)
+        .def_readwrite("index", &SentencePosition::index);
+
     // 绑定 Sentence 结构体
     // 如果指针是 nullptr，在 Python 中会是 None。
     py::class_<Sentence>(m, "Sentence")
@@ -495,11 +507,14 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("translated_preview", &Sentence::translated_preview)
         .def_readwrite("originalLinebreak", &Sentence::originalLinebreak)
         .def_readwrite("other_info", &Sentence::other_info) // std::map<string, string> <=> dict[str, str]
+        .def_readwrite("repeatedBlockRefTo", &Sentence::repeatedBlockRefTo)
+        .def_readwrite("repeatedBlockRefBy", &Sentence::repeatedBlockRefBy)
         .def_readwrite("nameType", &Sentence::nameType)
         .def_readwrite("prev", &Sentence::prev) // Sentence* <=> Sentence or None
         .def_readwrite("next", &Sentence::next) // Sentence* <=> Sentence or None
         .def_readwrite("complete", &Sentence::complete)
         .def_readwrite("notAnalyzeProblem", &Sentence::notAnalyzeProblem)
+        .def_readwrite("repeatedBlockRefPending", &Sentence::repeatedBlockRefPending)
         .def("problems_get_by_index", &Sentence::problems_get_by_index)
         .def("problems_set_by_index", &Sentence::problems_set_by_index);
 
@@ -543,16 +558,54 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("extractCJK", &extractCJK)
         .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor);
 
+    py::class_<RuntimeSuccessEvent>(m, "RuntimeSuccessEvent")
+        .def(py::init<>())
+        .def_readwrite("timestamp", &RuntimeSuccessEvent::timestamp)
+        .def_readwrite("filename", &RuntimeSuccessEvent::filename)
+        .def_readwrite("index", &RuntimeSuccessEvent::index)
+        .def_readwrite("speakers", &RuntimeSuccessEvent::speakers)
+        .def_readwrite("sourcePreview", &RuntimeSuccessEvent::sourcePreview)
+        .def_readwrite("translationPreview", &RuntimeSuccessEvent::translationPreview)
+        .def_readwrite("translatedBy", &RuntimeSuccessEvent::translatedBy);
+
+    py::class_<RuntimeErrorEvent>(m, "RuntimeErrorEvent")
+        .def(py::init<>())
+        .def_readwrite("timestamp", &RuntimeErrorEvent::timestamp)
+        .def_readwrite("kind", &RuntimeErrorEvent::kind)
+        .def_readwrite("level", &RuntimeErrorEvent::level)
+        .def_readwrite("message", &RuntimeErrorEvent::message)
+        .def_readwrite("filename", &RuntimeErrorEvent::filename)
+        .def_readwrite("indexRange", &RuntimeErrorEvent::indexRange)
+        .def_readwrite("retryCount", &RuntimeErrorEvent::retryCount)
+        .def_readwrite("model", &RuntimeErrorEvent::model)
+        .def_readwrite("sleepSeconds", &RuntimeErrorEvent::sleepSeconds);
+
+    py::class_<RuntimeFileProgress>(m, "RuntimeFileProgress")
+        .def(py::init<>())
+        .def_readwrite("filename", &RuntimeFileProgress::filename)
+        .def_readwrite("total", &RuntimeFileProgress::total)
+        .def_readwrite("completed", &RuntimeFileProgress::completed)
+        .def_readwrite("problems", &RuntimeFileProgress::problems);
+
     py::class_<IController, std::shared_ptr<IController>>(m, "IController")
         .def_property("m_totalSentences", [](IController& self) { return self.m_totalSentences.load(); },
             [](IController& self, int val) { self.m_totalSentences = val; })
         .def_property("m_completedSentences", [](IController& self) { return self.m_completedSentences.load(); },
             [](IController& self, int val) { self.m_completedSentences = val; })
+        .def_property("m_workersActive", [](IController& self) { return self.m_workersActive.load(); },
+            [](IController& self, int val) { self.m_workersActive = val; })
+        .def_property("m_workersConfigured", [](IController& self) { return self.m_workersConfigured.load(); },
+            [](IController& self, int val) { self.m_workersConfigured = val; })
         .def("makeBar", &IController::makeBar)
         .def("writeLog", &IController::writeLog)
         .def("addThreadNum", &IController::addThreadNum)
         .def("reduceThreadNum", &IController::reduceThreadNum)
-        .def("updateBar", &IController::updateBar)
+        .def("updateBar", &IController::updateBar, py::arg("ticks") = 1)
+        .def("setRuntimeFiles", &IController::setRuntimeFiles)
+        .def("setRuntimeStage", &IController::setRuntimeStage, py::arg("stage"), py::arg("currentFile") = std::string{})
+        .def("recordFileSentenceDone", &IController::recordFileSentenceDone)
+        .def("recordRuntimeSuccess", &IController::recordRuntimeSuccess)
+        .def("recordRuntimeError", &IController::recordRuntimeError)
         .def("shouldStop", &IController::shouldStop)
         .def("flush", &IController::flush);
 
@@ -568,17 +621,28 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
     py::class_<NormalJsonTranslator, ITranslator>(m, "NormalJsonTranslator")
         .def_readwrite("m_transEngine", &NormalJsonTranslator::m_transEngine)
         .def_readwrite("m_controller", &NormalJsonTranslator::m_controller)
-        .def_readwrite("m_projectDir", &NormalJsonTranslator::m_projectDir)
+        .def_readwrite("m_logger", &NormalJsonTranslator::m_logger)
         .def_readwrite("m_inputDir", &NormalJsonTranslator::m_inputDir)
         .def_readwrite("m_inputCacheDir", &NormalJsonTranslator::m_inputCacheDir)
         .def_readwrite("m_outputDir", &NormalJsonTranslator::m_outputDir)
         .def_readwrite("m_outputCacheDir", &NormalJsonTranslator::m_outputCacheDir)
         .def_readwrite("m_transCacheDir", &NormalJsonTranslator::m_transCacheDir)
         .def_readwrite("m_otherCacheDir", &NormalJsonTranslator::m_otherCacheDir)
+        .def_readwrite("m_backgroundTextCachePath", &NormalJsonTranslator::m_backgroundTextCachePath)
+        .def_readwrite("m_projectDir", &NormalJsonTranslator::m_projectDir)
+        .def_readwrite("m_agentRootDir", &NormalJsonTranslator::m_agentRootDir)
+        .def_readwrite("m_agentTermLedgerPath", &NormalJsonTranslator::m_agentTermLedgerPath)
+        .def_readwrite("m_agentFileNotesDir", &NormalJsonTranslator::m_agentFileNotesDir)
+        .def_readwrite("m_agentSearchCatalogPath", &NormalJsonTranslator::m_agentSearchCatalogPath)
         .def_readwrite("m_backgroundTextCacheMap", &NormalJsonTranslator::m_backgroundTextCacheMap)
         .def_readwrite("m_systemPrompt", &NormalJsonTranslator::m_systemPrompt)
         .def_readwrite("m_userPrompt", &NormalJsonTranslator::m_userPrompt)
+        .def_readwrite("m_agentSystemPrompt", &NormalJsonTranslator::m_agentSystemPrompt)
+        .def_readwrite("m_agentUserPrompt", &NormalJsonTranslator::m_agentUserPrompt)
+        .def_readwrite("m_genDictReviewSystemPrompt", &NormalJsonTranslator::m_genDictReviewSystemPrompt)
+        .def_readwrite("m_genDictReviewUserPrompt", &NormalJsonTranslator::m_genDictReviewUserPrompt)
         .def_readwrite("m_targetLang", &NormalJsonTranslator::m_targetLang)
+        .def_readwrite("m_pythonTranslator", &NormalJsonTranslator::m_pythonTranslator)
         .def_readwrite("m_threadsNum", &NormalJsonTranslator::m_threadsNum)
         .def_readwrite("m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize)
         .def_readwrite("m_batchSize", &NormalJsonTranslator::m_batchSize)
@@ -595,17 +659,28 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_usePostDictInMsg", &NormalJsonTranslator::m_usePostDictInMsg)
         .def_readwrite("m_useGptDictToReplaceName", &NormalJsonTranslator::m_useGptDictToReplaceName)
         .def_readwrite("m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc)
+        .def_readwrite("m_agentEnabled", &NormalJsonTranslator::m_agentEnabled)
         .def_readwrite("m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks)
-        .def_readwrite("m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize)
+        .def_readwrite("m_useRepeatedBlockInputCache", &NormalJsonTranslator::m_useRepeatedBlockInputCache)
         .def_readwrite("m_apiStrategy", &NormalJsonTranslator::m_apiStrategy)
         .def_readwrite("m_sortMethod", &NormalJsonTranslator::m_sortMethod)
         .def_readwrite("m_splitFile", &NormalJsonTranslator::m_splitFile)
         .def_readwrite("m_splitFileNum", &NormalJsonTranslator::m_splitFileNum)
+        .def_readwrite("m_repeatedBlockMinSize", &NormalJsonTranslator::m_repeatedBlockMinSize)
         .def_readwrite("m_cacheSearchDistance", &NormalJsonTranslator::m_cacheSearchDistance)
         .def_readwrite("m_linebreakSymbol", &NormalJsonTranslator::m_linebreakSymbol)
+        .def_readwrite("m_agentMaxTurnsPerChunk", &NormalJsonTranslator::m_agentMaxTurnsPerChunk)
+        .def_readwrite("m_agentSoftContextChars", &NormalJsonTranslator::m_agentSoftContextChars)
+        .def_readwrite("m_agentHardContextChars", &NormalJsonTranslator::m_agentHardContextChars)
+        .def_readwrite("m_agentSearchResultLimit", &NormalJsonTranslator::m_agentSearchResultLimit)
         .def_readwrite("m_needsCombining", &NormalJsonTranslator::m_needsCombining)
         .def_readwrite("m_splitFilePartsToJson", &NormalJsonTranslator::m_splitFilePartsToJson)
         .def_readwrite("m_jsonToSplitFileParts", &NormalJsonTranslator::m_jsonToSplitFileParts)
+        .def_readwrite("m_agentKnownRelFiles", &NormalJsonTranslator::m_agentKnownRelFiles)
+        .def_readwrite("m_agentDictionaryPaths", &NormalJsonTranslator::m_agentDictionaryPaths)
+        .def_readwrite("m_agentProjectInfoPath", &NormalJsonTranslator::m_agentProjectInfoPath)
+        .def_readwrite("m_nameMap", &NormalJsonTranslator::m_nameMap)
+        .def_readwrite("m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths)
         .def_readwrite("m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed)
         .def_readwrite("m_onPerformApi", &NormalJsonTranslator::m_onPerformApi)
         .def_readwrite("m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed)
@@ -613,11 +688,15 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("preProcess", &NormalJsonTranslator::preProcess)
         .def("postProcess", &NormalJsonTranslator::postProcess)
         .def("processFile", &NormalJsonTranslator::processFile)
-        .def("normalJsonTranslator_init", &NormalJsonTranslator::normalJsonInit)
-        .def("normalJsonTranslator_beforeRun", &NormalJsonTranslator::normalJsonBeforeRun)
-        .def("normalJsonTranslator_process", &NormalJsonTranslator::normalJsonProcess)
-        .def("normalJsonTranslator_afterRun", &NormalJsonTranslator::normalJsonAfterRun)
-        .def("normalJsonTranslator_run", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); });
+        .def("shouldReportRuntimeWorkbench", &NormalJsonTranslator::shouldReportRuntimeWorkbench)
+        .def("applyAgentRetranslateSuggestions", &NormalJsonTranslator::applyAgentRetranslateSuggestions)
+        .def("resolveRepeatedBlockReferences", &NormalJsonTranslator::resolveRepeatedBlockReferences)
+        .def("normalJsonInit", &NormalJsonTranslator::normalJsonInit)
+        .def("normalJsonBeforeRun", &NormalJsonTranslator::normalJsonBeforeRun)
+        .def("normalJsonProcessFiles", &NormalJsonTranslator::normalJsonProcessFiles)
+        .def("normalJsonProcess", &NormalJsonTranslator::normalJsonProcess)
+        .def("normalJsonAfterRun", &NormalJsonTranslator::normalJsonAfterRun)
+        .def("normalJsonRun", [](NormalJsonTranslator& self) { self.NormalJsonTranslator::run(); });
 
     py::class_<EpubTextNodeInfo>(m, "EpubTextNodeInfo")
         .def(py::init<>())
@@ -642,17 +721,17 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_originalTextScale", &EpubTranslator::m_originalTextScale)
         .def_readwrite("m_jsonToInfoMap", &EpubTranslator::m_jsonToInfoMap)
         .def_readwrite("m_epubToJsonsMap", &EpubTranslator::m_epubToJsonsMap)
-        .def("epubTranslator_init", &EpubTranslator::epubInit)
-        .def("epubTranslator_beforeRun", &EpubTranslator::epubBeforeRun)
-        .def("epubTranslator_run", [](EpubTranslator& self) { self.EpubTranslator::run(); });
+        .def("epubInit", &EpubTranslator::epubInit)
+        .def("epubBeforeRun", &EpubTranslator::epubBeforeRun)
+        .def("epubRun", [](EpubTranslator& self) { self.EpubTranslator::run(); });
 
     py::class_<PDFTranslator, NormalJsonTranslator>(m, "PDFTranslator")
         .def_readwrite("m_pdfInputDir", &PDFTranslator::m_pdfInputDir)
         .def_readwrite("m_pdfOutputDir", &PDFTranslator::m_pdfOutputDir)
         .def_readwrite("m_bilingualOutput", &PDFTranslator::m_bilingualOutput)
         .def_readwrite("m_jsonToPDFPathMap", &PDFTranslator::m_jsonToPDFPathMap)
-        .def("pdfTranslator_init", &PDFTranslator::pdfInit)
-        .def("pdfTranslator_beforeRun", &PDFTranslator::pdfBeforeRun)
-        .def("pdfTranslator_run", [](PDFTranslator& self) { self.PDFTranslator::run(); });
+        .def("pdfInit", &PDFTranslator::pdfInit)
+        .def("pdfBeforeRun", &PDFTranslator::pdfBeforeRun)
+        .def("pdfRun", [](PDFTranslator& self) { self.PDFTranslator::run(); });
 
 }

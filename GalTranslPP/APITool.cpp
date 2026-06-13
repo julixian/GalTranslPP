@@ -12,6 +12,17 @@ module APITool;
 
 import Tool;
 
+namespace
+{
+    std::string responseTextOrError(const cpr::Response& response)
+    {
+        if (!response.text.empty()) {
+            return response.text;
+        }
+        return response.error.message;
+    }
+}
+
 #ifdef _WIN32
 // Windows下获取系统代理的辅助函数
 std::string getSystemProxyUrl() {
@@ -135,19 +146,10 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
 
         apiResponse.statusCode = response.status_code;
         if (response.status_code == 200) {
-            apiResponse.success = true;
             apiResponse.content = concatenatedContent;
         }
         else {
-            apiResponse.success = false;
-            apiResponse.content = response.text;
-            logger->error("[线程 {}] API 流式请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
-            controller->recordRuntimeError(RuntimeErrorEvent{
-                .kind = "api",
-                .level = "error",
-                .message = std::format("API 流式请求失败，状态码: {}, 错误: {}", response.status_code, response.text),
-                .model = api.modelName
-            });
+            apiResponse.content = responseTextOrError(response);
         }
     }
     else {
@@ -163,35 +165,7 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
         );
 
         apiResponse.statusCode = response.status_code;
-        apiResponse.content = response.text; // 先记录原始响应体
-
-        if (response.status_code == 200) {
-            try {
-                // 解析完整的JSON响应
-                apiResponse.content = json::parse(response.text)["choices"][0]["message"]["content"];
-                apiResponse.success = true;
-            }
-            catch (const json::exception& e) {
-                logger->error("[线程 {}] 成功响应但JSON解析失败: {}, 错误: {}", threadId, response.text, e.what());
-                controller->recordRuntimeError(RuntimeErrorEvent{
-                    .kind = "api",
-                    .level = "error",
-                    .message = std::format("成功响应但 JSON 解析失败: {}", e.what()),
-                    .model = api.modelName
-                });
-                apiResponse.success = false;
-            }
-        }
-        else {
-            logger->error("[线程 {}] API 非流请求失败，状态码: {}, 错误: {}", threadId, response.status_code, response.text);
-            controller->recordRuntimeError(RuntimeErrorEvent{
-                .kind = "api",
-                .level = "error",
-                .message = std::format("API 非流请求失败，状态码: {}, 错误: {}", response.status_code, response.text),
-                .model = api.modelName
-            });
-            apiResponse.success = false;
-        }
+        apiResponse.content = responseTextOrError(response); // 先记录原始响应体
     }
 
     return apiResponse;

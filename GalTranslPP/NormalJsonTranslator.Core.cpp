@@ -24,6 +24,74 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
+namespace
+{
+#define GPP_REQUIRE_CONFIG(CONDITION, KEY, VALUE, REQUIREMENT) \
+    do { \
+        if (!(CONDITION)) { \
+            throw std::invalid_argument(std::format("配置项 {} 无效：当前值 {}，要求{}", KEY, VALUE, REQUIREMENT)); \
+        } \
+    } while (false)
+
+    struct NormalJsonCoreConfig {
+        TransEngine transEngine{};
+        std::string_view sortMethod;
+        std::string_view splitFile;
+        bool agentEnabled{};
+        int batchSize{};
+        int threadsNum{};
+        int nameTransBatchSize{};
+        int splitFileNum{};
+        int repeatedBlockMinSize{};
+        int cacheSearchDistance{};
+        int saveCacheInterval{};
+        int maxRetries{};
+        int contextHistorySize{};
+        int agentMaxTurnsPerChunk{};
+        int agentSoftContextChars{};
+        int agentHardContextChars{};
+        int agentSearchResultLimit{};
+    };
+
+    bool isOneOf(std::string_view value, std::initializer_list<std::string_view> candidates)
+    {
+        return std::ranges::find(candidates, value) != candidates.end();
+    }
+
+    void validateNormalJsonCoreConfig(const NormalJsonCoreConfig& config)
+    {
+        GPP_REQUIRE_CONFIG(config.batchSize > 0, "common.numPerRequestTranslate", config.batchSize, "大于 0");
+        GPP_REQUIRE_CONFIG(config.threadsNum > 0, "common.threadsNum", config.threadsNum, "大于 0");
+        GPP_REQUIRE_CONFIG(config.nameTransBatchSize > 0, "common.numPerRequestNameTranslate", config.nameTransBatchSize, "大于 0");
+        GPP_REQUIRE_CONFIG(isOneOf(config.sortMethod, { "name", "size" }), "common.sortMethod", config.sortMethod, "为 name 或 size");
+        GPP_REQUIRE_CONFIG(isOneOf(config.splitFile, { "No", "Num", "Equal" }), "common.splitFile", config.splitFile, "为 No、Num 或 Equal");
+        GPP_REQUIRE_CONFIG(config.splitFileNum > 0, "common.splitFileNum", config.splitFileNum, "大于 0");
+        GPP_REQUIRE_CONFIG(config.repeatedBlockMinSize >= 2, "common.repeatedBlockMinSize", config.repeatedBlockMinSize, "大于等于 2");
+        GPP_REQUIRE_CONFIG(config.cacheSearchDistance >= 0, "common.cacheSearchDistance", config.cacheSearchDistance, "大于等于 0");
+        GPP_REQUIRE_CONFIG(config.saveCacheInterval > 0, "common.saveCacheInterval", config.saveCacheInterval, "大于 0");
+        GPP_REQUIRE_CONFIG(config.maxRetries > 0, "common.maxRetries", config.maxRetries, "大于 0");
+        GPP_REQUIRE_CONFIG(config.contextHistorySize > 0, "common.contextHistorySize", config.contextHistorySize, "大于 0");
+
+        if (!config.agentEnabled) {
+            return;
+        }
+
+        GPP_REQUIRE_CONFIG(config.agentMaxTurnsPerChunk > 0, "agent.maxTurnsPerChunk", config.agentMaxTurnsPerChunk, "大于 0");
+        GPP_REQUIRE_CONFIG(config.agentSearchResultLimit > 0, "agent.searchResultLimit", config.agentSearchResultLimit, "大于 0");
+        if (config.transEngine == TransEngine::ForGalTsv || config.transEngine == TransEngine::ForNovelTsv) {
+            GPP_REQUIRE_CONFIG(config.agentSoftContextChars > 0, "agent.softContextChars", config.agentSoftContextChars, "大于 0");
+            GPP_REQUIRE_CONFIG(config.agentHardContextChars > 0, "agent.hardContextChars", config.agentHardContextChars, "大于 0");
+            GPP_REQUIRE_CONFIG(config.agentSoftContextChars <= config.agentHardContextChars,
+                "agent.softContextChars", config.agentSoftContextChars, "小于等于 agent.hardContextChars");
+        }
+        else if (config.transEngine != TransEngine::GenDict) {
+            throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict");
+        }
+    }
+
+#undef GPP_REQUIRE_CONFIG
+}
+
 NormalJsonTranslator::~NormalJsonTranslator()
 {
     m_logger->info("所有任务已完成！NormalJsonTranslator结束。");
@@ -114,12 +182,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
         m_threadsNum = toml::find_or(configData, "common", "threadsNum", 1);
         m_nameTransBatchSize = toml::find_or(configData, "common", "numPerRequestNameTranslate", 50);
-        if (m_threadsNum < 1) {
-            m_threadsNum = 1;
-        }
-        if (m_nameTransBatchSize < 1) {
-            m_nameTransBatchSize = 50;
-        }
         m_sortMethod = toml::find_or(configData, "common", "sortMethod", "name");
         m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
         m_splitFile = toml::find_or(configData, "common", "splitFile", "No");
@@ -139,28 +201,26 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentSoftContextChars = toml::find_or(configData, "agent", "softContextChars", 75000);
         m_agentHardContextChars = toml::find_or(configData, "agent", "hardContextChars", 100000);
         m_agentSearchResultLimit = toml::find_or(configData, "agent", "searchResultLimit", 80);
-        if (m_repeatedBlockMinSize < 2) {
-            m_repeatedBlockMinSize = 2;
-        }
 
-        if (m_agentEnabled) {
-            if (m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv) {
-                if (m_agentMaxTurnsPerChunk <= 0 || m_agentSearchResultLimit <= 0 || m_agentSoftContextChars <= 0 || m_agentHardContextChars <= 0) {
-                    throw std::invalid_argument("Agent 模式配置无效");
-                }
-                if (m_agentSoftContextChars > m_agentHardContextChars) {
-                    std::swap(m_agentSoftContextChars, m_agentHardContextChars);
-                }
-            }
-            else if (m_transEngine == TransEngine::GenDict) {
-                if (m_agentMaxTurnsPerChunk <= 0 || m_agentSearchResultLimit <= 0) {
-                    throw std::invalid_argument("GenDict Review Agent 配置无效");
-                }
-            }
-            else {
-                throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict");
-            }
-        }
+        validateNormalJsonCoreConfig({
+            .transEngine = m_transEngine,
+            .sortMethod = m_sortMethod,
+            .splitFile = m_splitFile,
+            .agentEnabled = m_agentEnabled,
+            .batchSize = m_batchSize,
+            .threadsNum = m_threadsNum,
+            .nameTransBatchSize = m_nameTransBatchSize,
+            .splitFileNum = m_splitFileNum,
+            .repeatedBlockMinSize = m_repeatedBlockMinSize,
+            .cacheSearchDistance = m_cacheSearchDistance,
+            .saveCacheInterval = m_saveCacheInterval,
+            .maxRetries = m_maxRetries,
+            .contextHistorySize = m_contextHistorySize,
+            .agentMaxTurnsPerChunk = m_agentMaxTurnsPerChunk,
+            .agentSoftContextChars = m_agentSoftContextChars,
+            .agentHardContextChars = m_agentHardContextChars,
+            .agentSearchResultLimit = m_agentSearchResultLimit
+            });
 
         m_usePreDictInName = toml::find_or(configData, "dictionary", "usePreDictInName", false);
         m_usePostDictInName = toml::find_or(configData, "dictionary", "usePostDictInName", false);

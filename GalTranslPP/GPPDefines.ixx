@@ -49,7 +49,8 @@ export
     }
 
     struct Sentence {
-        int index;
+        int index = -1;
+        std::string fileName;
         std::string name;
         std::vector<std::string> names;
         std::string name_preview;

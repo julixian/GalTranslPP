@@ -300,6 +300,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	lua.new_usertype<Sentence>("Sentence",
 		sol::constructors<Sentence()>(), // 允许在 Lua 中创建 Sentence
 		"index", &Sentence::index,
+		"fileName", &Sentence::fileName,
 		"name", &Sentence::name,
 		"names", &Sentence::names,
 		"name_preview", &Sentence::name_preview,

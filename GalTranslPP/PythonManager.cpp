@@ -495,6 +495,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
     py::class_<Sentence>(m, "Sentence")
         .def(py::init<>()) // 允许在 Python 中创建实例: s = gpp_plugin_api.Sentence()
         .def_readwrite("index", &Sentence::index)
+        .def_readwrite("fileName", &Sentence::fileName)
         .def_readwrite("name", &Sentence::name)
         .def_readwrite("names", &Sentence::names) // std::vector<string> <=> list[str]
         .def_readwrite("name_preview", &Sentence::name_preview)

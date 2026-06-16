@@ -1,11 +1,22 @@
---[[
+--[[ 
+
+GPPDefines.ixx:
+
 enum class NameType
 {
     None, Single, Multiple
 };
 
+struct SentencePosition {
+    std::string file;
+    int index = -1;
+
+    friend bool operator==(const SentencePosition&, const SentencePosition&) = default;
+};
+
 struct Sentence {
-    int index;
+    int index = -1;
+    std::string fileName;
     std::string name;
     std::vector<std::string> names;
     std::string name_preview;
@@ -18,15 +29,35 @@ struct Sentence {
     std::string translated_preview;
     std::string originalLinebreak;
     std::map<std::string, std::string> other_info;
+    std::optional<SentencePosition> repeatedBlockRefTo;
+    std::vector<SentencePosition> repeatedBlockRefBy;
 
     NameType nameType = NameType::None;
     Sentence* prev = nullptr;
     Sentence* next = nullptr;
     bool complete = false;
     bool notAnalyzeProblem = false;
+    bool repeatedBlockRefPending = false;
 
-    std::optional<std::string> problems_get_by_index(int index);
-    bool problems_set_by_index(int index, const std::string& problem);
+    std::optional<std::string> problems_get_by_index(int index) {
+        if (index < 0 || index >= problems.size()) {
+            return std::nullopt;
+        }
+        return problems[index];
+    }
+
+    bool problems_set_by_index(int index, const std::string& problem) {
+        if (index < 0 || index >= problems.size()) {
+            return false;
+        }
+        problems[index] = problem;
+        return true;
+    }
+};
+
+enum class TransEngine
+{
+    None, ForGalJson, ForGalTsv, ForNovelTsv, DeepseekJson, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
 };
 
 utils里的工具函数的签名详见 LuaMnager::registerCustomTypes 中绑定 utils 库的部分

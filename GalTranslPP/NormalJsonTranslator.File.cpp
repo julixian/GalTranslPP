@@ -51,9 +51,11 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         ifs.open(inputPath, std::ios::binary);
         jSentences = ordered_json::parse(ifs);
         ifs.close();
+        const std::string relInputFileName = wide2Ascii(relInputPath);
         for (const auto& [index, item] : jSentences | std::views::enumerate) {
             Sentence se;
             se.index = (int)index;
+            se.fileName = relInputFileName;
             if (auto jit = item.find("name"); jit != item.end()) {
                 se.nameType = NameType::Single;
                 jit->get_to(se.name);

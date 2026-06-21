@@ -404,7 +404,7 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
 
 
 // 开启关闭 Python 解释器
-const fs::path pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt";
+static const fs::path pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt";
 bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
     if (fs::exists(pyEnvPath) && fs::exists(pyEnvPath / L"python.exe")) {
 

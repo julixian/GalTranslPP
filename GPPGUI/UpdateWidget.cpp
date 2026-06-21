@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. Sentence 结构体增加 fileName 字段",
+        "1. Sentence 结构体处理过程中增加 fileName 字段",
     };
 
     mainLayout->addWidget(updateTitle);

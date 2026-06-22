@@ -1,30 +1,6 @@
 [[normalDict]]
-org = '𫚕'
-rep = '鰤'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
 org = '筿'
 rep = '篠'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '𩽾'
-rep = '鮟'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '𩾌'
-rep = '鱇'
 conditionTarget = ''
 conditionReg = ''
 isReg = false

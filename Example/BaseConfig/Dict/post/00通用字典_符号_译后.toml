@@ -15,30 +15,6 @@ isReg = false
 priority = 0
 
 [[normalDict]]
-org = '......'
-rep = '……'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '...'
-rep = '…'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '…'
-rep = '……'
-conditionTarget = 'pretrans_text'
-conditionReg = '\A(?![\S\s]*……)'
-isReg = false
-priority = 0
-
-[[normalDict]]
 org = ','
 rep = '，'
 conditionTarget = ''
@@ -100,22 +76,6 @@ rep = '——'
 conditionTarget = 'pretrans_text'
 conditionReg = '\A(?![\S\s]*——)'
 isReg = false
-priority = 0
-
-[[normalDict]]
-org = '"([^"]*?)"'
-rep = '『$1』'
-conditionTarget = 'preproc_text'
-conditionReg = '\A[^"]*『[^"]*』[^"]*\z'
-isReg = true
-priority = 0
-
-[[normalDict]]
-org = '"([^"]*?)"'
-rep = '『$1』'
-conditionTarget = 'preproc_text'
-conditionReg = '\A[^"]*「[^"]*」[^"]*\z'
-isReg = true
 priority = 0
 
 [[normalDict]]
@@ -243,14 +203,6 @@ org = '’'
 rep = '”'
 conditionTarget = 'orig_text'
 conditionReg = '”'
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '。）'
-rep = '）'
-conditionTarget = 'orig_text'
-conditionReg = '\A(?![\S\s]*。）)'
 isReg = false
 priority = 0
 

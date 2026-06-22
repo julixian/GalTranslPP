@@ -1,81 +1,81 @@
 [[normalDict]]
-org = 'オチンチン'
-rep = 'おちんちん'
+org = '(雄)?チ[ン○●〇◯]チ[ン○●〇◯]'
+rep = '${1:+オ}チンチン'
 conditionTarget = ''
 conditionReg = ''
-isReg = false
+isReg = true
+priority = 1
+
+[[normalDict]]
+org = '(雄)?チ[ン○●〇◯]([ポコ])'
+rep = '${1:+オ}チン$2'
+conditionTarget = ''
+conditionReg = ''
+isReg = true
+priority = 1
+
+[[normalDict]]
+org = '(雄)?[ぢち][ん○●〇◯][ぢち][ん○●〇◯]'
+rep = '${1:+お}ちんちん'
+conditionTarget = ''
+conditionReg = ''
+isReg = true
+priority = 1
+
+[[normalDict]]
+org = '(雄)?[ぢち][○●〇◯]([ぽこ])'
+rep = '${1:+お}ちん$2'
+conditionTarget = ''
+conditionReg = ''
+isReg = true
+priority = 1
+
+[[normalDict]]
+org = '(オ)?チンチン'
+rep = '${1:+お}ちんちん'
+conditionTarget = ''
+conditionReg = ''
+isReg = true
 priority = 0
 
 [[normalDict]]
-org = 'チンチン'
-rep = 'ちんちん'
+org = '(オ)?チンポ'
+rep = '${1:+お}ちんぽ'
 conditionTarget = ''
 conditionReg = ''
-isReg = false
+isReg = true
 priority = 0
 
 [[normalDict]]
-org = 'ぢんぢん'
-rep = 'ちんちん'
+org = '(オ)?チンコ'
+rep = '${1:+お}ちんこ'
 conditionTarget = ''
 conditionReg = ''
-isReg = false
+isReg = true
 priority = 0
 
 [[normalDict]]
-org = 'おちんこ'
-rep = 'おちんぽ'
+org = 'マ[○●〇◯]コ'
+rep = 'マンコ'
 conditionTarget = ''
 conditionReg = ''
-isReg = false
-priority = 0
+isReg = true
+priority = 1
 
 [[normalDict]]
-org = 'おチンポ'
-rep = 'おちんぽ'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '雄チンポ'
-rep = 'おちんぽ'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = 'チンコ'
-rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = 'ちんこ'
-rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = 'オマンコ'
-rep = 'おまんこ'
-conditionTarget = ''
-conditionReg = ''
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = 'マンコ'
+org = 'ま[○●〇◯]こ'
 rep = 'まんこ'
 conditionTarget = ''
 conditionReg = ''
-isReg = false
+isReg = true
+priority = 1
+
+[[normalDict]]
+org = '(オ)?マンコ'
+rep = '${1:+お}まんこ'
+conditionTarget = ''
+conditionReg = ''
+isReg = true
 priority = 0
 
 [[normalDict]]
@@ -101,44 +101,4 @@ conditionTarget = ''
 conditionReg = ''
 isReg = false
 priority = 0
-
-[[normalDict]]
-org = 'チ[○●〇◯]([コチポ])'
-rep = 'チン$1'
-conditionTarget = ''
-conditionReg = ''
-isReg = true
-priority = 1
-
-[[normalDict]]
-org = 'ち[○●〇◯]([こちぽ])'
-rep = 'ちん$1'
-conditionTarget = ''
-conditionReg = ''
-isReg = true
-priority = 1
-
-[[normalDict]]
-org = 'おぢ[○●〇◯]ぢん'
-rep = 'おぢんぢん'
-conditionTarget = ''
-conditionReg = ''
-isReg = true
-priority = 1
-
-[[normalDict]]
-org = 'マ[○●〇◯]コ'
-rep = 'マンコ'
-conditionTarget = ''
-conditionReg = ''
-isReg = true
-priority = 1
-
-[[normalDict]]
-org = 'ま[○●〇◯]こ'
-rep = 'まんこ'
-conditionTarget = ''
-conditionReg = ''
-isReg = true
-priority = 1
 

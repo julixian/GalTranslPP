@@ -22,11 +22,3 @@ conditionReg = '人妻|ひとづま'
 isReg = false
 priority = 0
 
-[[normalDict]]
-org = '撒旦'
-rep = '魔王'
-conditionTarget = 'preproc_text'
-conditionReg = '\A(?![\S\s]*サタン)'
-isReg = false
-priority = 0
-

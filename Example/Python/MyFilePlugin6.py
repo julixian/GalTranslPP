@@ -43,7 +43,7 @@ def unload():
 
             result = subprocess.run(
                 [fontChangerPath, "-j", "gt_output",
-                 "-i", "julixiansimhei-Regular.ttf",
+                 "-i", "super_gagaga.ttf",
                  "-f", newFontFaceName,
                  "-e", "excludeList.json",
                  "-s"],

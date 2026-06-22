@@ -1,15 +1,16 @@
 gptDict = [
     {org = "責め", rep = "责难", note = ""},
     {org = "キンタマ", rep = "蛋蛋", note = ""},
-    {org = "口まんこ", rep = "嘴穴", note = ""},
-    {org = "おめこ", rep = "小穴", note = ""},
-    {org = "おまんこ", rep = "小穴", note = ""},
-    {org = "まんこ", rep = "小穴", note = ""},
     {org = "おちんちん", rep = "肉棒", note = ""},
     {org = "ちんちん", rep = "肉棒", note = ""},
     {org = "おちんぽ", rep = "肉棒", note = ""},
     {org = "ちんぽ", rep = "肉棒", note = ""},
-    {org = "チンポ", rep = "肉棒", note = ""},
+    {org = "おちんこ", rep = "肉棒", note = ""},
+    {org = "ちんこ", rep = "肉棒", note = ""},
+    {org = "口まんこ", rep = "嘴穴", note = ""},
+    {org = "おめこ", rep = "小穴", note = ""},
+    {org = "おまんこ", rep = "小穴", note = ""},
+    {org = "まんこ", rep = "小穴", note = ""},
     {org = "ペニス", rep = "阴茎", note = ""},
 ]
 

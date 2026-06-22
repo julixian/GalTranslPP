@@ -14,9 +14,8 @@ export import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
-
-#ifdef _WIN32
+export
+{
     std::string wide2Ascii(const std::wstring& wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
     std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
     inline std::string wide2Ascii(const wchar_t* wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
@@ -37,7 +36,6 @@ export {
     bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow = true, int timeDelayAfterCommand = 5);
 
     int getConsoleWidth();
-#endif
 
 
     std::string getNameString(const Sentence* se);
@@ -50,7 +48,7 @@ export {
         return str | std::views::transform([](const auto c) { return std::tolower(c); }) | std::ranges::to<RetT>();
     }
     template<typename T>
-        requires(!std::is_same_v<std::remove_cvref_t<T>, fs::path>)
+    requires(!std::is_same_v<std::remove_cvref_t<T>, fs::path>)
     inline auto str2Lower(T&& str) {
         if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::wstring_view>) {
             return str2LowerImpl<std::wstring>(str);

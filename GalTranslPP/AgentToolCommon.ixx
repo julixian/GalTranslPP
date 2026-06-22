@@ -8,7 +8,8 @@ import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     struct AgentToolJsonEnvelopeParseOptions {
         bool allowCodeFence = true;
         bool allowLightRepair = true;

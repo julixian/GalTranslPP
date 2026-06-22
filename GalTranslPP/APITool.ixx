@@ -7,7 +7,8 @@ export module APITool;
 import Tool;
 import ITranslator;
 
-export {
+export
+{
     struct TranslationApi {
         std::string apikey;
         std::string apiurl;

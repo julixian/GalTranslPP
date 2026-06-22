@@ -16,8 +16,8 @@ import LuaManager;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-export {
-
+export
+{
     template<typename T>
     concept IsMapLike = requires {
         typename T::key_type;

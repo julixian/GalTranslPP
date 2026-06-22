@@ -8,7 +8,8 @@ import GPPDefines;
 
 namespace fs = std::filesystem;
 
-export {
+export
+{
     struct AgentSourceLineView {
         int id = -1;
         std::string speaker;

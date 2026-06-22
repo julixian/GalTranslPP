@@ -9,8 +9,8 @@ import spdlog;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     std::tuple<bool, std::string> extractPDF(const fs::path& pdfPath, const fs::path& jsonPath, bool showProgress = false);
 
     std::tuple<bool, std::string> rejectPDF(const fs::path& orgPDFPath, const fs::path& translatedJsonPath, const fs::path& outputPDFPath,

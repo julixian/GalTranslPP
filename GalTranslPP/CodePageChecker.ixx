@@ -13,8 +13,8 @@ import Tool;
 
 namespace fs = std::filesystem;
 
-export {
-
+export
+{
     void U_CALLCONV codePageFromUCallback(
         const void* context,
         UConverterFromUnicodeArgs* fromUArgs,

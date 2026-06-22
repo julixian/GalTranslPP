@@ -1,5 +1,3 @@
-﻿// PDFCfgPage.h
-
 #ifndef PDFCFGPAGE_H
 #define PDFCFGPAGE_H
 
@@ -15,7 +13,7 @@ public:
     ~PDFCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // PDFCFGPAGE_H

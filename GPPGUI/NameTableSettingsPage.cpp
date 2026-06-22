@@ -1,4 +1,4 @@
-﻿#include "NameTableSettingsPage.h"
+#include "NameTableSettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -17,12 +17,12 @@
 import Tool;
 
 NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
-	BasePage(parent), _projectConfig(projectConfig), _globalConfig(globalConfig), _projectDir(projectDir)
+	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("人名替换表"));
 	setTitleVisible(false);
 
-	_setupUI();
+	setupUi();
 }
 
 NameTableSettingsPage::~NameTableSettingsPage()
@@ -32,15 +32,15 @@ NameTableSettingsPage::~NameTableSettingsPage()
 
 void NameTableSettingsPage::refreshTable()
 {
-	if (_refreshFunc) {
-		_refreshFunc();
+	if (m_refreshFunc) {
+		m_refreshFunc();
 	}
 }
 
 QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 {
 	QList<NameTableEntry> result;
-	fs::path nameTablePath = _projectDir / L"人名替换表.toml";
+	fs::path nameTablePath = m_projectDir / L"人名替换表.toml";
 	if (!fs::exists(nameTablePath)) {
 		return result;
 	}
@@ -66,16 +66,16 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 		ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("人名替换表 不符合 toml 规范"), 3000);
 		return result;
 	}
-	
+
 	return result;
 }
 
 QString NameTableSettingsPage::readNameTableStr()
 {
-	return ReadDicts::readDictsStr(_projectDir / L"人名替换表.toml");
+	return ReadDicts::readDictsStr(m_projectDir / L"人名替换表.toml");
 }
 
-void NameTableSettingsPage::_setupUI()
+void NameTableSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -114,7 +114,7 @@ void NameTableSettingsPage::_setupUI()
 	delNameButton->setFixedWidth(30);
 	ElaToolTip* delNameButtonToolTip = new ElaToolTip(delNameButton);
 	delNameButtonToolTip->setToolTip(tr("删除词条"));
-	
+
 	buttonLayout->addWidget(plainTextModeButton);
 	buttonLayout->addWidget(TableModeButton);
 	buttonLayout->addStretch();
@@ -145,11 +145,11 @@ void NameTableSettingsPage::_setupUI()
 	nameTableView->verticalHeader()->setHidden(true);
 	nameTableView->setAlternatingRowColors(true);
 	nameTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-	nameTableView->setColumnWidth(0, toml::find_or(_projectConfig, "GUIConfig", "nameTableColumnWidth", "0", 258));
-	nameTableView->setColumnWidth(1, toml::find_or(_projectConfig, "GUIConfig", "nameTableColumnWidth", "1", 258));
-	nameTableView->setColumnWidth(2, toml::find_or(_projectConfig, "GUIConfig", "nameTableColumnWidth", "2", 258));
+	nameTableView->setColumnWidth(0, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "0", 258));
+	nameTableView->setColumnWidth(1, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "1", 258));
+	nameTableView->setColumnWidth(2, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "2", 258));
 	stackedWidget->addWidget(nameTableView);
-	stackedWidget->setCurrentIndex(toml::find_or(_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(_globalConfig, "defaultNameTableOpenMode", 0)));
+	stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 0)));
 
 	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 	TableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
@@ -172,7 +172,7 @@ void NameTableSettingsPage::_setupUI()
 			TableModeButton->setEnabled(false);
 			addNameButton->setEnabled(true);
 			delNameButton->setEnabled(true);
-			withdrawButton->setEnabled(!_withdrawList.isEmpty());
+			withdrawButton->setEnabled(!m_withdrawList.isEmpty());
 		});
 	auto refreshFunc = [=]()
 		{
@@ -201,13 +201,13 @@ void NameTableSettingsPage::_setupUI()
 						return a.row() > b.row();
 					});
 				for (const QModelIndex& index : indexList) {
-					if (_withdrawList.size() > 100) {
-						_withdrawList.pop_front();
+					if (m_withdrawList.size() > 100) {
+						m_withdrawList.pop_front();
 					}
-					_withdrawList.push_back(entries[index.row()]);
+					m_withdrawList.push_back(entries[index.row()]);
 					nameTableModel->removeRow(index.row());
 				}
-				if (!_withdrawList.isEmpty()) {
+				if (!m_withdrawList.isEmpty()) {
 					withdrawButton->setEnabled(true);
 				}
 			}
@@ -216,20 +216,20 @@ void NameTableSettingsPage::_setupUI()
 		{
 			// 保存的提示和按钮绑定，因为保存项目配置时用的自己的提示
 			// 但刷新可以直接把提示丢进refreshFunc里，因为一般用到这个函数的时候都要提示(单独保存字典时的重载是静默的)
-			if (_applyFunc) {
-				_applyFunc();
+			if (m_applyFunc) {
+				m_applyFunc();
 			}
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("已保存 人名替换表"), 3000);
 		});
 	connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (_withdrawList.isEmpty()) {
+			if (m_withdrawList.isEmpty()) {
 				return;
 			}
-			NameTableEntry entry = _withdrawList.front();
-			_withdrawList.pop_front();
+			NameTableEntry entry = m_withdrawList.front();
+			m_withdrawList.pop_front();
 			nameTableModel->insertRow(0, entry);
-			if (_withdrawList.isEmpty()) {
+			if (m_withdrawList.isEmpty()) {
 				withdrawButton->setEnabled(false);
 			}
 		});
@@ -238,9 +238,9 @@ void NameTableSettingsPage::_setupUI()
 	nameTableLayout->addLayout(buttonLayout);
 	nameTableLayout->addWidget(stackedWidget);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			std::ofstream ofs(_projectDir / L"人名替换表.toml", std::ios::binary);
+			std::ofstream ofs(m_projectDir / L"人名替换表.toml", std::ios::binary);
 			int index = stackedWidget->currentIndex();
 			if (index == 0) {
 				ofs << plainTextEdit->toPlainText().toStdString();
@@ -261,13 +261,13 @@ void NameTableSettingsPage::_setupUI()
 				ofs.close();
 				plainTextEdit->setPlainText(readNameTableStr());
 			}
-			insertToml(_projectConfig, "GUIConfig.nameTableOpenMode", stackedWidget->currentIndex());
-			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.0", nameTableView->columnWidth(0));
-			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.1", nameTableView->columnWidth(1));
-			insertToml(_projectConfig, "GUIConfig.nameTableColumnWidth.2", nameTableView->columnWidth(2));
+			insertToml(m_projectConfig, "GUIConfig.nameTableOpenMode", stackedWidget->currentIndex());
+			insertToml(m_projectConfig, "GUIConfig.nameTableColumnWidth.0", nameTableView->columnWidth(0));
+			insertToml(m_projectConfig, "GUIConfig.nameTableColumnWidth.1", nameTableView->columnWidth(1));
+			insertToml(m_projectConfig, "GUIConfig.nameTableColumnWidth.2", nameTableView->columnWidth(2));
 		};
 
-	_refreshFunc = refreshFunc;
+	m_refreshFunc = refreshFunc;
 
 	tabWidget->addTab(nameTableWidget, tr("人名替换表"));
 	mainLayout->addWidget(tabWidget);

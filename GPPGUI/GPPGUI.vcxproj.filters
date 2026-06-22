@@ -138,7 +138,7 @@
     <ClCompile Include="HomePage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
-    <ClCompile Include="SettingPage.cpp">
+    <ClCompile Include="AppSettingsPage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
     <ClCompile Include="UpdateWidget.cpp">
@@ -257,7 +257,7 @@
     <QtMoc Include="HomePage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
-    <QtMoc Include="SettingPage.h">
+    <QtMoc Include="AppSettingsPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="UpdateWidget.h">

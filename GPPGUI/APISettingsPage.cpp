@@ -1,5 +1,3 @@
-﻿// APISettingsPage.cpp
-
 #include "APISettingsPage.h"
 
 #include <QVBoxLayout>
@@ -24,12 +22,12 @@
 import Tool;
 
 APISettingsPage::APISettingsPage(toml::ordered_value& projectConfig, QWidget* parent)
-    : BasePage(parent), _projectConfig(projectConfig)
+    : BasePage(parent), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("API 设置"));
     setTitleVisible(false);
 
-    _setupUI();
+    setupUi();
 }
 
 APISettingsPage::~APISettingsPage()
@@ -39,37 +37,37 @@ APISettingsPage::~APISettingsPage()
 void APISettingsPage::apply2Config()
 {
     toml::ordered_array apiArray;
-    for (const auto& apiRow : _apiRows) {
+    for (const auto& apiRow : m_apiRows) {
         apiRow.applyFunc(apiArray);
     }
-    insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apis", apiArray);
-    if (_applyFunc) {
-        _applyFunc();
+    insertToml(m_projectConfig, "backendSpecific.OpenAI-Compatible.apis", apiArray);
+    if (m_applyFunc) {
+        m_applyFunc();
     }
 }
 
-void APISettingsPage::_setupUI()
+void APISettingsPage::setupUi()
 {
     QWidget* centerWidget = new QWidget(this);
     centerWidget->setWindowTitle(tr("API 设置"));
-    _mainLayout = new QVBoxLayout(centerWidget);
-    _mainLayout->setContentsMargins(20, 15, 15, 0);
-    _mainLayout->setSpacing(5);
+    m_mainLayout = new QVBoxLayout(centerWidget);
+    m_mainLayout->setContentsMargins(20, 15, 15, 0);
+    m_mainLayout->setSpacing(5);
 
-    const auto& apis = toml::find_or_default<toml::array>(_projectConfig, "backendSpecific", "OpenAI-Compatible", "apis");
+    const auto apis = toml::find_or_default<toml::array>(m_projectConfig, "backendSpecific", "OpenAI-Compatible", "apis");
     for (const auto& api : apis) {
         if (!api.is_table()) {
             continue;
         }
-        ElaScrollPageArea* newRowWidget = _createApiInputRowWidget(api);
-        _mainLayout->addWidget(newRowWidget);
+        ElaScrollPageArea* newRowWidget = createApiInputRowWidget(api);
+        m_mainLayout->addWidget(newRowWidget);
     }
     if (apis.size() == 0) {
-        _addApiInputRow();
+        addApiInputRow();
     }
 
     // API 使用策略
-    std::string strategy = toml::find_or(_projectConfig, "backendSpecific", "OpenAI-Compatible", "apiStrategy", "");
+    const std::string strategy = toml::find_or(m_projectConfig, "backendSpecific", "OpenAI-Compatible", "apiStrategy", "");
     bool isRandom = strategy == "random";
     ElaScrollPageArea* apiStrategyArea = new ElaScrollPageArea(this);
     QHBoxLayout* apiStrategyLayout = new QHBoxLayout(apiStrategyArea);
@@ -90,7 +88,7 @@ void APISettingsPage::_setupUI()
     apiStrategyGroup->addButton(apiStrategyFallback, 1);
 
     // API 超时时间
-    int timeout = toml::find_or(_projectConfig, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 180);
+    int timeout = toml::find_or(m_projectConfig, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 180);
     ElaScrollPageArea* apiTimeoutArea = new ElaScrollPageArea(this);
     QHBoxLayout* apiTimeoutLayout = new QHBoxLayout(apiTimeoutArea);
     ElaDoubleText* apiTimeoutTitle = new ElaDoubleText(apiTimeoutArea,
@@ -106,40 +104,40 @@ void APISettingsPage::_setupUI()
     // “增加新 API”按钮
     ElaPushButton* addApiButton = new ElaPushButton(tr("增加新 API"), this);
     addApiButton->setFixedWidth(120);
-    connect(addApiButton, &ElaPushButton::clicked, this, &APISettingsPage::_addApiInputRow);
+    connect(addApiButton, &ElaPushButton::clicked, this, &APISettingsPage::addApiInputRow);
 
-    _applyFunc = [=]()
+    m_applyFunc = [=]()
         {
-            apiStrategyGroup->button(0)->isChecked() ? insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
-                : insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
-            insertToml(_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", apiTimeoutSpinBox->value());
+            apiStrategyGroup->button(0)->isChecked() ? insertToml(m_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "random")
+                : insertToml(m_projectConfig, "backendSpecific.OpenAI-Compatible.apiStrategy", "fallback");
+            insertToml(m_projectConfig, "backendSpecific.OpenAI-Compatible.apiTimeout", apiTimeoutSpinBox->value());
         };
 
     // 将按钮添加到布局中
-    _mainLayout->addWidget(apiStrategyArea);
-    _mainLayout->addWidget(apiTimeoutArea);
-    _mainLayout->addWidget(addApiButton);
-    _mainLayout->addStretch();
+    m_mainLayout->addWidget(apiStrategyArea);
+    m_mainLayout->addWidget(apiTimeoutArea);
+    m_mainLayout->addWidget(addApiButton);
+    m_mainLayout->addStretch();
     addCentralWidget(centerWidget, true, false, 0);
 }
 
 // 【重构】这个函数现在只负责调用创建函数并插入到正确位置
-void APISettingsPage::_addApiInputRow()
+void APISettingsPage::addApiInputRow()
 {
-    ElaScrollPageArea* newRowWidget = _createApiInputRowWidget();
+    ElaScrollPageArea* newRowWidget = createApiInputRowWidget();
 
     // 获取当前布局中的项目数量
-    int count = _mainLayout->count();
+    int count = m_mainLayout->count();
     // count - 4 是因为最后是 stretch, addApiButton, apiStrategyArea, apiTimeoutArea
-    _mainLayout->insertWidget(count - 4, newRowWidget);
+    m_mainLayout->insertWidget(count - 4, newRowWidget);
 }
 
 // 【新增】这个函数创建一整行带边框和删除按钮的UI
-ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& api)
+ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& api)
 {
-    const std::string& key = toml::find_or(api, "apikey", "");
-    const std::string& url = toml::find_or(api, "apiurl", "");
-    const std::string& model = toml::find_or(api, "modelName", "");
+    const std::string key = toml::find_or(api, "apikey", "");
+    const std::string url = toml::find_or(api, "apiurl", "");
+    const std::string model = toml::find_or(api, "modelName", "");
     bool stream = toml::find_or(api, "stream", false);
     bool enable = toml::find_or(api, "enable", true);
     std::optional<double> temperature;
@@ -227,7 +225,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
     // 使用 QObject::setProperty 来给按钮附加它所属容器的指针
     deleteButton->setProperty("containerWidget", QVariant::fromValue<QWidget*>(container));
     rightLayout->addWidget(deleteButton, 0, Qt::AlignCenter);
-    connect(deleteButton, &ElaIconButton::clicked, this, &APISettingsPage::_onDeleteApiRow);
+    connect(deleteButton, &ElaIconButton::clicked, this, &APISettingsPage::onDeleteApiRow);
 
     QHBoxLayout* enableLayout = new QHBoxLayout(container);
     ElaText* enableLabel = new ElaText(tr("启用"), 13, container);
@@ -353,7 +351,7 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
         std::string extraKeysStr = api.at("extraKeys").as_array()
             | std::views::filter([](const toml::value& v) { return v.is_string(); })
             | std::views::transform([](const toml::value& v) { return v.as_string(); })
-            | std::views::join_with('\n') 
+            | std::views::join_with('\n')
             | std::ranges::to<std::string>();
         extraKeysEdit->setPlainText(QString::fromStdString(extraKeysStr));
     }
@@ -418,12 +416,12 @@ ElaScrollPageArea* APISettingsPage::_createApiInputRowWidget(const toml::value& 
             }
             apiArray.push_back(std::move(apiTable));
         };
-    _apiRows.append(newRowControls);
+    m_apiRows.append(newRowControls);
 
     return container;
 }
 
-void APISettingsPage::_onDeleteApiRow()
+void APISettingsPage::onDeleteApiRow()
 {
     // 获取信号的发送者，即被点击的删除按钮
     ElaIconButton* deleteButton = qobject_cast<ElaIconButton*>(sender());
@@ -438,15 +436,15 @@ void APISettingsPage::_onDeleteApiRow()
     }
 
     // 从列表中找到并移除对应的控件组
-    for (int i = 0; i < _apiRows.size(); ++i) {
-        if (_apiRows.at(i).container == containerWidget) {
-            _apiRows.at(i).configWidget->deleteLater();
-            _apiRows.removeAt(i);
+    for (int i = 0; i < m_apiRows.size(); ++i) {
+        if (m_apiRows.at(i).container == containerWidget) {
+            m_apiRows.at(i).configWidget->deleteLater();
+            m_apiRows.removeAt(i);
             break;
         }
     }
 
     // 从布局中移除并删除该容器
-    _mainLayout->removeWidget(containerWidget);
+    m_mainLayout->removeWidget(containerWidget);
     containerWidget->deleteLater(); // 使用 deleteLater() 更安全
 }

@@ -20,36 +20,36 @@
 
 using namespace ProjectCachePagePrivate;
 
-void ProjectCachePage::_renderEntries()
+void ProjectCachePage::renderEntries()
 {
     // 右侧概览列表是当前文件 JSON 的“视图层”：本地搜索和只看问题句
-    // 只影响 QStandardItemModel，不改变 _entries 的真实行号和顺序。
-    if (!_entryModel) {
+    // 只影响 QStandardItemModel，不改变 m_entries 的真实行号和顺序。
+    if (!m_entryModel) {
         return;
     }
-    _renderingEntries = true;
-    _entryModel->clear();
-    _selectedEntryRows.clear();
+    m_renderingEntries = true;
+    m_entryModel->clear();
+    m_selectedEntryRows.clear();
 
-    if (_currentFile.isEmpty()) {
-        _currentFileLabel->setText(tr("未选择缓存文件"));
-        _renderingEntries = false;
-        _updateCurrentSummary();
-        _updateActionStates();
+    if (m_currentFile.isEmpty()) {
+        m_currentFileLabel->setText(tr("未选择缓存文件"));
+        m_renderingEntries = false;
+        updateCurrentSummary();
+        updateActionStates();
         return;
     }
 
-    const QString query = _localSearchEdit ? _localSearchEdit->text() : QString();
-    const bool onlyProblems = _filterProblemsCheck && _filterProblemsCheck->isChecked();
+    const QString query = m_localSearchEdit ? m_localSearchEdit->text() : QString();
+    const bool onlyProblems = m_filterProblemsCheck && m_filterProblemsCheck->isChecked();
 
-    for (int i = 0; i < (int)_entries.size(); ++i) {
-        const auto& item = _entries[i];
+    for (int i = 0; i < (int)m_entries.size(); ++i) {
+        const auto& item = m_entries[i];
         if (!item.is_object()) {
             continue;
         }
-        const QString source = _entrySource(item);
-        const QString dst = _entryDst(item);
-        const QString problems = _problemString(item, " | ");
+        const QString source = entrySource(item);
+        const QString dst = entryDst(item);
+        const QString problems = problemString(item, " | ");
         if (onlyProblems && problems.isEmpty()) {
             continue;
         }
@@ -59,92 +59,92 @@ void ProjectCachePage::_renderEntries()
             && !problems.contains(query, Qt::CaseInsensitive)) {
             continue;
         }
-        QStandardItem* itemRow = new QStandardItem(_entryListText(item, i));
+        QStandardItem* itemRow = new QStandardItem(entryListText(item, i));
         itemRow->setData(i, JsonRowRole);
         itemRow->setData(sentenceIndexOf(item, i), EntryIndexRole);
-        itemRow->setData(_speakerString(item), EntrySpeakerRole);
+        itemRow->setData(speakerString(item), EntrySpeakerRole);
         itemRow->setData(problems, EntryProblemRole);
-        itemRow->setData(_entryTranslatedBy(item), EntryEngineRole);
+        itemRow->setData(entryTranslatedBy(item), EntryEngineRole);
         itemRow->setData(source, EntrySourceRole);
         itemRow->setData(dst, EntryDstRole);
         itemRow->setEditable(false);
         setModelItemFont(itemRow, BodyFontPx);
-        _entryModel->appendRow(itemRow);
+        m_entryModel->appendRow(itemRow);
     }
 
-    _renderingEntries = false;
-    _currentFileLabel->setText(_currentFile.isEmpty() ? tr("未选择缓存文件") : ((_dirtyFiles.contains(_currentFile) ? "*" : "") + _currentFile));
-    _updateCurrentSummary();
-    _updateActionStates();
+    m_renderingEntries = false;
+    m_currentFileLabel->setText(m_currentFile.isEmpty() ? tr("未选择缓存文件") : ((m_dirtyFiles.contains(m_currentFile) ? "*" : "") + m_currentFile));
+    updateCurrentSummary();
+    updateActionStates();
 }
 
-void ProjectCachePage::_syncSelectedEntryRows()
+void ProjectCachePage::syncSelectedEntryRows()
 {
     // UI 里选中的是可见模型行，真正执行删除/编辑时必须先还原成 JSON 行号。
-    _selectedEntryRows.clear();
-    if (!_entryList || !_entryList->selectionModel()) {
+    m_selectedEntryRows.clear();
+    if (!m_entryList || !m_entryList->selectionModel()) {
         return;
     }
-    const QModelIndexList selected = _entryList->selectionModel()->selectedRows();
+    const QModelIndexList selected = m_entryList->selectionModel()->selectedRows();
     for (const QModelIndex& index : selected) {
         const int row = index.data(JsonRowRole).toInt();
         if (row >= 0) {
-            _selectedEntryRows.insert(row);
+            m_selectedEntryRows.insert(row);
         }
     }
 }
 
-void ProjectCachePage::_updateEntryListItem(int row)
+void ProjectCachePage::updateEntryListItem(int row)
 {
-    if (!_entryModel) {
+    if (!m_entryModel) {
         return;
     }
-    for (int modelRow = 0; modelRow < _entryModel->rowCount(); ++modelRow) {
-        QStandardItem* item = _entryModel->item(modelRow);
+    for (int modelRow = 0; modelRow < m_entryModel->rowCount(); ++modelRow) {
+        QStandardItem* item = m_entryModel->item(modelRow);
         if (item && item->data(JsonRowRole).toInt() == row) {
-            item->setText(_entryListText(_entries[row], row));
-            item->setData(sentenceIndexOf(_entries[row], row), EntryIndexRole);
-            item->setData(_speakerString(_entries[row]), EntrySpeakerRole);
-            item->setData(_problemString(_entries[row], " | "), EntryProblemRole);
-            item->setData(_entryTranslatedBy(_entries[row]), EntryEngineRole);
-            item->setData(_entrySource(_entries[row]), EntrySourceRole);
-            item->setData(_entryDst(_entries[row]), EntryDstRole);
+            item->setText(entryListText(m_entries[row], row));
+            item->setData(sentenceIndexOf(m_entries[row], row), EntryIndexRole);
+            item->setData(speakerString(m_entries[row]), EntrySpeakerRole);
+            item->setData(problemString(m_entries[row], " | "), EntryProblemRole);
+            item->setData(entryTranslatedBy(m_entries[row]), EntryEngineRole);
+            item->setData(entrySource(m_entries[row]), EntrySourceRole);
+            item->setData(entryDst(m_entries[row]), EntryDstRole);
             return;
         }
     }
 }
 
-void ProjectCachePage::_updateEntryField(int row, const char* key, const QString& value)
+void ProjectCachePage::updateEntryField(int row, const char* key, const QString& value)
 {
-    if (_isProjectRunning() || _currentFile.isEmpty()) {
+    if (isProjectRunning() || m_currentFile.isEmpty()) {
         return;
     }
-    if (row < 0 || row >= (int)_entries.size() || !_entries[row].is_object()) {
+    if (row < 0 || row >= (int)m_entries.size() || !m_entries[row].is_object()) {
         return;
     }
-    if (_jsonString(_entries[row], key) == value) {
+    if (jsonString(m_entries[row], key) == value) {
         return;
     }
     // 编辑窗口只允许写回 pre_processed_text / pre_translated_text；
     // original_text 在这个页面始终当作元信息。
-    _entries[row][key] = value.toStdString();
-    _markDirty(_currentFile);
-    _updateEntryListItem(row);
-    _updateCurrentSummary();
+    m_entries[row][key] = value.toStdString();
+    markDirty(m_currentFile);
+    updateEntryListItem(row);
+    updateCurrentSummary();
 }
 
-void ProjectCachePage::_openEntryEditor(int row)
+void ProjectCachePage::openEntryEditor(int row)
 {
-    if (_currentFile.isEmpty() || row < 0 || row >= (int)_entries.size() || !_entries[row].is_object()) {
+    if (m_currentFile.isEmpty() || row < 0 || row >= (int)m_entries.size() || !m_entries[row].is_object()) {
         return;
     }
 
-    // 弹窗内使用当前条目的快照展示；保存时通过 row 写回 _entries。
-    const auto item = _entries[row];
-    const bool writable = !_isProjectRunning();
+    // 弹窗内使用当前条目的快照展示；保存时通过 row 写回 m_entries。
+    const auto item = m_entries[row];
+    const bool writable = !isProjectRunning();
 
     ElaDialog dialog(this);
-    const QString speaker = _speakerString(item);
+    const QString speaker = speakerString(item);
     dialog.setWindowTitle(speaker.isEmpty()
         ? QString("#%1").arg(sentenceIndexOf(item, row))
         : QString("#%1  %2").arg(sentenceIndexOf(item, row)).arg(speaker));
@@ -168,13 +168,13 @@ void ProjectCachePage::_openEntryEditor(int row)
             return edit;
         };
 
-    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), _entryOriginal(item), true, 60);
+    ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), entryOriginal(item), true, 60);
     Q_UNUSED(originalEdit);
-    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), _entrySource(item), !writable, 80);
-    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), _entryDst(item), !writable, 80);
-    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), _problemString(item), true, 60);
+    ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), entrySource(item), !writable, 80);
+    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), entryDst(item), !writable, 80);
+    ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), problemString(item), true, 60);
     Q_UNUSED(problemsEdit);
-    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), _entryPreview(item), true, 60);
+    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), entryPreview(item), true, 60);
     Q_UNUSED(previewEdit);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -187,8 +187,8 @@ void ProjectCachePage::_openEntryEditor(int row)
     saveButton->setEnabled(writable);
     connect(saveButton, &ElaPushButton::clicked, this, [=, &dialog]()
         {
-            _updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
-            _updateEntryField(row, "pre_translated_text", dstEdit->toPlainText());
+            updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
+            updateEntryField(row, "pre_translated_text", dstEdit->toPlainText());
             dialog.accept();
         });
     buttonLayout->addWidget(saveButton);
@@ -198,9 +198,9 @@ void ProjectCachePage::_openEntryEditor(int row)
     dialog.exec();
 }
 
-void ProjectCachePage::_deleteEntryRows(QList<int> rows)
+void ProjectCachePage::deleteEntryRows(QList<int> rows)
 {
-    if (_currentFile.isEmpty() || rows.isEmpty()) {
+    if (m_currentFile.isEmpty() || rows.isEmpty()) {
         return;
     }
     std::ranges::sort(rows);
@@ -211,25 +211,25 @@ void ProjectCachePage::_deleteEntryRows(QList<int> rows)
     int deleted = 0;
     // 从后往前删，避免前面的 erase 改变后续行号。
     for (int row : rows) {
-        if (row >= 0 && row < (int)_entries.size()) {
-            _entries.erase(_entries.begin() + row);
+        if (row >= 0 && row < (int)m_entries.size()) {
+            m_entries.erase(m_entries.begin() + row);
             ++deleted;
         }
     }
     if (deleted <= 0) {
         return;
     }
-    _selectedEntryRows.clear();
-    _markDirty(_currentFile);
-    _renderEntries();
-    _runGlobalSearch();
-    if (_problemsLoaded) {
-        _loadProblems();
+    m_selectedEntryRows.clear();
+    markDirty(m_currentFile);
+    renderEntries();
+    runGlobalSearch();
+    if (m_problemsLoaded) {
+        loadProblems();
     }
-    _setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个条目，保存后生效"));
+    setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个条目，保存后生效"));
 }
 
-QString ProjectCachePage::_jsonString(const json& object, const char* key)
+QString ProjectCachePage::jsonString(const json& object, const char* key)
 {
     if (!object.is_object() || !object.contains(key)) {
         return {};
@@ -244,16 +244,16 @@ QString ProjectCachePage::_jsonString(const json& object, const char* key)
     return QString::fromStdString(value.dump());
 }
 
-QString ProjectCachePage::_speakerString(const json& object)
+QString ProjectCachePage::speakerString(const json& object)
 {
     if (object.contains("name_preview")) {
-        const QString preview = _jsonString(object, "name_preview");
+        const QString preview = jsonString(object, "name_preview");
         if (!preview.isEmpty()) {
             return preview;
         }
     }
     if (object.contains("name")) {
-        return _jsonString(object, "name");
+        return jsonString(object, "name");
     }
     if (object.contains("names") && object["names"].is_array()) {
         QStringList names;
@@ -267,7 +267,7 @@ QString ProjectCachePage::_speakerString(const json& object)
     return {};
 }
 
-QString ProjectCachePage::_problemString(const json& object, const QString& separator)
+QString ProjectCachePage::problemString(const json& object, const QString& separator)
 {
     if (!object.contains("problems") || !object["problems"].is_array()) {
         return {};
@@ -284,54 +284,54 @@ QString ProjectCachePage::_problemString(const json& object, const QString& sepa
     return problems.join(separator);
 }
 
-QString ProjectCachePage::_entrySource(const json& object)
+QString ProjectCachePage::entrySource(const json& object)
 {
-    return _jsonString(object, "pre_processed_text");
+    return jsonString(object, "pre_processed_text");
 }
 
-QString ProjectCachePage::_entryDst(const json& object)
+QString ProjectCachePage::entryDst(const json& object)
 {
-    return _jsonString(object, "pre_translated_text");
+    return jsonString(object, "pre_translated_text");
 }
 
-QString ProjectCachePage::_entryOriginal(const json& object)
+QString ProjectCachePage::entryOriginal(const json& object)
 {
-    return _jsonString(object, "original_text");
+    return jsonString(object, "original_text");
 }
 
-QString ProjectCachePage::_entryPreview(const json& object)
+QString ProjectCachePage::entryPreview(const json& object)
 {
-    return _jsonString(object, "translated_preview");
+    return jsonString(object, "translated_preview");
 }
 
-QString ProjectCachePage::_entryTranslatedBy(const json& object)
+QString ProjectCachePage::entryTranslatedBy(const json& object)
 {
-    return _jsonString(object, "translated_by");
+    return jsonString(object, "translated_by");
 }
 
-QString ProjectCachePage::_truncateForList(const QString& text, int maxChars)
+QString ProjectCachePage::truncateForList(const QString& text, int maxChars)
 {
     return compactPreview(text, maxChars);
 }
 
-QString ProjectCachePage::_entryListText(const json& object, int row) const
+QString ProjectCachePage::entryListText(const json& object, int row) const
 {
     QStringList header;
     header << QString("#%1").arg(sentenceIndexOf(object, row));
-    const QString speaker = _speakerString(object);
+    const QString speaker = speakerString(object);
     if (!speaker.isEmpty()) {
         header << speaker;
     }
-    const QString problems = _problemString(object, " | ");
+    const QString problems = problemString(object, " | ");
     if (!problems.isEmpty()) {
         header << tr("问题: ") + compactPreview(problems, 120);
     }
-    const QString engine = _entryTranslatedBy(object);
+    const QString engine = entryTranslatedBy(object);
     if (!engine.isEmpty()) {
         header << engine;
     }
     return header.join("  ·  ")
-        + "\n" + tr("原文: ") + compactPreview(_entrySource(object), 220)
-        + "\n" + tr("译文: ") + compactPreview(_entryDst(object), 220);
+        + "\n" + tr("原文: ") + compactPreview(entrySource(object), 220)
+        + "\n" + tr("译文: ") + compactPreview(entryDst(object), 220);
 }
 

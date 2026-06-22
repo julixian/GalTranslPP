@@ -1,5 +1,3 @@
-// PromptSettingsPage.h
-
 #ifndef PROMPTSSETTINGSPAGE_H
 #define PROMPTSSETTINGSPAGE_H
 
@@ -22,10 +20,10 @@ public:
 
 private:
 
-    void _setupUI();
-    toml::ordered_value _promptConfig;
-    toml::ordered_value& _projectConfig;
-    fs::path& _projectDir;
+    void setupUi();
+    toml::ordered_value m_promptConfig;
+    toml::ordered_value& m_projectConfig;
+    fs::path& m_projectDir;
 
 };
 

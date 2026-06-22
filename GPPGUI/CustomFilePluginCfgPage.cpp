@@ -1,4 +1,4 @@
-﻿#include "CustomFilePluginCfgPage.h"
+#include "CustomFilePluginCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -14,7 +14,7 @@
 import Tool;
 
 CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
-	: BasePage(parent), _projectConfig(projectConfig), _globalConfig(globalConfig), _projectDir(projectDir)
+	: BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("自定义文件处理插件配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -24,7 +24,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 创建自定义文件处理插件路径设置
-	const std::string& customFilePluginPath = toml::find_or(_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
+	const std::string customFilePluginPath = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
 	ElaScrollPageArea* filePluginArea = new ElaScrollPageArea(this);
 	QHBoxLayout* filePluginLayout = new QHBoxLayout(filePluginArea);
 	ElaText* filePluginText = new ElaText(tr("自定义文件处理插件路径"), 16, filePluginArea);
@@ -36,20 +36,20 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	ElaPushButton* filePluginBtn = new ElaPushButton(tr("浏览"), filePluginArea);
 	connect(filePluginBtn, &ElaPushButton::clicked, this, [=]()
 		{
-			QString path = QFileDialog::getOpenFileName(this, tr("选择自定义文件处理插件"), 
-				QString::fromStdString(toml::find_or(_globalConfig, "lastPluginPath", "./")), 
+			QString path = QFileDialog::getOpenFileName(this, tr("选择自定义文件处理插件"),
+				QString::fromStdString(toml::find_or(m_globalConfig, "lastPluginPath", "./")),
 				"custom script (*.lua *.py)");
 			if (!path.isEmpty())
 			{
 				filePluginEdit->setText(path);
-				insertToml(_globalConfig, "lastPluginPath", path.toStdString());
+				insertToml(m_globalConfig, "lastPluginPath", path.toStdString());
 			}
 		});
 	filePluginLayout->addWidget(filePluginBtn);
 	mainLayout->addWidget(filePluginArea);
 
 	// 继承的基类 # NormalJson, Epub, PDF
-	const std::string& inherit = toml::find_or(_projectConfig, "plugins", "baseClassName", "NormalJson");
+	const std::string inherit = toml::find_or(m_projectConfig, "plugins", "baseClassName", "NormalJson");
 	ElaScrollPageArea* inheritArea = new ElaScrollPageArea(this);
 	QHBoxLayout* inheritLayout = new QHBoxLayout(inheritArea);
 	ElaText* inheritText = new ElaText(tr("基类继承"), 16, inheritArea);
@@ -69,10 +69,10 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	inheritLayout->addWidget(inheritCombo);
 	mainLayout->addWidget(inheritArea);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			insertToml(_projectConfig, "plugins.customFilePlugin", filePluginEdit->text().toStdString());
-			insertToml(_projectConfig, "plugins.baseClassName", inheritCombo->currentText().toStdString());
+			insertToml(m_projectConfig, "plugins.customFilePlugin", filePluginEdit->text().toStdString());
+			insertToml(m_projectConfig, "plugins.baseClassName", inheritCombo->currentText().toStdString());
 		};
 
 	mainLayout->addStretch();

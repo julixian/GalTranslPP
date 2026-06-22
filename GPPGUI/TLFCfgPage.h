@@ -1,5 +1,3 @@
-﻿// TLFCfgPage.h
-
 #ifndef TLFCFGPAGE_H
 #define TLFCFGPAGE_H
 
@@ -15,7 +13,7 @@ public:
     ~TLFCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 
 };
 

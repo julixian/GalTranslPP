@@ -1,5 +1,3 @@
-﻿// ValueSliderWidget.h
-
 #ifndef VALUESLIDERWIDGET_H
 #define VALUESLIDERWIDGET_H
 
@@ -23,18 +21,18 @@ public:
 
 Q_SIGNALS:
     // 当值发生变化时，发出此信号，方便外部连接
-    void valueChanged(double newValue);
+    void valueChangedSignal(double newValue);
 
 private Q_SLOTS:
     // 私有槽，用于处理内部控件的信号
-    void _onSliderValueChanged(int intValue);
-    void _onSpinBoxValueChanged(double doubleValue);
+    void onSliderValueChanged(int intValue);
+    void onSpinBoxValueChanged(double doubleValue);
 
 private:
-    ElaSlider* _slider;
-    ElaDoubleSpinBox* _spinBox;
-    double _maxValue;
-    double _minValue;
+    ElaSlider* m_slider = nullptr;
+    ElaDoubleSpinBox* m_spinBox = nullptr;
+    double m_maxValue;
+    double m_minValue;
 };
 
 #endif // VALUESLIDERWIDGET_H

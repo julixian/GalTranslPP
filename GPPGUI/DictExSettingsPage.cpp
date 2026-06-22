@@ -1,4 +1,4 @@
-﻿#include "DictExSettingsPage.h"
+#include "DictExSettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -12,12 +12,12 @@
 import Tool;
 
 DictExSettingsPage::DictExSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
-	BasePage(parent), _projectConfig(projectConfig), _globalConfig(globalConfig)
+	BasePage(parent), m_projectConfig(projectConfig), m_globalConfig(globalConfig)
 {
 	setWindowTitle(tr("项目字典设置"));
 	setTitleVisible(false);
 
-	_setupUI();
+	setupUi();
 }
 
 DictExSettingsPage::~DictExSettingsPage()
@@ -27,18 +27,18 @@ DictExSettingsPage::~DictExSettingsPage()
 
 void DictExSettingsPage::refreshCommonDictsList()
 {
-	if (_refreshCommonDictsListFunc) {
-		_refreshCommonDictsListFunc();
+	if (m_refreshCommonDictsListFunc) {
+		m_refreshCommonDictsListFunc();
 	}
 }
 
-void DictExSettingsPage::_setupUI()
+void DictExSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(20, 15, 15, 0);
 
-	auto createDictSelectAreaFunc = 
+	auto createDictSelectAreaFunc =
 		[=](const QString& text, const QString& defaultItem, const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
 		{
 			const std::set<QString> projectFixedDictNames = { "项目译前字典", "项目GPT字典", "项目译后字典" };
@@ -52,14 +52,14 @@ void DictExSettingsPage::_setupUI()
 			dictNamesLayout->addStretch();
 			ElaMultiSelectComboBox* dictNamesComboBox = new ElaMultiSelectComboBox(dictNamesArea);
 			dictNamesComboBox->setFixedWidth(500);
-			const auto& globalConfigDictNames = toml::find_or_default<toml::array>(_globalConfig, globalConfigKey, "dictNames");
+			const auto& globalConfigDictNames = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 				for (const auto& dictName : globalConfigDictNames) {
 					if (dictName.is_string()) {
 						dictNamesComboBox->addItem(QString::fromStdString(dictName.as_string()));
 					}
 				}
 			dictNamesComboBox->addItem(defaultItem);
-			const auto& projectConfigDictNames = toml::find_or_default<toml::array>(_projectConfig, "dictionary", projectConfigKey);
+			const auto& projectConfigDictNames = toml::find_or_default<toml::array>(m_projectConfig, "dictionary", projectConfigKey);
 			QList<int> indexesToSelect;
 			for (const auto& dictName : projectConfigDictNames) {
 				if (dictName.is_string()) {
@@ -86,7 +86,7 @@ void DictExSettingsPage::_setupUI()
 	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), tr("项目译后字典"), "commonPostDicts", "postDict");
 
 
-	bool usePreDictInName = toml::find_or(_projectConfig, "dictionary", "usePreDictInName", false);
+	bool usePreDictInName = toml::find_or(m_projectConfig, "dictionary", "usePreDictInName", false);
 	ElaScrollPageArea* usePreDictInNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePreDictInNameLayout = new QHBoxLayout(usePreDictInNameArea);
 	ElaText* usePreDictInNameText = new ElaText(usePreDictInNameArea);
@@ -100,7 +100,7 @@ void DictExSettingsPage::_setupUI()
 	usePreDictInNameLayout->addWidget(usePreDictInNameSwitch);
 	mainLayout->addWidget(usePreDictInNameArea);
 
-	bool usePostDictInName = toml::find_or(_projectConfig, "dictionary", "usePostDictInName", false);
+	bool usePostDictInName = toml::find_or(m_projectConfig, "dictionary", "usePostDictInName", false);
 	ElaScrollPageArea* usePostDictInNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePostDictInNameLayout = new QHBoxLayout(usePostDictInNameArea);
 	ElaText* usePostDictInNameText = new ElaText(usePostDictInNameArea);
@@ -114,7 +114,7 @@ void DictExSettingsPage::_setupUI()
 	usePostDictInNameLayout->addWidget(usePostDictInNameSwitch);
 	mainLayout->addWidget(usePostDictInNameArea);
 
-	bool usePreDictInMsg = toml::find_or(_projectConfig, "dictionary", "usePreDictInMsg", true);
+	bool usePreDictInMsg = toml::find_or(m_projectConfig, "dictionary", "usePreDictInMsg", true);
 	ElaScrollPageArea* usePreDictInMsgArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePreDictInMsgLayout = new QHBoxLayout(usePreDictInMsgArea);
 	ElaText* usePreDictInMsgText = new ElaText(usePreDictInMsgArea);
@@ -128,7 +128,7 @@ void DictExSettingsPage::_setupUI()
 	usePreDictInMsgLayout->addWidget(usePreDictInMsgSwitch);
 	mainLayout->addWidget(usePreDictInMsgArea);
 
-	bool usePostDictInMsg = toml::find_or(_projectConfig, "dictionary", "usePostDictInMsg", true);
+	bool usePostDictInMsg = toml::find_or(m_projectConfig, "dictionary", "usePostDictInMsg", true);
 	ElaScrollPageArea* usePostDictInMsgArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePostDictInMsgLayout = new QHBoxLayout(usePostDictInMsgArea);
 	ElaText* usePostDictInMsgText = new ElaText(usePostDictInMsgArea);
@@ -142,7 +142,7 @@ void DictExSettingsPage::_setupUI()
 	usePostDictInMsgLayout->addWidget(usePostDictInMsgSwitch);
 	mainLayout->addWidget(usePostDictInMsgArea);
 
-	bool useGPTDictToReplaceName = toml::find_or(_projectConfig, "dictionary", "useGPTDictToReplaceName", false);
+	bool useGPTDictToReplaceName = toml::find_or(m_projectConfig, "dictionary", "useGPTDictToReplaceName", false);
 	ElaScrollPageArea* useGPTDictToReplaceNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* useGPTDictToReplaceNameLayout = new QHBoxLayout(useGPTDictToReplaceNameArea);
 	ElaText* useGPTDictToReplaceNameText = new ElaText(useGPTDictToReplaceNameArea);
@@ -157,12 +157,12 @@ void DictExSettingsPage::_setupUI()
 	mainLayout->addWidget(useGPTDictToReplaceNameArea);
 	mainLayout->addStretch();
 
-	_refreshCommonDictsListFunc = [=]()
+	m_refreshCommonDictsListFunc = [=]()
 		{
-			auto refreshCommonDictsListFunc = 
+			auto refreshCommonDictsListFunc =
 				[=](const QString& excludeName, const std::string& globalConfigKey, ElaMultiSelectComboBox* comboBox_)
 				{
-					const auto& commonDictsArr = toml::find_or_default<toml::array>(_globalConfig, globalConfigKey, "dictNames");
+					const auto& commonDictsArr = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 					QList<int> dictIndexesToRemove;
 					for (int i = 0; i < comboBox_->count(); i++) {
 						if (
@@ -188,7 +188,7 @@ void DictExSettingsPage::_setupUI()
 								continue;
 							}
 							comboBox_->insertItem(0, QString::fromStdString(dictName.as_string()));
-							if (toml::find_or(_globalConfig, globalConfigKey, "spec", dictName.as_string(), "defaultOn", true)) {
+							if (toml::find_or(m_globalConfig, globalConfigKey, "spec", dictName.as_string(), "defaultOn", true)) {
 								commonDictsChosen.append(QString::fromStdString(dictName.as_string()));
 							}
 						}
@@ -199,11 +199,11 @@ void DictExSettingsPage::_setupUI()
 			refreshCommonDictsListFunc(tr("项目译前字典"), "commonPreDicts", comboBox);
 			refreshCommonDictsListFunc(tr("项目GPT字典"), "commonGptDicts", gptDictNamesComboBox);
 			refreshCommonDictsListFunc(tr("项目译后字典"), "commonPostDicts", postDictNamesComboBox);
-			
+
 		};
 
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
 			toml::array preDictNamesArr, gptDictNamesArr, postDictNamesArr;
 			QStringList preDictNamesStr = comboBox->getCurrentSelection(),
@@ -218,15 +218,15 @@ void DictExSettingsPage::_setupUI()
 			for (const auto& name : postDictNames) {
 				postDictNamesArr.push_back(name.toStdString() + ".toml");
 			}
-			insertToml(_projectConfig, "dictionary.preDict", preDictNamesArr);
-			insertToml(_projectConfig, "dictionary.gptDict", gptDictNamesArr);
-			insertToml(_projectConfig, "dictionary.postDict", postDictNamesArr);
+			insertToml(m_projectConfig, "dictionary.preDict", preDictNamesArr);
+			insertToml(m_projectConfig, "dictionary.gptDict", gptDictNamesArr);
+			insertToml(m_projectConfig, "dictionary.postDict", postDictNamesArr);
 
-			insertToml(_projectConfig, "dictionary.usePreDictInName", usePreDictInNameSwitch->getIsToggled());
-			insertToml(_projectConfig, "dictionary.usePostDictInName", usePostDictInNameSwitch->getIsToggled());
-			insertToml(_projectConfig, "dictionary.usePreDictInMsg", usePreDictInMsgSwitch->getIsToggled());
-			insertToml(_projectConfig, "dictionary.usePostDictInMsg", usePostDictInMsgSwitch->getIsToggled());
-			insertToml(_projectConfig, "dictionary.useGPTDictToReplaceName", useGPTDictToReplaceNameSwitch->getIsToggled());
+			insertToml(m_projectConfig, "dictionary.usePreDictInName", usePreDictInNameSwitch->getIsToggled());
+			insertToml(m_projectConfig, "dictionary.usePostDictInName", usePostDictInNameSwitch->getIsToggled());
+			insertToml(m_projectConfig, "dictionary.usePreDictInMsg", usePreDictInMsgSwitch->getIsToggled());
+			insertToml(m_projectConfig, "dictionary.usePostDictInMsg", usePostDictInMsgSwitch->getIsToggled());
+			insertToml(m_projectConfig, "dictionary.useGPTDictToReplaceName", useGPTDictToReplaceNameSwitch->getIsToggled());
 		};
 
 	addCentralWidget(mainWidget, true, false, 0);

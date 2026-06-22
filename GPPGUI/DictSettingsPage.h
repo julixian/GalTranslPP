@@ -1,5 +1,3 @@
-// DictSettingsPage.h
-
 #ifndef DICTSETTINGSPAGE_H
 #define DICTSETTINGSPAGE_H
 
@@ -25,16 +23,16 @@ public:
 
 private:
 
-    void _setupUI();
-    toml::ordered_value& _globalConfig;
-    toml::ordered_value& _projectConfig;
-    fs::path& _projectDir;
+    void setupUi();
+    fs::path& m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
 
-    std::function<void()> _refreshFunc;
+    std::function<void()> m_refreshFunc;
 
-    QList<GptDictEntry> _withdrawGptList;
-    QList<NormalDictEntry> _withdrawPreList;
-    QList<NormalDictEntry> _withdrawPostList;
+    QList<GptDictEntry> m_withdrawGptList;
+    QList<NormalDictEntry> m_withdrawPreList;
+    QList<NormalDictEntry> m_withdrawPostList;
 };
 
 #endif // COMMONSETTINGSPAGE_H

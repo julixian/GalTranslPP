@@ -1,5 +1,3 @@
-// NameTableModel.h
-
 #ifndef NAMETABLEMODEL_H
 #define NAMETABLEMODEL_H
 
@@ -40,8 +38,8 @@ public:
     const QList<NameTableEntry>& getEntriesRef() const;
 
 private:
-    QList<NameTableEntry> _entries; // 存储所有字典条目的列表
-    QStringList _headerLabels;       // 存储表头标题
+    QList<NameTableEntry> m_entries; // 存储所有字典条目的列表
+    QStringList m_headerLabels;       // 存储表头标题
 };
 
 #endif // NAMETABLEMODEL_H

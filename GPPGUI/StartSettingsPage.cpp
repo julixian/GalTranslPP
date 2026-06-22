@@ -1,4 +1,4 @@
-﻿#include "StartSettingsPage.h"
+#include "StartSettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -28,211 +28,211 @@
 
 import Tool;
 
-StartSettingsPage::StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) 
-	: BasePage(parent), _projectConfig(projectConfig), _globalConfig(globalConfig), _projectDir(projectDir), _mainWindow(mainWindow)
+StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent)
+	: BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig), m_mainWindow(mainWindow)
 {
 	setWindowTitle(tr("启动设置"));
 	setTitleVisible(false);
 
-	_trayIcon = new QSystemTrayIcon(this);
-	_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
-	connect(_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
+	m_trayIcon = new QSystemTrayIcon(this);
+	m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
+	connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
 		{
-			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(_projectDir.wstring()));
+			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
 		});
 
-	_setupUI();
+	setupUi();
 }
 
 StartSettingsPage::~StartSettingsPage()
 {
-	_trayIcon = nullptr;
-	if (_worker && _workThread && _workThread->isRunning()) {
-		_worker->stopTranslation();
+	m_trayIcon = nullptr;
+	if (m_worker && m_workThread && m_workThread->isRunning()) {
+		m_worker->stopTranslation();
 	}
-	_disposeWorkerThread();
+	disposeWorkerThread();
 }
 
 void StartSettingsPage::apply2Config()
 {
-	_njCfgPage->apply2Config();
-	_epubCfgPage->apply2Config();
-	_pdfCfgPage->apply2Config();
-	_customFilePluginCfgPage->apply2Config();
-	if (_applyFunc) {
-		_applyFunc();
+	m_njCfgPage->apply2Config();
+	m_epubCfgPage->apply2Config();
+	m_pdfCfgPage->apply2Config();
+	m_customFilePluginCfgPage->apply2Config();
+	if (m_applyFunc) {
+		m_applyFunc();
 	}
 }
 
 void StartSettingsPage::clearLog() {
-	_resetLogBufferState(false);
+	resetLogBufferState(false);
 }
 
-bool StartSettingsPage::_isLogScrollAtBottom() const
+bool StartSettingsPage::isLogScrollAtBottom() const
 {
-	const QScrollBar* scrollBar = _logOutput->verticalScrollBar();
+	const QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
 	return scrollBar->value() >= scrollBar->maximum() - 4;
 }
 
-void StartSettingsPage::_ensureWorkerThread()
+void StartSettingsPage::ensureWorkerThread()
 {
-	if (_workThread) {
+	if (m_workThread) {
 		return;
 	}
 
-	_workThread = new QThread(this);
-	_worker = new TranslatorWorker(_projectDir);
-	_worker->moveToThread(_workThread);
-	connect(_workThread, &QThread::finished, _worker, &TranslatorWorker::deleteLater);
-	connect(this, &StartSettingsPage::startWork, _worker, &TranslatorWorker::doTranslation);
-	connect(_worker, &TranslatorWorker::translationFinished, this, &StartSettingsPage::_workFinished);
+	m_workThread = new QThread(this);
+	m_worker = new TranslatorWorker(m_projectDir);
+	m_worker->moveToThread(m_workThread);
+	connect(m_workThread, &QThread::finished, m_worker, &TranslatorWorker::deleteLater);
+	connect(this, &StartSettingsPage::startWorkSignal, m_worker, &TranslatorWorker::doTranslation);
+	connect(m_worker, &TranslatorWorker::translationFinishedSignal, this, &StartSettingsPage::workFinished);
 
-	connect(_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
+	connect(m_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
 		{
-			_progressBar->setRange(0, totalSentences);
-			_progressBar->setValue(0);
-			_threadNumRing->setRange(0, totalThreads);
-			_threadNumRing->setValue(0);
-			_progressBar->setFormat("%v/%m lines [%p%]");
-			_startTime = std::chrono::high_resolution_clock::now();
-			_usedTimeLabel->display("00:00:00");
-			_remainTimeLabel->display("--:--");
-			_estimator.reset();
-			if (_translationWorkbenchPage && _transEngine != "Rebuild") {
-				_translationWorkbenchPage->updateStage(tr("翻译中"), QString());
+			m_progressBar->setRange(0, totalSentences);
+			m_progressBar->setValue(0);
+			m_threadNumRing->setRange(0, totalThreads);
+			m_threadNumRing->setValue(0);
+			m_progressBar->setFormat("%v/%m lines [%p%]");
+			m_startTime = std::chrono::high_resolution_clock::now();
+			m_usedTimeLabel->display("00:00:00");
+			m_remainTimeLabel->display("--:--");
+			m_estimator.reset();
+			if (m_translationWorkbenchPage && m_transEngine != "Rebuild") {
+				m_translationWorkbenchPage->updateStage(tr("翻译中"), QString());
 			}
 		});
-	connect(_worker, &TranslatorWorker::writeLogSignal, this, [this](const QString& log)
+	connect(m_worker, &TranslatorWorker::writeLogSignal, this, [this](const QString& log)
 		{
-			if (_isLogScrollAtBottom() && !_logPaused && !_logResumeInProgress && _pendingLog.isEmpty() && !_pendingOverflowed) {
-				_appendLogChunkToView(log);
+			if (isLogScrollAtBottom() && !m_logPaused && !m_logResumeInProgress && m_pendingLog.isEmpty() && !m_pendingOverflowed) {
+				appendLogChunkToView(log);
 				return;
 			}
-			if (!_isLogScrollAtBottom()) {
-				_setLogPaused(true);
+			if (!isLogScrollAtBottom()) {
+				setLogPaused(true);
 			}
-			_enqueuePendingLog(log);
+			enqueuePendingLog(log);
 		});
-	connect(_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
+	connect(m_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
 		{
-			_threadNumRing->setValue(_threadNumRing->getValue() + 1);
+			m_threadNumRing->setValue(m_threadNumRing->getValue() + 1);
 		});
-	connect(_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
+	connect(m_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
 		{
-			_threadNumRing->setValue(_threadNumRing->getValue() - 1);
+			m_threadNumRing->setValue(m_threadNumRing->getValue() - 1);
 		});
-	connect(_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
+	connect(m_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
 		{
-			const int previousProgress = _progressBar->value();
-			_progressBar->setValue(previousProgress + ticks);
-			const int progressDelta = _progressBar->value() - previousProgress;
-			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - _startTime);
-			_usedTimeLabel->display(QString::fromStdString(
+			const int previousProgress = m_progressBar->value();
+			m_progressBar->setValue(previousProgress + ticks);
+			const int progressDelta = m_progressBar->value() - previousProgress;
+			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - m_startTime);
+			m_usedTimeLabel->display(QString::fromStdString(
 				std::format("{:%T}", elapsedSeconds)
 			));
 			if (progressDelta <= 0) {
 				return;
 			}
-			const auto etaWithSpeed = _estimator.recordProgressAndGetSpeedWithEta(progressDelta, _progressBar->value(), _progressBar->maximum());
+			const auto etaWithSpeed = m_estimator.recordProgressAndGetSpeedWithEta(progressDelta, m_progressBar->value(), m_progressBar->maximum());
 			const double& speed = etaWithSpeed.first;
 			const Duration& eta = etaWithSpeed.second;
-			if (_speedLabel) {
-				_speedLabel->setText(QString::fromStdString(
+			if (m_speedLabel) {
+				m_speedLabel->setText(QString::fromStdString(
 					std::format("{:.2f} lines/s", speed)
 				));
 			}
 			if (eta.count() == std::numeric_limits<double>::infinity() || std::isnan(eta.count())) {
-				_remainTimeLabel->display("--:--");
+				m_remainTimeLabel->display("--:--");
 				return;
 			}
-			_remainTimeLabel->display(QString::fromStdString(
+			m_remainTimeLabel->display(QString::fromStdString(
 				std::format("{:%T}", eta)
 			));
 		});
-	connect(_worker, &TranslatorWorker::runtimeFilesResetSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+	connect(m_worker, &TranslatorWorker::runtimeFilesResetSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
 		{
-			_translationWorkbenchPage->resetRuntimeFiles(files);
+			m_translationWorkbenchPage->resetRuntimeFiles(files);
 		});
-	connect(_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+	connect(m_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
 		{
-			_translationWorkbenchPage->updateRuntimeFiles(files);
+			m_translationWorkbenchPage->updateRuntimeFiles(files);
 		});
-	connect(_worker, &TranslatorWorker::runtimeSuccessBatchSignal, this, [=](const QVector<GuiRuntimeSuccessEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeSuccessBatchSignal, this, [=](const QVector<GuiRuntimeSuccessEvent>& events)
 		{
-			_translationWorkbenchPage->appendSuccesses(events);
+			m_translationWorkbenchPage->appendSuccesses(events);
 		});
-	connect(_worker, &TranslatorWorker::runtimeErrorBatchSignal, this, [=](const QVector<GuiRuntimeErrorEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeErrorBatchSignal, this, [=](const QVector<GuiRuntimeErrorEvent>& events)
 		{
-			_translationWorkbenchPage->appendErrors(events);
+			m_translationWorkbenchPage->appendErrors(events);
 		});
-	connect(_worker, &TranslatorWorker::runtimeStageChangedSignal, this, [=](const QString& stage, const QString& currentFile)
+	connect(m_worker, &TranslatorWorker::runtimeStageChangedSignal, this, [=](const QString& stage, const QString& currentFile)
 		{
-			_translationWorkbenchPage->updateStage(stage, currentFile);
+			m_translationWorkbenchPage->updateStage(stage, currentFile);
 		});
-	_workThread->start();
+	m_workThread->start();
 }
 
-void StartSettingsPage::_disposeWorkerThread()
+void StartSettingsPage::disposeWorkerThread()
 {
-	if (!_workThread) {
+	if (!m_workThread) {
 		return;
 	}
-	_workThread->quit();
-	_workThread->wait();
-	_workThread->deleteLater();
-	_workThread = nullptr;
-	_worker = nullptr;
+	m_workThread->quit();
+	m_workThread->wait();
+	m_workThread->deleteLater();
+	m_workThread = nullptr;
+	m_worker = nullptr;
 }
 
-void StartSettingsPage::_setLogPaused(bool paused)
+void StartSettingsPage::setLogPaused(bool paused)
 {
-	if (_logPaused == paused) {
+	if (m_logPaused == paused) {
 		return;
 	}
-	_logPaused = paused;
-	if (_logPausedRow) {
-		_logPausedRow->setVisible(_logPaused);
+	m_logPaused = paused;
+	if (m_logPausedRow) {
+		m_logPausedRow->setVisible(m_logPaused);
 	}
 }
 
-void StartSettingsPage::_enqueuePendingLog(const QString& chunk)
+void StartSettingsPage::enqueuePendingLog(const QString& chunk)
 {
 	const qsizetype chunkBytes = chunk.size();
-	if (_pendingLogBytes + chunkBytes > MAX_PENDING_LOG_BYTES && !_pendingLog.contains("```\n问题概览:")) {
-		_pendingLog.clear();
-		_pendingLogBytes = 0;
-		_pendingOverflowed = true;
+	if (m_pendingLogBytes + chunkBytes > MaxPendingLogBytes && !m_pendingLog.contains("```\n问题概览:")) {
+		m_pendingLog.clear();
+		m_pendingLogBytes = 0;
+		m_pendingOverflowed = true;
 	}
-	_pendingLog += chunk;
-	_pendingLogBytes += chunkBytes;
+	m_pendingLog += chunk;
+	m_pendingLogBytes += chunkBytes;
 }
 
-void StartSettingsPage::_flushPendingLogToView()
+void StartSettingsPage::flushPendingLogToView()
 {
-	if (!_pendingLog.isEmpty()) {
-		_appendLogChunkToView(_pendingLog);
-		_pendingLog.clear();
+	if (!m_pendingLog.isEmpty()) {
+		appendLogChunkToView(m_pendingLog);
+		m_pendingLog.clear();
 	}
-	if (_pendingOverflowed) {
-		_appendLogChunkToView(tr("[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。") + "\n");
-		_pendingOverflowed = false;
+	if (m_pendingOverflowed) {
+		appendLogChunkToView(tr("[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。") + "\n");
+		m_pendingOverflowed = false;
 	}
-	_pendingLogBytes = 0;
+	m_pendingLogBytes = 0;
 }
 
-void StartSettingsPage::_appendLogChunkToView(const QString& log)
+void StartSettingsPage::appendLogChunkToView(const QString& log)
 {
 	if (log.isEmpty()) {
 		return;
 	}
 
-	_logOutput->setUpdatesEnabled(false);
-	QScrollBar* scrollBar = _logOutput->verticalScrollBar();
+	m_logOutput->setUpdatesEnabled(false);
+	QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
 
 	{
 		scrollBar->blockSignals(true);
-		QTextCursor tempCursor(_logOutput->document());
+		QTextCursor tempCursor(m_logOutput->document());
 		tempCursor.movePosition(QTextCursor::End);
 		tempCursor.setCharFormat(QTextCharFormat());
 
@@ -296,10 +296,10 @@ void StartSettingsPage::_appendLogChunkToView(const QString& log)
 			}
 		}
 
-		int currentLineCount = _logOutput->document()->lineCount();
-		if (currentLineCount > MAX_LOG_LINE_COUNT) {
-			const int toRemoveLineCount = currentLineCount - MAX_LOG_LINE_COUNT;
-			QTextCursor deleteCursor(_logOutput->document());
+		int currentLineCount = m_logOutput->document()->lineCount();
+		if (currentLineCount > MaxLogLineCount) {
+			const int toRemoveLineCount = currentLineCount - MaxLogLineCount;
+			QTextCursor deleteCursor(m_logOutput->document());
 			deleteCursor.movePosition(QTextCursor::Start);
 			deleteCursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor, toRemoveLineCount);
 			deleteCursor.removeSelectedText();
@@ -309,22 +309,22 @@ void StartSettingsPage::_appendLogChunkToView(const QString& log)
 	}
 
 	scrollBar->setValue(scrollBar->maximum());
-	_logOutput->setUpdatesEnabled(true);
+	m_logOutput->setUpdatesEnabled(true);
 }
 
-void StartSettingsPage::_resetLogBufferState(bool keepViewContent)
+void StartSettingsPage::resetLogBufferState(bool keepViewContent)
 {
-	_pendingLog.clear();
-	_pendingLogBytes = 0;
-	_pendingOverflowed = false;
-	_logResumeInProgress = false;
-	_setLogPaused(false);
-	if (!keepViewContent && _logOutput) {
-		_logOutput->clear();
+	m_pendingLog.clear();
+	m_pendingLogBytes = 0;
+	m_pendingOverflowed = false;
+	m_logResumeInProgress = false;
+	setLogPaused(false);
+	if (!keepViewContent && m_logOutput) {
+		m_logOutput->clear();
 	}
 }
 
-void StartSettingsPage::_setupUI()
+void StartSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -339,82 +339,82 @@ void StartSettingsPage::_setupUI()
 	logAreaLayout->setContentsMargins(0, 0, 0, 0);
 	logAreaLayout->setSpacing(4);
 
-	_logOutput = new ElaPlainTextEdit(logAreaWidget);
-	_logOutput->setReadOnly(true);
-	QFont font = _logOutput->font();
+	m_logOutput = new ElaPlainTextEdit(logAreaWidget);
+	m_logOutput->setReadOnly(true);
+	QFont font = m_logOutput->font();
 	font.setPixelSize(14);
-	_logOutput->setFont(font);
-	_logOutput->setPlaceholderText(tr("日志输出"));
-	logAreaLayout->addWidget(_logOutput);
+	m_logOutput->setFont(font);
+	m_logOutput->setPlaceholderText(tr("日志输出"));
+	logAreaLayout->addWidget(m_logOutput);
 
-	_logPausedRow = new QWidget(logAreaWidget);
-	QHBoxLayout* logPausedRowLayout = new QHBoxLayout(_logPausedRow);
+	m_logPausedRow = new QWidget(logAreaWidget);
+	QHBoxLayout* logPausedRowLayout = new QHBoxLayout(m_logPausedRow);
 	logPausedRowLayout->setContentsMargins(0, 0, 0, 0);
 	logPausedRowLayout->setSpacing(8);
 
-	_logPausedHint = new ElaText(_logPausedRow);
-	_logPausedHint->setTextPixelSize(12);
-	_logPausedHint->setText(tr("日志输出已暂停，点击右侧按钮\n回到底部并补发缓存"));
-	logPausedRowLayout->addWidget(_logPausedHint);
+	m_logPausedHint = new ElaText(m_logPausedRow);
+	m_logPausedHint->setTextPixelSize(12);
+	m_logPausedHint->setText(tr("日志输出已暂停，点击右侧按钮\n回到底部并补发缓存"));
+	logPausedRowLayout->addWidget(m_logPausedHint);
 	logPausedRowLayout->addStretch();
 
-	_resumeLogButton = new ElaPushButton(_logPausedRow);
-	_resumeLogButton->setText(tr("回到底部并继续输出"));
-	logPausedRowLayout->addWidget(_resumeLogButton);
-	_logPausedRow->setVisible(false);
-	logAreaLayout->addWidget(_logPausedRow);
+	m_resumeLogButton = new ElaPushButton(m_logPausedRow);
+	m_resumeLogButton->setText(tr("回到底部并继续输出"));
+	logPausedRowLayout->addWidget(m_resumeLogButton);
+	m_logPausedRow->setVisible(false);
+	logAreaLayout->addWidget(m_logPausedRow);
 	topLayout->addWidget(logAreaWidget);
 
-	connect(_resumeLogButton, &ElaPushButton::clicked, this, [=]()
+	connect(m_resumeLogButton, &ElaPushButton::clicked, this, [=]()
 		{
-			QScrollBar* scrollBar = _logOutput->verticalScrollBar();
-			_logResumeInProgress = true;
+			QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
+			m_logResumeInProgress = true;
 			{
 				QSignalBlocker blocker(scrollBar);
 				scrollBar->setValue(scrollBar->maximum());
-				_flushPendingLogToView();
+				flushPendingLogToView();
 				scrollBar->setValue(scrollBar->maximum());
 			}
-			_setLogPaused(false);
-			_logResumeInProgress = false;
+			setLogPaused(false);
+			m_logResumeInProgress = false;
 		});
 
 	QTimer* timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, [=]()
 		{
-			if (!_logPausedRow->isVisible() || !_isLogScrollAtBottom()) {
+			if (!m_logPausedRow->isVisible() || !isLogScrollAtBottom()) {
 				timer->stop();
-				_timerStarted = false;
+				m_timerStarted = false;
 				return;
 			}
-			if (--(_secondsToResumeLog) > 0) {
-				_resumeLogButton->setText(tr("继续输出") + "(" + QString::number(_secondsToResumeLog) + ")");
+			if (--(m_secondsToResumeLog) > 0) {
+				m_resumeLogButton->setText(tr("继续输出") + "(" + QString::number(m_secondsToResumeLog) + ")");
 			}
 			else {
 				timer->stop();
-				_resumeLogButton->click();
-				_timerStarted = false;
+				m_resumeLogButton->click();
+				m_timerStarted = false;
 			}
 		});
-	_logOutput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-	QScrollBar* logScrollBar = _logOutput->verticalScrollBar();
+	m_logOutput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+	QScrollBar* logScrollBar = m_logOutput->verticalScrollBar();
 	connect(logScrollBar, &QScrollBar::valueChanged, this, [=](int)
 		{
-			if (_logResumeInProgress) {
+			if (m_logResumeInProgress) {
 				return;
 			}
-			if (!_isLogScrollAtBottom()) {
-				if (_logPaused || !_startTranslateButton->isEnabled()) {
-					_resumeLogButton->setText(tr("回到底部并继续输出"));
-					_secondsToResumeLog = 3;
-					_setLogPaused(true);
+			if (!isLogScrollAtBottom()) {
+				if (m_logPaused || !m_startTranslateButton->isEnabled()) {
+					m_resumeLogButton->setText(tr("回到底部并继续输出"));
+					m_secondsToResumeLog = 3;
+					setLogPaused(true);
 				}
 			}
-			else if (_logPausedRow->isVisible()) {
-				if (!_timerStarted) { // 不想用 isActive，怕又出问题
-					_resumeLogButton->setText(tr("继续输出") + "(" + QString::number(_secondsToResumeLog) + ")");
+			else if (m_logPausedRow->isVisible()) {
+				if (!m_timerStarted) { // 不想用 isActive，怕又出问题
+					m_resumeLogButton->setText(tr("继续输出") + "(" + QString::number(m_secondsToResumeLog) + ")");
 					timer->start(1000);
-					_timerStarted = true;
+					m_timerStarted = true;
 				}
 			}
 		});
@@ -426,35 +426,35 @@ void StartSettingsPage::_setupUI()
 	QVBoxLayout* buttonLayout = new QVBoxLayout(buttonArea);
 
 	// 文件格式
-	std::string filePlugin = toml::find_or(_projectConfig, "plugins", "filePlugin", "NormalJson");
+	const std::string filePlugin = toml::find_or(m_projectConfig, "plugins", "filePlugin", "NormalJson");
 	QString filePluginStr = QString::fromStdString(filePlugin);
 	ElaText* fileFormatLabel = new ElaText(buttonArea);
 	fileFormatLabel->setTextPixelSize(16);
 	fileFormatLabel->setText(tr("文件格式:"));
 	buttonLayout->addWidget(fileFormatLabel);
-	_fileFormatComboBox = new NoWheelComboBox(buttonArea);
-	_fileFormatComboBox->addItem("NormalJson");
-	_fileFormatComboBox->addItem("Epub");
-	_fileFormatComboBox->addItem("PDF");
-	_fileFormatComboBox->addItem("Custom");
+	m_fileFormatComboBox = new NoWheelComboBox(buttonArea);
+	m_fileFormatComboBox->addItem("NormalJson");
+	m_fileFormatComboBox->addItem("Epub");
+	m_fileFormatComboBox->addItem("PDF");
+	m_fileFormatComboBox->addItem("Custom");
 	if (!filePluginStr.isEmpty()) {
 		if (filePluginStr.toLower().endsWith(".lua") || filePluginStr.toLower().endsWith(".py")) {
-			_fileFormatComboBox->setCurrentIndex(3);
+			m_fileFormatComboBox->setCurrentIndex(3);
 		}
 		else {
-			int index = _fileFormatComboBox->findText(filePluginStr);
+			int index = m_fileFormatComboBox->findText(filePluginStr);
 			if (index >= 0) {
-				_fileFormatComboBox->setCurrentIndex(index);
+				m_fileFormatComboBox->setCurrentIndex(index);
 			}
 		}
 	}
-	buttonLayout->addWidget(_fileFormatComboBox);
+	buttonLayout->addWidget(m_fileFormatComboBox);
 
 	// 针对文件格式的输出设置
 	ElaPushButton* outputSetting = new ElaPushButton(buttonArea);
 	outputSetting->setText(tr("文件处理器设置"));
 	buttonLayout->addWidget(outputSetting);
-	connect(outputSetting, &ElaPushButton::clicked, this, &StartSettingsPage::_onOutputSettingClicked);
+	connect(outputSetting, &ElaPushButton::clicked, this, &StartSettingsPage::onOutputSettingClicked);
 
 	// 线程数
 	ElaText* threadNumLabel = new ElaText(buttonArea);
@@ -463,12 +463,12 @@ void StartSettingsPage::_setupUI()
 	buttonLayout->addWidget(threadNumLabel);
 	QWidget* threadNumWidget = new QWidget(buttonArea);
 	QHBoxLayout* threadNumLayout = new QHBoxLayout(threadNumWidget);
-	_threadNumRing = new ElaProgressRing(buttonArea);
-	threadNumLayout->addWidget(_threadNumRing);
-	_speedLabel = new ElaText(buttonArea);
-	_speedLabel->setTextPixelSize(12);
-	_speedLabel->setText("0 lines/s");
-	threadNumLayout->addWidget(_speedLabel);
+	m_threadNumRing = new ElaProgressRing(buttonArea);
+	threadNumLayout->addWidget(m_threadNumRing);
+	m_speedLabel = new ElaText(buttonArea);
+	m_speedLabel->setTextPixelSize(12);
+	m_speedLabel->setText("0 lines/s");
+	threadNumLayout->addWidget(m_speedLabel);
 	buttonLayout->addWidget(threadNumWidget);
 
 	// 已用时间
@@ -476,21 +476,21 @@ void StartSettingsPage::_setupUI()
 	usedTimeLabelText->setTextPixelSize(14);
 	usedTimeLabelText->setText(tr("已用时间:"));
 	buttonLayout->addWidget(usedTimeLabelText);
-	_usedTimeLabel = new ElaLCDNumber(buttonArea);
-	_usedTimeLabel->display("00:00:00");
-	buttonLayout->addWidget(_usedTimeLabel);
+	m_usedTimeLabel = new ElaLCDNumber(buttonArea);
+	m_usedTimeLabel->display("00:00:00");
+	buttonLayout->addWidget(m_usedTimeLabel);
 
 	// 剩余时间
 	ElaText* remainTimeLabelText = new ElaText(buttonArea);
 	remainTimeLabelText->setTextPixelSize(14);
 	remainTimeLabelText->setText(tr("剩余时间:"));
 	buttonLayout->addWidget(remainTimeLabelText);
-	_remainTimeLabel = new ElaLCDNumber(buttonArea);
-	_remainTimeLabel->display("00:00:00");
-	buttonLayout->addWidget(_remainTimeLabel);
+	m_remainTimeLabel = new ElaLCDNumber(buttonArea);
+	m_remainTimeLabel->display("00:00:00");
+	buttonLayout->addWidget(m_remainTimeLabel);
 
 	// 翻译模式
-	std::string transEngine = toml::find_or(_projectConfig, "plugins", "transEngine", "ForGalJson");
+	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalJson");
 	QString transEngineStr = QString::fromStdString(transEngine);
 	ElaText* translateModeLabel = new ElaText(buttonArea);
 	translateModeLabel->setTextPixelSize(16);
@@ -515,7 +515,7 @@ void StartSettingsPage::_setupUI()
 	}
 	buttonLayout->addWidget(translateMode);
 
-	const bool agentEnabled = toml::find_or(_projectConfig, "agent", "enabled", false);
+	const bool agentEnabled = toml::find_or(m_projectConfig, "agent", "enabled", false);
 	ElaText* agentModeLabel = new ElaText(buttonArea);
 	agentModeLabel->setTextPixelSize(14);
 	agentModeLabel->setText(tr("实验性: Agent 模式"));
@@ -537,30 +537,30 @@ void StartSettingsPage::_setupUI()
 	refreshAgentControls();
 
 	// 开始翻译
-	_startTranslateButton = new ElaPushButton(buttonArea);
-	_startTranslateButton->setText(tr("开始翻译"));
-	connect(_startTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::_onStartTranslatingClicked);
-	connect(_startTranslateButton, &ElaPushButton::clicked, this, [=]()
+	m_startTranslateButton = new ElaPushButton(buttonArea);
+	m_startTranslateButton->setText(tr("开始翻译"));
+	connect(m_startTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::onStartTranslatingClicked);
+	connect(m_startTranslateButton, &ElaPushButton::clicked, this, [=]()
 		{
-			const bool scrollAtBottom = _isLogScrollAtBottom();
-			if (!_logOutput->toPlainText().isEmpty()) {
-				QTextCursor tempCursor(_logOutput->document());
+			const bool scrollAtBottom = isLogScrollAtBottom();
+			if (!m_logOutput->toPlainText().isEmpty()) {
+				QTextCursor tempCursor(m_logOutput->document());
 				tempCursor.movePosition(QTextCursor::End);
 				tempCursor.insertText("\n\n\n\n\n");
 			}
 			if (scrollAtBottom) {
-				QScrollBar* scrollBar = _logOutput->verticalScrollBar();
+				QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
 				scrollBar->setValue(scrollBar->maximum());
 			}
 		});
-	buttonLayout->addWidget(_startTranslateButton);
+	buttonLayout->addWidget(m_startTranslateButton);
 
 	// 停止翻译
-	_stopTranslateButton = new ElaPushButton(buttonArea);
-	_stopTranslateButton->setText(tr("停止翻译"));
-	_stopTranslateButton->setEnabled(false);
-	connect(_stopTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::_onStopTranslatingClicked);
-	buttonLayout->addWidget(_stopTranslateButton);
+	m_stopTranslateButton = new ElaPushButton(buttonArea);
+	m_stopTranslateButton->setText(tr("停止翻译"));
+	m_stopTranslateButton->setEnabled(false);
+	connect(m_stopTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::onStopTranslatingClicked);
+	buttonLayout->addWidget(m_stopTranslateButton);
 	topLayout->addWidget(buttonArea);
 
 	mainLayout->addWidget(topWidget);
@@ -571,60 +571,60 @@ void StartSettingsPage::_setupUI()
 	QHBoxLayout* progressLayout = new QHBoxLayout(progressRow);
 	progressLayout->setContentsMargins(0, 0, 0, 0);
 	progressLayout->setSpacing(8);
-	_progressBar = new ElaProgressBar(mainWidget);
-	_progressBar->setRange(0, 100);
-	_progressBar->setValue(0);
-	progressLayout->addWidget(_progressBar, 1);
-	_workbenchButton = new ElaIconButton(ElaIconType::ChartSimple, 16, 35, 35, progressRow);
-	_workbenchButton->setToolTip(tr("详情"));
-	connect(_workbenchButton, &QPushButton::clicked, this, [=]()
+	m_progressBar = new ElaProgressBar(mainWidget);
+	m_progressBar->setRange(0, 100);
+	m_progressBar->setValue(0);
+	progressLayout->addWidget(m_progressBar, 1);
+	m_workbenchButton = new ElaIconButton(ElaIconType::ChartSimple, 16, 35, 35, progressRow);
+	m_workbenchButton->setToolTip(tr("详情"));
+	connect(m_workbenchButton, &QPushButton::clicked, this, [=]()
 		{
 			this->navigation(5);
 		});
-	progressLayout->addWidget(_workbenchButton);
+	progressLayout->addWidget(m_workbenchButton);
 	mainLayout->addWidget(progressRow);
 
-	_translationWorkbenchPage = new TranslationWorkbenchPage(this);
+	m_translationWorkbenchPage = new TranslationWorkbenchPage(this);
 
 	// 这个的 isVerticalGrabGesture 保持为 true 主要是方便随便拉一下看进度条而不必非要转鼠标滚轮或者侧边滚动条
 	addCentralWidget(mainWidget, true, true, 0);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			if (_fileFormatComboBox->currentText() != "Custom") {
-				insertToml(_projectConfig, "plugins.filePlugin", _fileFormatComboBox->currentText().toStdString());
+			if (m_fileFormatComboBox->currentText() != "Custom") {
+				insertToml(m_projectConfig, "plugins.filePlugin", m_fileFormatComboBox->currentText().toStdString());
 			}
 			else {
-				const std::string customFilePluginStr = toml::find_or(_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
+				const std::string customFilePluginStr = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
 				const fs::path customFilePluginPath = ascii2Wide(customFilePluginStr);
 				if (
 					!isSameExtension(customFilePluginPath, L".lua") &&
 					!isSameExtension(customFilePluginPath, L".py")
-					) 
+					)
 				{
 					ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("文件格式错误"), tr("自定义文件插件的格式必须是 .lua 或 .py 格式。"), 3000);
 				}
-				insertToml(_projectConfig, "plugins.filePlugin", customFilePluginStr);
+				insertToml(m_projectConfig, "plugins.filePlugin", customFilePluginStr);
 			}
-			insertToml(_projectConfig, "plugins.transEngine", translateMode->currentText().toStdString());
-			insertToml(_projectConfig, "agent.enabled", agentModeToggle->getIsToggled());
+			insertToml(m_projectConfig, "plugins.transEngine", translateMode->currentText().toStdString());
+			insertToml(m_projectConfig, "agent.enabled", agentModeToggle->getIsToggled());
 		};
 
 	// 顺序和_onOutputSettingClicked里的索引一致
-	_njCfgPage = new NJCfgPage(_projectConfig, this);
-	addCentralWidget(_njCfgPage, true, false, 0);
-	_epubCfgPage = new EpubCfgPage(_projectConfig, this);
-	addCentralWidget(_epubCfgPage, true, false, 0);
-	_pdfCfgPage = new PDFCfgPage(_projectConfig, this);
-	addCentralWidget(_pdfCfgPage, true, false, 0);
-	_customFilePluginCfgPage = new CustomFilePluginCfgPage(_projectDir, _globalConfig, _projectConfig, this);
-	addCentralWidget(_customFilePluginCfgPage, true, false, 0);
-	addCentralWidget(_translationWorkbenchPage, true, false, 0);
+	m_njCfgPage = new NJCfgPage(m_projectConfig, this);
+	addCentralWidget(m_njCfgPage, true, false, 0);
+	m_epubCfgPage = new EpubCfgPage(m_projectConfig, this);
+	addCentralWidget(m_epubCfgPage, true, false, 0);
+	m_pdfCfgPage = new PDFCfgPage(m_projectConfig, this);
+	addCentralWidget(m_pdfCfgPage, true, false, 0);
+	m_customFilePluginCfgPage = new CustomFilePluginCfgPage(m_projectDir, m_globalConfig, m_projectConfig, this);
+	addCentralWidget(m_customFilePluginCfgPage, true, false, 0);
+	addCentralWidget(m_translationWorkbenchPage, true, false, 0);
 }
 
-void StartSettingsPage::_onOutputSettingClicked()
+void StartSettingsPage::onOutputSettingClicked()
 {
-	QString fileFormat = _fileFormatComboBox->currentText();
+	QString fileFormat = m_fileFormatComboBox->currentText();
 	if (fileFormat == "NormalJson") {
 		this->navigation(1);
 	}
@@ -642,99 +642,99 @@ void StartSettingsPage::_onOutputSettingClicked()
 
 // 底下的可以不用看
 
-void StartSettingsPage::_onStartTranslatingClicked()
+void StartSettingsPage::onStartTranslatingClicked()
 {
-	_resetLogBufferState(true);
-	if (_translationWorkbenchPage) {
-		_translationWorkbenchPage->clearRuntime();
+	resetLogBufferState(true);
+	if (m_translationWorkbenchPage) {
+		m_translationWorkbenchPage->clearRuntime();
 	}
-	Q_EMIT startTranslating();
-	_transEngine = QString::fromStdString(toml::find_or(_projectConfig, "plugins", "transEngine", ""));
+	Q_EMIT startTranslatingSignal();
+	m_transEngine = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "transEngine", ""));
 
-	_startTime = std::chrono::high_resolution_clock::now();
-	_usedTimeLabel->display("00:00:00");
-	_startTranslateButton->setEnabled(false);
-	_progressBar->setValue(0);
-	_ensureWorkerThread();
+	m_startTime = std::chrono::high_resolution_clock::now();
+	m_usedTimeLabel->display("00:00:00");
+	m_startTranslateButton->setEnabled(false);
+	m_progressBar->setValue(0);
+	ensureWorkerThread();
 
-	Q_EMIT startWork();
-	_stopTranslateButton->setEnabled(true);
+	Q_EMIT startWorkSignal();
+	m_stopTranslateButton->setEnabled(true);
 }
 
-void StartSettingsPage::_onStopTranslatingClicked()
+void StartSettingsPage::onStopTranslatingClicked()
 {
-	_stopTranslateButton->setEnabled(false);
-	if (_worker) {
-		_worker->stopTranslation();
+	m_stopTranslateButton->setEnabled(false);
+	if (m_worker) {
+		m_worker->stopTranslation();
 	}
 	ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止中"), tr("正在等待最后一批翻译完成，请稍候..."), 3000);
 }
 
-void StartSettingsPage::_workFinished(int exitCode)
+void StartSettingsPage::workFinished(int exitCode)
 {
-	_threadNumRing->setValue(0);
-	_remainTimeLabel->display("00:00:00");
-	_trayIcon->show();
+	m_threadNumRing->setValue(0);
+	m_remainTimeLabel->display("00:00:00");
+	m_trayIcon->show();
 
 	switch (exitCode)
 	{
 	case -2:
-		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") + 
-			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"), 3000);
+		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") +
+			QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"), 3000);
 
 		// 显示通知消息
-		_trayIcon->showMessage(
+		m_trayIcon->showMessage(
 			tr("翻译失败"),                  // 标题
-				tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"),      // 内容
+				tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译任务失败，请检查日志输出。"),      // 内容
 			QSystemTrayIcon::Critical, // 图标类型 (Information, Warning, Critical)
 			5000                          // 显示时长 (毫秒)
 		);
 		break;
 	case -1:
-		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") + 
-			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 连工厂函数都失败了，玩毛啊"), 3000);
+		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), tr("项目 ") +
+			QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 连工厂函数都失败了，玩毛啊"), 3000);
 		break;
 	case 0:
-		if (_transEngine == "DumpName" || _transEngine == "GenDict") {
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), tr("项目 ") + 
-				QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"), 3000);
-			_trayIcon->showMessage(
+		if (m_transEngine == "DumpName" || m_transEngine == "GenDict") {
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), tr("项目 ") +
+				QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"), 3000);
+			m_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
-					tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"),      // 内容
+					tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的生成任务已完成。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
-		else if (_transEngine == "ShowNormal") {
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), 
-				tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"), 3000);
-			_trayIcon->showMessage(
+		else if (m_transEngine == "ShowNormal") {
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"),
+				tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的预处理结果。"), 3000);
+			m_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
-					tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的预处理结果。"),      // 内容
+					tr("请在 show_normal 文件夹中查收项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的预处理结果。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
 		else {
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("翻译完成"), 
-				tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
-			_trayIcon->showMessage(
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("翻译完成"),
+				tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + " 的翻译结果。", 3000);
+			m_trayIcon->showMessage(
 				tr("翻译完成"),                  // 标题
-					tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译结果。"),      // 内容
+					tr("请在 gt_output 文件夹中查收项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译结果。"),      // 内容
 				QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
 		break;
 	case 1:
-		_trayIcon->showMessage(
+		m_trayIcon->showMessage(
 			tr("翻译停止"),                  // 标题
-			tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务停止成功。"),      // 内容
+			tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译任务停止成功。"),      // 内容
 			QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
 			5000                          // 显示时长 (毫秒)
 		);
-		ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止成功"), tr("项目 ") + 
-			QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译任务已终止"), 3000);
+		ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止成功"), tr("项目 ") +
+			QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译任务已终止"), 3000);
 		break;
 	default:
 		break;
@@ -742,13 +742,13 @@ void StartSettingsPage::_workFinished(int exitCode)
 	std::thread([this]()
 		{
 			std::this_thread::sleep_for(std::chrono::seconds(5));
-			if (_trayIcon) {
-				_trayIcon->hide();
+			if (m_trayIcon) {
+				m_trayIcon->hide();
 			}
 		}).detach();
 
-	Q_EMIT finishTranslatingSignal(_transEngine, exitCode);
-	_startTranslateButton->setEnabled(true);
-	_stopTranslateButton->setEnabled(false);
-	_disposeWorkerThread();
+	Q_EMIT finishTranslatingSignal(m_transEngine, exitCode);
+	m_startTranslateButton->setEnabled(true);
+	m_stopTranslateButton->setEnabled(false);
+	disposeWorkerThread();
 }

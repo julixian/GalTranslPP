@@ -25,29 +25,29 @@
 using namespace ProjectCachePagePrivate;
 
 ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent)
-    : BasePage(parent), _projectDir(projectDir), _projectConfig(projectConfig)
+    : BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("缓存管理"));
     setTitleVisible(false);
-    _setupUI();
+    setupUi();
 }
 
 ProjectCachePage::~ProjectCachePage() = default;
 
 void ProjectCachePage::ensureCacheFilesLoaded()
 {
-    if (_cacheFilesLoaded) {
+    if (m_cacheFilesLoaded) {
         return;
     }
-    _loadCacheFiles();
+    loadCacheFiles();
 }
 
 void ProjectCachePage::refreshCacheFiles()
 {
-    _loadCacheFiles(true);
+    loadCacheFiles(true);
 }
 
-void ProjectCachePage::_setupUI()
+void ProjectCachePage::setupUi()
 {
     // 缓存页是一个偏高密度的工具界面：左侧放文件/搜索/问题导航和批量操作，
     // 右侧留给当前缓存文件的句子概览，便于快速扫描和跳转编辑。
@@ -59,94 +59,94 @@ void ProjectCachePage::_setupUI()
     QHBoxLayout* topLayout = new QHBoxLayout();
     topLayout->setSpacing(8);
 
-    _cacheDirLabel = new ElaText(QString::fromStdWString(_cacheDir().wstring()), BodyFontPx, mainWidget);
-    _cacheDirLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    _cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
-    topLayout->addWidget(_cacheDirLabel, 1);
+    m_cacheDirLabel = new ElaText(QString::fromStdWString(getCacheDir().wstring()), BodyFontPx, mainWidget);
+    m_cacheDirLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
+    topLayout->addWidget(m_cacheDirLabel, 1);
 
     ElaIconButton* openCacheButton = createHeaderIconButton(ElaIconType::FolderOpen, tr("打开缓存文件夹"), mainWidget);
     connect(openCacheButton, &ElaIconButton::clicked, this, [=]()
         {
-            QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(_cacheDir().wstring())));
+            QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(getCacheDir().wstring())));
         });
     topLayout->addWidget(openCacheButton);
 
     ElaIconButton* refreshButton = createHeaderIconButton(ElaIconType::Rotate, tr("刷新"), mainWidget);
     connect(refreshButton, &ElaIconButton::clicked, this, [=]()
         {
-            if (!_dirtyFiles.isEmpty()
-                && !_confirmAction(tr("确认刷新"), tr("刷新会放弃所有未保存的缓存修改，确定要继续吗？"))) {
+            if (!m_dirtyFiles.isEmpty()
+                && !confirmAction(tr("确认刷新"), tr("刷新会放弃所有未保存的缓存修改，确定要继续吗？"))) {
                 return;
             }
-            _loadCacheFiles(true);
+            loadCacheFiles(true);
         });
     topLayout->addWidget(refreshButton);
 
-    _saveButton = createHeaderIconButton(ElaIconType::FloppyDisk, tr("保存当前文件"), mainWidget);
-    connect(_saveButton, &ElaIconButton::clicked, this, [=]()
+    m_saveButton = createHeaderIconButton(ElaIconType::FloppyDisk, tr("保存当前文件"), mainWidget);
+    connect(m_saveButton, &ElaIconButton::clicked, this, [=]()
         {
-            if (!_ensureWritableAction(tr("保存缓存"))) {
+            if (!ensureWritableAction(tr("保存缓存"))) {
                 return;
             }
             QString error;
-            if (_writeCacheFile(_currentFile, _entries, &error)) {
-                _loadedEntriesByFile[_currentFile] = _entries;
-                _dirtyFiles.remove(_currentFile);
-                _renderFileList();
-                _currentFileLabel->setText(_currentFile);
-                _setInfo(tr("已保存 ") + _currentFile);
+            if (writeCacheFile(m_currentFile, m_entries, &error)) {
+                m_loadedEntriesByFile[m_currentFile] = m_entries;
+                m_dirtyFiles.remove(m_currentFile);
+                renderFileList();
+                m_currentFileLabel->setText(m_currentFile);
+                setInfo(tr("已保存 ") + m_currentFile);
             }
             else {
-                _setError(error);
+                setError(error);
             }
-            _updateActionStates();
+            updateActionStates();
         });
-    topLayout->addWidget(_saveButton);
+    topLayout->addWidget(m_saveButton);
 
-    _saveAllButton = createHeaderIconButton(ElaIconType::FloppyDisks, tr("保存全部"), mainWidget);
-    connect(_saveAllButton, &ElaIconButton::clicked, this, [=]()
+    m_saveAllButton = createHeaderIconButton(ElaIconType::FloppyDisks, tr("保存全部"), mainWidget);
+    connect(m_saveAllButton, &ElaIconButton::clicked, this, [=]()
         {
-            if (!_ensureWritableAction(tr("保存缓存"))) {
+            if (!ensureWritableAction(tr("保存缓存"))) {
                 return;
             }
             int saved = 0;
             QString lastError;
-            const QStringList files = _dirtyFiles.values();
+            const QStringList files = m_dirtyFiles.values();
             for (const QString& filename : files) {
-                const auto it = _loadedEntriesByFile.find(filename);
-                if (it == _loadedEntriesByFile.end()) {
+                const auto it = m_loadedEntriesByFile.find(filename);
+                if (it == m_loadedEntriesByFile.end()) {
                     continue;
                 }
                 QString error;
-                if (_writeCacheFile(filename, it.value(), &error)) {
-                    _dirtyFiles.remove(filename);
+                if (writeCacheFile(filename, it.value(), &error)) {
+                    m_dirtyFiles.remove(filename);
                     ++saved;
                 }
                 else {
                     lastError = error;
                 }
             }
-            _renderFileList();
-            if (!_currentFile.isEmpty()) {
-                _currentFileLabel->setText((_dirtyFiles.contains(_currentFile) ? "*" : "") + _currentFile);
+            renderFileList();
+            if (!m_currentFile.isEmpty()) {
+                m_currentFileLabel->setText((m_dirtyFiles.contains(m_currentFile) ? "*" : "") + m_currentFile);
             }
             if (!lastError.isEmpty()) {
-                _setError(lastError);
+                setError(lastError);
             }
             else {
-                _setInfo(tr("已保存 ") + QString::number(saved) + tr(" 个缓存文件"));
+                setInfo(tr("已保存 ") + QString::number(saved) + tr(" 个缓存文件"));
             }
-            _updateActionStates();
+            updateActionStates();
         });
-    topLayout->addWidget(_saveAllButton);
+    topLayout->addWidget(m_saveAllButton);
     mainLayout->addLayout(topLayout);
 
-    _mainSplitter = new QSplitter(Qt::Horizontal, mainWidget);
-    _mainSplitter->setChildrenCollapsible(false);
-    _mainSplitter->setHandleWidth(8);
-    _mainSplitter->setStyleSheet(splitterStyle());
+    m_mainSplitter = new QSplitter(Qt::Horizontal, mainWidget);
+    m_mainSplitter->setChildrenCollapsible(false);
+    m_mainSplitter->setHandleWidth(8);
+    m_mainSplitter->setStyleSheet(splitterStyle());
 
-    QWidget* sidebarWidget = new QWidget(_mainSplitter);
+    QWidget* sidebarWidget = new QWidget(m_mainSplitter);
     sidebarWidget->setMinimumWidth(260);
     sidebarWidget->setMaximumWidth(330);
     QVBoxLayout* sidebarLayout = new QVBoxLayout(sidebarWidget);
@@ -155,8 +155,8 @@ void ProjectCachePage::_setupUI()
 
     QHBoxLayout* navLayout = new QHBoxLayout();
     navLayout->setSpacing(4);
-    _sidebarButtonGroup = new QButtonGroup(this);
-    _sidebarButtonGroup->setExclusive(true);
+    m_sidebarButtonGroup = new QButtonGroup(this);
+    m_sidebarButtonGroup->setExclusive(true);
     auto addNavButton = [&](const QString& text, int index)
         {
             ElaPushButton* button = new ElaPushButton(text, sidebarWidget);
@@ -166,37 +166,37 @@ void ProjectCachePage::_setupUI()
             QFont font = button->font();
             font.setPixelSize(BodyFontPx);
             button->setFont(font);
-            _sidebarButtonGroup->addButton(button, index);
+            m_sidebarButtonGroup->addButton(button, index);
             navLayout->addWidget(button);
             return button;
         };
-    _filesNavButton = addNavButton(tr("文件"), 0);
-    _searchNavButton = addNavButton(tr("搜索"), 1);
-    _problemsNavButton = addNavButton(tr("问题"), 2);
-    connect(_sidebarButtonGroup, &QButtonGroup::idClicked, this, [=](int index)
+    m_filesNavButton = addNavButton(tr("文件"), 0);
+    m_searchNavButton = addNavButton(tr("搜索"), 1);
+    m_problemsNavButton = addNavButton(tr("问题"), 2);
+    connect(m_sidebarButtonGroup, &QButtonGroup::idClicked, this, [=](int index)
         {
-            _setSidebarPage(index);
+            setSidebarPage(index);
         });
     sidebarLayout->addLayout(navLayout);
 
-    _sidebarStack = new QStackedWidget(sidebarWidget);
+    m_sidebarStack = new QStackedWidget(sidebarWidget);
 
-    QWidget* filesTab = new QWidget(_sidebarStack);
+    QWidget* filesTab = new QWidget(m_sidebarStack);
     QVBoxLayout* filesLayout = new QVBoxLayout(filesTab);
     filesLayout->setContentsMargins(0, 0, 0, 0);
     filesLayout->setSpacing(4);
 
-    _deleteFilesButton = new ElaPushButton(tr("删除选中文件"), filesTab);
-    connect(_deleteFilesButton, &ElaPushButton::clicked, this, [=]()
+    m_deleteFilesButton = new ElaPushButton(tr("删除选中文件"), filesTab);
+    connect(m_deleteFilesButton, &ElaPushButton::clicked, this, [=]()
         {
-            if (!_ensureWritableAction(tr("删除缓存文件"))) {
+            if (!ensureWritableAction(tr("删除缓存文件"))) {
                 return;
             }
-            const QModelIndexList selected = _fileList->selectionModel()->selectedRows();
+            const QModelIndexList selected = m_fileList->selectionModel()->selectedRows();
             if (selected.empty()) {
                 return;
             }
-            if (!_confirmAction(tr("确认删除"),
+            if (!confirmAction(tr("确认删除"),
                 tr("确定要删除选中的 ") + QString::number(selected.size()) + tr(" 个缓存文件吗？"))) {
                 return;
             }
@@ -204,264 +204,264 @@ void ProjectCachePage::_setupUI()
             for (const QModelIndex& index : selected) {
                 const QString filename = index.data(Qt::UserRole).toString();
                 std::error_code ec;
-                fs::remove(_cachePathForRelativeName(filename), ec);
+                fs::remove(cachePathForRelativeName(filename), ec);
                 if (!ec) {
-                    _loadedEntriesByFile.remove(filename);
-                    _dirtyFiles.remove(filename);
-                    if (_currentFile == filename) {
-                        _currentFile.clear();
-                        _entries = json::array();
-                        _selectedEntryRows.clear();
-                        _renderEntries();
+                    m_loadedEntriesByFile.remove(filename);
+                    m_dirtyFiles.remove(filename);
+                    if (m_currentFile == filename) {
+                        m_currentFile.clear();
+                        m_entries = json::array();
+                        m_selectedEntryRows.clear();
+                        renderEntries();
                     }
                     ++deleted;
                 }
             }
-            _loadCacheFiles();
-            _setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个缓存文件"));
+            loadCacheFiles();
+            setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个缓存文件"));
         });
-    filesLayout->addWidget(_deleteFilesButton);
+    filesLayout->addWidget(m_deleteFilesButton);
 
-    _fileModel = new QStandardItemModel(this);
-    _fileList = new ElaListView(filesTab);
-    _fileList->setModel(_fileModel);
-    _fileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    _fileList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _fileList->setItemHeight(42);
-    connect(_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    m_fileModel = new QStandardItemModel(this);
+    m_fileList = new ElaListView(filesTab);
+    m_fileList->setModel(m_fileModel);
+    m_fileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_fileList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_fileList->setItemHeight(42);
+    connect(m_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             if (!index.isValid()) {
                 return;
             }
-            _loadCacheFile(index.data(Qt::UserRole).toString());
-            _updateActionStates();
+            loadCacheFile(index.data(Qt::UserRole).toString());
+            updateActionStates();
         });
-    connect(_fileList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
+    connect(m_fileList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
         {
-            _updateActionStates();
+            updateActionStates();
         });
-    filesLayout->addWidget(_fileList, 1);
-    _sidebarStack->addWidget(filesTab);
+    filesLayout->addWidget(m_fileList, 1);
+    m_sidebarStack->addWidget(filesTab);
 
-    QWidget* searchTab = new QWidget(_sidebarStack);
+    QWidget* searchTab = new QWidget(m_sidebarStack);
     QVBoxLayout* searchLayout = new QVBoxLayout(searchTab);
     searchLayout->setContentsMargins(0, 0, 0, 0);
     searchLayout->setSpacing(4);
 
-    _globalSearchEdit = new ElaLineEdit(searchTab);
-    _globalSearchEdit->setPlaceholderText(tr("搜索内容..."));
-    _globalSearchEdit->setIsClearButtonEnable(true);
-    connect(_globalSearchEdit, &ElaLineEdit::returnPressed, this, &ProjectCachePage::_runGlobalSearch);
-    connect(_globalSearchEdit, &ElaLineEdit::textChanged, this, [=]()
+    m_globalSearchEdit = new ElaLineEdit(searchTab);
+    m_globalSearchEdit->setPlaceholderText(tr("搜索内容..."));
+    m_globalSearchEdit->setIsClearButtonEnable(true);
+    connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, &ProjectCachePage::runGlobalSearch);
+    connect(m_globalSearchEdit, &ElaLineEdit::textChanged, this, [=]()
         {
-            _runGlobalSearch();
+            runGlobalSearch();
         });
-    searchLayout->addWidget(_globalSearchEdit);
+    searchLayout->addWidget(m_globalSearchEdit);
 
-    _globalSearchField = new NoWheelComboBox(searchTab);
-    _globalSearchField->addItem(tr("全部"), "all");
-    _globalSearchField->addItem(tr("原文 pre_processed_text"), "src");
-    _globalSearchField->addItem(tr("译文 pre_translated_text"), "dst");
-    _globalSearchField->addItem(tr("问题 problems"), "problems");
-    connect(_globalSearchField, &ElaComboBox::currentIndexChanged, this, [=](int)
+    m_globalSearchField = new NoWheelComboBox(searchTab);
+    m_globalSearchField->addItem(tr("全部"), "all");
+    m_globalSearchField->addItem(tr("原文 pre_processed_text"), "src");
+    m_globalSearchField->addItem(tr("译文 pre_translated_text"), "dst");
+    m_globalSearchField->addItem(tr("问题 problems"), "problems");
+    connect(m_globalSearchField, &ElaComboBox::currentIndexChanged, this, [=](int)
         {
-            _runGlobalSearch();
+            runGlobalSearch();
         });
-    searchLayout->addWidget(_globalSearchField);
+    searchLayout->addWidget(m_globalSearchField);
 
     // 批量替换默认收起，日常浏览时优先把空间留给搜索结果列表。
-    _replaceToggleButton = new ElaPushButton(tr("展开批量替换"), searchTab);
-    _replaceToggleButton->setCheckable(true);
-    connect(_replaceToggleButton, &ElaPushButton::toggled, this, [=](bool checked)
+    m_replaceToggleButton = new ElaPushButton(tr("展开批量替换"), searchTab);
+    m_replaceToggleButton->setCheckable(true);
+    connect(m_replaceToggleButton, &ElaPushButton::toggled, this, [=](bool checked)
         {
-            _setReplacePanelVisible(checked);
+            setReplacePanelVisible(checked);
         });
-    searchLayout->addWidget(_replaceToggleButton);
+    searchLayout->addWidget(m_replaceToggleButton);
 
-    _replacePanel = new QWidget(searchTab);
-    QVBoxLayout* replaceLayout = new QVBoxLayout(_replacePanel);
+    m_replacePanel = new QWidget(searchTab);
+    QVBoxLayout* replaceLayout = new QVBoxLayout(m_replacePanel);
     replaceLayout->setContentsMargins(0, 0, 0, 0);
     replaceLayout->setSpacing(4);
 
-    _replaceQueryEdit = new ElaLineEdit(searchTab);
-    _replaceQueryEdit->setPlaceholderText(tr("查找"));
-    _replaceQueryEdit->setIsClearButtonEnable(true);
-    replaceLayout->addWidget(_replaceQueryEdit);
+    m_replaceQueryEdit = new ElaLineEdit(searchTab);
+    m_replaceQueryEdit->setPlaceholderText(tr("查找"));
+    m_replaceQueryEdit->setIsClearButtonEnable(true);
+    replaceLayout->addWidget(m_replaceQueryEdit);
 
-    _replaceWithEdit = new ElaLineEdit(searchTab);
-    _replaceWithEdit->setPlaceholderText(tr("替换为"));
-    _replaceWithEdit->setIsClearButtonEnable(true);
-    replaceLayout->addWidget(_replaceWithEdit);
+    m_replaceWithEdit = new ElaLineEdit(searchTab);
+    m_replaceWithEdit->setPlaceholderText(tr("替换为"));
+    m_replaceWithEdit->setIsClearButtonEnable(true);
+    replaceLayout->addWidget(m_replaceWithEdit);
 
-    _replaceField = new ElaComboBox(searchTab);
-    _replaceField->addItem(tr("译文 pre_translated_text"), "dst");
-    _replaceField->addItem(tr("原文 pre_processed_text"), "src");
-    _replaceField->addItem(tr("全部"), "all");
-    replaceLayout->addWidget(_replaceField);
+    m_replaceField = new ElaComboBox(searchTab);
+    m_replaceField->addItem(tr("译文 pre_translated_text"), "dst");
+    m_replaceField->addItem(tr("原文 pre_processed_text"), "src");
+    m_replaceField->addItem(tr("全部"), "all");
+    replaceLayout->addWidget(m_replaceField);
 
     QHBoxLayout* replaceButtonLayout = new QHBoxLayout();
     ElaPushButton* replacePreviewButton = new ElaPushButton(tr("预览"), searchTab);
-    connect(replacePreviewButton, &ElaPushButton::clicked, this, &ProjectCachePage::_previewReplace);
+    connect(replacePreviewButton, &ElaPushButton::clicked, this, &ProjectCachePage::previewReplace);
     replaceButtonLayout->addWidget(replacePreviewButton);
-    _replaceExecuteButton = new ElaPushButton(tr("替换"), searchTab);
-    connect(_replaceExecuteButton, &ElaPushButton::clicked, this, &ProjectCachePage::_executeReplace);
-    replaceButtonLayout->addWidget(_replaceExecuteButton);
+    m_replaceExecuteButton = new ElaPushButton(tr("替换"), searchTab);
+    connect(m_replaceExecuteButton, &ElaPushButton::clicked, this, &ProjectCachePage::executeReplace);
+    replaceButtonLayout->addWidget(m_replaceExecuteButton);
     replaceLayout->addLayout(replaceButtonLayout);
 
-    _replacePreviewLabel = new ElaText("", BodyFontPx, searchTab);
-    _replacePreviewLabel->setWordWrap(true);
-    _replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
-    replaceLayout->addWidget(_replacePreviewLabel);
-    searchLayout->addWidget(_replacePanel);
+    m_replacePreviewLabel = new ElaText("", BodyFontPx, searchTab);
+    m_replacePreviewLabel->setWordWrap(true);
+    m_replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
+    replaceLayout->addWidget(m_replacePreviewLabel);
+    searchLayout->addWidget(m_replacePanel);
 
-    _searchStatusLabel = new ElaText("", BodyFontPx, searchTab);
-    _searchStatusLabel->setStyleSheet(auxiliaryTextStyle());
-    searchLayout->addWidget(_searchStatusLabel);
+    m_searchStatusLabel = new ElaText("", BodyFontPx, searchTab);
+    m_searchStatusLabel->setStyleSheet(auxiliaryTextStyle());
+    searchLayout->addWidget(m_searchStatusLabel);
 
-    _searchModel = new QStandardItemModel(this);
-    _searchResultList = new ElaListView(searchTab);
-    _searchResultList->setModel(_searchModel);
-    _searchResultList->setSelectionMode(QAbstractItemView::SingleSelection);
-    _searchResultList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_searchModel = new QStandardItemModel(this);
+    m_searchResultList = new ElaListView(searchTab);
+    m_searchResultList->setModel(m_searchModel);
+    m_searchResultList->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_searchResultList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     // 高度需要和 CacheSearchDelegate 的四行卡片布局保持同步。
-    _searchResultList->setItemHeight(120);
-    _searchResultList->setItemDelegate(createCacheSearchDelegate(_searchResultList));
-    _searchResultList->setMinimumHeight(520);
-    connect(_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    m_searchResultList->setItemHeight(120);
+    m_searchResultList->setItemDelegate(createCacheSearchDelegate(m_searchResultList));
+    m_searchResultList->setMinimumHeight(520);
+    connect(m_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             if (index.isValid()) {
-                _jumpToHit(index.data(HitIndexRole).toInt());
+                jumpToHit(index.data(HitIndexRole).toInt());
             }
         });
-    searchLayout->addWidget(_searchResultList, 1);
-    _sidebarStack->addWidget(searchTab);
+    searchLayout->addWidget(m_searchResultList, 1);
+    m_sidebarStack->addWidget(searchTab);
 
-    QWidget* problemsTab = new QWidget(_sidebarStack);
+    QWidget* problemsTab = new QWidget(m_sidebarStack);
     QVBoxLayout* problemsLayout = new QVBoxLayout(problemsTab);
     problemsLayout->setContentsMargins(0, 0, 0, 0);
     problemsLayout->setSpacing(4);
 
     ElaPushButton* refreshProblemsButton = new ElaPushButton(tr("刷新问题"), problemsTab);
-    connect(refreshProblemsButton, &ElaPushButton::clicked, this, &ProjectCachePage::_loadProblems);
+    connect(refreshProblemsButton, &ElaPushButton::clicked, this, &ProjectCachePage::loadProblems);
     problemsLayout->addWidget(refreshProblemsButton);
 
-    _problemModel = new QStandardItemModel(this);
-    _problemList = new ElaListView(problemsTab);
-    _problemList->setModel(_problemModel);
-    _problemList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _problemList->setItemHeight(32);
-    connect(_problemList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    m_problemModel = new QStandardItemModel(this);
+    m_problemList = new ElaListView(problemsTab);
+    m_problemList->setModel(m_problemModel);
+    m_problemList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_problemList->setItemHeight(32);
+    connect(m_problemList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             if (!index.isValid()) {
                 return;
             }
-            _setSidebarPage(1);
-            _globalSearchField->setCurrentIndex(_globalSearchField->findData("problems"));
-            _globalSearchEdit->setText(index.data(ProblemTextRole).toString());
-            _runGlobalSearch();
+            setSidebarPage(1);
+            m_globalSearchField->setCurrentIndex(m_globalSearchField->findData("problems"));
+            m_globalSearchEdit->setText(index.data(ProblemTextRole).toString());
+            runGlobalSearch();
         });
-    problemsLayout->addWidget(_problemList, 1);
-    _sidebarStack->addWidget(problemsTab);
+    problemsLayout->addWidget(m_problemList, 1);
+    m_sidebarStack->addWidget(problemsTab);
 
-    sidebarLayout->addWidget(_sidebarStack, 1);
-    _mainSplitter->addWidget(sidebarWidget);
+    sidebarLayout->addWidget(m_sidebarStack, 1);
+    m_mainSplitter->addWidget(sidebarWidget);
 
-    QWidget* editorWidget = new QWidget(_mainSplitter);
+    QWidget* editorWidget = new QWidget(m_mainSplitter);
     QVBoxLayout* editorLayout = new QVBoxLayout(editorWidget);
     editorLayout->setContentsMargins(8, 0, 0, 0);
     editorLayout->setSpacing(8);
 
     QHBoxLayout* currentLayout = new QHBoxLayout();
-    _currentFileLabel = new ElaText(tr("未选择缓存文件"), TitleFontPx, editorWidget);
-    _currentFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    QFont currentFont = _currentFileLabel->font();
+    m_currentFileLabel = new ElaText(tr("未选择缓存文件"), TitleFontPx, editorWidget);
+    m_currentFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    QFont currentFont = m_currentFileLabel->font();
     currentFont.setBold(true);
-    _currentFileLabel->setFont(currentFont);
-    currentLayout->addWidget(_currentFileLabel, 1);
-    _currentSummaryLabel = new ElaText("", BodyFontPx, editorWidget);
-    _currentSummaryLabel->setStyleSheet(auxiliaryTextStyle());
-    _currentSummaryLabel->setWordWrap(false);
-    _currentSummaryLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    _currentSummaryLabel->setMinimumWidth(360);
-    currentLayout->addWidget(_currentSummaryLabel);
+    m_currentFileLabel->setFont(currentFont);
+    currentLayout->addWidget(m_currentFileLabel, 1);
+    m_currentSummaryLabel = new ElaText("", BodyFontPx, editorWidget);
+    m_currentSummaryLabel->setStyleSheet(auxiliaryTextStyle());
+    m_currentSummaryLabel->setWordWrap(false);
+    m_currentSummaryLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_currentSummaryLabel->setMinimumWidth(360);
+    currentLayout->addWidget(m_currentSummaryLabel);
     editorLayout->addLayout(currentLayout);
 
     QHBoxLayout* filterLayout = new QHBoxLayout();
     filterLayout->setSpacing(8);
-    _localSearchEdit = new ElaLineEdit(editorWidget);
-    _localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 pre_processed_text / pre_translated_text / problems..."));
-    _localSearchEdit->setIsClearButtonEnable(true);
-    connect(_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
+    m_localSearchEdit = new ElaLineEdit(editorWidget);
+    m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 pre_processed_text / pre_translated_text / problems..."));
+    m_localSearchEdit->setIsClearButtonEnable(true);
+    connect(m_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
         {
-            _renderEntries();
+            renderEntries();
         });
-    filterLayout->addWidget(_localSearchEdit, 1);
-    _filterProblemsCheck = new ElaCheckBox(tr("只看问题句"), editorWidget);
-    connect(_filterProblemsCheck, &ElaCheckBox::toggled, this, [=]()
+    filterLayout->addWidget(m_localSearchEdit, 1);
+    m_filterProblemsCheck = new ElaCheckBox(tr("只看问题句"), editorWidget);
+    connect(m_filterProblemsCheck, &ElaCheckBox::toggled, this, [=]()
         {
-            _renderEntries();
+            renderEntries();
         });
-    filterLayout->addWidget(_filterProblemsCheck);
+    filterLayout->addWidget(m_filterProblemsCheck);
 
-    _editEntryButton = new ElaPushButton(tr("编辑选中条目"), editorWidget);
-    connect(_editEntryButton, &ElaPushButton::clicked, this, [=]()
+    m_editEntryButton = new ElaPushButton(tr("编辑选中条目"), editorWidget);
+    connect(m_editEntryButton, &ElaPushButton::clicked, this, [=]()
         {
-            _openEntryEditor(_currentJsonRow());
+            openEntryEditor(currentJsonRow());
         });
-    filterLayout->addWidget(_editEntryButton);
+    filterLayout->addWidget(m_editEntryButton);
 
-    _deleteEntriesButton = new ElaPushButton(tr("删除选中条目"), editorWidget);
-    connect(_deleteEntriesButton, &ElaPushButton::clicked, this, [=]()
+    m_deleteEntriesButton = new ElaPushButton(tr("删除选中条目"), editorWidget);
+    connect(m_deleteEntriesButton, &ElaPushButton::clicked, this, [=]()
         {
-            if (!_ensureWritableAction(tr("删除缓存条目"))) {
+            if (!ensureWritableAction(tr("删除缓存条目"))) {
                 return;
             }
-            _syncSelectedEntryRows();
-            if (_selectedEntryRows.isEmpty()) {
+            syncSelectedEntryRows();
+            if (m_selectedEntryRows.isEmpty()) {
                 return;
             }
-            if (!_confirmAction(tr("确认删除"),
-                tr("确定要删除选中的 ") + QString::number(_selectedEntryRows.size()) + tr(" 个缓存条目吗？"))) {
+            if (!confirmAction(tr("确认删除"),
+                tr("确定要删除选中的 ") + QString::number(m_selectedEntryRows.size()) + tr(" 个缓存条目吗？"))) {
                 return;
             }
-            _deleteEntryRows(_selectedEntryRows.values());
+            deleteEntryRows(m_selectedEntryRows.values());
         });
-    filterLayout->addWidget(_deleteEntriesButton);
+    filterLayout->addWidget(m_deleteEntriesButton);
     editorLayout->addLayout(filterLayout);
 
-    _entryModel = new QStandardItemModel(this);
-    _entryList = new ElaListView(editorWidget);
-    _entryList->setModel(_entryModel);
-    _entryList->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    _entryList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _entryList->setItemHeight(112);
-    _entryList->setItemDelegate(createCacheEntryDelegate(_entryList));
-    connect(_entryList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
+    m_entryModel = new QStandardItemModel(this);
+    m_entryList = new ElaListView(editorWidget);
+    m_entryList->setModel(m_entryModel);
+    m_entryList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_entryList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_entryList->setItemHeight(112);
+    m_entryList->setItemDelegate(createCacheEntryDelegate(m_entryList));
+    connect(m_entryList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
         {
-            _syncSelectedEntryRows();
-            _updateCurrentSummary();
-            _updateActionStates();
+            syncSelectedEntryRows();
+            updateCurrentSummary();
+            updateActionStates();
         });
-    connect(_entryList, &ElaListView::doubleClicked, this, [=](const QModelIndex& index)
+    connect(m_entryList, &ElaListView::doubleClicked, this, [=](const QModelIndex& index)
         {
             if (index.isValid()) {
-                _openEntryEditor(index.data(JsonRowRole).toInt());
+                openEntryEditor(index.data(JsonRowRole).toInt());
             }
         });
-    editorLayout->addWidget(_entryList, 1);
+    editorLayout->addWidget(m_entryList, 1);
 
-    _mainSplitter->addWidget(editorWidget);
-    _mainSplitter->setSizes({ 300, 1160 });
+    m_mainSplitter->addWidget(editorWidget);
+    m_mainSplitter->setSizes({ 300, 1160 });
 
-    mainLayout->addWidget(_mainSplitter, 1);
+    mainLayout->addWidget(m_mainSplitter, 1);
     addCentralWidget(mainWidget, true, false, 0);
     connect(eTheme, &ElaTheme::themeModeChanged, this, [=](ElaThemeType::ThemeMode)
         {
-            _refreshThemeStyles();
-            _renderEntries();
+            refreshThemeStyles();
+            renderEntries();
         });
-    _setSidebarPage(0);
-    _refreshThemeStyles();
-    _setReplacePanelVisible(false);
-    _updateActionStates();
+    setSidebarPage(0);
+    refreshThemeStyles();
+    setReplacePanelVisible(false);
+    updateActionStates();
 }

@@ -1,5 +1,3 @@
-// CommonNormalDictPage.h
-
 #ifndef COMMONNORMALDICTPAGE_H
 #define COMMONNORMALDICTPAGE_H
 
@@ -19,20 +17,20 @@ public:
     ~CommonNormalDictPage() override;
 
 Q_SIGNALS:
-    void commonDictsChanged();
+    void commonDictsChangedSignal();
 
 private:
 
-    void _setupUI();
+    void setupUi();
 
-    toml::ordered_value& _globalConfig;
+    toml::ordered_value& m_globalConfig;
 
-    QList<NormalTabEntry> _normalTabEntries;
-    QWidget* _mainWindow;
+    QList<NormalTabEntry> m_normalTabEntries;
+    QWidget* m_mainWindow = nullptr;
 
-    std::string _mode;
-    std::string _modeConfigKey;
-    fs::path _modeDictDir;
+    std::string m_mode;
+    std::string m_modeConfigKey;
+    fs::path m_modeDictDir;
 };
 
 #endif // COMMONNORMALDICTPAGE_H

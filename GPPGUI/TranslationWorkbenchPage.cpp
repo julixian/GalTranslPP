@@ -332,10 +332,10 @@ TranslationWorkbenchPage::TranslationWorkbenchPage(QWidget* parent)
 {
     setWindowTitle(tr("翻译工作台"));
     setTitleVisible(false);
-    _setupUI();
+    setupUi();
 }
 
-void TranslationWorkbenchPage::_setupUI()
+void TranslationWorkbenchPage::setupUi()
 {
     // 工作台分成两块：左侧是按时间流动的成功句，右侧在“最近错误”和“文件进度”之间切换。
     // 页面本身只维护内存态，所有数据都来自 TranslatorWorker 转发的 Controller 运行期事件。
@@ -345,20 +345,20 @@ void TranslationWorkbenchPage::_setupUI()
     mainLayout->setSpacing(8);
 
     QHBoxLayout* headerLayout = new QHBoxLayout();
-    _summaryText = new ElaText(tr("等待翻译任务"), 13, mainWidget);
-    headerLayout->addWidget(_summaryText, 1);
-    _filterText = new ElaText("", 12, mainWidget);
-    _filterText->setStyleSheet(QString("color:%1;").arg(themeColor(ElaThemeType::BasicDetailsText).name(QColor::HexArgb)));
-    headerLayout->addWidget(_filterText);
-    _clearFilterButton = new ElaPushButton(tr("清除筛选"), mainWidget);
-    connect(_clearFilterButton, &ElaPushButton::clicked, this, [=]()
+    m_summaryText = new ElaText(tr("等待翻译任务"), 13, mainWidget);
+    headerLayout->addWidget(m_summaryText, 1);
+    m_filterText = new ElaText("", 12, mainWidget);
+    m_filterText->setStyleSheet(QString("color:%1;").arg(themeColor(ElaThemeType::BasicDetailsText).name(QColor::HexArgb)));
+    headerLayout->addWidget(m_filterText);
+    m_clearFilterButton = new ElaPushButton(tr("清除筛选"), mainWidget);
+    connect(m_clearFilterButton, &ElaPushButton::clicked, this, [=]()
         {
-            // 清除文件筛选后重新渲染句流；底层事件仍保留在 _successes 中。
-            _successFileFilters.clear();
-            _renderSuccesses();
-            _refreshHeader();
+            // 清除文件筛选后重新渲染句流；底层事件仍保留在 m_successes 中。
+            m_successFileFilters.clear();
+            renderSuccesses();
+            refreshHeader();
         });
-    headerLayout->addWidget(_clearFilterButton);
+    headerLayout->addWidget(m_clearFilterButton);
     mainLayout->addLayout(headerLayout);
 
     QHBoxLayout* bodyLayout = new QHBoxLayout();
@@ -373,14 +373,14 @@ void TranslationWorkbenchPage::_setupUI()
     titleFont.setBold(true);
     successTitle->setFont(titleFont);
     successLayout->addWidget(successTitle);
-    _successModel = new QStandardItemModel(this);
-    _successList = new ElaListView(successPane);
-    _successList->setModel(_successModel);
-    _successList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _successList->setUniformItemSizes(true);
-    _successList->setItemHeight(126);
-    _successList->setItemDelegate(new SuccessDelegate(_successList));
-    successLayout->addWidget(_successList, 1);
+    m_successModel = new QStandardItemModel(this);
+    m_successList = new ElaListView(successPane);
+    m_successList->setModel(m_successModel);
+    m_successList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_successList->setUniformItemSizes(true);
+    m_successList->setItemHeight(126);
+    m_successList->setItemDelegate(new SuccessDelegate(m_successList));
+    successLayout->addWidget(m_successList, 1);
     bodyLayout->addWidget(successPane, 5);
 
     QWidget* sidePane = new QWidget(mainWidget);
@@ -389,97 +389,97 @@ void TranslationWorkbenchPage::_setupUI()
     sideLayout->setSpacing(5);
     QHBoxLayout* tabLayout = new QHBoxLayout();
     tabLayout->setSpacing(5);
-    _sideTabGroup = new QButtonGroup(this);
-    _sideTabGroup->setExclusive(true);
-    _errorsTabButton = new ElaPushButton(tr("最近错误"), sidePane);
-    _errorsTabButton->setCheckable(true);
-    _filesTabButton = new ElaPushButton(tr("文件进度"), sidePane);
-    _filesTabButton->setCheckable(true);
-    _sideTabGroup->addButton(_errorsTabButton, 0);
-    _sideTabGroup->addButton(_filesTabButton, 1);
-    tabLayout->addWidget(_errorsTabButton);
-    tabLayout->addWidget(_filesTabButton);
+    m_sideTabGroup = new QButtonGroup(this);
+    m_sideTabGroup->setExclusive(true);
+    m_errorsTabButton = new ElaPushButton(tr("最近错误"), sidePane);
+    m_errorsTabButton->setCheckable(true);
+    m_filesTabButton = new ElaPushButton(tr("文件进度"), sidePane);
+    m_filesTabButton->setCheckable(true);
+    m_sideTabGroup->addButton(m_errorsTabButton, 0);
+    m_sideTabGroup->addButton(m_filesTabButton, 1);
+    tabLayout->addWidget(m_errorsTabButton);
+    tabLayout->addWidget(m_filesTabButton);
     sideLayout->addLayout(tabLayout);
-    connect(_sideTabGroup, &QButtonGroup::idClicked, this, &TranslationWorkbenchPage::_setSideTab);
+    connect(m_sideTabGroup, &QButtonGroup::idClicked, this, &TranslationWorkbenchPage::setSideTab);
 
-    _sideStack = new QStackedWidget(sidePane);
-    _errorModel = new QStandardItemModel(this);
-    _errorList = new ElaListView(_sideStack);
-    _errorList->setModel(_errorModel);
-    _errorList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _errorList->setUniformItemSizes(true);
-    _errorList->setItemHeight(152);
-    _errorList->setItemDelegate(new ErrorDelegate(_errorList));
-    _sideStack->addWidget(_errorList);
+    m_sideStack = new QStackedWidget(sidePane);
+    m_errorModel = new QStandardItemModel(this);
+    m_errorList = new ElaListView(m_sideStack);
+    m_errorList->setModel(m_errorModel);
+    m_errorList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_errorList->setUniformItemSizes(true);
+    m_errorList->setItemHeight(152);
+    m_errorList->setItemDelegate(new ErrorDelegate(m_errorList));
+    m_sideStack->addWidget(m_errorList);
 
-    _fileModel = new QStandardItemModel(this);
-    _fileList = new ElaListView(_sideStack);
-    _fileList->setModel(_fileModel);
-    _fileList->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    _fileList->setUniformItemSizes(true);
-    _fileList->setItemHeight(92);
-    _fileList->setItemDelegate(new FileDelegate(_fileList));
-    connect(_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    m_fileModel = new QStandardItemModel(this);
+    m_fileList = new ElaListView(m_sideStack);
+    m_fileList->setModel(m_fileModel);
+    m_fileList->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_fileList->setUniformItemSizes(true);
+    m_fileList->setItemHeight(92);
+    m_fileList->setItemDelegate(new FileDelegate(m_fileList));
+    connect(m_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             // 文件进度项同时也是筛选开关：可快速只看某个文件产生的成功句。
             const auto file = index.data(FileRole).value<GuiRuntimeFileProgress>();
             if (!file.filename.isEmpty()) {
-                if (_successFileFilters.contains(file.filename)) {
-                    _successFileFilters.remove(file.filename);
+                if (m_successFileFilters.contains(file.filename)) {
+                    m_successFileFilters.remove(file.filename);
                 }
                 else {
-                    _successFileFilters.insert(file.filename);
+                    m_successFileFilters.insert(file.filename);
                 }
-                _renderSuccesses();
-                _refreshHeader();
+                renderSuccesses();
+                refreshHeader();
             }
         });
-    _sideStack->addWidget(_fileList);
-    sideLayout->addWidget(_sideStack, 1);
+    m_sideStack->addWidget(m_fileList);
+    sideLayout->addWidget(m_sideStack, 1);
     bodyLayout->addWidget(sidePane, 3);
 
     mainLayout->addLayout(bodyLayout, 1);
     addCentralWidget(mainWidget, true, false, 0);
-    _setSideTab(0);
-    _refreshHeader();
+    setSideTab(0);
+    refreshHeader();
 }
 
-void TranslationWorkbenchPage::_setSideTab(int index)
+void TranslationWorkbenchPage::setSideTab(int index)
 {
     // ElaPushButton 分段按钮不依赖额外导航控件，切换时只同步 stacked widget 和 checked 状态。
-    _sideStack->setCurrentIndex(index);
-    _errorsTabButton->setChecked(index == 0);
-    _filesTabButton->setChecked(index == 1);
+    m_sideStack->setCurrentIndex(index);
+    m_errorsTabButton->setChecked(index == 0);
+    m_filesTabButton->setChecked(index == 1);
 }
 
 void TranslationWorkbenchPage::clearRuntime()
 {
     // 新任务开始或手动清空时调用；页面不落盘保存历史，状态全部随 GUI 会话消失。
-    _successes.clear();
-    _errors.clear();
-    _files.clear();
-    _successFileFilters.clear();
-    _successTotal = 0;
-    _errorTotal = 0;
-    _stage.clear();
-    _currentFile.clear();
-    _renderSuccesses();
-    _renderErrors();
-    _renderFiles();
-    _refreshHeader();
+    m_successes.clear();
+    m_errors.clear();
+    m_files.clear();
+    m_successFileFilters.clear();
+    m_successTotal = 0;
+    m_errorTotal = 0;
+    m_stage.clear();
+    m_currentFile.clear();
+    renderSuccesses();
+    renderErrors();
+    renderFiles();
+    refreshHeader();
 }
 
 void TranslationWorkbenchPage::resetRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files)
 {
     // Controller 重新注册运行文件时，右侧文件表以这批数据为准，旧筛选也要清空。
-    _files.clear();
-    _successFileFilters.clear();
+    m_files.clear();
+    m_successFileFilters.clear();
     for (const auto& file : files) {
-        _files[file.filename] = file;
+        m_files[file.filename] = file;
     }
-    _renderFiles();
-    _renderSuccesses();
-    _refreshHeader();
+    renderFiles();
+    renderSuccesses();
+    refreshHeader();
 }
 
 void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files)
@@ -490,14 +490,14 @@ void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFilePr
         if (file.filename.isEmpty()) {
             continue;
         }
-        _files[file.filename] = file;
+        m_files[file.filename] = file;
         changed = true;
     }
     if (!changed) {
         return;
     }
-    _renderFiles();
-    _refreshHeader();
+    renderFiles();
+    refreshHeader();
 }
 
 void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEvent>& events)
@@ -505,14 +505,14 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
     if (events.isEmpty()) {
         return;
     }
-    _successTotal += events.size();
+    m_successTotal += events.size();
     for (const auto& event : events) {
-        _successes.push_front(event);
+        m_successes.push_front(event);
     }
-    // 内存保留最近 500 条，但摘要里的成功事件统计使用 _successTotal 累计值。
-    _trimSuccesses();
-    _renderSuccesses();
-    _refreshHeader();
+    // 内存保留最近 500 条，但摘要里的成功事件统计使用 m_successTotal 累计值。
+    trimSuccesses();
+    renderSuccesses();
+    refreshHeader();
 }
 
 void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>& events)
@@ -520,35 +520,35 @@ void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>&
     if (events.isEmpty()) {
         return;
     }
-    _errorTotal += events.size();
+    m_errorTotal += events.size();
     for (const auto& event : events) {
-        _errors.push_front(event);
+        m_errors.push_front(event);
     }
     // 错误只保留最近若干条，避免一次 API 风暴把 GUI 模型撑爆。
-    _trimErrors();
-    _renderErrors();
-    _refreshHeader();
+    trimErrors();
+    renderErrors();
+    refreshHeader();
 }
 
 void TranslationWorkbenchPage::updateStage(const QString& stage, const QString& currentFile)
 {
-    _stage = stage;
-    _currentFile = currentFile;
-    _refreshHeader();
+    m_stage = stage;
+    m_currentFile = currentFile;
+    refreshHeader();
 }
 
-void TranslationWorkbenchPage::_renderSuccesses()
+void TranslationWorkbenchPage::renderSuccesses()
 {
-    // _successes 内部是“最新在前”，渲染前取最近 N 条再反转，
+    // m_successes 内部是“最新在前”，渲染前取最近 N 条再反转，
     // 让视觉顺序变成从上到下递增，最新事件贴近底部。
-    if (_successList) {
-        _successList->setUpdatesEnabled(false);
+    if (m_successList) {
+        m_successList->setUpdatesEnabled(false);
     }
-    _successModel->clear();
+    m_successModel->clear();
     QVector<GuiRuntimeSuccessEvent> visible;
-    visible.reserve(qMin(_successes.size(), MaxRenderedSuccessEvents));
-    for (const GuiRuntimeSuccessEvent& event : _successes) {
-        if (!_successFileFilters.isEmpty() && !_successFileFilters.contains(event.filename)) {
+    visible.reserve(qMin(m_successes.size(), MaxRenderedSuccessEvents));
+    for (const GuiRuntimeSuccessEvent& event : m_successes) {
+        if (!m_successFileFilters.isEmpty() && !m_successFileFilters.contains(event.filename)) {
             continue;
         }
         visible.push_back(event);
@@ -560,38 +560,38 @@ void TranslationWorkbenchPage::_renderSuccesses()
         QStandardItem* item = new QStandardItem(event.filename);
         item->setData(QVariant::fromValue(event), SuccessRole);
         item->setEditable(false);
-        _successModel->appendRow(item);
+        m_successModel->appendRow(item);
     }
-    if (_successList) {
-        _successList->setUpdatesEnabled(true);
+    if (m_successList) {
+        m_successList->setUpdatesEnabled(true);
     }
 }
 
-void TranslationWorkbenchPage::_renderErrors()
+void TranslationWorkbenchPage::renderErrors()
 {
     // 错误列表不做复杂展开，保持短卡片 + tooltip。
-    if (_errorList) {
-        _errorList->setUpdatesEnabled(false);
+    if (m_errorList) {
+        m_errorList->setUpdatesEnabled(false);
     }
-    _errorModel->clear();
-    for (const auto& event : _errors) {
+    m_errorModel->clear();
+    for (const auto& event : m_errors) {
         GuiRuntimeErrorEvent displayEvent = event;
         displayEvent.message = compactPreview(displayEvent.message, 240);
         QStandardItem* item = new QStandardItem(displayEvent.message);
         item->setData(QVariant::fromValue(displayEvent), ErrorRole);
         item->setToolTip(displayEvent.message);
         item->setEditable(false);
-        _errorModel->appendRow(item);
+        m_errorModel->appendRow(item);
     }
-    if (_errorList) {
-        _errorList->setUpdatesEnabled(true);
+    if (m_errorList) {
+        m_errorList->setUpdatesEnabled(true);
     }
 }
 
-void TranslationWorkbenchPage::_renderFiles()
+void TranslationWorkbenchPage::renderFiles()
 {
-    _fileModel->clear();
-    QList<GuiRuntimeFileProgress> files = _files.values();
+    m_fileModel->clear();
+    QList<GuiRuntimeFileProgress> files = m_files.values();
     // 未完成文件排前面，文件名按 locale 排序，方便运行中扫进度。
     std::ranges::sort(files, [](const auto& a, const auto& b)
         {
@@ -606,54 +606,54 @@ void TranslationWorkbenchPage::_renderFiles()
         QStandardItem* item = new QStandardItem(file.filename);
         item->setData(QVariant::fromValue(file), FileRole);
         item->setEditable(false);
-        _fileModel->appendRow(item);
+        m_fileModel->appendRow(item);
     }
 }
 
-void TranslationWorkbenchPage::_refreshHeader()
+void TranslationWorkbenchPage::refreshHeader()
 {
     // 顶部摘要从运行期文件进度和错误集合即时汇总，不依赖进度条信号本身。
     int total = 0;
     int completed = 0;
     int problems = 0;
-    for (const auto& file : _files) {
+    for (const auto& file : m_files) {
         total += file.total;
         completed += file.completed;
         problems += file.problems;
     }
-    const QString stage = _stage.isEmpty() ? tr("空闲") : _stage;
-    const QString current = _currentFile.isEmpty() ? QString() : tr(" · 当前文件: ") + _currentFile;
-    _summaryText->setText(tr("%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误")
+    const QString stage = m_stage.isEmpty() ? tr("空闲") : m_stage;
+    const QString current = m_currentFile.isEmpty() ? QString() : tr(" · 当前文件: ") + m_currentFile;
+    m_summaryText->setText(tr("%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误")
         .arg(stage, current)
-        .arg(completed).arg(total).arg(problems).arg(_successTotal).arg(_errorTotal));
-    if (_successFileFilters.isEmpty()) {
-        _filterText->clear();
-        _clearFilterButton->setVisible(false);
+        .arg(completed).arg(total).arg(problems).arg(m_successTotal).arg(m_errorTotal));
+    if (m_successFileFilters.isEmpty()) {
+        m_filterText->clear();
+        m_clearFilterButton->setVisible(false);
     }
     else {
-        _filterText->setText(tr("已筛选文件: ") + QStringList(_successFileFilters.values()).join(", "));
-        _clearFilterButton->setVisible(true);
+        m_filterText->setText(tr("已筛选文件: ") + QStringList(m_successFileFilters.values()).join(", "));
+        m_clearFilterButton->setVisible(true);
     }
-    _errorsTabButton->setText(_errorTotal <= 0 ? tr("最近错误") : tr("最近错误 (%1)").arg(_errorTotal));
-    const int unfinished = std::ranges::count_if(_files, [](const auto& file)
+    m_errorsTabButton->setText(m_errorTotal <= 0 ? tr("最近错误") : tr("最近错误 (%1)").arg(m_errorTotal));
+    const int unfinished = std::ranges::count_if(m_files, [](const auto& file)
         {
             return file.total <= 0 || file.completed < file.total;
         });
-    _filesTabButton->setText(unfinished <= 0 ? tr("文件进度") : tr("文件进度 (%1)").arg(unfinished));
+    m_filesTabButton->setText(unfinished <= 0 ? tr("文件进度") : tr("文件进度 (%1)").arg(unfinished));
 }
 
-void TranslationWorkbenchPage::_trimSuccesses()
+void TranslationWorkbenchPage::trimSuccesses()
 {
-    // 保留上限控制在追加阶段做；_successTotal 不裁剪，用于展示本轮累计进入句流的总数。
-    while (_successes.size() > MaxSuccessEvents) {
-        _successes.pop_back();
+    // 保留上限控制在追加阶段做；m_successTotal 不裁剪，用于展示本轮累计进入句流的总数。
+    while (m_successes.size() > MaxSuccessEvents) {
+        m_successes.pop_back();
     }
 }
 
-void TranslationWorkbenchPage::_trimErrors()
+void TranslationWorkbenchPage::trimErrors()
 {
     // 错误多为诊断入口，保留最近即可。
-    while (_errors.size() > MaxErrorEvents) {
-        _errors.pop_back();
+    while (m_errors.size() > MaxErrorEvents) {
+        m_errors.pop_back();
     }
 }

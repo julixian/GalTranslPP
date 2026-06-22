@@ -1,5 +1,3 @@
-﻿// PluginItemWidget.h
-
 #ifndef PLUGINITEMWIDGET_H
 #define PLUGINITEMWIDGET_H
 
@@ -29,18 +27,18 @@ public:
 
 Q_SIGNALS:
     // 信号，当用户点击移动按钮时，通知父窗口
-    void moveUpRequested(PluginItemWidget* item);
-    void moveDownRequested(PluginItemWidget* item);
-    void settingsRequested(PluginItemWidget* item);
+    void moveUpRequestedSignal(PluginItemWidget* item);
+    void moveDownRequestedSignal(PluginItemWidget* item);
+    void settingsRequestedSignal(PluginItemWidget* item);
 
 private:
     // 内部控件
-    ElaComboBox* _pluginRunTimeBox;
-    ElaDoubleText* _pluginNameLabel;
-    ElaToggleSwitch* _enableSwitch;
-    ElaIconButton* _moveUpButton;
-    ElaIconButton* _moveDownButton;
-    ElaIconButton* _settingsButton;
+    ElaComboBox* m_pluginRunTimeBox = nullptr;
+    ElaDoubleText* m_pluginNameLabel = nullptr;
+    ElaToggleSwitch* m_enableSwitch = nullptr;
+    ElaIconButton* m_moveUpButton = nullptr;
+    ElaIconButton* m_moveDownButton = nullptr;
+    ElaIconButton* m_settingsButton = nullptr;
 };
 
 #endif // PLUGINITEMWIDGET_H

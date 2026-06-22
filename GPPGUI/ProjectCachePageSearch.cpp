@@ -16,7 +16,7 @@
 
 using namespace ProjectCachePagePrivate;
 
-QStringList ProjectCachePage::_problemsFromEditorText(const QString& text)
+QStringList ProjectCachePage::problemsFromEditorText(const QString& text)
 {
     QStringList result;
     for (QString line : text.split('\n')) {
@@ -27,7 +27,7 @@ QStringList ProjectCachePage::_problemsFromEditorText(const QString& text)
     return result;
 }
 
-int ProjectCachePage::_countOccurrences(const QString& text, const QString& query)
+int ProjectCachePage::countOccurrences(const QString& text, const QString& query)
 {
     if (query.isEmpty()) {
         return 0;
@@ -41,28 +41,28 @@ int ProjectCachePage::_countOccurrences(const QString& text, const QString& quer
     return count;
 }
 
-int ProjectCachePage::_replaceInString(QString& text, const QString& query, const QString& replacement)
+int ProjectCachePage::replaceInString(QString& text, const QString& query, const QString& replacement)
 {
-    const int count = _countOccurrences(text, query);
+    const int count = countOccurrences(text, query);
     if (count > 0) {
         text.replace(query, replacement, Qt::CaseSensitive);
     }
     return count;
 }
 
-QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(const QString& query, const QString& field, int* totalMatches) const
+QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(const QString& query, const QString& field, int* totalMatches) const
 {
     // 替换预览和实际替换共用同一套收集逻辑，避免“预览命中”和“实际修改”
     // 因字段范围不同步而产生偏差。
     int total = 0;
     QList<ReplaceDetail> details;
-    for (const CacheFileInfo& file : _cacheFiles) {
+    for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
-        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
-        if (loaded != _loadedEntriesByFile.end()) {
+        const auto loaded = m_dirtyFiles.contains(file.relativeName) ? m_loadedEntriesByFile.find(file.relativeName) : m_loadedEntriesByFile.end();
+        if (loaded != m_loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
-        else if (!_readCacheFile(file.relativeName, entries, nullptr)) {
+        else if (!readCacheFile(file.relativeName, entries, nullptr)) {
             continue;
         }
         int fileMatches = 0;
@@ -73,10 +73,10 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(
             // 替换字段和翻译缓存实际字段保持一致：
             // src -> pre_processed_text，dst -> pre_translated_text。
             if (field == "src" || field == "all") {
-                fileMatches += _countOccurrences(_entrySource(item), query);
+                fileMatches += countOccurrences(entrySource(item), query);
             }
             if (field == "dst" || field == "all") {
-                fileMatches += _countOccurrences(_entryDst(item), query);
+                fileMatches += countOccurrences(entryDst(item), query);
             }
         }
         if (fileMatches > 0) {
@@ -90,7 +90,7 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::_collectReplaceDetails(
     return details;
 }
 
-int ProjectCachePage::_applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const
+int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const
 {
     int total = 0;
     for (auto& item : entries) {
@@ -98,16 +98,16 @@ int ProjectCachePage::_applyReplaceToEntries(json& entries, const QString& query
             continue;
         }
         if (field == "src" || field == "all") {
-            QString source = _entrySource(item);
-            const int matches = _replaceInString(source, query, replacement);
+            QString source = entrySource(item);
+            const int matches = replaceInString(source, query, replacement);
             if (matches > 0) {
                 item["pre_processed_text"] = source.toStdString();
                 total += matches;
             }
         }
         if (field == "dst" || field == "all") {
-            QString dst = _entryDst(item);
-            const int matches = _replaceInString(dst, query, replacement);
+            QString dst = entryDst(item);
+            const int matches = replaceInString(dst, query, replacement);
             if (matches > 0) {
                 item["pre_translated_text"] = dst.toStdString();
                 total += matches;
@@ -117,32 +117,32 @@ int ProjectCachePage::_applyReplaceToEntries(json& entries, const QString& query
     return total;
 }
 
-void ProjectCachePage::_runGlobalSearch()
+void ProjectCachePage::runGlobalSearch()
 {
-    if (!_globalSearchEdit || !_searchResultList) {
+    if (!m_globalSearchEdit || !m_searchResultList) {
         return;
     }
-    const QString query = _globalSearchEdit->text();
-    const QString field = _globalSearchField->currentData().toString();
-    _searchHits.clear();
-    _searchModel->clear();
+    const QString query = m_globalSearchEdit->text();
+    const QString field = m_globalSearchField->currentData().toString();
+    m_searchHits.clear();
+    m_searchModel->clear();
     if (query.isEmpty()) {
-        _searchStatusLabel->clear();
-        if (_searchNavButton) {
-            _searchNavButton->setText(tr("搜索"));
+        m_searchStatusLabel->clear();
+        if (m_searchNavButton) {
+            m_searchNavButton->setText(tr("搜索"));
         }
         return;
     }
 
     // 搜索框 textChanged 会频繁触发，这里限制结果数，避免大缓存目录里边输入边卡死。
     constexpr int maxResults = 2000;
-    for (const CacheFileInfo& file : _cacheFiles) {
+    for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
-        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
-        if (loaded != _loadedEntriesByFile.end()) {
+        const auto loaded = m_dirtyFiles.contains(file.relativeName) ? m_loadedEntriesByFile.find(file.relativeName) : m_loadedEntriesByFile.end();
+        if (loaded != m_loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
-        else if (!_readCacheFile(file.relativeName, entries, nullptr)) {
+        else if (!readCacheFile(file.relativeName, entries, nullptr)) {
             continue;
         }
         for (int i = 0; i < (int)entries.size(); ++i) {
@@ -150,9 +150,9 @@ void ProjectCachePage::_runGlobalSearch()
             if (!item.is_object()) {
                 continue;
             }
-            const QString src = _entrySource(item);
-            const QString dst = _entryDst(item);
-            const QString problem = _problemString(item, " | ");
+            const QString src = entrySource(item);
+            const QString dst = entryDst(item);
+            const QString problem = problemString(item, " | ");
             const bool matchSrc = src.contains(query, Qt::CaseInsensitive);
             const bool matchDst = dst.contains(query, Qt::CaseInsensitive);
             const bool matchProblem = problem.contains(query, Qt::CaseInsensitive);
@@ -162,28 +162,28 @@ void ProjectCachePage::_runGlobalSearch()
                 || (field == "all" && !matchSrc && !matchDst && !matchProblem)) {
                 continue;
             }
-            _searchHits.push_back({
+            m_searchHits.push_back({
                 file.relativeName,
                 i,
                 sentenceIndexOf(item, i),
                 matchSrc,
                 matchDst,
                 matchProblem,
-                _truncateForList(src),
-                _truncateForList(dst),
-                _truncateForList(problem),
+                truncateForList(src),
+                truncateForList(dst),
+                truncateForList(problem),
             });
-            if (_searchHits.size() >= maxResults) {
+            if (m_searchHits.size() >= maxResults) {
                 break;
             }
         }
-        if (_searchHits.size() >= maxResults) {
+        if (m_searchHits.size() >= maxResults) {
             break;
         }
     }
 
-    for (int i = 0; i < _searchHits.size(); ++i) {
-        const SearchHit& hit = _searchHits[i];
+    for (int i = 0; i < m_searchHits.size(); ++i) {
+        const SearchHit& hit = m_searchHits[i];
         QStringList badges;
         if (hit.matchSrc) badges << tr("原文");
         if (hit.matchDst) badges << tr("译文");
@@ -198,23 +198,23 @@ void ProjectCachePage::_runGlobalSearch()
         item->setData(hit.problemPreview, HitProblemRole);
         item->setEditable(false);
         setModelItemFont(item, BodyFontPx);
-        _searchModel->appendRow(item);
+        m_searchModel->appendRow(item);
     }
-    _searchStatusLabel->setText(tr("%1 条结果").arg(_searchHits.size()));
-    if (_searchNavButton) {
-        _searchNavButton->setText(tr("搜索 (%1)").arg(_searchHits.size()));
+    m_searchStatusLabel->setText(tr("%1 条结果").arg(m_searchHits.size()));
+    if (m_searchNavButton) {
+        m_searchNavButton->setText(tr("搜索 (%1)").arg(m_searchHits.size()));
     }
 }
 
-void ProjectCachePage::_previewReplace()
+void ProjectCachePage::previewReplace()
 {
-    const QString query = _replaceQueryEdit->text();
+    const QString query = m_replaceQueryEdit->text();
     if (query.isEmpty()) {
-        _replacePreviewLabel->setText(tr("请输入查找内容"));
+        m_replacePreviewLabel->setText(tr("请输入查找内容"));
         return;
     }
     int total = 0;
-    const QList<ReplaceDetail> details = _collectReplaceDetails(query, _replaceField->currentData().toString(), &total);
+    const QList<ReplaceDetail> details = collectReplaceDetails(query, m_replaceField->currentData().toString(), &total);
     QString text = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
     const int limit = std::min(static_cast<int>(details.size()), 8);
     for (int i = 0; i < limit; ++i) {
@@ -223,29 +223,29 @@ void ProjectCachePage::_previewReplace()
     if (details.size() > limit) {
         text += tr("\n...");
     }
-    _replacePreviewLabel->setText(text);
+    m_replacePreviewLabel->setText(text);
 }
 
-void ProjectCachePage::_executeReplace()
+void ProjectCachePage::executeReplace()
 {
-    if (!_ensureWritableAction(tr("批量替换"))) {
+    if (!ensureWritableAction(tr("批量替换"))) {
         return;
     }
-    const QString query = _replaceQueryEdit->text();
-    const QString replacement = _replaceWithEdit->text();
-    const QString field = _replaceField->currentData().toString();
+    const QString query = m_replaceQueryEdit->text();
+    const QString replacement = m_replaceWithEdit->text();
+    const QString field = m_replaceField->currentData().toString();
     if (query.isEmpty()) {
-        _replacePreviewLabel->setText(tr("请输入查找内容"));
+        m_replacePreviewLabel->setText(tr("请输入查找内容"));
         return;
     }
 
     int total = 0;
-    const QList<ReplaceDetail> details = _collectReplaceDetails(query, field, &total);
+    const QList<ReplaceDetail> details = collectReplaceDetails(query, field, &total);
     if (total <= 0) {
-        _replacePreviewLabel->setText(tr("无匹配内容"));
+        m_replacePreviewLabel->setText(tr("无匹配内容"));
         return;
     }
-    if (!_confirmAction(tr("确认替换"), tr("确定要替换 %1 处内容吗？").arg(total))) {
+    if (!confirmAction(tr("确认替换"), tr("确定要替换 %1 处内容吗？").arg(total))) {
         return;
     }
 
@@ -253,19 +253,19 @@ void ProjectCachePage::_executeReplace()
     int changedMatches = 0;
     for (const ReplaceDetail& detail : details) {
         json entries;
-        const auto loaded = _dirtyFiles.contains(detail.filename) ? _loadedEntriesByFile.find(detail.filename) : _loadedEntriesByFile.end();
-        if (loaded != _loadedEntriesByFile.end()) {
+        const auto loaded = m_dirtyFiles.contains(detail.filename) ? m_loadedEntriesByFile.find(detail.filename) : m_loadedEntriesByFile.end();
+        if (loaded != m_loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
-        else if (!_readCacheFile(detail.filename, entries, nullptr)) {
+        else if (!readCacheFile(detail.filename, entries, nullptr)) {
             continue;
         }
-        const int matches = _applyReplaceToEntries(entries, query, replacement, field);
+        const int matches = applyReplaceToEntries(entries, query, replacement, field);
         if (matches > 0) {
-            _loadedEntriesByFile[detail.filename] = entries;
-            _dirtyFiles.insert(detail.filename);
-            if (_currentFile == detail.filename) {
-                _entries = entries;
+            m_loadedEntriesByFile[detail.filename] = entries;
+            m_dirtyFiles.insert(detail.filename);
+            if (m_currentFile == detail.filename) {
+                m_entries = entries;
             }
             changedMatches += matches;
             ++changedFiles;
@@ -273,36 +273,36 @@ void ProjectCachePage::_executeReplace()
     }
 
     // 替换只改内存副本并标脏；刷新三个视图让用户立刻看到待保存状态。
-    _renderFileList();
-    _renderEntries();
-    _runGlobalSearch();
-    _replacePreviewLabel->setText(tr("已替换 %1 处，涉及 %2 个文件；保存后落盘。").arg(changedMatches).arg(changedFiles));
-    _setInfo(tr("批量替换完成，记得保存修改"));
-    _updateActionStates();
+    renderFileList();
+    renderEntries();
+    runGlobalSearch();
+    m_replacePreviewLabel->setText(tr("已替换 %1 处，涉及 %2 个文件；保存后落盘。").arg(changedMatches).arg(changedFiles));
+    setInfo(tr("批量替换完成，记得保存修改"));
+    updateActionStates();
 }
 
-void ProjectCachePage::_loadProblems()
+void ProjectCachePage::loadProblems()
 {
-    if (!_problemList) {
+    if (!m_problemList) {
         return;
     }
-    _problemsLoaded = true;
+    m_problemsLoaded = true;
     // 问题页只聚合 GalTranslPP 的 problems 数组；这里不兼容 GalTransl 旧 problem 字段。
     QMap<QString, int> counts;
-    for (const CacheFileInfo& file : _cacheFiles) {
+    for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
-        const auto loaded = _dirtyFiles.contains(file.relativeName) ? _loadedEntriesByFile.find(file.relativeName) : _loadedEntriesByFile.end();
-        if (loaded != _loadedEntriesByFile.end()) {
+        const auto loaded = m_dirtyFiles.contains(file.relativeName) ? m_loadedEntriesByFile.find(file.relativeName) : m_loadedEntriesByFile.end();
+        if (loaded != m_loadedEntriesByFile.end()) {
             entries = loaded.value();
         }
-        else if (!_readCacheFile(file.relativeName, entries, nullptr)) {
+        else if (!readCacheFile(file.relativeName, entries, nullptr)) {
             continue;
         }
         for (const auto& item : entries) {
             if (!item.is_object()) {
                 continue;
             }
-            for (const QString& problemText : _problemsFromEditorText(_problemString(item))) {
+            for (const QString& problemText : problemsFromEditorText(problemString(item))) {
                 counts[problemText] += 1;
             }
         }
@@ -320,7 +320,7 @@ void ProjectCachePage::_loadProblems()
             return a.first.localeAwareCompare(b.first) < 0;
         });
 
-    _problemModel->clear();
+    m_problemModel->clear();
     for (const auto& itemPair : items) {
         const QString& problem = itemPair.first;
         const int count = itemPair.second;
@@ -329,55 +329,55 @@ void ProjectCachePage::_loadProblems()
         item->setToolTip(tr("点击搜索此问题"));
         item->setEditable(false);
         setModelItemFont(item, BodyFontPx);
-        _problemModel->appendRow(item);
+        m_problemModel->appendRow(item);
     }
-    if (_problemsNavButton) {
-        _problemsNavButton->setText(items.empty() ? tr("问题") : tr("问题 (%1)").arg(items.size()));
+    if (m_problemsNavButton) {
+        m_problemsNavButton->setText(items.empty() ? tr("问题") : tr("问题 (%1)").arg(items.size()));
     }
 }
 
-void ProjectCachePage::_jumpToHit(int hitIndex)
+void ProjectCachePage::jumpToHit(int hitIndex)
 {
-    if (hitIndex < 0 || hitIndex >= _searchHits.size()) {
+    if (hitIndex < 0 || hitIndex >= m_searchHits.size()) {
         return;
     }
-    const SearchHit& hit = _searchHits[hitIndex];
-    _loadCacheFile(hit.filename);
-    _selectEntryByRow(hit.row);
+    const SearchHit& hit = m_searchHits[hitIndex];
+    loadCacheFile(hit.filename);
+    selectEntryByRow(hit.row);
 }
 
-void ProjectCachePage::_selectEntryByRow(int row)
+void ProjectCachePage::selectEntryByRow(int row)
 {
-    if (row < 0 || !_entryList || !_entryModel) {
+    if (row < 0 || !m_entryList || !m_entryModel) {
         return;
     }
-    if (_localSearchEdit && !_localSearchEdit->text().isEmpty()) {
-        QSignalBlocker blocker(_localSearchEdit);
-        _localSearchEdit->clear();
+    if (m_localSearchEdit && !m_localSearchEdit->text().isEmpty()) {
+        QSignalBlocker blocker(m_localSearchEdit);
+        m_localSearchEdit->clear();
     }
-    if (_filterProblemsCheck && _filterProblemsCheck->isChecked()) {
-        QSignalBlocker blocker(_filterProblemsCheck);
-        _filterProblemsCheck->setChecked(false);
+    if (m_filterProblemsCheck && m_filterProblemsCheck->isChecked()) {
+        QSignalBlocker blocker(m_filterProblemsCheck);
+        m_filterProblemsCheck->setChecked(false);
     }
     // 命中搜索结果后清掉右侧局部过滤，再重新渲染，保证目标行一定可见。
-    _renderEntries();
-    for (int modelRow = 0; modelRow < _entryModel->rowCount(); ++modelRow) {
-        const QModelIndex index = _entryModel->index(modelRow, 0);
+    renderEntries();
+    for (int modelRow = 0; modelRow < m_entryModel->rowCount(); ++modelRow) {
+        const QModelIndex index = m_entryModel->index(modelRow, 0);
         if (index.data(JsonRowRole).toInt() == row) {
-            _entryList->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-            _entryList->setCurrentIndex(index);
-            _entryList->scrollTo(index, QAbstractItemView::PositionAtCenter);
+            m_entryList->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            m_entryList->setCurrentIndex(index);
+            m_entryList->scrollTo(index, QAbstractItemView::PositionAtCenter);
             return;
         }
     }
 }
 
-int ProjectCachePage::_currentJsonRow() const
+int ProjectCachePage::currentJsonRow() const
 {
-    if (!_entryList || !_entryList->selectionModel()) {
+    if (!m_entryList || !m_entryList->selectionModel()) {
         return -1;
     }
-    const QModelIndexList selected = _entryList->selectionModel()->selectedRows();
+    const QModelIndexList selected = m_entryList->selectionModel()->selectedRows();
     if (selected.empty()) {
         return -1;
     }

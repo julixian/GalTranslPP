@@ -1,5 +1,3 @@
-// OtherSettingsPage.h
-
 #ifndef OTHERSETTINGSPAGE_H
 #define OTHERSETTINGSPAGE_H
 
@@ -13,22 +11,21 @@ class OtherSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit OtherSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
     ~OtherSettingsPage() override;
 
 Q_SIGNALS:
     void saveConfigSignal();
     void refreshProjectConfigSignal();
-    void changeProjectNameSignal(QString newProjectName);
+    void changeProjectNameSignal(const QString& newProjectName);
 
 private:
 
-    void _setupUI();
-    toml::ordered_value& _globalConfig;
-    toml::ordered_value& _projectConfig;
-
-    fs::path& _projectDir;
-    QWidget* _mainWindow;
+    void setupUi();
+    fs::path& m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
+    QWidget* m_mainWindow = nullptr;
 };
 
 #endif // OTHERSETTINGSPAGE_H

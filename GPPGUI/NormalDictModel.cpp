@@ -1,5 +1,3 @@
-﻿// NormalDictModel.cpp
-
 #include "NormalDictModel.h"
 #include <QFont>
 
@@ -7,8 +5,8 @@ NormalDictModel::NormalDictModel(QObject* parent)
     : QAbstractTableModel(parent)
 {
     // 初始化表头
-    _headerLabels << tr("原文") << tr("译文") << tr("条件对象") << tr("条件正则") << tr("启用正则") << tr("优先级");
-    Q_ASSERT(_headerLabels.count() == Column::ColumnCount); // 确保枚举和表头数量一致
+    m_headerLabels << tr("原文") << tr("译文") << tr("条件对象") << tr("条件正则") << tr("启用正则") << tr("优先级");
+    Q_ASSERT(m_headerLabels.count() == Column::ColumnCount); // 确保枚举和表头数量一致
 }
 
 // 返回数据行数
@@ -18,7 +16,7 @@ int NormalDictModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return (int)_entries.count();
+    return (int)m_entries.count();
 }
 
 // 返回列数
@@ -33,11 +31,11 @@ int NormalDictModel::columnCount(const QModelIndex& parent) const
 // 提供数据给视图
 QVariant NormalDictModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid() || index.row() >= _entries.count()) {
+    if (!index.isValid() || index.row() >= m_entries.count()) {
         return {};
     }
 
-    const NormalDictEntry& entry = _entries.at(index.row());
+    const NormalDictEntry& entry = m_entries.at(index.row());
 
     // --- 处理文本显示和编辑 ---
     if (role == Qt::DisplayRole || role == Qt::EditRole)
@@ -70,8 +68,8 @@ QVariant NormalDictModel::headerData(int section, Qt::Orientation orientation, i
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
-        if (section < _headerLabels.count()) {
-            return _headerLabels.at(section);
+        if (section < m_headerLabels.count()) {
+            return m_headerLabels.at(section);
         }
     }
     return QAbstractTableModel::headerData(section, orientation, role);
@@ -109,7 +107,7 @@ bool NormalDictModel::setData(const QModelIndex& index, const QVariant& value, i
         return false;
     }
 
-    NormalDictEntry& entry = _entries[index.row()];
+    NormalDictEntry& entry = m_entries[index.row()];
 
     // --- 处理文本编辑变化 ---
     if (role == Qt::EditRole)
@@ -142,8 +140,8 @@ bool NormalDictModel::setData(const QModelIndex& index, const QVariant& value, i
             while (str.startsWith("next_")) {
                 str = str.mid(5);
             }
-            //Name, NamePreview, Names, NamesPreview, OrigText, PreprocText, PretransText, Problems, OtherInfo, TranslatedBy, TransPreview 
-            static const QSet<QString> validNames = 
+            //Name, NamePreview, Names, NamesPreview, OrigText, PreprocText, PretransText, Problems, OtherInfo, TranslatedBy, TransPreview
+            static const QSet<QString> validNames =
             {
                 "name", "name_preview", "names", "names_preview", "orig_text", "preproc_text",
                 "pretrans_text", "problems", "other_info", "translated_by", "trans_preview"
@@ -195,7 +193,7 @@ void NormalDictModel::loadData(const QList<NormalDictEntry>& entries)
 {
     // 在修改底层数据结构之前，必须调用 beginResetModel()
     beginResetModel();
-    _entries = entries;
+    m_entries = entries;
     // 修改完成后，调用 endResetModel()
     endResetModel();
 }
@@ -205,7 +203,7 @@ bool NormalDictModel::insertRow(int row, NormalDictEntry entry, const QModelInde
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    _entries.insert(row, entry);
+    m_entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -214,13 +212,13 @@ bool NormalDictModel::insertRow(int row, NormalDictEntry entry, const QModelInde
 
 bool NormalDictModel::removeRow(int row, const QModelIndex& parent)
 {
-    if (row < 0 || row >= _entries.count()) {
+    if (row < 0 || row >= m_entries.count()) {
         return false;
     }
 
     // 在移除行之前，调用 beginRemoveRows()
     beginRemoveRows(parent, row, row);
-    _entries.removeAt(row);
+    m_entries.removeAt(row);
     // 移除完成后，调用 endRemoveRows()
     endRemoveRows();
     return true;
@@ -228,10 +226,10 @@ bool NormalDictModel::removeRow(int row, const QModelIndex& parent)
 
 QList<NormalDictEntry> NormalDictModel::getEntries() const
 {
-    return _entries;
+    return m_entries;
 }
 
 const QList<NormalDictEntry>& NormalDictModel::getEntriesRef() const
 {
-    return _entries;
+    return m_entries;
 }

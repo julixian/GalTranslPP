@@ -1,5 +1,3 @@
-﻿// NormalTabEntry.h
-
 #ifndef NORMALTABENTRY_H
 #define NORMALTABENTRY_H
 

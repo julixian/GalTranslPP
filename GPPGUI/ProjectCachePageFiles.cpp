@@ -19,20 +19,20 @@ import Tool;
 
 using namespace ProjectCachePagePrivate;
 
-void ProjectCachePage::_loadCacheFiles(bool discardDirty)
+void ProjectCachePage::loadCacheFiles(bool discardDirty)
 {
     // 首次进入页面会保守保留脏文件内存副本；用户主动刷新时 discardDirty=true，
     // 表示放弃未保存编辑并以磁盘内容为准，文件名前的 * 也会随之清掉。
-    _cacheFiles.clear();
-    _cacheFilesLoaded = true;
-    _problemsLoaded = false;
-    const QString previousFile = _currentFile;
+    m_cacheFiles.clear();
+    m_cacheFilesLoaded = true;
+    m_problemsLoaded = false;
+    const QString previousFile = m_currentFile;
     if (discardDirty) {
-        _dirtyFiles.clear();
-        _loadedEntriesByFile.clear();
+        m_dirtyFiles.clear();
+        m_loadedEntriesByFile.clear();
     }
-    const bool keepPreviousFromMemory = !discardDirty && !previousFile.isEmpty() && _dirtyFiles.contains(previousFile);
-    const fs::path cacheDir = _cacheDir();
+    const bool keepPreviousFromMemory = !discardDirty && !previousFile.isEmpty() && m_dirtyFiles.contains(previousFile);
+    const fs::path cacheDir = getCacheDir();
     if (!fs::exists(cacheDir)) {
         std::error_code ec;
         fs::create_directories(cacheDir, ec);
@@ -45,8 +45,8 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
             }
             CacheFileInfo info;
             info.relativeName = QString::fromStdWString(fs::relative(entry.path(), cacheDir).wstring());
-            if (discardDirty || !_dirtyFiles.contains(info.relativeName)) {
-                _loadedEntriesByFile.remove(info.relativeName);
+            if (discardDirty || !m_dirtyFiles.contains(info.relativeName)) {
+                m_loadedEntriesByFile.remove(info.relativeName);
             }
             std::error_code ec;
             info.size = entry.file_size(ec);
@@ -55,10 +55,10 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
 
             json data;
             QString error;
-            if (_readCacheFile(info.relativeName, data, &error) && data.is_array()) {
+            if (readCacheFile(info.relativeName, data, &error) && data.is_array()) {
                 info.entries = (int)data.size();
                 for (const auto& item : data) {
-                    if (item.is_object() && !_problemString(item).isEmpty()) {
+                    if (item.is_object() && !problemString(item).isEmpty()) {
                         ++info.problems;
                     }
                 }
@@ -67,7 +67,7 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
                 info.parseOk = false;
                 info.error = error;
             }
-            _cacheFiles.push_back(info);
+            m_cacheFiles.push_back(info);
         }
     }
 
@@ -75,46 +75,46 @@ void ProjectCachePage::_loadCacheFiles(bool discardDirty)
     collator.setNumericMode(true);
     collator.setCaseSensitivity(Qt::CaseInsensitive);
     // 使用 Windows 资源管理器式自然排序，例如 1、2、10，而不是 1、10、2。
-    std::ranges::sort(_cacheFiles, [&collator](const CacheFileInfo& a, const CacheFileInfo& b)
+    std::ranges::sort(m_cacheFiles, [&collator](const CacheFileInfo& a, const CacheFileInfo& b)
         {
             return collator.compare(a.relativeName, b.relativeName) < 0;
         });
 
-    _cacheDirLabel->setText(QString::fromStdWString(cacheDir.wstring()));
-    _renderFileList();
-    const bool previousStillExists = std::ranges::any_of(_cacheFiles, [&](const CacheFileInfo& file)
+    m_cacheDirLabel->setText(QString::fromStdWString(cacheDir.wstring()));
+    renderFileList();
+    const bool previousStillExists = std::ranges::any_of(m_cacheFiles, [&](const CacheFileInfo& file)
         {
             return file.relativeName == previousFile && file.parseOk;
         });
     if (!previousFile.isEmpty()) {
         if (previousStillExists) {
-            _loadCacheFile(previousFile, !keepPreviousFromMemory);
+            loadCacheFile(previousFile, !keepPreviousFromMemory);
         }
         else {
-            _currentFile.clear();
-            _entries = json::array();
-            _selectedEntryRows.clear();
-            _renderEntries();
+            m_currentFile.clear();
+            m_entries = json::array();
+            m_selectedEntryRows.clear();
+            renderEntries();
         }
     }
     // 如果用户当前正在问题页或搜索页，刷新磁盘文件后同步刷新可见结果。
-    if (_sidebarStack && _sidebarStack->currentIndex() == 2) {
-        _loadProblems();
+    if (m_sidebarStack && m_sidebarStack->currentIndex() == 2) {
+        loadProblems();
     }
-    if (_globalSearchEdit && !_globalSearchEdit->text().isEmpty()) {
-        _runGlobalSearch();
+    if (m_globalSearchEdit && !m_globalSearchEdit->text().isEmpty()) {
+        runGlobalSearch();
     }
-    _updateActionStates();
+    updateActionStates();
 }
 
-void ProjectCachePage::_renderFileList()
+void ProjectCachePage::renderFileList()
 {
     // 文件列表只保存相对路径到 Qt::UserRole，点击时再加载对应 JSON。
     // 这样列表重建不会复制完整缓存内容。
-    _fileModel->clear();
-    for (const CacheFileInfo& file : _cacheFiles) {
+    m_fileModel->clear();
+    for (const CacheFileInfo& file : m_cacheFiles) {
         QString title = file.relativeName;
-        if (_dirtyFiles.contains(file.relativeName)) {
+        if (m_dirtyFiles.contains(file.relativeName)) {
             title = "*" + title;
         }
         QString subtitle = tr("%1 句 · %2 问题").arg(file.entries).arg(file.problems);
@@ -126,66 +126,66 @@ void ProjectCachePage::_renderFileList()
         item->setToolTip(file.parseOk ? file.relativeName : file.error);
         item->setEditable(false);
         setModelItemFont(item, BodyFontPx);
-        _fileModel->appendRow(item);
-        if (_currentFile == file.relativeName) {
-            const QModelIndex index = _fileModel->indexFromItem(item);
-            _fileList->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
-            _fileList->setCurrentIndex(index);
+        m_fileModel->appendRow(item);
+        if (m_currentFile == file.relativeName) {
+            const QModelIndex index = m_fileModel->indexFromItem(item);
+            m_fileList->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            m_fileList->setCurrentIndex(index);
         }
     }
-    if (_filesNavButton) {
-        _filesNavButton->setText(tr("文件 (%1)").arg(_cacheFiles.size()));
+    if (m_filesNavButton) {
+        m_filesNavButton->setText(tr("文件 (%1)").arg(m_cacheFiles.size()));
     }
 }
 
-void ProjectCachePage::_loadCacheFile(const QString& filename, bool forceReload)
+void ProjectCachePage::loadCacheFile(const QString& filename, bool forceReload)
 {
     if (filename.isEmpty()) {
         return;
     }
-    const bool fileChanged = _currentFile != filename;
+    const bool fileChanged = m_currentFile != filename;
     // 先用内存副本，保证切换文件时不丢尚未保存的改动；
     // forceReload 用于刷新后重新读取磁盘上的干净文件。
-    if (!forceReload && _loadedEntriesByFile.contains(filename)) {
-        _entries = _loadedEntriesByFile.value(filename);
+    if (!forceReload && m_loadedEntriesByFile.contains(filename)) {
+        m_entries = m_loadedEntriesByFile.value(filename);
     }
     else {
         QString error;
-        if (!_readCacheFile(filename, _entries, &error)) {
-            _setError(error);
+        if (!readCacheFile(filename, m_entries, &error)) {
+            setError(error);
             return;
         }
-        if (!_entries.is_array()) {
-            _setError(tr("缓存文件不是 JSON 数组: ") + filename);
+        if (!m_entries.is_array()) {
+            setError(tr("缓存文件不是 JSON 数组: ") + filename);
             return;
         }
-        _loadedEntriesByFile[filename] = _entries;
+        m_loadedEntriesByFile[filename] = m_entries;
     }
-    _currentFile = filename;
+    m_currentFile = filename;
     if (fileChanged) {
-        _selectedEntryRows.clear();
+        m_selectedEntryRows.clear();
     }
-    _currentFileLabel->setText((_dirtyFiles.contains(filename) ? "*" : "") + filename);
-    _renderEntries();
-    _updateCurrentSummary();
-    _updateActionStates();
+    m_currentFileLabel->setText((m_dirtyFiles.contains(filename) ? "*" : "") + filename);
+    renderEntries();
+    updateCurrentSummary();
+    updateActionStates();
 }
 
-fs::path ProjectCachePage::_cacheDir() const
+fs::path ProjectCachePage::getCacheDir() const
 {
-    return _projectDir / transCacheDirName;
+    return m_projectDir / transCacheDirName;
 }
 
-fs::path ProjectCachePage::_cachePathForRelativeName(const QString& filename) const
+fs::path ProjectCachePage::cachePathForRelativeName(const QString& filename) const
 {
-    return _cacheDir() / fs::path(filename.toStdWString());
+    return getCacheDir() / fs::path(filename.toStdWString());
 }
 
-bool ProjectCachePage::_readCacheFile(const QString& filename, json& entries, QString* errorMessage) const
+bool ProjectCachePage::readCacheFile(const QString& filename, json& entries, QString* errorMessage) const
 {
     try {
         // 缓存文件是翻译核心生成的 UTF-8 JSON 数组。
-        std::ifstream ifs(_cachePathForRelativeName(filename), std::ios::binary);
+        std::ifstream ifs(cachePathForRelativeName(filename), std::ios::binary);
         if (!ifs.is_open()) {
             if (errorMessage) {
                 *errorMessage = tr("无法打开缓存文件: ") + filename;
@@ -203,10 +203,10 @@ bool ProjectCachePage::_readCacheFile(const QString& filename, json& entries, QS
     }
 }
 
-bool ProjectCachePage::_writeCacheFile(const QString& filename, const json& entries, QString* errorMessage) const
+bool ProjectCachePage::writeCacheFile(const QString& filename, const json& entries, QString* errorMessage) const
 {
     try {
-        const fs::path path = _cachePathForRelativeName(filename);
+        const fs::path path = cachePathForRelativeName(filename);
         createParent(path);
         std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
         if (!ofs.is_open()) {

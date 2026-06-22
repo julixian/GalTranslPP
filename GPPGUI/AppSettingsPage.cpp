@@ -1,12 +1,12 @@
-﻿#include "SettingPage.h"
+#include "AppSettingsPage.h"
 
-#include <ElaMessageBar.h>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QButtonGroup>
 
 #include "ElaApplication.h"
+#include "ElaMessageBar.h"
 #include "ElaComboBox.h"
 #include "ElaRadioButton.h"
 #include "ElaScrollPageArea.h"
@@ -20,19 +20,26 @@
 import Tool;
 namespace fs = std::filesystem;
 
-SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
-    : BasePage(parent), _globalConfig(globalConfig)
+AppSettingsPage::AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent)
+    : BasePage(parent), m_globalConfig(globalConfig)
 {
-    // 预览窗口标题
-    ElaWindow* window = qobject_cast<ElaWindow*>(parent);
-    setWindowTitle("Setting");
+    setWindowTitle(tr("应用设置"));
     setContentsMargins(30, 15, 15, 0);
+
+    setupUi();
+}
+
+AppSettingsPage::~AppSettingsPage() = default;
+
+void AppSettingsPage::setupUi()
+{
+    ElaWindow* window = qobject_cast<ElaWindow*>(parentWidget());
 
     ElaText* themeText = new ElaText(tr("主题设置"), this);
     themeText->setWordWrap(false);
     themeText->setTextPixelSize(18);
 
-    int themeMode = toml::find_or(_globalConfig, "themeMode", 0);
+    int themeMode = toml::find_or(m_globalConfig, "themeMode", 0);
     eTheme->setThemeMode((ElaThemeType::ThemeMode)themeMode);
     ElaComboBox* themeComboBox = new ElaComboBox(this);
     themeComboBox->addItem(tr("日间模式"));
@@ -86,7 +93,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     windowModeButtonGroup->addButton(acrylicButton, 4);
     windowModeButtonGroup->addButton(dwmBlurnormalButton, 5);
 
-    int windowDisplayMode = toml::find_or(_globalConfig, "windowDisplayMode", 0); // 不知道为什么3及以上的值会失效
+    int windowDisplayMode = toml::find_or(m_globalConfig, "windowDisplayMode", 0); // 不知道为什么3及以上的值会失效
     QAbstractButton* abstractButton = windowModeButtonGroup->button(windowDisplayMode);
     if (abstractButton)
     {
@@ -100,7 +107,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
         });
     connect(eApp, &ElaApplication::pWindowDisplayModeChanged, this, [=]()
         {
-            auto button = windowModeButtonGroup->button(eApp->getWindowDisplayMode());
+            const auto button = windowModeButtonGroup->button(eApp->getWindowDisplayMode());
             if (ElaRadioButton* elaRadioButton = qobject_cast<ElaRadioButton*>(button))
             {
                 elaRadioButton->setChecked(true);
@@ -143,15 +150,15 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     navigationGroup->addButton(minimumButton, 1);
     navigationGroup->addButton(compactButton, 2);
     navigationGroup->addButton(maximumButton, 3);
-    int navigationMode = toml::find_or(_globalConfig, "navigationMode", 0);
+    int navigationMode = toml::find_or(m_globalConfig, "navigationMode", 0);
     abstractButton = navigationGroup->button(navigationMode);
-    if (abstractButton) 
+    if (abstractButton)
     {
         abstractButton->setChecked(true);
     }
     window->setNavigationBarDisplayMode((ElaNavigationType::NavigationDisplayMode)navigationMode);
 
-    connect(navigationGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled) 
+    connect(navigationGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this, [=](QAbstractButton* button, bool isToggled)
         {
             window->setNavigationBarDisplayMode((ElaNavigationType::NavigationDisplayMode)navigationGroup->id(button));
         });
@@ -181,7 +188,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     stackSwitchGroup->addButton(scaleButton, 2);
     stackSwitchGroup->addButton(flipButton, 3);
     stackSwitchGroup->addButton(blurButton, 4);
-    int stackSwitchMode = toml::find_or(_globalConfig, "stackSwitchMode", 1);
+    int stackSwitchMode = toml::find_or(m_globalConfig, "stackSwitchMode", 1);
     abstractButton = stackSwitchGroup->button(stackSwitchMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -207,10 +214,10 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     autoRefreshLayout->addWidget(autoRefreshText);
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
-    autoRefreshSwitch->setIsToggled(toml::find_or(_globalConfig, "autoRefreshAfterTranslate", true));
-    connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked) 
+    autoRefreshSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoRefreshAfterTranslate", true));
+    connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
         {
-            insertToml(_globalConfig, "autoRefreshAfterTranslate", isChecked);
+            insertToml(m_globalConfig, "autoRefreshAfterTranslate", isChecked);
         });
     autoRefreshLayout->addWidget(autoRefreshSwitch);
 
@@ -226,7 +233,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     nameTableOpenModeLayout->addStretch();
     nameTableOpenModeLayout->addWidget(nameTableOpenModeTextButton);
     nameTableOpenModeLayout->addWidget(nameTableOpenModeTableButton);
-    int nameTableOpenMode = toml::find_or(_globalConfig, "defaultNameTableOpenMode", 1);
+    int nameTableOpenMode = toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 1);
     QButtonGroup* nameTableOpenModeGroup = new QButtonGroup(nameTableOpenModeArea);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTextButton, 0);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTableButton, 1);
@@ -239,7 +246,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
         {
             if (isToggled)
             {
-                insertToml(_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(button));
+                insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(button));
             }
         });
 
@@ -255,7 +262,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     dictOpenModeLayout->addStretch();
     dictOpenModeLayout->addWidget(dictOpenModeTextButton);
     dictOpenModeLayout->addWidget(dictOpenModeTableButton);
-    int dictOpenMode = toml::find_or(_globalConfig, "defaultDictOpenMode", 1);
+    int dictOpenMode = toml::find_or(m_globalConfig, "defaultDictOpenMode", 1);
     QButtonGroup* dictOpenModeGroup = new QButtonGroup(dictOpenModeArea);
     dictOpenModeGroup->addButton(dictOpenModeTextButton, 0);
     dictOpenModeGroup->addButton(dictOpenModeTableButton, 1);
@@ -268,7 +275,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
         {
             if (isToggled)
             {
-                insertToml(_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(button));
+                insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(button));
             }
         });
 
@@ -286,13 +293,13 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     allowCloseWhenRunningWarningText->setTextPixelSize(10);
     allowCloseWhenRunningWidgetLayout->addWidget(allowCloseWhenRunningWarningText);
     ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
-    allowCloseWhenRunningSwitch->setIsToggled(toml::find_or(_globalConfig, "allowCloseWhenRunning", false));
+    allowCloseWhenRunningSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false));
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningWidget);
     allowCloseWhenRunningLayout->addStretch();
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningSwitch);
     connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
         {
-            insertToml(_globalConfig, "allowCloseWhenRunning", isChecked);
+            insertToml(m_globalConfig, "allowCloseWhenRunning", isChecked);
         });
 
 
@@ -303,7 +310,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     checkUpdateText->setWordWrap(false);
     checkUpdateText->setTextPixelSize(15);
     ElaToggleSwitch* checkUpdateSwitch = new ElaToggleSwitch(checkUpdateArea);
-    checkUpdateSwitch->setIsToggled(toml::find_or(_globalConfig, "autoCheckUpdate", true));
+    checkUpdateSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoCheckUpdate", true));
     checkUpdateLayout->addWidget(checkUpdateText);
     checkUpdateLayout->addStretch();
     checkUpdateLayout->addWidget(checkUpdateSwitch);
@@ -315,16 +322,16 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     autoDownloadText->setWordWrap(false);
     autoDownloadText->setTextPixelSize(15);
     ElaToggleSwitch* autoDownloadSwitch = new ElaToggleSwitch(autoDownloadArea);
-    autoDownloadSwitch->setIsToggled(toml::find_or(_globalConfig, "autoDownloadUpdate", true));
+    autoDownloadSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
     autoDownloadLayout->addWidget(autoDownloadText);
     autoDownloadLayout->addStretch();
     autoDownloadLayout->addWidget(autoDownloadSwitch);
     connect(autoDownloadSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
         {
-            insertToml(_globalConfig, "autoDownloadUpdate", isChecked);
+            insertToml(m_globalConfig, "autoDownloadUpdate", isChecked);
         });
 
-    
+
     // 语言设置
     ElaScrollPageArea* languageArea = new ElaScrollPageArea(this);
     QHBoxLayout* languageLayout = new QHBoxLayout(languageArea);
@@ -343,7 +350,7 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     ElaComboBox* languageComboBox = new ElaComboBox(languageArea);
     languageComboBox->addItem("zh_CN");
     languageComboBox->addItem("en");
-    if (int languageIndex = languageComboBox->findText(QString::fromStdString(toml::find_or(_globalConfig, "language", "zh_CN"))); languageIndex >= 0) {
+    if (int languageIndex = languageComboBox->findText(QString::fromStdString(toml::find_or(m_globalConfig, "language", "zh_CN"))); languageIndex >= 0) {
         languageComboBox->setCurrentIndex(languageIndex);
     }
     languageLayout->addWidget(languageComboBox);
@@ -366,16 +373,16 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     pyEnvPathLayout->addStretch();
     ElaLineEdit* pyEnvPathLineEdit = new ElaLineEdit(pyEnvPathArea);
     pyEnvPathLineEdit->setFixedWidth(400);
-    pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(_globalConfig, "pyEnvPath", "BaseConfig/python-3.12.10-embed-amd64")));
+    pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pyEnvPath", "BaseConfig/python-3.12.10-embed-amd64")));
     pyEnvPathLayout->addWidget(pyEnvPathLineEdit);
     ElaPushButton* pyEnvPathButton = new ElaPushButton(tr("浏览"), pyEnvPathArea);
     pyEnvPathLayout->addWidget(pyEnvPathButton);
     connect(pyEnvPathButton, &ElaPushButton::clicked, this, [=]()
         {
-            QString pyExePath = QFileDialog::getOpenFileName(this, tr("选择Python.exe"), pyEnvPathLineEdit->text(), "Python.exe (python.exe)");
+            const QString pyExePath = QFileDialog::getOpenFileName(this, tr("选择Python.exe"), pyEnvPathLineEdit->text(), "Python.exe (python.exe)");
             if (!pyExePath.isEmpty())
             {
-                fs::path newPyEnvPath = fs::path(pyExePath.toStdWString()).parent_path();
+                const fs::path newPyEnvPath = fs::path(pyExePath.toStdWString()).parent_path();
                 if (!fs::exists(newPyEnvPath / L"python312.zip")) {
                     ElaMessageBar::error(ElaMessageBarType::TopRight, tr("错误"), tr("目录下没有 python{ver}.zip 文件"), 3000);
                     return;
@@ -390,34 +397,34 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     //        QString pyEnvPathQStr = pyEnvPathLineEdit->text();
     //        Q_EMIT restartPythonEnvSignal(pyEnvPathQStr);
     //    });
-    
 
 
-    _applyFunc = [=]()
+
+    m_applyFunc = [=]()
         {
-            QRect rect = window->frameGeometry();
-            insertToml(_globalConfig, "windowWidth", rect.width());
-            insertToml(_globalConfig, "windowHeight", rect.height());
-            insertToml(_globalConfig, "windowPosX", rect.x());
-            insertToml(_globalConfig, "windowPosY", rect.y());
-            insertToml(_globalConfig, "themeMode", (int)eTheme->getThemeMode());
-            insertToml(_globalConfig, "windowDisplayMode", windowModeButtonGroup->id(windowModeButtonGroup->checkedButton()));
-            insertToml(_globalConfig, "navigationMode", navigationGroup->id(navigationGroup->checkedButton()));
-            insertToml(_globalConfig, "stackSwitchMode", stackSwitchGroup->id(stackSwitchGroup->checkedButton()));
+            const QRect rect = window->frameGeometry();
+            insertToml(m_globalConfig, "windowWidth", rect.width());
+            insertToml(m_globalConfig, "windowHeight", rect.height());
+            insertToml(m_globalConfig, "windowPosX", rect.x());
+            insertToml(m_globalConfig, "windowPosY", rect.y());
+            insertToml(m_globalConfig, "themeMode", (int)eTheme->getThemeMode());
+            insertToml(m_globalConfig, "windowDisplayMode", windowModeButtonGroup->id(windowModeButtonGroup->checkedButton()));
+            insertToml(m_globalConfig, "navigationMode", navigationGroup->id(navigationGroup->checkedButton()));
+            insertToml(m_globalConfig, "stackSwitchMode", stackSwitchGroup->id(stackSwitchGroup->checkedButton()));
 
-            insertToml(_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
-            insertToml(_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
-            insertToml(_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
-            insertToml(_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());
-            insertToml(_globalConfig, "autoDownloadUpdate", autoDownloadSwitch->getIsToggled());
-            insertToml(_globalConfig, "autoCheckUpdate", checkUpdateSwitch->getIsToggled());
-            insertToml(_globalConfig, "language", languageComboBox->currentText().toStdString());
-            insertToml(_globalConfig, "pyEnvPath", pyEnvPathLineEdit->text().toStdString());
+            insertToml(m_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
+            insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
+            insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
+            insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());
+            insertToml(m_globalConfig, "autoDownloadUpdate", autoDownloadSwitch->getIsToggled());
+            insertToml(m_globalConfig, "autoCheckUpdate", checkUpdateSwitch->getIsToggled());
+            insertToml(m_globalConfig, "language", languageComboBox->currentText().toStdString());
+            insertToml(m_globalConfig, "pyEnvPath", pyEnvPathLineEdit->text().toStdString());
         };
-    
+
 
     QWidget* centralWidget = new QWidget(this);
-    centralWidget->setWindowTitle("Setting");
+    centralWidget->setWindowTitle(tr("应用设置"));
     QVBoxLayout* centerLayout = new QVBoxLayout(centralWidget);
     centerLayout->addWidget(themeText);
     centerLayout->addWidget(themeSwitchArea);
@@ -436,8 +443,4 @@ SettingPage::SettingPage(toml::ordered_value& globalConfig, QWidget* parent)
     centerLayout->addWidget(pyEnvPathArea);
     centerLayout->addStretch();
     addCentralWidget(centralWidget, true, true, 0);
-}
-
-SettingPage::~SettingPage()
-{
 }

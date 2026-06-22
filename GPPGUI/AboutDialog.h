@@ -1,4 +1,4 @@
-﻿#ifndef ABOUTDIALOG_H
+#ifndef ABOUTDIALOG_H
 #define ABOUTDIALOG_H
 
 #include <ElaDialog.h>
@@ -8,6 +8,7 @@ class ElaIconButton;
 class AboutDialog : public ElaDialog
 {
     Q_OBJECT
+
 public:
     explicit AboutDialog(QWidget* parent = nullptr);
     ~AboutDialog() override;
@@ -18,7 +19,9 @@ Q_SIGNALS:
     void downloadUpdateSignal();
 
 private:
-    ElaIconButton* _downloadButton;
+    void setupUi();
+
+    ElaIconButton* m_downloadButton = nullptr;
 };
 
 #endif // ABOUTDIALOG_H

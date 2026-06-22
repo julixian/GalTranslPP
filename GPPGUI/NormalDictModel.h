@@ -1,5 +1,3 @@
-﻿// NormalDictModel.h
-
 #ifndef NORMALDICTMODEL_H
 #define NORMALDICTMODEL_H
 
@@ -52,8 +50,8 @@ public:
     const QList<NormalDictEntry>& getEntriesRef() const;
 
 private:
-    QList<NormalDictEntry> _entries; // 存储所有字典条目的列表
-    QStringList _headerLabels;       // 存储表头标题
+    QList<NormalDictEntry> m_entries; // 存储所有字典条目的列表
+    QStringList m_headerLabels;       // 存储表头标题
 };
 
 #endif // NORMALDICTMODEL_H

@@ -30,38 +30,38 @@ public:
     void clearRuntime();
 
 private:
-    void _setupUI();
-    void _setSideTab(int index);
-    void _renderSuccesses();
-    void _renderErrors();
-    void _renderFiles();
-    void _refreshHeader();
-    void _trimSuccesses();
-    void _trimErrors();
+    void setupUi();
+    void setSideTab(int index);
+    void renderSuccesses();
+    void renderErrors();
+    void renderFiles();
+    void refreshHeader();
+    void trimSuccesses();
+    void trimErrors();
 
-    QVector<GuiRuntimeSuccessEvent> _successes;
-    QVector<GuiRuntimeErrorEvent> _errors;
-    QMap<QString, GuiRuntimeFileProgress> _files;
-    QSet<QString> _successFileFilters;
-    int _successTotal{0};
-    int _errorTotal{0};
-    QString _stage;
-    QString _currentFile;
+    QVector<GuiRuntimeSuccessEvent> m_successes;
+    QVector<GuiRuntimeErrorEvent> m_errors;
+    QMap<QString, GuiRuntimeFileProgress> m_files;
+    QSet<QString> m_successFileFilters;
+    int m_successTotal{};
+    int m_errorTotal{};
+    QString m_stage;
+    QString m_currentFile;
 
-    QStandardItemModel* _successModel{nullptr};
-    QStandardItemModel* _errorModel{nullptr};
-    QStandardItemModel* _fileModel{nullptr};
+    QStandardItemModel* m_successModel = nullptr;
+    QStandardItemModel* m_errorModel = nullptr;
+    QStandardItemModel* m_fileModel = nullptr;
 
-    ElaListView* _successList{nullptr};
-    ElaListView* _errorList{nullptr};
-    ElaListView* _fileList{nullptr};
-    ElaText* _summaryText{nullptr};
-    ElaText* _filterText{nullptr};
-    ElaPushButton* _clearFilterButton{nullptr};
-    ElaPushButton* _errorsTabButton{nullptr};
-    ElaPushButton* _filesTabButton{nullptr};
-    QButtonGroup* _sideTabGroup{nullptr};
-    QStackedWidget* _sideStack{nullptr};
+    ElaListView* m_successList = nullptr;
+    ElaListView* m_errorList = nullptr;
+    ElaListView* m_fileList = nullptr;
+    ElaText* m_summaryText = nullptr;
+    ElaText* m_filterText = nullptr;
+    ElaPushButton* m_clearFilterButton = nullptr;
+    ElaPushButton* m_errorsTabButton = nullptr;
+    ElaPushButton* m_filesTabButton = nullptr;
+    QButtonGroup* m_sideTabGroup = nullptr;
+    QStackedWidget* m_sideStack = nullptr;
 };
 
 #endif // TRANSLATIONWORKBENCHPAGE_H

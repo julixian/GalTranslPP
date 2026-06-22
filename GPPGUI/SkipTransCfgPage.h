@@ -1,4 +1,4 @@
-﻿#ifndef SKIPTRANSCFGPAGE_H
+#ifndef SKIPTRANSCFGPAGE_H
 #define SKIPTRANSCFGPAGE_H
 
 #include <toml.hpp>
@@ -13,7 +13,7 @@ public:
     ~SkipTransCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // ! SKIPTRANSCFGPAGE_H

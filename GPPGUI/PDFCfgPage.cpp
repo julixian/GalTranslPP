@@ -1,4 +1,4 @@
-﻿#include "pdfCfgPage.h"
+#include "pdfCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -10,7 +10,7 @@
 
 import Tool;
 
-PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("PDF 输出配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -20,7 +20,7 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出双语翻译文件
-	bool outputDual = toml::find_or(_projectConfig, "plugins", "PDF", "输出双语翻译文件", true);
+	bool outputDual = toml::find_or(m_projectConfig, "plugins", "PDF", "输出双语翻译文件", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("输出双语翻译文件"), outputArea);
@@ -33,9 +33,9 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	outputLayout->addWidget(outputSwitch);
 	mainLayout->addWidget(outputArea);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			insertToml(_projectConfig, "plugins.PDF.输出双语翻译文件", outputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.PDF.输出双语翻译文件", outputSwitch->getIsToggled());
 		};
 
 	mainLayout->addStretch();

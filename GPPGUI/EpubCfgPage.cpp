@@ -1,4 +1,4 @@
-﻿#include "EpubCfgPage.h"
+#include "EpubCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -16,7 +16,7 @@
 
 import Tool;
 
-EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("Epub 输出配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -26,7 +26,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 双语显示
-	bool bilingual = toml::find_or(_projectConfig, "plugins", "Epub", "双语显示", true);
+	bool bilingual = toml::find_or(m_projectConfig, "plugins", "Epub", "双语显示", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("双语显示"), outputArea);
@@ -39,7 +39,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	mainLayout->addWidget(outputArea);
 
 	// 原文颜色
-	std::string colorStr = toml::find_or(_projectConfig, "plugins", "Epub", "原文颜色", "#808080");
+	const std::string colorStr = toml::find_or(m_projectConfig, "plugins", "Epub", "原文颜色", "#808080");
 	QColor color = QColor(colorStr.c_str());
 	ElaScrollPageArea* colorArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* colorLayout = new QHBoxLayout(colorArea);
@@ -78,7 +78,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 
 
 	// 缩小比例
-	double scale = toml::find_or(_projectConfig, "plugins", "Epub", "缩小比例", 0.8);
+	double scale = toml::find_or(m_projectConfig, "plugins", "Epub", "缩小比例", 0.8);
 	ElaScrollPageArea* scaleArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* scaleLayout = new QHBoxLayout(scaleArea);
 	ElaText* scaleText = new ElaText(tr("缩小比例"), scaleArea);
@@ -92,7 +92,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	mainLayout->addWidget(scaleArea);
 
 	// 预处理正则
-	toml::ordered_value preRegexArr = toml::find_or_default<toml::ordered_value>(_projectConfig, "plugins", "Epub", "preprocRegex");
+	toml::ordered_value preRegexArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "Epub", "preprocRegex");
 	if (!preRegexArr.is_array()) {
 		preRegexArr = toml::array{};
 	}
@@ -106,7 +106,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	mainLayout->addWidget(preRegexEdit);
 
 	// 后处理正则
-	toml::ordered_value postRegexArr = toml::find_or_default<toml::ordered_value>(_projectConfig, "plugins", "Epub", "postprocRegex");
+	toml::ordered_value postRegexArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "Epub", "postprocRegex");
 	if (!postRegexArr.is_array()) {
 		postRegexArr = toml::array{};
 	}
@@ -130,20 +130,20 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 		});
 	mainLayout->addWidget(tipButtonWidget);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			insertToml(_projectConfig, "plugins.Epub.双语显示", outputSwitch->getIsToggled());
-			insertToml(_projectConfig, "plugins.Epub.原文颜色", colorDialog->getCurrentColorRGB().toStdString());
-			insertToml(_projectConfig, "plugins.Epub.缩小比例", scaleSlider->value());
+			insertToml(m_projectConfig, "plugins.Epub.双语显示", outputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.Epub.原文颜色", colorDialog->getCurrentColorRGB().toStdString());
+			insertToml(m_projectConfig, "plugins.Epub.缩小比例", scaleSlider->value());
 
 			try {
 				toml::ordered_value preTbl = toml::parse_str<toml::ordered_type_config>(preRegexEdit->toPlainText().toStdString());
 				auto& preArr = preTbl["preprocRegex"];
 				if (preArr.is_array()) {
-					insertToml(_projectConfig, "plugins.Epub.preprocRegex", preArr);
+					insertToml(m_projectConfig, "plugins.Epub.preprocRegex", preArr);
 				}
 				else {
-					insertToml(_projectConfig, "plugins.Epub.preprocRegex", toml::array{});
+					insertToml(m_projectConfig, "plugins.Epub.preprocRegex", toml::array{});
 				}
 			}
 			catch (...) {
@@ -153,17 +153,17 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 				toml::ordered_value postTbl = toml::parse_str<toml::ordered_type_config>(postRegexEdit->toPlainText().toStdString());
 				auto& postArr = postTbl["postprocRegex"];
 				if (postArr.is_array()) {
-					insertToml(_projectConfig, "plugins.Epub.postprocRegex", postArr);
+					insertToml(m_projectConfig, "plugins.Epub.postprocRegex", postArr);
 				}
 				else {
-					insertToml(_projectConfig, "plugins.Epub.postprocRegex", toml::array{});
+					insertToml(m_projectConfig, "plugins.Epub.postprocRegex", toml::array{});
 				}
 			}
 			catch (...) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("Epub后处理正则格式错误"), 3000);
 			}
 		};
-	
+
 	mainLayout->addStretch();
 	centerWidget->setWindowTitle(tr("Epub 输出配置"));
 	addCentralWidget(centerWidget, true, false, 0);

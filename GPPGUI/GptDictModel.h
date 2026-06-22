@@ -1,5 +1,3 @@
-﻿// GptDictModel.h
-
 #ifndef GPTDICTMODEL_H
 #define GPTDICTMODEL_H
 
@@ -40,8 +38,8 @@ public:
     const QList<GptDictEntry>& getEntriesRef() const;
 
 private:
-    QList<GptDictEntry> _entries; // 存储所有字典条目的列表
-    QStringList _headerLabels;       // 存储表头标题
+    QList<GptDictEntry> m_entries; // 存储所有字典条目的列表
+    QStringList m_headerLabels;       // 存储表头标题
 };
 
 #endif // GPTDICTMODEL_H

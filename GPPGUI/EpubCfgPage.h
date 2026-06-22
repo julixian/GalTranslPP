@@ -1,5 +1,3 @@
-﻿// EpubCfgPage.h
-
 #ifndef EPUBCFGPAGE_H
 #define EPUBCFGPAGE_H
 
@@ -15,7 +13,7 @@ public:
     ~EpubCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // EPUBCFGPAGE_H

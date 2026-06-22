@@ -1,4 +1,4 @@
-﻿#include "TranslatorWorker.h"
+#include "TranslatorWorker.h"
 #include <QMetaType>
 #include <QThread>
 #include <QTimer>
@@ -62,74 +62,74 @@ class GUIController : public IController
 public:
     virtual void writeLog(const std::string& log) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _log += log;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_log += log;
     }
 
     virtual bool shouldStop() override
     {
-        return _worker->getShouldStop();
+        return m_worker->getShouldStop();
     }
 
     virtual void flush() override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        if (!_log.isEmpty()) {
-            QStringList lines = _log.split('\n');
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (!m_log.isEmpty()) {
+            QStringList lines = m_log.split('\n');
             for (QString& line : lines) {
                 if (line.length() > 256) {
                     line.truncate(256);
                     line += "(...line truncated)";
                 }
             }
-            _log = lines.join('\n');
-            Q_EMIT _worker->writeLogSignal(_log);
-            _log.clear();
+            m_log = lines.join('\n');
+            Q_EMIT m_worker->writeLogSignal(m_log);
+            m_log.clear();
         }
-        Q_EMIT _worker->updateBarSignal(_progress);
-        _progress = 0;
-        if (!_pendingRuntimeFilesProgress.empty()) {
+        Q_EMIT m_worker->updateBarSignal(m_progress);
+        m_progress = 0;
+        if (!m_pendingRuntimeFilesProgress.empty()) {
             QVector<GuiRuntimeFileProgress> runtimeFilesProgressVec;
-            runtimeFilesProgressVec.reserve((qsizetype)_pendingRuntimeFilesProgress.size());
-            for (const auto& runtimeFileProgress : _pendingRuntimeFilesProgress | std::views::values) {
+            runtimeFilesProgressVec.reserve((qsizetype)m_pendingRuntimeFilesProgress.size());
+            for (const auto& runtimeFileProgress : m_pendingRuntimeFilesProgress | std::views::values) {
                 runtimeFilesProgressVec.push_back(runtimeFileProgress);
             }
-            Q_EMIT _worker->runtimeFileProgressBatchSignal(runtimeFilesProgressVec);
-            _pendingRuntimeFilesProgress.clear();
+            Q_EMIT m_worker->runtimeFileProgressBatchSignal(runtimeFilesProgressVec);
+            m_pendingRuntimeFilesProgress.clear();
         }
-        if (!_pendingRuntimeSuccesses.empty()) {
-            Q_EMIT _worker->runtimeSuccessBatchSignal(_pendingRuntimeSuccesses);
-            _pendingRuntimeSuccesses.clear();
+        if (!m_pendingRuntimeSuccesses.empty()) {
+            Q_EMIT m_worker->runtimeSuccessBatchSignal(m_pendingRuntimeSuccesses);
+            m_pendingRuntimeSuccesses.clear();
         }
-        if (!_pendingRuntimeErrors.empty()) {
-            Q_EMIT _worker->runtimeErrorBatchSignal(_pendingRuntimeErrors);
-            _pendingRuntimeErrors.clear();
+        if (!m_pendingRuntimeErrors.empty()) {
+            Q_EMIT m_worker->runtimeErrorBatchSignal(m_pendingRuntimeErrors);
+            m_pendingRuntimeErrors.clear();
         }
     }
 
 protected:
     virtual void onMakeBar(int totalSentences, int totalThreads) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->makeBarSignal(totalSentences, totalThreads);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        Q_EMIT m_worker->makeBarSignal(totalSentences, totalThreads);
     }
 
     virtual void onAddThreadNum(int) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->addThreadNumSignal();
+        std::lock_guard<std::mutex> lock(m_mutex);
+        Q_EMIT m_worker->addThreadNumSignal();
     }
 
     virtual void onReduceThreadNum(int) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        Q_EMIT _worker->reduceThreadNumSignal();
+        std::lock_guard<std::mutex> lock(m_mutex);
+        Q_EMIT m_worker->reduceThreadNumSignal();
     }
 
     virtual void onUpdateBar(int ticks, int, int) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _progress += ticks;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_progress += ticks;
     }
 
     virtual void onRuntimeFilesReset(const std::vector<RuntimeFileProgress>& files) override
@@ -139,41 +139,41 @@ protected:
         for (const RuntimeFileProgress& file : files) {
             guiFiles.push_back(toGuiFileProgress(file));
         }
-        Q_EMIT _worker->runtimeFilesResetSignal(guiFiles);
+        Q_EMIT m_worker->runtimeFilesResetSignal(guiFiles);
     }
 
     virtual void onRuntimeStageChanged(const std::string& stage, const std::string& currentFile) override
     {
-        Q_EMIT _worker->runtimeStageChangedSignal(qstr(stage), qstr(currentFile));
+        Q_EMIT m_worker->runtimeStageChangedSignal(qstr(stage), qstr(currentFile));
     }
 
     virtual void onRuntimeFileProgress(const RuntimeFileProgress& file) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(m_mutex);
         GuiRuntimeFileProgress guiFile = toGuiFileProgress(file);
-        _pendingRuntimeFilesProgress[guiFile.filename.toStdString()] = std::move(guiFile);
+        m_pendingRuntimeFilesProgress[guiFile.filename.toStdString()] = std::move(guiFile);
     }
 
     virtual void onRuntimeSuccess(const RuntimeSuccessEvent& event) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _pendingRuntimeSuccesses.push_back(toGuiSuccessEvent(event));
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingRuntimeSuccesses.push_back(toGuiSuccessEvent(event));
     }
 
     virtual void onRuntimeError(const RuntimeErrorEvent& event) override
     {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _pendingRuntimeErrors.push_back(toGuiErrorEvent(event));
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_pendingRuntimeErrors.push_back(toGuiErrorEvent(event));
     }
 
 public:
     explicit GUIController(TranslatorWorker* worker)
-	    : _worker(worker)
+	    : m_worker(worker)
     {
-        _log.reserve(1024 * 1024);
-        _flushThread = std::thread([this]()
+        m_log.reserve(1024 * 1024);
+        m_flushThread = std::thread([this]()
             {
-                while (_controlling) {
+                while (m_controlling) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(200));
                     flush();
                 }
@@ -182,26 +182,26 @@ public:
 
     virtual ~GUIController() override
     {
-        _controlling = false;
-        if (_flushThread.joinable()) {
-            _flushThread.join();
+        m_controlling = false;
+        if (m_flushThread.joinable()) {
+            m_flushThread.join();
         }
     }
 
 private:
-    std::mutex _mutex;
-    QString _log;
-    std::thread _flushThread;
-    TranslatorWorker* _worker;
-    bool _controlling = true;
-    int _progress = 0;
-    std::map<std::string, GuiRuntimeFileProgress> _pendingRuntimeFilesProgress;
-    QVector<GuiRuntimeSuccessEvent> _pendingRuntimeSuccesses;
-    QVector<GuiRuntimeErrorEvent> _pendingRuntimeErrors;
+    std::mutex m_mutex;
+    QString m_log;
+    std::thread m_flushThread;
+    TranslatorWorker* m_worker;
+    bool m_controlling = true;
+    int m_progress = 0;
+    std::map<std::string, GuiRuntimeFileProgress> m_pendingRuntimeFilesProgress;
+    QVector<GuiRuntimeSuccessEvent> m_pendingRuntimeSuccesses;
+    QVector<GuiRuntimeErrorEvent> m_pendingRuntimeErrors;
 };
 
 TranslatorWorker::TranslatorWorker(const fs::path& projectDir, QObject* parent)
-    : QObject(parent), _projectDir(projectDir)
+    : QObject(parent), m_projectDir(projectDir)
 {
     qRegisterMetaType<GuiRuntimeSuccessEvent>("GuiRuntimeSuccessEvent");
     qRegisterMetaType<GuiRuntimeErrorEvent>("GuiRuntimeErrorEvent");
@@ -213,15 +213,15 @@ TranslatorWorker::TranslatorWorker(const fs::path& projectDir, QObject* parent)
 
 void TranslatorWorker::doTranslation()
 {
-    _shouldStop = false;
+    m_shouldStop = false;
 
     const auto controller = std::make_shared<GUIController>(this);
 
     try {
 
-        const std::unique_ptr<ITranslator> translator = createTranslator(_projectDir, controller);
+        const std::unique_ptr<ITranslator> translator = createTranslator(m_projectDir, controller);
         if (!translator) {
-            Q_EMIT translationFinished(-1);
+            Q_EMIT translationFinishedSignal(-1);
             return;
         }
         translator->run();
@@ -230,40 +230,40 @@ void TranslatorWorker::doTranslation()
     catch (const std::system_error& e) {
         controller->flush();
         Q_EMIT writeLogSignal("[系统错误] " + QString::fromStdString(e.what()));
-        Q_EMIT translationFinished(-2);
+        Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::invalid_argument& e) {
         controller->flush();
         Q_EMIT writeLogSignal("[参数错误] " + QString::fromStdString(e.what()));
-        Q_EMIT translationFinished(-2);
+        Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::runtime_error& e) {
         controller->flush();
         Q_EMIT writeLogSignal("[运行时错误] " + QString::fromStdString(e.what()));
-        Q_EMIT translationFinished(-2);
+        Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::exception& e) {
         controller->flush();
         Q_EMIT writeLogSignal("[标准错误] " + QString::fromStdString(e.what()));
-        Q_EMIT translationFinished(-2);
+        Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (...) {
         controller->flush();
         Q_EMIT writeLogSignal("[未知错误]");
-        Q_EMIT translationFinished(-2);
+        Q_EMIT translationFinishedSignal(-2);
         return;
     }
 
-    controller->writeLog(std::string("翻译任务") + (_shouldStop ? "已停止" : "已完成") + "。");
+    controller->writeLog(std::string("翻译任务") + (m_shouldStop ? "已停止" : "已完成") + "。");
     controller->flush();
-    Q_EMIT translationFinished(_shouldStop ? 1 : 0);
+    Q_EMIT translationFinishedSignal(m_shouldStop ? 1 : 0);
 }
 
 void TranslatorWorker::stopTranslation()
 {
-    _shouldStop = true;
+    m_shouldStop = true;
 }

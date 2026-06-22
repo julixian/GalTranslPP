@@ -1,5 +1,3 @@
-﻿// ElaDoubleText.h
-
 #ifndef ELADOUBLETEXT_H
 #define ELADOUBLETEXT_H
 
@@ -19,9 +17,9 @@ public:
     QString getFirstLineText() const;
 
 private:
-    ElaText* _firstLine{ nullptr };
-    ElaText* _secondLine{ nullptr };
-    ElaToolTip* _toolTip{ nullptr };
+    ElaText* m_firstLine = nullptr;
+    ElaText* m_secondLine = nullptr;
+    ElaToolTip* m_toolTip = nullptr;
 };
 
 #endif // ELADOUBLETEXT_H

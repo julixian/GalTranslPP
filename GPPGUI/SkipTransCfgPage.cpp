@@ -14,7 +14,7 @@
 import Tool;
 
 SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
-    : BasePage(parent), _projectConfig(projectConfig)
+    : BasePage(parent), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("跳过翻译设置"));
     setContentsMargins(30, 15, 15, 0);
@@ -24,7 +24,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
     // skipH
-    bool skipH = toml::find_or(_projectConfig, "plugins", "SkipTrans", "skipH", false);
+    bool skipH = toml::find_or(m_projectConfig, "plugins", "SkipTrans", "skipH", false);
     ElaScrollPageArea* skipHArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* skipHLayout = new QHBoxLayout(skipHArea);
     ElaDoubleText* skipHText = new ElaDoubleText(skipHArea,
@@ -39,7 +39,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	mainLayout->addSpacing(20);
 
     // skipKeys
-	toml::ordered_value skipKeysArr = toml::find_or_default<toml::ordered_value>(_projectConfig, "plugins", "SkipTrans", "skipKeys");
+	toml::ordered_value skipKeysArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "SkipTrans", "skipKeys");
 	if (!skipKeysArr.is_array()) {
 		skipKeysArr = toml::array{};
 	}
@@ -51,7 +51,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	mainLayout->addWidget(skipKeysHelperText);
 	ElaPlainTextEdit* skipKeysEdit = new ElaPlainTextEdit(centerWidget);
 	skipKeysEdit->setMinimumHeight(330);
-	
+
 	QFont font = skipKeysEdit->font();
 	font.setPixelSize(14);
 	skipKeysEdit->setFont(font);
@@ -60,18 +60,18 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	mainLayout->addWidget(skipKeysEdit);
 
 
-    _applyFunc = [=]
+    m_applyFunc = [=]
         {
-            insertToml(_projectConfig, "plugins.SkipTrans.skipH", skipHSwitch->getIsToggled());
+            insertToml(m_projectConfig, "plugins.SkipTrans.skipH", skipHSwitch->getIsToggled());
 
 			try {
 				toml::ordered_value newSkipKeysTbl = toml::parse_str<toml::ordered_type_config>(skipKeysEdit->toPlainText().toStdString());
 				auto& newSkipKeysArr = newSkipKeysTbl["skipKeys"];
 				if (newSkipKeysArr.is_array()) {
-					insertToml(_projectConfig, "plugins.SkipTrans.skipKeys", newSkipKeysArr);
+					insertToml(m_projectConfig, "plugins.SkipTrans.skipKeys", newSkipKeysArr);
 				}
 				else {
-					insertToml(_projectConfig, "plugins.SkipTrans.skipKeys", toml::array{});
+					insertToml(m_projectConfig, "plugins.SkipTrans.skipKeys", toml::array{});
 				}
 			}
 			catch (...) {

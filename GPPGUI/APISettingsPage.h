@@ -1,5 +1,3 @@
-// APISettingsPage.h
-
 #ifndef APISETTINGSPAGE_H
 #define APISETTINGSPAGE_H
 
@@ -20,13 +18,13 @@ public:
     virtual void apply2Config() override;
 
 private Q_SLOTS:
-    void _addApiInputRow();
-    void _onDeleteApiRow();
+    void addApiInputRow();
+    void onDeleteApiRow();
 
 private:
     // 成员变量
-    QVBoxLayout* _mainLayout; // 页面主布局(用来增删APIKEY输入控件)
-    toml::ordered_value& _projectConfig;
+    QVBoxLayout* m_mainLayout = nullptr; // 页面主布局(用来增删APIKEY输入控件)
+    toml::ordered_value& m_projectConfig;
 
     // 用于存储动态控件的列表
     struct ApiRowControls {
@@ -34,11 +32,11 @@ private:
         QWidget* configWidget;
         std::function<void(toml::ordered_array&)> applyFunc;
     };
-    QList<ApiRowControls> _apiRows;
+    QList<ApiRowControls> m_apiRows;
 
-    void _setupUI();
+    void setupUi();
     // 创建一个新的API输入行（现在返回一个ElaScrollPageArea*）
-    ElaScrollPageArea* _createApiInputRowWidget(const toml::value& apiTblValue = toml::table{});
+    ElaScrollPageArea* createApiInputRowWidget(const toml::value& apiTblValue = toml::table{});
 };
 
 #endif // APISETTINGSPAGE_H

@@ -1,4 +1,4 @@
-﻿#ifndef MAINWINDOW_H
+#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #define PYBIND11_HEADERS
@@ -14,7 +14,7 @@ class AboutDialog;
 class DefaultPromptPage;
 class CommonGptDictPage;
 class CommonNormalDictPage;
-class SettingPage;
+class AppSettingsPage;
 class ProjectSettingsPage;
 class ElaContentDialog;
 class UpdateChecker;
@@ -38,45 +38,45 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent* event) override;
 
 private Q_SLOTS:
-    void _onNewProjectTriggered();
-    void _onOpenProjectTriggered();
-    void _onRemoveProjectTriggered();
-    void _onDeleteProjectTriggered();
-    void _onSaveProjectTriggered();
-    void _onFinishTranslating(QString nodeKey);
-    void _onCloseWindowClicked(bool restart);
-    void _onClearLog(bool forceClear);
+    void onNewProjectTriggered();
+    void onOpenProjectTriggered();
+    void onRemoveProjectTriggered();
+    void onDeleteProjectTriggered();
+    void onSaveProjectTriggered();
+    void onFinishTranslating(const QString& nodeKey);
+    void onCloseWindowClicked(bool restart);
+    void onClearLog(bool forceClear);
 
 private:
 
     void initWindow();
     void initEdgeLayout();
     void initContent();
-    ProjectSettingsPage* _createProjectSettingsPage(const fs::path& projectDir);
+    ProjectSettingsPage* createProjectSettingsPage(const fs::path& projectDir);
 
-    HomePage* _homePage{nullptr};
-    AboutDialog* _aboutDialog{nullptr};
-    DefaultPromptPage* _defaultPromptPage{nullptr};
-    CommonNormalDictPage* _commonPreDictPage{nullptr};
-    CommonGptDictPage* _commonGptDictPage{nullptr};
-    CommonNormalDictPage* _commonPostDictPage{nullptr};
-    SettingPage* _settingPage{nullptr};
+    HomePage* m_homePage = nullptr;
+    AboutDialog* m_aboutDialog = nullptr;
+    DefaultPromptPage* m_defaultPromptPage = nullptr;
+    CommonNormalDictPage* m_commonPreDictPage = nullptr;
+    CommonGptDictPage* m_commonGptDictPage = nullptr;
+    CommonNormalDictPage* m_commonPostDictPage = nullptr;
+    AppSettingsPage* m_appSettingsPage = nullptr;
 
-    QString _commonDictExpanderKey;
-    QString _projectExpanderKey;
+    QString m_commonDictExpanderKey;
+    QString m_projectExpanderKey;
 
-    QString _aboutKey;
-    QString _transIllustrationKey;
-    QString _settingKey;
+    QString m_aboutKey;
+    QString m_transIllustrationKey;
+    QString m_appSettingsKey;
 
-    QShortcut* _clearLogShortcut{nullptr};
+    QShortcut* m_clearLogShortcut = nullptr;
 
-    QList<QSharedPointer<ProjectSettingsPage>> _projectPages;
+    QList<QSharedPointer<ProjectSettingsPage>> m_projectPages;
 
-    ElaContentDialog* _closeDialog{nullptr};
-    UpdateChecker* _updateChecker{nullptr};
+    ElaContentDialog* m_closeDialog = nullptr;
+    UpdateChecker* m_updateChecker = nullptr;
 
-    toml::ordered_value _globalConfig;
-    std::unique_ptr<py::gil_scoped_release>& _release;
+    toml::ordered_value m_globalConfig;
+    std::unique_ptr<py::gil_scoped_release>& m_release;
 };
 #endif // MAINWINDOW_H

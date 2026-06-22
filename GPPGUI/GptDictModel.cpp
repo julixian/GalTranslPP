@@ -1,5 +1,3 @@
-﻿// GptDictModel.cpp
-
 #include "GptDictModel.h"
 #include <QFont>
 
@@ -7,7 +5,7 @@ GptDictModel::GptDictModel(QObject* parent)
     : QAbstractTableModel(parent)
 {
     // 初始化表头
-    _headerLabels << tr("原文") << tr("译文") << tr("描述");
+    m_headerLabels << tr("原文") << tr("译文") << tr("描述");
 }
 
 // 返回数据行数
@@ -17,7 +15,7 @@ int GptDictModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return (int)_entries.count();
+    return (int)m_entries.count();
 }
 
 // 返回列数
@@ -26,7 +24,7 @@ int GptDictModel::columnCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return (int)_headerLabels.count();
+    return (int)m_headerLabels.count();
 }
 
 // 提供数据给视图
@@ -37,14 +35,14 @@ QVariant GptDictModel::data(const QModelIndex& index, int role) const
     }
 
     // 确保行和列在有效范围内
-    if (index.row() >= _entries.count() || index.column() >= _headerLabels.count()) {
+    if (index.row() >= m_entries.count() || index.column() >= m_headerLabels.count()) {
         return {};
     }
 
     // --- 核心逻辑：根据 'role' 提供不同的数据 ---
     if (role == Qt::DisplayRole || role == Qt::EditRole)
     {
-        const GptDictEntry& entry = _entries.at(index.row());
+        const GptDictEntry& entry = m_entries.at(index.row());
         switch (index.column())
         {
         case 0: return entry.original;
@@ -69,8 +67,8 @@ QVariant GptDictModel::headerData(int section, Qt::Orientation orientation, int 
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
-        if (section < _headerLabels.count()) {
-            return _headerLabels.at(section);
+        if (section < m_headerLabels.count()) {
+            return m_headerLabels.at(section);
         }
     }
     return QAbstractTableModel::headerData(section, orientation, role);
@@ -96,11 +94,11 @@ bool GptDictModel::setData(const QModelIndex& index, const QVariant& value, int 
         return false;
     }
 
-    if (index.row() >= _entries.count() || index.column() >= _headerLabels.count()) {
+    if (index.row() >= m_entries.count() || index.column() >= m_headerLabels.count()) {
         return false;
     }
 
-    GptDictEntry& entry = _entries[index.row()];
+    GptDictEntry& entry = m_entries[index.row()];
     QString textValue = value.toString();
 
     // 根据列更新对应的数据
@@ -135,7 +133,7 @@ void GptDictModel::loadData(const QList<GptDictEntry>& entries)
 {
     // 在修改底层数据结构之前，必须调用 beginResetModel()
     beginResetModel();
-    _entries = entries;
+    m_entries = entries;
     // 修改完成后，调用 endResetModel()
     endResetModel();
 }
@@ -145,7 +143,7 @@ bool GptDictModel::insertRow(int row, const GptDictEntry& entry, const QModelInd
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    _entries.insert(row, entry);
+    m_entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -154,13 +152,13 @@ bool GptDictModel::insertRow(int row, const GptDictEntry& entry, const QModelInd
 
 bool GptDictModel::removeRow(int row, const QModelIndex& parent)
 {
-    if (row < 0 || row >= _entries.count()) {
+    if (row < 0 || row >= m_entries.count()) {
         return false;
     }
 
     // 在移除行之前，调用 beginRemoveRows()
     beginRemoveRows(parent, row, row);
-    _entries.removeAt(row);
+    m_entries.removeAt(row);
     // 移除完成后，调用 endRemoveRows()
     endRemoveRows();
     return true;
@@ -168,10 +166,10 @@ bool GptDictModel::removeRow(int row, const QModelIndex& parent)
 
 QList<GptDictEntry> GptDictModel::getEntries() const
 {
-    return _entries;
+    return m_entries;
 }
 
 const QList<GptDictEntry>& GptDictModel::getEntriesRef() const
 {
-    return _entries;
+    return m_entries;
 }

@@ -1,4 +1,4 @@
-﻿#include "ElaInputDialog.h"
+#include "ElaInputDialog.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -8,16 +8,14 @@
 #include "ElaLineEdit.h"
 
 
-ElaInputDialog::ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result, bool* ok) :
-	ElaContentDialog(parent), _result(result), _ok(ok)
+ElaInputDialog::ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result) :
+	ElaContentDialog(parent), m_result(result)
 {
 	setWindowTitle("InputDialog");
 
 	setLeftButtonText(tr("取消"));
 	setMiddleButtonText(tr("重置"));
 	setRightButtonText(tr("确定"));
-
-	*_ok = false;
 
 	// 创建一个中心部件和布局
 	QWidget* centerWidget = new QWidget(this);
@@ -30,10 +28,10 @@ ElaInputDialog::ElaInputDialog(QWidget* parent, const QString& label, const QStr
 	mainLayout->addWidget(labelText);
 	mainLayout->addSpacing(2);
 
-	_lineEdit = new ElaLineEdit(centerWidget);
-	_lineEdit->setPlaceholderText(text);
+	m_lineEdit = new ElaLineEdit(centerWidget);
+	m_lineEdit->setPlaceholderText(text);
 	mainLayout->addStretch();
-	mainLayout->addWidget(_lineEdit);
+	mainLayout->addWidget(m_lineEdit);
 
 	setCentralWidget(centerWidget);
 }
@@ -45,11 +43,10 @@ ElaInputDialog::~ElaInputDialog()
 
 void ElaInputDialog::onRightButtonClicked()
 {
-	*_ok = true;
-	_result = _lineEdit->text();
+	m_result = m_lineEdit->text();
 }
 
 void ElaInputDialog::onMiddleButtonClicked()
 {
-	_lineEdit->clear();
+	m_lineEdit->clear();
 }

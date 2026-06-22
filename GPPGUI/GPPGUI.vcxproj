@@ -187,7 +187,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
     <ClCompile Include="ProjectCachePageSearch.cpp" />
     <ClCompile Include="PromptSettingsPage.cpp" />
     <ClCompile Include="ReadDicts.cpp" />
-    <ClCompile Include="SettingPage.cpp" />
+    <ClCompile Include="AppSettingsPage.cpp" />
     <ClCompile Include="SkipTransCfgPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
     <ClCompile Include="TranslationWorkbenchPage.cpp" />
@@ -288,7 +288,7 @@ copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
     <QtMoc Include="HomePage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="SettingPage.h" />
+    <QtMoc Include="AppSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="UpdateWidget.h" />

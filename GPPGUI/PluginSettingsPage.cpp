@@ -1,5 +1,3 @@
-﻿// PluginSettingsPage.cpp
-
 #include "PluginSettingsPage.h"
 #include "PluginItemWidget.h" // 引入自定义控件
 
@@ -20,13 +18,13 @@
 
 import Tool;
 
-PluginSettingsPage::PluginSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
-    BasePage(parent), _projectConfig(projectConfig), _projectDir(projectDir), _mainWindow(mainWindow)
+PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent) :
+    BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig), m_mainWindow(mainWindow)
 {
     setWindowTitle(tr("插件设置"));
     setTitleVisible(false);
 
-    _setupUI();
+    setupUi();
 }
 
 PluginSettingsPage::~PluginSettingsPage()
@@ -35,12 +33,12 @@ PluginSettingsPage::~PluginSettingsPage()
 
 void PluginSettingsPage::apply2Config()
 {
-    if (_applyFunc) {
-        _applyFunc();
+    if (m_applyFunc) {
+        m_applyFunc();
     }
 }
 
-void PluginSettingsPage::_setupUI()
+void PluginSettingsPage::setupUi()
 {
     QWidget* mainWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -54,8 +52,8 @@ void PluginSettingsPage::_setupUI()
 
     // 创建一个容器用于放置列表
     QWidget* listContainer = new QWidget(mainWidget);
-    _pluginListLayout = new QVBoxLayout(listContainer);
-    _pluginListLayout->setContentsMargins(0, 0, 0, 0);
+    m_pluginListLayout = new QVBoxLayout(listContainer);
+    m_pluginListLayout->setContentsMargins(0, 0, 0, 0);
 
     // 插件名称列表
     QMap<QString, PluginRunTime> pluginNamesMap =
@@ -66,7 +64,7 @@ void PluginSettingsPage::_setupUI()
     };
     toml::ordered_array customPlugins;
     // 先处理项目已经启用的插件
-    const auto pluginsArr = toml::find_or_default<toml::ordered_array>(_projectConfig, "plugins", "textPlugins");
+    const auto pluginsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "textPlugins");
     for (const auto& pluginNameStr : pluginsArr) {
         if (!pluginNameStr.is_string()) {
             continue;
@@ -86,11 +84,11 @@ void PluginSettingsPage::_setupUI()
         QString runTimeStr = QString::fromStdString(pluginRunTimeNames[runTime]);
         PluginItemWidget* item = new PluginItemWidget(pluginNormalName, runTimeStr, this);
         item->setIsToggled(isEnabled);
-        _pluginItems.append(item);
-        _pluginListLayout->addWidget(item);
-        connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onItemMoveUp);
-        connect(item, &PluginItemWidget::moveDownRequested, this, &PluginSettingsPage::_onItemMoveDown);
-        connect(item, &PluginItemWidget::settingsRequested, this, &PluginSettingsPage::_onItemSettings);
+        m_pluginItems.append(item);
+        m_pluginListLayout->addWidget(item);
+        connect(item, &PluginItemWidget::moveUpRequestedSignal, this, &PluginSettingsPage::onItemMoveUp);
+        connect(item, &PluginItemWidget::moveDownRequestedSignal, this, &PluginSettingsPage::onItemMoveDown);
+        connect(item, &PluginItemWidget::settingsRequestedSignal, this, &PluginSettingsPage::onItemSettings);
         // 防止重复添加
         pluginNamesMap.erase(pluginNamesMap.find(pluginNormalName));
     }
@@ -100,19 +98,19 @@ void PluginSettingsPage::_setupUI()
     {
         QString runTimeStr = QString::fromStdString(pluginRunTimeNames[pluginNamesMap[name]]);
         PluginItemWidget* item = new PluginItemWidget(name, runTimeStr, this);
-        _pluginItems.append(item); // 添加到列表中
-        _pluginListLayout->addWidget(item); // 添加到布局中
+        m_pluginItems.append(item); // 添加到列表中
+        m_pluginListLayout->addWidget(item); // 添加到布局中
         // 连接信号
-        connect(item, &PluginItemWidget::moveUpRequested, this, &PluginSettingsPage::_onItemMoveUp);
-        connect(item, &PluginItemWidget::moveDownRequested, this, &PluginSettingsPage::_onItemMoveDown);
-        connect(item, &PluginItemWidget::settingsRequested, this, &PluginSettingsPage::_onItemSettings);
+        connect(item, &PluginItemWidget::moveUpRequestedSignal, this, &PluginSettingsPage::onItemMoveUp);
+        connect(item, &PluginItemWidget::moveDownRequestedSignal, this, &PluginSettingsPage::onItemMoveDown);
+        connect(item, &PluginItemWidget::settingsRequestedSignal, this, &PluginSettingsPage::onItemSettings);
     }
     mainLayout->addWidget(listContainer);
 
     // 初始化按钮状态
-    _updateMoveButtonStates();
+    updateMoveButtonStates();
 
-    auto createCustomPluginsPlainTextEditFunc = 
+    auto createCustomPluginsPlainTextEditFunc =
         [=](const QString& title, const std::string& configKey, const toml::ordered_array& customPlugins_) -> std::function<void(toml::ordered_array&)>
         {
             QHBoxLayout* customPluginsLayout = new QHBoxLayout(mainWidget);
@@ -143,13 +141,13 @@ void PluginSettingsPage::_setupUI()
                     toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
                     auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];
                     if (!newCustomPluginsArr.is_array()) {
-                        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析错误"), 
+                        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析错误"),
                             tr("自定义文本处理插件不符合 toml 规范"), 3000);
                         return;
                     }
 
                     QString fileName = QFileDialog::getOpenFileName(this, tr("选择自定义文本处理插件"),
-                        QString::fromStdWString(_projectDir.wstring()), "custom script (*.lua *.py)");
+                        QString::fromStdWString(m_projectDir.wstring()), "custom script (*.lua *.py)");
                     if (!fileName.isEmpty()) {
                         newCustomPluginsArr.push_back(fileName.toStdString());
                         customPluginsEdit->setPlainText(QString::fromStdString(toml::format(newCustomPluginsTbl)));
@@ -162,15 +160,15 @@ void PluginSettingsPage::_setupUI()
                         toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
                         auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];
                         if (newCustomPluginsArr.is_array()) {
-                            for (const auto& newCustomPlugin : newCustomPluginsArr.as_array() 
-                                | std::views::filter([](const auto& plugin) { return plugin.is_string(); })) 
+                            for (const auto& newCustomPlugin : newCustomPluginsArr.as_array()
+                                | std::views::filter([](const auto& plugin) { return plugin.is_string(); }))
                             {
                                 arr.push_back(newCustomPlugin);
                             }
                         }
                     }
                     catch (...) {
-                        ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析错误"), 
+                        ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析错误"),
                             QString::fromStdString(configKey) + tr(" 不符合 toml 规范"), 3000);
                     }
                 };
@@ -183,24 +181,24 @@ void PluginSettingsPage::_setupUI()
 
     addCentralWidget(mainWidget, true, false, 0);
 
-    // 这里的顺序和 _onItemSettings 中的 navigation 索引对应
-    _tf2hCfgPage = new TF2HCfgPage(_projectConfig, this);
-    addCentralWidget(_tf2hCfgPage, true, false, 0);;
-    _tlfCfgPage = new TLFCfgPage(_projectConfig, this);
-    addCentralWidget(_tlfCfgPage, true, false, 0);
-    _skipTransCfgPage = new SkipTransCfgPage(_projectConfig, this);
-    addCentralWidget(_skipTransCfgPage, true, false, 0);
+    // 这里的顺序和 onItemSettings 中的 navigation 索引对应
+    m_tf2hCfgPage = new TF2HCfgPage(m_projectConfig, this);
+    addCentralWidget(m_tf2hCfgPage, true, false, 0);;
+    m_tlfCfgPage = new TLFCfgPage(m_projectConfig, this);
+    addCentralWidget(m_tlfCfgPage, true, false, 0);
+    m_skipTransCfgPage = new SkipTransCfgPage(m_projectConfig, this);
+    addCentralWidget(m_skipTransCfgPage, true, false, 0);
 
 
 
-    _applyFunc = [=]()
+    m_applyFunc = [=]()
         {
-            _skipTransCfgPage->apply2Config();
-            _tlfCfgPage->apply2Config();
-            _tf2hCfgPage->apply2Config();
+            m_skipTransCfgPage->apply2Config();
+            m_tlfCfgPage->apply2Config();
+            m_tf2hCfgPage->apply2Config();
 
             toml::ordered_array pluginsToSave;
-            for (PluginItemWidget* item : _pluginItems) {
+            for (PluginItemWidget* item : m_pluginItems) {
                 std::string pluginNameToSave = item->getPluginName().toStdString();
                 if (!item->getIsToggled()) {
                     pluginNameToSave = ">" + pluginNameToSave;
@@ -208,11 +206,11 @@ void PluginSettingsPage::_setupUI()
                 pluginsToSave.push_back(pluginNameToSave);
             }
             saveCustomPluginsFunc(pluginsToSave);
-            insertToml(_projectConfig, "plugins.textPlugins", pluginsToSave);
+            insertToml(m_projectConfig, "plugins.textPlugins", pluginsToSave);
         };
 }
 
-void PluginSettingsPage::_onItemSettings(PluginItemWidget* item)
+void PluginSettingsPage::onItemSettings(PluginItemWidget* item)
 {
     if (!item) {
         return;
@@ -232,47 +230,47 @@ void PluginSettingsPage::_onItemSettings(PluginItemWidget* item)
 
 // 下面不用看，没什么用
 
-void PluginSettingsPage::_onItemMoveUp(PluginItemWidget* item)
+void PluginSettingsPage::onItemMoveUp(PluginItemWidget* item)
 {
-    int index = _pluginListLayout->indexOf(item);
+    int index = m_pluginListLayout->indexOf(item);
     if (index > 0) // 确保不是第一个
     {
         // 从布局和列表中移除
-        _pluginListLayout->removeWidget(item);
-        _pluginItems.removeOne(item);
+        m_pluginListLayout->removeWidget(item);
+        m_pluginItems.removeOne(item);
 
         // 插入到新位置
-        _pluginListLayout->insertWidget(index - 1, item);
-        _pluginItems.insert(index - 1, item);
+        m_pluginListLayout->insertWidget(index - 1, item);
+        m_pluginItems.insert(index - 1, item);
 
-        _updateMoveButtonStates();
+        updateMoveButtonStates();
     }
 }
 
-void PluginSettingsPage::_onItemMoveDown(PluginItemWidget* item)
+void PluginSettingsPage::onItemMoveDown(PluginItemWidget* item)
 {
-    int index = _pluginListLayout->indexOf(item);
+    int index = m_pluginListLayout->indexOf(item);
     // 确保不是最后一个有效的item
-    if (index < _pluginItems.count() - 1)
+    if (index < m_pluginItems.count() - 1)
     {
-        _pluginListLayout->removeWidget(item);
-        _pluginItems.removeOne(item);
+        m_pluginListLayout->removeWidget(item);
+        m_pluginItems.removeOne(item);
 
-        _pluginListLayout->insertWidget(index + 1, item);
-        _pluginItems.insert(index + 1, item);
+        m_pluginListLayout->insertWidget(index + 1, item);
+        m_pluginItems.insert(index + 1, item);
 
-        _updateMoveButtonStates();
+        updateMoveButtonStates();
     }
 }
 
-void PluginSettingsPage::_updateMoveButtonStates()
+void PluginSettingsPage::updateMoveButtonStates()
 {
-    for (int i = 0; i < _pluginItems.count(); ++i)
+    for (int i = 0; i < m_pluginItems.count(); ++i)
     {
-        PluginItemWidget* item = _pluginItems.at(i);
+        PluginItemWidget* item = m_pluginItems.at(i);
         // 第一个不能上移
         item->setMoveUpButtonEnabled(i > 0);
         // 最后一个不能下移
-        item->setMoveDownButtonEnabled(i < _pluginItems.count() - 1);
+        item->setMoveDownButtonEnabled(i < m_pluginItems.count() - 1);
     }
 }

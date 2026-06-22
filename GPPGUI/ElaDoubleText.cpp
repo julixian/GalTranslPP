@@ -1,4 +1,4 @@
-﻿#include "ElaDoubleText.h"
+#include "ElaDoubleText.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -7,25 +7,25 @@ ElaDoubleText::ElaDoubleText(QWidget* parent, const QString& firstLine, int firs
 	: QWidget(parent)
 {
 	QVBoxLayout* textLayout = new QVBoxLayout(this);
-	_firstLine = new ElaText(firstLine, firstLinePixelSize, this);
-	_firstLine->setWordWrap(false);
+	m_firstLine = new ElaText(firstLine, firstLinePixelSize, this);
+	m_firstLine->setWordWrap(false);
 
 	if (!toolTip.isEmpty()) {
-		_toolTip = new ElaToolTip(_firstLine);
-		_toolTip->setToolTip(toolTip);
+		m_toolTip = new ElaToolTip(m_firstLine);
+		m_toolTip->setToolTip(toolTip);
 	}
-	textLayout->addWidget(_firstLine);
+	textLayout->addWidget(m_firstLine);
 
 	if (!secondLine.isEmpty()) {
-		_secondLine = new ElaText(secondLine, secondLinePixelSize, this);
-		_secondLine->setWordWrap(false);
-		textLayout->addWidget(_secondLine);
+		m_secondLine = new ElaText(secondLine, secondLinePixelSize, this);
+		m_secondLine->setWordWrap(false);
+		textLayout->addWidget(m_secondLine);
 	}
 }
 
 QString ElaDoubleText::getFirstLineText() const
 {
-	return _firstLine->text();
+	return m_firstLine->text();
 }
 
 ElaDoubleText::~ElaDoubleText()

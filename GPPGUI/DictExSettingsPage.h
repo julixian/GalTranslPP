@@ -19,11 +19,11 @@ public:
 
 private:
 
-    void _setupUI();
-    toml::ordered_value& _globalConfig;
-    toml::ordered_value& _projectConfig;
+    void setupUi();
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
 
-    std::function<void()> _refreshCommonDictsListFunc;
+    std::function<void()> m_refreshCommonDictsListFunc;
 };
 
 #endif // DICTEXSETTINGSPAGE_H

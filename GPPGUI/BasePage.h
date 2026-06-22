@@ -15,7 +15,7 @@ public Q_SLOTS:
     virtual void apply2Config();
 
 protected:
-    std::function<void()> _applyFunc;
+    std::function<void()> m_applyFunc;
 };
 
 #endif // BASEPAGE_H

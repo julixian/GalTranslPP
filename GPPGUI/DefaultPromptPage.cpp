@@ -1,4 +1,4 @@
-﻿#include "DefaultPromptPage.h"
+#include "DefaultPromptPage.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -23,21 +23,21 @@ DefaultPromptPage::DefaultPromptPage(QWidget* parent)
 
 	if (fs::exists(defaultPromptPath)) {
 		try {
-			_promptConfig = toml::uoparse(defaultPromptPath);
+			m_promptConfig = toml::uoparse(defaultPromptPath);
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词配置文件不符合 toml 规范"), 3000);
 		}
 	}
 
-    _setupUI();
+    setupUi();
 }
 
 DefaultPromptPage::~DefaultPromptPage()
 {
 }
 
-void DefaultPromptPage::_setupUI()
+void DefaultPromptPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -48,7 +48,7 @@ void DefaultPromptPage::_setupUI()
 	tabWidget->setIsTabTransparent(true);
 
 
-	auto createPromptWidgetFunc = 
+	auto createPromptWidgetFunc =
 		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
 			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
@@ -95,7 +95,7 @@ void DefaultPromptPage::_setupUI()
 					plainTextFont.setPixelSize(15);
 					promptTextEdit->setFont(plainTextFont);
 					promptTextEdit->setPlainText(
-						QString::fromStdString(toml::find_or(_promptConfig, key, ""))
+						QString::fromStdString(toml::find_or(m_promptConfig, key, ""))
 					);
 					promptStackedWidget->addWidget(promptTextEdit);
 					return promptTextEdit;
@@ -142,15 +142,15 @@ void DefaultPromptPage::_setupUI()
 					toml::ordered_value systemPromptVal = promptSystemModeEdit->toPlainText().toStdString();
 					userPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 					systemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-					insertToml(_promptConfig, userPromptKey, userPromptVal);
-					insertToml(_promptConfig, systemPromptKey, systemPromptVal);
+					insertToml(m_promptConfig, userPromptKey, userPromptVal);
+					insertToml(m_promptConfig, systemPromptKey, systemPromptVal);
 					if (hasAgentPrompt) {
 						toml::ordered_value agentUserPromptVal = agentPromptUserModeEdit->toPlainText().toStdString();
 						toml::ordered_value agentSystemPromptVal = agentPromptSystemModeEdit->toPlainText().toStdString();
 						agentUserPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 						agentSystemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						insertToml(_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
-						insertToml(_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
+						insertToml(m_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
+						insertToml(m_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
 					}
 				};
 
@@ -158,7 +158,7 @@ void DefaultPromptPage::_setupUI()
 				{
 					resultApply2ConfigFunc();
 					std::ofstream ofs(defaultPromptPath, std::ios::binary);
-					ofs << _promptConfig;
+					ofs << m_promptConfig;
 					ofs.close();
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("默认 ") + promptName + tr(" 提示词配置已保存。"), 3000);
 				});
@@ -166,7 +166,7 @@ void DefaultPromptPage::_setupUI()
 
 			return resultApply2ConfigFunc;
 		};
-	
+
 
 		auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_TRANS_PROMPT_EN", "FORGALTSV_SYSTEM",
 			"FORGALTSV_AGENT_PROMPT_EN", "FORGALTSV_AGENT_SYSTEM");
@@ -179,7 +179,7 @@ void DefaultPromptPage::_setupUI()
 		auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_PROMPT", "NAMETRANS_SYSTEM");
 
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
 			forgalJsonApplyFunc();
 			forgalTsvApplyFunc();
@@ -188,7 +188,7 @@ void DefaultPromptPage::_setupUI()
 			gendictApplyFunc();
 			nametransApplyFunc();
 			std::ofstream ofs(defaultPromptPath, std::ios::binary);
-			ofs << _promptConfig;
+			ofs << m_promptConfig;
 			ofs.close();
 		};
 

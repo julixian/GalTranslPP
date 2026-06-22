@@ -1,5 +1,3 @@
-// CustomFilePluginCfgPage.h
-
 #ifndef CUSTOMFILEPLUGINCFGPAGE_H
 #define CUSTOMFILEPLUGINCFGPAGE_H
 
@@ -17,9 +15,9 @@ public:
     ~CustomFilePluginCfgPage() override;
 
 private:
-    fs::path& _projectDir;
-    toml::ordered_value& _globalConfig;
-    toml::ordered_value& _projectConfig;
+    fs::path& m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // CUSTOMFILEPLUGINCFGPAGE_H

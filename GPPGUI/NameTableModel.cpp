@@ -1,5 +1,3 @@
-﻿// NameTableModel.cpp
-
 #include "NameTableModel.h"
 #include <QFont>
 
@@ -7,7 +5,7 @@ NameTableModel::NameTableModel(QObject* parent)
     : QAbstractTableModel(parent)
 {
     // 初始化表头
-    _headerLabels << tr("原名") << tr("译名") << tr("出现次数") ;
+    m_headerLabels << tr("原名") << tr("译名") << tr("出现次数") ;
 }
 
 // 返回数据行数
@@ -17,7 +15,7 @@ int NameTableModel::rowCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return (int)_entries.count();
+    return (int)m_entries.count();
 }
 
 // 返回列数
@@ -26,17 +24,17 @@ int NameTableModel::columnCount(const QModelIndex& parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return (int)_headerLabels.count();
+    return (int)m_headerLabels.count();
 }
 
 // 提供数据给视图
 QVariant NameTableModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid() || index.row() >= _entries.count()) {
+    if (!index.isValid() || index.row() >= m_entries.count()) {
         return {};
     }
 
-    const NameTableEntry& entry = _entries.at(index.row());
+    const NameTableEntry& entry = m_entries.at(index.row());
 
     // --- 处理文本显示和编辑 ---
     if (role == Qt::DisplayRole || role == Qt::EditRole)
@@ -66,8 +64,8 @@ QVariant NameTableModel::headerData(int section, Qt::Orientation orientation, in
 {
     if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
     {
-        if (section < _headerLabels.count()) {
-            return _headerLabels.at(section);
+        if (section < m_headerLabels.count()) {
+            return m_headerLabels.at(section);
         }
     }
     return QAbstractTableModel::headerData(section, orientation, role);
@@ -101,7 +99,7 @@ bool NameTableModel::setData(const QModelIndex& index, const QVariant& value, in
         return false;
     }
 
-    NameTableEntry& entry = _entries[index.row()];
+    NameTableEntry& entry = m_entries[index.row()];
 
     // --- 处理文本编辑变化 ---
     if (role == Qt::EditRole)
@@ -135,7 +133,7 @@ void NameTableModel::loadData(const QList<NameTableEntry>& entries)
 {
     // 在修改底层数据结构之前，必须调用 beginResetModel()
     beginResetModel();
-    _entries = entries;
+    m_entries = entries;
     // 修改完成后，调用 endResetModel()
     endResetModel();
 }
@@ -145,7 +143,7 @@ bool NameTableModel::insertRow(int row, NameTableEntry entry, const QModelIndex&
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
-    _entries.insert(row, entry);
+    m_entries.insert(row, entry);
 
     // 插入完成后，调用 endInsertRows()
     endInsertRows();
@@ -154,13 +152,13 @@ bool NameTableModel::insertRow(int row, NameTableEntry entry, const QModelIndex&
 
 bool NameTableModel::removeRow(int row, const QModelIndex& parent)
 {
-    if (row < 0 || row >= _entries.count()) {
+    if (row < 0 || row >= m_entries.count()) {
         return false;
     }
 
     // 在移除行之前，调用 beginRemoveRows()
     beginRemoveRows(parent, row, row);
-    _entries.removeAt(row);
+    m_entries.removeAt(row);
     // 移除完成后，调用 endRemoveRows()
     endRemoveRows();
     return true;
@@ -168,10 +166,10 @@ bool NameTableModel::removeRow(int row, const QModelIndex& parent)
 
 QList<NameTableEntry> NameTableModel::getEntries() const
 {
-    return _entries;
+    return m_entries;
 }
 
 const QList<NameTableEntry>& NameTableModel::getEntriesRef() const
 {
-    return _entries;
+    return m_entries;
 }

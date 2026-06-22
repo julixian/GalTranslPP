@@ -1,5 +1,3 @@
-﻿// StartSettingsPage.h
-
 #ifndef STARTSETTINGSPAGE_H
 #define STARTSETTINGSPAGE_H
 
@@ -32,7 +30,7 @@ class StartSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit StartSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
 
     virtual void apply2Config() override;
@@ -40,77 +38,77 @@ public:
     void clearLog();
 
 Q_SIGNALS:
-    void startTranslating();  // 让projectSettings去保存配置
+    void startTranslatingSignal();  // 让projectSettings去保存配置
     void finishTranslatingSignal(const QString& transEngine, int exitCode); // 这两个向projectSettings页发送
-    void startWork();
-    void stopWork();  // 这两个向worker发送
+    void startWorkSignal();
+    void stopWorkSignal();  // 这两个向worker发送
 
 private:
-    static constexpr qsizetype MAX_PENDING_LOG_BYTES = 5 * 1024 * 1024;
-    static constexpr int MAX_LOG_LINE_COUNT = 10000;
+    static constexpr qsizetype MaxPendingLogBytes = 5 * 1024 * 1024;
+    static constexpr int MaxLogLineCount = 10000;
 
-    bool _isLogScrollAtBottom() const;
-    void _ensureWorkerThread();
-    void _disposeWorkerThread();
-    void _setLogPaused(bool paused);
-    void _enqueuePendingLog(const QString& chunk);
-    void _flushPendingLogToView();
-    void _appendLogChunkToView(const QString& log);
-    void _resetLogBufferState(bool keepViewContent);
+    bool isLogScrollAtBottom() const;
+    void ensureWorkerThread();
+    void disposeWorkerThread();
+    void setLogPaused(bool paused);
+    void enqueuePendingLog(const QString& chunk);
+    void flushPendingLogToView();
+    void appendLogChunkToView(const QString& log);
+    void resetLogBufferState(bool keepViewContent);
 
 private:
 
-    fs::path& _projectDir;
-    QThread* _workThread{nullptr};
-    TranslatorWorker* _worker{nullptr};
+    void setupUi();
+    fs::path& m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
+    QWidget* m_mainWindow = nullptr;
 
-    void _setupUI();
-    toml::ordered_value& _projectConfig;
-    toml::ordered_value& _globalConfig;
-    QWidget* _mainWindow;
+    QThread* m_workThread = nullptr;
+    TranslatorWorker* m_worker = nullptr;
 
-    ElaPushButton* _startTranslateButton;
-    ElaPushButton* _stopTranslateButton;
-    ElaIconButton* _workbenchButton{nullptr};
-    ElaProgressBar* _progressBar;
+    ElaPushButton* m_startTranslateButton = nullptr;
+    ElaPushButton* m_stopTranslateButton = nullptr;
+    ElaIconButton* m_workbenchButton = nullptr;
+    ElaProgressBar* m_progressBar = nullptr;
 
-    ElaPlainTextEdit* _logOutput;
-    QWidget* _logPausedRow{nullptr};
-    ElaText* _logPausedHint{nullptr};
-    ElaPushButton* _resumeLogButton{nullptr};
-    int _secondsToResumeLog{3};
-    bool _logPaused{false};
-    bool _logResumeInProgress{false};
-    QString _pendingLog;
-    qsizetype _pendingLogBytes{0};
-    bool _pendingOverflowed{false};
-    bool _timerStarted{false};
+    ElaPlainTextEdit* m_logOutput = nullptr;
+    QWidget* m_logPausedRow = nullptr;
+    ElaText* m_logPausedHint = nullptr;
+    ElaPushButton* m_resumeLogButton = nullptr;
+    int m_secondsToResumeLog = 3;
+    bool m_logPaused{};
+    bool m_logResumeInProgress{};
+    QString m_pendingLog;
+    qsizetype m_pendingLogBytes{};
+    bool m_pendingOverflowed{};
+    bool m_timerStarted{};
 
-    ElaComboBox* _fileFormatComboBox;
+    ElaComboBox* m_fileFormatComboBox = nullptr;
 
-    QString _transEngine;
-    ElaProgressRing* _threadNumRing;
-    ElaText* _speedLabel{nullptr};
-    ElaLCDNumber* _usedTimeLabel;
-    ElaLCDNumber* _remainTimeLabel;
-    QSystemTrayIcon* _trayIcon;
-    EtaEstimator _estimator;
-    std::chrono::high_resolution_clock::time_point _startTime;
+    QString m_transEngine;
+    ElaProgressRing* m_threadNumRing = nullptr;
+    ElaText* m_speedLabel = nullptr;
+    ElaLCDNumber* m_usedTimeLabel = nullptr;
+    ElaLCDNumber* m_remainTimeLabel = nullptr;
+    QSystemTrayIcon* m_trayIcon = nullptr;
+    EtaEstimator m_estimator;
+    std::chrono::high_resolution_clock::time_point m_startTime;
 
 private Q_SLOTS:
 
-    void _onStartTranslatingClicked();
-    void _onStopTranslatingClicked();
-    void _workFinished(int exitCode); // worker结束了的信号
-    void _onOutputSettingClicked();
+    void onStartTranslatingClicked();
+    void onStopTranslatingClicked();
+    void workFinished(int exitCode); // worker结束了的信号
+    void onOutputSettingClicked();
 
 private:
     // 文件格式输出配置页
-    NJCfgPage* _njCfgPage;
-    EpubCfgPage* _epubCfgPage;
-    PDFCfgPage* _pdfCfgPage;
-    CustomFilePluginCfgPage* _customFilePluginCfgPage;
-    TranslationWorkbenchPage* _translationWorkbenchPage{nullptr};
+    NJCfgPage* m_njCfgPage = nullptr;
+    EpubCfgPage* m_epubCfgPage = nullptr;
+    PDFCfgPage* m_pdfCfgPage = nullptr;
+    CustomFilePluginCfgPage* m_customFilePluginCfgPage = nullptr;
+    TranslationWorkbenchPage* m_translationWorkbenchPage = nullptr;
 };
 
 #endif // STARTSETTINGSPAGE_H

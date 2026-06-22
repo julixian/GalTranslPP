@@ -1,4 +1,4 @@
-﻿#define PYBIND11_HEADERS
+#define PYBIND11_HEADERS
 #include "../GalTranslPP/GPPMacros.hpp"
 #include <toml.hpp>
 #include <QDir>
@@ -28,8 +28,8 @@ namespace py = pybind11;
 
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
-    HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
-    if (hProcess != NULL) {
+    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
+    if (hProcess != nullptr) {
         WaitForSingleObject(hProcess, INFINITE);
         CloseHandle(hProcess);
     }
@@ -54,15 +54,20 @@ int main(int argc, char* argv[])
 
     try {
         bool checkUpdate = true;
-        bool allowMultiInstance = false;
+        //bool allowMultiInstance = false;
         QTranslator translator;
         QTranslator qtBaseTranslator; // 用于翻译 Qt 内置对话框，如 QMessageBox 的按钮
         try {
             const toml::value globalConfig = toml::uparse(globalConfigPath);
             checkUpdate = toml::find_or(globalConfig, "autoCheckUpdate", true);
-            allowMultiInstance = toml::find_or(globalConfig, "allowMultiInstance", false);
+            //allowMultiInstance = toml::find_or(globalConfig, "allowMultiInstance", false);
             const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
-            if (language == "en") {
+            if (language == "zh_CN") {
+                if (qtBaseTranslator.load("qt_zh_CN.qm", "translations")) {
+                    a.installTranslator(&qtBaseTranslator);
+                }
+            }
+            else if (language == "en") {
                 if (qtBaseTranslator.load("qt_en.qm", "translations")) {
                     a.installTranslator(&qtBaseTranslator);
                 }
@@ -128,7 +133,7 @@ int main(int argc, char* argv[])
 #ifdef Q_OS_WIN
             MessageBoxW(nullptr, L"无法创建共享内存段，程序即将退出。", L"错误", MB_ICONERROR);
 #endif
-            return 1; // 创建失败，退出 
+            return 1; // 创建失败，退出
         }
 
         eApp->init();
@@ -182,7 +187,7 @@ int main(int argc, char* argv[])
             w.checkUpdate();
         }
 
-        int result = a.exec();
+        const int result = a.exec();
         shutDownPythonEnv(release);
 
         // 程序退出前，确保服务器关闭
@@ -215,6 +220,6 @@ int main(int argc, char* argv[])
 #endif
         return 1;
     }
-    
-    return 0;
+
+    return 2;
 }

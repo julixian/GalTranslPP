@@ -1,4 +1,4 @@
-﻿#include "PromptSettingsPage.h"
+#include "PromptSettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -15,23 +15,23 @@
 import Tool;
 
 PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
-	BasePage(parent), _projectConfig(projectConfig), _projectDir(projectDir)
+	BasePage(parent), m_projectConfig(projectConfig), m_projectDir(projectDir)
 {
 	setWindowTitle(tr("项目提示词设置"));
 	setTitleVisible(false);
 
-	if (fs::exists(_projectDir / L"Prompt.toml")) {
+	if (fs::exists(m_projectDir / L"Prompt.toml")) {
 		try {
-			_promptConfig = toml::uoparse(_projectDir / L"Prompt.toml");
+			m_promptConfig = toml::uoparse(m_projectDir / L"Prompt.toml");
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("项目 ") +
-				QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的提示词配置文件不符合标准。"), 3000);
+				QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的提示词配置文件不符合标准。"), 3000);
 		}
 	}
 	else if (fs::exists(defaultPromptPath)) {
 		try {
-			_promptConfig = toml::uoparse(_projectDir / L"Prompt.toml");
+			m_promptConfig = toml::uoparse(m_projectDir / L"Prompt.toml");
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词文件不符合 toml 规范"), 3000);
@@ -40,8 +40,8 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 	else {
 		ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("找不到提示词文件"), 3000);
 	}
-	
-	_setupUI();
+
+	setupUi();
 }
 
 PromptSettingsPage::~PromptSettingsPage()
@@ -50,7 +50,7 @@ PromptSettingsPage::~PromptSettingsPage()
 }
 
 
-void PromptSettingsPage::_setupUI()
+void PromptSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -62,14 +62,14 @@ void PromptSettingsPage::_setupUI()
 
 
 	auto createPromptWidgetFunc =
-		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey, 
+		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
 			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
 			const bool hasAgentPrompt = agentUserPromptKey.has_value() && agentSystemPromptKey.has_value();
 			QWidget* promptWidget = new QWidget(mainWidget);
 			QVBoxLayout* promptLayout = new QVBoxLayout(promptWidget);
 			promptLayout->setContentsMargins(0, 0, 0, 0);
-			
+
 			QHBoxLayout* promptButtonLayout = new QHBoxLayout(promptWidget);
 			ElaPushButton* promptUserModeButtom = new ElaPushButton(promptWidget);
 			promptUserModeButtom->setText(tr("用户提示词"));
@@ -102,7 +102,7 @@ void PromptSettingsPage::_setupUI()
 					plainTextFont.setPixelSize(15);
 					promptTextEdit->setFont(plainTextFont);
 					promptTextEdit->setPlainText(
-						QString::fromStdString(toml::find_or(_promptConfig, key, ""))
+						QString::fromStdString(toml::find_or(m_promptConfig, key, ""))
 					);
 					promptStackedWidget->addWidget(promptTextEdit);
 					return promptTextEdit;
@@ -131,7 +131,7 @@ void PromptSettingsPage::_setupUI()
 					button->setEnabled(false);
 					promptStackedWidget->setCurrentIndex(promptButtomGroup->id(button));
 				});
-			
+
 			promptStackedWidget->setCurrentIndex(0);
 			promptLayout->addWidget(promptStackedWidget);
 			tabWidget->addTab(promptWidget, promptName);
@@ -142,15 +142,15 @@ void PromptSettingsPage::_setupUI()
 					toml::ordered_value systemPromptVal = promptSystemModeEdit->toPlainText().toStdString();
 					userPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 					systemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-					insertToml(_promptConfig, userPromptKey, userPromptVal);
-					insertToml(_promptConfig, systemPromptKey, systemPromptVal);
+					insertToml(m_promptConfig, userPromptKey, userPromptVal);
+					insertToml(m_promptConfig, systemPromptKey, systemPromptVal);
 					if (hasAgentPrompt) {
 						toml::ordered_value agentUserPromptVal = agentPromptUserModeEdit->toPlainText().toStdString();
 						toml::ordered_value agentSystemPromptVal = agentPromptSystemModeEdit->toPlainText().toStdString();
 						agentUserPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
 						agentSystemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						insertToml(_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
-						insertToml(_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
+						insertToml(m_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
+						insertToml(m_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
 					}
 				};
 			return result;
@@ -166,7 +166,7 @@ void PromptSettingsPage::_setupUI()
 		"GENDICT_REVIEW_PROMPT", "GENDICT_REVIEW_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_PROMPT", "NAMETRANS_SYSTEM");
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
 			forgalJsonApplyFunc();
 			forgalTsvApplyFunc();
@@ -174,8 +174,8 @@ void PromptSettingsPage::_setupUI()
 			sakuraApplyFunc();
 			gendictApplyFunc();
 			nametransApplyFunc();
-			std::ofstream ofs(_projectDir / L"Prompt.toml", std::ios::binary);
-			ofs << _promptConfig;
+			std::ofstream ofs(m_projectDir / L"Prompt.toml", std::ios::binary);
+			ofs << m_promptConfig;
 			ofs.close();
 		};
 

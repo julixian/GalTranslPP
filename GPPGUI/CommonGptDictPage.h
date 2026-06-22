@@ -1,5 +1,3 @@
-﻿// CommonGptDictPage.h
-
 #ifndef COMMONGPTDICTPAGE_H
 #define COMMONGPTDICTPAGE_H
 
@@ -37,16 +35,16 @@ public:
     ~CommonGptDictPage() override;
 
 Q_SIGNALS:
-    void commonDictsChanged();
+    void commonDictsChangedSignal();
 
 private:
 
-    void _setupUI();
+    void setupUi();
 
-    toml::ordered_value& _globalConfig;
+    toml::ordered_value& m_globalConfig;
 
-    QList<GptTabEntry> _gptTabEntries;
-    QWidget* _mainWindow;
+    QList<GptTabEntry> m_gptTabEntries;
+    QWidget* m_mainWindow = nullptr;
 };
 
 #endif // COMMONGPTDICTPAGE_H

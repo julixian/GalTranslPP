@@ -1,4 +1,4 @@
-﻿#ifndef TF2HCFGPAGE_H
+#ifndef TF2HCFGPAGE_H
 #define TF2HCFGPAGE_H
 
 #include <toml.hpp>
@@ -13,7 +13,7 @@ public:
     ~TF2HCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // ! TF2HCFGPAGE_H

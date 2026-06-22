@@ -1,4 +1,4 @@
-﻿#include "PASettingsPage.h"
+#include "PASettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -20,12 +20,12 @@
 
 import Tool;
 
-PASettingsPage::PASettingsPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+PASettingsPage::PASettingsPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("问题分析"));
 	setTitleVisible(false);
 
-	_setupUI();
+	setupUi();
 }
 
 PASettingsPage::~PASettingsPage()
@@ -33,7 +33,7 @@ PASettingsPage::~PASettingsPage()
 
 }
 
-void PASettingsPage::_setupUI()
+void PASettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -46,7 +46,7 @@ void PASettingsPage::_setupUI()
 		tr("字典未使用"), tr("残留日文"), tr("引入拉丁字母"), tr("引入韩文"), tr("引入繁体字"), tr("语言不通"), tr("非法字符"),};
 
 	std::set<std::string> problemListSet;
-	const auto& problemListOrgArray = toml::find_or_default<toml::array>(_projectConfig, "problemAnalyze", "problemList");
+	const auto& problemListOrgArray = toml::find_or_default<toml::array>(m_projectConfig, "problemAnalyze", "problemList");
 	for (const auto& problem : problemListOrgArray) {
 			if (problem.is_string()) {
 				problemListSet.insert(problem.as_string());
@@ -75,7 +75,7 @@ void PASettingsPage::_setupUI()
 	mainLayout->addSpacing(20);
 
 	// 规定标点错漏要查哪些标点
-	std::string punctuationSet = toml::find_or(_projectConfig, "problemAnalyze", "punctSet", "");
+	const std::string punctuationSet = toml::find_or(m_projectConfig, "problemAnalyze", "punctSet", "");
 	QString punctuationSetStr = QString::fromStdString(punctuationSet);
 	ElaScrollPageArea* punctuationListArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* punctuationListLayout = new QHBoxLayout(punctuationListArea);
@@ -89,7 +89,7 @@ void PASettingsPage::_setupUI()
 	mainLayout->addWidget(punctuationListArea);
 
 	// 语言不通检测的语言置信度，设置越高则检测越精准，但可能遗漏，反之亦然
-	double languageProbability = toml::find_or(_projectConfig, "problemAnalyze", "langProbability", 0.94);
+	double languageProbability = toml::find_or(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
 	ElaScrollPageArea* languageProbabilityArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* languageProbabilityLayout = new QHBoxLayout(languageProbabilityArea);
 	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(languageProbabilityArea,
@@ -103,7 +103,7 @@ void PASettingsPage::_setupUI()
 	mainLayout->addWidget(languageProbabilityArea);
 
 	// 非法字符要检查的字符集
-	std::string codePage = toml::find_or(_projectConfig, "problemAnalyze", "codePage", "gbk");
+	const std::string codePage = toml::find_or(m_projectConfig, "problemAnalyze", "codePage", "gbk");
 	ElaScrollPageArea* codePageArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* codePageLayout = new QHBoxLayout(codePageArea);
 	ElaDoubleText* codePageTitle = new ElaDoubleText(codePageArea,
@@ -118,11 +118,11 @@ void PASettingsPage::_setupUI()
 
 	mainLayout->addSpacing(20);
 
-	auto createPAPlainTextEditAreaFunc = 
+	auto createPAPlainTextEditAreaFunc =
 		[=](const std::string& configKey, const QString& title, std::optional<int> minHeight = std::nullopt)
 		-> std::function<void()>
 		{
-			toml::ordered_value PASettingsArr = toml::find_or_default<toml::ordered_value>(_projectConfig, "problemAnalyze", configKey);
+			toml::ordered_value PASettingsArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "problemAnalyze", configKey);
 			if (!PASettingsArr.is_array()) {
 				PASettingsArr = toml::array{};
 			}
@@ -162,10 +162,10 @@ void PASettingsPage::_setupUI()
 									retranslKey = problemList[index].toStdString();
 								}
 							}
-							insertToml(_projectConfig, "problemAnalyze." + configKey, newPASettingsArr);
+							insertToml(m_projectConfig, "problemAnalyze." + configKey, newPASettingsArr);
 						}
 						else {
-							insertToml(_projectConfig, "problemAnalyze." + configKey, toml::array{});
+							insertToml(m_projectConfig, "problemAnalyze." + configKey, toml::array{});
 						}
 					}
 					catch (...) {
@@ -198,10 +198,10 @@ void PASettingsPage::_setupUI()
 			QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/pahelper.html"));
 		});
 	mainLayout->addWidget(illusButtonWidget);
-	
+
 	mainLayout->addStretch();
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
 			toml::array problemListArray;
 			for (qsizetype i = 0; i < problemListButtons.size(); i++) {
@@ -210,10 +210,10 @@ void PASettingsPage::_setupUI()
 				}
 				problemListArray.push_back(problemList[i].toStdString());
 			}
-			insertToml(_projectConfig, "problemAnalyze.problemList", problemListArray);
-			insertToml(_projectConfig, "problemAnalyze.punctSet", punctuationList->text().toStdString());
-			insertToml(_projectConfig, "problemAnalyze.codePage", codePageEdit->text().toStdString());
-			insertToml(_projectConfig, "problemAnalyze.langProbability", languageProbabilitySlider->value());
+			insertToml(m_projectConfig, "problemAnalyze.problemList", problemListArray);
+			insertToml(m_projectConfig, "problemAnalyze.punctSet", punctuationList->text().toStdString());
+			insertToml(m_projectConfig, "problemAnalyze.codePage", codePageEdit->text().toStdString());
+			insertToml(m_projectConfig, "problemAnalyze.langProbability", languageProbabilitySlider->value());
 
 			retranslKeysSaveFunc();
 			skipProblemsSaveFunc();

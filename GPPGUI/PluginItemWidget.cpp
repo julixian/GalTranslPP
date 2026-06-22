@@ -1,5 +1,3 @@
-﻿// PluginItemWidget.cpp
-
 #include "PluginItemWidget.h"
 
 #include <QHBoxLayout>
@@ -30,48 +28,48 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
 
     // 插件名称
-    _pluginNameLabel = new ElaDoubleText(this,
+    m_pluginNameLabel = new ElaDoubleText(this,
         pluginName, 16, toolTipMap[pluginName], 10, "");
 
-    _pluginRunTimeBox = new ElaComboBox(this);
-    _pluginRunTimeBox->setFixedWidth(150);
-    _pluginRunTimeBox->addItems(boxItemMap[pluginName]);
-    _pluginRunTimeBox->setCurrentText(runTimeStr);
+    m_pluginRunTimeBox = new ElaComboBox(this);
+    m_pluginRunTimeBox->setFixedWidth(150);
+    m_pluginRunTimeBox->addItems(boxItemMap[pluginName]);
+    m_pluginRunTimeBox->setCurrentText(runTimeStr);
 
     // 新增设置按钮
-    _settingsButton = new ElaIconButton(ElaIconType::Gear, this);
-    connect(_settingsButton, &ElaIconButton::clicked, this, [=]() 
+    m_settingsButton = new ElaIconButton(ElaIconType::Gear, this);
+    connect(m_settingsButton, &ElaIconButton::clicked, this, [=]()
         {
-            Q_EMIT settingsRequested(this);
+            Q_EMIT settingsRequestedSignal(this);
         });
 
     // 启用/禁用开关
-    _enableSwitch = new ElaToggleSwitch(this);
-    _enableSwitch->setIsToggled(false);
+    m_enableSwitch = new ElaToggleSwitch(this);
+    m_enableSwitch->setIsToggled(false);
 
     // 上移按钮
-    _moveUpButton = new ElaIconButton(ElaIconType::AngleUp, this);
-    connect(_moveUpButton, &ElaIconButton::clicked, this, [=]() 
+    m_moveUpButton = new ElaIconButton(ElaIconType::AngleUp, this);
+    connect(m_moveUpButton, &ElaIconButton::clicked, this, [=]()
         {
-            Q_EMIT moveUpRequested(this);
+            Q_EMIT moveUpRequestedSignal(this);
         });
 
     // 下移按钮
-    _moveDownButton = new ElaIconButton(ElaIconType::AngleDown, this);
-    connect(_moveDownButton, &ElaIconButton::clicked, this, [=]() 
+    m_moveDownButton = new ElaIconButton(ElaIconType::AngleDown, this);
+    connect(m_moveDownButton, &ElaIconButton::clicked, this, [=]()
         {
-            Q_EMIT moveDownRequested(this);
+            Q_EMIT moveDownRequestedSignal(this);
         });
 
     // 组合布局
-    mainLayout->addWidget(_pluginNameLabel);
+    mainLayout->addWidget(m_pluginNameLabel);
     mainLayout->addStretch();
-    mainLayout->addWidget(_enableSwitch);
-    mainLayout->addWidget(_pluginRunTimeBox);
+    mainLayout->addWidget(m_enableSwitch);
+    mainLayout->addWidget(m_pluginRunTimeBox);
     mainLayout->addSpacing(10);
-    mainLayout->addWidget(_settingsButton);
-    mainLayout->addWidget(_moveUpButton);
-    mainLayout->addWidget(_moveDownButton);
+    mainLayout->addWidget(m_settingsButton);
+    mainLayout->addWidget(m_moveUpButton);
+    mainLayout->addWidget(m_moveDownButton);
 }
 
 PluginItemWidget::~PluginItemWidget()
@@ -80,25 +78,25 @@ PluginItemWidget::~PluginItemWidget()
 
 QString PluginItemWidget::getPluginName() const
 {
-    return _pluginRunTimeBox->currentText() + ":" + _pluginNameLabel->getFirstLineText();
+    return m_pluginRunTimeBox->currentText() + ":" + m_pluginNameLabel->getFirstLineText();
 }
 
 bool PluginItemWidget::getIsToggled() const
 {
-    return _enableSwitch->getIsToggled();
+    return m_enableSwitch->getIsToggled();
 }
 
 void PluginItemWidget::setIsToggled(bool enabled)
 {
-    _enableSwitch->setIsToggled(enabled);
+    m_enableSwitch->setIsToggled(enabled);
 }
 
 void PluginItemWidget::setMoveUpButtonEnabled(bool enabled)
 {
-    _moveUpButton->setEnabled(enabled);
+    m_moveUpButton->setEnabled(enabled);
 }
 
 void PluginItemWidget::setMoveDownButtonEnabled(bool enabled)
 {
-    _moveDownButton->setEnabled(enabled);
+    m_moveDownButton->setEnabled(enabled);
 }

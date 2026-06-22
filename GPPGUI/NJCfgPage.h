@@ -1,5 +1,3 @@
-﻿// NJCfgPage.h
-
 #ifndef NJCFGPAGE_H
 #define NJCFGPAGE_H
 
@@ -15,7 +13,7 @@ public:
     ~NJCfgPage() override;
 
 private:
-    toml::ordered_value& _projectConfig;
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // NJCFGPAGE_H

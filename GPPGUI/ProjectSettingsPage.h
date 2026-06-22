@@ -1,5 +1,3 @@
-﻿// ProjectSettingsPage.h
-
 #ifndef PROJECTSETTINGSPAGE_H
 #define PROJECTSETTINGSPAGE_H
 
@@ -41,39 +39,38 @@ public:
     void clearLog(bool forceClear);
 
 Q_SIGNALS:
-        void finishTranslatingSignal(QString nodeKey); // 用于加红点提示翻译完成
-        void changeProjectNameSignal(QString nodeKey, QString newProjectName); // 改变项目名
+    void finishTranslatingSignal(const QString& nodeKey); // 用于加红点提示翻译完成
+    void changeProjectNameSignal(const QString& nodeKey, const QString& newProjectName); // 改变项目名
 
 private:
+    fs::path m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value m_projectConfig;
+    QWidget* m_mainWindow = nullptr;
+
     // UI 控件
-    QStackedWidget* _stackedWidget;
-    fs::path _projectDir;
-    toml::ordered_value _projectConfig;
-    toml::ordered_value& _globalConfig;
+    QStackedWidget* m_stackedWidget = nullptr;
 
-    APISettingsPage* _apiSettingsPage;
-    PluginSettingsPage* _pluginSettingsPage;
-    CommonSettingsPage* _commonSettingsPage;
-    PASettingsPage* _paSettingsPage;
-    NameTableSettingsPage* _nameTableSettingsPage;
-    DictSettingsPage* _dictSettingsPage;
-    DictExSettingsPage* _dictExSettingsPage;
-    StartSettingsPage* _startSettingsPage;
-    OtherSettingsPage* _otherSettingsPage;
-    PromptSettingsPage* _promptSettingsPage;
-    ProjectCachePage* _projectCachePage;
-    ElaText* _settingsTitle;
+    APISettingsPage* m_apiSettingsPage = nullptr;
+    PluginSettingsPage* m_pluginSettingsPage = nullptr;
+    CommonSettingsPage* m_commonSettingsPage = nullptr;
+    PASettingsPage* m_paSettingsPage = nullptr;
+    NameTableSettingsPage* m_nameTableSettingsPage = nullptr;
+    DictSettingsPage* m_dictSettingsPage = nullptr;
+    DictExSettingsPage* m_dictExSettingsPage = nullptr;
+    StartSettingsPage* m_startSettingsPage = nullptr;
+    OtherSettingsPage* m_otherSettingsPage = nullptr;
+    PromptSettingsPage* m_promptSettingsPage = nullptr;
+    ProjectCachePage* m_projectCachePage = nullptr;
+    ElaText* m_settingsTitle = nullptr;
 
-    QWidget* _mainWindow;
-
-    void _setupUI();
-    void _createPages();
+    void setupUi();
+    void createPages();
 
 private Q_SLOTS:
-    // 槽函数，用于响应开始翻译按钮的点击
-    void _onStartTranslating();
-    void _onFinishTranslating(const QString& transEngine, int exitCode);
-    void _onRefreshProjectConfig();
+    void onStartTranslating();
+    void onFinishTranslating(const QString& transEngine, int exitCode);
+    void onRefreshProjectConfig();
 };
 
 #endif // PROJECTSETTINGSPAGE_H

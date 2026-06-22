@@ -1,5 +1,3 @@
-// PASettingsPage.h
-
 #ifndef PASETTINGSPAGE_H
 #define PASETTINGSPAGE_H
 
@@ -16,8 +14,8 @@ public:
 
 private:
 
-    void _setupUI();
-    toml::ordered_value& _projectConfig;
+    void setupUi();
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // COMMONSETTINGSPAGE_H

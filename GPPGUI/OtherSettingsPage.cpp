@@ -1,4 +1,4 @@
-﻿#include "OtherSettingsPage.h"
+#include "OtherSettingsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -11,7 +11,6 @@
 #include "ElaScrollPageArea.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
-#include "ElaToolTip.h"
 #include "ElaContentDialog.h"
 #include "ElaInputDialog.h"
 #include "ElaDoubleText.h"
@@ -19,13 +18,13 @@
 import Tool;
 import NormalJsonTranslatorHelperTool;
 
-OtherSettingsPage::OtherSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
-	BasePage(parent), _projectConfig(projectConfig), _globalConfig(globalConfig), _projectDir(projectDir), _mainWindow(mainWindow)
+OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent) :
+	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig), m_mainWindow(mainWindow)
 {
 	setWindowTitle(tr("其它设置"));
 	setTitleVisible(false);
 
-	_setupUI();
+	setupUi();
 }
 
 OtherSettingsPage::~OtherSettingsPage()
@@ -33,7 +32,7 @@ OtherSettingsPage::~OtherSettingsPage()
 
 }
 
-void OtherSettingsPage::_setupUI()
+void OtherSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -49,14 +48,14 @@ void OtherSettingsPage::_setupUI()
 	pathLayout->addStretch();
 	ElaLineEdit* pathEdit = new ElaLineEdit(pathArea);
 	pathEdit->setReadOnly(true);
-	pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
+	pathEdit->setText(QString::fromStdWString(m_projectDir.wstring()));
 	pathEdit->setFixedWidth(650);
 	pathLayout->addWidget(pathEdit);
 	ElaPushButton* openButton = new ElaPushButton(pathArea);
 	openButton->setText(tr("打开文件夹"));
 	connect(openButton, &ElaPushButton::clicked, this, [=]()
 		{
-			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(_projectDir.wstring()));
+			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
 		});
 	pathLayout->addWidget(openButton);
@@ -76,32 +75,34 @@ void OtherSettingsPage::_setupUI()
 	moveButton->setText(tr("移动项目"));
 	connect(moveButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (toml::find_or(_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移动失败"), tr("项目仍在运行中，无法移动"), 3000);
 				return;
 			}
 
-			QString newProjectParentPath = QFileDialog::getExistingDirectory(this, tr("请选择要移动到的文件夹"), QString::fromStdString(toml::find_or(_globalConfig, "lastProjectPath", "./Projects")));
+			const QString newProjectParentPath = QFileDialog::getExistingDirectory(this, tr("请选择要移动到的文件夹"),
+				QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectPath", "./Projects")));
 			if (newProjectParentPath.isEmpty()) {
 				return;
 			}
-			insertToml(_globalConfig, "lastProjectPath", newProjectParentPath.toStdString());
-			fs::path newProjectPath = fs::path(newProjectParentPath.toStdWString()) / _projectDir.filename();
+			insertToml(m_globalConfig, "lastProjectPath", newProjectParentPath.toStdString());
+			const fs::path newProjectPath = fs::path(newProjectParentPath.toStdWString()) / m_projectDir.filename();
 			if (fs::exists(newProjectPath)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移动失败"), tr("目录下已有同名文件或文件夹"), 3000);
 				return;
 			}
 
 			try {
-				fs::rename(_projectDir, newProjectPath);
+				fs::rename(m_projectDir, newProjectPath);
 			}
 			catch (const fs::filesystem_error& e) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移动失败"), QString(e.what()), 3000);
 				return;
 			}
-			_projectDir = newProjectPath;
-			pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
-			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移动成功"), QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 项目已移动到新文件夹"), 3000);
+			m_projectDir = newProjectPath;
+			pathEdit->setText(QString::fromStdWString(m_projectDir.wstring()));
+			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移动成功"), QString::fromStdWString(m_projectDir.filename().wstring()) +
+				tr(" 项目已移动到新文件夹"), 3000);
 			Q_EMIT refreshProjectConfigSignal();
 		});
 	moveRenameLayout->addWidget(moveButton);
@@ -109,38 +110,37 @@ void OtherSettingsPage::_setupUI()
 	renameButton->setText(tr("项目更名"));
 	connect(renameButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (toml::find_or(_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), tr("项目仍在运行中，无法更名"), 3000);
 				return;
 			}
 
-			bool ok;
 			QString newProjectName;
-			ElaInputDialog inputDialog(_mainWindow, tr("请输入新的项目名称"), tr("新的项目名"), newProjectName, &ok);
-			inputDialog.exec();
-			if (!ok) {
+			ElaInputDialog inputDialog(m_mainWindow, tr("请输入新的项目名称"), tr("新的项目名"), newProjectName);
+			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}
+
 			if(newProjectName.isEmpty() || newProjectName.contains("\\") || newProjectName.contains("/")){
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), tr("项目名不能为空且不能包含斜杠"), 3000);
 				return;
 			}
 
-			fs::path newProjectPath = _projectDir.parent_path() / newProjectName.toStdWString();
+			const fs::path newProjectPath = m_projectDir.parent_path() / newProjectName.toStdWString();
 			if (fs::exists(newProjectPath)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), tr("目录下已有同名文件或文件夹"), 3000);
 				return;
 			}
 
 			try {
-				fs::rename(_projectDir, newProjectPath);
+				fs::rename(m_projectDir, newProjectPath);
 			}
 			catch (const fs::filesystem_error& e) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), QString(e.what()), 3000);
 				return;
 			}
-			_projectDir = newProjectPath;
-			pathEdit->setText(QString::fromStdWString(_projectDir.wstring()));
+			m_projectDir = newProjectPath;
+			pathEdit->setText(QString::fromStdWString(m_projectDir.wstring()));
 			Q_EMIT changeProjectNameSignal(newProjectName);
 			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("更名成功"), tr("项目已更名为 ") + newProjectName, 3000);
 			Q_EMIT refreshProjectConfigSignal();
@@ -153,20 +153,21 @@ void OtherSettingsPage::_setupUI()
 	ElaScrollPageArea* importArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* importLayout = new QHBoxLayout(importArea);
 	ElaDoubleText* importLabel = new ElaDoubleText(importArea,
-		tr("导入翻译问题概览至翻译缓存"), 16, tr("使用 翻译问题概览.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence"), 10, "");
+		tr("导入翻译问题概览至翻译缓存"), 16,
+		tr("使用 翻译问题概览.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence"), 10, "");
 	importLayout->addWidget(importLabel);
 	importLayout->addStretch();
 	ElaPushButton* importButton = new ElaPushButton(importArea);
 	importButton->setText(tr("导入"));
 	connect(importButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (toml::find_or(_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入失败"), tr("项目仍在运行中，无法导入"), 3000);
 				return;
 			}
-			QString importOverviewPathStr = QFileDialog::getOpenFileName(this, tr("选择翻译问题概览文件"), QString::fromStdWString(_projectDir.wstring()),
+			const QString importOverviewPathQStr = QFileDialog::getOpenFileName(this, tr("选择翻译问题概览文件"), QString::fromStdWString(m_projectDir.wstring()),
 				"JSON files (*.json);;TOML files (*.toml)");
-			if (importOverviewPathStr.isEmpty()) {
+			if (importOverviewPathQStr.isEmpty()) {
 				return;
 			}
 			try {
@@ -178,13 +179,13 @@ void OtherSettingsPage::_setupUI()
 
 				{
 					json overviewData;
-					if (importOverviewPathStr.endsWith(".json", Qt::CaseInsensitive)) {
-						ifs.open(importOverviewPathStr.toStdWString(), std::ios::binary);
+					if (importOverviewPathQStr.endsWith(".json", Qt::CaseInsensitive)) {
+						ifs.open(importOverviewPathQStr.toStdWString(), std::ios::binary);
 						overviewData = json::parse(ifs);
 						ifs.close();
 					}
-					else if (importOverviewPathStr.endsWith(".toml", Qt::CaseInsensitive)) {
-						const auto tomlData = toml::uparse(fs::path(importOverviewPathStr.toStdWString()));
+					else if (importOverviewPathQStr.endsWith(".toml", Qt::CaseInsensitive)) {
+						const auto tomlData = toml::uparse(fs::path(importOverviewPathQStr.toStdWString()));
 						overviewData = toml2Json(tomlData.at("problemOverview"));
 					}
 					else {
@@ -196,7 +197,7 @@ void OtherSettingsPage::_setupUI()
 				}
 
 				for (const auto& [cacheFileName, overviewItems] : overviewFileMap) {
-					const fs::path cachePath = _projectDir / transCacheDirName / ascii2Wide(cacheFileName);
+					const fs::path cachePath = m_projectDir / transCacheDirName / ascii2Wide(cacheFileName);
 					if (!fs::exists(cachePath)) {
 						problems.push_back(std::format("[文件 {}] 未在 cache 中找到，跳过导入", cacheFileName));
 						continue;
@@ -227,8 +228,8 @@ void OtherSettingsPage::_setupUI()
 							continue;
 						}
 						auto& cacheItem = it->second.get();
-						std::string overviewItemOrigText = overviewItem["original_text"].get<std::string>();
-						std::string cacheItemOrigText = cacheItem["original_text"].get<std::string>();
+						const std::string overviewItemOrigText = overviewItem["original_text"].get<std::string>();
+						const std::string cacheItemOrigText = cacheItem["original_text"].get<std::string>();
 						if (overviewItemOrigText != cacheItemOrigText) {
 							problems.push_back(std::format("[文件 {}] 句子(index {}) 与 cache 中原文不匹配，可能产生意外结果，\n概览原文: {}\n缓存原文: {}",
 								cacheFileName, overviewItemIndex, overviewItemOrigText, cacheItemOrigText));
@@ -249,19 +250,19 @@ void OtherSettingsPage::_setupUI()
 					}
 				}
 
-				QString completeStr = tr("成功导入 ") + QString::number(importCount) + tr(" 个句子至 trans_cache");
+				const QString completeQStr = tr("成功导入 ") + QString::number(importCount) + tr(" 个句子至 trans_cache");
 				if (!problems.empty()) {
-					const fs::path problemPath = _projectDir / L"import_problems.log";
+					const fs::path problemPath = m_projectDir / L"import_problems.log";
 					std::ofstream ofs(problemPath);
 					for (const auto& problem : problems) {
 						ofs << problem << "\n";
 					}
-					ofs << completeStr.toStdString() << "\n";
+					ofs << completeQStr.toStdString() << "\n";
 					ofs.close();
 					ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入完毕"), tr("导入中出现的问题记录在 import_problems.log 中"), 3000);
 				}
 				else {
-					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("导入完毕"), completeStr, 3000);
+					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("导入完毕"), completeQStr, 3000);
 				}
 			}
 			catch (const std::exception& e) {
@@ -285,7 +286,7 @@ void OtherSettingsPage::_setupUI()
 	connect(saveButton, &ElaPushButton::clicked, this, [=]()
 		{
 			Q_EMIT saveConfigSignal();
-			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的配置信息已保存"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的配置信息已保存"), 3000);
 		});
 	saveLayout->addWidget(saveButton);
 	mainLayout->addWidget(saveArea);
@@ -302,12 +303,12 @@ void OtherSettingsPage::_setupUI()
 	refreshButton->setText(tr("刷新"));
 	connect(refreshButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (toml::find_or(_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("刷新失败"), tr("项目仍在运行中，无法刷新"), 3000);
 				return;
 			}
 
-			ElaContentDialog helpDialog(_mainWindow);
+			ElaContentDialog helpDialog(m_mainWindow);
 			helpDialog.setLeftButtonText(tr("否"));
 			helpDialog.setMiddleButtonText(tr("思考人生"));
 			helpDialog.setRightButtonText(tr("是"));
@@ -326,11 +327,9 @@ void OtherSettingsPage::_setupUI()
 			layout->addStretch();
 			helpDialog.setCentralWidget(widget);
 
-			connect(&helpDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
-				{
-					Q_EMIT refreshProjectConfigSignal();
-				});
-			helpDialog.exec();
+			if (helpDialog.exec() == QDialog::Accepted) {
+				Q_EMIT refreshProjectConfigSignal();
+			}
 		});
 	refreshLayout->addWidget(refreshButton);
 	mainLayout->addWidget(refreshArea);
@@ -347,12 +346,12 @@ void OtherSettingsPage::_setupUI()
 	cacheButton->setText(tr("删除"));
 	connect(cacheButton, &ElaPushButton::clicked, this, [=]()
 		{
-			if (toml::find_or(_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), tr("项目仍在运行中，无法删除缓存"), 3000);
 				return;
 			}
 
-			ElaContentDialog helpDialog(_mainWindow);
+			ElaContentDialog helpDialog(m_mainWindow);
 
 			helpDialog.setLeftButtonText(tr("否"));
 			helpDialog.setMiddleButtonText(tr("思考人生"));
@@ -372,23 +371,21 @@ void OtherSettingsPage::_setupUI()
 			layout->addStretch();
 			helpDialog.setCentralWidget(widget);
 
-			connect(&helpDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
-				{
-					try {
-						fs::remove_all(_projectDir / transCacheDirName);
-					}
-					catch (const fs::filesystem_error& e) {
-						ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), QString(e.what()), 3000);
-						return;
-					}
-					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("项目 ") + QString::fromStdWString(_projectDir.filename().wstring()) + tr(" 的翻译缓存已删除"), 3000);
-
-				});
-			helpDialog.exec();
+			if (helpDialog.exec() == QDialog::Accepted) {
+				try {
+					fs::remove_all(m_projectDir / transCacheDirName);
+				}
+				catch (const fs::filesystem_error& e) {
+					ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), QString(e.what()), 3000);
+					return;
+				}
+				ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("项目 ") +
+					QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的翻译缓存已删除"), 3000);
+			}
 		});
 	cacheLayout->addWidget(cacheButton);
 	mainLayout->addWidget(cacheArea);
-	
+
 	mainLayout->addStretch();
 	addCentralWidget(mainWidget, true, false, 0);
 }

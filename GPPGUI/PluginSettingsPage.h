@@ -1,5 +1,3 @@
-﻿// PluginSettingsPage.h
-
 #ifndef PLUGINSETTINGSPAGE_H
 #define PLUGINSETTINGSPAGE_H
 
@@ -20,31 +18,31 @@ class PluginSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit PluginSettingsPage(QWidget* mainWindow, fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
     ~PluginSettingsPage() override;
     virtual void apply2Config() override;
 
 private Q_SLOTS:
-    void _onItemMoveUp(PluginItemWidget* item);
-    void _onItemMoveDown(PluginItemWidget* item);
-    void _onItemSettings(PluginItemWidget* item);
+    void onItemMoveUp(PluginItemWidget* item);
+    void onItemMoveDown(PluginItemWidget* item);
+    void onItemSettings(PluginItemWidget* item);
 
 private:
-    void _setupUI();
-    void _updateMoveButtonStates(); // 更新所有项的上下移动按钮状态
+    void setupUi();
+    void updateMoveButtonStates(); // 更新所有项的上下移动按钮状态
 
-    QVBoxLayout* _pluginListLayout; // 容纳所有 PluginItemWidget 的布局
-    QList<PluginItemWidget*> _pluginItems; // 按顺序存储所有项的指针
+    QVBoxLayout* m_pluginListLayout = nullptr; // 容纳所有 PluginItemWidget 的布局
+    QList<PluginItemWidget*> m_pluginItems; // 按顺序存储所有项的指针
 
-    fs::path& _projectDir;
-    toml::ordered_value& _projectConfig;
-    QWidget* _mainWindow;
+    fs::path& m_projectDir;
+    toml::ordered_value& m_projectConfig;
+    QWidget* m_mainWindow = nullptr;
 
 private:
     // 以下为各个插件的设置页面
-    TF2HCfgPage* _tf2hCfgPage;
-    TLFCfgPage* _tlfCfgPage;
-    SkipTransCfgPage* _skipTransCfgPage;
+    TF2HCfgPage* m_tf2hCfgPage = nullptr;
+    TLFCfgPage* m_tlfCfgPage = nullptr;
+    SkipTransCfgPage* m_skipTransCfgPage = nullptr;
 };
 
 #endif // PLUGINSETTINGSPAGE_H

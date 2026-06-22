@@ -1,5 +1,3 @@
-// CommonSettingsPage.h
-
 #ifndef COMMONSETTINGSPAGE_H
 #define COMMONSETTINGSPAGE_H
 
@@ -15,8 +13,8 @@ public:
     ~CommonSettingsPage() override;
 
 private:
-    void _setupUI();
-    toml::ordered_value& _projectConfig;
+    void setupUi();
+    toml::ordered_value& m_projectConfig;
 };
 
 #endif // COMMONSETTINGSPAGE_H

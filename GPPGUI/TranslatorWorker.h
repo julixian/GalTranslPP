@@ -1,4 +1,4 @@
-﻿#ifndef TRANSLATORWORKER_H
+#ifndef TRANSLATORWORKER_H
 #define TRANSLATORWORKER_H
 
 #include <QObject>
@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 struct GuiRuntimeSuccessEvent {
     QString timestamp;
     QString filename;
-    int index{0};
+    int index{};
     QStringList speakers;
     QString sourcePreview;
     QString translationPreview;
@@ -26,17 +26,17 @@ struct GuiRuntimeErrorEvent {
     QString message;
     QString filename;
     QString indexRange;
-    int retryCount{-1};
+    int retryCount = -1;
     QString model;
-    double sleepSeconds{-1.0};
+    double sleepSeconds = -1.0;
 };
 Q_DECLARE_METATYPE(GuiRuntimeErrorEvent)
 
 struct GuiRuntimeFileProgress {
     QString filename;
-    int total{0};
-    int completed{0};
-    int problems{0};
+    int total{};
+    int completed{};
+    int problems{};
 };
 Q_DECLARE_METATYPE(GuiRuntimeFileProgress)
 
@@ -47,7 +47,7 @@ public:
     explicit TranslatorWorker(const fs::path& projectDir, QObject* parent = nullptr);
 
     void stopTranslation();
-    bool getShouldStop() const { return _shouldStop; }
+    bool getShouldStop() const { return m_shouldStop; }
 
 
 public Q_SLOTS:
@@ -56,7 +56,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     // 任务完成信号（无论是正常结束还是被中断）
-    void translationFinished(int exitCode);
+    void translationFinishedSignal(int exitCode);
 
     void makeBarSignal(int totalSentences, int totalThreads);
     void writeLogSignal(const QString& log);
@@ -70,8 +70,8 @@ Q_SIGNALS:
     void runtimeStageChangedSignal(const QString& stage, const QString& currentFile);
 
 private:
-    fs::path _projectDir;
-    bool _shouldStop = false;
+    fs::path m_projectDir;
+    bool m_shouldStop = false;
 };
 
 #endif // TRANSLATORWORKER_H

@@ -1,4 +1,4 @@
-﻿#include "NJCfgPage.h"
+#include "NJCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -9,7 +9,7 @@
 
 import Tool;
 
-NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), _projectConfig(projectConfig)
+NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("NormalJson 输出配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -19,7 +19,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出带原文
-	bool outputWithSrc = toml::find_or(_projectConfig, "plugins", "NormalJson", "output_with_src", true);
+	bool outputWithSrc = toml::find_or(m_projectConfig, "plugins", "NormalJson", "output_with_src", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("输出带原文"), outputArea);
@@ -32,9 +32,9 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	outputLayout->addWidget(outputSwitch);
 	mainLayout->addWidget(outputArea);
 
-	_applyFunc = [=]()
+	m_applyFunc = [=]()
 		{
-			insertToml(_projectConfig, "plugins.NormalJson.output_with_src", outputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.NormalJson.output_with_src", outputSwitch->getIsToggled());
 		};
 
 	mainLayout->addStretch();

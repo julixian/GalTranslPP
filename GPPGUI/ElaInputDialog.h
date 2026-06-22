@@ -1,5 +1,3 @@
-﻿// ElaInputDialog.h
-
 #ifndef ELAINPUTDIALOG_H
 #define ELAINPUTDIALOG_H
 
@@ -12,7 +10,7 @@ class ElaInputDialog : public ElaContentDialog
     Q_OBJECT
 
 public:
-    explicit ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result, bool* ok);
+    explicit ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result);
     ~ElaInputDialog() override;
 
 private Q_SLOTS:
@@ -20,9 +18,8 @@ private Q_SLOTS:
     virtual void onMiddleButtonClicked() override;
 
 private:
-    QString& _result;
-    ElaLineEdit* _lineEdit;
-    bool* _ok;
+    QString& m_result;
+    ElaLineEdit* m_lineEdit = nullptr;
 
 };
 

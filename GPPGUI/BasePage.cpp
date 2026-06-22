@@ -16,8 +16,8 @@ BasePage::BasePage(QWidget* parent)
 
 void BasePage::apply2Config()
 {
-    if (_applyFunc) {
-        _applyFunc();
+    if (m_applyFunc) {
+        m_applyFunc();
     }
 }
 

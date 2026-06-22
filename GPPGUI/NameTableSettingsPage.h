@@ -1,5 +1,3 @@
-// NameTableSettingsPage.h
-
 #ifndef NAMETABLESETTINGSPAGE_H
 #define NAMETABLESETTINGSPAGE_H
 
@@ -22,15 +20,15 @@ public:
 
 private:
 
-    void _setupUI();
+    void setupUi();
     QList<NameTableEntry> readNameTable();
     QString readNameTableStr();
-    toml::ordered_value& _projectConfig;
-    toml::ordered_value& _globalConfig;
-    fs::path& _projectDir;
-    std::function<void()> _refreshFunc;
+    fs::path& m_projectDir;
+    toml::ordered_value& m_globalConfig;
+    toml::ordered_value& m_projectConfig;
+    std::function<void()> m_refreshFunc;
 
-    QList<NameTableEntry> _withdrawList;
+    QList<NameTableEntry> m_withdrawList;
 };
 
 #endif // NAMETABLESETTINGSPAGE_H

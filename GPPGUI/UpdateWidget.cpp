@@ -1,4 +1,4 @@
-﻿#include "UpdateWidget.h"
+#include "UpdateWidget.h"
 
 #include <QVBoxLayout>
 #include "ElaText.h"
@@ -17,6 +17,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. Sentence 结构体处理过程中增加 fileName 字段",
+		"2. 优化 关于 页面中的检查更新逻辑",
+        "3. 优化字典",
     };
 
     mainLayout->addWidget(updateTitle);
@@ -25,7 +27,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         updateItem->setIsWrapAnywhere(true);
         mainLayout->addWidget(updateItem);
     }
-    
+
     mainLayout->addStretch();
 }
 

@@ -1,41 +1,31 @@
-﻿#include "UpdateChecker.h"
+#include "UpdateChecker.h"
+
+#include <QCryptographicHash>
+#include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QJsonArray>
-#include <QMessageBox>
-#include <QDesktopServices>
-#include <QFile>
-#include <QCryptographicHash>
+#include <QNetworkRequest>
 
-#include "ElaText.h"
 #include "ElaMessageBar.h"
+#include "ElaText.h"
 
 import Tool;
-namespace fs = std::filesystem;
 
-// 计算文件的 SHA-256 哈希值
-QString calculateFileSha256(const QString& filePath)
+namespace
 {
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        return QString(); // 返回空字符串表示失败
+    constexpr int CheckTimeoutMs = 10000;
+    constexpr int DownloadStallTimeoutMs = 15000;
+    constexpr qint64 HashBufferSize = 1024 * 1024;
+
+    QString networkErrorText(const QNetworkReply* reply)
+    {
+        return reply ? reply->errorString() : QString();
     }
-
-    QCryptographicHash hash(QCryptographicHash::Sha256);
-
-    const qint64 bufferSize = 8192;
-    while (!file.atEnd()) {
-        // 从文件中读取一块数据，然后添加到哈希计算中
-        QByteArray buffer = file.read(bufferSize);
-        hash.addData(buffer);
-    }
-
-    file.close();
-    return hash.result().toHex();
 }
 
-UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusText, QObject* parent) :
-    QObject(parent), m_statusText(statusText), m_globalConfig(globalConfig)
+UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusText, QObject* parent)
+    : QObject(parent), m_statusText(statusText), m_globalConfig(globalConfig)
 {
     m_checkManager = new QNetworkAccessManager(this);
     connect(m_checkManager, &QNetworkAccessManager::finished, this, &UpdateChecker::onReplyFinished);
@@ -45,7 +35,6 @@ UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusT
 
     m_trayIcon = new QSystemTrayIcon(this);
     m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
-
     connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
         {
             Q_EMIT applyUpdateAndRestartSignal();
@@ -62,41 +51,84 @@ UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusT
 
 UpdateChecker::~UpdateChecker()
 {
-    m_trayIcon = nullptr;
+    if (m_checkReply) {
+        m_checkReply->abort();
+    }
+    if (m_downloadReply) {
+        m_downloadReply->abort();
+    }
+    resetDownloadFile();
 }
 
-void UpdateChecker::check(bool forDownload)
+void UpdateChecker::check(bool downloadIfAvailableAfterChecking)
 {
-    // GitHub API for the latest release
-    if (m_downloadReply) {
-        ElaMessageBar::information(ElaMessageBarType::Top, tr("别急别急"), tr("正在下载更新包..."), 5000);
+    if (m_state == UpdateState::Downloading) {
+        ElaMessageBar::information(ElaMessageBarType::Top, tr("请稍候"), tr("正在下载更新包..."), 5000);
         return;
     }
-    if (m_downloadSuccess) {
-        ElaMessageBar::information(ElaMessageBarType::Top, tr("下载已完成"), tr("点击卡片以关闭程序并安装更新"), 5000);
-        m_trayIcon->show();
-        m_trayIcon->showMessage(
-            tr("下载已完成"),                  // 标题
-                tr("点击以关闭程序并安装更新"),      // 内容
-            QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
-            5000                          // 显示时长 (毫秒)
-        );
-        std::thread([this]()
-            {
-                std::this_thread::sleep_for(std::chrono::seconds(5));
-                if (m_trayIcon) {
-                    m_trayIcon->hide();
-                }
-            }).detach();
+
+    if (m_state == UpdateState::ReadyToInstall) {
+        if (hasValidLocalPackage(m_latestRelease.asset)) {
+            showReadyToInstallNotification(tr("下载已完成"), tr("点击以关闭程序并安装更新"));
+            return;
+        }
+        else {
+            setState(UpdateState::UpdateAvailable);
+        }
+    }
+
+    if (m_state == UpdateState::Checking) {
+        m_pendingDownloadRequest = m_pendingDownloadRequest || downloadIfAvailableAfterChecking;
+        ElaMessageBar::information(ElaMessageBarType::Top, tr("请稍候"), tr("正在检查更新..."), 5000);
         return;
     }
-    QUrl url("https://api.github.com/repos/" + m_repoOwner + "/" + m_repoName + "/releases/latest");
+
+    if (m_state == UpdateState::UpdateAvailable && downloadIfAvailableAfterChecking) {
+        m_pendingDownloadRequest = true;
+        maybeStartDownload(true);
+        return;
+    }
+
+    startCheck(downloadIfAvailableAfterChecking);
+}
+
+bool UpdateChecker::shouldDownloadButtonEnabled() const
+{
+	if (m_state == UpdateState::UpdateAvailable) {
+        return true;
+	}
+    return false;
+}
+
+bool UpdateChecker::shouldStartUpdater() const
+{
+    if (m_state == UpdateState::ReadyToInstall && hasValidLocalPackage(m_latestRelease.asset)) {
+        return true;
+    }
+    return false;
+}
+
+void UpdateChecker::setState(UpdateState state)
+{
+    m_state = state;
+}
+
+void UpdateChecker::startCheck(bool requestDownload)
+{
+    m_pendingDownloadRequest = requestDownload;
+    setState(UpdateState::Checking);
+    if (m_statusText) {
+        m_statusText->setText(tr("正在检查更新..."));
+    }
+
+    const QUrl url("https://api.github.com/repos/" + m_repoOwner + "/" + m_repoName + "/releases/latest");
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Accept", "application/vnd.github+json");
+    request.setRawHeader("User-Agent", "GalTranslPP-GUI");
 
     m_checkReply = m_checkManager->get(request);
-    m_isForDownloadMap[m_checkReply] = forDownload;
-    m_checkTimer->start(10000);
+    m_checkTimer->start(CheckTimeoutMs);
 }
 
 void UpdateChecker::onReplyTimeout()
@@ -108,111 +140,212 @@ void UpdateChecker::onReplyTimeout()
 
 void UpdateChecker::onReplyFinished(QNetworkReply* reply)
 {
+    if (reply != m_checkReply) {
+        reply->deleteLater();
+        return;
+    }
+
     m_checkTimer->stop();
-    bool forDownload = m_isForDownloadMap[reply];
-    m_isForDownloadMap.erase(m_isForDownloadMap.find(reply));
     m_checkReply = nullptr;
 
     if (reply->error() != QNetworkReply::NoError) {
-        ElaMessageBar::warning(ElaMessageBarType::Top, tr("更新检测失败"), tr("网络连接失败，请检查网络设置。"), 5000);
+        const QString error = networkErrorText(reply);
         reply->deleteLater();
+        failCheck(error.isEmpty() ? tr("网络连接失败，请检查网络设置。") : error);
         return;
     }
 
-    QByteArray responseData = reply->readAll();
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
-
-    if (!jsonDoc.isObject()) {
-        ElaMessageBar::warning(ElaMessageBarType::Top, tr("更新检测失败"), tr("获取更新信息失败。"), 5000);
+    LatestReleaseInfo releaseInfo;
+    QString errorMessage;
+    if (!parseLatestRelease(reply->readAll(), releaseInfo, &errorMessage)) {
         reply->deleteLater();
+        failCheck(errorMessage);
         return;
-    }
-
-    QJsonObject jsonObj = jsonDoc.object();
-    std::string latestVersion = jsonObj["tag_name"].toString().toStdString();
-    bool canUpdate = forDownload ? true : toml::find_or(m_globalConfig, "autoDownloadUpdate", true);
-    bool isCompatible = true;
-    bool hasNewVersion = cmpVer(latestVersion, GPPVERSION, isCompatible);
-
-    if (hasNewVersion) {
-        if (!forDownload) {
-            ElaMessageBar::information(ElaMessageBarType::Top, tr("检测到新版本"), tr("最新版本: ") + QString::fromStdString(latestVersion), 5000);
-        }
-        if (canUpdate && !m_downloadReply) {
-            if (!forDownload && !isCompatible) {
-                ElaMessageBar::warning(ElaMessageBarType::Top, tr("不兼容更新"), tr("最新版含有不兼容当前版本的内容，请在确认 github 发布页更新日志后再酌情下载。"), 5000);
-            }
-            else {
-                bool hasUpdateFile = false;
-                if (fs::exists(L"GUICORE.7z")) {
-                    QString currentFileHash = "sha256:" + calculateFileSha256("GUICORE.7z");
-                    QJsonArray assets = jsonObj["assets"].toArray();
-                    for (int i = 0; i < assets.size(); i++) {
-                        if (assets[i].toObject()["name"] != "GUICORE.7z") {
-                            continue;
-                        }
-                        QString updateFileHash = assets[i].toObject()["digest"].toString();
-                        if (updateFileHash == currentFileHash) {
-                            m_statusText->setText(tr("更新下载已完成"));
-                            m_downloadSuccess = true;
-                            hasUpdateFile = true;
-                            m_trayIcon->show();
-                            m_trayIcon->showMessage(
-                                tr("下载完成"),                  // 标题
-                                    tr("点击以关闭程序并安装更新"),      // 内容
-                                QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
-                                5000                          // 显示时长 (毫秒)
-                            );
-                            std::thread([this]()
-                                {
-                                    std::this_thread::sleep_for(std::chrono::seconds(5));
-                                    if (m_trayIcon) {
-                                        m_trayIcon->hide();
-                                    }
-                                }).detach();
-                        }
-                        break;
-                    }
-                }
-                if (!hasUpdateFile) {
-                    m_statusText->setText(tr("检测到新版本！"));
-                    QJsonArray assets = jsonObj["assets"].toArray();
-                    for (int i = 0; i < assets.size(); i++) {
-                        if (assets[i].toObject()["name"] != "GUICORE.7z") {
-                            continue;
-                        }
-                        ElaMessageBar::information(ElaMessageBarType::Top, tr("下载更新"), tr("正在下载更新包..."), 5000);
-                        m_statusText->setText(tr("下载更新..."));
-                        downloadUpdate(assets[i].toObject()["browser_download_url"].toString());
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    else {
-        ElaMessageBar::success(ElaMessageBarType::Top, tr("版本检测"), tr("当前已是最新的版本"), 5000);
     }
     reply->deleteLater();
-    Q_EMIT checkCompleteSignal(hasNewVersion);
+
+    m_latestRelease = releaseInfo;
+    if (!m_latestRelease.hasNewVersion) {
+        setState(UpdateState::Idle);
+        if (m_statusText) {
+            m_statusText->setText(tr("当前已是最新版本"));
+        }
+        ElaMessageBar::success(ElaMessageBarType::Top, tr("版本检测"), tr("当前已是最新的版本"), 5000);
+        Q_EMIT checkCompleteSignal(false);
+        return;
+    }
+
+    setState(UpdateState::UpdateAvailable);
+    if (m_statusText) {
+        m_statusText->setText(tr("检测到新版本！"));
+    }
+    if (!m_pendingDownloadRequest) {
+        ElaMessageBar::information(ElaMessageBarType::Top, tr("检测到新版本"), tr("最新版本: ") + m_latestRelease.version, 5000);
+    }
+
+    maybeStartDownload(m_pendingDownloadRequest || toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
+    if (m_state != UpdateState::ReadyToInstall) {
+        Q_EMIT checkCompleteSignal(true);
+    }
 }
 
-void UpdateChecker::downloadUpdate(const QString& url)
+bool UpdateChecker::parseLatestRelease(const QByteArray& responseData, LatestReleaseInfo& info, QString* errorMessage) const
 {
-    QNetworkRequest request(url);
-    m_downloadReply = m_downloadManager->get(request);
+    const QJsonDocument jsonDoc = QJsonDocument::fromJson(responseData);
+    if (!jsonDoc.isObject()) {
+        if (errorMessage) {
+            *errorMessage = tr("获取更新信息失败。");
+        }
+        return false;
+    }
 
+    const QJsonObject jsonObj = jsonDoc.object();
+    info.version = jsonObj["tag_name"].toString();
+    if (info.version.isEmpty()) {
+        if (errorMessage) {
+            *errorMessage = tr("更新信息中缺少版本号。");
+        }
+        return false;
+    }
+
+    bool isCompatible = true;
+    info.hasNewVersion = cmpVer(info.version.toStdString(), GPPVERSION, isCompatible);
+    info.isCompatible = isCompatible;
+    info.asset = findGuiCoreAsset(jsonObj["assets"].toArray()).value_or(UpdateAssetInfo{});
+
+    if (info.hasNewVersion && !info.asset.downloadUrl.isValid()) {
+        if (errorMessage) {
+            *errorMessage = tr("发布页中未找到 GUICORE.7z 更新包。");
+        }
+        return false;
+    }
+
+    return true;
+}
+
+std::optional<UpdateChecker::UpdateAssetInfo> UpdateChecker::findGuiCoreAsset(const QJsonArray& assets) const
+{
+    for (const QJsonValue& value : assets) {
+        const QJsonObject asset = value.toObject();
+        if (asset["name"].toString() != m_assetName) {
+            continue;
+        }
+
+        UpdateAssetInfo info;
+        info.name = asset["name"].toString();
+        info.downloadUrl = QUrl(asset["browser_download_url"].toString());
+        info.sha256 = normalizeSha256(asset["digest"].toString());
+        return info;
+    }
+
+    return std::nullopt;
+}
+
+QString UpdateChecker::normalizeSha256(const QString& digest)
+{
+    QString normalized = digest.trimmed();
+    if (normalized.startsWith("sha256:", Qt::CaseInsensitive)) {
+        normalized = normalized.mid(QStringLiteral("sha256:").size());
+    }
+    return normalized.toLower();
+}
+
+QString UpdateChecker::calculateFileSha256(const QString& filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return QString();
+    }
+
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    while (!file.atEnd()) {
+        hash.addData(file.read(HashBufferSize));
+    }
+    return hash.result().toHex();
+}
+
+bool UpdateChecker::hasValidLocalPackage(const UpdateAssetInfo& asset) const
+{
+    if (asset.sha256.isEmpty() || !QFile::exists(m_packagePath)) {
+        return false;
+    }
+
+    return calculateFileSha256(m_packagePath) == asset.sha256;
+}
+
+void UpdateChecker::maybeStartDownload(bool requestDownload)
+{
+    if (!m_latestRelease.hasNewVersion) {
+        return;
+    }
+
+    if (!requestDownload) {
+        return;
+    }
+
+    if (!m_latestRelease.isCompatible && !m_pendingDownloadRequest) {
+        ElaMessageBar::warning(
+            ElaMessageBarType::Top,
+            tr("不兼容更新"),
+            tr("最新版含有不兼容当前版本的内容，请确认 GitHub 发布页更新日志后再下载。"),
+            5000);
+        return;
+    }
+
+    if (hasValidLocalPackage(m_latestRelease.asset)) {
+        finishReadyToInstall(tr("更新下载已完成"));
+        return;
+    }
+
+    startDownload(m_latestRelease.asset);
+}
+
+void UpdateChecker::startDownload(const UpdateAssetInfo& asset)
+{
+    if (m_state == UpdateState::Downloading) {
+        return;
+    }
+
+    QFile::remove(m_tempPackagePath);
+    m_downloadFile = new QFile(m_tempPackagePath, this);
+    if (!m_downloadFile->open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        resetDownloadFile();
+        failDownload(tr("无法创建更新包临时文件。"));
+        return;
+    }
+
+    QNetworkRequest request(asset.downloadUrl);
+    request.setRawHeader("User-Agent", "GalTranslPP-GUI");
+    m_downloadReply = m_downloadManager->get(request);
+    connect(m_downloadReply, &QNetworkReply::readyRead, this, [this]()
+        {
+            if (m_downloadFile && m_downloadReply) {
+                m_downloadFile->write(m_downloadReply->readAll());
+            }
+        });
     connect(m_downloadReply, &QNetworkReply::downloadProgress, this, &UpdateChecker::onDownloadProgress);
 
-    m_downloadTimer->start(15000);
+    setState(UpdateState::Downloading);
+    if (m_statusText) {
+        m_statusText->setText(tr("下载更新..."));
+    }
+    ElaMessageBar::information(ElaMessageBarType::Top, tr("下载更新"), tr("正在下载更新包..."), 5000);
+    m_downloadTimer->start(DownloadStallTimeoutMs);
 }
 
 void UpdateChecker::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
 {
-    m_statusText->setText(QString::fromStdString(
-        std::format("下载更新... {:.1f}/{:.1f} MB", (double)bytesReceived / 1024 / 1024, (double)bytesTotal / 1024 / 1024)
-    ));
-    m_downloadTimer->start(15000);
+    if (m_statusText) {
+        const QString totalText = bytesTotal > 0 ? formatBytes(bytesTotal) : tr("未知大小");
+        m_statusText->setText(tr("下载更新... %1/%2").arg(formatBytes(bytesReceived), totalText));
+    }
+    m_downloadTimer->start(DownloadStallTimeoutMs);
+}
+
+QString UpdateChecker::formatBytes(qint64 bytes)
+{
+    constexpr double Mib = 1024.0 * 1024.0;
+    return QString::number((double)bytes / Mib, 'f', 1) + " MB";
 }
 
 void UpdateChecker::onDownloadTimeout()
@@ -224,50 +357,98 @@ void UpdateChecker::onDownloadTimeout()
 
 void UpdateChecker::onDownloadFinished(QNetworkReply* reply)
 {
-    m_downloadTimer->stop();
-    m_downloadReply = nullptr;
-
-    if (reply->error() != QNetworkReply::NoError) {
-        ElaMessageBar::warning(ElaMessageBarType::Top, tr("更新下载失败"), tr("网络连接失败，请检查网络设置。"), 5000);
-        m_statusText->setText(tr("更新下载失败"));
+    if (reply != m_downloadReply) {
         reply->deleteLater();
         return;
     }
 
-    std::ofstream ofs(L"GUICORE.7z", std::ios::binary);
-    QByteArray responseData = reply->readAll();
-    ofs.write(responseData.data(), responseData.size());
-    ofs.close();
+    m_downloadTimer->stop();
+    m_downloadReply = nullptr;
+
+    if (m_downloadFile) {
+        m_downloadFile->write(reply->readAll());
+        m_downloadFile->close();
+    }
+
+    if (reply->error() != QNetworkReply::NoError) {
+        const QString error = networkErrorText(reply);
+        reply->deleteLater();
+        resetDownloadFile();
+        QFile::remove(m_tempPackagePath);
+        failDownload(error.isEmpty() ? tr("网络连接失败，请检查网络设置。") : error);
+        return;
+    }
+    reply->deleteLater();
+
+    resetDownloadFile();
+    if (!m_latestRelease.asset.sha256.isEmpty()
+        && calculateFileSha256(m_tempPackagePath) != m_latestRelease.asset.sha256) {
+        QFile::remove(m_tempPackagePath);
+        failDownload(tr("更新包校验失败，请重新下载。"));
+        return;
+    }
+
+    QFile::remove(m_packagePath);
+    if (!QFile::rename(m_tempPackagePath, m_packagePath)) {
+        QFile::remove(m_tempPackagePath);
+        failDownload(tr("无法保存更新包。"));
+        return;
+    }
+
+    finishReadyToInstall(tr("更新下载成功"));
+}
+
+void UpdateChecker::finishReadyToInstall(const QString& statusMessage)
+{
+    setState(UpdateState::ReadyToInstall);
+    m_downloadSuccess = true;
+    if (m_statusText) {
+        m_statusText->setText(statusMessage);
+    }
 
     ElaMessageBar::success(ElaMessageBarType::Top, tr("更新下载成功"), tr("将在程序关闭后自动安装更新"), 5000);
-    m_statusText->setText(tr("更新下载成功"));
-    m_downloadSuccess = true;
+    showReadyToInstallNotification(tr("下载完成"), tr("点击以关闭程序并安装更新"));
+    Q_EMIT checkCompleteSignal(true);
+}
 
-    // 其实我有点想用 wintoast ...，QT这个taryIcon真有点丑，而且还有点麻烦
+void UpdateChecker::showReadyToInstallNotification(const QString& title, const QString& message)
+{
+    if (!m_trayIcon) {
+        return;
+    }
+
     m_trayIcon->show();
-    m_trayIcon->showMessage(
-        tr("下载完成"),                  // 标题
-            tr("点击以关闭程序并安装更新"),      // 内容
-        QSystemTrayIcon::Information, // 图标类型 (Information, Warning, Critical)
-        5000                          // 显示时长 (毫秒)
-    );
-    std::thread([this]()
-        {
-            std::this_thread::sleep_for(std::chrono::seconds(5));
-            if (m_trayIcon) {
-                m_trayIcon->hide();
-            }
-        }).detach();
-
-    reply->deleteLater();
+    m_trayIcon->showMessage(title, message, QSystemTrayIcon::Information, 5000);
+    QTimer::singleShot(5000, m_trayIcon, &QSystemTrayIcon::hide);
 }
 
-bool UpdateChecker::getIsDownloadSucceed()
+void UpdateChecker::failCheck(const QString& message)
 {
-    return m_downloadSuccess;
+    setState(UpdateState::Idle);
+    if (m_statusText) {
+        m_statusText->setText(tr("更新检测失败"));
+    }
+    ElaMessageBar::warning(ElaMessageBarType::Top, tr("更新检测失败"), message, 5000);
+    Q_EMIT checkCompleteSignal(false);
 }
 
-bool UpdateChecker::getIsDownloading()
+void UpdateChecker::failDownload(const QString& message)
 {
-    return m_downloadReply != nullptr;
+    setState(m_latestRelease.hasNewVersion ? UpdateState::UpdateAvailable : UpdateState::Idle);
+    if (m_statusText) {
+        m_statusText->setText(tr("更新下载失败"));
+    }
+    ElaMessageBar::warning(ElaMessageBarType::Top, tr("更新下载失败"), message, 5000);
+    Q_EMIT checkCompleteSignal(m_latestRelease.hasNewVersion);
+}
+
+void UpdateChecker::resetDownloadFile()
+{
+    if (!m_downloadFile) {
+        return;
+    }
+
+    m_downloadFile->close();
+    m_downloadFile->deleteLater();
+    m_downloadFile = nullptr;
 }

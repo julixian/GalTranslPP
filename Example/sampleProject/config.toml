@@ -3,9 +3,9 @@ apiStrategy = "random" # 令牌策略，random随机轮询，fallback优先第�
 apiTimeout = 300 # 请求超时时间，单位秒
 
   [[backendSpecific.OpenAI-Compatible.apis]]
-  apikey = ""             # sk-example-key | sakura引擎可不填
+  apikey = ""             # sk-example-key | filePlugin为sakura时可不填
   apiurl = ""             # https://openai-example.com | 请求地址，加不加/v1都行
-  modelName = ""          # modelName | sakura引擎可不填
+  modelName = ""          # modelName | filePlugin为sakura时可不填
   stream = false
   # enable = false
   # temperature = 1.0
@@ -21,9 +21,10 @@ filePlugin = "NormalJson" # 用于支持更多格式: NormalJson, Epub, PDF, Mto
 # 自定义文件插件的具体示例详见 git 仓库中的 Example 文件夹中的 MySampleFilePlugin
 baseClassName = "NormalJson"
 
-# ForGalJson: 向AI输入json格式的对话并要求AI以json格式回复，使用 FORGALJSON_SYSTEM 和 FORGALJSON_TRANS_PROMPT_EN 作为提示词
 # ForGalTsv: 向AI输入TSV格式的对话并要求AI以TSV格式回复，使用 FORGALTSV_SYSTEM 和 FORGALTSV_TRANS_PROMPT_EN 作为提示词
 # ForNovelTsv: 和 ForGalTsv 的区别是输入不带name，使用 FORNOVELTSV_SYSTEM 和 FORNOVELTSV_TRANS_PROMPT_EN 作为提示词
+# ForGalJson: 向AI输入json格式的对话并要求AI以json格式回复，使用 FORGALJSON_SYSTEM 和 FORGALJSON_TRANS_PROMPT_EN 作为提示词。
+# json格式一般比TSV格式更耗token但破限能力更强。
 # Sakura: 使用 SAKURA_SYSTEM_PROMPT 和 SAKURA_TRANS_PROMPT 作为提示词
 # DumpName: 更新 人名替换表.toml 以供替换人名
 # NameTrans: 翻译人名表(如果没有则先Dump)，使用 NAMETRANS_SYSTEM 和 NAMETRANS_PROMPT 作为提示词
@@ -40,7 +41,7 @@ transEngine = "ForGalTsv"
 # 如 "Lua/MySampleTextPlugin.lua"
 # 插件中必须定义 init 函数，具体示例详见 git 仓库中的 Example 文件夹中的 MySampleTextPlugin
 textPlugins = [
-  # 以 '>' 开头表示此插件不生效
+  # 以 '>' 开头表示此插件不生效，和注释掉一个效果
   ">SkipTrans",                # 等效于 ">prerun:SkipTrans"
   #">TextLinebreakFix",        # 等效于 "dpostrun:TextLinebreakFix"
   #">postrun:TextFull2Half",   # 改到执行译后字典替换之前的时机转换
@@ -57,15 +58,17 @@ output_with_src = true
 "双语显示" = true
 
 [[plugins.Epub.preprocRegex]]
+# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*\(\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*\)\s*</rp>\s*</ruby>\s*'
+# rep = '[$2/$1]'
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'
 
-[[plugins.Epub.preprocRegex]]
-# 基本等效于: 
+[[plugins.Epub.preprocRegex]] 
 # org = '((?i)(?:<p\b[^>]*>|\G(?!\A))[^<]*\K<(?!/p>)[^>]*>)'
 # rep = ''
 org = '(<p[^>/]*>)(.*?)(</p>)'
 callback = [
+  # { org = '<br/>(*SKIP)(*F)|<[^>]*>', rep = '', group = 2},
   { org = '<[^>]*>', rep = '', group = 2 },
 ]
 
@@ -157,8 +160,8 @@ problemList = [
 retranslKeys = [
   #[{ conditionScript='<PROJECT_DIR>/Lua/MySampleTextPlugin.lua',conditionFunc='funcName'},
   #{ conditionScript='<PROJECT_DIR>/Python/MySampleTextPlugin.py',conditionFunc='funcName'}],
-  # "本有",
-  # "本无",
+  #"本有",
+  #"本无",
   "引入繁体字",
   "残留日文",
   "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
@@ -168,7 +171,7 @@ retranslKeys = [
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
 skipProblems = [
-  # "^引入拉丁字母: Live$"  # 不加任何条件
+  #"^引入拉丁字母: Live$"  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
   [ '引入拉丁字母', { conditionTarget = 'preproc_text', conditionReg = 'モチモチ'},
     { conditionTarget = 'trans_preview', conditionReg = 'Q弹'}],

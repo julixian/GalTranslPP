@@ -58,7 +58,7 @@ output_with_src = true
 "双语显示" = true
 
 [[plugins.Epub.preprocRegex]]
-# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*\(\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*\)\s*</rp>\s*</ruby>\s*'
+# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*[\(《]\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*[\)》]\s*</rp>\s*</ruby>\s*'
 # rep = '[$2/$1]'
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'

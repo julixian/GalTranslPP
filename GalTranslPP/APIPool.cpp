@@ -188,7 +188,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<APIPool>& apiPoo
 
     // 情况二：频率限制 (429) 或其他可重试错误
     // 状态码 429 是最明确的信号
-    if (response.statusCode == 429 || lowerErrorMsg.contains("rate limit") || lowerErrorMsg.contains("try again")) {
+    if (response.statusCode == 429 || lowerErrorMsg.contains("rate limit") || lowerErrorMsg.contains("try again") || lowerErrorMsg.contains("饱和")) {
         // 429 也不加 retryCount
         // 实现指数退避与抖动
         const int maxSleepSeconds = (int)std::pow(2, 6);

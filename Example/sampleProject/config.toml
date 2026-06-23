@@ -58,7 +58,7 @@ output_with_src = true
 "双语显示" = true
 
 [[plugins.Epub.preprocRegex]]
-# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*[\(《]\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*[\)》]\s*</rp>\s*</ruby>\s*'
+# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*[\(《（]\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*[\)》）]\s*</rp>\s*</ruby>\s*'
 # rep = '[$2/$1]'
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'
@@ -80,7 +80,7 @@ skipH = false
 # 实际上只是将原文复制给译文并标记为已翻译，所以依旧影响上下文的缓存命中
 # 语法与 retranslKeys 完全相同
 skipKeys = [
-  '^[a-zA-Z\d_\p{P}]+$', # 等效于 [{ conditionTarget = 'preproc_text', conditionReg = '^[a-zA-Z\d_\p{P}]+$' }]
+  '\A[a-zA-Z\d_\p{P}\s]+\z', # 等效于 [{ conditionTarget = 'preproc_text', conditionReg = '\A[a-zA-Z\d_\p{P}\s]+\z' }]
 ]
 
 [plugins.TextLinebreakFix]

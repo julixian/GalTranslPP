@@ -16,8 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. ErrorMessage里有『饱和』时归类为频率限制",
-        "2. 优化项目示例中的默认设置",
+        "1. [GUI] 修复『清空当前项目翻译日志』显示不全的 bug",
     };
 
     mainLayout->addWidget(updateTitle);

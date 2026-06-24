@@ -45,7 +45,7 @@ private Q_SLOTS:
     void onSaveProjectTriggered();
     void onFinishTranslating(const QString& nodeKey);
     void onCloseWindowClicked(bool restart);
-    void onClearLog(bool forceClear);
+    void onClearLog(bool forceClear); // forceClear 为 true 时，只要处在项目的任一页面(为 false 时，如快捷键方案，需要处于 `开始翻译` 页面)，就可以触发日志清除
 
 private:
 

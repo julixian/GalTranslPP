@@ -243,6 +243,7 @@ void MainWindow::initEdgeLayout()
     // 右键菜单
     ElaMenu* appBarMenu = new ElaMenu(this);
     appBarMenu->setMenuItemHeight(27);
+    appBarMenu->setFixedWidth(200);
     // 召唤停靠窗口
     connect(appBarMenu->addElaIconAction(ElaIconType::BellConcierge, tr("召唤停靠窗口")), &QAction::triggered, this, [=]()
         {

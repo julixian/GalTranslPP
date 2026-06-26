@@ -3,14 +3,15 @@ import gpp_plugin_api as gpp
 from pathlib import Path
 import shutil
 import subprocess
+from typing import cast
 
 # 所有已注册类型和函数详见 GalTranslPP/PythonManager.cpp
 
 # 必须: 声明 pythonTranslator
 # C++ 会在 init 前将此属性赋值为基类指针
-pythonTranslator = None
+pythonTranslator = cast(gpp.NormalJsonTranslator, None)
 
-logger = None
+logger = cast(gpp.spdlogLogger, None)
 
 def run():
     pythonTranslator.normalJsonBeforeRun()

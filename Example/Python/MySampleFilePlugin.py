@@ -6,14 +6,15 @@ import threading
 import queue
 import time
 import traceback
+from typing import cast
 
 # 所有已注册类型和函数详见 GalTranslPP/PythonManager.cpp
 
 # 必须: 声明 pythonTranslator
 # C++ 会在 init 前将此属性赋值为基类指针
-pythonTranslator = None
+pythonTranslator = cast(gpp.EpubTranslator, None)
 
-logger = None
+logger = cast(gpp.spdlogLogger, None)
 
 lock = threading.Lock()
 
@@ -56,6 +57,7 @@ def multi_threads_run():
     # 因为子解释器里用 多进程 或 ThreadPoolExecutor 会有一些妙妙小问题
     # 在不进行大模型翻译时行为趋近于单线程，因为我只在大模型翻译部分释放了 C++ 侧占有的 GIL，否则又会有一些妙妙小问题
     relFilePaths = pythonTranslator.m_currentRunRelFilePaths
+    assert relFilePaths is not None
     MAX_WORKERS = pythonTranslator.m_threadsNum
     pythonTranslator.m_controller.makeBar(pythonTranslator.m_controller.m_totalSentences, MAX_WORKERS)
     task_queue = queue.Queue()

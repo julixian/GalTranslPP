@@ -50,15 +50,7 @@ priority = 0
 org = '"([^"]*?)"'
 rep = '『$1』'
 conditionTarget = 'preproc_text'
-conditionReg = '\A[^"]*『[^"]*』[^"]*\z'
-isReg = true
-priority = 0
-
-[[normalDict]]
-org = '"([^"]*?)"'
-rep = '『$1』'
-conditionTarget = 'preproc_text'
-conditionReg = '\A[^"]*「[^"]*」[^"]*\z'
+conditionReg = '\A(?![\S\s]*?"[\S\s]*?")'
 isReg = true
 priority = 0
 
@@ -66,15 +58,7 @@ priority = 0
 org = '“([^“”]*?)”'
 rep = '『$1』'
 conditionTarget = 'preproc_text'
-conditionReg = '\A[^“”]*『[^“”]*』[^“”]*\z'
-isReg = true
-priority = 0
-
-[[normalDict]]
-org = '“([^“”]*?)”'
-rep = '『$1』'
-conditionTarget = 'preproc_text'
-conditionReg = '\A[^“”]*「[^“”]*」[^“”]*\z'
+conditionReg = '\A(?![\S\s]*?“[\S\s]*?”)'
 isReg = true
 priority = 0
 

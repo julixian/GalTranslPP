@@ -2,8 +2,9 @@
 import gpp_plugin_api as gpp
 from pathlib import Path
 import re
+from typing import cast
 
-logger = None
+logger = cast(gpp.spdlogLogger, None)
 targetLang_useTokenizer = False
 targetLang_tokenizeFunc = None
 
@@ -15,5 +16,5 @@ def init(project_dir: Path):
 
 
 def dPostRun(se: gpp.Sentence):
-    if se.translated_preview.contains('\ufffd'):
+    if '\ufffd' in se.translated_preview:
         se.problems += ["U+FFFD 残留"]

@@ -3,12 +3,13 @@ import gpp_plugin_api as gpp
 from pathlib import Path
 import re
 import json
+from typing import Callable, cast
 
 # Sentence 的声明详见 Example/Lua/MySampleTextPlugin.lua
 
 # 全局变量，由 C++ 注入
 # python 中的 logger 和 toknizeFunc 不在 utils 中而是在当前模块的全局变量中
-logger = None
+logger = cast(gpp.spdlogLogger, None)
 
 # sourceLang_useTokenizer = True
 targetLang_tokenizerBackend = "spaCy"
@@ -21,7 +22,7 @@ targetLang_spaCyModelName = "zh_core_web_trf"
 
 targetLang_useTokenizer = True
 # 如果使用提供的分词器则必须先定义 tokenizeFunc
-targetLang_tokenizeFunc = None
+targetLang_tokenizeFunc = cast(Callable[[str], tuple[list[list[str]], list[list[str]]]], None)
 
 tokenizeCachePath = Path(__file__).resolve().parent / Path(r"other_cache\tokenizeCache_linelink.json")
 tokenizeCache = {}
@@ -183,4 +184,3 @@ def unload():
     with open(tokenizeCachePath, 'w', encoding='utf-8') as f:
         json.dump(tokenizeCache, f, ensure_ascii=False, indent=2)
     logger.info(f"LineLink tokenizeCache 已保存至 {tokenizeCachePath}")
-    

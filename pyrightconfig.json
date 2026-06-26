@@ -1,0 +1,12 @@
+{
+  "stubPath": "typings",
+  "include": [
+    "Example/Python"
+  ],
+  "exclude": [
+    "Example/Python/outdated",
+    "Example/Python/implCharMap2NameTable.py"
+  ],
+  "reportMissingModuleSource": false,
+  "typeCheckingMode": "basic"
+}

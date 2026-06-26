@@ -31,14 +31,25 @@ if tokenizeCachePath.exists():
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
 
+def splitIntoTokens(sentence: str):
+    tokens = []
+    if sentence in tokenizeCache:
+        wordPosVec = tokenizeCache[sentence]
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, sentence)
+    else:
+        wordPosVec, entityVec = targetLang_tokenizeFunc(sentence)
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, sentence)
+        tokenizeCache[sentence] = wordPosVec
+    return tokens
+
 def init(project_dir: Path):
     """
     插件初始化函数，由 C++ 调用一次。
     """
     logger.info(f"LineLink 初始化成功，projectDir: {project_dir}")
 
-MAX_LEN = 25
-LINEBREAK_SYMBOL = "\r\n"
+MAX_LEN = 32
+LINEBREAK_SYMBOL = "\\n"
 def has_long_part(transView: str):
     max_len = MAX_LEN
     segments = transView.split(LINEBREAK_SYMBOL)
@@ -68,16 +79,7 @@ def processSentence(se: gpp.Sentence):
     segments = [s.strip() for s in segments if s.strip()]
     transView = "".join(segments)
     max_len = MAX_LEN
-    tokens = []
-    if transView in tokenizeCache:
-        wordPosVec = tokenizeCache[transView]
-        tokens = gpp.utils.splitIntoTokens(wordPosVec, transView)
-    else:
-        wordPosVec, entityVec = targetLang_tokenizeFunc(transView)
-        tokens = gpp.utils.splitIntoTokens(wordPosVec, transView)
-        tokenizeCache[transView] = wordPosVec
-    if not tokens:
-        return
+    tokens = splitIntoTokens(transView)
     
     dialogue = transView.startswith("「")
     new_lines = []
@@ -97,15 +99,18 @@ def processSentence(se: gpp.Sentence):
                 next_token = residual_tokens[index + 1]
                 if len(current_line) + len(current_token) + len(next_token) > max_len:
                     if current_token in excludePuncts:
+                        #『\n...
                         new_lines.append(current_line)
                         current_line = current_token
                         continue
                     removed = gpp.utils.removePunctuation(next_token)
                     if not removed and next_token not in excludePuncts:
                         if any(current_line.endswith(excludePunct) for excludePunct in excludePuncts):
+                            #『word\n。』
                             new_lines.append(current_line[:-1])
                             current_line = current_line[-1] + current_token
                         else:
+                            # word\n，
                             new_lines.append(current_line)
                             current_line = current_token
                         continue
@@ -113,7 +118,11 @@ def processSentence(se: gpp.Sentence):
         else:
             new_lines.append(current_line)
             current_line = current_token
-    new_lines.append(current_line)
+    if len(new_lines) >= 1 and len(current_line) <= 2 and not gpp.utils.removePunctuation(current_line):
+        # word\n。」
+        new_lines[-1] = new_lines[-1] + current_line
+    else:
+        new_lines.append(current_line)
     se.translated_preview = (LINEBREAK_SYMBOL + "　").join(new_lines) if dialogue else LINEBREAK_SYMBOL.join(new_lines)
 
 def linkLine(se: gpp.Sentence):
@@ -164,7 +173,7 @@ def dPostRun(se: gpp.Sentence):
         if not gpp.utils.extractCJK(se.translated_preview) or se.original_text.startswith("　　"):
             return
         processSentence(se)
-        linkLine(se)
+        #linkLine(se)
         #se.translated_preview = se.translated_preview.replace(LINEBREAK_SYMBOL, "\n")
     except Exception as e:
         logger.error(f"Error during LineLink run(): {e}")

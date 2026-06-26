@@ -17,13 +17,14 @@ def wait_for_exit(sec):
     input_thread.join(timeout=sec)
 
 try:
-    projectPath = Path(r"D:\VSProj\JLXHP\Release\korolum")
+    projectPath = Path(r"D:\VSProj\JLXHP\x64\Release\LibidoAventure")
+    projectName = str(projectPath.name)
     packPyScript = projectPath / "pack.py"
-    newScPath = projectPath / "korolum_cn_script"
-    basePath = projectPath / "korolum_cn_base"
+    basePath = projectPath / (projectName + "_cn_base")
     newCharMapPath = basePath / "base"
+    newScriptPath = projectPath / (projectName + "_cn_script")
 
-    shutil.copytree("scene_rep", newScPath / "scene", dirs_exist_ok=True)
+    shutil.copytree("scene_rep", newScriptPath / "scene", dirs_exist_ok=True)
 
     subprocess.run(
                 ["MergeJsonTransMap.exe", "json_cn", "json_jp", newCharMapPath / "transMap.json"]

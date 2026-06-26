@@ -19,15 +19,15 @@ targetLang_spaCyModelName = "zh_core_web_trf"
 # sourceLang_tokenizeFunc = None
 # ...
 
+targetLang_useTokenizer = True
+# 如果使用提供的分词器则必须先定义 tokenizeFunc
+targetLang_tokenizeFunc = None
+
 tokenizeCachePath = Path(__file__).resolve().parent / Path(r"other_cache\tokenizeCache_linelink.json")
 tokenizeCache = {}
 if tokenizeCachePath.exists():
     with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
         tokenizeCache = json.load(f)
-
-targetLang_useTokenizer = True
-# 如果使用提供的分词器则必须先定义 tokenizeFunc
-targetLang_tokenizeFunc = None
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
 

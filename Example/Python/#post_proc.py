@@ -18,19 +18,25 @@ def wait_for_exit(sec):
 
 try:
     projectPath = Path(r"D:\VSProj\JLXHP\x64\Release\LibidoAventure")
-    projectName = str(projectPath.name)
+    projectBaseName = str(projectPath.name)
     packPyScript = projectPath / "pack.py"
-    basePath = projectPath / (projectName + "_cn_base")
+    basePath = projectPath / (projectBaseName + "_cn_base")
     newCharMapPath = basePath / "base"
-    newScriptPath = projectPath / (projectName + "_cn_script")
-
-    shutil.copytree("scene_rep", newScriptPath / "scene", dirs_exist_ok=True)
+    newScriptPath = projectPath / (projectBaseName + "_cn_script")
 
     subprocess.run(
-                ["MergeJsonTransMap.exe", "json_cn", "json_jp", newCharMapPath / "transMap.json"]
+                [sys.executable, r"AdvHD_ws2_Toolkit\src\ws2_json_handler.py",
+                 "import", "--output-encrypt", "encrypted",
+                 "Rio1__bak", "Rio1__cn", (newScriptPath / "Rio1")]
             )
 
-    shutil.copy2("korolum_mjp.ttf", basePath / "korolum_cn" / "Font")
+    subprocess.run(
+                ["MergeJsonTransMap.exe",
+                 "Rio1__cn", "Rio1__jp", newCharMapPath / "transMap.json"]
+            )
+
+    shutil.copy2(projectBaseName + "_mjp.ttf",
+                 basePath / (projectBaseName + "_cn") / "Font")
     shutil.copy2("charMap.json", newCharMapPath)
     shutil.copy2("charsNotMap.json", newCharMapPath)
 

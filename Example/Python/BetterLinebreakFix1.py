@@ -24,7 +24,7 @@ targetLang_useTokenizer = True
 # 如果使用提供的分词器则必须先定义 tokenizeFunc
 targetLang_tokenizeFunc = cast(Callable[[str], tuple[list[list[str]], list[list[str]]]], None)
 
-tokenizeCachePath = Path(__file__).resolve().parent / Path(r"other_cache\tokenizeCache_linelink.json")
+tokenizeCachePath = Path(__file__).resolve().parent / r"other_cache\tokenizeCache_linelink.json"
 tokenizeCache = {}
 if tokenizeCachePath.exists():
     with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
@@ -32,7 +32,7 @@ if tokenizeCachePath.exists():
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
 
-def splitIntoTokens(sentence: str):
+def splitIntoTokens(sentence: str) -> list[str]:
     tokens = []
     if sentence in tokenizeCache:
         wordPosVec = tokenizeCache[sentence]
@@ -42,6 +42,42 @@ def splitIntoTokens(sentence: str):
         tokens = gpp.utils.splitIntoTokens(wordPosVec, sentence)
         tokenizeCache[sentence] = wordPosVec
     return tokens
+
+def is_dialogue(text: str) -> bool:
+    text = text.strip()
+    pairs = {
+        "「": "」",
+        "『": "』",
+        "（": "）",
+    }
+
+    if len(text) < 2:
+        return False
+
+    left = text[0]
+    right = pairs.get(left)
+
+    if right is None or text[-1] != right:
+        return False
+
+    # 必须是同一组符号完整包住整句。
+    # 例如：（xxx）xxxx（xxx）
+    # 虽然首尾也是 （），但中间提前闭合过，所以不是 dialogue。
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch == left:
+            depth += 1
+        elif ch == right:
+            depth -= 1
+
+            if depth == 0 and i != len(text) - 1:
+                return False
+
+            if depth < 0:
+                return False
+
+    return depth == 0
+
 
 def init(project_dir: Path):
     """
@@ -57,7 +93,7 @@ def has_long_part(transView: str):
     segments = [s.strip() for s in segments if s.strip()]
     if not segments:
         return False
-    dialogue = segments[0].startswith("「")
+    dialogue = is_dialogue(transView)
     for index, segment in enumerate(segments):
         if dialogue:
             if index == 0:
@@ -82,7 +118,7 @@ def processSentence(se: gpp.Sentence):
     max_len = MAX_LEN
     tokens = splitIntoTokens(transView)
     
-    dialogue = transView.startswith("「")
+    dialogue = is_dialogue(transView)
     new_lines = []
     current_line: str = tokens[0]
     residual_tokens = tokens[1:]
@@ -184,3 +220,4 @@ def unload():
     with open(tokenizeCachePath, 'w', encoding='utf-8') as f:
         json.dump(tokenizeCache, f, ensure_ascii=False, indent=2)
     logger.info(f"LineLink tokenizeCache 已保存至 {tokenizeCachePath}")
+    

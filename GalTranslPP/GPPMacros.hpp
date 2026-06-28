@@ -23,7 +23,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/container/btree_map.h>
 #include <absl/container/btree_set.h>
-#endif // 用模块也能编过但是会崩。。。
+#endif // 用模块也能编过但是会崩。。。不知道又是哪里的什么在抽风。。。
 
 #define NESTED_CVT(className, memberName) sol::property([](className& self) \
 { \

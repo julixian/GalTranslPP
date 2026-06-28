@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 static thread_local std::unique_ptr<chrome_lang_id::NNetLanguageIdentifier> langIdentifier;
 static thread_local std::unique_ptr<CodePageChecker> codePageChecker;
 static thread_local std::unique_ptr<opencc::SimpleConverter> simpleConverter;
+static absl::btree_set<std::string_view> excludeTraditionalCharList = { "乾", "阪", "篠", "塚" };
 
 
 ProblemAnalyzer::~ProblemAnalyzer() {
@@ -30,10 +31,7 @@ ProblemAnalyzer::~ProblemAnalyzer() {
 ProblemAnalyzer::ProblemAnalyzer(const std::unique_ptr<GptDictionary>& gptDictionary, const std::string& targetLang, const std::shared_ptr<spdlog::logger>& logger)
     : m_gptDictionary(gptDictionary), m_targetLang(targetLang), m_logger(logger) 
 {
-	m_excludeTraditionalCharList =
-    {
-        "乾", "阪", "篠", "塚"
-    };
+
 }
 
 void ProblemAnalyzer::analyze(Sentence* sentence) {
@@ -106,7 +104,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         if (const std::string simplified = simpleConverter->Convert(transView); simplified != transView) { // 这一步主要是为了初筛加速
             std::string traditionalChars;
             for (const auto& origChar : splitIntoGraphemes(transView)
-                | std::views::filter([&](const std::string& g) { return !m_excludeTraditionalCharList.contains(g); }))
+                | std::views::filter([&](const std::string& g) { return !excludeTraditionalCharList.contains(g); }))
             {
                 // 经过初筛之后的实际检查还是分单个文字进行的，我测下来这样效果会好一点，大概是因为 opencc/icu 这些库本来搞这个的目的
                 // 是真的用来繁简转换而不是用来测有没有『繁体字』的，让 opencc 联系上下文反而会出现一些误报

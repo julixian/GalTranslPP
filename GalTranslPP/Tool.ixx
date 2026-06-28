@@ -155,9 +155,10 @@ export
         return a > b ? a - b : b - a;
     }
 
-    namespace toml {
-        toml::value uparse(const fs::path& path);
-        toml::ordered_value uoparse(const fs::path& path);
+    namespace toml
+    {
+        ::toml::value uparse(const fs::path& path);
+        ::toml::ordered_value uoparse(const fs::path& path);
     }
 
     // 辅助函数：在一个 TOML 表中，根据一个由键组成的路径向量来查找值

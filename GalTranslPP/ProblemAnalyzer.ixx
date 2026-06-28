@@ -41,7 +41,6 @@ export
         double m_probabilityThreshold{};
         std::string m_codePage;
         std::string m_targetLang;
-        absl::btree_set<std::string_view> m_excludeTraditionalCharList;
 
         std::shared_ptr<spdlog::logger> m_logger;
 

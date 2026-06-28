@@ -225,7 +225,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPPMacros.hpp">
-      <Filter>Tools\Utils</Filter>
+      <Filter>Tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

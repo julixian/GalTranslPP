@@ -643,12 +643,6 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 
 	// 绑定 utils 库
 	sol::table utilsTable = lua.create_named_table("utils");
-	utilsTable["ascii2Ascii"] = [](const std::string& ascii, std::optional<int> src, std::optional<int> dst) -> std::tuple<std::string, bool>
-		{
-			int usedDefaultChar = 0;
-			std::string resultStr = ascii2Ascii(ascii, (unsigned int)src.value_or(65001), (unsigned int)dst.value_or(0), &usedDefaultChar);
-			return std::make_tuple(resultStr, (bool)usedDefaultChar);
-		};
 	utilsTable["executeCommand"] = [](const std::string& program, const std::string& args, std::optional<bool> showWindow, std::optional<int> timeDelayAfterCommand) -> bool
 		{
 			return executeCommand(ascii2Wide(program), ascii2Wide(args), showWindow.value_or(true), timeDelayAfterCommand.value_or(5));

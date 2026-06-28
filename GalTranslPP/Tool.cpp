@@ -75,14 +75,6 @@ std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
     return wide;
 }
 
-std::string ascii2Ascii(const std::string& ascii, UINT src, UINT dst, LPBOOL usedDefaultChar) {
-    return wide2Ascii(ascii2Wide(ascii, src), dst, usedDefaultChar);
-}
-
-std::string ascii2Ascii(std::string_view ascii, UINT src, UINT dst, LPBOOL usedDefaultChar) {
-    return wide2Ascii(ascii2Wide(ascii, src), dst, usedDefaultChar);
-}
-
 bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow, int timeDelayAfterCommand) {
 
     std::wstring commandLineStr;

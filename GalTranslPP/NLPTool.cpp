@@ -12,7 +12,8 @@ import PythonManager;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-namespace {
+namespace
+{
     struct LazyTokenizeState {
         std::once_flag initOnce;
         std::function<NLPResult(const std::string&)> tokenizeFunc;
@@ -46,16 +47,23 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
             return runLazyTokenizer(state, text, [&]() -> std::function<NLPResult(const std::string&)>
                 {
                     logger->info("正在检查 MeCab 环境...");
+                    char* argv[] = {
+                        (char*)"mecab",
+                        (char*)"-r",
+						(char*)"BaseConfig/mecabDict/mecabrc",
+						(char*)"-d",
+						(char*)mecabDictDir.c_str()
+                    };
                     const auto mecabModel = std::shared_ptr<MeCab::Model>(
-                        MeCab::Model::create(("-r BaseConfig/mecabDict/mecabrc -d " + ascii2Ascii(mecabDictDir)).c_str())
+                        MeCab::Model::create(std::size(argv), argv)
                     );
                     if (!mecabModel) {
-                        throw std::runtime_error(std::format("无法初始化 MeCab Model。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在且无特殊字符\n错误信息: {}",
+                        throw std::runtime_error(std::format("无法初始化 MeCab Model。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在\n错误信息: {}",
                             mecabDictDir, MeCab::getLastError()));
                     }
                     const auto mecabTagger = std::shared_ptr<MeCab::Tagger>(mecabModel->createTagger());
                     if (!mecabTagger) {
-                        throw std::runtime_error(std::format("无法初始化 MeCab Tagger。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在且无特殊字符\n错误信息: {}",
+                        throw std::runtime_error(std::format("无法初始化 MeCab Tagger。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在\n错误信息: {}",
                             mecabDictDir, MeCab::getLastError()));
                     }
                     logger->info("MeCab 环境检查完毕。");
@@ -75,10 +83,10 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
                                 std::string surface(node->surface, node->length);
                                 std::string feature = node->feature;
                                 //logger->trace("分词结果：{} ({})", surface, feature);
-                                wordPosList.emplace_back(std::vector<std::string>{ surface, feature });
                                 if (feature.contains("固有名詞") || !extractKatakana(surface).empty()) {
-                                    entityList.emplace_back(std::vector<std::string>{ surface, feature });
+                                    entityList.emplace_back(std::initializer_list<std::string>{ surface, feature });
                                 }
+                                wordPosList.emplace_back(std::initializer_list<std::string>{ std::move(surface), std::move(feature) });
                             }
                             return NLPResult{ std::move(wordPosList), std::move(entityList) };
                         };

@@ -18,20 +18,17 @@ export
 {
     std::string wide2Ascii(const std::wstring& wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
     std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
-    inline std::string wide2Ascii(const wchar_t* wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
+    std::string wide2Ascii(const wchar_t* wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
         return wide2Ascii(std::wstring_view(wide), codePage, usedDefaultChar);
     }
     template<typename T>
     requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
-    inline std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
+    std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
         return wide2Ascii(path.native(), codePage, usedDefaultChar);
     }
 
     std::wstring ascii2Wide(const std::string& ascii, UINT codePage = CP_UTF8);
     std::wstring ascii2Wide(std::string_view ascii, UINT codePage = CP_UTF8);
-
-    std::string ascii2Ascii(const std::string& ascii, UINT src = CP_UTF8, UINT dst = CP_ACP, LPBOOL usedDefaultChar = nullptr);
-    std::string ascii2Ascii(std::string_view ascii, UINT src = CP_UTF8, UINT dst = CP_ACP, LPBOOL usedDefaultChar = nullptr);
 
     bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow = true, int timeDelayAfterCommand = 5);
 
@@ -43,24 +40,48 @@ export
 
     bool createParent(const fs::path& path);
 
-    template<typename RetT>
-    RetT str2LowerImpl(auto&& str) {
-        return str | std::views::transform([](const auto c) { return std::tolower(c); }) | std::ranges::to<RetT>();
+    template <typename CharT, typename Traits, typename Alloc>
+    auto& str2LowerInplace(std::basic_string<CharT, Traits, Alloc>& str) {
+        for (CharT& ch : str) {
+            if constexpr (std::is_same_v<CharT, wchar_t>) {
+                if (ch >= L'A' && ch <= L'Z') {
+                    ch = (wchar_t)(ch - L'A' + L'a');
+                }
+            }
+#ifdef PROJECT_NO_ANSI
+            else if constexpr (std::is_same_v<CharT, char>) {
+                if (ch >= 'A' && ch <= 'Z') {
+                    ch = (char)(ch - 'A' + 'a');
+                }
+            }
+#endif
+            else {
+                static_assert(false, __FUNCTION__ ", line " LITERAL_TO_STR(__LINE__));
+            }
+        }
+        return str;
     }
     template<typename T>
     requires(!std::is_same_v<std::remove_cvref_t<T>, fs::path>)
-    inline auto str2Lower(T&& str) {
-        if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::wstring_view>) {
-            return str2LowerImpl<std::wstring>(str);
+    auto str2Lower(T&& str) {
+        if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::wstring>
+            || std::constructible_from<std::wstring, T>)
+        {
+            std::wstring ret(str);
+            str2LowerInplace(ret);
+            return ret;
         }
-        if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string_view>) {
-            return str2LowerImpl<std::string>(str);
+#ifdef PROJECT_NO_ANSI
+        else if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string>
+            || std::constructible_from<std::string, T>)
+        {
+            std::string ret(str);
+            str2LowerInplace(ret);
+            return ret;
         }
-        if constexpr (std::constructible_from<std::wstring_view, T>) {
-            return str2LowerImpl<std::wstring>(std::wstring_view(str));
-        }
-        if constexpr (std::constructible_from<std::string_view, T>) {
-            return str2LowerImpl<std::string>(std::string_view(str));
+#endif
+        else {
+            static_assert(false, __FUNCTION__ ", line " LITERAL_TO_STR(__LINE__));
         }
     }
     std::wstring str2Lower(const fs::path& path) {
@@ -69,11 +90,6 @@ export
 #else
         return str2Lower(path.wstring());
 #endif
-    }
-    template <typename CharT, typename Traits, typename Alloc>
-    auto& str2LowerInplace(std::basic_string<CharT, Traits, Alloc>& str) {
-        std::transform(str.begin(), str.end(), str.begin(), [](const auto c) { return std::tolower(c); });
-        return str;
     }
 
     auto splitStringImpl(auto&& str, auto&& delimiter) -> decltype(auto)
@@ -279,5 +295,4 @@ export
         const std::vector<std::string> keys = splitString(path, '.');
         return insertToml(table, keys, value);
     }
-
 }

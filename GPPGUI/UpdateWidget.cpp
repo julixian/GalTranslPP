@@ -17,6 +17,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. [GUI] 修复『清空当前项目翻译日志』显示不全的 bug",
+        "2. 修复 MeCab 字典路径不能有非 ansi 及空格符号的问题",
+
     };
 
     mainLayout->addWidget(updateTitle);

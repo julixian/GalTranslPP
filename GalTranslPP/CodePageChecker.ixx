@@ -9,7 +9,7 @@
 
 export module CodePageChecker;
 
-import Tool;
+export import Tool;
 
 namespace fs = std::filesystem;
 

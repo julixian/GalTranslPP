@@ -5,8 +5,8 @@
 
 export module LuaTextPlugin;
 
-import GPPDefines;
-import LuaManager;
+export import GPPDefines;
+export import LuaManager;
 
 namespace fs = std::filesystem;
 

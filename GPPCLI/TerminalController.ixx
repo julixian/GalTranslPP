@@ -1,7 +1,7 @@
 ﻿export module TerminalController;
 
-import Tool;
-import ProgressBar;
+export import Tool;
+export import ProgressBar;
 export import ITranslator;
 
 export

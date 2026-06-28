@@ -1,6 +1,5 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <zip.h>
 #pragma  warning( push ) 

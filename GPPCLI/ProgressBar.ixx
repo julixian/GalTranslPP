@@ -1,6 +1,6 @@
 ﻿export module ProgressBar;
 
-import Tool;
+export import Tool;
 
 export
 {

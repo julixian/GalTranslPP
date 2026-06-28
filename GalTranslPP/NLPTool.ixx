@@ -4,7 +4,7 @@
 
 export module NLPTool;
 
-import GPPDefines;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

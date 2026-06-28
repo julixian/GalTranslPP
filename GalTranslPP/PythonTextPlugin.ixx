@@ -5,8 +5,8 @@
 
 export module PythonTextPlugin;
 
-import GPPDefines;
-import PythonManager;
+export import GPPDefines;
+export import PythonManager;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

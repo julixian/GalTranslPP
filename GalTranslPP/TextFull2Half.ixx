@@ -1,12 +1,11 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
 export module TextFull2Half;
 
-import GPPDefines;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

@@ -3,7 +3,6 @@
 #include <QThread>
 #include <QTimer>
 
-import std;
 import ITranslator;
 
 namespace

@@ -4,7 +4,7 @@ module;
 
 export module DictionaryReviewIndex;
 
-import GPPDefines;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

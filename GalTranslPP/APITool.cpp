@@ -1,6 +1,5 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #ifdef _WIN32
 #include <windows.h>

@@ -127,12 +127,6 @@
     <ClCompile Include="NameTranslator.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rdParty\json.ixx">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\spdlog.ixx">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="NormalJsonTranslator.Agent.cpp">
       <Filter>filePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
@@ -193,6 +187,18 @@
     <ClCompile Include="GPPDefines.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="..\3rdParty\json.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\spdlog.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\AbslContainers.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\jpcre2\jpcre2.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -212,6 +218,9 @@
     </Filter>
     <Filter Include="Tools\DictionaryGenerator">
       <UniqueIdentifier>{ccbf815e-31b1-4b96-9a48-a775c055245b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Tools\Utils\3rdParty">
+      <UniqueIdentifier>{3a779742-8f1a-46e7-955f-0988b836e907}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

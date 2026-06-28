@@ -1,13 +1,12 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 
 export module Dictionary;
 
-import GPPDefines;
-import PythonManager;
-import LuaManager;
+export import GPPDefines;
+export import PythonManager;
+export import LuaManager;
 
 namespace fs = std::filesystem;
 

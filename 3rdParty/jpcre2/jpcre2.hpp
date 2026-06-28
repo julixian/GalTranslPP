@@ -73,11 +73,28 @@
 #if __cplusplus >= 201103L || _MSVC_LANG >= 201103L
     #define JPCRE2_USE_MINIMUM_CXX_11 1
     #include <utility>
+    #include <array>        // std::array
     #ifndef JPCRE2_USE_FUNCTION_POINTER_CALLBACK
         #include <functional>   // std::function
     #endif
 #else
     #define JPCRE2_USE_MINIMUM_CXX_11 0
+#endif
+
+#ifndef JPCRE2_INTERNAL_FUNC
+    #ifdef JPCRE2_BUILD_MODULE
+        #define JPCRE2_INTERNAL_FUNC inline
+    #else
+        #define JPCRE2_INTERNAL_FUNC static inline
+    #endif
+#endif
+
+#ifndef JPCRE2_INTERNAL_DATA
+    #if defined(JPCRE2_BUILD_MODULE) && (__cplusplus >= 201703L || _MSVC_LANG >= 201703L)
+        #define JPCRE2_INTERNAL_DATA inline constexpr
+    #else
+        #define JPCRE2_INTERNAL_DATA static const
+    #endif
 #endif
 
 #define JPCRE2_UNUSED(x) ((void)(x))
@@ -117,12 +134,12 @@ namespace jpcre2 {
  *  Contains constant Strings with version info.
  */
 namespace INFO {
-    static const char NAME[] = "JPCRE2";               ///< Name of the project
-    static const char FULL_VERSION[] = "10.32.01";     ///< Full version string
-    static const char VERSION_GENRE[] = "10";          ///< Generation, depends on original PCRE2 version
-    static const char VERSION_MAJOR[] = "32";          ///< Major version, updated when API change is made
-    static const char VERSION_MINOR[] = "01";          ///< Minor version, includes bug fix or minor feature upgrade
-    static const char VERSION_PRE_RELEASE[] = "";      ///< Alpha or beta (testing) release version
+    JPCRE2_INTERNAL_DATA char NAME[] = "JPCRE2";               ///< Name of the project
+    JPCRE2_INTERNAL_DATA char FULL_VERSION[] = "10.32.01";     ///< Full version string
+    JPCRE2_INTERNAL_DATA char VERSION_GENRE[] = "10";          ///< Generation, depends on original PCRE2 version
+    JPCRE2_INTERNAL_DATA char VERSION_MAJOR[] = "32";          ///< Major version, updated when API change is made
+    JPCRE2_INTERNAL_DATA char VERSION_MINOR[] = "01";          ///< Minor version, includes bug fix or minor feature upgrade
+    JPCRE2_INTERNAL_DATA char VERSION_PRE_RELEASE[] = "";      ///< Alpha or beta (testing) release version
 }
 
 
@@ -173,14 +190,14 @@ struct IsSame<T,T>{ static const bool value = true; };
 ///@param msg message (std::string)
 ///@param f file where jassert was called.
 ///@param line line number where jassert was called.
-static inline void jassert(bool cond, const char* msg, const char* f, size_t line){
+JPCRE2_INTERNAL_FUNC void jassert(bool cond, const char* msg, const char* f, size_t line){
     if(!cond) {
         std::fprintf(stderr,"\n\tE: AssertionFailure\n%s\nAssertion failed in file: %s\t at line: %u\n", msg, f, (unsigned)line);
         std::abort();
     }
 }
 
-static inline void _jvassert(bool cond, char const * name, const char* f, size_t line){
+JPCRE2_INTERNAL_FUNC void _jvassert(bool cond, char const * name, const char* f, size_t line){
     jassert(cond, (std::string("ValueError: \n\
     Required data vector of type ")+std::string(name)+" is empty.\n\
     Your MatchEvaluator callback function is not\n\
@@ -192,7 +209,7 @@ static inline void _jvassert(bool cond, char const * name, const char* f, size_t
     the doc in MatchEvaluator section.").c_str(), f, line);
 }
 
-static inline std::string _tostdstring(unsigned x){
+JPCRE2_INTERNAL_FUNC std::string _tostdstring(unsigned x){
     char buf[128];
     int written = std::sprintf(buf, "%u", x);
     return (written > 0) ? std::string(buf, buf + written) : std::string();
@@ -673,64 +690,64 @@ namespace MOD {
 
     // Define modifiers for compile
     // String of compile modifier characters for PCRE2 options
-    static const char C_N[] = "eijmnsuxADJU";
+    JPCRE2_INTERNAL_DATA char C_N[] = "eijmnsuxADJU";
     // Array of compile modifier values for PCRE2 options
     // Uint is being used in getModifier() in for loop to get the number of element in this array,
     // be sure to chnage there if you change here.
-    static const jpcre2::Uint C_V[12] = { PCRE2_MATCH_UNSET_BACKREF,                  // Modifier e
-                                          PCRE2_CASELESS,                             // Modifier i
-                                          PCRE2_ALT_BSUX | PCRE2_MATCH_UNSET_BACKREF, // Modifier j
-                                          PCRE2_MULTILINE,                            // Modifier m
-                                          PCRE2_UTF | PCRE2_UCP,                      // Modifier n (includes u)
-                                          PCRE2_DOTALL,                               // Modifier s
-                                          PCRE2_UTF,                                  // Modifier u
-                                          PCRE2_EXTENDED,                             // Modifier x
-                                          PCRE2_ANCHORED,                             // Modifier A
-                                          PCRE2_DOLLAR_ENDONLY,                       // Modifier D
-                                          PCRE2_DUPNAMES,                             // Modifier J
-                                          PCRE2_UNGREEDY                              // Modifier U
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint C_V[12] = { PCRE2_MATCH_UNSET_BACKREF,                  // Modifier e
+                                                  PCRE2_CASELESS,                             // Modifier i
+                                                  PCRE2_ALT_BSUX | PCRE2_MATCH_UNSET_BACKREF, // Modifier j
+                                                  PCRE2_MULTILINE,                            // Modifier m
+                                                  PCRE2_UTF | PCRE2_UCP,                      // Modifier n (includes u)
+                                                  PCRE2_DOTALL,                               // Modifier s
+                                                  PCRE2_UTF,                                  // Modifier u
+                                                  PCRE2_EXTENDED,                             // Modifier x
+                                                  PCRE2_ANCHORED,                             // Modifier A
+                                                  PCRE2_DOLLAR_ENDONLY,                       // Modifier D
+                                                  PCRE2_DUPNAMES,                             // Modifier J
+                                                  PCRE2_UNGREEDY                              // Modifier U
+                                                };
 
 
     // String of compile modifier characters for JPCRE2 options
-    static const char CJ_N[] = "S";
+    JPCRE2_INTERNAL_DATA char CJ_N[] = "S";
     // Array of compile modifier values for JPCRE2 options
-    static const jpcre2::Uint CJ_V[1] = { JIT_COMPILE,                                // Modifier S
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint CJ_V[1] = { JIT_COMPILE,                                // Modifier S
+                                                };
 
 
     // Define modifiers for replace
     // String of action (replace) modifier characters for PCRE2 options
-    static const char R_N[] = "eEgx";
+    JPCRE2_INTERNAL_DATA char R_N[] = "eEgx";
     // Array of action (replace) modifier values for PCRE2 options
-    static const jpcre2::Uint R_V[4]  = {  PCRE2_SUBSTITUTE_UNSET_EMPTY,                // Modifier  e
-                                           PCRE2_SUBSTITUTE_UNKNOWN_UNSET | PCRE2_SUBSTITUTE_UNSET_EMPTY,   // Modifier E (includes e)
-                                           PCRE2_SUBSTITUTE_GLOBAL,                     // Modifier g
-                                           PCRE2_SUBSTITUTE_EXTENDED                    // Modifier x
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint R_V[4]  = {  PCRE2_SUBSTITUTE_UNSET_EMPTY,                // Modifier  e
+                                                   PCRE2_SUBSTITUTE_UNKNOWN_UNSET | PCRE2_SUBSTITUTE_UNSET_EMPTY,   // Modifier E (includes e)
+                                                   PCRE2_SUBSTITUTE_GLOBAL,                     // Modifier g
+                                                   PCRE2_SUBSTITUTE_EXTENDED                    // Modifier x
+                                                };
 
 
     // String of action (replace) modifier characters for JPCRE2 options
-    static const char RJ_N[] = "";
+    JPCRE2_INTERNAL_DATA char RJ_N[] = "";
     // Array of action (replace) modifier values for JPCRE2 options
-    static const jpcre2::Uint RJ_V[1] = { NONE  //placeholder
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint RJ_V[1] = { NONE  //placeholder
+                                                };
 
     // Define modifiers for match
     // String of action (match) modifier characters for PCRE2 options
-    static const char M_N[] = "A";
+    JPCRE2_INTERNAL_DATA char M_N[] = "A";
     // Array of action (match) modifier values for PCRE2 options
-    static const jpcre2::Uint M_V[1]  = { PCRE2_ANCHORED                               // Modifier  A
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint M_V[1]  = { PCRE2_ANCHORED                               // Modifier  A
+                                                };
 
 
     // String of action (match) modifier characters for JPCRE2 options
-    static const char MJ_N[] = "g";
+    JPCRE2_INTERNAL_DATA char MJ_N[] = "g";
     // Array of action (match) modifier values for JPCRE2 options
-    static const jpcre2::Uint MJ_V[1] = { FIND_ALL,                                   // Modifier  g
-                                        };
+    JPCRE2_INTERNAL_DATA jpcre2::Uint MJ_V[1] = { FIND_ALL,                                   // Modifier  g
+                                                };
 
-    static inline void toOption(Modifier const& mod, bool x,
+    JPCRE2_INTERNAL_FUNC void toOption(Modifier const& mod, bool x,
                                 Uint const * J_V, char const * J_N, SIZE_T SJ,
                                 Uint const * V, char const * N, SIZE_T S,
                                 Uint* po, Uint* jo,
@@ -765,28 +782,28 @@ namespace MOD {
         }
     }
 
-    static inline void toMatchOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
+    JPCRE2_INTERNAL_FUNC void toMatchOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
         toOption(mod, x,
                  MJ_V, MJ_N, sizeof(MJ_V)/sizeof(Uint),
                  M_V, M_N, sizeof(M_V)/sizeof(Uint),
                  po, jo, en, eo);
     }
 
-    static inline void toReplaceOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
+    JPCRE2_INTERNAL_FUNC void toReplaceOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
         toOption(mod, x,
                  RJ_V, RJ_N, sizeof(RJ_V)/sizeof(Uint),
                  R_V, R_N, sizeof(R_V)/sizeof(Uint),
                  po, jo, en, eo);
     }
 
-    static inline void toCompileOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
+    JPCRE2_INTERNAL_FUNC void toCompileOption(Modifier const& mod, bool x, Uint* po, Uint* jo, int* en, SIZE_T* eo){
         toOption(mod, x,
                  CJ_V, CJ_N, sizeof(CJ_V)/sizeof(Uint),
                  C_V, C_N, sizeof(C_V)/sizeof(Uint),
                  po, jo, en, eo);
     }
 
-    static inline std::string fromOption(Uint const * J_V, char const * J_N, SIZE_T SJ,
+    JPCRE2_INTERNAL_FUNC std::string fromOption(Uint const * J_V, char const * J_N, SIZE_T SJ,
                                          Uint const * V, char const * N, SIZE_T S,
                                          Uint po, Uint jo
                                          ){
@@ -806,19 +823,19 @@ namespace MOD {
         return mod;
     }
 
-    static inline std::string fromMatchOption(Uint po, Uint jo){
+    JPCRE2_INTERNAL_FUNC std::string fromMatchOption(Uint po, Uint jo){
         return fromOption(MJ_V, MJ_N, sizeof(MJ_V)/sizeof(Uint),
                           M_V, M_N, sizeof(M_V)/sizeof(Uint),
                           po, jo);
     }
 
-    static inline std::string fromReplaceOption(Uint po, Uint jo){
+    JPCRE2_INTERNAL_FUNC std::string fromReplaceOption(Uint po, Uint jo){
         return fromOption(RJ_V, RJ_N, sizeof(RJ_V)/sizeof(Uint),
                           R_V, R_N, sizeof(R_V)/sizeof(Uint),
                           po, jo);
     }
 
-    static inline std::string fromCompileOption(Uint po, Uint jo){
+    JPCRE2_INTERNAL_FUNC std::string fromCompileOption(Uint po, Uint jo){
         return fromOption(CJ_V, CJ_N, sizeof(CJ_V)/sizeof(Uint),
                           C_V, C_N, sizeof(C_V)/sizeof(Uint),
                           po, jo);
@@ -1187,21 +1204,24 @@ class ModifierTable{
 
 
 //These message strings are used for error/warning message construction.
-//take care to prevent multiple definition
-template<typename Char_T> struct MSG{
-    static std::basic_string<Char_T> INVALID_MODIFIER(void);
-    static std::basic_string<Char_T> INSUFFICIENT_OVECTOR(void);
+template<typename Char_T> struct MSG;
+template<> struct MSG<char> {
+    static std::basic_string<char> INVALID_MODIFIER(){ return "Invalid modifier: "; }
+    static std::basic_string<char> INSUFFICIENT_OVECTOR(){ return "ovector wasn't big enough"; }
 };
-//specialization
-template<> inline std::basic_string<char> MSG<char>::INVALID_MODIFIER(){ return "Invalid modifier: "; }
-template<> inline std::basic_string<wchar_t> MSG<wchar_t>::INVALID_MODIFIER(){ return L"Invalid modifier: "; }
-template<> inline std::basic_string<char> MSG<char>::INSUFFICIENT_OVECTOR(){ return "ovector wasn't big enough"; }
-template<> inline std::basic_string<wchar_t> MSG<wchar_t>::INSUFFICIENT_OVECTOR(){ return L"ovector wasn't big enough"; }
+template<> struct MSG<wchar_t> {
+    static std::basic_string<wchar_t> INVALID_MODIFIER(){ return L"Invalid modifier: "; }
+    static std::basic_string<wchar_t> INSUFFICIENT_OVECTOR(){ return L"ovector wasn't big enough"; }
+};
 #if JPCRE2_USE_MINIMUM_CXX_11
-template<> inline std::basic_string<char16_t> MSG<char16_t>::INVALID_MODIFIER(){ return u"Invalid modifier: "; }
-template<> inline std::basic_string<char32_t> MSG<char32_t>::INVALID_MODIFIER(){ return U"Invalid modifier: "; }
-template<> inline std::basic_string<char16_t> MSG<char16_t>::INSUFFICIENT_OVECTOR(){ return u"ovector wasn't big enough"; }
-template<> inline std::basic_string<char32_t> MSG<char32_t>::INSUFFICIENT_OVECTOR(){ return U"ovector wasn't big enough"; }
+template<> struct MSG<char16_t> {
+    static std::basic_string<char16_t> INVALID_MODIFIER(){ return u"Invalid modifier: "; }
+    static std::basic_string<char16_t> INSUFFICIENT_OVECTOR(){ return u"ovector wasn't big enough"; }
+};
+template<> struct MSG<char32_t> {
+    static std::basic_string<char32_t> INVALID_MODIFIER(){ return U"Invalid modifier: "; }
+    static std::basic_string<char32_t> INSUFFICIENT_OVECTOR(){ return U"ovector wasn't big enough"; }
+};
 #endif
 
 ///struct to select the types.
@@ -1257,16 +1277,26 @@ struct select{
     typedef class Map<String, String> MapNas;
     ///Substring name to Substring number map.
     typedef class Map<String, SIZE_T> MapNtN;
+    ///Array of start and end offsets.
+    typedef std::array<PCRE2_SIZE, 2> ArrOff;
+    ///Map for named substring start and end offsets.
+    typedef class Map<String, ArrOff> MapOff;
     #else
     ///Map for Named substrings.
     typedef typename std::map<String, String> MapNas;
     ///Substring name to Substring number map.
     typedef typename std::map<String, SIZE_T> MapNtN;
+    ///Array of start and end offsets.
+    typedef typename std::vector<PCRE2_SIZE> ArrOff;
+    ///Map for named substring start and end offsets.
+    typedef typename std::map<String, ArrOff> MapOff;
     #endif
 
     ///Allow spelling mistake of MapNtN as MapNtn.
     typedef MapNtN MapNtn;
 
+    ///Vector for start and end offsets of one match.
+    typedef typename std::vector<ArrOff> OffSub;
     ///Vector for Numbered substrings (Sub container).
     typedef typename std::vector<String> NumSub;
     ///Vector of matches with named substrings.
@@ -1277,6 +1307,10 @@ struct select{
     typedef VecNtN VecNtn;
     ///Vector of matches with numbered substrings.
     typedef typename std::vector<NumSub> VecNum;
+    ///Vector of offsets with numbered substrings.
+    typedef typename std::vector<OffSub> VecNmO;
+    ///Vector of offsets with named substrings.
+    typedef typename std::vector<MapOff> VecNsO;
 
     //These are to shorten the code
     typedef typename Pcre2Type<sizeof( Char_T ) * CHAR_BIT>::Pcre2Uchar Pcre2Uchar;
@@ -1326,6 +1360,13 @@ struct select{
         return a?String((Char*) a):String();
     }
 
+    static String asciiToString(char const *a) {
+        String s;
+        if(!a) return s;
+        while(*a) s += (Char)*a++;
+        return s;
+    }
+
     ///Retruns error message from PCRE2 error number
     ///@param err_num error number (negative)
     ///@return message as jpcre2::select::String.
@@ -1341,9 +1382,9 @@ struct select{
     ///@return message as jpcre2::select::String.
     static String getErrorMessage(int err_num, int err_off)  {
         if(err_num == (int)ERROR::INVALID_MODIFIER){
-            return MSG<Char>::INVALID_MODIFIER() + toString((Char)err_off);
+            return asciiToString("Invalid modifier: ") + toString((Char)err_off);
         } else if(err_num == (int)ERROR::INSUFFICIENT_OVECTOR){
-            return MSG<Char>::INSUFFICIENT_OVECTOR();
+            return asciiToString("ovector wasn't big enough");
         } else if(err_num != 0) {
             return getPcre2ErrorMessage((int) err_num);
         } else return String();
@@ -1393,6 +1434,8 @@ struct select{
         VecNum* vec_num;
         VecNas* vec_nas;
         VecNtN* vec_ntn;
+        VecNmO* vec_nmo;
+        VecNsO* vec_nso;
 
         VecOff* vec_soff;
         VecOff* vec_eoff;
@@ -1406,6 +1449,8 @@ struct select{
             vec_num = 0;
             vec_nas = 0;
             vec_ntn = 0;
+            vec_nmo = 0;
+            vec_nso = 0;
             vec_soff = 0;
             vec_eoff = 0;
             match_opts = 0;
@@ -1431,6 +1476,8 @@ struct select{
             vec_num = rm.vec_num;
             vec_nas = rm.vec_nas;
             vec_ntn = rm.vec_ntn;
+            vec_nmo = rm.vec_nmo;
+            vec_nso = rm.vec_nso;
             vec_soff = rm.vec_soff;
             vec_eoff = rm.vec_eoff;
 
@@ -1691,6 +1738,18 @@ struct select{
             return vec_ntn;
         }
 
+        ///Get pointer to offset of numbered substring vector.
+        ///@return Pointer to const offset of numbered substring vector.
+        virtual VecNmO const* getOffsetOfNumberedSubstringVector() const {
+            return vec_nmo;
+        }
+
+        ///Get pointer to offset of named substring vector.
+        ///@return Pointer to const offset of named substring vector.
+        virtual VecNsO const* getOffsetOfNamedSubstringVector() const {
+            return vec_nso;
+        }
+
         ///Set the associated regex object.
         ///Null pointer unsets it.
         ///Underlying data is not modified.
@@ -1731,6 +1790,28 @@ struct select{
         /// @return Reference to the calling RegexMatch object
         virtual RegexMatch& setNameToNumberMapVector(VecNtN* v) {
             vec_ntn = v;
+            return *this;
+        }
+
+        /// Set a pointer to the offset of numbered substring vector.
+        /// Null pointer unsets it.
+        ///
+        /// This vector will be filled with numbered (indexed) captured group offsets.
+        /// @param v pointer to the offset of numbered substring vector
+        /// @return Reference to the calling RegexMatch object
+        virtual RegexMatch& setOffsetOfNumberedSubstringVector(VecNmO* v) {
+            vec_nmo = v;
+            return *this;
+        }
+
+        /// Set a pointer to the offset of named substring vector.
+        /// Null pointer unsets it.
+        ///
+        /// This vector will be populated with named captured group offsets.
+        /// @param v pointer to the offset of named substring vector
+        /// @return Reference to the calling RegexMatch object
+        virtual RegexMatch& setOffsetOfNamedSubstringVector(VecNsO* v) {
+            vec_nso = v;
             return *this;
         }
 
@@ -2062,6 +2143,8 @@ struct select{
     ///* setNumberedSubstringVector
     ///* setNamedSubstringVector
     ///* setNameToNumberMapVector
+    ///* setOffsetOfNumberedSubstringVector
+    ///* setOffsetOfNamedSubstringVector
     ///* setMatchStartOffsetVector
     ///* setMatchEndOffsetVector
     ///
@@ -2139,6 +2222,8 @@ struct select{
         VecNum vec_num;
         VecNas vec_nas;
         VecNtN vec_ntn;
+        VecNmO vec_nmo;
+        VecNsO vec_nso;
         VecOff vec_soff;
         VecOff vec_eoff;
         int callbackn;
@@ -2177,6 +2262,8 @@ struct select{
             callback5 = 0;
             callback6 = 0;
             callback7 = 0;
+            setOffsetOfNumberedSubstringVector(&vec_nmo);
+            setOffsetOfNamedSubstringVector(&vec_nso);
             setMatchStartOffsetVector(&vec_soff);
             setMatchEndOffsetVector(&vec_eoff);
             buffer_size = 0;
@@ -2207,6 +2294,10 @@ struct select{
             callback7 = me.callback7;
             //must update the pointers to point to this class vectors.
             setVectorPointersAccordingToCallback();
+            setOffsetOfNumberedSubstringVector(&vec_nmo);
+            setOffsetOfNamedSubstringVector(&vec_nso);
+            setMatchStartOffsetVector(&vec_soff);
+            setMatchEndOffsetVector(&vec_eoff);
             buffer_size = me.buffer_size;
         }
 
@@ -2214,6 +2305,8 @@ struct select{
             vec_num = me.vec_num;
             vec_nas = me.vec_nas;
             vec_ntn = me.vec_ntn;
+            vec_nmo = me.vec_nmo;
+            vec_nso = me.vec_nso;
             vec_soff = me.vec_soff;
             vec_eoff = me.vec_eoff;
             onlyCopy(me);
@@ -2224,6 +2317,8 @@ struct select{
             vec_num = std::move_if_noexcept(me.vec_num);
             vec_nas = std::move_if_noexcept(me.vec_nas);
             vec_ntn = std::move_if_noexcept(me.vec_ntn);
+            vec_nmo = std::move_if_noexcept(me.vec_nmo);
+            vec_nso = std::move_if_noexcept(me.vec_nso);
             vec_soff = std::move_if_noexcept(me.vec_soff);
             vec_eoff = std::move_if_noexcept(me.vec_eoff);
             onlyCopy(me);
@@ -2249,6 +2344,14 @@ struct select{
         }
         MatchEvaluator& setMatchEndOffsetVector(VecOff* v){
             RegexMatch::setMatchEndOffsetVector(v);
+            return *this;
+        }
+        MatchEvaluator& setOffsetOfNumberedSubstringVector(VecNmO* v) {
+            RegexMatch::setOffsetOfNumberedSubstringVector(v);
+            return *this;
+        }
+        MatchEvaluator& setOffsetOfNamedSubstringVector(VecNsO* v) {
+            RegexMatch::setOffsetOfNamedSubstringVector(v);
             return *this;
         }
 
@@ -2603,6 +2706,8 @@ struct select{
             vec_num.clear();
             vec_nas.clear();
             vec_ntn.clear();
+            vec_nmo.clear();
+            vec_nso.clear();
             vec_soff.clear();
             vec_eoff.clear();
             return *this;
@@ -2616,6 +2721,8 @@ struct select{
             VecNum().swap(vec_num);
             VecNas().swap(vec_nas);
             VecNtN().swap(vec_ntn);
+            VecNmO().swap(vec_nmo);
+            VecNsO().swap(vec_nso);
             VecOff().swap(vec_soff);
             VecOff().swap(vec_eoff);
             return *this;
@@ -4721,14 +4828,36 @@ template<typename Char_T>
 bool jpcre2::select<Char_T>::RegexMatch::getNumberedSubstrings(int rc, Pcre2Sptr subject, PCRE2_SIZE* ovector, uint32_t ovector_count) {
 #endif
     NumSub num_sub;
+    OffSub off_sub;
     uint32_t rcu = rc;
-    num_sub.reserve(rcu); //we know exactly how many elements it will have.
+    if(vec_num) num_sub.reserve(ovector_count);
+    if(vec_nmo) off_sub.reserve(ovector_count);
     uint32_t i;
-    for (i = 0u; i < rcu; i++)
-        num_sub.push_back(String((Char*)(subject + ovector[2*i]), ovector[2*i+1] - ovector[2*i]));
-    for (uint32_t j = i; j < ovector_count; j++)
-        num_sub.push_back(String());
-    vec_num->push_back(num_sub); //this function shouldn't be called if this vector is null
+    for (i = 0u; i < ovector_count; i++) {
+        uint32_t st = i << 1;
+        uint32_t en = st + 1;
+        bool captured = i < rcu && ovector[st] != PCRE2_UNSET;
+        if(vec_num) {
+            if(captured)
+                num_sub.push_back(String((Char*)(subject + ovector[st]), ovector[en] - ovector[st]));
+            else
+                num_sub.push_back(String());
+        }
+        if(vec_nmo) {
+            #if JPCRE2_USE_MINIMUM_CXX_11
+            ArrOff off = {{0, 0}};
+            #else
+            ArrOff off(2, 0);
+            #endif
+            if(captured) {
+                off[0] = ovector[st];
+                off[1] = ovector[en];
+            }
+            off_sub.push_back(off);
+        }
+    }
+    if(vec_num) vec_num->push_back(num_sub);
+    if(vec_nmo) vec_nmo->push_back(off_sub);
     return true;
 }
 
@@ -4748,6 +4877,7 @@ bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int n
     String key;
     MapNas map_nas;
     MapNtN map_ntn;
+    MapOff map_off;
     for (int i = 0; i < namecount; i++) {
         int n;
         if(sizeof( Char_T ) * CHAR_BIT == 8){
@@ -4760,13 +4890,35 @@ bool jpcre2::select<Char_T>::RegexMatch::getNamedSubstrings(int namecount, int n
         }
         //Use of tabptr is finished for this iteration, let's increment it now.
         tabptr += name_entry_size;
-        String value((Char*)(subject + ovector[2*n]), ovector[2*n+1] - ovector[2*n]); //n, not i.
-        if(vec_nas) map_nas[key] = value;
         if(vec_ntn) map_ntn[key] = n;
+        if(vec_nas || vec_nso) {
+            uint32_t st = (uint32_t)n << 1;
+            uint32_t en = st + 1;
+            bool captured = ovector[st] != PCRE2_UNSET;
+            if(vec_nas) {
+                if(captured)
+                    map_nas[key] = String((Char*)(subject + ovector[st]), ovector[en] - ovector[st]);
+                else
+                    map_nas[key] = String();
+            }
+            if(vec_nso) {
+                #if JPCRE2_USE_MINIMUM_CXX_11
+                ArrOff off = {{0, 0}};
+                #else
+                ArrOff off(2, 0);
+                #endif
+                if(captured) {
+                    off[0] = ovector[st];
+                    off[1] = ovector[en];
+                }
+                map_off[key] = off;
+            }
+        }
     }
     //push the maps into vectors:
     if(vec_nas) vec_nas->push_back(map_nas);
     if(vec_ntn) vec_ntn->push_back(map_ntn);
+    if(vec_nso) vec_nso->push_back(map_off);
     return true;
 }
 
@@ -4804,6 +4956,8 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
     if (vec_num) vec_num->clear();
     if (vec_nas) vec_nas->clear();
     if (vec_ntn) vec_ntn->clear();
+    if (vec_nmo) vec_nmo->clear();
+    if (vec_nso) vec_nso->clear();
     if(vec_soff) vec_soff->clear();
     if(vec_eoff) vec_eoff->clear();
 
@@ -4867,14 +5021,14 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
     if(vec_soff) vec_soff->push_back(ovector[0]);
     if(vec_eoff) vec_eoff->push_back(ovector[1]);
 
-    // Get numbered substrings if vec_num isn't null
-    if (vec_num) { //must do null check
+    // Get numbered substrings or their offsets if either vector isn't null.
+    if (vec_num || vec_nmo) { //must do null check
         if(!getNumberedSubstrings(rc, subject, ovector, ovector_count))
             return count;
     }
 
-    //get named substrings if either vec_nas or vec_ntn is given.
-    if (vec_nas || vec_ntn) {
+    //get named substrings if any named match data vector is given.
+    if (vec_nas || vec_ntn || vec_nso) {
         /* See if there are any named substrings, and if so, show them by name. First
          we have to extract the count of named parentheses from the pattern. */
 
@@ -5047,13 +5201,13 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
         /* As before, get substrings stored in the output vector by number, and then
          also any named substrings. */
 
-        // Get numbered substrings if vec_num isn't null
-        if (vec_num) { //must do null check
+        // Get numbered substrings or their offsets if either vector isn't null.
+        if (vec_num || vec_nmo) { //must do null check
             if(!getNumberedSubstrings(rc, subject, ovector, ovector_count))
                 return count;
         }
 
-        if (vec_nas || vec_ntn) {
+        if (vec_nas || vec_ntn || vec_nso) {
             //must call this whether we have named substrings or not:
             if(!getNamedSubstrings(namecount, name_entry_size, name_table, subject, ovector))
                 return count;
@@ -5068,6 +5222,8 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
 
 #undef JPCRE2_VECTOR_DATA_ASSERT
 #undef JPCRE2_UNUSED
+#undef JPCRE2_INTERNAL_FUNC
+#undef JPCRE2_INTERNAL_DATA
 #undef JPCRE2_USE_MINIMUM_CXX_11
 
 //some macro documentation for doxygen

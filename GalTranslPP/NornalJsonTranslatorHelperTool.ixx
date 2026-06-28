@@ -5,8 +5,8 @@
 
 export module NormalJsonTranslatorHelperTool;
 
-import Tool;
-import ITranslator;
+export import Tool;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 

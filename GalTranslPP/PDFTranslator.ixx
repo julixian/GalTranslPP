@@ -5,9 +5,7 @@
 
 export module PDFTranslator;
 
-import spdlog;
-import ITranslator;
-import NormalJsonTranslator;
+export import NormalJsonTranslator;
 
 namespace fs = std::filesystem;
 

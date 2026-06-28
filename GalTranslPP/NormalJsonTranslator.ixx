@@ -1,7 +1,6 @@
 ﻿module;
 
 #define PYBIND11_HEADERS
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <ctpl_stl.h>
 #include <proxy/proxy.h>
@@ -9,15 +8,15 @@
 
 export module NormalJsonTranslator;
 
-import APIPool;
-import AgentSourceView;
-import Dictionary;
-import IPlugin;
-import GPPDefines;
-import ProblemAnalyzer;
-import LuaManager;
-import PythonManager;
-import ITranslator;
+export import APIPool;
+export import AgentSourceView;
+export import Dictionary;
+export import IPlugin;
+export import GPPDefines;
+export import ProblemAnalyzer;
+export import LuaManager;
+export import PythonManager;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 

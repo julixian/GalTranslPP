@@ -6,8 +6,7 @@
 
 export module PythonManager;
 
-import std;
-import spdlog;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

@@ -4,8 +4,7 @@
 
 export module ProblemAnalyzer;
 
-import Dictionary;
-import GPPDefines;
+export import Dictionary;
 
 export
 {

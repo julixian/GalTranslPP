@@ -4,10 +4,10 @@
 
 export module DictionaryGenerator;
 
-import APIPool;
-import AgentSourceView;
-import GPPDefines;
-import ITranslator;
+export import APIPool;
+export import AgentSourceView;
+export import GPPDefines;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 

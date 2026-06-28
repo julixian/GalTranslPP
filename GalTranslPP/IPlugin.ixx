@@ -6,9 +6,9 @@
 
 export module IPlugin;
 
-import GPPDefines;
-import LuaManager;
-import PythonManager;
+export import GPPDefines;
+export import LuaManager;
+export import PythonManager;
 // export import proxy.v4;
 
 namespace fs = std::filesystem;

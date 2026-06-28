@@ -5,9 +5,9 @@
 
 export module SkipTrans;
 
-import GPPDefines;
-import LuaManager;
-import PythonManager;
+export import GPPDefines;
+export import LuaManager;
+export import PythonManager;
 
 namespace fs = std::filesystem;
 

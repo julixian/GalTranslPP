@@ -5,7 +5,7 @@
 
 export module TextLinebreakFix;
 
-import GPPDefines;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

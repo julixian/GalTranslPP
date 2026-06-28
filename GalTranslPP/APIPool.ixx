@@ -4,10 +4,8 @@
 
 export module APIPool;
 
-import std;
-import spdlog;
-import ITranslator;
 export import APITool;
+export import ITranslator;
 
 export
 {

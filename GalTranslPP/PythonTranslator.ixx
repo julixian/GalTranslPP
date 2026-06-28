@@ -5,11 +5,11 @@
 
 export module PythonTranslator;
 
-import Tool;
-import NormalJsonTranslator;
-import EpubTranslator;
-import PDFTranslator;
-import PythonManager;
+export import Tool;
+export import NormalJsonTranslator;
+export import EpubTranslator;
+export import PDFTranslator;
+export import PythonManager;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

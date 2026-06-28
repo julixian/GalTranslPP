@@ -4,8 +4,8 @@
 
 export module APITool;
 
-import Tool;
-import ITranslator;
+export import Tool;
+export import ITranslator;
 
 export
 {

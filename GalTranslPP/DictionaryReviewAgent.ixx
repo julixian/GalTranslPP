@@ -4,11 +4,11 @@ module;
 
 export module DictionaryReviewAgent;
 
-import APIPool;
-import AgentSourceView;
-import DictionaryReviewIndex;
-import GPPDefines;
-import ITranslator;
+export import APIPool;
+export import AgentSourceView;
+export import DictionaryReviewIndex;
+export import GPPDefines;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 

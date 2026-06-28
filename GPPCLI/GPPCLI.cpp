@@ -18,7 +18,6 @@ namespace py = pybind11;
 
 int main(int argc, char* argv[])
 {
-
 #ifdef _WIN32
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);

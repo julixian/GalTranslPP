@@ -4,10 +4,9 @@
 
 export module NameTranslator;
 
-import APIPool;
-import Dictionary;
-import ITranslator;
-import spdlog;
+export import APIPool;
+export import Dictionary;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 

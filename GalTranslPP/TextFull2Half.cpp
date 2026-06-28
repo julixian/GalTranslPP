@@ -1,6 +1,5 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>

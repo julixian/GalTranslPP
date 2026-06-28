@@ -1,6 +1,8 @@
 ﻿export module GPPDefines;
 
-export import std;
+export import std.compat;
+export import AbslContainers;
+export import jpcre2;
 export import nlohmann.json;
 export import spdlog;
 

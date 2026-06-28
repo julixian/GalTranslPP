@@ -1,14 +1,11 @@
 ﻿module;
 
 #define PYBIND11_HEADERS
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 
 export module EpubTranslator;
 
-import spdlog;
-import ITranslator;
-import NormalJsonTranslator;
+export import NormalJsonTranslator;
 
 namespace fs = std::filesystem;
 

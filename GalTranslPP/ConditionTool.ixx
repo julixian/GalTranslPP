@@ -1,17 +1,15 @@
 ﻿module;
 
 #define PYBIND11_HEADERS
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 #include <sol/sol.hpp>
 
 export module ConditionTool;
 
-import GPPDefines;
-import Tool;
-import PythonManager;
-import LuaManager;
+export import Tool;
+export import PythonManager;
+export import LuaManager;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

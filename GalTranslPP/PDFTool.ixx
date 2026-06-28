@@ -4,8 +4,7 @@
 
 export module PDFTool;
 
-import std;
-import spdlog;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

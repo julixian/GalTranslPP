@@ -5,8 +5,7 @@
 
 export module LuaManager;
 
-import std;
-import spdlog;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

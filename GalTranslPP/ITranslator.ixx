@@ -1,6 +1,6 @@
 ﻿export module ITranslator;
 
-import std;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 

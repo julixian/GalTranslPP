@@ -1,7 +1,6 @@
 ﻿module;
 
 #define PYBIND11_HEADERS
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <cpp-base64/base64.h>
 #include <toml.hpp>

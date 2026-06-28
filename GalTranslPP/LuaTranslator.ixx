@@ -5,11 +5,11 @@
 
 export module LuaTranslator;
 
-import Tool;
-import NormalJsonTranslator;
-import EpubTranslator;
-import PDFTranslator;
-import LuaManager;
+export import Tool;
+export import NormalJsonTranslator;
+export import EpubTranslator;
+export import PDFTranslator;
+export import LuaManager;
 
 namespace fs = std::filesystem;
 

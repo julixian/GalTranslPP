@@ -1,12 +1,12 @@
 ﻿module;
 
-#define PCRE2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
 module NormalJsonTranslatorHelperTool;
 
 import Tool;
+
 namespace fs = std::filesystem;
 
 namespace

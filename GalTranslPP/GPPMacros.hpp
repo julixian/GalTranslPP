@@ -1,7 +1,7 @@
 ﻿#ifndef GPPMACROS
 #define GPPMACROS
 
-#define _RANGES_ // import std.compat; 时如果有头文件 #include <ranges> 会导致调用 std::views::zip 时出现异常定义不一致的问题。 这是 STL 的和 MSVC 的问题，不知道后续能不能修复
+#define _RANGES_ // import std.compat; 时如果有头文件 #include <ranges> 会导致调用 std::views::zip 时出现异常定义不一致的问题。这是 STL 的和 MSVC 的问题，不知道后续能不能修复
 
 // 已经添加至预处理器定义中
 //_CRT_SECURE_NO_WARNINGS
@@ -17,6 +17,13 @@
 #include <pybind11/embed.h>
 #include <pybind11/subinterpreter.h>
 #endif
+
+#ifdef ABSL_CONTAINERS
+#include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
+#include <absl/container/btree_map.h>
+#include <absl/container/btree_set.h>
+#endif // 用模块也能编过但是会崩。。。
 
 #define NESTED_CVT(className, memberName) sol::property([](className& self) \
 { \

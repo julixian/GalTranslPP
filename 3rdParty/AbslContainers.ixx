@@ -9,10 +9,12 @@ export module AbslContainers;
 
 export namespace absl
 {
+#ifndef ABSL_CONTAINERS
 	using ::absl::flat_hash_map;
 	using ::absl::flat_hash_set;
 	using ::absl::btree_map;
 	using ::absl::btree_set;
 	using ::absl::btree_multimap;
 	using ::absl::erase_if;
+#endif
 }

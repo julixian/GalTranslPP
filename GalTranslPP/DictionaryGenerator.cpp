@@ -110,7 +110,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
 
     m_logger->info("共分割成 {} 个文本块，开始进行分词(使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...", m_segments.size());
     m_controller->makeBar((int)m_segments.size(), 1);
-    m_controller->addThreadNum();
+    ActiveWorkerGuard workerGuard(m_controller);
     m_segmentWords.reserve(m_segments.size());
 
     absl::flat_hash_set<std::string> wordsInSegment;
@@ -162,7 +162,6 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             break;
         }
     }
-    m_controller->reduceThreadNum();
 }
 
 std::vector<int> DictionaryGenerator::solveSentenceSelection() {
@@ -198,7 +197,7 @@ std::vector<int> DictionaryGenerator::solveSentenceSelection() {
     std::vector<uint8_t> usedIndices(filteredSegmentWords.size(), 0);
 
     m_controller->makeBar((int)allWords.size(), 1);
-    m_controller->addThreadNum();
+    ActiveWorkerGuard workerGuard(m_controller);
 
     while (coveredWords.size() < allWords.size()) {
         int bestIndex = -1;
@@ -235,7 +234,6 @@ std::vector<int> DictionaryGenerator::solveSentenceSelection() {
             break;
         }
     }
-    m_controller->reduceThreadNum();
     return selectedIndices;
 }
 
@@ -379,9 +377,8 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
     for (int segmentIdx : selectedIndices) {
         results.emplace_back(pool.push([=](int threadId)
             {
-                m_controller->addThreadNum();
+                ActiveWorkerGuard workerGuard(m_controller);
                 this->callLLMToGenerate(segmentIdx, threadId);
-                m_controller->reduceThreadNum();
             }));
     }
     waitForThreads(pool, results);

@@ -34,10 +34,9 @@ LuaTextPlugin::LuaTextPlugin(const fs::path& projectDir, const std::string& scri
 	try {
 		std::lock_guard<std::mutex> lock(m_luaState->executionMutex);
 		(*(m_luaState->functions["init"]))(projectDir);
-	}
-	catch (const sol::error& e) {
-		m_logger->error("{} init 函数执行失败", m_scriptPath);
-		throw std::runtime_error(e.what());
+    }
+    catch (const sol::error& e) {
+        throw std::runtime_error(std::format("{} init 函数执行失败: {}", m_scriptPath, e.what()));
 	}
 
 	m_logger->info("{} 初始化成功", m_scriptPath);
@@ -64,9 +63,8 @@ void LuaTextPlugin::dPreRun(Sentence* se) {
 		std::lock_guard<std::mutex> lock(m_luaState->executionMutex);
 		(*m_luaDPreRunFunc)(se);
 	}
-	catch (const sol::error& e) {
-		m_logger->error("{} dPreRun 函数执行失败", m_scriptPath);
-		throw std::runtime_error(e.what());
+    catch (const sol::error& e) {
+        throw std::runtime_error(std::format("{} dPreRun 函数执行失败: {}", m_scriptPath, e.what()));
 	}
 }
 
@@ -78,9 +76,8 @@ void LuaTextPlugin::preRun(Sentence* se) {
 		std::lock_guard<std::mutex> lock(m_luaState->executionMutex);
 		(*m_luaPreRunFunc)(se);
 	}
-	catch (const sol::error& e) {
-		m_logger->error("{} preRun 函数执行失败", m_scriptPath);
-		throw std::runtime_error(e.what());
+    catch (const sol::error& e) {
+        throw std::runtime_error(std::format("{} preRun 函数执行失败: {}", m_scriptPath, e.what()));
 	}
 }
 
@@ -92,9 +89,8 @@ void LuaTextPlugin::postRun(Sentence* se) {
 		std::lock_guard<std::mutex> lock(m_luaState->executionMutex);
 		(*m_luaPostRunFunc)(se);
 	}
-	catch (const sol::error& e) {
-		m_logger->error("{} postRun 函数执行失败", m_scriptPath);
-		throw std::runtime_error(e.what());
+    catch (const sol::error& e) {
+        throw std::runtime_error(std::format("{} postRun 函数执行失败: {}", m_scriptPath, e.what()));
 	}
 }
 
@@ -106,8 +102,7 @@ void LuaTextPlugin::dPostRun(Sentence* se) {
 		std::lock_guard<std::mutex> lock(m_luaState->executionMutex);
 		(*m_luaDPostRunFunc)(se);
 	}
-	catch (const sol::error& e) {
-		m_logger->error("{} dPostRun函数执行失败", m_scriptPath);
-		throw std::runtime_error(e.what());
-	}
+    catch (const sol::error& e) {
+        throw std::runtime_error(std::format("{} dPostRun函数执行失败: {}", m_scriptPath, e.what()));
+    }
 }

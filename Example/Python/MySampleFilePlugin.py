@@ -18,16 +18,6 @@ logger = cast(gpp.spdlogLogger, None)
 
 lock = threading.Lock()
 
-def isApiTranslationEngine(transEngine):
-    if (transEngine == gpp.TransEngine.ForGalJson or
-        transEngine == gpp.TransEngine.ForGalTsv or
-        transEngine == gpp.TransEngine.ForNovelTsv or
-        transEngine == gpp.TransEngine.DeepseekJson or
-        transEngine == gpp.TransEngine.Sakura
-    ):
-        return True
-    return False
-
 def process_file(rel_file_path, worker_id):
     """包装函数，worker_id是线程编号"""
     try:
@@ -96,7 +86,7 @@ def multi_threads_run():
     logger.info("所有 Python 线程执行完毕")
 
     if not pythonTranslator.m_controller.shouldStop():
-        if pythonTranslator.m_useRepeatedBlockInputCache and isApiTranslationEngine(pythonTranslator.m_transEngine):
+        if pythonTranslator.m_useRepeatedBlockInputCache and gpp.utils.isApiTranslationEngine(pythonTranslator.m_transEngine):
             pythonTranslator.resolveRepeatedBlockReferences()
         if pythonTranslator.m_agentEnabled:
             pythonTranslator.applyAgentRetranslateSuggestions()

@@ -74,20 +74,6 @@ std::vector<std::string> collectRelFileStrings(const std::vector<fs::path>& relF
         | std::ranges::to<std::vector>();
 }
 
-bool isApiTranslationEngine(TransEngine transEngine) {
-    switch (transEngine)
-    {
-    case TransEngine::ForGalJson:
-    case TransEngine::ForGalTsv:
-    case TransEngine::ForNovelTsv:
-    case TransEngine::DeepseekJson:
-    case TransEngine::Sakura:
-        return true;
-    default:
-        return false;
-    }
-}
-
 std::optional<toml::ordered_table> buildProblemOverviewItemFromCache(
     const fs::path& relFilePath,
     const json& item
@@ -225,8 +211,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 relJsonPaths.push_back(relInputPath);
             }
             catch (const json::exception& e) {
-                m_logger->critical("读取文件 {} 时出错", wide2Ascii(relInputPath));
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("读取文件 {} 时出错: {}", wide2Ascii(relInputPath), e.what()));
             }
         }
 
@@ -343,8 +328,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         }
     }
     catch (const toml::exception& e) {
-        m_logger->critical("解析 人名替换表.toml 时出错");
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("解析 人名替换表.toml 时出错: {}", e.what()));
     }
 
     // 5. 如启用了 splitFile，则先预切分输入，后续按 part 参与并行调度。
@@ -377,8 +361,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                         m_logger->debug("文件 {} 已被分割成 {} 份，存入输入缓存。", wide2Ascii(relJsonPath), parts.size());
                     }
                     catch (const json::exception& e) {
-                        m_logger->critical("分割文件 {} 时出错", wide2Ascii(relJsonPath));
-                        throw std::runtime_error(e.what());
+                        throw std::runtime_error(std::format("分割文件 {} 时出错: {}", wide2Ascii(relJsonPath), e.what()));
                     }
                 }
                 if (reportRuntimeWorkbench) {
@@ -435,8 +418,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 filesWithData.emplace_back(relFilePath, std::move(data));
             }
             catch (const json::exception& e) {
-                m_logger->critical("分析连续重复块时读取文件 {} 失败", wide2Ascii(relFilePath));
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("分析连续重复块时读取文件 {} 失败: {}", wide2Ascii(relFilePath), e.what()));
             }
         }
 
@@ -587,7 +569,9 @@ void NormalJsonTranslator::normalJsonAfterRun()
     else if (m_useRepeatedBlockInputCache) {
         fs::remove_all(m_inputCacheDir);
     }
-    if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild && m_controller->m_completedSentences != m_controller->m_totalSentences) {
+    if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild &&
+        m_controller->m_completedSentences != m_controller->m_totalSentences)
+    {
         m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。",
             m_controller->m_completedSentences.load(), m_controller->m_totalSentences.load());
     }
@@ -600,16 +584,14 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
     for (const auto& relFilePath : relFilePaths) {
         results.emplace_back(m_threadPool.push([=](const int id)
             {
-                m_controller->addThreadNum();
+                ActiveWorkerGuard workerGuard(m_controller);
                 try {
                     this->processFile(relFilePath, id);
                 }
                 catch (const std::exception& e) {
                     this->recordRuntimeError("file", e.what(), relFilePath);
-                    m_controller->reduceThreadNum();
                     throw;
                 }
-                m_controller->reduceThreadNum();
             }));
     }
     m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
@@ -660,8 +642,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
             }
         }
         catch (const json::exception& e) {
-            m_logger->critical("连续重复块引用回填读取 {} 失败", wide2Ascii(relFilePath));
-            throw std::runtime_error(e.what());
+            throw std::runtime_error(std::format("连续重复块引用回填读取 {} 失败: {}", wide2Ascii(relFilePath), e.what()));
         }
         fileBundles.emplace(relFilePath, std::move(bundle));
     }

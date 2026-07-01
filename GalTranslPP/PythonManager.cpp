@@ -545,7 +545,6 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
     py::module_ utilsSubmodule = m.def_submodule("utils", "A submodule for utility functions");
 
     utilsSubmodule
-        .def("executeCommand", &executeCommand)
         .def("getConsoleWidth", &getConsoleWidth)
         .def("removePunctuation", &removePunctuation)
         .def("removeWhitespace", &removeWhitespace)
@@ -557,7 +556,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("extractLatin", &extractLatin)
         .def("extractHangul", &extractHangul)
         .def("extractCJK", &extractCJK)
-        .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor);
+        .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor)
+        .def("isApiTranslationEngine", &isApiTranslationEngine);
 
     py::class_<RuntimeSuccessEvent>(m, "RuntimeSuccessEvent")
         .def(py::init<>())

@@ -11,6 +11,7 @@
 export module Tool;
 
 export import GPPDefines;
+export import ITranslator;
 
 namespace fs = std::filesystem;
 
@@ -24,7 +25,11 @@ export
     template<typename T>
     requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
     std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
+#ifdef _WIN32
         return wide2Ascii(path.native(), codePage, usedDefaultChar);
+#else
+        return path.string();
+#endif
     }
 
     std::wstring ascii2Wide(const std::string& ascii, UINT codePage = CP_UTF8);
@@ -143,7 +148,7 @@ export
     std::string extractLatin(const std::string& sourceString);
     std::string extractHangul(const std::string& sourceString);
     std::string extractCJK(const std::string& sourceString);
-    std::move_only_function<std::string(const std::string&)> getTraditionalChineseExtractor(const std::shared_ptr<spdlog::logger>& logger);
+    std::function<std::string(const std::string&)> getTraditionalChineseExtractor(const std::shared_ptr<spdlog::logger>& logger);
 
     void loadTokenizeCache
     (absl::flat_hash_map<std::string, std::vector<std::vector<std::string>>>& result, const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger);
@@ -165,6 +170,21 @@ export
     PluginRunTime choosePluginRunTime(const std::string& pluginNameLower, PluginRunTime defaultTime);
 
     void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& results);
+
+    bool isApiTranslationEngine(TransEngine transEngine);
+
+    class ActiveWorkerGuard {
+    public:
+        explicit ActiveWorkerGuard(const std::shared_ptr<IController>& controller);
+        ActiveWorkerGuard(const ActiveWorkerGuard&) = delete;
+        ActiveWorkerGuard& operator=(const ActiveWorkerGuard&) = delete;
+        ActiveWorkerGuard(ActiveWorkerGuard&&) = delete;
+        ActiveWorkerGuard& operator=(ActiveWorkerGuard&&) = delete;
+        ~ActiveWorkerGuard();
+
+    private:
+        std::shared_ptr<IController> m_controller;
+    };
 
     template<typename T>
     T calculateAbs(T a, T b) {

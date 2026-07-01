@@ -56,8 +56,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
             pluginRunTimeNames[m_runTime], m_replacePunctuation, m_reverseConversion);
     }
     catch (const toml::exception& e) {
-        m_logger->critical("TextFull2Half-{} 配置文件解析错误", pluginRunTimeNames[m_runTime]);
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("TextFull2Half-{} 配置文件解析错误: {}", pluginRunTimeNames[m_runTime], e.what()));
     }
 }
 

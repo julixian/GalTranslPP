@@ -24,6 +24,5 @@ export
     };
 
     AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sentence>& sentences, const fs::path& relPath = {});
-    json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch = false);
     json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines);
 }

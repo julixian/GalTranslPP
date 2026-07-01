@@ -152,12 +152,6 @@ export
 
         bool shouldReportRuntimeWorkbench() const;
 
-        void preProcess(Sentence* se);
-        void postProcess(Sentence* se);
-
-        bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
-        bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
-
 
 	    // Agent 模式共享持久化状态的辅助函数。
 	    // 所有写路径都应经过这些函数，避免 worker 线程在 load-modify-save 窗口内互相覆盖。
@@ -175,11 +169,17 @@ export
             const std::string& indexRange = {}, int retryCount = -1, const std::string& model = {},
             double sleepSeconds = -1.0, const std::string& level = "error") const;
 
-        void applyAgentRetranslateSuggestions();
-        void resolveRepeatedBlockReferences();
+        void preProcess(Sentence* se);
+        void postProcess(Sentence* se);
+
+        bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
+        bool translateBatchAgent(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& backgroundText, int threadId);
 
         void processFile(const fs::path& relInputPath, int threadId);
         void normalJsonProcessFiles(const std::vector<fs::path>& relFilePaths);
+
+        void resolveRepeatedBlockReferences();
+        void applyAgentRetranslateSuggestions();
 
     public:
         NormalJsonTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,

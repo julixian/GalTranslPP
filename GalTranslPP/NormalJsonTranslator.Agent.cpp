@@ -764,7 +764,8 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
     const std::string scope = arguments.value("scope", "current_file");
     const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
-    const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 2));
+    const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 1));
+    const bool includeSpeaker = arguments.value("include_speaker", true);
     std::vector<fs::path> targetFiles;
 
     if (scope != "current_file" && scope != "all_files" && scope != "specified_file") {
@@ -795,6 +796,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
             }
             for (const auto& [index, line] : sourceView->lines | std::views::enumerate) {
                 const std::string& src = line.toolText;
+                const std::string& srcHaystackLower = includeSpeaker ? line.speakerToolTextLower : line.toolTextLower;
                 std::string dst;
                 if (const auto it = cacheMap.find(line.id); it != cacheMap.end()) {
                     dst = it->second.value("translated_preview", it->second.value("pre_translated_text", ""));
@@ -803,7 +805,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
                 const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
                     {
                         return !queryLower.empty() &&
-                            (line.toolTextLower.contains(queryLower) || (!dstLower.empty() && dstLower.contains(queryLower)));
+                            (srcHaystackLower.contains(queryLower) || (!dstLower.empty() && dstLower.contains(queryLower)));
                     });
                 if (!matched) {
                     continue;
@@ -829,6 +831,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
         {"queries", queries},
         {"start", start},
         {"limit", limit},
+        {"include_speaker", includeSpeaker},
         {"total", matchCount},
         {"context_lines", contextLines},
         {"matches", matches}

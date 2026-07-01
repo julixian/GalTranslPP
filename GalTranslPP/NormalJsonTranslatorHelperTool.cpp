@@ -800,8 +800,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
             }
             catch (const json::exception& e) {
                 ifs.close();
-                logger->critical("合并文件 {} 时出错", wide2Ascii(partPath));
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("合并文件 {} 时出错: {}", wide2Ascii(partPath), e.what()));
             }
         }
         else {

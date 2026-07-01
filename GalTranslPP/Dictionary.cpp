@@ -155,8 +155,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         }
     }
     catch (const toml::exception& e) {
-        m_logger->critical("GPT 字典文件解析错误");
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("GPT 字典文件解析错误: {}: {}", wide2Ascii(filePath), e.what()));
     }
 
     m_logger->info("已加载 GPT 字典: {}, 共 {} 个词条", wide2Ascii(filePath.filename()), count);
@@ -310,8 +309,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
         }
     }
     catch (const toml::exception& e) {
-        m_logger->critical("Normal 字典文件解析错误: {}", wide2Ascii(filePath));
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("Normal 字典文件解析错误: {}: {}", wide2Ascii(filePath), e.what()));
     }
 
     m_logger->info("已加载 Normal 字典: {}, 共 {} 个词条", wide2Ascii(filePath.filename()), count);

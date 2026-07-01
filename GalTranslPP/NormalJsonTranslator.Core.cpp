@@ -591,8 +591,7 @@ void NormalJsonTranslator::normalJsonInit()
         }
     }
     catch (const toml::exception& e) {
-        m_logger->critical("项目配置文件解析失败");
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("项目配置文件解析失败: {}", e.what()));
     }
 }
 

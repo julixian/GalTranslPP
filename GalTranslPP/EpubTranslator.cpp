@@ -132,8 +132,7 @@ void EpubTranslator::epubInit()
         readRegexArr(postRegexArr, m_postRegexPatterns);
     }
     catch (const toml::exception& e) {
-        m_logger->critical("Epub 配置文件解析失败");
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("Epub 配置文件解析失败: {}", e.what()));
     }
 }
 

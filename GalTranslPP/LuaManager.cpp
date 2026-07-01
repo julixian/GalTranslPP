@@ -685,7 +685,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	utilsTable["extractLatin"] = &extractLatin;
 	utilsTable["extractHangul"] = &extractHangul;
 	utilsTable["extractCJK"] = &extractCJK;
-	utilsTable["traditionalChineseExtractor"] = getTraditionalChineseExtractor(m_logger);
+	utilsTable["getTraditionalChineseExtractor"] = &getTraditionalChineseExtractor;
+	utilsTable["isApiTranslationEngine"] = &isApiTranslationEngine;
 	utilsTable["extractZip"] = [](const std::string& zipPath, const std::string& outputDir)
 		{
 			extractZip(ascii2Wide(zipPath), ascii2Wide(outputDir));
@@ -699,61 +700,30 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			std::set<std::string> excludeSet(excludePrefixes.begin(), excludePrefixes.end());
 			extractZipExclude(ascii2Wide(zipPath), ascii2Wide(outputDir), excludeSet);
 		};
-	utilsTable["icuRegexMatch"] = [](const std::string& str, const std::string& pattern) -> bool
+	utilsTable["pcre2RegexSearch1"] = [](const std::string& str, const std::string& pattern, std::optional<std::string> modifier)
+			-> std::vector<std::vector<std::string>>
 		{
-			const icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(pattern);
-			UErrorCode status = U_ZERO_ERROR;
-			const auto regexPattern = std::unique_ptr<icu::RegexPattern>(icu::RegexPattern::compile(ustr, 0, status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to compile regex pattern: {}", pattern));
-			}
-			const auto matcher = std::unique_ptr<icu::RegexMatcher>(regexPattern->matcher(icu::UnicodeString::fromUTF8(str), status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to create regex matcher: {}", pattern));
-			}
-			return (bool)matcher->matches(status);
+			jpc::Regex re(pattern, modifier.value_or(defaultRegCompileModifier));
+			jpc::RegexMatch rm(&re);
+			jpc::VecNum vecNum;
+			rm.setModifier("g").setSubject(&str).setNumberedSubstringVector(&vecNum).match();
+			return vecNum;
 		};
-	utilsTable["icuRegexSearch"] = [](const std::string& str, const std::string& pattern) -> std::vector<std::vector<std::string>>
+	utilsTable["pcre2RegexSearch2"] = [](const std::string& str, const std::string& pattern, std::optional<std::string> modifier)
+		-> std::vector<std::map<std::string, std::string>>
 		{
-			const icu::UnicodeString ustr(icu::UnicodeString::fromUTF8(pattern));
-			UErrorCode status = U_ZERO_ERROR;
-			const auto regexPattern = std::unique_ptr<icu::RegexPattern>(icu::RegexPattern::compile(ustr, 0, status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to compile regex pattern: {}", pattern));
-			}
-			const auto matcher = std::unique_ptr<icu::RegexMatcher>(regexPattern->matcher(icu::UnicodeString::fromUTF8(str), status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to create regex matcher: {}", pattern));
-			}
-			std::vector<std::vector<std::string>> result;
-			while (matcher->find(status) && U_SUCCESS(status)) {
-				std::vector<std::string> matches;
-				for (int32_t i = 0; i <= matcher->groupCount(); i++) {
-					icu::UnicodeString uGroup = matcher->group(i, status);
-					if (U_FAILURE(status)) {
-						throw std::runtime_error(std::format("Failed to get group {} of regex match: {}", i, pattern));
-					}
-					std::string group;
-					matches.push_back(std::move(uGroup.toUTF8String(group)));
-				}
-				result.push_back(std::move(matches));
-			}
-			return result;
+			jpc::Regex re(pattern, modifier.value_or(defaultRegCompileModifier));
+			jpc::RegexMatch rm(&re);
+			jpc::VecNas vecNas;
+			rm.setModifier("g").setSubject(&str).setNamedSubstringVector(&vecNas).match();
+			return vecNas;
 		};
-	utilsTable["icuRegexReplace"] = [](const std::string& str, const std::string& pattern, const std::string& rep) -> std::string
+	utilsTable["pcre2RegexReplace"] = [](const std::string& str, const std::string& pattern, const std::string& rep,
+			std::optional<std::string> compileModifier, std::optional<std::string> replaceModifier) -> std::string
 		{
-			const icu::UnicodeString ustr(icu::UnicodeString::fromUTF8(str));
-			UErrorCode status = U_ZERO_ERROR;
-			const auto regexPattern = std::unique_ptr<icu::RegexPattern>(icu::RegexPattern::compile(icu::UnicodeString::fromUTF8(pattern), 0, status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to compile regex pattern: {}", pattern));
-			}
-			const auto matcher = std::unique_ptr<icu::RegexMatcher>(regexPattern->matcher(ustr, status));
-			if (U_FAILURE(status)) {
-				throw std::runtime_error(std::format("Failed to create regex matcher: {}", pattern));
-			}
-			std::string result;
-			return matcher->replaceAll(icu::UnicodeString::fromUTF8(rep), status).toUTF8String(result);
+			jpc::Regex re(pattern, compileModifier.value_or(defaultRegCompileModifier));
+			jpc::RegexReplace rr(&re);
+			return rr.setModifier(replaceModifier.value_or(defaultRegReplaceModifier)).setSubject(str).replace();
 		};
 	//utilsTable["pcre2RegexMatch"]
 
@@ -783,28 +753,28 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	);
 	utilsTable["logger"] = m_logger;
 
-	auto supplyTokenizerFunc = [&](const std::string& mode)
+	auto supplyTokenizerFunc = [&](const std::string& langMode)
 		{
-			if (lua[mode + "useTokenizer"].get_or(false)) {
-				const std::string tokenizerBackend = lua[mode + "tokenizerBackend"].get<std::string>();
+			if (lua[langMode + "useTokenizer"].get_or(false)) {
+				const std::string tokenizerBackend = lua[langMode + "tokenizerBackend"].get<std::string>();
 				if (tokenizerBackend == "MeCab") {
-					const std::string mecabDictDir = lua[mode + "mecabDictDir"].get<std::string>();
+					const std::string mecabDictDir = lua[langMode + "mecabDictDir"].get<std::string>();
 					m_logger->info("{} 已配置 MeCab 分词器，首次使用时加载。", scriptPath);
-					utilsTable[mode + "tokenizeFunc"] = getMeCabTokenizeFunc(mecabDictDir, m_logger);
+					utilsTable[langMode + "tokenizeFunc"] = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 				}
 				else if (tokenizerBackend == "spaCy") {
-					const std::string spaCyModelName = lua[mode + "spaCyModelName"].get<std::string>();
+					const std::string spaCyModelName = lua[langMode + "spaCyModelName"].get<std::string>();
 					m_logger->info("{} 已配置 spaCy 分词器，首次使用时加载。", scriptPath);
-					utilsTable[mode + "tokenizeFunc"] = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
+					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
 				}
 				else if (tokenizerBackend == "Stanza") {
-					const std::string stanzaLang = lua[mode + "stanzaLang"].get<std::string>();
+					const std::string stanzaLang = lua[langMode + "stanzaLang"].get<std::string>();
 					m_logger->info("{} 已配置 Stanza 分词器，首次使用时加载。", scriptPath);
-					utilsTable[mode + "tokenizeFunc"] = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
+					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
 				}
 				else if (tokenizerBackend == "pkuseg") {
 					m_logger->info("{} 已配置 pkuseg 分词器，首次使用时加载。", scriptPath);
-					utilsTable[mode + "tokenizeFunc"] = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
+					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
 				}
 				else {
 					throw std::invalid_argument(std::format("{} 中注册了无效的 tokenizerBackend: {}", scriptPath, tokenizerBackend));

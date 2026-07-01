@@ -33,6 +33,12 @@ void waitForProcessToExit(qint64 pid) {
 
 int main(int argc, char* argv[]) {
 
+#ifdef Q_OS_WIN
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+    std::setlocale(LC_ALL, ".UTF-8");
+#endif
+
     QCoreApplication a(argc, argv);
     QCoreApplication::setApplicationName("GalTransl++ Updater");
 

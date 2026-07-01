@@ -102,11 +102,10 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 		if (m_useTokenizer) {
 			m_logger->info("插件 TextLinebreakFix-{} 分词器已启用", pluginRunTimeNames[m_runTime]);
 		}
-	}
-	catch (const toml::exception& e) {
-		m_logger->critical("TextLinebreakFix-{} 插件配置文件解析错误", pluginRunTimeNames[m_runTime]);
-		throw std::runtime_error(e.what());
-	}
+    }
+    catch (const toml::exception& e) {
+        throw std::runtime_error(std::format("TextLinebreakFix-{} 插件配置文件解析错误: {}", pluginRunTimeNames[m_runTime], e.what()));
+    }
 }
 
 std::vector<std::string> TextLinebreakFix::splitIntoTokens(const std::string& text)

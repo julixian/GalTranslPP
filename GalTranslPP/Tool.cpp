@@ -35,6 +35,8 @@
 
 module Tool;
 
+import ITranslator;
+
 namespace fs = std::filesystem;
 
 
@@ -615,15 +617,15 @@ std::string removeWhitespace(const std::string& sourceString) {
     return resultString;
 }
 
-std::move_only_function<std::string(const std::string&)> getTraditionalChineseExtractor(const std::shared_ptr<spdlog::logger>& logger)
+std::function<std::string(const std::string&)> getTraditionalChineseExtractor(const std::shared_ptr<spdlog::logger>& logger)
 {
     // 是否需要线程安全？(似乎是不需要)
     try {
-        auto converter = std::make_unique<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
+        auto converter = std::make_shared<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
         absl::btree_set<std::string_view> excludeList = {
             "乾", "阪", "篠", "塚"
         };
-        std::move_only_function<std::string(const std::string&)> result = [excludeListR = std::move(excludeList), converterR = std::move(converter)](const std::string& sourceString)
+        std::function<std::string(const std::string&)> result = [excludeListR = std::move(excludeList), converterR = std::move(converter)](const std::string& sourceString)
             {
                 if (const std::string simplified = converterR->Convert(sourceString); simplified == sourceString) {
                     return std::string{};
@@ -645,11 +647,11 @@ std::move_only_function<std::string(const std::string&)> getTraditionalChineseEx
     catch (...) {
         logger->error("OpenCC is not usable, try falling back to ICU-based traditional Chinese detection");
         UErrorCode status = U_ZERO_ERROR;
-        auto toSimplified = std::unique_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
+        auto toSimplified = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
             throw std::runtime_error("ICU-based traditional Chinese detection is not available");
         }
-        auto toTraditional = std::unique_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
+        auto toTraditional = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
             throw std::runtime_error("ICU-based simplified Chinese detection is not available");
         }
@@ -659,7 +661,7 @@ std::move_only_function<std::string(const std::string&)> getTraditionalChineseEx
         absl::btree_set<UChar32> excludeList = {
             U'著', U'乾', U'阪', U'篠', U'塚'
         };
-        std::move_only_function<std::string(const std::string&)>result = [excludeListR = std::move(excludeList), toSimplifiedR = std::move(toSimplified),
+        std::function<std::string(const std::string&)>result = [excludeListR = std::move(excludeList), toSimplifiedR = std::move(toSimplified),
             toTraditionalR = std::move(toTraditional)](const std::string& sourceString)
             {
 				{
@@ -888,12 +890,12 @@ namespace toml
 {
     ::toml::value uparse(const fs::path& path) {
         std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse(ifs, wide2Ascii(path, 0, nullptr));
+        return ::toml::parse(ifs, wide2Ascii(path));
     }
 
     ::toml::ordered_value uoparse(const fs::path& path) {
         std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path, 0, nullptr));
+        return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
     }
 }
 
@@ -912,6 +914,35 @@ void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& res
     }
     if (firstException) {
         std::rethrow_exception(firstException);
+    }
+}
+
+bool isApiTranslationEngine(TransEngine transEngine) {
+    switch (transEngine)
+    {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForGalTsv:
+    case TransEngine::ForNovelTsv:
+    case TransEngine::DeepseekJson:
+    case TransEngine::Sakura:
+        return true;
+    default:
+        return false;
+    }
+}
+
+ActiveWorkerGuard::ActiveWorkerGuard(const std::shared_ptr<IController>& controller)
+    : m_controller(controller)
+{
+    if (m_controller) {
+        m_controller->addThreadNum();
+    }
+}
+
+ActiveWorkerGuard::~ActiveWorkerGuard()
+{
+    if (m_controller) {
+        m_controller->reduceThreadNum();
     }
 }
 

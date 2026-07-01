@@ -443,12 +443,14 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
     json matches = json::array();
     const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentToolLimit(arguments.value("limit", env.searchResultLimit), env.searchResultLimit);
-    const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 2));
+    const int contextLines = sanitizeAgentContextLines(arguments.value("context_lines", 1));
+    const bool includeSpeaker = arguments.value("include_speaker", true);
     if (env.sourceFileLookup == nullptr) {
         return {
             {"queries", queries},
             {"start", start},
             {"limit", limit},
+            {"include_speaker", includeSpeaker},
             {"total", 0},
             {"context_lines", contextLines},
             {"matches", matches}
@@ -465,8 +467,9 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
 
         for (const auto& [lineIndex, line] : sourceFile.lines | std::views::enumerate) {
             std::string matchedQuery;
+            const std::string& haystackLower = includeSpeaker ? line.speakerToolTextLower : line.toolTextLower;
             for (const auto& [index, queryLower] : queryLowers | std::views::enumerate) {
-                if (!queryLower.empty() && line.speakerToolTextLower.contains(queryLower)) {
+                if (!queryLower.empty() && haystackLower.contains(queryLower)) {
                     matchedQuery = queries[index];
                     break;
                 }
@@ -496,6 +499,7 @@ json runReviewSearchTextTool(const ReviewToolExecutionEnv& env, const json& argu
         {"current_file", wide2Ascii(env.currentFile)},
         {"start", start},
         {"limit", limit},
+        {"include_speaker", includeSpeaker},
         {"total", matchCount},
         {"context_lines", contextLines},
         {"matches", matches}
@@ -1245,17 +1249,7 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
     for (int groupIndex = 0; groupIndex < (int)groups.size(); ++groupIndex) {
         results.emplace_back(pool.push([&, groupIndex](int threadId)
             {
-                struct ActiveWorkerGuard {
-                    std::shared_ptr<IController> controller;
-                    explicit ActiveWorkerGuard(std::shared_ptr<IController> controller) : controller(std::move(controller))
-                    {
-                        this->controller->addThreadNum();
-                    }
-                    ~ActiveWorkerGuard()
-                    {
-                        controller->reduceThreadNum();
-                    }
-                } workerGuard(m_controller);
+                ActiveWorkerGuard workerGuard(m_controller);
                 reviewGroupFunc(groupIndex, groups[groupIndex], threadId);
             }));
     }

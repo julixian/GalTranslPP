@@ -28,16 +28,6 @@ AgentSourceFileView buildAgentSourceFileViewFromSentences(const std::vector<Sent
     return fileView;
 }
 
-json agentSourceLineToJson(const AgentSourceLineView& line, bool isMatch) {
-    json result = {
-        {"id", line.id},
-        {"speaker", line.speaker},
-        {"message", line.toolText},
-        {"is_match", isMatch}
-    };
-    return result;
-}
-
 json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, int matchIndex, int contextLines) {
     json nearbyLines = json::array();
     if (lines.empty()) {
@@ -46,7 +36,13 @@ json buildAgentSourceNearbyLines(const std::vector<AgentSourceLineView>& lines, 
     const int start = std::max(0, matchIndex - contextLines);
     const int end = std::min((int)lines.size() - 1, matchIndex + contextLines);
     for (int i = start; i <= end; ++i) {
-        nearbyLines.push_back(agentSourceLineToJson(lines[i], i == matchIndex));
+        const auto& line = lines[i];
+        nearbyLines.push_back(json{
+        {"id", line.id},
+        {"speaker", line.speaker},
+        {"message", line.toolText},
+        {"is_context", i != matchIndex}
+        });
     }
     return nearbyLines;
 }

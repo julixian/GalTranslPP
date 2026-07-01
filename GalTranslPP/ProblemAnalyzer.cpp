@@ -101,22 +101,22 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
             simpleConverter = std::make_unique<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
         }
         const std::string& transView = chooseStringRef(sentence, m_problems.introTraditionalChinese.check);
-        if (const std::string simplified = simpleConverter->Convert(transView); simplified != transView) { // 这一步主要是为了初筛加速
-            std::string traditionalChars;
-            for (const auto& origChar : splitIntoGraphemes(transView)
+        if (const std::string simplifiedView = simpleConverter->Convert(transView); simplifiedView != transView) { // 这一步主要是为了初筛加速
+            std::string traditionalGraphemes;
+            for (const auto& origGrapheme : splitIntoGraphemes(transView)
                 | std::views::filter([&](const std::string& g) { return !excludeTraditionalCharList.contains(g); }))
             {
                 // 经过初筛之后的实际检查还是分单个文字进行的，我测下来这样效果会好一点，大概是因为 opencc/icu 这些库本来搞这个的目的
                 // 是真的用来繁简转换而不是用来测有没有『繁体字』的，让 opencc 联系上下文反而会出现一些误报
                 // 这实际上是放宽了对繁体字的检测，有待观察吧
                 // 但加了不少速是真的（）
-                if (const std::string simplifiedChar = simpleConverter->Convert(origChar); simplifiedChar != origChar)
+                if (const std::string simplifiedGrapheme = simpleConverter->Convert(origGrapheme); simplifiedGrapheme != origGrapheme)
                 {
-                    traditionalChars += std::format("({} -> {})", origChar, simplifiedChar);
+                    traditionalGraphemes += std::format("({} -> {})", origGrapheme, simplifiedGrapheme);
                 }
             }
-            if (!traditionalChars.empty()) {
-                sentence->problems.push_back("引入繁体字: " + traditionalChars);
+            if (!traditionalGraphemes.empty()) {
+                sentence->problems.push_back("引入繁体字: " + traditionalGraphemes);
             }
         }
     }

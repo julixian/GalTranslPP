@@ -72,8 +72,7 @@ void PythonTextPlugin::dPreRun(Sentence* se) {
                 (*m_pythonDPreRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                m_logger->error("{} dPreRun 函数执行失败", m_modulePath);
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("{} dPreRun 函数执行失败: {}", m_modulePath, e.what()));
             }
         }).get();
 }
@@ -88,8 +87,7 @@ void PythonTextPlugin::preRun(Sentence* se) {
                 (*m_pythonPreRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                m_logger->error("{} preRun 函数执行失败", m_modulePath);
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("{} preRun 函数执行失败: {}", m_modulePath, e.what()));
             }
         }).get();
 }
@@ -104,8 +102,7 @@ void PythonTextPlugin::postRun(Sentence* se) {
                 (*m_pythonPostRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                m_logger->error("{} postRun 函数执行失败", m_modulePath);
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("{} postRun 函数执行失败: {}", m_modulePath, e.what()));
             }
         }).get();
 }
@@ -120,8 +117,7 @@ void PythonTextPlugin::dPostRun(Sentence* se) {
                 (*m_pythonDPostRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                m_logger->error("{} postRun 函数执行失败", m_modulePath);
-                throw std::runtime_error(e.what());
+                throw std::runtime_error(std::format("{} postRun 函数执行失败: {}", m_modulePath, e.what()));
             }
         }).get();
 }

@@ -171,28 +171,21 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     for (int i = 0; i < workerCount; ++i) {
         results.emplace_back(pool.push([this, &namesToTranslate, &nextNameIndex](const int threadId)
             {
-                m_controller->addThreadNum();
-                try {
-                    absl::flat_hash_map<std::string, std::string> workerResults;
-                    while (!m_controller->shouldStop()) {
-                        const size_t start = nextNameIndex.fetch_add((size_t)m_batchSize);
-                        if (start >= namesToTranslate.size()) {
-                            break;
-                        }
-                        const size_t count = std::min((size_t)m_batchSize, namesToTranslate.size() - start);
-                        auto batchResults = translateBatch(std::span<const std::string>(namesToTranslate.data() + start, count), threadId);
-                        for (auto&& [name, trans] : batchResults) {
-                            workerResults.insert_or_assign(std::move(name), std::move(trans));
-                        }
-                        m_controller->updateBar((int)count);
+                ActiveWorkerGuard workerGuard(m_controller);
+                absl::flat_hash_map<std::string, std::string> workerResults;
+                while (!m_controller->shouldStop()) {
+                    const size_t start = nextNameIndex.fetch_add((size_t)m_batchSize);
+                    if (start >= namesToTranslate.size()) {
+                        break;
                     }
-                    m_controller->reduceThreadNum();
-                    return workerResults;
+                    const size_t count = std::min((size_t)m_batchSize, namesToTranslate.size() - start);
+                    auto batchResults = translateBatch(std::span<const std::string>(namesToTranslate.data() + start, count), threadId);
+                    for (auto&& [name, trans] : batchResults) {
+                        workerResults.insert_or_assign(std::move(name), std::move(trans));
+                    }
+                    m_controller->updateBar((int)count);
                 }
-                catch (...) {
-                    m_controller->reduceThreadNum();
-                    throw;
-                }
+                return workerResults;
             }));
     }
     std::exception_ptr firstException = nullptr;

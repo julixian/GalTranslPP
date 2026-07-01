@@ -69,8 +69,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
             pluginRunTimeNames[m_runTime], m_skipH);
     }
     catch (const toml::exception& e) {
-        m_logger->critical("SkipTrans-{} 配置文件解析错误", pluginRunTimeNames[m_runTime]);
-        throw std::runtime_error(e.what());
+        throw std::runtime_error(std::format("SkipTrans-{} 配置文件解析错误: {}", pluginRunTimeNames[m_runTime], e.what()));
     }
 }
 

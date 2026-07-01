@@ -554,7 +554,7 @@ Step C. After tool results.
 list_files(spec?, start=0, limit?): list available script files as `{file, lines}` objects. `lines` is the valid translation index count: `read_lines.start`, search result `id`, and commit translation `id` use this same index space.
 read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range.
 example: { "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }
-search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=2): search source and cached dst; text hits include nearby context lines.
+search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=1, include_speaker=true): search source, speaker names when include_speaker is true, and cached dst; text hits include nearby context lines.
 example: { "id": "search1", "name": "search_text", "arguments": { "queries": ["明日香"], "scope": "all_files" } }
 search_dictionary(query?|queries?, start=0, limit?): search loaded GPT dictionary entries for explicit external clues. Omit `query|queries` to inspect a dictionary snapshot.
 example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"] } }
@@ -788,7 +788,7 @@ Step C. After tool results.
 list_files(spec?, start=0, limit?): list available script files as `{file, lines}` objects. `lines` is the valid translation index count: `read_lines.start`, search result `id`, and commit translation `id` use this same index space.
 read_lines(file, start, count, include_src=true, include_dst=true): read source and cached translations from a file range.
 example: { "id": "ctx1", "name": "read_lines", "arguments": { "file": "[AgentCurrentFile]", "start": 120, "count": 12 } }
-search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=2): search source and cached dst; text hits include nearby context lines.
+search_text(query?|queries?, scope=current_file|all_files|specified_file, file?, start=0, limit?, context_lines?=1, include_speaker=true): search source, speaker names when include_speaker is true, and cached dst; text hits include nearby context lines.
 example: { "id": "search1", "name": "search_text", "arguments": { "queries": ["明日香"], "scope": "all_files" } }
 search_dictionary(query?|queries?, start=0, limit?): search loaded GPT dictionary entries for explicit external clues. Omit `query|queries` to inspect a dictionary snapshot.
 example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries": ["Xanadu"] } }

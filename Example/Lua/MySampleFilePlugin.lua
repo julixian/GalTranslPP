@@ -1,14 +1,5 @@
 -- 所有已注册类型和函数详见 GalTranslPP/LuaManager.cpp
 
-function isApiTranslationEngine(transEngine)
-    if transEngine == TransEngine.ForGalJson or transEngine == TransEngine.ForGalTsv
-        or transEngine == TransEngine.ForNovelTsv or transEngine == TransEngine.DeepseekJson
-        or transEngine == TransEngine.Sakura then
-        return true
-    end
-    return false
-end
-
 function run()
     -- Lua 没有多线程，所有函数都是阻塞的
     -- 这导致 Lua 的文件多线程只能依赖 C++ 侧开辟线程
@@ -25,20 +16,23 @@ function run()
         luaTranslator:normalJsonAfterRun()
         return
     end
+
     local relFilePathsStr = {}
     for i = 1, #relFilePaths do
         table.insert(relFilePathsStr, relFilePaths[i].value)
     end
     utils.logger:info("relFilePaths: \n" .. table.concat(relFilePathsStr, "\n"))
+
     luaTranslator:normalJsonProcessFiles(relFilePaths)
     if not luaTranslator.m_controller:shouldStop() then
-        if luaTranslator.m_useRepeatedBlockInputCache and isApiTranslationEngine(luaTranslator.m_transEngine) then
+        if luaTranslator.m_useRepeatedBlockInputCache and utils.isApiTranslationEngine(luaTranslator.m_transEngine) then
             luaTranslator:resolveRepeatedBlockReferences()
         end
         if luaTranslator.m_agentEnabled then
             luaTranslator:applyAgentRetranslateSuggestions()
         end
     end
+
     luaTranslator:normalJsonAfterRun()
     return
 

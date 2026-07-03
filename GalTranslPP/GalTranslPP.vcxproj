@@ -238,6 +238,11 @@
   <ItemGroup>
     <ClInclude Include="GPPMacros.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
+      <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

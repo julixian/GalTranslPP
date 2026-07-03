@@ -736,11 +736,11 @@ void loadTokenizeCache
             json::parse(ifs).get_to(result);
         }
         else {
-            logger->debug("未找到分词缓存 {}", wide2Ascii(cachePath, 65001, nullptr));
+            logger->debug("未找到分词缓存 {}", wide2Ascii(cachePath));
         }
     }
     catch (const json::parse_error& e) {
-        logger->error("读取分词缓存 {} 失败: {}", wide2Ascii(cachePath, 65001, nullptr), e.what());
+        logger->error("读取分词缓存 {} 失败: {}", wide2Ascii(cachePath), e.what());
     }
 }
 
@@ -752,10 +752,10 @@ void saveTokenizeCache
         std::ofstream ofs(cachePath, std::ios::binary);
         ofs << j.dump(2);
         ofs.close();
-        logger->debug("分词缓存已保存到 {}", wide2Ascii(cachePath, 65001, nullptr));
+        logger->debug("分词缓存已保存到 {}", wide2Ascii(cachePath));
     }
     catch (...) {
-        logger->error("分词缓存 {} 保存失败", wide2Ascii(cachePath, 65001, nullptr));
+        logger->error("分词缓存 {} 保存失败", wide2Ascii(cachePath));
     }
 }
 
@@ -763,21 +763,21 @@ void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, cons
     const bit7z::Bit7zLibrary library{ "7z.dll" };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
-    extractor.extractMatching(wide2Ascii(zipPath, 65001, nullptr), fileName, wide2Ascii(outputDir, 65001, nullptr));
+    extractor.extractMatching(wide2Ascii(zipPath), fileName, wide2Ascii(outputDir));
 }
 
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
     const bit7z::Bit7zLibrary library{ "7z.dll" };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
-    extractor.extract(wide2Ascii(zipPath, 65001, nullptr), wide2Ascii(outputDir, 65001, nullptr));
+    extractor.extract(wide2Ascii(zipPath), wide2Ascii(outputDir));
 }
 
 void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes) {
     const bit7z::Bit7zLibrary library{ "7z.dll" };
     std::vector<uint32_t> indices;
 
-    bit7z::BitArchiveReader archive{ library, wide2Ascii(zipPath, 65001, nullptr) };
+    bit7z::BitArchiveReader archive{ library, wide2Ascii(zipPath) };
     for (const auto& item : archive) {
         if (
             std::ranges::any_of(excludePrefixes, [&](const std::string& prefix) { return item.path().starts_with(prefix); })
@@ -790,7 +790,7 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
-    extractor.extractItems(wide2Ascii(zipPath, 65001, nullptr), indices, wide2Ascii(outputDir, 65001, nullptr));
+    extractor.extractItems(wide2Ascii(zipPath), indices, wide2Ascii(outputDir));
 }
 
 std::string nowTimestampString() {

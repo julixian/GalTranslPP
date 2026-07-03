@@ -87,7 +87,7 @@ copy "$(TargetPath)" "$(TargetDir)..\GUICORE\$(TargetName)_new$(TargetExt)"
 if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GPPGUI_PRIVATE\$(TargetName)_new$(TargetExt)"</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>Updater.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -125,12 +125,12 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
-      <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
-    </ProjectReference>
+    <Manifest Include="Updater.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="Updater.manifest" />
+    <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
+      <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

@@ -8,6 +8,7 @@
   <Project Path="GPPGUI/GPPGUI.vcxproj" Id="7f42b0ef-d5de-4830-a393-ceb8cb3050a4">
     <Platform Project="x64" />
   </Project>
+  <Project Path="GPPVersion/GPPVersion.vcxproj" Id="ddf53174-80c0-4331-b135-6e64362b1d87" />
   <Project Path="Updater/Updater.vcxproj" Id="6bea6d92-b958-40cf-a670-d63793d84555">
     <Platform Project="x64" />
   </Project>

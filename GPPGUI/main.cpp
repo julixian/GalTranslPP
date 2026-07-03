@@ -1,23 +1,25 @@
 #define PYBIND11_HEADERS
 #include "../GalTranslPP/GPPMacros.hpp"
-#include <toml.hpp>
-#include <QDir>
 #include <QApplication>
-#include <QTranslator>
-#include <QCoreApplication>
 #include <QCommandLineParser>
-#include <QSharedMemory>
+#include <QCoreApplication>
+#include <QDir>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QNetworkProxyFactory>
+#include <QSharedMemory>
+#include <QTranslator>
+
+#include "ElaApplication.h"
+#include "mainwindow.h"
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #endif
 
-#include "ElaApplication.h"
-#include "mainwindow.h"
+#include <toml.hpp>
 
+#pragma comment(lib, "GPPVersion.lib")
 #pragma comment(lib, "GalTranslPP.lib")
 #pragma comment(lib, "ElaWidgetTools.lib")
 

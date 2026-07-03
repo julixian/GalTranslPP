@@ -28,10 +28,9 @@ export
 #ifdef _WIN32
         return wide2Ascii(path.native(), codePage, usedDefaultChar);
 #else
-        return path.string();
+        return wide2Ascii(path.wstring(), codePage, usedDefaultChar);
 #endif
     }
-
     std::wstring ascii2Wide(const std::string& ascii, UINT codePage = CP_UTF8);
     std::wstring ascii2Wide(std::string_view ascii, UINT codePage = CP_UTF8);
 

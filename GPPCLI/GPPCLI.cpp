@@ -14,6 +14,7 @@ import TerminalController;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
+#pragma comment(lib, "GPPVersion.lib")
 #pragma comment(lib, "GalTranslPP.lib")
 
 int main(int argc, char* argv[])

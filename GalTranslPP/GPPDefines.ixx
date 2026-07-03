@@ -5,18 +5,12 @@ export import AbslContainers;
 export import jpcre2;
 export import nlohmann.json;
 export import spdlog;
+export import GPPVersion;
 
 namespace fs = std::filesystem;
 
 export
 {
-    extern const std::string GPPVERSION;
-    extern const std::string PYTHONVERSION;
-    extern const std::string PROMPTVERSION;
-    extern const std::string DICTVERSION;
-    extern const std::string QTVERSION;
-    extern const std::string ICUVERSION;
-
     extern const fs::path baseConfigPath;
     extern const fs::path globalConfigPath;
     extern const fs::path defaultPromptPath;

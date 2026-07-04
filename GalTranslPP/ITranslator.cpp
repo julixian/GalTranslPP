@@ -174,7 +174,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
     const auto configData = toml::uparse(configFilePath);
 
     const std::string filePlugin = toml::find_or(configData, "plugins", "filePlugin", "NormalJson");
-    const std::string transEngine = toml::find_or(configData, "plugins", "transEngine", "ForGalJson");
+    const std::string transEngine = toml::find_or(configData, "plugins", "transEngine", "ForGalTsv");
     // 日志配置
     spdlog::level::level_enum logLevel;
     bool saveLog = toml::find_or(configData, "common", "saveLog", true);

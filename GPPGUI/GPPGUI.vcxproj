@@ -105,12 +105,12 @@ copy "$(SolutionDir)3rdParty\ElaWidgetTools\Install\ElaWidgetTools\bin\ElaWidget
 
 copy "$(TargetPath)" "$(TargetDir)..\GUICORE\$(TargetName)$(TargetExt)"
 if not exist "$(TargetDir)..\GUICORE\translations" mkdir "$(TargetDir)..\GUICORE\translations"
-copy "$(TargetDir)translations\Translation_*.*" "$(TargetDir)..\GUICORE\translations\"
+copy "$(TargetDir)translations\qt_gpp*.*" "$(TargetDir)..\GUICORE\translations\"
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GUICORE\"
 
 if exist "$(TargetDir)..\GPPGUI_PRIVATE" (
 copy "$(TargetPath)" "$(TargetDir)..\GPPGUI_PRIVATE\$(TargetName)$(TargetExt)"
-copy "$(TargetDir)translations\Translation_*.*" "$(TargetDir)..\GPPGUI_PRIVATE\translations\"
+copy "$(TargetDir)translations\qt_gpp*.*" "$(TargetDir)..\GPPGUI_PRIVATE\translations\"
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
 )
 </Command>

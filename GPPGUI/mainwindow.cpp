@@ -196,7 +196,11 @@ void MainWindow::initEdgeLayout()
     ElaMenuBar* menuBar = new ElaMenuBar(this);
     menuBar->setFixedHeight(30);
     QWidget* customWidget = new QWidget(this);
-    customWidget->setFixedWidth(595);
+    int customWidgetWidth = 595;
+    if (const std::string language = toml::find_or(m_globalConfig, "language", "zh_CN"); language == "en") {
+        customWidgetWidth = 490;
+    }
+    customWidget->setFixedWidth(customWidgetWidth);
     QVBoxLayout* customLayout = new QVBoxLayout(customWidget);
     customLayout->setContentsMargins(0, 0, 0, 0);
     customLayout->addWidget(menuBar);
@@ -249,7 +253,7 @@ void MainWindow::initEdgeLayout()
         {
             updateDockWidget->show();
         });
-    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, tr("设置")), &QAction::triggered, this, [=]()
+    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, tr("应用设置")), &QAction::triggered, this, [=]()
         {
             navigation(m_appSettingsKey);
         });
@@ -311,7 +315,7 @@ void MainWindow::initContent()
     addFooterNode(tr("关于"), nullptr, m_aboutKey, 0, ElaIconType::User);
     m_aboutDialog = new AboutDialog();
     m_aboutDialog->hide();
-    addFooterNode(tr("设置"), m_appSettingsPage, m_appSettingsKey, 0, ElaIconType::GearComplex);
+    addFooterNode(tr("应用设置"), m_appSettingsPage, m_appSettingsKey, 0, ElaIconType::GearComplex);
 
     connect(m_aboutDialog, &AboutDialog::checkUpdateSignal, this, [=]()
         {

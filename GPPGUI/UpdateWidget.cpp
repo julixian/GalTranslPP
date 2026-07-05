@@ -16,9 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 修复部分异常文本乱码的问题",
-		"2. 为 Review Agent 和 翻译 Agent 查询词句时添加可选参数 include_speaker，默认为 true",
-
+        "1. GalTransl 核心 i18n 彻底化",
+		"2. 新增设置 允许应用进程多开",
     };
 
     mainLayout->addWidget(updateTitle);

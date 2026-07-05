@@ -8,9 +8,9 @@
 #include "ElaApplication.h"
 #include "ElaMessageBar.h"
 #include "ElaComboBox.h"
+#include "ElaDoubleText.h"
 #include "ElaRadioButton.h"
 #include "ElaScrollPageArea.h"
-#include "ElaText.h"
 #include "ElaTheme.h"
 #include "ElaLineEdit.h"
 #include "ElaToggleSwitch.h"
@@ -33,7 +33,7 @@ AppSettingsPage::~AppSettingsPage() = default;
 
 void AppSettingsPage::setupUi()
 {
-    ElaWindow* window = qobject_cast<ElaWindow*>(parentWidget());
+    ElaWindow* window = qobject_cast<ElaWindow*>(this->window());
 
     ElaText* themeText = new ElaText(tr("主题设置"), this);
     themeText->setWordWrap(false);
@@ -49,7 +49,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* themeSwitchLayout = new QHBoxLayout(themeSwitchArea);
     ElaText* themeSwitchText = new ElaText(tr("主题切换"), this);
     themeSwitchText->setWordWrap(false);
-    themeSwitchText->setTextPixelSize(15);
+    themeSwitchText->setTextPixelSize(16);
     themeSwitchLayout->addWidget(themeSwitchText);
     themeSwitchLayout->addStretch();
     themeSwitchLayout->addWidget(themeComboBox);
@@ -118,7 +118,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* windowModeSwitchLayout = new QHBoxLayout(windowModeSwitchArea);
     ElaText* micaSwitchText = new ElaText(tr("窗口效果"), this);
     micaSwitchText->setWordWrap(false);
-    micaSwitchText->setTextPixelSize(15);
+    micaSwitchText->setTextPixelSize(16);
     windowModeSwitchLayout->addWidget(micaSwitchText);
     windowModeSwitchLayout->addStretch();
     windowModeSwitchLayout->addWidget(normalButton);
@@ -137,7 +137,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* guideBarModeLayout = new QHBoxLayout(guideBarModeArea);
     ElaText* guideBarModeText = new ElaText(tr("导航栏模式选择"), this);
     guideBarModeText->setWordWrap(false);
-    guideBarModeText->setTextPixelSize(15);
+    guideBarModeText->setTextPixelSize(16);
     guideBarModeLayout->addWidget(guideBarModeText);
     guideBarModeLayout->addStretch();
     guideBarModeLayout->addWidget(minimumButton);
@@ -201,7 +201,7 @@ void AppSettingsPage::setupUi()
         });
 
 
-    ElaText* helperText = new ElaText(tr("应用程序设置"), this);
+    ElaText* helperText = new ElaText(tr("GalTransl 设置"), this);
     helperText->setWordWrap(false);
     helperText->setTextPixelSize(18);
 
@@ -210,7 +210,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* autoRefreshLayout = new QHBoxLayout(autoRefreshArea);
     ElaText* autoRefreshText = new ElaText(tr("(DumpName/NameTrans)/GenDict任务成功后自动刷新人名表/项目GPT字典"), autoRefreshArea);
     autoRefreshText->setWordWrap(false);
-    autoRefreshText->setTextPixelSize(15);
+    autoRefreshText->setTextPixelSize(16);
     autoRefreshLayout->addWidget(autoRefreshText);
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
@@ -226,7 +226,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* nameTableOpenModeLayout = new QHBoxLayout(nameTableOpenModeArea);
     ElaText* nameTableOpenModeText = new ElaText(tr("新项目人名表默认打开模式"), nameTableOpenModeArea);
     nameTableOpenModeText->setWordWrap(false);
-    nameTableOpenModeText->setTextPixelSize(15);
+    nameTableOpenModeText->setTextPixelSize(16);
     ElaRadioButton* nameTableOpenModeTextButton = new ElaRadioButton(tr("纯文本模式"), nameTableOpenModeArea);
     ElaRadioButton* nameTableOpenModeTableButton = new ElaRadioButton(tr("表格模式"), nameTableOpenModeArea);
     nameTableOpenModeLayout->addWidget(nameTableOpenModeText);
@@ -282,24 +282,33 @@ void AppSettingsPage::setupUi()
     // 允许在项目仍在运行的情况下关闭程序(危险)
     ElaScrollPageArea* allowCloseWhenRunningArea = new ElaScrollPageArea(this);
     QHBoxLayout* allowCloseWhenRunningLayout = new QHBoxLayout(allowCloseWhenRunningArea);
-    QWidget* allowCloseWhenRunningWidget = new QWidget(allowCloseWhenRunningArea);
-    QVBoxLayout* allowCloseWhenRunningWidgetLayout = new QVBoxLayout(allowCloseWhenRunningWidget);
-    ElaText* allowCloseWhenRunningText = new ElaText(tr("允许在项目仍在运行的情况下关闭程序"), allowCloseWhenRunningArea);
-    allowCloseWhenRunningText->setWordWrap(false);
-    allowCloseWhenRunningText->setTextPixelSize(15);
-    allowCloseWhenRunningWidgetLayout->addWidget(allowCloseWhenRunningText);
-    ElaText* allowCloseWhenRunningWarningText = new ElaText(tr("危险！"), allowCloseWhenRunningArea);
-    allowCloseWhenRunningWarningText->setWordWrap(false);
-    allowCloseWhenRunningWarningText->setTextPixelSize(10);
-    allowCloseWhenRunningWidgetLayout->addWidget(allowCloseWhenRunningWarningText);
+    ElaDoubleText* allowCloseWhenRunningText = new ElaDoubleText(allowCloseWhenRunningArea,
+        tr("允许在项目仍在运行的情况下关闭程序"), 16,
+        tr("危险！"), 10, "");
+    allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningText);
     ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
     allowCloseWhenRunningSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false));
-    allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningWidget);
     allowCloseWhenRunningLayout->addStretch();
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningSwitch);
     connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
         {
             insertToml(m_globalConfig, "allowCloseWhenRunning", isChecked);
+        });
+
+    // 允许应用进程多开
+    ElaScrollPageArea* allowMultiInstanceArea = new ElaScrollPageArea(this);
+    QHBoxLayout* allowMultiInstanceLayout = new QHBoxLayout(allowMultiInstanceArea);
+    ElaDoubleText* allowMultiInstanceText = new ElaDoubleText(allowMultiInstanceArea,
+        tr("允许应用进程多开"), 16,
+        tr("通常建议由一个进程管理多个项目而不是多开进程"), 10, "");
+    allowMultiInstanceLayout->addWidget(allowMultiInstanceText);
+    ElaToggleSwitch* allowMultiInstanceSwitch = new ElaToggleSwitch(allowMultiInstanceArea);
+    allowMultiInstanceSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowMultiInstance", false));
+    allowMultiInstanceLayout->addStretch();
+    allowMultiInstanceLayout->addWidget(allowMultiInstanceSwitch);
+    connect(allowMultiInstanceSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+        {
+            insertToml(m_globalConfig, "allowMultiInstance", isChecked);
         });
 
 
@@ -308,7 +317,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* checkUpdateLayout = new QHBoxLayout(checkUpdateArea);
     ElaText* checkUpdateText = new ElaText(tr("自动检查更新"), checkUpdateArea);
     checkUpdateText->setWordWrap(false);
-    checkUpdateText->setTextPixelSize(15);
+    checkUpdateText->setTextPixelSize(16);
     ElaToggleSwitch* checkUpdateSwitch = new ElaToggleSwitch(checkUpdateArea);
     checkUpdateSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoCheckUpdate", true));
     checkUpdateLayout->addWidget(checkUpdateText);
@@ -320,7 +329,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* autoDownloadLayout = new QHBoxLayout(autoDownloadArea);
     ElaText* autoDownloadText = new ElaText(tr("检测到更新后自动下载"), autoDownloadArea);
     autoDownloadText->setWordWrap(false);
-    autoDownloadText->setTextPixelSize(15);
+    autoDownloadText->setTextPixelSize(16);
     ElaToggleSwitch* autoDownloadSwitch = new ElaToggleSwitch(autoDownloadArea);
     autoDownloadSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
     autoDownloadLayout->addWidget(autoDownloadText);
@@ -335,17 +344,10 @@ void AppSettingsPage::setupUi()
     // 语言设置
     ElaScrollPageArea* languageArea = new ElaScrollPageArea(this);
     QHBoxLayout* languageLayout = new QHBoxLayout(languageArea);
-    QWidget* languageWidget = new QWidget(languageArea);
-    QVBoxLayout* languageWidgetLayout = new QVBoxLayout(languageWidget);
-    ElaText* languageText = new ElaText(tr("语言设置"), languageArea);
-    languageWidgetLayout->addWidget(languageText);
-    ElaText* languageTipText = new ElaText(tr("重启生效"), languageArea);
-    languageTipText->setWordWrap(false);
-    languageTipText->setTextPixelSize(10);
-    languageWidgetLayout->addWidget(languageTipText);
-    languageText->setWordWrap(false);
-    languageText->setTextPixelSize(15);
-    languageLayout->addWidget(languageWidget);
+    ElaDoubleText* languageText = new ElaDoubleText(languageArea,
+        tr("语言设置"), 16,
+        tr("重启生效"), 10, "");
+    languageLayout->addWidget(languageText);
     languageLayout->addStretch();
     ElaComboBox* languageComboBox = new ElaComboBox(languageArea);
     languageComboBox->addItem("zh_CN");
@@ -359,17 +361,10 @@ void AppSettingsPage::setupUi()
     // pyEnvPath(重启生效)
     ElaScrollPageArea* pyEnvPathArea = new ElaScrollPageArea(this);
     QHBoxLayout* pyEnvPathLayout = new QHBoxLayout(pyEnvPathArea);
-    QWidget* pyEnvPathWidget = new QWidget(pyEnvPathArea);
-    QVBoxLayout* pyEnvPathWidgetLayout = new QVBoxLayout(pyEnvPathWidget);
-    ElaText* pyEnvPathText = new ElaText(tr("Python环境路径"), pyEnvPathArea);
-    pyEnvPathText->setWordWrap(false);
-    pyEnvPathText->setTextPixelSize(15);
-    pyEnvPathWidgetLayout->addWidget(pyEnvPathText);
-    ElaText* pyEnvPathTipText = new ElaText(tr("重启生效"), pyEnvPathArea);
-    pyEnvPathTipText->setWordWrap(false);
-    pyEnvPathTipText->setTextPixelSize(10);
-    pyEnvPathWidgetLayout->addWidget(pyEnvPathTipText);
-    pyEnvPathLayout->addWidget(pyEnvPathWidget);
+    ElaDoubleText* pyEnvPathText = new ElaDoubleText(languageArea,
+        tr("Python环境路径"), 16,
+        tr("重启生效"), 10, "");
+    pyEnvPathLayout->addWidget(pyEnvPathText);
     pyEnvPathLayout->addStretch();
     ElaLineEdit* pyEnvPathLineEdit = new ElaLineEdit(pyEnvPathArea);
     pyEnvPathLineEdit->setFixedWidth(400);
@@ -390,13 +385,6 @@ void AppSettingsPage::setupUi()
                 pyEnvPathLineEdit->setText(QString::fromStdWString(newPyEnvPath.wstring()));
             }
         });
-    //ElaPushButton* pyEnvRestartButtom = new ElaPushButton(tr("重启环境"), pyEnvPathArea);
-    //pyEnvPathLayout->addWidget(pyEnvRestartButtom);
-    //connect(pyEnvRestartButtom, &ElaPushButton::clicked, this, [=]()
-    //    {
-    //        QString pyEnvPathQStr = pyEnvPathLineEdit->text();
-    //        Q_EMIT restartPythonEnvSignal(pyEnvPathQStr);
-    //    });
 
 
 
@@ -416,6 +404,7 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());
+            insertToml(m_globalConfig, "allowMultiInstance", allowMultiInstanceSwitch->getIsToggled());
             insertToml(m_globalConfig, "autoDownloadUpdate", autoDownloadSwitch->getIsToggled());
             insertToml(m_globalConfig, "autoCheckUpdate", checkUpdateSwitch->getIsToggled());
             insertToml(m_globalConfig, "language", languageComboBox->currentText().toStdString());
@@ -437,6 +426,7 @@ void AppSettingsPage::setupUi()
     centerLayout->addWidget(nameTableOpenModeArea);
     centerLayout->addWidget(dictOpenModeArea);
     centerLayout->addWidget(allowCloseWhenRunningArea);
+    centerLayout->addWidget(allowMultiInstanceArea);
     centerLayout->addWidget(checkUpdateArea);
     centerLayout->addWidget(autoDownloadArea);
     centerLayout->addWidget(languageArea);

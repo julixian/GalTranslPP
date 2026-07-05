@@ -7,6 +7,7 @@ ElaDoubleText::ElaDoubleText(QWidget* parent, const QString& firstLine, int firs
 	: QWidget(parent)
 {
 	QVBoxLayout* textLayout = new QVBoxLayout(this);
+	textLayout->setContentsMargins(0, 5, 0, 5);
 	m_firstLine = new ElaText(firstLine, firstLinePixelSize, this);
 	m_firstLine->setWordWrap(false);
 
@@ -19,6 +20,7 @@ ElaDoubleText::ElaDoubleText(QWidget* parent, const QString& firstLine, int firs
 	if (!secondLine.isEmpty()) {
 		m_secondLine = new ElaText(secondLine, secondLinePixelSize, this);
 		m_secondLine->setWordWrap(false);
+		textLayout->setSpacing(2);
 		textLayout->addWidget(m_secondLine);
 	}
 }

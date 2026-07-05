@@ -260,9 +260,9 @@ void ProjectCachePage::setupUi()
 
     m_globalSearchField = new NoWheelComboBox(searchTab);
     m_globalSearchField->addItem(tr("全部"), "all");
-    m_globalSearchField->addItem(tr("原文 pre_processed_text"), "src");
-    m_globalSearchField->addItem(tr("译文 pre_translated_text"), "dst");
-    m_globalSearchField->addItem(tr("问题 problems"), "problems");
+    m_globalSearchField->addItem("preproc_text", "src");
+    m_globalSearchField->addItem("pretrans_text", "dst");
+    m_globalSearchField->addItem("problems", "problems");
     connect(m_globalSearchField, &ElaComboBox::currentIndexChanged, this, [=](int)
         {
             runGlobalSearch();
@@ -389,7 +389,7 @@ void ProjectCachePage::setupUi()
     QHBoxLayout* filterLayout = new QHBoxLayout();
     filterLayout->setSpacing(8);
     m_localSearchEdit = new ElaLineEdit(editorWidget);
-    m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 pre_processed_text / pre_translated_text / problems..."));
+    m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/pretrans/problems..."));
     m_localSearchEdit->setIsClearButtonEnable(true);
     connect(m_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
         {

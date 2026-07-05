@@ -13,9 +13,9 @@ pyEnvPath = "BaseConfig/python-3.12.10-embed-amd64"
 stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
-windowHeight = 677
-windowPosX = 0
-windowPosY = 28
+windowHeight = 676
+windowPosX = 84
+windowPosY = 53
 windowWidth = 1308
 
 [commonGptDicts]

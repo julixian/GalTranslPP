@@ -96,7 +96,7 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     <QtTranslation>
       <BuildAction>lupdate_lrelease</BuildAction>
       <FunctionAliases>translate+=gppTr</FunctionAliases>
-      <QmOutputDir>$(OutDir)\translations\</QmOutputDir>
+      <QmOutputDir>$(TargetDir)translations\</QmOutputDir>
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">

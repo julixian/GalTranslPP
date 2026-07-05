@@ -178,7 +178,7 @@ del "$(TargetDir)$(TargetName).lib"
 
 copy "$(SolutionDir)3rdParty\7z.dll" "$(TargetDir)"
 copy "$(SolutionDir)3rdParty\pybind11\bin\python*.dll" "$(TargetDir)"
-copy "$(SolutionDir)lib\qt_gpp*.qm" "$(TargetDir)\translations\"
+copy "$(SolutionDir)lib\qt_gpp*.qm" "$(TargetDir)translations\"
 
 if exist "$(TargetDir)..\GPPCLI_PRIVATE" (
 copy "$(TargetPath)" "$(TargetDir)..\GPPCLI_PRIVATE\$(TargetName)$(TargetExt)"

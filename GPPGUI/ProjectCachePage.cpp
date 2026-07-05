@@ -94,7 +94,7 @@ void ProjectCachePage::setupUi()
                 m_dirtyFiles.remove(m_currentFile);
                 renderFileList();
                 m_currentFileLabel->setText(m_currentFile);
-                setInfo(tr("已保存 ") + m_currentFile);
+                setInfo(tr("已保存 %1").arg(m_currentFile));
             }
             else {
                 setError(error);
@@ -134,7 +134,7 @@ void ProjectCachePage::setupUi()
                 setError(lastError);
             }
             else {
-                setInfo(tr("已保存 ") + QString::number(saved) + tr(" 个缓存文件"));
+                setInfo(tr("已保存 %1 个缓存文件").arg(QString::number(saved)));
             }
             updateActionStates();
         });
@@ -147,7 +147,7 @@ void ProjectCachePage::setupUi()
     m_mainSplitter->setStyleSheet(splitterStyle());
 
     QWidget* sidebarWidget = new QWidget(m_mainSplitter);
-    sidebarWidget->setMinimumWidth(260);
+    sidebarWidget->setMinimumWidth(270);
     sidebarWidget->setMaximumWidth(330);
     QVBoxLayout* sidebarLayout = new QVBoxLayout(sidebarWidget);
     sidebarLayout->setContentsMargins(0, 0, 6, 0);
@@ -197,7 +197,7 @@ void ProjectCachePage::setupUi()
                 return;
             }
             if (!confirmAction(tr("确认删除"),
-                tr("确定要删除选中的 ") + QString::number(selected.size()) + tr(" 个缓存文件吗？"))) {
+                tr("确定要删除选中的 %1 个缓存文件吗？").arg(QString::number(selected.size())))) {
                 return;
             }
             int deleted = 0;
@@ -218,7 +218,7 @@ void ProjectCachePage::setupUi()
                 }
             }
             loadCacheFiles();
-            setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个缓存文件"));
+            setInfo(tr("已删除 %1 个缓存文件").arg(QString::number(deleted)));
         });
     filesLayout->addWidget(m_deleteFilesButton);
 
@@ -294,8 +294,8 @@ void ProjectCachePage::setupUi()
     replaceLayout->addWidget(m_replaceWithEdit);
 
     m_replaceField = new ElaComboBox(searchTab);
-    m_replaceField->addItem(tr("译文 pre_translated_text"), "dst");
-    m_replaceField->addItem(tr("原文 pre_processed_text"), "src");
+    m_replaceField->addItem(tr("pretrans_text"), "dst");
+    m_replaceField->addItem(tr("preproc_text"), "src");
     m_replaceField->addItem(tr("全部"), "all");
     replaceLayout->addWidget(m_replaceField);
 
@@ -421,7 +421,7 @@ void ProjectCachePage::setupUi()
                 return;
             }
             if (!confirmAction(tr("确认删除"),
-                tr("确定要删除选中的 ") + QString::number(m_selectedEntryRows.size()) + tr(" 个缓存条目吗？"))) {
+                tr("确定要删除选中的 %1 个缓存条目吗？").arg(QString::number(m_selectedEntryRows.size())))) {
                 return;
             }
             deleteEntryRows(m_selectedEntryRows.values());

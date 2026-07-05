@@ -11,7 +11,7 @@ class OtherSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
+    explicit OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     ~OtherSettingsPage() override;
 
 Q_SIGNALS:
@@ -25,7 +25,6 @@ private:
     fs::path& m_projectDir;
     toml::ordered_value& m_globalConfig;
     toml::ordered_value& m_projectConfig;
-    QWidget* m_mainWindow = nullptr;
 };
 
 #endif // OTHERSETTINGSPAGE_H

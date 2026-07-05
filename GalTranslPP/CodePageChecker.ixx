@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #include <unicode/unistr.h>
@@ -56,15 +56,15 @@ CodePageChecker::CodePageChecker(const std::string& codePage, const std::shared_
     UErrorCode status = U_ZERO_ERROR;
     m_u8Converter.reset(ucnv_open("utf-8", &status));
     if (U_FAILURE(status)) {
-        throw std::runtime_error("Error: Could not create ICU u8 converters. " + std::string(u_errorName(status)));
+        throw std::runtime_error(gppTr("CodePageChecker.CodePageChecker", "无法创建 ICU u8 转换器: %1", u_errorName(status)));
     }
     m_codePageConverter.reset(ucnv_open(m_codePage.c_str(), &status));
     if (U_FAILURE(status)) {
-        throw std::runtime_error("Error: Could not create ICU " + m_codePage + " converters. " + std::string(u_errorName(status)));
+        throw std::runtime_error(gppTr("CodePageChecker.CodePageChecker", "无法创建 ICU %1 转换器: %2", m_codePage, u_errorName(status)));
     }
     ucnv_setFromUCallBack(m_codePageConverter.get(), codePageFromUCallback, &m_unmappableCharsResult, nullptr, nullptr, &status);
     if (U_FAILURE(status)) {
-        throw std::runtime_error("Error: Could not set ICU callback function. " + std::string(u_errorName(status)));
+        throw std::runtime_error(gppTr("CodePageChecker.CodePageChecker", "无法设置 ICU 回调函数: %1", u_errorName(status)));
     }
 }
 
@@ -133,7 +133,7 @@ const std::string& CodePageChecker::findUnmappableChars(const std::string& trans
     // U_BUFFER_OVERFLOW_ERROR 也可能发生，但我们不关心，因为我们不使用目标缓冲区的结果。
     // 我们只关心其他意外的严重错误。
     if (U_FAILURE(status) && status != U_INVALID_CHAR_FOUND && status != U_BUFFER_OVERFLOW_ERROR) {
-        throw std::runtime_error(std::format("ICU conversion failed with unexpected error : {}", u_errorName(status)));
+        throw std::runtime_error(gppTr("CodePageChecker.findUnmappableChars", "ICU 转换发生意外错误: %1", u_errorName(status)));
     }
     return m_unmappableCharsResult;
 }

@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #include <toml.hpp>
@@ -76,7 +76,7 @@ public:
 						tbl[kv.first.as<std::string>()] = solObj2JsonValue(kv.second);
 					}
 					else {
-						throw std::runtime_error("LuaJson: non-string key");
+						throw std::runtime_error(gppTr("LuaJson.solObj2JsonValue", "LuaJson: key 必须是字符串"));
 					}
 				}
 				return tbl;
@@ -181,7 +181,7 @@ public:
 						tbl.insert({ kv.first.as<std::string>(), solObj2TomlValue(kv.second) });
 					}
 					else {
-						throw std::runtime_error("LuaToml: non-string key");
+						throw std::runtime_error(gppTr("LuaToml.solObj2TomlValue", "LuaToml: key 必须是字符串"));
 					}
 				}
 				return tbl;
@@ -229,7 +229,7 @@ public:
 std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(const std::string& scriptPath, const std::string& functionName) {
 	const fs::path stdScriptPath = fs::weakly_canonical(ascii2Wide(scriptPath));
 	if (!fs::exists(stdScriptPath)) {
-		m_logger->error("Script is not exist: {}", scriptPath);
+		m_logger->error(gppTr("LuaManager.registerFunction", "脚本不存在: %1", scriptPath));
 		return std::nullopt;
 	}
 
@@ -246,7 +246,7 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 			it = m_scriptStates.find(stdScriptPath);
 		}
 		catch (const sol::error& e) {
-			m_logger->error("Failed to load script {}: {}", scriptPath, e.what());
+			m_logger->error(gppTr("LuaManager.registerFunction", "加载脚本 %1 失败: %2", scriptPath, e.what()));
 			return std::nullopt;
 		}
 	}
@@ -258,7 +258,7 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 	if (!it->second->functions.contains(functionName)) {
 		auto pFunc = std::make_unique<sol::function>((*(it->second->lua))[functionName]);
 		if (!pFunc->valid()) {
-			m_logger->debug("Failed to find function {} in script {}", functionName, scriptPath);
+			m_logger->debug(gppTr("LuaManager.registerFunction", "在脚本 %1 中未找到函数 %2", scriptPath, functionName));
 			return std::nullopt;
 		}
 		it->second->functions.insert({ functionName, std::move(pFunc) });
@@ -759,25 +759,25 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 				const std::string tokenizerBackend = lua[langMode + "tokenizerBackend"].get<std::string>();
 				if (tokenizerBackend == "MeCab") {
 					const std::string mecabDictDir = lua[langMode + "mecabDictDir"].get<std::string>();
-					m_logger->info("{} 已配置 MeCab 分词器，首次使用时加载。", scriptPath);
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 MeCab 分词器，首次使用时加载。", scriptPath));
 					utilsTable[langMode + "tokenizeFunc"] = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 				}
 				else if (tokenizerBackend == "spaCy") {
 					const std::string spaCyModelName = lua[langMode + "spaCyModelName"].get<std::string>();
-					m_logger->info("{} 已配置 spaCy 分词器，首次使用时加载。", scriptPath);
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 spaCy 分词器，首次使用时加载。", scriptPath));
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
 				}
 				else if (tokenizerBackend == "Stanza") {
 					const std::string stanzaLang = lua[langMode + "stanzaLang"].get<std::string>();
-					m_logger->info("{} 已配置 Stanza 分词器，首次使用时加载。", scriptPath);
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 Stanza 分词器，首次使用时加载。", scriptPath));
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
 				}
 				else if (tokenizerBackend == "pkuseg") {
-					m_logger->info("{} 已配置 pkuseg 分词器，首次使用时加载。", scriptPath);
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 pkuseg 分词器，首次使用时加载。", scriptPath));
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
 				}
 				else {
-					throw std::invalid_argument(std::format("{} 中注册了无效的 tokenizerBackend: {}", scriptPath, tokenizerBackend));
+					throw std::invalid_argument(gppTr("LuaManager.registerCustomTypes", "%1 中注册了无效的 tokenizerBackend: %2", scriptPath, tokenizerBackend));
 				}
 			}
 		};

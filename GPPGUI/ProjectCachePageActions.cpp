@@ -171,8 +171,7 @@ bool ProjectCachePage::ensureWritableAction(const QString& actionName) const
 
 bool ProjectCachePage::confirmAction(const QString& title, const QString& message)
 {
-    QWidget* dialogParent = window();
-    ElaContentDialog dialog(dialogParent ? dialogParent : this);
+    ElaContentDialog dialog(window());
     dialog.setLeftButtonText(tr("否"));
     dialog.setMiddleButtonText(tr("思考人生"));
     dialog.setRightButtonText(tr("是"));
@@ -194,7 +193,6 @@ bool ProjectCachePage::confirmAction(const QString& title, const QString& messag
     layout->addStretch();
 
     dialog.setCentralWidget(widget);
-    connect(&dialog, &ElaContentDialog::middleButtonClicked, &dialog, &ElaContentDialog::close);
     return dialog.exec() == QDialog::Accepted;
 }
 

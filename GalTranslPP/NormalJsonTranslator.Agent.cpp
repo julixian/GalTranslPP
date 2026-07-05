@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -40,7 +40,7 @@ AgentProtocolResponse parseAgentTextResponse(const std::string& content) {
     AgentProtocolResponse result;
     const std::optional<json> payloadOpt = tryParseAgentJsonEnvelope(content);
     if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
-        throw std::runtime_error("Agent 响应不是合法 JSON 对象");
+        throw std::runtime_error(gppTr("parseAgentProtocolResponse", "Agent 响应不是合法 JSON 对象"));
     }
 
     const json& payload = *payloadOpt;
@@ -334,9 +334,9 @@ std::vector<int> inferAgentOccurrenceIdsFromChunk(const std::string& sourceTerm,
 
 std::string formatAgentRetranslateProblem(const std::string& reason) {
     if (reason.empty()) {
-        return "可能需要重翻";
+        return gppTr("formatAgentRetranslateProblem", "可能需要重翻");
     }
-    return "可能需要重翻: " + reason;
+    return gppTr("formatAgentRetranslateProblem", "可能需要重翻: %1", reason);
 }
 
 std::string formatAgentTermChangeReason(
@@ -344,7 +344,7 @@ std::string formatAgentTermChangeReason(
     const std::string& oldTarget,
     const std::string& newTarget
 ) {
-    return std::format("术语「{}」译名由「{}」更新为「{}」", sourceTerm, oldTarget, newTarget);
+    return gppTr("formatAgentTermChangeReason", "术语「%1」译名由「%2」更新为「%3」", sourceTerm, oldTarget, newTarget);
 }
 
 std::optional<std::pair<fs::path, int>> parseAgentRewriteTarget(const json& request) {
@@ -474,7 +474,7 @@ json NormalJsonTranslator::buildAgentBaseMessages(
         agentInputHeader = "SRC\tID\n";
         break;
     default:
-        throw std::invalid_argument("Agent 模式不支持的 TransEngine");
+        throw std::invalid_argument(gppTr("NormalJsonTranslator.buildAgentBaseMessages", "Agent 模式不支持的 TransEngine"));
     }
     replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", agentInputHeader + inputBlock);
     replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
@@ -519,11 +519,11 @@ void NormalJsonTranslator::applyAgentCommit(
     for (Sentence* se : pending) {
         const auto it = translationMap.find(se->index);
         if (it == translationMap.end()) {
-            throw std::runtime_error(std::format("commit 缺少句子 {}", se->index));
+            throw std::runtime_error(gppTr("NormalJsonTranslator.applyAgentCommit", "commit 缺少句子 %1", se->index));
         }
         const std::string dst = it->second.value("dst", "");
         if (dst.empty()) {
-            throw std::runtime_error(std::format("commit 句子 {} 的 dst 为空", se->index));
+            throw std::runtime_error(gppTr("NormalJsonTranslator.applyAgentCommit", "commit 句子 %1 的 dst 为空", se->index));
         }
         sentencePatches.push_back({
             .sentence = se,
@@ -598,12 +598,9 @@ void NormalJsonTranslator::applyAgentCommit(
                         ::appendAgentOccurrence(entry, relInputPath, id);
                     }
                     if (inferredIds.empty()) {
-                        m_logger->debug(
-                            "[线程 {}] [文件 {}] Agent 术语 {} 未提供 line_ids，且本地未在当前 chunk 匹配到出现位置，本轮不记录 occurrence。",
-                            threadId,
-                            wide2Ascii(relInputPath),
-                            sourceTerm
-                        );
+                        m_logger->debug(gppTr("NormalJsonTranslator.applyAgentCommit",
+                            "[线程 %1] [文件 %2] Agent 术语 %3 未提供 line_ids，且本地未在当前 chunk 匹配到出现位置，本轮不记录 occurrence。",
+                            threadId, wide2Ascii(relInputPath), sourceTerm));
                     }
                 }
 
@@ -635,7 +632,7 @@ void NormalJsonTranslator::applyAgentCommit(
                     const std::string newTarget = request.value("new_target", "");
                     reason = (!sourceTerm.empty() && !oldTarget.empty() && !newTarget.empty())
                         ? ::formatAgentTermChangeReason(sourceTerm, oldTarget, newTarget)
-                        : "Agent 请求重翻";
+                        : gppTr("NormalJsonTranslator.applyAgentCommit", "Agent 请求重翻");
                 }
                 addRetranslateSuggestion(target->first, target->second, reason);
             }
@@ -653,14 +650,10 @@ void NormalJsonTranslator::applyAgentCommit(
     }
 
     if (!protocol.termUpdates.empty()) {
-        m_logger->debug(
-            "[线程 {}] [文件 {}] Agent 术语账本本轮实际写入 {} / {} 条，记录建议重翻 {} 条。",
-            threadId,
-            wide2Ascii(relInputPath),
-            appliedTermUpdateCount,
-            protocol.termUpdates.size(),
-            recordedSuggestionCount
-        );
+        m_logger->debug(gppTr("NormalJsonTranslator.applyAgentCommit",
+            "[线程 %1] [文件 %2] Agent 术语账本本轮实际写入 %3 / %4 条，记录建议重翻 %5 条。",
+            threadId, wide2Ascii(relInputPath), appliedTermUpdateCount,
+            protocol.termUpdates.size(), recordedSuggestionCount));
     }
 }
 
@@ -770,7 +763,7 @@ json runAgentSearchTextTool(const AgentToolExecutionEnv& env, const json& argume
 
     if (scope != "current_file" && scope != "all_files" && scope != "specified_file") {
         return json{
-            {"error", std::format("search_text.scope 非法: {}。允许值仅有 current_file|all_files|specified_file", scope)},
+            {"error", gppTr("executeAgentToolCall", "search_text.scope 非法: %1。允许值仅有 current_file|all_files|specified_file", scope)},
             {"allowed_scope", json::array({"current_file", "all_files", "specified_file"})}
         };
     }
@@ -1040,7 +1033,7 @@ json executeAgentToolCalls(const AgentToolExecutionEnv& env, const std::vector<A
                 result["result"] = runAgentCommonGetProjectNoteTool(sharedEnv, call.arguments);
             }
             else {
-                result["error"] = std::format("未知工具: {}", call.name);
+                result["error"] = gppTr("executeAgentToolCalls", "未知工具: %1", call.name);
             }
         }
         catch (const std::exception& e) {
@@ -1115,7 +1108,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         }
 
         if (m_smartRetry && retryCount == 2 && pending.size() > 1) {
-            m_logger->warn("[线程 {}] [文件 {}] Agent 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath));
+            m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath)));
 
             const size_t mid = pending.size() / 2;
             std::span<Sentence*> pendingSpan(pending);
@@ -1127,7 +1120,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             return firstOk && secondOk;
         }
         else if (m_smartRetry && retryCount == 3) {
-            m_logger->warn("[线程 {}] [文件 {}] Agent 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath));
+            m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath)));
             backgroundText.clear();
         }
 
@@ -1135,8 +1128,8 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         bool compactRequested = false;
 
         const std::string logBlock = buildAgentLogBlock(relInputPath, batch, backgroundText);
-        m_logger->info("[线程 {}] [文件 {}] Agent 开始翻译，当前 chunk {}-{}，待提交 {} 句，最多 {} 轮:\n{}",
-            threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size(), m_agentMaxTurnsPerChunk, logBlock);
+        m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 开始翻译，当前 chunk %3-%4，待提交 %5 句，最多 %6 轮:\n%7",
+            threadId, wide2Ascii(relInputPath), pending.front()->index, pending.back()->index, pending.size(), m_agentMaxTurnsPerChunk, logBlock));
 
         // 这里开始才是“单个 chunk 的模型多轮循环”。
         // 最典型的链路是：准备 messages -> 调模型 -> 执行工具/压缩上下文/commit -> 进入下一轮或结束。
@@ -1144,26 +1137,22 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         for (int turn = 0; turn < m_agentMaxTurnsPerChunk; ++turn) {
 
             const size_t messageChars = ::approximateMessagesChars(messages);
-            m_logger->debug("[线程 {}] [文件 {}] Agent 第 {}/{} 轮，请求上下文约 {} 字符。",
-                threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars);
+            m_logger->debug(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 第 %3/%4 轮，请求上下文约 %5 字符。",
+                threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, messageChars));
             if (m_logger->should_log(spdlog::level::trace)) {
-                m_logger->trace(
-                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮请求消息（实际发送给模型）:\n{}",
-                    threadId,
-                    wide2Ascii(relInputPath),
-                    turn + 1,
-                    m_agentMaxTurnsPerChunk,
-                    truncateUtf8Prefix(messages.dump(2), 20000)
-                );
+                m_logger->trace(gppTr("NormalJsonTranslator.translateBatchAgent",
+                    "[线程 %1] [文件 %2] Agent 第 %3/%4 轮请求消息（实际发送给模型）:\n%5",
+                    threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk,
+                    truncateUtf8Prefix(messages.dump(2), 20000)));
             }
 
             if (messageChars > (size_t)m_agentHardContextChars) {
-                m_logger->warn("[线程 {}] [文件 {}] Agent 上下文超过 hardContextChars，回退到最近摘要重建消息。", threadId, wide2Ascii(relInputPath));
+                m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 上下文超过 hardContextChars，回退到最近摘要重建消息。", threadId, wide2Ascii(relInputPath)));
                 messages = buildAgentBaseMessages(relInputPath, batch, backgroundText);
                 compactRequested = false;
             }
             else if (!compactRequested && messageChars > (size_t)m_agentSoftContextChars) {
-                m_logger->info("[线程 {}] [文件 {}] Agent 上下文接近上限，要求模型先压缩上下文。", threadId, wide2Ascii(relInputPath));
+                m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 上下文接近上限，要求模型先压缩上下文。", threadId, wide2Ascii(relInputPath)));
                 messages.push_back({
                     {"role", "user"},
                     {"content", "Context is close to the limit. Return a compact_context action only. Do not call tools or commit in this turn."}
@@ -1173,7 +1162,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
             if (!apiOpt.has_value()) {
-                throw std::runtime_error("没有可用的 API key 了");
+                throw std::runtime_error(gppTr("NormalJsonTranslator.translateBatchAgent", "没有可用的 API key 了"));
             }
             const TranslationApi& currentApi = apiOpt.value();
 
@@ -1196,63 +1185,49 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             catch (const std::exception& e) {
                 ++retryCount;
                 recordRuntimeError("agent",
-                    std::format("Agent 响应解析失败: {}", e.what()),
+                    gppTr("NormalJsonTranslator.translateBatchAgent", "Agent 响应解析失败: %1", e.what()),
                     relInputPath,
                     pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
                     retryCount,
                     currentApi.modelName,
                     -1.0,
                     "warning");
-                m_logger->warn("[线程 {}] [文件 {}] Agent 响应解析失败，第 {} 次重试。原始响应: {}\n错误: {}",
-                    threadId, wide2Ascii(relInputPath), retryCount, response.content, e.what());
+                m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 响应解析失败，第 %3 次重试。原始响应: %4\n错误: %5",
+                    threadId, wide2Ascii(relInputPath), retryCount, response.content, e.what()));
                 turnLoopExitedByRetry = true;
                 break;
             }
 
-            m_logger->info("[线程 {}] [文件 {}] Agent 第 {}/{} 轮返回 action='{}'。",
-                threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action);
+            m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 第 %3/%4 轮返回 action='%5'。",
+                threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk, protocol.action));
             if (m_logger->should_log(spdlog::level::trace) && !response.content.empty()) {
-                m_logger->trace(
-                    "[线程 {}] [文件 {}] Agent 第 {}/{} 轮原始响应:\n{}",
-                    threadId,
-                    wide2Ascii(relInputPath),
-                    turn + 1,
-                    m_agentMaxTurnsPerChunk,
-                    truncateUtf8Prefix(response.content, 20000)
-                );
+                m_logger->trace(gppTr("NormalJsonTranslator.translateBatchAgent",
+                    "[线程 %1] [文件 %2] Agent 第 %3/%4 轮原始响应:\n%5",
+                    threadId, wide2Ascii(relInputPath), turn + 1, m_agentMaxTurnsPerChunk,
+                    truncateUtf8Prefix(response.content, 20000)));
             }
 
             if (protocol.action == "tool_calls" && !protocol.calls.empty()) {
-                m_logger->info(
-                    "[线程 {}] [文件 {}] Agent 请求 {} 个工具调用: {}。",
-                    threadId,
-                    wide2Ascii(relInputPath),
-                    protocol.calls.size(),
-                    formatToolCallSummary(protocol.calls)
-                );
+                m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent",
+                    "[线程 %1] [文件 %2] Agent 请求 %3 个工具调用: %4。",
+                    threadId, wide2Ascii(relInputPath), protocol.calls.size(),
+                    formatToolCallSummary(protocol.calls)));
                 if (m_logger->should_log(spdlog::level::debug)) {
-                    m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent 工具调用明细:\n{}",
-                        threadId,
-                        wide2Ascii(relInputPath),
-                        formatToolCallRequestsForLog(protocol.calls)
-                    );
+                    m_logger->debug(gppTr("NormalJsonTranslator.translateBatchAgent",
+                        "[线程 %1] [文件 %2] Agent 工具调用明细:\n%3",
+                        threadId, wide2Ascii(relInputPath),
+                        formatToolCallRequestsForLog(protocol.calls)));
                 }
                 const json toolResults = ::executeAgentToolCalls(toolEnv, protocol.calls);
                 compactRequested = false;
-                m_logger->info(
-                    "[线程 {}] [文件 {}] Agent 工具执行完成，返回 {} 项结果，继续下一轮。",
-                    threadId,
-                    wide2Ascii(relInputPath),
-                    toolResults.size()
-                );
+                m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent",
+                    "[线程 %1] [文件 %2] Agent 工具执行完成，返回 %3 项结果，继续下一轮。",
+                    threadId, wide2Ascii(relInputPath), toolResults.size()));
                 if (m_logger->should_log(spdlog::level::debug)) {
-                    m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent 工具返回结果:\n{}",
-                        threadId,
-                        wide2Ascii(relInputPath),
-                        truncateUtf8Prefix(toolResults.dump(2), 12000)
-                    );
+                    m_logger->debug(gppTr("NormalJsonTranslator.translateBatchAgent",
+                        "[线程 %1] [文件 %2] Agent 工具返回结果:\n%3",
+                        threadId, wide2Ascii(relInputPath),
+                        truncateUtf8Prefix(toolResults.dump(2), 12000)));
                 }
                 // 工具调用分支不会直接完成 chunk，而是把工具结果回填给下一轮模型继续推理。
                 messages.push_back({ {"role", "assistant"}, {"content", response.content} });
@@ -1271,7 +1246,7 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
                 else if (!response.content.empty()) {
                     backgroundText = response.content;
                 }
-                m_logger->info("[线程 {}] [文件 {}] Agent 已压缩上下文，摘要长度 {} 字符。", threadId, wide2Ascii(relInputPath), backgroundText.size());
+                m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 已压缩上下文，摘要长度 %3 字符。", threadId, wide2Ascii(relInputPath), backgroundText.size()));
                 messages = buildAgentBaseMessages(relInputPath, batch, backgroundText);
                 compactRequested = false;
                 continue;
@@ -1280,37 +1255,35 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
             if (protocol.action == "commit") {
                 // commit 成功后，这个 chunk 的多轮循环立即结束，控制权返回外层批处理调度。
                 if (m_logger->should_log(spdlog::level::debug)) {
-                    m_logger->debug(
-                        "[线程 {}] [文件 {}] Agent commit 内容:\ntranslations={}\nterm_updates={}\nrewrite_requests={}\nfile_note_patch={}\nrolling_context={}",
-                        threadId,
-                        wide2Ascii(relInputPath),
+                    m_logger->debug(gppTr("NormalJsonTranslator.translateBatchAgent",
+                        "[线程 %1] [文件 %2] Agent commit 内容:\ntranslations=%3\nterm_updates=%4\nrewrite_requests=%5\nfile_note_patch=%6\nrolling_context=%7",
+                        threadId, wide2Ascii(relInputPath),
                         truncateUtf8Prefix(protocol.translations.dump(2), 12000),
                         truncateUtf8Prefix(protocol.termUpdates.dump(2), 12000),
                         truncateUtf8Prefix(protocol.rewriteRequests.dump(2), 12000),
                         truncateUtf8Prefix(protocol.fileNotePatch.dump(2), 12000),
-                        truncateUtf8Prefix(protocol.rollingContext, 12000)
-                    );
+                        truncateUtf8Prefix(protocol.rollingContext, 12000)));
                 }
 
                 try {
                     int committedCount = 0;
                     applyAgentCommit(relInputPath, batch, backgroundText, threadId, protocol, currentApi.modelName, committedCount);
-                    m_logger->info("[线程 {}] [文件 {}] Agent commit 成功，提交 {} 句，术语更新 {} 条，建议重翻请求 {} 条，新的 rolling_context 长度 {} 字符。",
-                        threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size(), protocol.rollingContext.size());
+                    m_logger->info(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent commit 成功，提交 %3 句，术语更新 %4 条，建议重翻请求 %5 条，新的 rolling_context 长度 %6 字符。",
+                        threadId, wide2Ascii(relInputPath), committedCount, protocol.termUpdates.size(), protocol.rewriteRequests.size(), protocol.rollingContext.size()));
                     return true;
                 }
                 catch (const std::exception& e) {
                     ++retryCount;
                     recordRuntimeError("agent",
-                        std::format("Agent commit 校验失败: {}", e.what()),
+                        gppTr("NormalJsonTranslator.translateBatchAgent", "Agent commit 校验失败: %1", e.what()),
                         relInputPath,
                         pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
                         retryCount,
                         currentApi.modelName,
                         -1.0,
                         "warning");
-                    m_logger->warn("[线程 {}] [文件 {}] Agent commit 校验失败，第 {} 次重试。错误: {}",
-                        threadId, wide2Ascii(relInputPath), retryCount, e.what());
+                    m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent commit 校验失败，第 %3 次重试。错误: %4",
+                        threadId, wide2Ascii(relInputPath), retryCount, e.what()));
                     turnLoopExitedByRetry = true;
                     break;
                 }
@@ -1318,29 +1291,24 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
 
             ++retryCount;
             recordRuntimeError("agent",
-                std::format("Agent 返回未知 action '{}'", protocol.action),
+                gppTr("NormalJsonTranslator.translateBatchAgent", "Agent 返回未知 action '%1'", protocol.action),
                 relInputPath,
                 pending.empty() ? std::string{} : std::format("{}-{}", pending.front()->index, pending.back()->index),
                 retryCount,
                 currentApi.modelName,
                 -1.0,
                 "warning");
-            m_logger->warn("[线程 {}] [文件 {}] Agent 返回未知 action '{}'，第 {} 次重试。", threadId, wide2Ascii(relInputPath), protocol.action, retryCount);
+            m_logger->warn(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 返回未知 action '%3'，第 %4 次重试。", threadId, wide2Ascii(relInputPath), protocol.action, retryCount));
             turnLoopExitedByRetry = true;
             break;
         }
 
         if (!turnLoopExitedByRetry) {
             exceededTurnLimit = true;
-            m_logger->error(
-                "[线程 {}] [文件 {}] Agent 单个 chunk 在 {} 轮内仍未产出 commit，判定本批次失败，不再重试。当前 chunk {}-{}，待提交 {} 句。",
-                threadId,
-                wide2Ascii(relInputPath),
-                m_agentMaxTurnsPerChunk,
-                pending.front()->index,
-                pending.back()->index,
-                pending.size()
-            );
+            m_logger->error(gppTr("NormalJsonTranslator.translateBatchAgent",
+                "[线程 %1] [文件 %2] Agent 单个 chunk 在 %3 轮内仍未产出 commit，判定本批次失败，不再重试。当前 chunk %4-%5，待提交 %6 句。",
+                threadId, wide2Ascii(relInputPath), m_agentMaxTurnsPerChunk,
+                pending.front()->index, pending.back()->index, pending.size()));
             break;
         }
     }
@@ -1352,18 +1320,18 @@ bool NormalJsonTranslator::translateBatchAgent(const fs::path& relInputPath, std
         se->complete = true;
     }
     if (exceededTurnLimit) {
-        m_logger->error("[线程 {}] [文件 {}] Agent 批次因超过最大轮数而失败，共翻译 {} / {} 句。",
-            threadId, wide2Ascii(relInputPath), batch.size() - failedCount, batch.size());
+        m_logger->error(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 批次因超过最大轮数而失败，共翻译 %3 / %4 句。",
+            threadId, wide2Ascii(relInputPath), batch.size() - failedCount, batch.size()));
         recordRuntimeError("agent",
-            std::format("Agent 批次因超过最大轮数而失败，共翻译 {} / {} 句。", batch.size() - failedCount, batch.size()),
+            gppTr("NormalJsonTranslator.translateBatchAgent", "Agent 批次因超过最大轮数而失败，共翻译 %1 / %2 句。", batch.size() - failedCount, batch.size()),
             relInputPath,
             batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index));
     }
     else {
-        m_logger->error("[线程 {}] [文件 {}] Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。",
-            threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size());
+        m_logger->error(gppTr("NormalJsonTranslator.translateBatchAgent", "[线程 %1] [文件 %2] Agent 批次在 %3 次重试后彻底失败，共翻译 %4 / %5 句。",
+            threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size()));
         recordRuntimeError("agent",
-            std::format("Agent 批次在 {} 次重试后彻底失败，共翻译 {} / {} 句。", retryCount, batch.size() - failedCount, batch.size()),
+            gppTr("NormalJsonTranslator.translateBatchAgent", "Agent 批次在 %1 次重试后彻底失败，共翻译 %2 / %3 句。", retryCount, batch.size() - failedCount, batch.size()),
             relInputPath,
             batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index),
             retryCount);
@@ -1380,7 +1348,7 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
     for (const auto& [relFilePath, suggestionsByIndex] : m_agentRetranslateSuggestions) {
         const fs::path cachePath = m_transCacheDir / relFilePath;
         if (!fs::exists(cachePath)) {
-            m_logger->warn("Agent 建议重翻目标 {} 没有缓存文件，已跳过。", wide2Ascii(relFilePath));
+            m_logger->warn(gppTr("NormalJsonTranslator.applyAgentRetranslateSuggestions", "Agent 建议重翻目标 %1 没有缓存文件，已跳过。", wide2Ascii(relFilePath)));
             continue;
         }
 
@@ -1390,7 +1358,7 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
             cacheJson = json::parse(ifs);
         }
         catch (const json::exception& e) {
-            m_logger->warn("Agent 建议重翻目标缓存 {} 读取失败: {}", wide2Ascii(relFilePath), e.what());
+            m_logger->warn(gppTr("NormalJsonTranslator.applyAgentRetranslateSuggestions", "Agent 建议重翻目标缓存 %1 读取失败: %2", wide2Ascii(relFilePath), e.what()));
             continue;
         }
 
@@ -1426,6 +1394,6 @@ void NormalJsonTranslator::applyAgentRetranslateSuggestions() {
     }
 
     if (markedCount > 0) {
-        m_logger->info("Agent 已将 {} 条建议重翻记录写入缓存问题。", markedCount);
+        m_logger->info(gppTr("NormalJsonTranslator.applyAgentRetranslateSuggestions", "Agent 已将 %1 条建议重翻记录写入缓存问题。", markedCount));
     }
 }

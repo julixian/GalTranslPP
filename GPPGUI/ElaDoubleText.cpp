@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include <QFormLayout>
 
-ElaDoubleText::ElaDoubleText(QWidget* parent, const QString& firstLine, int firstLinePixelSize, const QString& secondLine, int secondLinePixelSize, const QString& toolTip)
+ElaDoubleText::ElaDoubleText(const QString& firstLine, int firstLinePixelSize, const QString& secondLine, int secondLinePixelSize, const QString& toolTip, QWidget* parent)
 	: QWidget(parent)
 {
 	QVBoxLayout* textLayout = new QVBoxLayout(this);

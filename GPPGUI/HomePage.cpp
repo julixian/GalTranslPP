@@ -288,24 +288,24 @@ HomePage::~HomePage() = default;
 
 void HomePage::setupUi()
 {
-    ElaText* flowText = new ElaText("Useful Tools", this);
+    QWidget* centralWidget = new QWidget(this);
+    centralWidget->setWindowTitle(tr("主页"));
+    QVBoxLayout* centerLayout = new QVBoxLayout(centralWidget);
+    centerLayout->setSpacing(0);
+    centerLayout->setContentsMargins(0, 0, 0, 0);
+
+    ElaText* flowText = new ElaText("Useful Tools", centralWidget);
     flowText->setTextPixelSize(20);
 
     QHBoxLayout* flowTextLayout = new QHBoxLayout();
     flowTextLayout->setContentsMargins(25, 0, 0, 0);
     flowTextLayout->addWidget(flowText);
 
-    QWidget* centralWidget = new QWidget(this);
-    centralWidget->setWindowTitle(tr("主页"));
-
-    QVBoxLayout* centerLayout = new QVBoxLayout(centralWidget);
-    centerLayout->setSpacing(0);
-    centerLayout->setContentsMargins(0, 0, 0, 0);
-    centerLayout->addWidget(createHeroCard(this));
+    centerLayout->addWidget(createHeroCard(centralWidget));
     centerLayout->addSpacing(20);
     centerLayout->addLayout(flowTextLayout);
     centerLayout->addSpacing(10);
-    centerLayout->addLayout(createPopularCardsLayout(m_globalConfig, this, this));
+    centerLayout->addLayout(createPopularCardsLayout(m_globalConfig, centralWidget, this));
     centerLayout->addStretch();
 
     addCentralWidget(centralWidget);

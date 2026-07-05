@@ -8,7 +8,7 @@
 #include "ElaLineEdit.h"
 
 
-ElaInputDialog::ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result) :
+ElaInputDialog::ElaInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent) :
 	ElaContentDialog(parent), m_result(result)
 {
 	setWindowTitle("InputDialog");

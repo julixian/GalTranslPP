@@ -29,7 +29,7 @@
 import Tool;
 
 ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent)
-    : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_mainWindow(parent)
+    : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig)
 {
     setWindowTitle(tr("项目设置主页"));
     setTitleVisible(false);
@@ -40,7 +40,8 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     catch (...) {
         m_projectConfig = toml::ordered_table{};
         ElaMessageBar::error(ElaMessageBarType::TopLeft,
-            tr("解析失败"), tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的配置文件不符合 toml 规范"), 3000);
+            tr("解析失败"), tr("项目 %1 的配置文件不符合 toml 规范")
+            .arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
     }
     insertToml(m_projectConfig, "GUIConfig.isRunning", false);
 
@@ -73,7 +74,7 @@ void ProjectSettingsPage::apply2Config()
     }
     catch (const toml::exception& e) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"toml 格式化错误", MB_ICONERROR);
+        MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"Toml 格式化错误", MB_ICONERROR);
 #endif
     }
 }
@@ -97,7 +98,7 @@ void ProjectSettingsPage::clearLog(bool forceClear) {
     if (forceClear || m_stackedWidget->currentWidget() == m_startSettingsPage) {
         m_startSettingsPage->clearLog();
         ElaMessageBar::success(ElaMessageBarType::Bottom,
-            tr("清理成功"), tr("已清空项目 ") + getProjectName() + tr(" 的日志输出窗口"), 3000);
+            tr("清理成功"), tr("已清空项目 %1 的日志输出窗口").arg(getProjectName()), 3000);
     }
 }
 
@@ -245,10 +246,10 @@ void ProjectSettingsPage::createPages()
     m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
     m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, m_projectConfig, m_stackedWidget);
     m_promptSettingsPage = new PromptSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
-    m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, m_projectConfig, m_mainWindow, m_stackedWidget);
+    m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
     m_projectCachePage = new ProjectCachePage(m_projectDir, m_projectConfig, m_stackedWidget);
-    m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_mainWindow, m_stackedWidget);
-    m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_mainWindow, m_stackedWidget);
+    m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
+    m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
 
     m_stackedWidget->addWidget(m_apiSettingsPage);
     m_stackedWidget->addWidget(m_commonSettingsPage);
@@ -274,8 +275,7 @@ void ProjectSettingsPage::createPages()
 
 void ProjectSettingsPage::onRefreshProjectConfig()
 {
-    bool isRunning = toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true);
-    if (isRunning) {
+    if (getIsRunning()) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("正在运行"), tr("项目仍在运行中，无法刷新配置"), 3000);
         return;
     }
@@ -284,7 +284,8 @@ void ProjectSettingsPage::onRefreshProjectConfig()
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft,
-            tr("解析失败"), tr("项目 ") + QString::fromStdWString(m_projectDir.filename().wstring()) + tr(" 的配置文件不符合规范"), 3000);
+            tr("解析失败"), tr("项目 %1 的配置文件不符合规范")
+            .arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
         return;
     }
     insertToml(m_projectConfig, "GUIConfig.isRunning", false);
@@ -306,10 +307,10 @@ void ProjectSettingsPage::onStartTranslating()
 
 void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int exitCode)
 {
-    if (
-        exitCode >= 0 &&
+    if (exitCode >= 0 &&
         toml::find_or(m_globalConfig, "autoRefreshAfterTranslate", true)
-        ) {
+        )
+    {
         if (transEngine == "DumpName" || transEngine == "NameTrans") {
             m_nameTableSettingsPage->refreshTable();
         }

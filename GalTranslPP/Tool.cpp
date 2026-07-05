@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 
@@ -222,7 +222,7 @@ std::vector<std::string> splitTsvLine(const std::string& line, const std::vector
             })
         )
     {
-        throw std::runtime_error("Empty delimiter is not allowed in TSV line splitting");
+        throw std::runtime_error(gppTr("splitTsvLine", "TSV 行切分不允许使用空分隔符"));
     }
 
     while (currentPos < line.length()) {
@@ -271,9 +271,9 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart tar) {
         return sentence->translated_preview;
         break;
     case CachePart::None:
-        throw std::runtime_error("Invalid condition target: None");
+        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标: None"));
     default:
-        throw std::runtime_error("Invalid condition target to get string: " + std::to_string((int)tar));
+        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标: %1", (int)tar));
     }
     return {};
 }
@@ -318,7 +318,7 @@ CachePart chooseCachePart(std::string_view partName) {
         part = CachePart::TransPreview;
     }
     else {
-        throw std::invalid_argument("无效的 CachePart: " + std::string(partName));
+        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart: %1", std::string(partName)));
     }
     return part;
 }
@@ -341,7 +341,7 @@ std::pair<std::string, int> getMostCommonChar(const std::string& s) {
 
     const std::unique_ptr<icu::BreakIterator> boundary(icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode));
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(std::format("Failed to create a character break iterator: {}", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("getMostCommonChar", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
     }
     boundary->setText(ustr);
 
@@ -384,7 +384,7 @@ std::vector<std::string> splitIntoGraphemes(const std::string& sourceString) {
     );
 
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(std::format("Failed to create a character break iterator: {}", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("splitIntoGraphemes", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
     }
 
     breakIterator->setText(uString);
@@ -411,7 +411,7 @@ size_t countGraphemesImpl(auto&& sourceString)
         icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
     );
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(std::format("Failed to create a character break iterator: {}", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("countGraphemes", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
     }
     breakIterator->setText(uString);
 
@@ -487,7 +487,7 @@ std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, const std
         const size_t tokenPos = text.find(token, searchPos);
         // 错误处理：如果在预期位置找不到 token，说明输入有问题
         if (tokenPos == std::string::npos) {
-            throw std::runtime_error(std::format("Token '{}' not found in the remainder of the original sentence.", token));
+            throw std::runtime_error(gppTr("splitIntoTokens", "在原句剩余部分中找不到 token '%1'。", token));
         }
         // 1. 提取并添加 token 前面的空白部分
         if (tokenPos > searchPos) {
@@ -641,19 +641,19 @@ std::function<std::string(const std::string&)> getTraditionalChineseExtractor(co
                 }
                 return resultStr;
             };
-        logger->info("Use OpenCC for traditional Chinese detection");
+        logger->info(gppTr("getTraditionalChineseExtractor", "使用 OpenCC 进行繁体中文检测"));
         return result;
     }
     catch (...) {
-        logger->error("OpenCC is not usable, try falling back to ICU-based traditional Chinese detection");
+        logger->error(gppTr("getTraditionalChineseExtractor", "OpenCC 不可用，尝试回退到基于 ICU 的繁体中文检测"));
         UErrorCode status = U_ZERO_ERROR;
         auto toSimplified = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error("ICU-based traditional Chinese detection is not available");
+            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的繁体中文检测不可用"));
         }
         auto toTraditional = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error("ICU-based simplified Chinese detection is not available");
+            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的简体中文检测不可用"));
         }
 
         // 白名单/排除列表：用于解决简繁转换中的歧义问题。
@@ -721,7 +721,7 @@ std::function<std::string(const std::string&)> getTraditionalChineseExtractor(co
                 std::string resultStr;
                 return resultUStr.toUTF8String(resultStr);
             };
-        logger->info("Use ICU-based traditional Chinese detection");
+        logger->info(gppTr("getTraditionalChineseExtractor", "使用基于 ICU 的繁体中文检测"));
         return result;
     }
     return {};
@@ -736,11 +736,11 @@ void loadTokenizeCache
             json::parse(ifs).get_to(result);
         }
         else {
-            logger->debug("未找到分词缓存 {}", wide2Ascii(cachePath));
+            logger->debug(gppTr("loadTokenizeCache", "未找到分词缓存 %1", wide2Ascii(cachePath)));
         }
     }
     catch (const json::parse_error& e) {
-        logger->error("读取分词缓存 {} 失败: {}", wide2Ascii(cachePath), e.what());
+        logger->error(gppTr("loadTokenizeCache", "读取分词缓存 %1 失败: %2", wide2Ascii(cachePath), e.what()));
     }
 }
 
@@ -752,10 +752,10 @@ void saveTokenizeCache
         std::ofstream ofs(cachePath, std::ios::binary);
         ofs << j.dump(2);
         ofs.close();
-        logger->debug("分词缓存已保存到 {}", wide2Ascii(cachePath));
+        logger->debug(gppTr("saveTokenizeCache", "分词缓存已保存到 %1", wide2Ascii(cachePath)));
     }
     catch (...) {
-        logger->error("分词缓存 {} 保存失败", wide2Ascii(cachePath));
+        logger->error(gppTr("saveTokenizeCache", "分词缓存 %1 保存失败", wide2Ascii(cachePath)));
     }
 }
 

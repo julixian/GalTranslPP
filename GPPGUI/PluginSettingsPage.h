@@ -18,7 +18,7 @@ class PluginSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
+    explicit PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     ~PluginSettingsPage() override;
     virtual void apply2Config() override;
 
@@ -36,7 +36,6 @@ private:
 
     fs::path& m_projectDir;
     toml::ordered_value& m_projectConfig;
-    QWidget* m_mainWindow = nullptr;
 
 private:
     // 以下为各个插件的设置页面

@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -56,7 +56,7 @@ export
                 const std::string modifier = toml::find_or(conditionTbl, "compile_modifier", defaultRegCompileModifier);
                 pattern.conditionReg.setPattern(conditionRegStr).setModifier(modifier).compile();
                 if (!pattern.conditionReg) {
-                    throw std::runtime_error(std::format("Failed to compile regex pattern: [{}]", conditionRegStr));
+                    throw std::runtime_error(gppTr("ConditionTool.createGppCondition", "正则表达式编译失败: [%1]", conditionRegStr));
                 }
                 patterns.push_back(std::move(pattern));
             };
@@ -141,14 +141,14 @@ export
                                     result = (*pConditionFunc)(se).get<bool>();
                                 }
                                 catch (const sol::error& e) {
-                                    throw std::runtime_error(std::format("执行Lua条件函数 {} 时发生错误: {}", conditionFuncStr, e.what()));
+                                    throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "执行Lua条件函数 %1 时发生错误: %2", conditionFuncStr, e.what()));
                                 }
                                 return result;
                             };
                         funcs.push_back(std::move(checkFunc));
                     }
                     else {
-                        throw std::runtime_error(std::format("注册Lua脚本 {} 中的条件函数 {} 失败", conditionLuaStr, conditionFuncStr));
+                        throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "注册Lua脚本 %1 中的条件函数 %2 失败", conditionLuaStr, conditionFuncStr));
                     }
                 }
                 break;
@@ -172,7 +172,7 @@ export
                                             result = (*pConditionFunc)(se).cast<bool>();
                                         }
                                         catch (const py::error_already_set& e) {
-                                            throw std::runtime_error(std::format("执行Python条件函数 {} 时发生错误: {}", conditionFuncStr, e.what()));
+                                            throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "执行Python条件函数 %1 时发生错误: %2", conditionFuncStr, e.what()));
                                         }
                                     }).get();
                                 return result;
@@ -180,13 +180,13 @@ export
                         funcs.push_back(std::move(checkFunc));
                     }
                     else {
-                        throw std::runtime_error(std::format("注册Python脚本 {} 中的条件函数 {} 失败", conditionPythonStr, conditionFuncStr));
+                        throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "注册Python脚本 %1 中的条件函数 %2 失败", conditionPythonStr, conditionFuncStr));
                     }
                 }
                 break;
 
                 default:
-                    throw std::runtime_error("未知的条件类型");
+                    throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "未知的条件类型"));
                 }
             };
 

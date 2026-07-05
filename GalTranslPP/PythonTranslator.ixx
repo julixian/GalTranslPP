@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -28,14 +28,14 @@ export
 	public:
 		virtual void run() override
 		{
-			this->m_logger->info("开始运行 PythonTranslator...");
+			this->m_logger->info(gppTr("PythonTranslator.run", "开始运行 PythonTranslator..."));
 			m_pythonInterpreter->submitTask([&]()
 				{
 					try {
 						(*m_pythonRunFunc)();
 					}
 					catch (const py::error_already_set& e) {
-						throw std::runtime_error(std::format("PythonTranslator 运行时异常: {}", e.what()));
+						throw std::runtime_error(gppTr("PythonTranslator.run", "PythonTranslator 运行时异常: %1", e.what()));
 					}
 				}).get();
 		}
@@ -48,11 +48,11 @@ export
 			m_translatorName = wide2Ascii(fs::path(ascii2Wide(m_modulePath)).stem());
 			std::optional<std::shared_ptr<PythonInterpreterInstance>> pythonInterpreterOpt = this->m_pythonManager->registerFunction(m_modulePath, "init");
 			if (!pythonInterpreterOpt.has_value()) {
-				throw std::runtime_error("PythonTranslator 获取 init 函数失败！");
+				throw std::runtime_error(gppTr("PythonTranslator.PythonTranslator", "PythonTranslator 获取 init 函数失败！"));
 			}
 			pythonInterpreterOpt = this->m_pythonManager->registerFunction(m_modulePath, "run");
 			if (!pythonInterpreterOpt.has_value()) {
-				throw std::runtime_error("PythonTranslator 获取 run 函数失败！");
+				throw std::runtime_error(gppTr("PythonTranslator.PythonTranslator", "PythonTranslator 获取 run 函数失败！"));
 			}
 			m_pythonInterpreter = pythonInterpreterOpt.value();
 			m_pythonRunFunc = m_pythonInterpreter->functions["run"].get();
@@ -68,10 +68,10 @@ export
 						(*(m_pythonInterpreter->functions["init"]))();
 					}
 					catch (const py::error_already_set& e) {
-						throw std::runtime_error(std::format("初始化 PythonTranslator 时出现异常: {}", e.what()));
+						throw std::runtime_error(gppTr("PythonTranslator.PythonTranslator", "初始化 PythonTranslator 时出现异常: %1", e.what()));
 					}
 				}).get();
-			this->m_logger->info("PythonTranslator 已加载模块: {}", m_translatorName);
+			this->m_logger->info(gppTr("PythonTranslator.PythonTranslator", "PythonTranslator 已加载模块: %1", m_translatorName));
 		}
 
 		virtual ~PythonTranslator() override
@@ -90,10 +90,10 @@ export
 					}
 					catch (const py::error_already_set& e) {
 						// 析构不抛异常
-						this->m_logger->error("卸载 PythonTranslator 时出现异常: {}", e.what());
+						this->m_logger->error(gppTr("PythonTranslator.~PythonTranslator", "卸载 PythonTranslator 时出现异常: %1", e.what()));
 					}
 				}).get();
-			this->m_logger->info("所有任务已完成！PythonTranslator {} 结束。", m_translatorName);
+			this->m_logger->info(gppTr("PythonTranslator.~PythonTranslator", "所有任务已完成！PythonTranslator %1 结束。", m_translatorName));
 		}
 
 	};

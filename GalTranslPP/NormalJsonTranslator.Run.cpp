@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -140,13 +140,13 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             );
         }
         catch (const fs::filesystem_error& e) {
-            m_logger->error("复制缓存文件夹时出现异常: {}", e.what());
+            m_logger->error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "复制缓存文件夹时出现异常: %1", e.what()));
         }
     }
     for (const auto& dir : { m_inputDir, m_outputDir, m_transCacheDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
-            m_logger->debug("已创建目录: {}", wide2Ascii(dir));
+            m_logger->debug(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "已创建目录: %1", wide2Ascii(dir)));
         }
     }
 
@@ -184,7 +184,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
 
                 for (const auto& [index, item] : data | std::views::enumerate) {
                     if (!item.contains("message")) {
-                        throw std::runtime_error(std::format("[文件 {}] 第 {} 个对象缺少 message 字段。", wide2Ascii(relInputPath), index));
+                        throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "[文件 %1] 第 %2 个对象缺少 message 字段。", wide2Ascii(relInputPath), index));
                     }
                     ++totalSentences;
                     if (reportRuntimeWorkbench) {
@@ -211,12 +211,12 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 relJsonPaths.push_back(relInputPath);
             }
             catch (const json::exception& e) {
-                throw std::runtime_error(std::format("读取文件 {} 时出错: {}", wide2Ascii(relInputPath), e.what()));
+                throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "读取文件 %1 时出错: %2", wide2Ascii(relInputPath), e.what()));
             }
         }
 
         if (totalSentences == 0) {
-            throw std::runtime_error("未找到有效的 Sentence");
+            throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "未找到有效的 Sentence"));
         }
         if (reportRuntimeWorkbench) {
             m_controller->setRuntimeFiles(runtimeFileTotals);
@@ -230,7 +230,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             }
         }
         catch (...) {
-            m_logger->error("解析原人名表失败");
+            m_logger->error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "解析原人名表失败"));
         }
 
         std::vector<std::pair<std::string, int>> nameTablePairsFromJson = nameTableFromJson
@@ -257,7 +257,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         ofs.open(nameTablePath, std::ios::binary);
         ofs << newNameTable;
         ofs.close();
-        m_logger->info("已更新 人名替换表.toml 文件");
+        m_logger->info(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "已更新 人名替换表.toml 文件"));
         if (m_transEngine == TransEngine::DumpName) {
             for (const auto& [filename, count] : runtimeFileTotals) {
                 for (int i = 0; i < count; ++i) {
@@ -322,13 +322,13 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             }
             const std::string transName = toml::find_or(value, 0, "");
             if (!transName.empty()) {
-                m_logger->trace("发现原名 '{}' 的译名 '{}'", key, transName);
+                m_logger->trace(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "发现原名 '%1' 的译名 '%2'", key, transName));
                 m_nameMap.insert({ key, transName });
             }
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(std::format("解析 人名替换表.toml 时出错: {}", e.what()));
+        throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "解析 人名替换表.toml 时出错: %1", e.what()));
     }
 
     // 5. 如启用了 splitFile，则先预切分输入，后续按 part 参与并行调度。
@@ -337,7 +337,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             {
                 m_needsCombining = true;
                 runtimeFileTotals.clear();
-                m_logger->info("检测到文件分割模式 ({})，开始预处理输入文件...", m_splitFile);
+                m_logger->info(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "检测到文件分割模式 (%1)，开始预处理输入文件...", m_splitFile));
                 for (const auto& relJsonPath : relJsonPaths) {
                     try {
                         ifs.open(m_inputDir / relJsonPath, std::ios::binary);
@@ -358,10 +358,10 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                             ofs << part.dump(2);
                             ofs.close();
                         }
-                        m_logger->debug("文件 {} 已被分割成 {} 份，存入输入缓存。", wide2Ascii(relJsonPath), parts.size());
+                        m_logger->debug(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "文件 %1 已被分割成 %2 份，存入输入缓存。", wide2Ascii(relJsonPath), parts.size()));
                     }
                     catch (const json::exception& e) {
-                        throw std::runtime_error(std::format("分割文件 {} 时出错: {}", wide2Ascii(relJsonPath), e.what()));
+                        throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "分割文件 %1 时出错: %2", wide2Ascii(relJsonPath), e.what()));
                     }
                 }
                 if (reportRuntimeWorkbench) {
@@ -375,7 +375,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             splitFunc(splitJsonArrayNum);
         }
         else if (m_splitFile != "No") {
-            throw std::invalid_argument(std::format("未知的文件分割模式: {}, 请使用 'No', 'Equal', 'Num'", m_splitFile));
+            throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "未知的文件分割模式: %1, 请使用 'No', 'Equal', 'Num'", m_splitFile));
         }
     }
 
@@ -401,7 +401,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
 #endif
     }
     else {
-        throw std::invalid_argument(std::format("未知的排序模式: {}", m_sortMethod));
+        throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "未知的排序模式: %1", m_sortMethod));
     }
 
     // 6. 可选：分析跨文件连续重复块，并将带引用信息的输入统一写入 inputCacheDir。
@@ -418,7 +418,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 filesWithData.emplace_back(relFilePath, std::move(data));
             }
             catch (const json::exception& e) {
-                throw std::runtime_error(std::format("分析连续重复块时读取文件 {} 失败: {}", wide2Ascii(relFilePath), e.what()));
+                throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "分析连续重复块时读取文件 %1 失败: %2", wide2Ascii(relFilePath), e.what()));
             }
         }
 
@@ -433,14 +433,13 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 ofs << data.dump(2);
                 ofs.close();
             }
-            m_logger->info(
-                "连续重复块引用分析完成，阈值 {}，共配置引用 {} 句。",
+            m_logger->info(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "连续重复块引用分析完成，阈值 %1，共配置引用 %2 句。",
                 m_repeatedBlockMinSize,
-                repeatedBlockPlan.refToByTarget.size()
+                repeatedBlockPlan.refToByTarget.size())
             );
         }
         else {
-            m_logger->info("连续重复块引用分析完成，未发现长度不小于 {} 的重复块。", m_repeatedBlockMinSize);
+            m_logger->info(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "连续重复块引用分析完成，未发现长度不小于 %1 的重复块。", m_repeatedBlockMinSize));
         }
     }
 
@@ -494,7 +493,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
 
     // 1. 汇总所有问题概览。
     if (m_problemOverview.as_array().empty()) {
-        m_logger->info("\n\n```\n无问题概览\n```\n");
+        m_logger->info(gppTr("NormalJsonTranslator.normalJsonAfterRun", "\n\n```\n无问题概览\n```\n"));
     }
     else {
         std::ofstream ofs;
@@ -504,7 +503,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
         ofs.open(m_projectDir / L"翻译问题概览.json", std::ios::binary);
         ofs << toml2Json(m_problemOverview).dump(2);
         ofs.close();
-        m_logger->debug("已生成 翻译问题概览.json 和 翻译问题概览.toml 文件");
+        m_logger->debug(gppTr("NormalJsonTranslator.normalJsonAfterRun", "已生成 翻译问题概览.json 和 翻译问题概览.toml 文件"));
 
         absl::btree_map<std::string, absl::flat_hash_set<std::string>> problemMap;
         for (const auto& [problem, filename] : m_problemOverview.as_array()
@@ -522,7 +521,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
             problemMap[problem].insert(filename);
         }
 
-        std::string problemOverviewStr = "\n\n```\n问题概览:\n";
+        std::string problemOverviewStr = gppTr("NormalJsonTranslator.normalJsonAfterRun", "\n\n```\n问题概览:\n");
         size_t problemCount = 0;
         for (const auto& [problem, files] : problemMap) {
             std::string fileStr = "(";
@@ -544,7 +543,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
             }
             problemOverviewStr += std::format("{}. {}  |  {}\n", ++problemCount, problem, fileStr);
         }
-        m_logger->error("{}问题概览结束\n```\n", problemOverviewStr);
+        m_logger->error(problemOverviewStr + gppTr("NormalJsonTranslator.normalJsonAfterRun", "问题概览结束\n```\n"));
     }
 
     // 2. 保存背景文本缓存，供下次运行恢复上下文。
@@ -555,10 +554,10 @@ void NormalJsonTranslator::normalJsonAfterRun()
             std::ofstream ofs(m_backgroundTextCachePath, std::ios::binary);
             ofs << j.dump(2);
             ofs.close();
-            m_logger->debug("背景文本缓存已保存至 {}", wide2Ascii(m_backgroundTextCachePath));
+            m_logger->debug(gppTr("NormalJsonTranslator.normalJsonAfterRun", "背景文本缓存已保存至 %1", wide2Ascii(m_backgroundTextCachePath)));
         }
         catch (...) {
-            m_logger->error("背景文本缓存 {} 保存失败", wide2Ascii(m_backgroundTextCachePath));
+            m_logger->error(gppTr("NormalJsonTranslator.normalJsonAfterRun", "背景文本缓存 %1 保存失败", wide2Ascii(m_backgroundTextCachePath)));
         }
     }
 
@@ -572,8 +571,8 @@ void NormalJsonTranslator::normalJsonAfterRun()
     if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild &&
         m_controller->m_completedSentences != m_controller->m_totalSentences)
     {
-        m_logger->critical("重建过程中有句子未命中缓存 ({}/{} lines)，请检查日志以定位问题。",
-            m_controller->m_completedSentences.load(), m_controller->m_totalSentences.load());
+        m_logger->critical(gppTr("NormalJsonTranslator.normalJsonAfterRun", "重建过程中有句子未命中缓存 (%1/%2 lines)，请检查日志以定位问题。",
+            m_controller->m_completedSentences.load(), m_controller->m_totalSentences.load()));
     }
 }
 
@@ -594,7 +593,7 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
                 }
             }));
     }
-    m_logger->info("已将 {} 个文件任务分配到线程池，等待处理完成...", results.size());
+    m_logger->info(gppTr("NormalJsonTranslator.normalJsonProcessFiles", "已将 %1 个文件任务分配到线程池，等待处理完成...", results.size()));
     waitForThreads(m_threadPool, results);
 }
 
@@ -642,7 +641,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
             }
         }
         catch (const json::exception& e) {
-            throw std::runtime_error(std::format("连续重复块引用回填读取 {} 失败: {}", wide2Ascii(relFilePath), e.what()));
+            throw std::runtime_error(gppTr("NormalJsonTranslator.resolveRepeatedBlockReferences", "连续重复块引用回填读取 %1 失败: %2", wide2Ascii(relFilePath), e.what()));
         }
         fileBundles.emplace(relFilePath, std::move(bundle));
     }
@@ -732,11 +731,11 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
     }
 
     if (missingCount > 0) {
-        m_logger->warn("连续重复块引用回填完成，共复制 {} 句。但还有 {} 句未找到被引用缓存，仅保留占位结果。",
-            resolvedCount, missingCount);
+        m_logger->warn(gppTr("NormalJsonTranslator.resolveRepeatedBlockReferences", "连续重复块引用回填完成，共复制 %1 句。但还有 %2 句未找到被引用缓存，仅保留占位结果。",
+            resolvedCount, missingCount));
     }
     else {
-        m_logger->info("连续重复块引用回填完成，共复制 {} 句。", resolvedCount);
+        m_logger->info(gppTr("NormalJsonTranslator.resolveRepeatedBlockReferences", "连续重复块引用回填完成，共复制 %1 句。", resolvedCount));
     }
 
     if (m_needsCombining) {

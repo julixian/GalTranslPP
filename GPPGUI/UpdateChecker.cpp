@@ -180,7 +180,8 @@ void UpdateChecker::onReplyFinished(QNetworkReply* reply)
         m_statusText->setText(tr("检测到新版本！"));
     }
     if (!m_pendingDownloadRequest) {
-        ElaMessageBar::information(ElaMessageBarType::Top, tr("检测到新版本"), tr("最新版本: ") + m_latestRelease.version, 5000);
+        ElaMessageBar::information(ElaMessageBarType::Top, tr("检测到新版本"),
+            tr("最新版本: %1").arg(m_latestRelease.version), 5000);
     }
 
     maybeStartDownload(m_pendingDownloadRequest || toml::find_or(m_globalConfig, "autoDownloadUpdate", true));

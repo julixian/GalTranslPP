@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #pragma  warning( push ) 
@@ -37,7 +37,7 @@ ProblemAnalyzer::ProblemAnalyzer(const std::unique_ptr<GptDictionary>& gptDictio
 void ProblemAnalyzer::analyze(Sentence* sentence) {
     if (sentence->translated_preview.empty()) {
         if (!sentence->pre_processed_text.empty()) {
-            sentence->problems.push_back("翻译为空");
+            sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "翻译为空"));
         }
         return;
     }
@@ -50,7 +50,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         if (wordCount > 20) {
             const auto [mostWordOrg, wordCountOrg] = getMostCommonChar(origText);
             if (wordCount > (wordCountOrg > 0 ? wordCountOrg * 2 : 20)) {
-                sentence->problems.push_back(std::format("词频过高-'{}'{}次", mostWord, wordCount));
+                sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "词频过高-'%1'%2次", mostWord, wordCount));
             }
         }
     }
@@ -63,8 +63,8 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
             bool orgHas = origText.contains(punctToCheck);
             bool transHas = transView.contains(punctToCheck);
 
-            if (orgHas && !transHas) sentence->problems.push_back("本有 " + punctToCheck + " 符号");
-            if (!orgHas && transHas) sentence->problems.push_back("本无 " + punctToCheck + " 符号");
+            if (orgHas && !transHas) sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "本有 %1 符号", punctToCheck));
+            if (!orgHas && transHas) sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "本无 %1 符号", punctToCheck));
         }
     }
 
@@ -72,7 +72,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
     if (m_problems.remainJp.use) {
         const std::string& transView = chooseStringRef(sentence, m_problems.remainJp.check);
         if (std::string kanas = extractKana(transView); !kanas.empty()) {
-            sentence->problems.push_back("残留日文: " + kanas);
+            sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "残留日文: %1", kanas));
         }
     }
 
@@ -81,7 +81,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         const std::string& origText = chooseStringRef(sentence, m_problems.introLatin.base);
         const std::string& transView = chooseStringRef(sentence, m_problems.introLatin.check);
         if (std::string latins = extractLatin(transView); !latins.empty() && extractLatin(origText).empty()) {
-            sentence->problems.push_back("引入拉丁字母: " + latins);
+            sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入拉丁字母: %1", latins));
         }
     }
 
@@ -90,7 +90,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         const std::string& origText = chooseStringRef(sentence, m_problems.introHangul.base);
         const std::string& transView = chooseStringRef(sentence, m_problems.introHangul.check);
         if (std::string hanguls = extractHangul(transView); !hanguls.empty() && extractHangul(origText).empty()) {
-            sentence->problems.push_back("引入韩文: " + hanguls);
+            sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入韩文: %1", hanguls));
         }
     }
 
@@ -116,7 +116,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                 }
             }
             if (!traditionalGraphemes.empty()) {
-                sentence->problems.push_back("引入繁体字: " + traditionalGraphemes);
+                sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入繁体字: %1", traditionalGraphemes));
             }
         }
     }
@@ -129,7 +129,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
             int origLinebreaks = countSubstring(origText, m_problems.linebreakLost.base == CachePart::OrigText ? sentence->originalLinebreak : "<br>");
             int transLinebreaks = countSubstring(transView, m_problems.linebreakLost.check == CachePart::TransPreview ? sentence->originalLinebreak : "<br>");
             if (origLinebreaks > transLinebreaks) {
-                sentence->problems.push_back(std::format("丢失换行({}/{})", transLinebreaks, origLinebreaks));
+                sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "丢失换行(%1/%2)", transLinebreaks, origLinebreaks));
             }
         }
     }
@@ -140,7 +140,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
             int origLinebreaks = countSubstring(origText, m_problems.linebreakLost.base == CachePart::OrigText ? sentence->originalLinebreak : "<br>");
             int transLinebreaks = countSubstring(transView, m_problems.linebreakLost.check == CachePart::TransPreview ? sentence->originalLinebreak : "<br>");
             if (origLinebreaks < transLinebreaks) {
-                sentence->problems.push_back(std::format("多加换行({}/{})", transLinebreaks, origLinebreaks));
+                sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "多加换行(%1/%2)", transLinebreaks, origLinebreaks));
             }
         }
     }
@@ -153,7 +153,8 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         size_t transViewCharCount = countGraphemes(transView);
         if (transViewCharCount > origTextCharCount && origTextCharCount != 0) {
             sentence->problems.push_back(
-                std::format("比原文严格长 {:.2f} 倍({}/{}字符)", transViewCharCount / (double)origTextCharCount, transViewCharCount, origTextCharCount)
+                gppTr("ProblemAnalyzer.analyze", "比原文严格长 %1 倍(%2/%3字符)",
+                    std::format("{:.2f}", transViewCharCount / (double)origTextCharCount), transViewCharCount, origTextCharCount)
             );
         }
     }
@@ -164,7 +165,8 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         size_t transViewCharCount = countGraphemes(transView);
         if (transViewCharCount > (double)origTextCharCount * 1.3 && origTextCharCount != 0) {
             sentence->problems.push_back(
-                std::format("比原文长 {:.2f} 倍({}/{}字符)", transViewCharCount / (double)origTextCharCount, transViewCharCount, origTextCharCount)
+                gppTr("ProblemAnalyzer.analyze", "比原文长 %1 倍(%2/%3字符)",
+                    std::format("{:.2f}", transViewCharCount / (double)origTextCharCount), transViewCharCount, origTextCharCount)
             );
         }
     }
@@ -212,7 +214,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
             if (transTextLen > 6) {
                 auto results = langIdentifier->FindTopNMostFreqLangs(transTextToCheck, 3);
                 if (results[0].language == chrome_lang_id::NNetLanguageIdentifier::kUnknown && !langSet.empty()) {
-                    sentence->problems.push_back("无法识别的语言");
+                    sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "无法识别的语言"));
                 }
                 for (const auto& result : results) {
                     if (result.language == chrome_lang_id::NNetLanguageIdentifier::kUnknown) {
@@ -223,7 +225,8 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                         continue;
                     }
                     if (result.language != simplifiedTargetLang && !langSet.contains(result.language)) {
-                        sentence->problems.push_back(std::format("引入({}, {:.3f})", result.language, result.probability));
+                        sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入(%1, %2)",
+                            result.language, std::format("{:.3f}", result.probability)));
                     }
                 }
             }
@@ -239,7 +242,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         const std::string& transView = chooseStringRef(sentence, m_problems.invalidChar.check);
         const std::string& unmappedChars = codePageChecker->findUnmappableChars(transView);
         if (!unmappedChars.empty()) {
-            sentence->problems.push_back("非 " + m_codePage + " 字符: " + unmappedChars);
+            sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "非 %1 字符: %2", m_codePage, unmappedChars));
         }
     }
 
@@ -295,7 +298,7 @@ void ProblemAnalyzer::loadProblems(const std::vector<std::string>& problemList, 
             m_codePage = codePage;
         }
         else {
-            throw std::invalid_argument(std::format("未知问题: {}", problem));
+            throw std::invalid_argument(gppTr("ProblemAnalyzer.loadProblems", "未知问题: %1", problem));
         }
     }
 }
@@ -307,10 +310,10 @@ void ProblemAnalyzer::overwriteCompareObj(const std::string& problemKey, const s
             obj.base = chooseCachePart(base);
             obj.check = chooseCachePart(check);
             if (obj.base == CachePart::None) {
-                throw std::invalid_argument(std::format("未知缓存键: {}", base));
+                throw std::invalid_argument(gppTr("ProblemAnalyzer.overwriteCompareObj", "未知缓存键: %1", base));
             }
             if (obj.check == CachePart::None) {
-                throw std::invalid_argument(std::format("未知缓存键: {}", check));
+                throw std::invalid_argument(gppTr("ProblemAnalyzer.overwriteCompareObj", "未知缓存键: %1", check));
             }
         };
 
@@ -354,6 +357,6 @@ void ProblemAnalyzer::overwriteCompareObj(const std::string& problemKey, const s
         saveCachePart(m_problems.invalidChar, base, check);
     }
     else {
-        throw std::invalid_argument(std::format("不支持的问题比较对象覆写: {}", problemKey));
+        throw std::invalid_argument(gppTr("ProblemAnalyzer.overwriteCompareObj", "不支持的问题比较对象覆写: %1", problemKey));
     }
 }

@@ -44,7 +44,6 @@ private:
     toml::ordered_value& m_globalConfig;
 
     QList<GptTabEntry> m_gptTabEntries;
-    QWidget* m_mainWindow = nullptr;
 };
 
 #endif // COMMONGPTDICTPAGE_H

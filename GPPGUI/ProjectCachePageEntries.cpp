@@ -73,7 +73,12 @@ void ProjectCachePage::renderEntries()
     }
 
     m_renderingEntries = false;
-    m_currentFileLabel->setText(m_currentFile.isEmpty() ? tr("未选择缓存文件") : ((m_dirtyFiles.contains(m_currentFile) ? "*" : "") + m_currentFile));
+    if (m_currentFile.isEmpty()) {
+        m_currentFileLabel->setText(tr("未选择缓存文件"));
+    }
+    else {
+        m_currentFileLabel->setText((m_dirtyFiles.contains(m_currentFile) ? "*" : "") + m_currentFile);
+    }
     updateCurrentSummary();
     updateActionStates();
 }
@@ -226,7 +231,7 @@ void ProjectCachePage::deleteEntryRows(QList<int> rows)
     if (m_problemsLoaded) {
         loadProblems();
     }
-    setInfo(tr("已删除 ") + QString::number(deleted) + tr(" 个条目，保存后生效"));
+    setInfo(tr("已删除 %1 个条目，保存后生效").arg(QString::number(deleted)));
 }
 
 QString ProjectCachePage::jsonString(const json& object, const char* key)
@@ -324,14 +329,16 @@ QString ProjectCachePage::entryListText(const json& object, int row) const
     }
     const QString problems = problemString(object, " | ");
     if (!problems.isEmpty()) {
-        header << tr("问题: ") + compactPreview(problems, 120);
+        header << tr("问题: %1").arg(compactPreview(problems, 120));
     }
     const QString engine = entryTranslatedBy(object);
     if (!engine.isEmpty()) {
         header << engine;
     }
-    return header.join("  ·  ")
-        + "\n" + tr("原文: ") + compactPreview(entrySource(object), 220)
-        + "\n" + tr("译文: ") + compactPreview(entryDst(object), 220);
+    QStringList lines;
+    lines << header.join("  ·  ");
+    lines << tr("原文: %1").arg(compactPreview(entrySource(object), 220));
+    lines << tr("译文: %1").arg(compactPreview(entryDst(object), 220));
+    return lines.join("\n");
 }
 

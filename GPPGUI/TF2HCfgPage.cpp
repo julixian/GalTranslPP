@@ -41,8 +41,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     bool reverseConvert = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "是否反向替换", false);
     ElaScrollPageArea* reverseArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* reverseLayout = new QHBoxLayout(reverseArea);
-    ElaDoubleText* reverseText = new ElaDoubleText(reverseArea,
-        tr("反向替换"), 16, tr("关闭为全转半，开启为半转全"), 10, "");
+    ElaDoubleText* reverseText = new ElaDoubleText(tr("反向替换"), 16, tr("关闭为全转半，开启为半转全"), 10, "", reverseArea);
     reverseLayout->addWidget(reverseText);
     reverseLayout->addStretch();
     ElaToggleSwitch* reverseSwitch = new ElaToggleSwitch(reverseArea);

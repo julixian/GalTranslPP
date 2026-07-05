@@ -18,8 +18,8 @@
 
 import Tool;
 
-PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent) :
-    BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig), m_mainWindow(mainWindow)
+PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
+    BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("插件设置"));
     setTitleVisible(false);
@@ -146,7 +146,7 @@ void PluginSettingsPage::setupUi()
                         return;
                     }
 
-                    QString fileName = QFileDialog::getOpenFileName(this, tr("选择自定义文本处理插件"),
+                    QString fileName = QFileDialog::getOpenFileName(window(), tr("选择自定义文本处理插件"),
                         QString::fromStdWString(m_projectDir.wstring()), "custom script (*.lua *.py)");
                     if (!fileName.isEmpty()) {
                         newCustomPluginsArr.push_back(fileName.toStdString());
@@ -169,7 +169,7 @@ void PluginSettingsPage::setupUi()
                     }
                     catch (...) {
                         ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析错误"),
-                            QString::fromStdString(configKey) + tr(" 不符合 toml 规范"), 3000);
+                            tr("%1 不符合 toml 规范").arg(QString::fromStdString(configKey)), 3000);
                     }
                 };
             return saveFunc;

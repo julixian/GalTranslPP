@@ -156,7 +156,7 @@ void ProjectCachePage::loadCacheFile(const QString& filename, bool forceReload)
             return;
         }
         if (!m_entries.is_array()) {
-            setError(tr("缓存文件不是 JSON 数组: ") + filename);
+            setError(tr("缓存文件不是 JSON 数组: %1").arg(filename));
             return;
         }
         m_loadedEntriesByFile[filename] = m_entries;
@@ -188,7 +188,7 @@ bool ProjectCachePage::readCacheFile(const QString& filename, json& entries, QSt
         std::ifstream ifs(cachePathForRelativeName(filename), std::ios::binary);
         if (!ifs.is_open()) {
             if (errorMessage) {
-                *errorMessage = tr("无法打开缓存文件: ") + filename;
+                *errorMessage = tr("无法打开缓存文件: %1").arg(filename);
             }
             return false;
         }
@@ -197,7 +197,7 @@ bool ProjectCachePage::readCacheFile(const QString& filename, json& entries, QSt
     }
     catch (const std::exception& e) {
         if (errorMessage) {
-            *errorMessage = tr("解析缓存失败: ") + filename + "\n" + QString::fromStdString(e.what());
+            *errorMessage = tr("解析缓存失败: %1\n%2").arg(filename).arg(QString::fromStdString(e.what()));
         }
         return false;
     }
@@ -211,7 +211,7 @@ bool ProjectCachePage::writeCacheFile(const QString& filename, const json& entri
         std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
         if (!ofs.is_open()) {
             if (errorMessage) {
-                *errorMessage = tr("无法写入缓存文件: ") + filename;
+                *errorMessage = tr("无法写入缓存文件: %1").arg(filename);
             }
             return false;
         }
@@ -220,7 +220,7 @@ bool ProjectCachePage::writeCacheFile(const QString& filename, const json& entri
     }
     catch (const std::exception& e) {
         if (errorMessage) {
-            *errorMessage = tr("写入缓存失败: ") + filename + "\n" + QString::fromStdString(e.what());
+            *errorMessage = tr("写入缓存失败: %1\n%2").arg(filename).arg(QString::fromStdString(e.what()));
         }
         return false;
     }

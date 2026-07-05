@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #include <toml.hpp>
@@ -21,7 +21,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 {
 	try {
 		if (m_runTime != PluginRunTime::DPost) {
-			m_logger->error("TextLinebreakFix 不支持 {} 阶段运行", pluginRunTimeNames[m_runTime]);
+			m_logger->error(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix 不支持 %1 阶段运行", pluginRunTimeNames[m_runTime]));
 			return;
 		}
 
@@ -52,7 +52,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			m_mode = LinebreakFixMode::NotFix;
 		}
 		else {
-			throw std::invalid_argument(std::format("TextLinebreakFix-{} 无效的换行模式: {}", pluginRunTimeNames[m_runTime], linebreakMode));
+			throw std::invalid_argument(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 无效的换行模式: %2", pluginRunTimeNames[m_runTime], linebreakMode));
 		}
 		m_priorityThreshold = parseToml<double>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.优先阈值");
 		m_segmentThreshold = parseToml<int>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.分段字数阈值");
@@ -66,45 +66,46 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			const std::string tokenizerBackend = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.tokenizerBackend");
 			if (tokenizerBackend == "MeCab") {
 				const std::string mecabDictDir = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.mecabDictDir");
-				m_logger->info("TextLinebreakFix-{} 已配置 MeCab 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]);
+				m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 已配置 MeCab 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]));
 				m_tokenizeTargetLangFunc = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 			}
 			else if (tokenizerBackend == "spaCy") {
 				const std::string spaCyModelName = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.spaCyModelName");
-				m_logger->info("TextLinebreakFix-{} 已配置 spaCy 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]);
+				m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 已配置 spaCy 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]));
 				m_tokenizeTargetLangFunc = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
 			}
 			else if (tokenizerBackend == "Stanza") {
 				const std::string stanzaLang = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.stanzaLang");
-				m_logger->info("TextLinebreakFix-{} 已配置 Stanza 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]);
+				m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 已配置 Stanza 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]));
 				m_tokenizeTargetLangFunc = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
 			}
 			else if (tokenizerBackend == "pkuseg") {
-				m_logger->info("TextLinebreakFix-{} 已配置 pkuseg 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]);
+				m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 已配置 pkuseg 分词器，首次使用时加载。", pluginRunTimeNames[m_runTime]));
 				m_tokenizeTargetLangFunc = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
 			}
 			else {
-				throw std::invalid_argument(std::format("TextLinebreakFix-{} 无效的 tokenizerBackend: {}", pluginRunTimeNames[m_runTime], tokenizerBackend));
+				throw std::invalid_argument(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 无效的 tokenizerBackend: %2", pluginRunTimeNames[m_runTime], tokenizerBackend));
 			}
 		}
 
 		if (m_segmentThreshold <= 0) {
-			throw std::runtime_error(std::format("TextLinebreakFix-{} 分段字数阈值必须大于0", pluginRunTimeNames[m_runTime]));
+			throw std::runtime_error(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 分段字数阈值必须大于0", pluginRunTimeNames[m_runTime]));
 		}
 		if (m_errorThreshold <= 0) {
-			throw std::runtime_error(std::format("TextLinebreakFix-{} 报错阈值必须大于0", pluginRunTimeNames[m_runTime]));
+			throw std::runtime_error(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 报错阈值必须大于0", pluginRunTimeNames[m_runTime]));
 		}
 
 		m_excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖" };
 
-		m_logger->info("已加载插件 TextLinebreakFix-{}, 换行模式: {}, 优先阈值 {:.3f}, 分段字数阈值: {}, 强制修复: {}, 报错阈值: {}",
-			pluginRunTimeNames[m_runTime], linebreakMode, m_priorityThreshold, m_segmentThreshold, m_forceFix, m_errorThreshold);
+		m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "已加载插件 TextLinebreakFix-%1, 换行模式: %2, 优先阈值 %3, 分段字数阈值: %4, 强制修复: %5, 报错阈值: %6",
+			pluginRunTimeNames[m_runTime], linebreakMode, std::format("{:.3f}", m_priorityThreshold),
+			m_segmentThreshold, m_forceFix ? "true" : "false", m_errorThreshold));
 		if (m_useTokenizer) {
-			m_logger->info("插件 TextLinebreakFix-{} 分词器已启用", pluginRunTimeNames[m_runTime]);
+			m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "插件 TextLinebreakFix-%1 分词器已启用", pluginRunTimeNames[m_runTime]));
 		}
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(std::format("TextLinebreakFix-{} 插件配置文件解析错误: {}", pluginRunTimeNames[m_runTime], e.what()));
+        throw std::runtime_error(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix-%1 插件配置文件解析错误: %2", pluginRunTimeNames[m_runTime], e.what()));
     }
 }
 
@@ -148,7 +149,7 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 					| std::views::enumerate)
 				{
 					if (size_t charCount = countGraphemes(newLineView); charCount > m_errorThreshold) {
-						se->problems.push_back(std::format("第 {} 行字数超出报错阈值[{}/{}]", index + 1, charCount, m_errorThreshold));
+						se->problems.push_back(gppTr("TextLinebreakFix.checkLineLength", "第 %1 行字数超出报错阈值[%2/%3]", index + 1, charCount, m_errorThreshold));
 					}
 				}
 			}
@@ -162,7 +163,7 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 		return;
 	}
 
-	m_logger->debug("需要修复换行的句子[{}]: 原文 {} 行, 译文 {} 行", se->translated_preview, origLinebreakCount + 1, transLinebreakCount + 1);
+	m_logger->debug(gppTr("TextLinebreakFix.fixLinebreak", "需要修复换行的句子[%1]: 原文 %2 行, 译文 %3 行", se->translated_preview, origLinebreakCount + 1, transLinebreakCount + 1));
 
 	std::string origTransPreview = se->translated_preview;
 	std::string transViewToModify = se->translated_preview;
@@ -171,8 +172,8 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 			transViewToModify += se->originalLinebreak;
 		}
 		se->translated_preview = std::move(transViewToModify);
-		se->other_info.insert({ "换行修复", std::format("原文 {} 行, 译文 {} 行, 修正后 {} 行", origLinebreakCount + 1, transLinebreakCount + 1, transLinebreakCount + 1) });
-		m_logger->debug("译文[{}]({}行) -> 修正后译文[{}]({}行)", origTransPreview, origLinebreakCount + 1, se->translated_preview, transLinebreakCount + 1);
+		se->other_info.insert({ gppTr("TextLinebreakFix.fixLinebreak", "换行修复"), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行", origLinebreakCount + 1, transLinebreakCount + 1, transLinebreakCount + 1) });
+		m_logger->debug(gppTr("TextLinebreakFix.fixLinebreak", "译文[%1](%2行) -> 修正后译文[%3](%4行)", origTransPreview, origLinebreakCount + 1, se->translated_preview, transLinebreakCount + 1));
 		return;
 	}
 	replaceStrInplace(transViewToModify, se->originalLinebreak, "");
@@ -399,13 +400,13 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 				{
 					return acc + "[" + token + "]";
 				});
-			se->other_info.insert({ "译文分词结果", std::move(tokensStr) });
+			se->other_info.insert({ gppTr("TextLinebreakFix.fixLinebreak", "译文分词结果"), std::move(tokensStr) });
 		}
 	}
 	break;
 
 	default:
-		throw std::invalid_argument("无效的 TextLinebreakFix 模式");
+		throw std::invalid_argument(gppTr("TextLinebreakFix.fixLinebreak", "无效的 TextLinebreakFix 模式"));
 
 	}
 
@@ -413,6 +414,6 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 	checkLineCharCountFunc(se->translated_preview);
 
 	const int newLinebreakCount = countSubstring(se->translated_preview, se->originalLinebreak);
-	se->other_info.insert({ "换行修复", std::format("原文 {} 行, 译文 {} 行, 修正后 {} 行", origLinebreakCount + 1, transLinebreakCount + 1, newLinebreakCount + 1) });
-	m_logger->debug("句子[{}]({}行) -> 修正后译文[{}]({}行)", origTransPreview, transLinebreakCount + 1, se->translated_preview, newLinebreakCount + 1);
+	se->other_info.insert({ gppTr("TextLinebreakFix.fixLinebreak", "换行修复"), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行", origLinebreakCount + 1, transLinebreakCount + 1, newLinebreakCount + 1) });
+	m_logger->debug(gppTr("TextLinebreakFix.fixLinebreak", "句子[%1](%2行) -> 修正后译文[%3](%4行)", origTransPreview, transLinebreakCount + 1, se->translated_preview, newLinebreakCount + 1));
 }

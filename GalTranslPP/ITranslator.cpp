@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -170,7 +170,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
 {
     const fs::path configFilePath = projectDir / L"config.toml";
     if (!fs::exists(configFilePath)) {
-        throw std::runtime_error("Config file not found");
+        throw std::runtime_error(gppTr("createTranslator", "找不到配置文件"));
     }
     const auto configData = toml::uparse(configFilePath);
 
@@ -199,7 +199,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         logLevel = spdlog::level::critical;
     }
     else {
-        throw std::runtime_error("Invalid log level");
+        throw std::runtime_error(gppTr("createTranslator", "无效的日志等级"));
     }
 
     constexpr size_t LOG_FILE_MAX_SIZE_DEFAULT = 1024 * 1024 * 10;
@@ -232,7 +232,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         logger->flush_on(spdlog::level::debug);
     }
     logger->set_pattern("[%H:%M:%S.%e %^%l%$] %v");
-    logger->info("Logger initialized.");
+    logger->info(gppTr("createTranslator", "日志器初始化完成。"));
     // 日志配置结束
 
     const std::string filePluginLower = str2Lower(filePlugin);
@@ -255,7 +255,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
             return translator;
         }
         else {
-            throw std::runtime_error("Invalid base class name: " + baseClassName);
+            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1", baseClassName));
         }
     }
     else if (filePluginLower.ends_with(".py")) {
@@ -277,7 +277,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
             return translator;
         }
         else {
-            throw std::runtime_error("Invalid base class name: " + baseClassName);
+            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1", baseClassName));
         }
     }
     else if (filePlugin == "NormalJson") {

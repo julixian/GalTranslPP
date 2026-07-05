@@ -622,7 +622,7 @@ void TranslationWorkbenchPage::refreshHeader()
         problems += file.problems;
     }
     const QString stage = m_stage.isEmpty() ? tr("空闲") : m_stage;
-    const QString current = m_currentFile.isEmpty() ? QString() : tr(" · 当前文件: ") + m_currentFile;
+    const QString current = m_currentFile.isEmpty() ? QString() : tr(" · 当前文件: %1").arg(m_currentFile);
     m_summaryText->setText(tr("%1%2 · %3/%4 句 · %5 问题 · %6 成功事件 · %7 错误")
         .arg(stage, current)
         .arg(completed).arg(total).arg(problems).arg(m_successTotal).arg(m_errorTotal));
@@ -631,7 +631,7 @@ void TranslationWorkbenchPage::refreshHeader()
         m_clearFilterButton->setVisible(false);
     }
     else {
-        m_filterText->setText(tr("已筛选文件: ") + QStringList(m_successFileFilters.values()).join(", "));
+        m_filterText->setText(tr("已筛选文件: %1").arg(QStringList(m_successFileFilters.values()).join(", ")));
         m_clearFilterButton->setVisible(true);
     }
     m_errorsTabButton->setText(m_errorTotal <= 0 ? tr("最近错误") : tr("最近错误 (%1)").arg(m_errorTotal));

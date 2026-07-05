@@ -154,7 +154,8 @@ void DictSettingsPage::setupUi()
 			{
 				plainTextEdit->setPlainText(readPlainTextFunc());
 				dictModel->loadData(readEntriesFunc());
-				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("重新载入了 ") + tabName, 3000);
+				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
+					tr("重新载入了 %1").arg(tabName), 3000);
 			};
 		auto saveDictFunc = [=](bool forceSaveInTableModeToInit)
 			{
@@ -239,7 +240,7 @@ void DictSettingsPage::setupUi()
 				else {
 					filter = "TOML files (*.toml);;JSON files (*.json)";
 				}
-				QString dictPathStr = QFileDialog::getOpenFileName(this, tr("选择字典文件"),
+				QString dictPathStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 					QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectDictPath", wide2Ascii(m_projectDir))), filter);
 				if (dictPathStr.isEmpty()) {
 					return;
@@ -259,8 +260,10 @@ void DictSettingsPage::setupUi()
 				}
 				dictModel->loadData(entries);
 				saveDictFunc(true);
-				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("导入成功"), tr("从文件 ") +
-					QString::fromStdWString(importDictPath.filename().wstring()) + tr(" 中导入了 ") + QString::number(entries.size()) + tr(" 个词条"), 3000);
+				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("导入成功"),
+					tr("从文件 %1 中导入了 %2 个词条")
+					.arg(QString::fromStdWString(importDictPath.filename().wstring()))
+					.arg(QString::number(entries.size())), 3000);
 			});
 		connect(plainTextModeButtom, &ElaPushButton::clicked, this, [=]()
 			{
@@ -284,7 +287,8 @@ void DictSettingsPage::setupUi()
 		connect(saveDictButton, &ElaPushButton::clicked, this, [=]()
 			{
 				saveDictFunc(false);
-				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tabName + tr(" 已保存"), 3000);
+				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
+					tr("%1 已保存").arg(tabName), 3000);
 			});
 		connect(addDictButton, &ElaPushButton::clicked, this, [=]()
 			{

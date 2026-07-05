@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #include <toml.hpp>
@@ -514,7 +514,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     break;
 
     default:
-        throw std::runtime_error("未知的 PromptType");
+        throw std::runtime_error(gppTr("buildContextHistory", "未知的 PromptType"));
     }
 
     return truncateUtf8Suffix(history, maxChars);
@@ -586,7 +586,7 @@ void fillBlockAndMap(
     break;
 
     default:
-        throw std::runtime_error("不支持的 TransEngine 用于构建输入");
+        throw std::runtime_error(gppTr("fillBlockAndMap", "不支持的 TransEngine 用于构建输入"));
     }
 }
 
@@ -762,7 +762,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
     break;
 
     default:
-        throw std::runtime_error("不支持的 TransEngine 用于解析输出");
+        throw std::runtime_error(gppTr("parseContent", "不支持的 TransEngine 用于解析输出"));
     }
 
     if (retransAllWhenFail && parsedCount != batchToTransThisRound.size()) {
@@ -781,7 +781,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
     ordered_json combinedJson = ordered_json::array();
 
     std::ifstream ifs;
-    logger->debug("开始合并文件: {}", wide2Ascii(originalRelFilePath));
+    logger->debug(gppTr("combineOutputFiles", "开始合并文件: %1", wide2Ascii(originalRelFilePath)));
 
     std::vector<fs::path> partPaths = splitFileParts | std::views::keys | std::ranges::to<std::vector>();
 
@@ -800,11 +800,11 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
             }
             catch (const json::exception& e) {
                 ifs.close();
-                throw std::runtime_error(std::format("合并文件 {} 时出错: {}", wide2Ascii(partPath), e.what()));
+                throw std::runtime_error(gppTr("combineOutputFiles", "合并文件 %1 时出错: %2", wide2Ascii(partPath), e.what()));
             }
         }
         else {
-            throw std::runtime_error(std::format("试图合并 {} 时出错，缺少文件 {}", wide2Ascii(originalRelFilePath), wide2Ascii(partPath)));
+            throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 %1 时出错，缺少文件 %2", wide2Ascii(originalRelFilePath), wide2Ascii(partPath)));
         }
     }
 
@@ -813,7 +813,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
     std::ofstream ofs(finalOutputPath, std::ios::binary);
     ofs << combinedJson.dump(2);
     ofs.close();
-    logger->info("文件 {} 合并完成，已保存到 {}", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath));
+    logger->info(gppTr("combineOutputFiles", "文件 %1 合并完成，已保存到 %2", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath)));
 }
 
 
@@ -956,7 +956,7 @@ json toml2Json(const toml::value& value) {
     else if (value.is_boolean()) {
         return value.as_boolean();
     }
-    throw std::runtime_error("不支持的 TOML 数据类型");
+    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型"));
 }
 
 ordered_json toml2Json(const toml::ordered_value& value) {
@@ -986,5 +986,5 @@ ordered_json toml2Json(const toml::ordered_value& value) {
     else if (value.is_boolean()) {
         return value.as_boolean();
     }
-    throw std::runtime_error("不支持的 TOML 数据类型");
+    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型"));
 }

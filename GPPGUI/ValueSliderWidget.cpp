@@ -4,7 +4,7 @@
 #include "ElaSlider.h"
 #include "ElaDoubleSpinBox.h"
 
-ValueSliderWidget::ValueSliderWidget(QWidget* parent, double minValue, double maxValue)
+ValueSliderWidget::ValueSliderWidget(double minValue, double maxValue, QWidget* parent)
     : QWidget(parent), m_minValue(minValue), m_maxValue(maxValue)
 {
     // 1. 创建子控件

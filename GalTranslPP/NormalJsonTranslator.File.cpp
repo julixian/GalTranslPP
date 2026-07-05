@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -28,9 +28,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         return;
     }
     if (shouldReportRuntimeWorkbench()) {
-        m_controller->setRuntimeStage("处理文件", wide2Ascii(relInputPath));
+        m_controller->setRuntimeStage(gppTr("NormalJsonTranslator.processFile", "处理文件"), wide2Ascii(relInputPath));
     }
-    m_logger->debug("[线程 {}] 开始处理文件: {}", threadId, wide2Ascii(relInputPath));
+    m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] 开始处理文件: %2", threadId, wide2Ascii(relInputPath)));
 
     std::ifstream ifs;
     const fs::path inputPath = (m_needsCombining || m_useRepeatedBlockInputCache)
@@ -76,7 +76,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         }
     }
     catch (const json::exception& e) {
-        throw std::runtime_error(std::format("[线程 {}] [文件 {}] 解析失败: {}", threadId, wide2Ascii(relInputPath), e.what()));
+        throw std::runtime_error(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 解析失败: %3", threadId, wide2Ascii(relInputPath), e.what()));
     }
 
     // 2. ShowNormal 模式只输出预处理后的结构，不进入后续翻译链。
@@ -171,10 +171,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     insertJsonArrToCacheMap(jsonArr);
                 }
                 catch (const json::exception& e) {
-                    throw std::runtime_error(std::format(
-                        "[线程 {}] 缓存文件 {} 解析失败: {}",
-                        threadId, wide2Ascii(fs::relative(potentialCachePath, m_transCacheDir)), e.what()
-                    ));
+                    throw std::runtime_error(gppTr("NormalJsonTranslator.processFile", "[线程 %1] 缓存文件 %2 解析失败: %3",
+                        threadId, wide2Ascii(fs::relative(potentialCachePath, m_transCacheDir)), e.what()));
                 }
             };
 
@@ -249,7 +247,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     totalCacheJsonList.insert(totalCacheJsonList.end(), cacheJsonList.begin(), cacheJsonList.end());
                 }
                 catch (const json::exception& e) {
-                    throw std::runtime_error(std::format("[线程 {}] 缓存文件 {} 解析失败: {}", threadId, wide2Ascii(cp), e.what()));
+                    throw std::runtime_error(gppTr("NormalJsonTranslator.processFile", "[线程 %1] 缓存文件 %2 解析失败: %3", threadId, wide2Ascii(cp), e.what()));
                 }
             }
             insertJsonArrToCacheMap(totalCacheJsonList);
@@ -296,9 +294,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         }
 
         if (!toTranslate.empty()) {
-            m_logger->info(
-                "[线程 {}] [文件 {}] 共 {} 句，命中缓存/跳过 {} 句，需翻译 {} 句。",
-                threadId, wide2Ascii(relInputPath), sentences.size(), sentences.size() - toTranslate.size(), toTranslate.size()
+            m_logger->info(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句。",
+                threadId, wide2Ascii(relInputPath), sentences.size(), sentences.size() - toTranslate.size(), toTranslate.size())
             );
         }
 
@@ -307,9 +304,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 | std::views::transform([](const auto& se) { return se->original_text; })
                 | std::views::join_with('\n')
                 | std::ranges::to<std::string>();
-            m_logger->critical(
-                "[线程 {}] [文件 {}] 有 {} 句未命中缓存，这些句子是: {}",
-                threadId, wide2Ascii(relInputPath), toTranslate.size(), notFoundSentences
+            m_logger->critical(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4",
+                threadId, wide2Ascii(relInputPath), toTranslate.size(), notFoundSentences)
             );
             saveCache(sentences, cachePath);
             std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
@@ -347,7 +343,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     std::lock_guard<std::shared_mutex> lock(m_backgroundTextCacheMapMutex);
                     m_backgroundTextCacheMap[filePathWithHash] = backgroundText;
                 }
-                m_logger->debug("[线程 {}] [文件 {}] 已停止翻译", threadId, wide2Ascii(relInputPath));
+                m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 已停止翻译", threadId, wide2Ascii(relInputPath)));
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
                 saveRebuildProblemOverviewFunc();
@@ -368,7 +364,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
 
             if (++batchCount % m_saveCacheInterval == 0) {
-                m_logger->debug("[线程 {}] [文件 {}] 达到保存间隔，正在更新缓存文件...", threadId, wide2Ascii(relInputPath));
+                m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...", threadId, wide2Ascii(relInputPath)));
                 std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
                 saveCache(sentences, cachePath);
             }
@@ -381,7 +377,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     // 6. 最终保存缓存与问题概览。
     {
         std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
-        m_logger->debug("[线程 {}] [文件 {}] 翻译完成，正在进行最终保存...", threadId, wide2Ascii(relInputPath));
+        m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 翻译完成，正在进行最终保存...", threadId, wide2Ascii(relInputPath)));
         saveCache(sentences, cachePath);
         saveRebuildProblemOverviewFunc();
     }
@@ -405,10 +401,10 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     ofs << jSentences.dump(2);
     ofs.close();
 
-    m_logger->info("[线程 {}] [文件 {}] 处理完成。", threadId, wide2Ascii(relInputPath));
+    m_logger->info(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 处理完成。", threadId, wide2Ascii(relInputPath)));
 
     if (m_useRepeatedBlockInputCache) {
-        m_logger->debug("[线程 {}] [文件 {}] 连续重复块引用模式启用，延后最终输出回填与文件回调。", threadId, wide2Ascii(relInputPath));
+        m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 连续重复块引用模式启用，延后最终输出回填与文件回调。", threadId, wide2Ascii(relInputPath)));
         return;
     }
 
@@ -420,10 +416,10 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             std::lock_guard<std::mutex> lock(m_outputMutex);
             splitFileParts[relInputPath] = true;
             if (std::ranges::any_of(splitFileParts, [](const auto& p) { return !p.second; })) {
-                m_logger->debug("文件 {} 尚未全部处理完成，跳过合并。", wide2Ascii(originalRelFilePath));
+                m_logger->debug(gppTr("NormalJsonTranslator.processFile", "文件 %1 尚未全部处理完成，跳过合并。", wide2Ascii(originalRelFilePath)));
                 return;
             }
-            m_logger->debug("开始合并 {} 的缓存文件...", wide2Ascii(originalRelFilePath));
+            m_logger->debug(gppTr("NormalJsonTranslator.processFile", "开始合并 %1 的缓存文件...", wide2Ascii(originalRelFilePath)));
         }
         combineOutputFiles(originalRelFilePath, splitFileParts, m_outputCacheDir, m_outputDir, m_logger);
         if (m_onFileProcessed) {
@@ -433,7 +429,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
             m_onFileProcessed(originalRelFilePath);
         }
-        m_logger->debug("[线程 {}] [文件 {}] 合并处理完成。", threadId, wide2Ascii(originalRelFilePath));
+        m_logger->debug(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 合并处理完成。", threadId, wide2Ascii(originalRelFilePath)));
     }
     else if (m_onFileProcessed) {
         std::unique_lock<std::mutex> lock(m_outputMutex, std::defer_lock);

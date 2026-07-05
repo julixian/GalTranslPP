@@ -160,7 +160,8 @@ void DefaultPromptPage::setupUi()
 					std::ofstream ofs(defaultPromptPath, std::ios::binary);
 					ofs << m_promptConfig;
 					ofs.close();
-					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("默认 ") + promptName + tr(" 提示词配置已保存。"), 3000);
+					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
+						tr("默认 %1 提示词配置已保存。").arg(promptName), 3000);
 				});
 			tabWidget->addTab(promptWidget, promptName);
 

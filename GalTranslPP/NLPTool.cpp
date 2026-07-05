@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
@@ -46,7 +46,7 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
         {
             return runLazyTokenizer(state, text, [&]() -> std::function<NLPResult(const std::string&)>
                 {
-                    logger->info("正在检查 MeCab 环境...");
+                    logger->info(gppTr("NLPTool.getMeCabTokenizeFunc", "正在检查 MeCab 环境..."));
                     char* argv[] = {
                         (char*)"mecab",
                         (char*)"-r",
@@ -58,15 +58,15 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
                         MeCab::Model::create(std::size(argv), argv)
                     );
                     if (!mecabModel) {
-                        throw std::runtime_error(std::format("无法初始化 MeCab Model。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在\n错误信息: {}",
+                        throw std::runtime_error(gppTr("NLPTool.getMeCabTokenizeFunc", "无法初始化 MeCab Model。请确保 BaseConfig/mecabDict/mecabrc 和 %1 存在\n错误信息: %2",
                             mecabDictDir, MeCab::getLastError()));
                     }
                     const auto mecabTagger = std::shared_ptr<MeCab::Tagger>(mecabModel->createTagger());
                     if (!mecabTagger) {
-                        throw std::runtime_error(std::format("无法初始化 MeCab Tagger。请确保 BaseConfig/mecabDict/mecabrc 和 {} 存在\n错误信息: {}",
+                        throw std::runtime_error(gppTr("NLPTool.getMeCabTokenizeFunc", "无法初始化 MeCab Tagger。请确保 BaseConfig/mecabDict/mecabrc 和 %1 存在\n错误信息: %2",
                             mecabDictDir, MeCab::getLastError()));
                     }
-                    logger->info("MeCab 环境检查完毕。");
+                    logger->info(gppTr("NLPTool.getMeCabTokenizeFunc", "MeCab 环境检查完毕。"));
 
                     return [mecabModel, mecabTagger](const std::string& inputText) -> NLPResult
                         {
@@ -75,7 +75,7 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
                             const std::unique_ptr<MeCab::Lattice> lattice(mecabModel->createLattice());
                             lattice->set_sentence(inputText.c_str());
                             if (!mecabTagger->parse(lattice.get())) {
-                                throw std::runtime_error(std::format("分词器解析失败，错误信息: {}", MeCab::getLastError()));
+                                throw std::runtime_error(gppTr("NLPTool.getMeCabTokenizeFunc", "分词器解析失败，错误信息: %1", MeCab::getLastError()));
                             }
                             for (const MeCab::Node* node = lattice->bos_node(); node; node = node->next) {
                                 if (node->stat == MECAB_BOS_NODE || node->stat == MECAB_EOS_NODE) continue;
@@ -108,7 +108,7 @@ std::function<NLPResult(const std::string&)> getNLPTokenizeFunc(const std::vecto
                     std::shared_ptr<py::object> pythonNLPFunc = PythonMainInterpreterManager::getInstance()
                         .registerNLPFunction(moduleName, modelName, logger, initNeedReboot);
                     if (initNeedReboot) {
-                        throw std::runtime_error("需要重启程序以应用新安装的 NLP 模型");
+                        throw std::runtime_error(gppTr("NLPTool.getNLPTokenizeFunc", "需要重启程序以应用新安装的 NLP 模型"));
                     }
 
                     std::function<NLPResult(const std::string&)> ret;
@@ -122,7 +122,7 @@ std::function<NLPResult(const std::string&)> getNLPTokenizeFunc(const std::vecto
                                             result = (*pythonNLPFunc)(inputText).cast<NLPResult>();
                                         }
                                         catch (const py::error_already_set& e) {
-                                            throw std::runtime_error(std::format("Python NLP 函数调用失败，错误信息: {}", e.what()));
+                                            throw std::runtime_error(gppTr("NLPTool.getNLPTokenizeFunc", "Python NLP 函数调用失败，错误信息: %1", e.what()));
                                         }
                                     };
                                 PythonMainInterpreterManager::getInstance().submitTask(std::move(nlpTaskFunc)).get();

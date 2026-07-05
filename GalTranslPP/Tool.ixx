@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #ifdef _WIN32
@@ -222,7 +222,7 @@ export
             keys.empty() ||
             std::ranges::any_of(keys, [](const std::string& key) { return key.empty(); })
             ) {
-            throw std::runtime_error("Invalid TOML path: " + path);
+            throw std::runtime_error(gppTr("parseToml", "无效的 TOML 路径: %1", path));
         }
         if (auto pValue = findValueByPath(config, keys)) {
             return toml::get<T>(*pValue);
@@ -230,7 +230,7 @@ export
         if (auto pValue = findValueByPath(backup, keys)) {
             return toml::get<T>(*pValue);
         }
-        throw std::runtime_error("Failed to find value in TOML: " + path);
+        throw std::runtime_error(gppTr("parseToml", "无法在 TOML 中找到值: %1", path));
     }
 
     template<typename T, typename TC>

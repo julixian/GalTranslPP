@@ -79,8 +79,7 @@ void PASettingsPage::setupUi()
 	QString punctuationSetStr = QString::fromStdString(punctuationSet);
 	ElaScrollPageArea* punctuationListArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* punctuationListLayout = new QHBoxLayout(punctuationListArea);
-	ElaDoubleText* punctuationListTitle = new ElaDoubleText(punctuationListArea,
-		tr("标点查错"), 16, tr("规定标点错漏要查哪些标点"), 10, "");
+	ElaDoubleText* punctuationListTitle = new ElaDoubleText(tr("标点查错"), 16, tr("规定标点错漏要查哪些标点"), 10, "", punctuationListArea);
 	punctuationListLayout->addWidget(punctuationListTitle);
 	punctuationListLayout->addStretch();
 	ElaLineEdit* punctuationList = new ElaLineEdit(punctuationListArea);
@@ -92,11 +91,10 @@ void PASettingsPage::setupUi()
 	double languageProbability = toml::find_or(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
 	ElaScrollPageArea* languageProbabilityArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* languageProbabilityLayout = new QHBoxLayout(languageProbabilityArea);
-	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(languageProbabilityArea,
-		tr("语言置信度"), 16, tr("语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然"), 10, "");
+	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(tr("语言置信度"), 16, tr("语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然"), 10, "", languageProbabilityArea);
 	languageProbabilityLayout->addWidget(languageProbabilityTitle);
 	languageProbabilityLayout->addStretch();
-	ValueSliderWidget* languageProbabilitySlider = new ValueSliderWidget(languageProbabilityArea);
+	ValueSliderWidget* languageProbabilitySlider = new ValueSliderWidget(0.0, 1.0, languageProbabilityArea);
 	languageProbabilitySlider->setFixedWidth(500);
 	languageProbabilitySlider->setValue(languageProbability);
 	languageProbabilityLayout->addWidget(languageProbabilitySlider);
@@ -106,8 +104,7 @@ void PASettingsPage::setupUi()
 	const std::string codePage = toml::find_or(m_projectConfig, "problemAnalyze", "codePage", "gbk");
 	ElaScrollPageArea* codePageArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* codePageLayout = new QHBoxLayout(codePageArea);
-	ElaDoubleText* codePageTitle = new ElaDoubleText(codePageArea,
-		tr("字符集"), 16, tr("非法字符要检查的字符集"), 10, "");
+	ElaDoubleText* codePageTitle = new ElaDoubleText(tr("字符集"), 16, tr("非法字符要检查的字符集"), 10, "", codePageArea);
 	codePageLayout->addWidget(codePageTitle);
 	codePageLayout->addStretch();
 	ElaLineEdit* codePageEdit = new ElaLineEdit(codePageArea);
@@ -169,7 +166,8 @@ void PASettingsPage::setupUi()
 						}
 					}
 					catch (...) {
-						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析错误"), QString::fromStdString(configKey) + tr(" 不符合 toml 规范"), 3000);
+						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析错误"),
+							tr("%1 不符合 toml 规范").arg(QString::fromStdString(configKey)), 3000);
 					}
 				};
 			return saveFunc;

@@ -26,7 +26,6 @@ private:
     toml::ordered_value& m_globalConfig;
 
     QList<NormalTabEntry> m_normalTabEntries;
-    QWidget* m_mainWindow = nullptr;
 
     std::string m_mode;
     std::string m_modeConfigKey;

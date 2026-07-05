@@ -101,11 +101,11 @@ MainWindow::MainWindow(QWidget* parent)
                 !(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false)) &&
                 std::ranges::any_of(m_projectPages, [](const auto& page)
                     {
-                        if (page->getIsRunning()) {
-                            ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("警告"),
-                                tr("项目 ") + page->getProjectName() + tr(" 仍在运行，请先停止运行！"), 3000);
-                            return true;
-                        }
+						if (page->getIsRunning()) {
+							ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("警告"),
+								tr("项目 %1 仍在运行，请先停止运行！").arg(page->getProjectName()), 3000);
+							return true;
+						}
                         return false;
                     })
                 )
@@ -373,7 +373,7 @@ void MainWindow::onNewProjectTriggered()
     insertToml(m_globalConfig, "lastProjectPath", parentPath.toStdString());
 
     QString projectName;
-    ElaInputDialog inputDialog(this, tr("请输入项目名称"), tr("新建项目"), projectName);
+    ElaInputDialog inputDialog(tr("请输入项目名称"), tr("新建项目"), projectName, this);
     if (inputDialog.exec() != QDialog::Accepted) {
         return;
     }
@@ -515,9 +515,10 @@ void MainWindow::onOpenProjectTriggered()
     ProjectSettingsPage* newPage = createProjectSettingsPage(projectDir);
     this->navigation(newPage->property("ElaPageKey").toString());
 
-    const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring()));
-    QDesktopServices::openUrl(dirUrl);
-    ElaMessageBar::success(ElaMessageBarType::TopRight, tr("打开成功"), newPage->getProjectName() + tr(" 已纳入项目管理！"), 3000);
+	const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring()));
+	QDesktopServices::openUrl(dirUrl);
+	ElaMessageBar::success(ElaMessageBarType::TopRight, tr("打开成功"),
+		tr("%1 已纳入项目管理！").arg(newPage->getProjectName()), 3000);
 }
 
 void MainWindow::onRemoveProjectTriggered()
@@ -567,10 +568,10 @@ void MainWindow::onRemoveProjectTriggered()
             else {
                 this->navigation(m_projectPages.back()->property("ElaPageKey").toString());
             }
-        }
-        ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移除成功"),
-            tr("项目 ") + projectName + tr(" 已从项目管理中移除！"), 3000);
-    }
+		}
+		ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移除成功"),
+			tr("项目 %1 已从项目管理中移除！").arg(projectName), 3000);
+	}
 }
 
 void MainWindow::onDeleteProjectTriggered()
@@ -627,10 +628,10 @@ void MainWindow::onDeleteProjectTriggered()
             else {
                 this->navigation(m_projectPages.back()->property("ElaPageKey").toString());
             }
-        }
-        ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"),
-            tr("项目 ") + projectName + tr(" 已从项目管理和磁盘中移除！"), 3000);
-    }
+		}
+		ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"),
+			tr("项目 %1 已从项目管理和磁盘中移除！").arg(projectName), 3000);
+	}
 }
 
 void MainWindow::onSaveProjectTriggered()
@@ -645,9 +646,9 @@ void MainWindow::onSaveProjectTriggered()
         return;
     }
 
-    it->get()->apply2Config();
-    ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
-        tr("项目 ") + it->get()->getProjectName() + tr(" 配置信息已保存！"), 3000);
+	it->get()->apply2Config();
+	ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
+		tr("项目 %1 配置信息已保存！").arg(it->get()->getProjectName()), 3000);
 }
 
 void MainWindow::onFinishTranslating(const QString& nodeKey)

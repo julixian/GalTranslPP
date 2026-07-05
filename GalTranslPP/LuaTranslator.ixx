@@ -1,4 +1,4 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 #include <sol/sol.hpp>
@@ -27,12 +27,12 @@ export
 	public:
 		virtual void run() override
 		{
-			this->m_logger->info("开始运行 LuaTranslator...");
+			this->m_logger->info(gppTr("LuaTranslator.run", "开始运行 LuaTranslator..."));
 			try {
 				(*m_luaRunFunc)();
 			}
 			catch (const sol::error& e) {
-				throw std::runtime_error(std::format("LuaTranslator 运行时异常: {}", e.what()));
+				throw std::runtime_error(gppTr("LuaTranslator.run", "LuaTranslator 运行时异常: %1", e.what()));
 			}
 		}
 
@@ -45,11 +45,11 @@ export
 			// m_outputDir = L"cache" / projectDir.filename() / (ascii2Wide(m_translatorName) + L"_json_output");
 			std::optional<std::shared_ptr<LuaStateInstance>> luaStateOpt = this->m_luaManager->registerFunction(m_scriptPath, "init");
 			if (!luaStateOpt.has_value()) {
-				throw std::runtime_error("LuaTranslator 获取 init 函数失败。");
+				throw std::runtime_error(gppTr("LuaTranslator.LuaTranslator", "LuaTranslator 获取 init 函数失败。"));
 			}
 			luaStateOpt = this->m_luaManager->registerFunction(m_scriptPath, "run");
 			if (!luaStateOpt.has_value()) {
-				throw std::runtime_error("LuaTranslator 获取 run 函数失败。");
+				throw std::runtime_error(gppTr("LuaTranslator.LuaTranslator", "LuaTranslator 获取 run 函数失败。"));
 			}
 			m_luaState = luaStateOpt.value();
 			m_luaRunFunc = m_luaState->functions["run"].get();
@@ -63,7 +63,7 @@ export
 				(*initFunc)();
 			}
 			catch (const sol::error& e) {
-				throw std::runtime_error(std::format("初始化 LuaTranslator 时出现异常: {}", e.what()));
+				throw std::runtime_error(gppTr("LuaTranslator.LuaTranslator", "初始化 LuaTranslator 时出现异常: %1", e.what()));
 			}
 		}
 
@@ -75,9 +75,9 @@ export
 				}
 			}
 			catch (const sol::error& e) {
-				this->m_logger->error("卸载 LuaTranslator 时出现异常: {}", e.what());
+				this->m_logger->error(gppTr("LuaTranslator.~LuaTranslator", "卸载 LuaTranslator 时出现异常: %1", e.what()));
 			}
-			this->m_logger->info("所有任务已完成！LuaTranslator {} 结束。", m_translatorName);
+			this->m_logger->info(gppTr("LuaTranslator.~LuaTranslator", "所有任务已完成！LuaTranslator %1 结束。", m_translatorName));
 		}
 	};
 }

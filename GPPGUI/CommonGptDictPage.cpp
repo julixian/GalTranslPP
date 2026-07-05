@@ -22,7 +22,7 @@ import Tool;
 namespace fs = std::filesystem;
 
 CommonGptDictPage::CommonGptDictPage(toml::ordered_value& globalConfig, QWidget* parent) :
-	BasePage(parent), m_globalConfig(globalConfig), m_mainWindow(parent)
+	BasePage(parent), m_globalConfig(globalConfig)
 {
 	setWindowTitle(tr("默认GPT字典设置"));
 	setTitleVisible(false);
@@ -199,8 +199,8 @@ void CommonGptDictPage::setupUi()
 					}
 					std::ofstream ofs(it->dictPath, std::ios::binary);
 					if (!ofs.is_open()) {
-						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"), tr("无法打开文件: ") +
-							QString::fromStdWString(it->dictPath.wstring()), 3000);
+						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"),
+							tr("无法打开文件: %1").arg(QString::fromStdWString(it->dictPath.wstring())), 3000);
 						return false;
 					}
 
@@ -262,8 +262,8 @@ void CommonGptDictPage::setupUi()
 					}
 					if (it->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
-						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("字典 ") +
-							QString::fromStdWString(it->dictPath.stem().wstring()) + tr(" 已保存"), 3000);
+						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
+							tr("字典 %1 已保存").arg(QString::fromStdWString(it->dictPath.stem().wstring())), 3000);
 					}
 				});
 
@@ -320,8 +320,8 @@ void CommonGptDictPage::setupUi()
 					}
 					plainTextEdit->setPlainText(ReadDicts::readDictsStr(it->dictPath));
 					model->loadData(ReadDicts::readGptDicts(it->dictPath));
-					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("字典 ") +
-						QString::fromStdWString(it->dictPath.filename().wstring()) + tr(" 已刷新"), 3000);
+					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
+						tr("字典 %1 已刷新").arg(QString::fromStdWString(it->dictPath.filename().wstring())), 3000);
 				});
 			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
 				{
@@ -334,7 +334,7 @@ void CommonGptDictPage::setupUi()
 					}
 
 					QString newDictName;
-					ElaInputDialog inputDialog(m_mainWindow, tr("请输入新名称"), tr("重命名字典"), newDictName);
+					ElaInputDialog inputDialog(tr("请输入新名称"), tr("重命名字典"), newDictName, window());
 					if (inputDialog.exec() != QDialog::Accepted) {
 						return;
 					}
@@ -350,8 +350,8 @@ void CommonGptDictPage::setupUi()
 							return entry.pageMainWidget != pageMainWidget && entry.dictPath.stem().wstring() == newDictName.toStdWString();
 						});
 					if (hasSameNameTab || newDictName == "项目GPT字典") {
-						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"), tr("字典 ") +
-							newDictName + tr(" 已存在"), 3000);
+						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
+							tr("字典 %1 已存在").arg(newDictName), 3000);
 						return;
 					}
 
@@ -381,12 +381,12 @@ void CommonGptDictPage::setupUi()
 						}
 						tabWidget->setTabText(tabWidget->indexOf(pageMainWidget), newDictName);
 						Q_EMIT commonDictsChangedSignal();
-						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("重命名成功"), tr("字典 ") +
-							QString::fromStdWString(oldDictPath.stem().wstring()) + tr(" 已重命名为 ") + newDictName, 3000);
+						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("重命名成功"),
+							tr("字典 %1 已重命名为 %2").arg(QString::fromStdWString(oldDictPath.stem().wstring()), newDictName), 3000);
 					}
 					catch (...) {
-						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("重命名失败"), tr("字典 ") +
-							QString::fromStdWString(oldDictPath.stem().wstring()) + tr(" 重命名失败"), 3000);
+						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("重命名失败"),
+							tr("字典 %1 重命名失败").arg(QString::fromStdWString(oldDictPath.stem().wstring())), 3000);
 						return;
 					}
 				});
@@ -403,7 +403,7 @@ void CommonGptDictPage::setupUi()
 					const std::string tmpDictName = wide2Ascii(gptTabEntryIt->dictPath.stem().wstring());
 
 					// 删除提示框
-					ElaContentDialog helpDialog(m_mainWindow);
+					ElaContentDialog helpDialog(window());
 
 					helpDialog.setRightButtonText(tr("是"));
 					helpDialog.setMiddleButtonText(tr("思考人生"));
@@ -412,7 +412,7 @@ void CommonGptDictPage::setupUi()
 					QWidget* widget = new QWidget(&helpDialog);
 					QVBoxLayout* layout = new QVBoxLayout(widget);
 					layout->setContentsMargins(15, 25, 15, 10);
-					ElaText* confirmText = new ElaText(tr("你确定要删除 ") + QString::fromStdString(tmpDictName) + tr(" 吗？"), widget);
+					ElaText* confirmText = new ElaText(tr("你确定要删除 %1 吗？").arg(QString::fromStdString(tmpDictName)), widget);
 					confirmText->setTextStyle(ElaTextType::Title);
 					confirmText->setWordWrap(false);
 					layout->addWidget(confirmText);
@@ -445,8 +445,8 @@ void CommonGptDictPage::setupUi()
 							dictNames = toml::array{};
 						}
 						Q_EMIT commonDictsChangedSignal();
-						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("删除成功"), tr("字典 ")
-							+ QString::fromStdString(tmpDictName) + tr(" 已从字典管理和磁盘中移除！"), 3000);
+						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("删除成功"),
+							tr("字典 %1 已从字典管理和磁盘中移除！").arg(QString::fromStdString(tmpDictName)), 3000);
 					}
 				});
 
@@ -490,7 +490,7 @@ void CommonGptDictPage::setupUi()
 
 	connect(importButton, &ElaPushButton::clicked, this, [=]()
 		{
-			QString importDictPathStr = QFileDialog::getOpenFileName(this, tr("选择字典文件"),
+			QString importDictPathStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonGptDictPath", "./")),
 				"TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)");
 			if (importDictPathStr.isEmpty()) {
@@ -513,21 +513,21 @@ void CommonGptDictPage::setupUi()
 					return entry.dictPath.stem().wstring() == importDictPath.stem().wstring();
 				});
 			if (hasSameNameTab) {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"), tr("字典 ") +
-					QString::fromStdWString(importDictPath.stem().wstring()) + tr(" 已存在"), 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"),
+					tr("字典 %1 已存在").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 				return;
 			}
 			QWidget* pageMainWidget = createGptTab(importDictPath);
 			tabWidget->addTab(pageMainWidget, QString::fromStdWString(importDictPath.stem().wstring()));
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
-			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"), tr("字典页 ") +
-				QString::fromStdWString(importDictPath.stem().wstring()) + tr(" 已创建"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"),
+				tr("字典页 %1 已创建").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 		});
 
 	connect(addNewTabButton, &ElaPushButton::clicked, this, [=]()
 		{
 			QString dictName;
-			ElaInputDialog inputDialog(m_mainWindow, tr("请输入字典表名称"), tr("新建字典"), dictName);
+			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), dictName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}
@@ -543,16 +543,16 @@ void CommonGptDictPage::setupUi()
 					return entry.dictPath.stem().wstring() == dictName.toStdWString();
 				});
 			if (hasSameNameTab || dictName == "项目GPT字典") {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"), tr("字典 ") +
-					dictName + tr(" 已存在"), 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
+					tr("字典 %1 已存在").arg(dictName), 3000);
 				return;
 			}
 
 			const fs::path newDictPath = defaultGptDictPath / (dictName.toStdWString() + L".toml");
 			std::ofstream ofs(newDictPath, std::ios::binary);
 			if (!ofs.is_open()) {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"), tr("无法创建 ") +
-					QString::fromStdWString(newDictPath.wstring()) + tr(" 文件"), 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
+					tr("无法创建 %1 文件").arg(QString::fromStdWString(newDictPath.wstring())), 3000);
 				return;
 			}
 			ofs.close();
@@ -560,8 +560,8 @@ void CommonGptDictPage::setupUi()
 			QWidget* pageMainWidget = createGptTab(newDictPath);
 			tabWidget->addTab(pageMainWidget, dictName);
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
-			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"), tr("字典页 ") +
-				QString::fromStdWString(newDictPath.stem().wstring()) + tr(" 已创建"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"),
+				tr("字典页 %1 已创建").arg(QString::fromStdWString(newDictPath.stem().wstring())), 3000);
 		});
 
 

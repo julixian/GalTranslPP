@@ -71,8 +71,7 @@ void APISettingsPage::setupUi()
     bool isRandom = strategy == "random";
     ElaScrollPageArea* apiStrategyArea = new ElaScrollPageArea(this);
     QHBoxLayout* apiStrategyLayout = new QHBoxLayout(apiStrategyArea);
-    ElaDoubleText* apiStrategyTitle = new ElaDoubleText(apiStrategyArea,
-        tr("API 使用策略"), 16, tr("令牌策略，random随机轮询，fallback优先第一个，出现[请求错误]时使用下一个"), 10, "");
+    ElaDoubleText* apiStrategyTitle = new ElaDoubleText(tr("API 使用策略"), 16, tr("令牌策略，random随机轮询，fallback优先第一个，出现[请求错误]时使用下一个"), 10, "", apiStrategyArea);
     apiStrategyLayout->addWidget(apiStrategyTitle);
     apiStrategyLayout->addStretch();
 
@@ -91,8 +90,7 @@ void APISettingsPage::setupUi()
     int timeout = toml::find_or(m_projectConfig, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 180);
     ElaScrollPageArea* apiTimeoutArea = new ElaScrollPageArea(this);
     QHBoxLayout* apiTimeoutLayout = new QHBoxLayout(apiTimeoutArea);
-    ElaDoubleText* apiTimeoutTitle = new ElaDoubleText(apiTimeoutArea,
-        tr("API 超时时间"), 16, tr("API 请求超时时间，单位为秒"), 10, "");
+    ElaDoubleText* apiTimeoutTitle = new ElaDoubleText(tr("API 超时时间"), 16, tr("API 请求超时时间，单位为秒"), 10, "", apiTimeoutArea);
     apiTimeoutLayout->addWidget(apiTimeoutTitle);
     apiTimeoutLayout->addStretch();
 
@@ -257,11 +255,10 @@ ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& a
 
     ElaScrollPageArea* temperatureConfigArea = new ElaScrollPageArea(configWidget);
     QHBoxLayout* temperatureConfigLayout = new QHBoxLayout(temperatureConfigArea);
-    ElaDoubleText* temperatureConfigTitle = new ElaDoubleText(temperatureConfigArea,
-        tr("温度"), 16, tr("勾选选框则使用自定义温度，否则使用供应商默认温度"), 10, "");
+    ElaDoubleText* temperatureConfigTitle = new ElaDoubleText(tr("温度"), 16, tr("勾选选框则使用自定义温度，否则使用供应商默认温度"), 10, "", temperatureConfigArea);
     temperatureConfigLayout->addWidget(temperatureConfigTitle);
     temperatureConfigLayout->addStretch();
-    ValueSliderWidget* temperatureSlider = new ValueSliderWidget(temperatureConfigArea, 0.0, 2.0);
+    ValueSliderWidget* temperatureSlider = new ValueSliderWidget(0.0, 2.0, temperatureConfigArea);
     temperatureSlider->setFixedWidth(400);
     temperatureSlider->setDecimals(2);
     if (temperature.has_value()) {
@@ -279,11 +276,10 @@ ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& a
     ElaScrollPageArea* topPConfigArea = new ElaScrollPageArea(configWidget);
     topPConfigArea->setFixedHeight(80);
     QHBoxLayout* topPConfigLayout = new QHBoxLayout(topPConfigArea);
-    ElaDoubleText* topPConfigTitle = new ElaDoubleText(topPConfigArea,
-        tr("top_p"), 16, tr("核采样(也是控制随机性的)"), 10, "");
+    ElaDoubleText* topPConfigTitle = new ElaDoubleText(tr("top_p"), 16, tr("核采样(也是控制随机性的)"), 10, "", topPConfigArea);
     topPConfigLayout->addWidget(topPConfigTitle);
     topPConfigLayout->addStretch();
-    ValueSliderWidget* topPSlider = new ValueSliderWidget(topPConfigArea, 0.0, 1.0);
+    ValueSliderWidget* topPSlider = new ValueSliderWidget(0.0, 1.0, topPConfigArea);
     topPSlider->setFixedWidth(400);
     topPSlider->setDecimals(2);
     if (topP.has_value()) {
@@ -301,11 +297,10 @@ ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& a
     ElaScrollPageArea* frequencyPenaltyConfigArea = new ElaScrollPageArea(configWidget);
     frequencyPenaltyConfigArea->setFixedHeight(80);
     QHBoxLayout* frequencyPenaltyConfigLayout = new QHBoxLayout(frequencyPenaltyConfigArea);
-    ElaDoubleText* frequencyPenaltyConfigTitle = new ElaDoubleText(frequencyPenaltyConfigArea,
-        tr("frequency_penalty"), 16, tr("频率惩罚"), 10, "");
+    ElaDoubleText* frequencyPenaltyConfigTitle = new ElaDoubleText(tr("frequency_penalty"), 16, tr("频率惩罚"), 10, "", frequencyPenaltyConfigArea);
     frequencyPenaltyConfigLayout->addWidget(frequencyPenaltyConfigTitle);
     frequencyPenaltyConfigLayout->addStretch();
-    ValueSliderWidget* frequencyPenaltySlider = new ValueSliderWidget(frequencyPenaltyConfigArea, -2.0, 2.0);
+    ValueSliderWidget* frequencyPenaltySlider = new ValueSliderWidget(-2.0, 2.0, frequencyPenaltyConfigArea);
     frequencyPenaltySlider->setFixedWidth(400);
     frequencyPenaltySlider->setDecimals(2);
     if (frequencyPenalty.has_value()) {
@@ -323,11 +318,10 @@ ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& a
     ElaScrollPageArea* presencePenaltyConfigArea = new ElaScrollPageArea(configWidget);
     presencePenaltyConfigArea->setFixedHeight(80);
     QHBoxLayout* presencePenaltyConfigLayout = new QHBoxLayout(presencePenaltyConfigArea);
-    ElaDoubleText* presencePenaltyConfigTitle = new ElaDoubleText(presencePenaltyConfigArea,
-        tr("presence_penalty"), 16, tr("存在惩罚"), 10, "");
+    ElaDoubleText* presencePenaltyConfigTitle = new ElaDoubleText(tr("presence_penalty"), 16, tr("存在惩罚"), 10, "", presencePenaltyConfigArea);
     presencePenaltyConfigLayout->addWidget(presencePenaltyConfigTitle);
     presencePenaltyConfigLayout->addStretch();
-    ValueSliderWidget* presencePenaltySlider = new ValueSliderWidget(presencePenaltyConfigArea, -2.0, 2.0);
+    ValueSliderWidget* presencePenaltySlider = new ValueSliderWidget(-2.0, 2.0, presencePenaltyConfigArea);
     presencePenaltySlider->setFixedWidth(400);
     presencePenaltySlider->setDecimals(2);
     if (presencePenalty.has_value()) {
@@ -343,8 +337,7 @@ ElaScrollPageArea* APISettingsPage::createApiInputRowWidget(const toml::value& a
     configLayout->addWidget(presencePenaltyConfigArea);
 
     configLayout->addSpacing(10);
-    ElaDoubleText* extraKeysTitle = new ElaDoubleText(configWidget,
-        tr("Extra keys"), 18, "", 0, "一行一个 key");
+    ElaDoubleText* extraKeysTitle = new ElaDoubleText(tr("Extra keys"), 18, "", 0, "一行一个 key", configWidget);
     configLayout->addWidget(extraKeysTitle);
     ElaPlainTextEdit* extraKeysEdit = new ElaPlainTextEdit(configWidget);
     if (api.contains("extraKeys") && api.at("extraKeys").is_array()) {

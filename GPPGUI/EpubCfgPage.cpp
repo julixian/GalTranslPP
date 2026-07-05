@@ -85,7 +85,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	scaleText->setTextPixelSize(16);
 	scaleLayout->addWidget(scaleText);
 	scaleLayout->addStretch();
-	ValueSliderWidget* scaleSlider = new ValueSliderWidget(scaleArea);
+	ValueSliderWidget* scaleSlider = new ValueSliderWidget(0.0, 1.0, scaleArea);
 	scaleSlider->setDecimals(2);
 	scaleSlider->setValue(scale);
 	scaleLayout->addWidget(scaleSlider);

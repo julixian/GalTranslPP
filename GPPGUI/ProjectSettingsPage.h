@@ -46,7 +46,6 @@ private:
     fs::path m_projectDir;
     toml::ordered_value& m_globalConfig;
     toml::ordered_value m_projectConfig;
-    QWidget* m_mainWindow = nullptr;
 
     // UI 控件
     QStackedWidget* m_stackedWidget = nullptr;

@@ -30,7 +30,7 @@ class StartSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* mainWindow, QWidget* parent = nullptr);
+    explicit StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
 
     virtual void apply2Config() override;
@@ -62,7 +62,6 @@ private:
     fs::path& m_projectDir;
     toml::ordered_value& m_globalConfig;
     toml::ordered_value& m_projectConfig;
-    QWidget* m_mainWindow = nullptr;
 
     QThread* m_workThread = nullptr;
     TranslatorWorker* m_worker = nullptr;

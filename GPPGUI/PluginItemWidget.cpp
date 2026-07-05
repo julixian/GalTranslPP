@@ -28,8 +28,7 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
 
     // 插件名称
-    m_pluginNameLabel = new ElaDoubleText(this,
-        pluginName, 16, toolTipMap[pluginName], 10, "");
+    m_pluginNameLabel = new ElaDoubleText(pluginName, 16, toolTipMap[pluginName], 10, "", this);
 
     m_pluginRunTimeBox = new ElaComboBox(this);
     m_pluginRunTimeBox->setFixedWidth(150);

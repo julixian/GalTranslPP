@@ -10,7 +10,7 @@ class ElaInputDialog : public ElaContentDialog
     Q_OBJECT
 
 public:
-    explicit ElaInputDialog(QWidget* parent, const QString& label, const QString& text, QString& result);
+    explicit ElaInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent = nullptr);
     ~ElaInputDialog() override;
 
 private Q_SLOTS:

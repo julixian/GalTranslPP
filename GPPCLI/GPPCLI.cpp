@@ -1,6 +1,10 @@
 ﻿#define PYBIND11_HEADERS
 #include "../GalTranslPP/GPPMacros.hpp"
 
+#include <QCoreApplication>
+#include <QDir>
+#include <QTranslator>
+
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -25,12 +29,34 @@ int main(int argc, char* argv[])
     std::setlocale(LC_ALL, ".UTF-8");
 #endif
 
+    QTranslator baseTranslator;
+    QTranslator coreTranslator;
+    QTranslator cliTranslator;
+    QCoreApplication app(argc, argv);
+    QDir::setCurrent(QCoreApplication::applicationDirPath());
+
     std::unique_ptr<py::gil_scoped_release> release;
 
     try {
         const auto globalConfig = toml::uparse(globalConfigPath);
+        const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
+        if (language == "zh_CN") {
+            if (baseTranslator.load("qt_zh_CN.qm", "translations")) {
+                app.installTranslator(&baseTranslator);
+            }
+        }
+        else if (language == "en") {
+            if (baseTranslator.load("qt_en.qm", "translations")) {
+                app.installTranslator(&baseTranslator);
+            }
+            if (coreTranslator.load("qt_gpp_en.qm", "translations")) {
+                app.installTranslator(&coreTranslator);
+            }
+            if (cliTranslator.load("qt_gppcli_en.qm", "translations")) {
+                app.installTranslator(&cliTranslator);
+            }
+        }
         const std::string pyEnvPathStr = toml::find_or(globalConfig, "pyEnvPath", "BaseConfig/python-3.12.10-embed-amd64");
-
         try {
             const fs::path pyEnvPath = ascii2Wide(pyEnvPathStr);
             if (!startUpPythonEnv(pyEnvPath, release)) {
@@ -55,7 +81,7 @@ int main(int argc, char* argv[])
         std::cout << "GalTransl++ CLI - test v" << GPPVERSION << "\n";
         std::cout << "======================================================\n";
 
-        std::cout << "请输入项目文件夹或Config.toml的路径。";
+        std::cout << "请输入项目文件夹或 config.toml 的路径。";
         if (!currentProjectPath.empty()) {
             std::cout << " (直接按 Enter 可再次处理: " << wide2Ascii(currentProjectPath.wstring()) << ")";
         }

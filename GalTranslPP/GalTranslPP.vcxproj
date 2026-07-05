@@ -181,7 +181,7 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -191,6 +191,7 @@
     <QtTranslation>
       <BuildAction>lupdate_lrelease</BuildAction>
       <FunctionAliases>translate+=gppTr</FunctionAliases>
+      <QmOutputDir>$(TargetDir)</QmOutputDir>
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemGroup>

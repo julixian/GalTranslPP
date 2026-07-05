@@ -102,14 +102,10 @@
 del "$(TargetDir)$(TargetName).lib"
 
 if not exist "$(TargetDir)translations" mkdir "$(TargetDir)translations"
-
-
 copy "$(SolutionDir)3rdParty\7z.dll" "$(TargetDir)"
 copy "$(SolutionDir)3rdParty\pybind11\bin\python*.dll" "$(TargetDir)"
-
 copy "$(SolutionDir)3rdParty\ElaWidgetTools\Install\ElaWidgetTools\bin\ElaWidgetTools.dll" "$(TargetDir)"
 copy "$(SolutionDir)lib\qt_gpp*.qm" "$(TargetDir)\translations\"
-
 
 if not exist "$(TargetDir)..\GUICORE\translations" mkdir "$(TargetDir)..\GUICORE\translations"
 copy "$(TargetPath)" "$(TargetDir)..\GUICORE\$(TargetName)$(TargetExt)"
@@ -118,14 +114,13 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GUICORE\translations\
 
 if exist "$(TargetDir)..\GPPGUI_PRIVATE" (
 copy "$(TargetPath)" "$(TargetDir)..\GPPGUI_PRIVATE\$(TargetName)$(TargetExt)"
-
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
 copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\translations\"
 )</Command>
     </PostBuildEvent>
     <QtTranslation>
       <BuildAction>lupdate_lrelease</BuildAction>
-      <QmOutputDir>$(OutDir)translations\</QmOutputDir>
+      <QmOutputDir>$(TargetDir)translations\</QmOutputDir>
       <FunctionAliases>translate+=gppTr</FunctionAliases>
     </QtTranslation>
   </ItemDefinitionGroup>

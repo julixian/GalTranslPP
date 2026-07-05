@@ -13,9 +13,9 @@ pyEnvPath = "BaseConfig/python-3.12.10-embed-amd64"
 stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
-windowHeight = 688
-windowPosX = 20
-windowPosY = 32
+windowHeight = 677
+windowPosX = 0
+windowPosY = 28
 windowWidth = 1308
 
 [commonGptDicts]
@@ -110,7 +110,7 @@ dictNames = ["译前H统一", "译前H口吃矫正"]
         5 = 60
 
 [showDockWidget]
-241 = true
+276 = true
 
 [[popularCards]]
 cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'

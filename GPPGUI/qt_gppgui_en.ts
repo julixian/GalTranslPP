@@ -3460,7 +3460,7 @@
         <location filename="ProjectCachePageDelegates.cpp" line="219"/>
         <location filename="ProjectCachePageDelegates.cpp" line="327"/>
         <source>译文</source>
-        <translation>Trans</translation>
+        <translation>Dst</translation>
     </message>
     <message>
         <location filename="ProjectCachePageDelegates.cpp" line="269"/>

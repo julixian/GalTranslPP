@@ -7,9 +7,9 @@
 #include <QFileIconProvider>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QIcon>
 #include <QUrl>
-#include <QVBoxLayout>
 
 #include "ElaAcrylicUrlCard.h"
 #include "ElaFlowLayout.h"

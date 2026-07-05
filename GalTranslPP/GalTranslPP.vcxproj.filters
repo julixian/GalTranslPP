@@ -199,6 +199,9 @@
     <ClCompile Include="..\3rdParty\jpcre2\jpcre2.ixx">
       <Filter>Tools\Utils\3rdParty</Filter>
     </ClCompile>
+    <ClCompile Include="GPPI18n.ixx">
+      <Filter>Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="filePlugins">
@@ -222,10 +225,18 @@
     <Filter Include="Tools\Utils\3rdParty">
       <UniqueIdentifier>{3a779742-8f1a-46e7-955f-0988b836e907}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{30b15c5b-bd56-4b8c-9e46-7c765f355cec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPPMacros.hpp">
       <Filter>Tools</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="qt_gpp_en.ts">
+      <Filter>Translation Files</Filter>
+    </QtTranslation>
   </ItemGroup>
 </Project>

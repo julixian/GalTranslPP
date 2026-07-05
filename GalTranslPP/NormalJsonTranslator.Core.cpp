@@ -75,16 +75,19 @@ namespace
             return;
         }
 
+        if (config.transEngine != TransEngine::ForGalTsv &&
+            config.transEngine != TransEngine::ForNovelTsv &&
+            config.transEngine != TransEngine::GenDict)
+        {
+            throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict");
+        }
         GPP_REQUIRE_CONFIG(config.agentMaxTurnsPerChunk > 0, "agent.maxTurnsPerChunk", config.agentMaxTurnsPerChunk, "大于 0");
         GPP_REQUIRE_CONFIG(config.agentSearchResultLimit > 0, "agent.searchResultLimit", config.agentSearchResultLimit, "大于 0");
-        if (config.transEngine == TransEngine::ForGalTsv || config.transEngine == TransEngine::ForNovelTsv) {
+        if (config.transEngine != TransEngine::GenDict) {
             GPP_REQUIRE_CONFIG(config.agentSoftContextChars > 0, "agent.softContextChars", config.agentSoftContextChars, "大于 0");
             GPP_REQUIRE_CONFIG(config.agentHardContextChars > 0, "agent.hardContextChars", config.agentHardContextChars, "大于 0");
             GPP_REQUIRE_CONFIG(config.agentSoftContextChars <= config.agentHardContextChars,
                 "agent.softContextChars", config.agentSoftContextChars, "小于等于 agent.hardContextChars");
-        }
-        else if (config.transEngine != TransEngine::GenDict) {
-            throw std::invalid_argument("Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict");
         }
     }
 
@@ -93,7 +96,7 @@ namespace
 
 NormalJsonTranslator::~NormalJsonTranslator()
 {
-    m_logger->info("所有任务已完成！NormalJsonTranslator结束。");
+    m_logger->info(gppTr("NormalJsonTranslator.~NormalJsonTranslator", "所有任务已完成！NormalJsonTranslator结束。"));
 }
 
 NormalJsonTranslator::NormalJsonTranslator(

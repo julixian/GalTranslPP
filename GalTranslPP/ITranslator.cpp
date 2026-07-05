@@ -90,6 +90,7 @@ void IController::setRuntimeFiles(const std::map<std::string, int>& fileTotals)
 
 void IController::setRuntimeStage(const std::string& stage, const std::string& currentFile)
 {
+    // 没什么大用，processFile 开头调用一下，用于展示最新开始翻译的文件
     onRuntimeStageChanged(stage, currentFile);
 }
 

@@ -28,7 +28,7 @@ class MainWindow : public ElaWindow
     Q_OBJECT
 
 public:
-    MainWindow(std::unique_ptr<py::gil_scoped_release>& release, QWidget* parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
 public Q_SLOTS:
@@ -77,6 +77,5 @@ private:
     UpdateChecker* m_updateChecker = nullptr;
 
     toml::ordered_value m_globalConfig;
-    std::unique_ptr<py::gil_scoped_release>& m_release;
 };
 #endif // MAINWINDOW_H

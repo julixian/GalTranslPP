@@ -322,7 +322,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtTranslation Include="Translation_en.ts">
+    <QtTranslation Include="qt_gppgui_en.ts">
       <Filter>Translation Files</Filter>
     </QtTranslation>
   </ItemGroup>

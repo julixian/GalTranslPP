@@ -311,24 +311,24 @@ template<> struct Pcre2Func<8> {
         return pcre2_substitute_8( code, subject, length, startoffset, options, match_data,
                                    mcontext, replacement, rlength, outputbuffer, outlengthptr);
     }
-    //~ static int substring_get_bynumber(Pcre2Type<8>::MatchData *match_data,
-                                        //~ uint32_t number,
-                                        //~ Pcre2Type<8>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_bynumber_8(match_data, number, bufferptr, bufflen);
-    //~ }
-    //~ static int substring_get_byname(Pcre2Type<8>::MatchData *match_data,
-                                        //~ Pcre2Type<8>::Pcre2Sptr name,
-                                        //~ Pcre2Type<8>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_byname_8(match_data, name, bufferptr, bufflen);
-    //~ }
-    //~ static void substring_free(Pcre2Type<8>::Pcre2Uchar *buffer){
-        //~ pcre2_substring_free_8(buffer);
-    //~ }
-    //~ static Pcre2Type<8>::Pcre2Code * code_copy(const Pcre2Type<8>::Pcre2Code *code){
-        //~ return pcre2_code_copy_8(code);
-    //~ }
+    // static int substring_get_bynumber(Pcre2Type<8>::MatchData *match_data,
+                                        // uint32_t number,
+                                        // Pcre2Type<8>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_bynumber_8(match_data, number, bufferptr, bufflen);
+    // }
+    // static int substring_get_byname(Pcre2Type<8>::MatchData *match_data,
+                                        // Pcre2Type<8>::Pcre2Sptr name,
+                                        // Pcre2Type<8>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_byname_8(match_data, name, bufferptr, bufflen);
+    // }
+    // static void substring_free(Pcre2Type<8>::Pcre2Uchar *buffer){
+        // pcre2_substring_free_8(buffer);
+    // }
+    // static Pcre2Type<8>::Pcre2Code * code_copy(const Pcre2Type<8>::Pcre2Code *code){
+        // return pcre2_code_copy_8(code);
+    // }
     static void code_free(Pcre2Type<8>::Pcre2Code *code){
         pcre2_code_free_8(code);
     }
@@ -364,30 +364,30 @@ template<> struct Pcre2Func<8> {
     static int set_newline(Pcre2Type<8>::CompileContext *ccontext, uint32_t value){
         return pcre2_set_newline_8(ccontext, value);
     }
-    //~ static void jit_stack_assign(Pcre2Type<8>::MatchContext *mcontext,
-                                 //~ Pcre2Type<8>::JitCallback callback_function,
-                                 //~ void *callback_data){
-        //~ pcre2_jit_stack_assign_8(mcontext, callback_function, callback_data);
-    //~ }
-    //~ static Pcre2Type<8>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
-                                                             //~ Pcre2Type<8>::GeneralContext *gcontext){
-    //~ return pcre2_jit_stack_create_8(startsize, maxsize, gcontext);
-    //~ }
-    //~ static void jit_stack_free(Pcre2Type<8>::JitStack *jit_stack){
-        //~ pcre2_jit_stack_free_8(jit_stack);
-    //~ }
-    //~ static void jit_free_unused_memory(Pcre2Type<8>::GeneralContext *gcontext){
-        //~ pcre2_jit_free_unused_memory_8(gcontext);
-    //~ }
-    //~ static Pcre2Type<8>::MatchContext *match_context_create(Pcre2Type<8>::GeneralContext *gcontext){
-        //~ return pcre2_match_context_create_8(gcontext);
-    //~ }
-    //~ static Pcre2Type<8>::MatchContext *match_context_copy(Pcre2Type<8>::MatchContext *mcontext){
-        //~ return pcre2_match_context_copy_8(mcontext);
-    //~ }
-    //~ static void match_context_free(Pcre2Type<8>::MatchContext *mcontext){
-        //~ pcre2_match_context_free_8(mcontext);
-    //~ }
+    // static void jit_stack_assign(Pcre2Type<8>::MatchContext *mcontext,
+                                 // Pcre2Type<8>::JitCallback callback_function,
+                                 // void *callback_data){
+        // pcre2_jit_stack_assign_8(mcontext, callback_function, callback_data);
+    // }
+    // static Pcre2Type<8>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
+                                                             // Pcre2Type<8>::GeneralContext *gcontext){
+    // return pcre2_jit_stack_create_8(startsize, maxsize, gcontext);
+    // }
+    // static void jit_stack_free(Pcre2Type<8>::JitStack *jit_stack){
+        // pcre2_jit_stack_free_8(jit_stack);
+    // }
+    // static void jit_free_unused_memory(Pcre2Type<8>::GeneralContext *gcontext){
+        // pcre2_jit_free_unused_memory_8(gcontext);
+    // }
+    // static Pcre2Type<8>::MatchContext *match_context_create(Pcre2Type<8>::GeneralContext *gcontext){
+        // return pcre2_match_context_create_8(gcontext);
+    // }
+    // static Pcre2Type<8>::MatchContext *match_context_copy(Pcre2Type<8>::MatchContext *mcontext){
+        // return pcre2_match_context_copy_8(mcontext);
+    // }
+    // static void match_context_free(Pcre2Type<8>::MatchContext *mcontext){
+        // pcre2_match_context_free_8(mcontext);
+    // }
     static uint32_t get_ovector_count(Pcre2Type<8>::MatchData *match_data){
         return pcre2_get_ovector_count_8(match_data);
     }
@@ -435,24 +435,24 @@ template<> struct Pcre2Func<16> {
         return pcre2_substitute_16( code, subject, length, startoffset, options, match_data,
                                    mcontext, replacement, rlength, outputbuffer, outlengthptr);
     }
-    //~ static int substring_get_bynumber(Pcre2Type<16>::MatchData *match_data,
-                                        //~ uint32_t number,
-                                        //~ Pcre2Type<16>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_bynumber_16(match_data, number, bufferptr, bufflen);
-    //~ }
-    //~ static int substring_get_byname(Pcre2Type<16>::MatchData *match_data,
-                                        //~ Pcre2Type<16>::Pcre2Sptr name,
-                                        //~ Pcre2Type<16>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_byname_16(match_data, name, bufferptr, bufflen);
-    //~ }
-    //~ static void substring_free(Pcre2Type<16>::Pcre2Uchar *buffer){
-        //~ pcre2_substring_free_16(buffer);
-    //~ }
-    //~ static Pcre2Type<16>::Pcre2Code * code_copy(const Pcre2Type<16>::Pcre2Code *code){
-        //~ return pcre2_code_copy_16(code);
-    //~ }
+    // static int substring_get_bynumber(Pcre2Type<16>::MatchData *match_data,
+                                        // uint32_t number,
+                                        // Pcre2Type<16>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_bynumber_16(match_data, number, bufferptr, bufflen);
+    // }
+    // static int substring_get_byname(Pcre2Type<16>::MatchData *match_data,
+                                        // Pcre2Type<16>::Pcre2Sptr name,
+                                        // Pcre2Type<16>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_byname_16(match_data, name, bufferptr, bufflen);
+    // }
+    // static void substring_free(Pcre2Type<16>::Pcre2Uchar *buffer){
+        // pcre2_substring_free_16(buffer);
+    // }
+    // static Pcre2Type<16>::Pcre2Code * code_copy(const Pcre2Type<16>::Pcre2Code *code){
+        // return pcre2_code_copy_16(code);
+    // }
     static void code_free(Pcre2Type<16>::Pcre2Code *code){
         pcre2_code_free_16(code);
     }
@@ -488,30 +488,30 @@ template<> struct Pcre2Func<16> {
     static int set_newline(Pcre2Type<16>::CompileContext *ccontext, uint32_t value){
         return pcre2_set_newline_16(ccontext, value);
     }
-    //~ static void jit_stack_assign(Pcre2Type<16>::MatchContext *mcontext,
-                                 //~ Pcre2Type<16>::JitCallback callback_function,
-                                 //~ void *callback_data){
-        //~ pcre2_jit_stack_assign_16(mcontext, callback_function, callback_data);
-    //~ }
-    //~ static Pcre2Type<16>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
-                                                             //~ Pcre2Type<16>::GeneralContext *gcontext){
-    //~ return pcre2_jit_stack_create_16(startsize, maxsize, gcontext);
-    //~ }
-    //~ static void jit_stack_free(Pcre2Type<16>::JitStack *jit_stack){
-        //~ pcre2_jit_stack_free_16(jit_stack);
-    //~ }
-    //~ static void jit_free_unused_memory(Pcre2Type<16>::GeneralContext *gcontext){
-        //~ pcre2_jit_free_unused_memory_16(gcontext);
-    //~ }
-    //~ static Pcre2Type<16>::MatchContext *match_context_create(Pcre2Type<16>::GeneralContext *gcontext){
-        //~ return pcre2_match_context_create_16(gcontext);
-    //~ }
-    //~ static Pcre2Type<16>::MatchContext *match_context_copy(Pcre2Type<16>::MatchContext *mcontext){
-        //~ return pcre2_match_context_copy_16(mcontext);
-    //~ }
-    //~ static void match_context_free(Pcre2Type<16>::MatchContext *mcontext){
-        //~ pcre2_match_context_free_16(mcontext);
-    //~ }
+    // static void jit_stack_assign(Pcre2Type<16>::MatchContext *mcontext,
+                                 // Pcre2Type<16>::JitCallback callback_function,
+                                 // void *callback_data){
+        // pcre2_jit_stack_assign_16(mcontext, callback_function, callback_data);
+    // }
+    // static Pcre2Type<16>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
+                                                             // Pcre2Type<16>::GeneralContext *gcontext){
+    // return pcre2_jit_stack_create_16(startsize, maxsize, gcontext);
+    // }
+    // static void jit_stack_free(Pcre2Type<16>::JitStack *jit_stack){
+        // pcre2_jit_stack_free_16(jit_stack);
+    // }
+    // static void jit_free_unused_memory(Pcre2Type<16>::GeneralContext *gcontext){
+        // pcre2_jit_free_unused_memory_16(gcontext);
+    // }
+    // static Pcre2Type<16>::MatchContext *match_context_create(Pcre2Type<16>::GeneralContext *gcontext){
+        // return pcre2_match_context_create_16(gcontext);
+    // }
+    // static Pcre2Type<16>::MatchContext *match_context_copy(Pcre2Type<16>::MatchContext *mcontext){
+        // return pcre2_match_context_copy_16(mcontext);
+    // }
+    // static void match_context_free(Pcre2Type<16>::MatchContext *mcontext){
+        // pcre2_match_context_free_16(mcontext);
+    // }
     static uint32_t get_ovector_count(Pcre2Type<16>::MatchData *match_data){
         return pcre2_get_ovector_count_16(match_data);
     }
@@ -559,24 +559,24 @@ template<> struct Pcre2Func<32> {
         return pcre2_substitute_32( code, subject, length, startoffset, options, match_data,
                                    mcontext, replacement, rlength, outputbuffer, outlengthptr);
     }
-    //~ static int substring_get_bynumber(Pcre2Type<32>::MatchData *match_data,
-                                        //~ uint32_t number,
-                                        //~ Pcre2Type<32>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_bynumber_32(match_data, number, bufferptr, bufflen);
-    //~ }
-    //~ static int substring_get_byname(Pcre2Type<32>::MatchData *match_data,
-                                        //~ Pcre2Type<32>::Pcre2Sptr name,
-                                        //~ Pcre2Type<32>::Pcre2Uchar **bufferptr,
-                                        //~ PCRE2_SIZE *bufflen){
-        //~ return pcre2_substring_get_byname_32(match_data, name, bufferptr, bufflen);
-    //~ }
-    //~ static void substring_free(Pcre2Type<32>::Pcre2Uchar *buffer){
-        //~ pcre2_substring_free_32(buffer);
-    //~ }
-    //~ static Pcre2Type<32>::Pcre2Code * code_copy(const Pcre2Type<32>::Pcre2Code *code){
-        //~ return pcre2_code_copy_32(code);
-    //~ }
+    // static int substring_get_bynumber(Pcre2Type<32>::MatchData *match_data,
+                                        // uint32_t number,
+                                        // Pcre2Type<32>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_bynumber_32(match_data, number, bufferptr, bufflen);
+    // }
+    // static int substring_get_byname(Pcre2Type<32>::MatchData *match_data,
+                                        // Pcre2Type<32>::Pcre2Sptr name,
+                                        // Pcre2Type<32>::Pcre2Uchar **bufferptr,
+                                        // PCRE2_SIZE *bufflen){
+        // return pcre2_substring_get_byname_32(match_data, name, bufferptr, bufflen);
+    // }
+    // static void substring_free(Pcre2Type<32>::Pcre2Uchar *buffer){
+        // pcre2_substring_free_32(buffer);
+    // }
+    // static Pcre2Type<32>::Pcre2Code * code_copy(const Pcre2Type<32>::Pcre2Code *code){
+        // return pcre2_code_copy_32(code);
+    // }
     static void code_free(Pcre2Type<32>::Pcre2Code *code){
         pcre2_code_free_32(code);
     }
@@ -612,30 +612,30 @@ template<> struct Pcre2Func<32> {
     static int set_newline(Pcre2Type<32>::CompileContext *ccontext, uint32_t value){
         return pcre2_set_newline_32(ccontext, value);
     }
-    //~ static void jit_stack_assign(Pcre2Type<32>::MatchContext *mcontext,
-                                 //~ Pcre2Type<32>::JitCallback callback_function,
-                                 //~ void *callback_data){
-        //~ pcre2_jit_stack_assign_32(mcontext, callback_function, callback_data);
-    //~ }
-    //~ static Pcre2Type<32>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
-                                                             //~ Pcre2Type<32>::GeneralContext *gcontext){
-    //~ return pcre2_jit_stack_create_32(startsize, maxsize, gcontext);
-    //~ }
-    //~ static void jit_stack_free(Pcre2Type<32>::JitStack *jit_stack){
-        //~ pcre2_jit_stack_free_32(jit_stack);
-    //~ }
-    //~ static void jit_free_unused_memory(Pcre2Type<32>::GeneralContext *gcontext){
-        //~ pcre2_jit_free_unused_memory_32(gcontext);
-    //~ }
-    //~ static Pcre2Type<32>::MatchContext *match_context_create(Pcre2Type<32>::GeneralContext *gcontext){
-        //~ return pcre2_match_context_create_32(gcontext);
-    //~ }
-    //~ static Pcre2Type<32>::MatchContext *match_context_copy(Pcre2Type<32>::MatchContext *mcontext){
-        //~ return pcre2_match_context_copy_32(mcontext);
-    //~ }
-    //~ static void match_context_free(Pcre2Type<32>::MatchContext *mcontext){
-        //~ pcre2_match_context_free_32(mcontext);
-    //~ }
+    // static void jit_stack_assign(Pcre2Type<32>::MatchContext *mcontext,
+                                 // Pcre2Type<32>::JitCallback callback_function,
+                                 // void *callback_data){
+        // pcre2_jit_stack_assign_32(mcontext, callback_function, callback_data);
+    // }
+    // static Pcre2Type<32>::JitStack *jit_stack_create(PCRE2_SIZE startsize, PCRE2_SIZE maxsize,
+                                                             // Pcre2Type<32>::GeneralContext *gcontext){
+    // return pcre2_jit_stack_create_32(startsize, maxsize, gcontext);
+    // }
+    // static void jit_stack_free(Pcre2Type<32>::JitStack *jit_stack){
+        // pcre2_jit_stack_free_32(jit_stack);
+    // }
+    // static void jit_free_unused_memory(Pcre2Type<32>::GeneralContext *gcontext){
+        // pcre2_jit_free_unused_memory_32(gcontext);
+    // }
+    // static Pcre2Type<32>::MatchContext *match_context_create(Pcre2Type<32>::GeneralContext *gcontext){
+        // return pcre2_match_context_create_32(gcontext);
+    // }
+    // static Pcre2Type<32>::MatchContext *match_context_copy(Pcre2Type<32>::MatchContext *mcontext){
+        // return pcre2_match_context_copy_32(mcontext);
+    // }
+    // static void match_context_free(Pcre2Type<32>::MatchContext *mcontext){
+        // pcre2_match_context_free_32(mcontext);
+    // }
     static uint32_t get_ovector_count(Pcre2Type<32>::MatchData *match_data){
         return pcre2_get_ovector_count_32(match_data);
     }
@@ -4582,7 +4582,7 @@ typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::MatchEvaluator::
         return RegexMatch::getSubject();
 
     Pcre2Sptr r_subject_ptr = (Pcre2Sptr) RegexMatch::getSubjectPointer()->c_str();
-    //~ SIZE_T totlen = RegexMatch::getSubjectPointer()->length();
+    // SIZE_T totlen = RegexMatch::getSubjectPointer()->length();
 
     if(do_match) match();
     SIZE_T mcount = vec_soff.size();
@@ -4605,7 +4605,7 @@ typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::MatchEvaluator::
             RegexMatch::error_number = PCRE2_ERROR_BADSUBSPATTERN;
             return RegexMatch::getSubject();
         } else {
-            //~ res += RegexMatch::getSubject().substr(current_offset, vec_soff[i]-current_offset);
+            // res += RegexMatch::getSubject().substr(current_offset, vec_soff[i]-current_offset);
             res += String(r_subject_ptr+current_offset, r_subject_ptr+vec_soff[i]);
         }
         //now process the matched part
@@ -4632,7 +4632,7 @@ typename jpcre2::select<Char_T>::String jpcre2::select<Char_T>::MatchEvaluator::
 
         //second part
         ///the matched part is the subject
-        //~ Pcre2Sptr subject = (Pcre2Sptr) RegexMatch::getSubjectPointer()->c_str();
+        // Pcre2Sptr subject = (Pcre2Sptr) RegexMatch::getSubjectPointer()->c_str();
         //substr(vec_soff[i], vec_eoff[i] - vec_soff[i]).c_str();//->substr(vec_soff[i], vec_eoff[i]-vec_soff[i]);
         Pcre2Sptr subject = r_subject_ptr + vec_soff[i];
         PCRE2_SIZE subject_length = vec_eoff[i] - vec_soff[i];

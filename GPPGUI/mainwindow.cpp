@@ -35,8 +35,8 @@
 import Tool;
 import PythonManager;
 
-MainWindow::MainWindow(std::unique_ptr<py::gil_scoped_release>& release, QWidget* parent)
-    : ElaWindow(parent), m_release(release)
+MainWindow::MainWindow(QWidget* parent)
+    : ElaWindow(parent)
 {
     if (fs::exists(L"BaseConfig/globalConfig.toml")) {
         try {
@@ -275,25 +275,6 @@ void MainWindow::initContent()
     m_commonPostDictPage = new CommonNormalDictPage("post", m_globalConfig, this);
 
     m_appSettingsPage = new AppSettingsPage(m_globalConfig, this);
-    //connect(m_appSettingsPage, &AppSettingsPage::restartPythonEnvSignal, this, [=](QString pyEnvPathQStr)
-    //    {
-    //        bool running = std::ranges::any_of(m_projectPages, [](auto& page)
-    //            {
-    //                return page->getIsRunning();
-    //            });
-    //        if (running) {
-    //            ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("警告"), tr("有项目正在运行，请先停止运行！"), 3000);
-    //            return;
-    //        }
-    //        try {
-    //            shutDownPythonEnv(m_release);
-    //            startUpPythonEnv(pyEnvPathQStr.toStdWString(), m_release);
-    //            ElaMessageBar::success(ElaMessageBarType::TopRight, tr("成功"), tr("Python虚拟环境已重启"), 3000);
-    //        }
-    //        catch (...) {
-    //            ElaMessageBar::error(ElaMessageBarType::TopRight, tr("失败"), tr("Python虚拟环境重启失败"), 3000);
-    //        }
-    //    });
 
     addPageNode(tr("主页"), m_homePage, ElaIconType::House);
 
@@ -356,20 +337,6 @@ void MainWindow::initContent()
                 m_aboutDialog->show();
             }
         });
-
-    /*connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, QString nodeKey)
-        {
-            auto it = std::ranges::find_if(m_projectPages, [&](auto& page)
-                {
-                    return page->property("ElaPageKey").toString() == nodeKey;
-                });
-            if (it != m_projectPages.end()) {
-                setWindowTitle("Galtransl++ - " + (*it)->getProjectName());
-            }
-            else {
-                setWindowTitle("Galtransl++");
-            }
-        });*/
 
     const std::string clearShortcut = toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L");
     m_clearLogShortcut = new QShortcut(QKeySequence(QString::fromStdString(clearShortcut)), this);

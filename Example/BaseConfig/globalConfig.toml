@@ -1,4 +1,5 @@
 allowCloseWhenRunning = false
+allowMultiInstance = false
 autoCheckUpdate = true
 autoDownloadUpdate = true
 autoRefreshAfterTranslate = true

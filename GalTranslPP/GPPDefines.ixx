@@ -6,6 +6,7 @@ export import jpcre2;
 export import nlohmann.json;
 export import spdlog;
 export import GPPVersion;
+export import GPPI18n;
 
 namespace fs = std::filesystem;
 

@@ -45,18 +45,32 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
         for (const auto& regStr : notConvertRegStrs) {
             jpc::Regex reg(regStr, defaultRegCompileModifier);
             if (!reg) {
-                throw std::invalid_argument(gppTr("TextFull2Half.TextFull2Half", "TextFull2Half 正则编译错误: %1", regStr));
+                throw std::invalid_argument(gppTr(
+                    "TextFull2Half.TextFull2Half",
+                    "TextFull2Half 正则编译错误: %1")
+                    .arg(regStr)
+                    .toStdString());
             }
             m_notConvertRegs.push_back(std::move(reg));
         }
 
         m_notConvertedCharsKey = std::format("TF2H-{}-notConvertedChars", pluginRunTimeNames[m_runTime]);
 
-        m_logger->info(gppTr("TextFull2Half.TextFull2Half", "TextFull2Half-%1 已加载 - 替换标点: %2, 反向替换: %3",
-            pluginRunTimeNames[m_runTime], m_replacePunctuation ? "true" : "false", m_reverseConversion ? "true" : "false"));
+        m_logger->info(gppTr(
+            "TextFull2Half.TextFull2Half",
+            "TextFull2Half-%1 已加载 - 替换标点: %2, 反向替换: %3")
+            .arg(pluginRunTimeNames[m_runTime])
+            .arg(m_replacePunctuation ? "true" : "false")
+            .arg(m_reverseConversion ? "true" : "false")
+            .toStdString());
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("TextFull2Half.TextFull2Half", "TextFull2Half-%1 配置文件解析错误: %2", pluginRunTimeNames[m_runTime], e.what()));
+        throw std::runtime_error(gppTr(
+            "TextFull2Half.TextFull2Half",
+            "TextFull2Half-%1 配置文件解析错误: %2")
+            .arg(pluginRunTimeNames[m_runTime])
+            .arg(e.what())
+            .toStdString());
     }
 }
 

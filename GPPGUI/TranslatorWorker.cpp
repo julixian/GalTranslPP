@@ -228,36 +228,36 @@ void TranslatorWorker::doTranslation()
     }
     catch (const std::system_error& e) {
         controller->flush();
-        Q_EMIT writeLogSignal(tr("[系统错误] %1").arg(QString::fromStdString(e.what())));
+        Q_EMIT writeLogSignal(tr("[GalTransl++ 系统错误] %1").arg(QString::fromStdString(e.what())));
         Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::invalid_argument& e) {
         controller->flush();
-        Q_EMIT writeLogSignal(tr("[参数错误] %1").arg(QString::fromStdString(e.what())));
+        Q_EMIT writeLogSignal(tr("[GalTransl++ 参数错误] %1").arg(QString::fromStdString(e.what())));
         Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::runtime_error& e) {
         controller->flush();
-        Q_EMIT writeLogSignal(tr("[运行时错误] %1").arg(QString::fromStdString(e.what())));
+        Q_EMIT writeLogSignal(tr("[GalTransl++ 运行时错误] %1").arg(QString::fromStdString(e.what())));
         Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (const std::exception& e) {
         controller->flush();
-        Q_EMIT writeLogSignal(tr("[标准错误] %1").arg(QString::fromStdString(e.what())));
+        Q_EMIT writeLogSignal(tr("[GalTransl++ 标准错误] %1").arg(QString::fromStdString(e.what())));
         Q_EMIT translationFinishedSignal(-2);
         return;
     }
     catch (...) {
         controller->flush();
-        Q_EMIT writeLogSignal(tr("[未知错误]"));
+        Q_EMIT writeLogSignal(tr("[GalTransl++ 未知错误]"));
         Q_EMIT translationFinishedSignal(-2);
         return;
     }
 
-    controller->writeLog(tr("翻译任务%1。").arg(m_shouldStop ? tr("已正常停止") : tr("已正常完成")).toStdString());
+    controller->writeLog(tr("[GalTransl++ info] 翻译任务%1。").arg(m_shouldStop ? tr("已正常停止") : tr("已正常完成")).toStdString());
     controller->flush();
     Q_EMIT translationFinishedSignal(m_shouldStop ? 1 : 0);
 }

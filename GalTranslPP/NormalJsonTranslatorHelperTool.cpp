@@ -514,7 +514,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     break;
 
     default:
-        throw std::runtime_error(gppTr("buildContextHistory", "未知的 PromptType"));
+        throw std::runtime_error(gppTr("buildContextHistory", "未知的 PromptType").toStdString());
     }
 
     return truncateUtf8Suffix(history, maxChars);
@@ -586,7 +586,7 @@ void fillBlockAndMap(
     break;
 
     default:
-        throw std::runtime_error(gppTr("fillBlockAndMap", "不支持的 TransEngine 用于构建输入"));
+        throw std::runtime_error(gppTr("fillBlockAndMap", "不支持的 TransEngine 用于构建输入").toStdString());
     }
 }
 
@@ -762,7 +762,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
     break;
 
     default:
-        throw std::runtime_error(gppTr("parseContent", "不支持的 TransEngine 用于解析输出"));
+        throw std::runtime_error(gppTr("parseContent", "不支持的 TransEngine 用于解析输出").toStdString());
     }
 
     if (retransAllWhenFail && parsedCount != batchToTransThisRound.size()) {
@@ -781,7 +781,9 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
     ordered_json combinedJson = ordered_json::array();
 
     std::ifstream ifs;
-    logger->debug(gppTr("combineOutputFiles", "开始合并文件: %1", wide2Ascii(originalRelFilePath)));
+    logger->debug(gppTr("combineOutputFiles", "开始合并文件: %1")
+        .arg(wide2Ascii(originalRelFilePath))
+        .toStdString());
 
     std::vector<fs::path> partPaths = splitFileParts | std::views::keys | std::ranges::to<std::vector>();
 
@@ -800,11 +802,17 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
             }
             catch (const json::exception& e) {
                 ifs.close();
-                throw std::runtime_error(gppTr("combineOutputFiles", "合并文件 %1 时出错: %2", wide2Ascii(partPath), e.what()));
+                throw std::runtime_error(gppTr("combineOutputFiles", "合并文件 %1 时出错: %2")
+                    .arg(wide2Ascii(partPath))
+                    .arg(e.what())
+                    .toStdString());
             }
         }
         else {
-            throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 %1 时出错，缺少文件 %2", wide2Ascii(originalRelFilePath), wide2Ascii(partPath)));
+            throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 %1 时出错，缺少文件 %2")
+                .arg(wide2Ascii(originalRelFilePath))
+                .arg(wide2Ascii(partPath))
+                .toStdString());
         }
     }
 
@@ -813,7 +821,10 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
     std::ofstream ofs(finalOutputPath, std::ios::binary);
     ofs << combinedJson.dump(2);
     ofs.close();
-    logger->info(gppTr("combineOutputFiles", "文件 %1 合并完成，已保存到 %2", wide2Ascii(originalRelFilePath), wide2Ascii(finalOutputPath)));
+    logger->info(gppTr("combineOutputFiles", "文件 %1 合并完成，已保存到 %2")
+        .arg(wide2Ascii(originalRelFilePath))
+        .arg(wide2Ascii(finalOutputPath))
+        .toStdString());
 }
 
 
@@ -883,9 +894,11 @@ void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cacheP
         writeRepeatedBlockReferenceInfo(cacheObj, se, true);
         cacheJson.push_back(std::move(cacheObj));
     }
-    std::ofstream ofs(cachePath, std::ios::binary);
+    const fs::path tempPath = cachePath.wstring() + L"__gpp__temp";
+    std::ofstream ofs(tempPath, std::ios::binary);
     ofs << cacheJson.dump(2);
     ofs.close();
+    fs::rename(tempPath, cachePath);
 }
 
 
@@ -956,7 +969,7 @@ json toml2Json(const toml::value& value) {
     else if (value.is_boolean()) {
         return value.as_boolean();
     }
-    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型"));
+    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型").toStdString());
 }
 
 ordered_json toml2Json(const toml::ordered_value& value) {
@@ -986,5 +999,5 @@ ordered_json toml2Json(const toml::ordered_value& value) {
     else if (value.is_boolean()) {
         return value.as_boolean();
     }
-    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型"));
+    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型").toStdString());
 }

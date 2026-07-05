@@ -30,7 +30,13 @@ namespace
         if (!(CONDITION)) { \
             const std::string gppConfigValue = std::format("{}", VALUE); \
             const std::string gppRequirement = std::format("{}", REQUIREMENT); \
-            throw std::invalid_argument(gppTr("validateNormalJsonCoreConfig", "配置项 %1 无效：当前值 %2，要求%3", KEY, gppConfigValue, gppRequirement)); \
+            throw std::invalid_argument(gppTr( \
+                    "validateNormalJsonCoreConfig", \
+                    "配置项 %1 无效：当前值 %2，要求%3") \
+                .arg(KEY) \
+                .arg(gppConfigValue) \
+                .arg(gppRequirement) \
+                .toStdString()); \
         } \
     } while (false)
 
@@ -61,17 +67,94 @@ namespace
 
     void validateNormalJsonCoreConfig(const NormalJsonCoreConfig& config)
     {
-        GPP_REQUIRE_CONFIG(config.batchSize > 0, "common.numPerRequestTranslate", config.batchSize, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.threadsNum > 0, "common.threadsNum", config.threadsNum, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.nameTransBatchSize > 0, "common.numPerRequestNameTranslate", config.nameTransBatchSize, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(isOneOf(config.sortMethod, { "name", "size" }), "common.sortMethod", config.sortMethod, gppTr("validateNormalJsonCoreConfig", "为 name 或 size"));
-        GPP_REQUIRE_CONFIG(isOneOf(config.splitFile, { "No", "Num", "Equal" }), "common.splitFile", config.splitFile, gppTr("validateNormalJsonCoreConfig", "为 No、Num 或 Equal"));
-        GPP_REQUIRE_CONFIG(config.splitFileNum > 0, "common.splitFileNum", config.splitFileNum, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.repeatedBlockMinSize >= 2, "common.repeatedBlockMinSize", config.repeatedBlockMinSize, gppTr("validateNormalJsonCoreConfig", "大于等于 2"));
-        GPP_REQUIRE_CONFIG(config.cacheSearchDistance >= 0, "common.cacheSearchDistance", config.cacheSearchDistance, gppTr("validateNormalJsonCoreConfig", "大于等于 0"));
-        GPP_REQUIRE_CONFIG(config.saveCacheInterval > 0, "common.saveCacheInterval", config.saveCacheInterval, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.maxRetries > 0, "common.maxRetries", config.maxRetries, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.contextHistorySize > 0, "common.contextHistorySize", config.contextHistorySize, gppTr("validateNormalJsonCoreConfig", "大于 0"));
+        GPP_REQUIRE_CONFIG(
+            config.batchSize > 0,
+            "common.numPerRequestTranslate",
+            config.batchSize,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.threadsNum > 0,
+            "common.threadsNum",
+            config.threadsNum,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.nameTransBatchSize > 0,
+            "common.numPerRequestNameTranslate",
+            config.nameTransBatchSize,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            isOneOf(config.sortMethod, { "name", "size" }),
+            "common.sortMethod",
+            config.sortMethod,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "为 name 或 size")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            isOneOf(config.splitFile, { "No", "Num", "Equal" }),
+            "common.splitFile",
+            config.splitFile,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "为 No、Num 或 Equal")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.splitFileNum > 0,
+            "common.splitFileNum",
+            config.splitFileNum,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.repeatedBlockMinSize >= 2,
+            "common.repeatedBlockMinSize",
+            config.repeatedBlockMinSize,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于等于 2")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.cacheSearchDistance >= 0,
+            "common.cacheSearchDistance",
+            config.cacheSearchDistance,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于等于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.saveCacheInterval > 0,
+            "common.saveCacheInterval",
+            config.saveCacheInterval,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.maxRetries > 0,
+            "common.maxRetries",
+            config.maxRetries,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.contextHistorySize > 0,
+            "common.contextHistorySize",
+            config.contextHistorySize,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
 
         if (!config.agentEnabled) {
             return;
@@ -81,15 +164,49 @@ namespace
             config.transEngine != TransEngine::ForNovelTsv &&
             config.transEngine != TransEngine::GenDict)
         {
-            throw std::invalid_argument(gppTr("validateNormalJsonCoreConfig", "Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict"));
+            throw std::invalid_argument(gppTr(
+                "validateNormalJsonCoreConfig",
+                "Agent 模式当前仅支持 ForGalTsv / ForNovelTsv / GenDict")
+                .toStdString());
         }
-        GPP_REQUIRE_CONFIG(config.agentMaxTurnsPerChunk > 0, "agent.maxTurnsPerChunk", config.agentMaxTurnsPerChunk, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-        GPP_REQUIRE_CONFIG(config.agentSearchResultLimit > 0, "agent.searchResultLimit", config.agentSearchResultLimit, gppTr("validateNormalJsonCoreConfig", "大于 0"));
+        GPP_REQUIRE_CONFIG(
+            config.agentMaxTurnsPerChunk > 0,
+            "agent.maxTurnsPerChunk",
+            config.agentMaxTurnsPerChunk,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
+        GPP_REQUIRE_CONFIG(
+            config.agentSearchResultLimit > 0,
+            "agent.searchResultLimit",
+            config.agentSearchResultLimit,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
         if (config.transEngine != TransEngine::GenDict) {
-            GPP_REQUIRE_CONFIG(config.agentSoftContextChars > 0, "agent.softContextChars", config.agentSoftContextChars, gppTr("validateNormalJsonCoreConfig", "大于 0"));
-            GPP_REQUIRE_CONFIG(config.agentHardContextChars > 0, "agent.hardContextChars", config.agentHardContextChars, gppTr("validateNormalJsonCoreConfig", "大于 0"));
+            GPP_REQUIRE_CONFIG(
+                config.agentSoftContextChars > 0,
+                "agent.softContextChars",
+                config.agentSoftContextChars,
+                gppTr(
+                    "validateNormalJsonCoreConfig",
+                    "大于 0")
+                    .toStdString());
+            GPP_REQUIRE_CONFIG(
+                config.agentHardContextChars > 0,
+                "agent.hardContextChars",
+                config.agentHardContextChars,
+                gppTr(
+                    "validateNormalJsonCoreConfig",
+                    "大于 0")
+                    .toStdString());
             GPP_REQUIRE_CONFIG(config.agentSoftContextChars <= config.agentHardContextChars,
-                "agent.softContextChars", config.agentSoftContextChars, gppTr("validateNormalJsonCoreConfig", "小于等于 agent.hardContextChars"));
+                "agent.softContextChars", config.agentSoftContextChars, gppTr(
+                    "validateNormalJsonCoreConfig",
+                    "小于等于 agent.hardContextChars")
+                    .toStdString());
         }
     }
 
@@ -98,7 +215,10 @@ namespace
 
 NormalJsonTranslator::~NormalJsonTranslator()
 {
-    m_logger->info(gppTr("NormalJsonTranslator.~NormalJsonTranslator", "所有任务已完成！NormalJsonTranslator结束。"));
+    m_logger->info(gppTr(
+        "NormalJsonTranslator.~NormalJsonTranslator",
+        "所有任务已完成！NormalJsonTranslator 结束。")
+        .toStdString());
 }
 
 NormalJsonTranslator::NormalJsonTranslator(
@@ -113,7 +233,10 @@ NormalJsonTranslator::NormalJsonTranslator(
     m_controller(controller), m_logger(logger), m_projectDir(projectDir),
     m_luaManager(std::make_unique<LuaManager>(logger)), m_pythonManager(std::make_unique<PythonManager>(logger))
 {
-    m_logger->info(gppTr("NormalJsonTranslator.NormalJsonTranslator", "GalTransl++ NormalJsonTranslator 启动..."));
+    m_logger->info(gppTr(
+        "NormalJsonTranslator.NormalJsonTranslator",
+        "GalTransl++ NormalJsonTranslator 启动...")
+        .toStdString());
     m_inputDir = inputDir.value_or(m_projectDir / L"gt_input");
     m_inputCacheDir = inputCacheDir.value_or(L"cache" / m_projectDir.filename() / L"gt_input_cache");
     m_outputDir = outputDir.value_or(m_projectDir / L"gt_output");
@@ -131,11 +254,15 @@ NormalJsonTranslator::NormalJsonTranslator(
             json::parse(ifs).get_to(m_backgroundTextCacheMap);
         }
         else {
-            m_logger->debug(gppTr("NormalJsonTranslator.NormalJsonTranslator", "未找到背景文本缓存 %1", wide2Ascii(m_backgroundTextCachePath)));
+            m_logger->debug(gppTr("NormalJsonTranslator.NormalJsonTranslator", "未找到背景文本缓存 %1")
+                .arg(wide2Ascii(m_backgroundTextCachePath))
+                .toStdString());
         }
     }
     catch (...) {
-        m_logger->error(gppTr("NormalJsonTranslator.NormalJsonTranslator", "读取背景文本缓存 %1 失败", wide2Ascii(m_backgroundTextCachePath)));
+        m_logger->error(gppTr("NormalJsonTranslator.NormalJsonTranslator", "读取背景文本缓存 %1 失败")
+            .arg(wide2Ascii(m_backgroundTextCachePath))
+            .toStdString());
     }
 }
 
@@ -177,7 +304,11 @@ void NormalJsonTranslator::normalJsonInit()
             m_transEngine = TransEngine::ShowNormal;
         }
         else {
-            throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "无效的 TransEngine: %1", transEngineStr));
+            throw std::runtime_error(gppTr(
+                "NormalJsonTranslator.normalJsonInit",
+                "无效的 TransEngine: %1")
+                .arg(transEngineStr)
+                .toStdString());
         }
 
         const auto pluginConfigData = toml::uparse(filePluginConfigPath / L"NormalJson.toml");
@@ -305,7 +436,10 @@ void NormalJsonTranslator::normalJsonInit()
         if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
             m_apiStrategy = toml::find_or(configData, "backendSpecific", "OpenAI-Compatible", "apiStrategy", "random");
             if (m_apiStrategy != "random" && m_apiStrategy != "fallback") {
-                throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "apiStrategy 必须为 random 或 fallback"));
+                throw std::invalid_argument(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "apiStrategy 必须为 random 或 fallback")
+                    .toStdString());
             }
             int apiTimeOutSecond = toml::find_or(configData, "backendSpecific", "OpenAI-Compatible", "apiTimeout", 300);
             m_apiTimeOutMs = apiTimeOutSecond * 1000;
@@ -371,7 +505,10 @@ void NormalJsonTranslator::normalJsonInit()
                 apis.push_back(std::move(api));
             }
             if (apis.empty()) {
-                throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "找不到可用的 API key"));
+                throw std::invalid_argument(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "找不到可用的 API key")
+                    .toStdString());
             }
             else {
                 m_apiPool = std::make_unique<APIPool>(m_logger);
@@ -382,7 +519,10 @@ void NormalJsonTranslator::normalJsonInit()
             const bool hasProjectPrompt = fs::exists(projectPromptPath);
             const bool hasDefaultPrompt = fs::exists(defaultPromptPath);
             if (!hasProjectPrompt && !hasDefaultPrompt) {
-                throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "找不到 Prompt.toml 文件"));
+                throw std::runtime_error(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "找不到 Prompt.toml 文件")
+                    .toStdString());
             }
 
             const auto projectPromptData = hasProjectPrompt ? toml::uparse(projectPromptPath) : toml::value{};
@@ -396,7 +536,11 @@ void NormalJsonTranslator::normalJsonInit()
                     if (hasDefaultPrompt && defaultPromptData.contains(key) && defaultPromptData.at(key).is_string()) {
                         return defaultPromptData.at(key).as_string();
                     }
-                    throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "Prompt.toml 中缺少 %1 键", key));
+                    throw std::invalid_argument(gppTr(
+                        "NormalJsonTranslator.normalJsonInit",
+                        "Prompt.toml 中缺少 %1 键")
+                        .arg(key)
+                        .toStdString());
                 };
 
             if (m_transEngine == TransEngine::GenDict) {
@@ -438,7 +582,10 @@ void NormalJsonTranslator::normalJsonInit()
                     userPromptKey = "NAMETRANS_PROMPT";
                     break;
                 default:
-                    throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "未知的 TransEngine"));
+                    throw std::invalid_argument(gppTr(
+                        "NormalJsonTranslator.normalJsonInit",
+                        "未知的 TransEngine")
+                        .toStdString());
                 }
 
                 if (m_agentEnabled) {
@@ -457,21 +604,34 @@ void NormalJsonTranslator::normalJsonInit()
             const std::string tokenizerBackend = toml::find_or(configData, "common", "tokenizerBackend", "MeCab");
             if (tokenizerBackend == "MeCab") {
                 const std::string mecabDictDir = toml::find_or(configData, "common", "mecabDictDir", "BaseConfig/mecabDict/mecab-ipadic-utf8");
-                m_logger->info(gppTr("NormalJsonTranslator.normalJsonInit", "已配置 MeCab 分词器，首次使用时加载。"));
+                m_logger->info(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "已配置 MeCab 分词器，首次使用时加载。")
+                    .toStdString());
                 m_tokenizeSourceLangFunc = getMeCabTokenizeFunc(mecabDictDir, m_logger);
             }
             else if (tokenizerBackend == "spaCy") {
                 const std::string spaCyModelName = toml::find_or(configData, "common", "spaCyModelName", "ja_core_news_lg");
-                m_logger->info(gppTr("NormalJsonTranslator.normalJsonInit", "已配置 spaCy 分词器，首次使用时加载。"));
+                m_logger->info(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "已配置 spaCy 分词器，首次使用时加载。")
+                    .toStdString());
                 m_tokenizeSourceLangFunc = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
             }
             else if (tokenizerBackend == "Stanza") {
                 const std::string stanzaLang = toml::find_or(configData, "common", "stanzaLang", "ja");
-                m_logger->info(gppTr("NormalJsonTranslator.normalJsonInit", "已配置 Stanza 分词器，首次使用时加载。"));
+                m_logger->info(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "已配置 Stanza 分词器，首次使用时加载。")
+                    .toStdString());
                 m_tokenizeSourceLangFunc = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
             }
             else {
-                throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "无效的 tokenizerBackend: %1", tokenizerBackend));
+                throw std::invalid_argument(gppTr(
+                    "NormalJsonTranslator.normalJsonInit",
+                    "无效的 tokenizerBackend: %1")
+                    .arg(tokenizerBackend)
+                    .toStdString());
             }
 
             const auto textPlugins = toml::find<
@@ -526,7 +686,11 @@ void NormalJsonTranslator::normalJsonInit()
                         pattern.conditionTarget = CachePart::Problems;
                         pattern.conditionReg.setPattern(elem.as_string()).setModifier(defaultRegCompileModifier).compile();
                         if (!pattern.conditionReg) {
-                            throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "retranslKeys 正则表达式 [%1] 编译失败", elem.as_string()));
+                            throw std::runtime_error(gppTr(
+                                "NormalJsonTranslator.normalJsonInit",
+                                "retranslKeys 正则表达式 [%1] 编译失败")
+                                .arg(elem.as_string())
+                                .toStdString());
                         }
                         GPPCondition cond{ std::move(pattern) };
                         CheckSeCondFunc checkFunc = [condr = std::move(cond)](const Sentence* se) -> bool
@@ -540,7 +704,10 @@ void NormalJsonTranslator::normalJsonInit()
                         m_retranslKeys.push_back(std::move(checkFunc));
                     }
                     else {
-                        throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "retranslKeys 的元素必须是字符串、表或表数组"));
+                        throw std::invalid_argument(gppTr(
+                            "NormalJsonTranslator.normalJsonInit",
+                            "retranslKeys 的元素必须是字符串、表或表数组")
+                            .toStdString());
                     }
                 }
             }
@@ -554,7 +721,10 @@ void NormalJsonTranslator::normalJsonInit()
                     }
                     else if (elem.is_array() && elem.size() > 0) {
                         if (!elem[0].is_string()) {
-                            throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "skipProblems 的内联表数组第一个元素必须是字符串"));
+                            throw std::invalid_argument(gppTr(
+                                "NormalJsonTranslator.normalJsonInit",
+                                "skipProblems 的内联表数组第一个元素必须是字符串")
+                                .toStdString());
                         }
                         jpc::Regex pattern(elem[0].as_string(), defaultRegCompileModifier);
                         if (elem.size() == 1) {
@@ -566,7 +736,10 @@ void NormalJsonTranslator::normalJsonInit()
                         }
                     }
                     else {
-                        throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonInit", "skipProblems 的元素必须是字符串或表数组"));
+                        throw std::invalid_argument(gppTr(
+                            "NormalJsonTranslator.normalJsonInit",
+                            "skipProblems 的元素必须是字符串或表数组")
+                            .toStdString());
                     }
                 }
             }
@@ -593,7 +766,9 @@ void NormalJsonTranslator::normalJsonInit()
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "项目配置文件解析失败: %1", e.what()));
+        throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "项目配置文件解析失败: %1")
+            .arg(e.what())
+            .toStdString());
     }
 }
 
@@ -609,7 +784,10 @@ void NormalJsonTranslator::recordSentenceDone(const fs::path& relInputPath, cons
         return;
     }
     m_controller->recordFileSentenceDone(wide2Ascii(relInputPath), !se.problems.empty());
-    if (addToSuccessStream && !std::ranges::contains(se.problems, gppTr("NormalJsonTranslator.postProcess", "翻译失败"))) {
+    if (addToSuccessStream && !std::ranges::contains(se.problems, gppTr(
+        "NormalJsonTranslator.postProcess",
+        "翻译失败")
+        .toStdString())) {
         RuntimeSuccessEvent event;
         event.filename = wide2Ascii(relInputPath);
         event.index = se.index;
@@ -723,7 +901,7 @@ void NormalJsonTranslator::postProcess(Sentence* se)
     se->problems.clear();
 
     if (se->translated_preview.starts_with("(Failed to translate)")) {
-            se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "翻译失败"));
+            se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "翻译失败").toStdString());
         se->notAnalyzeProblem = true;
     }
     if (se->translated_preview.starts_with("(GPPCProblem:")) {
@@ -733,7 +911,8 @@ void NormalJsonTranslator::postProcess(Sentence* se)
         }
     }
     else if (se->translated_preview.contains("GPPCProblem")) {
-        se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "错误的 GPPCProblem 格式"));
+        se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "错误的 GPPCProblem 格式")
+            .toStdString());
     }
 
     for (auto& plugin : m_textPlugins) {

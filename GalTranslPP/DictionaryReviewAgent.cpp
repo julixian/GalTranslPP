@@ -51,13 +51,16 @@ ReviewProtocolResponse parseReviewProtocolResponse(const std::string& content) {
     ReviewProtocolResponse result;
     const std::optional<json> payloadOpt = tryParseAgentJsonEnvelope(content);
     if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
-        throw std::runtime_error(gppTr("parseReviewProtocolResponse", "Review Agent 响应不是合法 JSON 对象"));
+        throw std::runtime_error(gppTr("parseReviewProtocolResponse", "Review Agent 响应不是合法 JSON 对象")
+            .toStdString());
     }
 
     const json& payload = *payloadOpt;
     const std::string schema = payload.value("schema", "");
     if (!schema.empty() && schema != "gpp-gendict-review-v1") {
-        throw std::runtime_error(gppTr("parseReviewProtocolResponse", "无效的 Review Agent schema: %1", schema));
+        throw std::runtime_error(gppTr("parseReviewProtocolResponse", "无效的 Review Agent schema: %1")
+            .arg(schema)
+            .toStdString());
     }
 
     result.action = payload.value("action", "");
@@ -902,8 +905,12 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             const std::string fallbackTarget = fallbackTargetForGroup(group);
             const std::string fallbackNote = fallbackNoteForGroup(group);
             if (decision.sourceTerm != group.sourceTerm) {
-                throw std::runtime_error(gppTr("DictionaryReviewAgent.applyDecisionEntry", "commit.source_term=%1 与当前术语 %2 不匹配",
-                    decision.sourceTerm, group.sourceTerm));
+                throw std::runtime_error(gppTr(
+                    "DictionaryReviewAgent.applyDecisionEntry",
+                    "commit.source_term=%1 与当前术语 %2 不匹配")
+                    .arg(decision.sourceTerm)
+                    .arg(group.sourceTerm)
+                    .toStdString());
             }
             if (decision.termUpdates.is_array()) {
                 for (const auto& update : decision.termUpdates) {
@@ -917,16 +924,30 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             }
             if (decision.status != "accepted" && decision.status != "merged" &&
                 decision.status != "deprecated" && decision.status != "conflict") {
-                throw std::runtime_error(gppTr("DictionaryReviewAgent.applyDecisionEntry", "无效状态: %1", decision.status));
+                throw std::runtime_error(gppTr(
+                    "DictionaryReviewAgent.applyDecisionEntry",
+                    "无效状态: %1")
+                    .arg(decision.status)
+                    .toStdString());
             }
             if ((decision.status == "accepted" || decision.status == "conflict") && decision.finalTarget.empty()) {
-                throw std::runtime_error(gppTr("DictionaryReviewAgent.applyDecisionEntry", "status=%1 时必须提供 final_target", decision.status));
+                throw std::runtime_error(gppTr(
+                    "DictionaryReviewAgent.applyDecisionEntry",
+                    "status=%1 时必须提供 final_target")
+                    .arg(decision.status)
+                    .toStdString());
             }
             if (decision.status == "conflict" && decision.finalNote.empty()) {
-                throw std::runtime_error(gppTr("DictionaryReviewAgent.applyDecisionEntry", "status=conflict 时必须提供 final_note"));
+                throw std::runtime_error(gppTr(
+                    "DictionaryReviewAgent.applyDecisionEntry",
+                    "status=conflict 时必须提供 final_note")
+                    .toStdString());
             }
             if (decision.status == "merged" && decision.mergeInto.empty()) {
-                throw std::runtime_error(gppTr("DictionaryReviewAgent.applyDecisionEntry", "status=merged 时必须提供 merge_into"));
+                throw std::runtime_error(gppTr(
+                    "DictionaryReviewAgent.applyDecisionEntry",
+                    "status=merged 时必须提供 merge_into")
+                    .toStdString());
             }
 
             json& entry = ledgerMap[group.sourceTerm];
@@ -959,7 +980,11 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     entry = {
                         {"target_term", decision.finalTarget.empty() ? fallbackTarget : decision.finalTarget},
                         {"note", decision.finalNote.empty()
-                            ? gppTr("DictionaryReviewAgent.applyDecisionEntry", "建议合并目标 %1 不存在；已保留为冲突以供手动审校", decision.mergeInto)
+                            ? gppTr(
+                                "DictionaryReviewAgent.applyDecisionEntry",
+                                "建议合并目标 %1 不存在；已保留为冲突以供手动审校")
+                                .arg(decision.mergeInto)
+                                .toStdString()
                             : decision.finalNote},
                         {"status", "conflict"},
                         {"merge_into", ""},
@@ -1003,7 +1028,10 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
     auto reviewGroupFunc = [&](int groupIndex, const DictionaryReviewTermGroup& group, int threadId)
         {
         if (m_controller->shouldStop()) {
-            m_logger->debug(gppTr("DictionaryReviewAgent.review", "GenDict Review Agent 收到停止信号，剩余术语将使用本地回退。"));
+            m_logger->debug(gppTr(
+                "DictionaryReviewAgent.review",
+                "GenDict Review Agent 收到停止信号，剩余术语将使用本地回退。")
+                .toStdString());
             {
                 std::lock_guard<std::mutex> lock(ledgerMutex);
                 applyFallbackForGroupUnlockedFunc(group, "stopped");
@@ -1012,9 +1040,17 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         }
 
         const fs::path currentFile = guessCurrentFileForTerm(group.sourceTerm, sourceFiles, m_config.relInputFiles);
-        m_logger->info(gppTr("DictionaryReviewAgent.review", "[线程 %1] GenDict Review Agent reviewing term %2/%3: %4, %5 target candidates, %6 note candidates, %7 occurrences.",
-            threadId, groupIndex + 1, groups.size(), group.sourceTerm,
-            group.candidateTargets.size(), group.candidateNotes.size(), group.occurrenceCount));
+        m_logger->info(gppTr(
+            "DictionaryReviewAgent.review",
+            "[线程 %1] GenDict Review Agent reviewing term %2/%3: %4, %5 target candidates, %6 note candidates, %7 occurrences.")
+            .arg(threadId)
+            .arg(groupIndex + 1)
+            .arg(groups.size())
+            .arg(group.sourceTerm)
+            .arg(group.candidateTargets.size())
+            .arg(group.candidateNotes.size())
+            .arg(group.occurrenceCount)
+            .toStdString());
 
         int retryCount = 0;
         bool completed = false;
@@ -1039,7 +1075,10 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     ? m_apiPool->getApi()
                     : m_apiPool->getFirstApi();
                 if (!apiOpt.has_value()) {
-                    throw std::runtime_error(gppTr("DictionaryReviewAgent.reviewTerm", "没有可用的 API key 了"));
+                    throw std::runtime_error(gppTr(
+                        "DictionaryReviewAgent.reviewTerm",
+                        "没有可用的 API key 了")
+                        .toStdString());
                 }
                 const TranslationApi& currentApi = apiOpt.value();
 
@@ -1059,36 +1098,42 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 }
                 catch (const std::exception& e) {
                     ++retryCount;
-                    m_logger->warn(gppTr("DictionaryReviewAgent.review",
-                        "GenDict Review Agent 术语 %1 第 %2/%3 轮返回无效响应，第 %4/%5 次重试。错误: %6。原始响应: %7",
-                        group.sourceTerm,
-                        turn + 1,
-                        m_config.maxTurnsPerTerm,
-                        retryCount,
-                        m_config.maxRetries,
-                        e.what(),
-                        truncateUtf8Prefix(response.content, 6000)));
+                    m_logger->warn(gppTr(
+                        "DictionaryReviewAgent.review",
+                        "GenDict Review Agent 术语 %1 第 %2/%3 轮返回无效响应，第 %4/%5 次重试。错误: %6。原始响应: %7")
+                        .arg(group.sourceTerm)
+                        .arg(turn + 1)
+                        .arg(m_config.maxTurnsPerTerm)
+                        .arg(retryCount)
+                        .arg(m_config.maxRetries)
+                        .arg(e.what())
+                        .arg(truncateUtf8Prefix(response.content, 6000))
+                        .toStdString());
                     turnLoopExitedByRetry = true;
                     break;
                 }
 
-                m_logger->info(gppTr("DictionaryReviewAgent.review",
-                    "GenDict Review Agent 术语 %1 第 %2/%3 轮返回 action='%4'。",
-                    group.sourceTerm,
-                    turn + 1,
-                    m_config.maxTurnsPerTerm,
-                    protocol.action));
+                m_logger->info(gppTr(
+                    "DictionaryReviewAgent.review",
+                    "GenDict Review Agent 术语 %1 第 %2/%3 轮返回 action='%4'。")
+                    .arg(group.sourceTerm)
+                    .arg(turn + 1)
+                    .arg(m_config.maxTurnsPerTerm)
+                    .arg(protocol.action)
+                    .toStdString());
 
                 if (protocol.action == "tool_calls") {
                     if (protocol.calls.empty()) {
                         ++retryCount;
-                        m_logger->warn(gppTr("DictionaryReviewAgent.review",
-                            "GenDict Review Agent 术语 %1 第 %2/%3 轮返回空 tool_calls，第 %4/%5 次重试。",
-                            group.sourceTerm,
-                            turn + 1,
-                            m_config.maxTurnsPerTerm,
-                            retryCount,
-                            m_config.maxRetries));
+                        m_logger->warn(gppTr(
+                            "DictionaryReviewAgent.review",
+                            "GenDict Review Agent 术语 %1 第 %2/%3 轮返回空 tool_calls，第 %4/%5 次重试。")
+                            .arg(group.sourceTerm)
+                            .arg(turn + 1)
+                            .arg(m_config.maxTurnsPerTerm)
+                            .arg(retryCount)
+                            .arg(m_config.maxRetries)
+                            .toStdString());
                         turnLoopExitedByRetry = true;
                         break;
                     }
@@ -1110,21 +1155,27 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                     env.ledgerMap = &toolLedgerSnapshot;
                     env.ledgerOrder = &toolEntriesSnapshot;
 
-                    m_logger->info(gppTr("DictionaryReviewAgent.review",
-                        "GenDict Review Agent 术语 %1 请求了 %2 个工具调用: %3。",
-                        group.sourceTerm,
-                        protocol.calls.size(),
-                        formatReviewToolCallDetailsForInfo(protocol.calls)));
+                    m_logger->info(gppTr(
+                        "DictionaryReviewAgent.review",
+                        "GenDict Review Agent 术语 %1 请求了 %2 个工具调用: %3。")
+                        .arg(group.sourceTerm)
+                        .arg(protocol.calls.size())
+                        .arg(formatReviewToolCallDetailsForInfo(protocol.calls))
+                        .toStdString());
                     const json toolResults = ::executeReviewToolCalls(env, protocol.calls);
-                    m_logger->info(gppTr("DictionaryReviewAgent.review",
-                        "GenDict Review Agent 术语 %1 工具结果: %2。",
-                        group.sourceTerm,
-                        summarizeReviewToolResultsForInfo(toolResults)));
+                    m_logger->info(gppTr(
+                        "DictionaryReviewAgent.review",
+                        "GenDict Review Agent 术语 %1 工具结果: %2。")
+                        .arg(group.sourceTerm)
+                        .arg(summarizeReviewToolResultsForInfo(toolResults))
+                        .toStdString());
                     if (m_logger->should_log(spdlog::level::debug)) {
-                        m_logger->debug(gppTr("DictionaryReviewAgent.review",
-                            "GenDict Review Agent 术语 %1 工具结果:\n%2",
-                            group.sourceTerm,
-                            truncateUtf8Prefix(toolResults.dump(2), 12000)));
+                        m_logger->debug(gppTr(
+                            "DictionaryReviewAgent.review",
+                            "GenDict Review Agent 术语 %1 工具结果:\n%2")
+                            .arg(group.sourceTerm)
+                            .arg(truncateUtf8Prefix(toolResults.dump(2), 12000))
+                            .toStdString());
                     }
 
                     messages.push_back({ {"role", "assistant"}, {"content", response.content} });
@@ -1136,11 +1187,13 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                 }
 
                 if (protocol.action == "skip") {
-                    m_logger->info(gppTr("DictionaryReviewAgent.review",
-                        "GenDict Review Agent 术语 %1 选择 skip，使用本地回退 target='%2'，note_chars=%3。",
-                        group.sourceTerm,
-                        truncateUtf8Prefix(fallbackTargetForGroup(group), 180),
-                        fallbackNoteForGroup(group).size()));
+                    m_logger->info(gppTr(
+                        "DictionaryReviewAgent.review",
+                        "GenDict Review Agent 术语 %1 选择 skip，使用本地回退 target='%2'，note_chars=%3。")
+                        .arg(group.sourceTerm)
+                        .arg(truncateUtf8Prefix(fallbackTargetForGroup(group), 180))
+                        .arg(fallbackNoteForGroup(group).size())
+                        .toStdString());
                     {
                         std::lock_guard<std::mutex> lock(ledgerMutex);
                         applyFallbackForGroupUnlockedFunc(group, "skip");
@@ -1161,42 +1214,50 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
                                 : json::object();
                         }
                         completed = true;
-                        m_logger->info(gppTr("DictionaryReviewAgent.review",
-                            "GenDict Review Agent 术语 %1 commit 已接受: %2。",
-                            group.sourceTerm,
-                            formatReviewAppliedEntryForInfo(
+                        m_logger->info(gppTr(
+                                "DictionaryReviewAgent.review",
+                                "GenDict Review Agent 术语 %1 commit 已接受: %2。")
+                            .arg(group.sourceTerm)
+                            .arg(formatReviewAppliedEntryForInfo(
                                 group.sourceTerm,
                                 appliedEntry,
                                 protocol.result.termUpdates
-                            )));
+                            ))
+                            .toStdString());
                         if (m_logger->should_log(spdlog::level::debug)) {
-                            m_logger->debug(gppTr("DictionaryReviewAgent.review",
-                                "GenDict Review Agent 术语 %1 commit 成功:\n%2",
-                                group.sourceTerm,
-                                truncateUtf8Prefix(response.content, 12000)));
+                            m_logger->debug(gppTr(
+                                "DictionaryReviewAgent.review",
+                                "GenDict Review Agent 术语 %1 commit 成功:\n%2")
+                                .arg(group.sourceTerm)
+                                .arg(truncateUtf8Prefix(response.content, 12000))
+                                .toStdString());
                         }
                     }
                     catch (const std::exception& e) {
                         ++retryCount;
-                        m_logger->warn(gppTr("DictionaryReviewAgent.review",
-                            "GenDict Review Agent 术语 %1 commit 校验失败，第 %2/%3 次重试。错误: %4。原始响应: %5",
-                            group.sourceTerm,
-                            retryCount,
-                            m_config.maxRetries,
-                            e.what(),
-                            truncateUtf8Prefix(response.content, 6000)));
+                        m_logger->warn(gppTr(
+                            "DictionaryReviewAgent.review",
+                            "GenDict Review Agent 术语 %1 commit 校验失败，第 %2/%3 次重试。错误: %4。原始响应: %5")
+                            .arg(group.sourceTerm)
+                            .arg(retryCount)
+                            .arg(m_config.maxRetries)
+                            .arg(e.what())
+                            .arg(truncateUtf8Prefix(response.content, 6000))
+                            .toStdString());
                         turnLoopExitedByRetry = true;
                     }
                     break;
                 }
 
                 ++retryCount;
-                m_logger->warn(gppTr("DictionaryReviewAgent.review",
-                    "GenDict Review Agent 术语 %1 返回未知 action '%2'，第 %3/%4 次重试。",
-                    group.sourceTerm,
-                    protocol.action,
-                    retryCount,
-                    m_config.maxRetries));
+                m_logger->warn(gppTr(
+                    "DictionaryReviewAgent.review",
+                    "GenDict Review Agent 术语 %1 返回未知 action '%2'，第 %3/%4 次重试。")
+                    .arg(group.sourceTerm)
+                    .arg(protocol.action)
+                    .arg(retryCount)
+                    .arg(m_config.maxRetries)
+                    .toStdString());
                 turnLoopExitedByRetry = true;
                 break;
             }
@@ -1206,10 +1267,12 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
             }
             if (!turnLoopExitedByRetry) {
                 exceededTurnLimit = true;
-                m_logger->warn(gppTr("DictionaryReviewAgent.review",
-                    "GenDict Review Agent 术语 %1 已达到最大轮数限制(%2)，使用本地回退。",
-                    group.sourceTerm,
-                    m_config.maxTurnsPerTerm));
+                m_logger->warn(gppTr(
+                    "DictionaryReviewAgent.review",
+                    "GenDict Review Agent 术语 %1 已达到最大轮数限制(%2)，使用本地回退。")
+                    .arg(group.sourceTerm)
+                    .arg(m_config.maxTurnsPerTerm)
+                    .toStdString());
                 break;
             }
         }
@@ -1224,7 +1287,12 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         };
 
     const int reviewThreads = std::max(1, std::min(m_config.threadsNum, (int)groups.size()));
-    m_logger->info(gppTr("DictionaryReviewAgent.review", "GenDict Review Agent 启动 %1 个审校 worker 处理 %2 个术语。", reviewThreads, groups.size()));
+    m_logger->info(gppTr(
+        "DictionaryReviewAgent.review",
+        "GenDict Review Agent 启动 %1 个审校 worker 处理 %2 个术语。")
+        .arg(reviewThreads)
+        .arg(groups.size())
+        .toStdString());
     ctpl::thread_pool pool(reviewThreads);
     std::vector<std::future<void>> results;
     results.reserve(groups.size());
@@ -1261,7 +1329,9 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         entry["merge_into"] = "";
         if (entry.value("note", "").empty()) {
             entry["note"] = fallbackNote.empty()
-                ? gppTr("DictionaryReviewAgent.review", "原合并目标 %1 未被保留；已恢复为手动审校", mergeInto)
+                ? gppTr("DictionaryReviewAgent.review", "原合并目标 %1 未被保留；已恢复为手动审校")
+                    .arg(mergeInto)
+                    .toStdString()
                 : fallbackNote;
         }
         entry["origin"] = "merge_recovered";
@@ -1305,6 +1375,8 @@ DictList DictionaryReviewAgent::review(const std::vector<DictionaryReviewTermGro
         );
     }
 
-    m_logger->info(gppTr("DictionaryReviewAgent.review", "GenDict Review Agent 完成。最终保留术语数: %1。", finalList.size()));
+    m_logger->info(gppTr("DictionaryReviewAgent.review", "GenDict Review Agent 完成。最终保留术语数: %1。")
+        .arg(finalList.size())
+        .toStdString());
     return finalList;
 }

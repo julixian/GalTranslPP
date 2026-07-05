@@ -32,7 +32,10 @@ PythonMainInterpreterManager::PythonMainInterpreterManager() {
         m_daemonThread = std::thread(&PythonMainInterpreterManager::daemonThreadFunc, this);
     }
     else {
-        throw std::runtime_error(gppTr("PythonMainInterpreterManager.PythonMainInterpreterManager", "Python 环境未初始化"));
+        throw std::runtime_error(gppTr(
+            "PythonMainInterpreterManager.PythonMainInterpreterManager",
+            "Python 环境未初始化")
+            .toStdString());
     }
 }
 
@@ -65,13 +68,21 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
 
     std::lock_guard<std::mutex> lock(m_mutex);
     if (const auto moduleFuncLocked = m_nlpModuleFunctions[moduleName][modelName].lock()) {
-        logger->debug(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 已在内存中，直接获取", moduleName, modelName));
+        logger->debug(gppTr(
+            "PythonMainInterpreterManager.registerNLPFunction",
+            "模块 %1 的模型 %2 已在内存中，直接获取")
+            .arg(moduleName)
+            .arg(modelName)
+            .toStdString());
         return moduleFuncLocked;
     }
 
     std::shared_ptr<py::object> pythonNLPModuleFunc;
 
-    logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "正在加载模块 %1 的模型 %2", moduleName, modelName));
+    logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "正在加载模块 %1 的模型 %2")
+        .arg(moduleName)
+        .arg(modelName)
+        .toStdString());
     auto loadModelTaskFunc = [&]()
         {
             try {
@@ -79,22 +90,43 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
                 bool modelInstalled = nlpModule.attr("check_model")(modelName).cast<bool>();
                 if (!modelInstalled) {
 
-                    logger->error(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 未安装，正在尝试安装", moduleName, modelName));
+                    logger->error(gppTr(
+                        "PythonMainInterpreterManager.registerNLPFunction",
+                        "模块 %1 的模型 %2 未安装，正在尝试安装")
+                        .arg(moduleName)
+                        .arg(modelName)
+                        .toStdString());
                     const std::vector<std::string> installArgs = nlpModule.attr("get_download_command")(modelName).cast<std::vector<std::string>>();
                     const std::string installCommand = installArgs | std::views::join_with(' ') | std::ranges::to<std::string>();
 
                     // 这个安装时间长，搞个窗口出来显示进度条吧
-                    logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "将在 3s 后开始安装模型，请勿关闭接下来出现的窗口！"));
+                    logger->info(gppTr(
+                        "PythonMainInterpreterManager.registerNLPFunction",
+                        "将在 3s 后开始安装模型，请勿关闭接下来出现的窗口！")
+                        .toStdString());
                     std::this_thread::sleep_for(std::chrono::seconds(3));
-                    logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "正在执行安装命令: %1", installCommand));
+                    logger->info(gppTr(
+                        "PythonMainInterpreterManager.registerNLPFunction",
+                        "正在执行安装命令: %1")
+                        .arg(installCommand)
+                        .toStdString());
 
                     if (!executeCommand(s_pythonExePath.wstring(), ascii2Wide(installCommand))) {
-                        throw std::runtime_error(gppTr("PythonMainInterpreterManager.registerNLPFunction", "安装模型 %1 的命令失败", modelName));
+                        throw std::runtime_error(gppTr(
+                            "PythonMainInterpreterManager.registerNLPFunction",
+                            "安装模型 %1 的命令失败")
+                            .arg(modelName)
+                            .toStdString());
                     }
 
                     modelInstalled = nlpModule.attr("check_model")(modelName).cast<bool>();
                     if (modelInstalled) {
-                        logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 安装成功", moduleName, modelName));
+                        logger->info(gppTr(
+                            "PythonMainInterpreterManager.registerNLPFunction",
+                            "模块 %1 的模型 %2 安装成功")
+                            .arg(moduleName)
+                            .arg(modelName)
+                            .toStdString());
                         m_nlpModuleFunctions[moduleName].insert_or_assign(modelName, std::weak_ptr<py::object>{});
                         // 不重启会找不到新下载的模型，因为已导入的 nlp 库模块不会 reload
                         // 理论上强制 reload 一遍 nlp 库也可以不用重启，不过保险起见
@@ -102,7 +134,12 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
                         return;
                     }
                     else {
-                        throw std::runtime_error(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 安装失败", moduleName, modelName));
+                        throw std::runtime_error(gppTr(
+                            "PythonMainInterpreterManager.registerNLPFunction",
+                            "模块 %1 的模型 %2 安装失败")
+                            .arg(moduleName)
+                            .arg(modelName)
+                            .toStdString());
                     }
                 }
                 pythonNLPModuleFunc = std::shared_ptr<py::object>(new py::object{ nlpModule.attr("NLPProcessor")(modelName).attr("process_text") },
@@ -110,11 +147,20 @@ std::shared_ptr<py::object> PythonMainInterpreterManager::registerNLPFunction
                 m_nlpModuleFunctions[moduleName].insert_or_assign(modelName, std::weak_ptr<py::object>{pythonNLPModuleFunc});
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonMainInterpreterManager.registerNLPFunction", "加载模块 %1 的模型 %2 时出现异常: %3", moduleName, modelName, e.what()));
+                throw std::runtime_error(gppTr(
+                    "PythonMainInterpreterManager.registerNLPFunction",
+                    "加载模块 %1 的模型 %2 时出现异常: %3")
+                    .arg(moduleName)
+                    .arg(modelName)
+                    .arg(e.what())
+                    .toStdString());
             }
         };
     this->submitTask(std::move(loadModelTaskFunc)).get();
-    logger->debug(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 已加载", moduleName, modelName));
+    logger->debug(gppTr("PythonMainInterpreterManager.registerNLPFunction", "模块 %1 的模型 %2 已加载")
+        .arg(moduleName)
+        .arg(modelName)
+        .toStdString());
     return pythonNLPModuleFunc;
 }
 
@@ -131,7 +177,11 @@ void PythonMainInterpreterManager::daemonThreadFunc() {
         py::module_::import("gpp_plugin_api");
     }
     catch (const py::error_already_set& e) {
-        throw std::runtime_error(gppTr("PythonMainInterpreterManager.daemonThreadFunc", "导入 gpp_plugin_api 时出现异常: %1", e.what()));
+        throw std::runtime_error(gppTr(
+            "PythonMainInterpreterManager.daemonThreadFunc",
+            "导入 gpp_plugin_api 时出现异常: %1")
+            .arg(e.what())
+            .toStdString());
     }
     while (true) {
         const auto taskOpt = m_taskQueue.pop();
@@ -148,7 +198,11 @@ void PythonMainInterpreterManager::daemonThreadFunc() {
             // 如果 taskFunc 没有捕获就在这里手动转成 runtime_error
             task->promise.set_exception(
                 std::make_exception_ptr(
-                    std::runtime_error(gppTr("PythonMainInterpreterManager.daemonThreadFunc", "PythonMainInterpreterManager 异常: %1", e.what()))
+                    std::runtime_error(gppTr(
+                        "PythonMainInterpreterManager.daemonThreadFunc",
+                        "PythonMainInterpreterManager 异常: %1")
+                        .arg(e.what())
+                        .toStdString())
                 )
             );
         }
@@ -218,7 +272,11 @@ void PythonInterpreterInstance::daemonThreadFunc() {
         py::module_::import("gpp_plugin_api");
     }
     catch (const py::error_already_set& e) {
-        throw std::runtime_error(gppTr("PythonInterpreterInstance.daemonThreadFunc", "导入 gpp_plugin_api 时出现异常: %1", e.what()));
+        throw std::runtime_error(gppTr(
+            "PythonInterpreterInstance.daemonThreadFunc",
+            "导入 gpp_plugin_api 时出现异常: %1")
+            .arg(e.what())
+            .toStdString());
     }
     while (true) {
         const auto taskOpt = m_taskQueue.pop();
@@ -233,7 +291,11 @@ void PythonInterpreterInstance::daemonThreadFunc() {
         catch (const py::error_already_set& e) {
             task->promise.set_exception(
                 std::make_exception_ptr(
-                    std::runtime_error(gppTr("PythonInterpreterInstance.daemonThreadFunc", "PythonInterpreterInstance 异常: %1", e.what()))
+                    std::runtime_error(gppTr(
+                        "PythonInterpreterInstance.daemonThreadFunc",
+                        "PythonInterpreterInstance 异常: %1")
+                        .arg(e.what())
+                        .toStdString())
                 )
             );
         }
@@ -252,7 +314,9 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
 
     const fs::path stdModulePath = fs::weakly_canonical(ascii2Wide(modulePath));
     if (!fs::exists(stdModulePath)) {
-        m_logger->error(gppTr("PythonManager.registerFunction", "脚本不存在: %1", modulePath));
+        m_logger->error(gppTr("PythonManager.registerFunction", "脚本不存在: %1")
+            .arg(modulePath)
+            .toStdString());
         return std::nullopt;
     }
 
@@ -262,7 +326,11 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
 
         auto pythonInterpreter = std::make_shared<PythonInterpreterInstance>();
         if (!pythonInterpreter->isEffective()) {
-            throw std::runtime_error(gppTr("PythonManager.registerFunction", "加载模块 %1 时出现异常，子解释器无法开启", moduleName));
+            throw std::runtime_error(gppTr(
+                "PythonManager.registerFunction",
+                "加载模块 %1 时出现异常，子解释器无法开启")
+                .arg(moduleName)
+                .toStdString());
         }
 
         pythonInterpreter->submitTask([&]()
@@ -277,7 +345,12 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
                     registerCustomTypes(moduleName);
                 }
                 catch (const py::error_already_set& e) {
-                    throw std::runtime_error(gppTr("PythonManager.registerFunction", "为模块 %1 加载自定义类型时出现异常: %2", moduleName, e.what()));
+                    throw std::runtime_error(gppTr(
+                        "PythonManager.registerFunction",
+                        "为模块 %1 加载自定义类型时出现异常: %2")
+                        .arg(moduleName)
+                        .arg(e.what())
+                        .toStdString());
                 }
             }).get();
         const auto [retIt, inserted] = m_interpreters.insert({ stdModulePath, pythonInterpreter });
@@ -285,7 +358,9 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
             it = retIt;
         }
         else {
-            throw std::runtime_error(gppTr("PythonManager.registerFunction", "模块 %1 插入失败", moduleName));
+            throw std::runtime_error(gppTr("PythonManager.registerFunction", "模块 %1 插入失败")
+                .arg(moduleName)
+                .toStdString());
         }
     }
 
@@ -297,19 +372,31 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
                 try {
                     const py::module_ pythonModule = py::module_::import(moduleName.c_str());
                     if (!py::hasattr(pythonModule, functionName.c_str())) {
-                        m_logger->debug(gppTr("PythonManager.registerFunction", "从脚本 %1 加载函数 %2 失败", modulePath, functionName));
+                        m_logger->debug(gppTr("PythonManager.registerFunction", "从脚本 %1 加载函数 %2 失败")
+                            .arg(modulePath)
+                            .arg(functionName)
+                            .toStdString());
                         return;
                     }
                     auto pFunc = std::make_unique<py::object>(pythonModule.attr(functionName.c_str()));
                     if (const py::object& func = *pFunc; !func || !py::isinstance<py::function>(func)) {
-                        m_logger->debug(gppTr("PythonManager.registerFunction", "从脚本 %1 加载函数 %2 失败", modulePath, functionName));
+                        m_logger->debug(gppTr("PythonManager.registerFunction", "从脚本 %1 加载函数 %2 失败")
+                            .arg(modulePath)
+                            .arg(functionName)
+                            .toStdString());
                         return;
                     }
                     pythonInterpreter->functions.insert({ functionName, std::move(pFunc) });
                     success = true;
                 }
                 catch (const py::error_already_set& e) {
-                    throw std::runtime_error(gppTr("PythonManager.registerFunction", "加载模块 %1 的函数 %2 时出现异常: %3", moduleName, functionName, e.what()));
+                    throw std::runtime_error(gppTr(
+                        "PythonManager.registerFunction",
+                        "加载模块 %1 的函数 %2 时出现异常: %3")
+                        .arg(moduleName)
+                        .arg(functionName)
+                        .arg(e.what())
+                        .toStdString());
                 }
             }).get();
         if (!success) {
@@ -329,25 +416,46 @@ void PythonManager::registerCustomTypes(const std::string& moduleName) {
                 const std::string tokenizerBackend = pythonModule.attr((mode + "tokenizerBackend").c_str()).cast<std::string>();
                 if (tokenizerBackend == "MeCab") {
                     const std::string mecabDictDir = pythonModule.attr((mode + "mecabDictDir").c_str()).cast<std::string>();
-                    m_logger->info(gppTr("PythonManager.registerCustomTypes", "%1 已配置 MeCab 分词器，首次使用时加载。", moduleName));
+                    m_logger->info(gppTr(
+                        "PythonManager.registerCustomTypes",
+                        "%1 已配置 MeCab 分词器，首次使用时加载。")
+                        .arg(moduleName)
+                        .toStdString());
                     pythonModule.attr((mode + "tokenizeFunc").c_str()) = getMeCabTokenizeFunc(mecabDictDir, m_logger);
                 }
                 else if (tokenizerBackend == "spaCy") {
                     const std::string spaCyModelName = pythonModule.attr((mode + "spaCyModelName").c_str()).cast<std::string>();
-                    m_logger->info(gppTr("PythonManager.registerCustomTypes", "%1 已配置 spaCy 分词器，首次使用时加载。", moduleName));
+                    m_logger->info(gppTr(
+                        "PythonManager.registerCustomTypes",
+                        "%1 已配置 spaCy 分词器，首次使用时加载。")
+                        .arg(moduleName)
+                        .toStdString());
                     pythonModule.attr((mode + "tokenizeFunc").c_str()) = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
                 }
                 else if (tokenizerBackend == "Stanza") {
                     const std::string stanzaLang = pythonModule.attr((mode + "stanzaLang").c_str()).cast<std::string>();
-                    m_logger->info(gppTr("PythonManager.registerCustomTypes", "%1 已配置 Stanza 分词器，首次使用时加载。", moduleName));
+                    m_logger->info(gppTr(
+                        "PythonManager.registerCustomTypes",
+                        "%1 已配置 Stanza 分词器，首次使用时加载。")
+                        .arg(moduleName)
+                        .toStdString());
                     pythonModule.attr((mode + "tokenizeFunc").c_str()) = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
                 }
                 else if (tokenizerBackend == "pkuseg") {
-                    m_logger->info(gppTr("PythonManager.registerCustomTypes", "%1 已配置 pkuseg 分词器，首次使用时加载。", moduleName));
+                    m_logger->info(gppTr(
+                        "PythonManager.registerCustomTypes",
+                        "%1 已配置 pkuseg 分词器，首次使用时加载。")
+                        .arg(moduleName)
+                        .toStdString());
                     pythonModule.attr((mode + "tokenizeFunc").c_str()) = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
                 }
                 else {
-                    throw std::invalid_argument(gppTr("PythonManager.registerCustomTypes", "%1 中注册了无效的 tokenizerBackend: %2", moduleName, tokenizerBackend));
+                    throw std::invalid_argument(gppTr(
+                        "PythonManager.registerCustomTypes",
+                        "%1 中注册了无效的 tokenizerBackend: %2")
+                        .arg(moduleName)
+                        .arg(tokenizerBackend)
+                        .toStdString());
                 }
             }
         };
@@ -362,42 +470,63 @@ void PythonManager::registerCustomTypes(const std::string& moduleName) {
 void checkPythonDependencies(const std::vector<std::string>& dependencies, const std::shared_ptr<spdlog::logger>& logger)
 {
     for (const auto& dependency : dependencies) {
-        logger->debug(gppTr("checkPythonDependencies", "正在检查依赖 %1", dependency));
+        logger->debug(gppTr("checkPythonDependencies", "正在检查依赖 %1").arg(dependency).toStdString());
         auto checkDependencyTaskFunc = [&]()
             {
                 try {
                     py::module_::import("importlib.metadata").attr("version")(dependency);
-                    logger->debug(gppTr("checkPythonDependencies", "依赖 %1 已安装", dependency));
+                    logger->debug(gppTr("checkPythonDependencies", "依赖 %1 已安装")
+                        .arg(dependency)
+                        .toStdString());
                 }
                 catch (const py::error_already_set& e) {
 
                     if (!e.matches(py::module_::import("importlib.metadata").attr("PackageNotFoundError"))) {
-                        throw std::runtime_error(gppTr("checkPythonDependencies", "检查依赖 %1 时出现异常: %2", dependency, e.what()));
+                        throw std::runtime_error(gppTr(
+                            "checkPythonDependencies",
+                            "检查依赖 %1 时出现异常: %2")
+                            .arg(dependency)
+                            .arg(e.what())
+                            .toStdString());
                     }
 
-                    logger->error(gppTr("checkPythonDependencies", "依赖 %1 未安装，正在尝试安装", dependency));
+                    logger->error(gppTr("checkPythonDependencies", "依赖 %1 未安装，正在尝试安装")
+                        .arg(dependency)
+                        .toStdString());
                     const std::string installCommand = "-m pip install " + dependency;
-                    logger->info(gppTr("checkPythonDependencies", "将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！"));
+                    logger->info(gppTr("checkPythonDependencies", "将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！")
+                        .toStdString());
                     std::this_thread::sleep_for(std::chrono::seconds(3));
-                    logger->info(gppTr("checkPythonDependencies", "正在执行安装命令: %1", installCommand));
+                    logger->info(gppTr("checkPythonDependencies", "正在执行安装命令: %1")
+                        .arg(installCommand)
+                        .toStdString());
 
                     if (!executeCommand(s_pythonExePath.wstring(), ascii2Wide(installCommand))) {
-                        throw std::runtime_error(gppTr("checkPythonDependencies", "安装依赖 %1 的命令失败", dependency));
+                        throw std::runtime_error(gppTr("checkPythonDependencies", "安装依赖 %1 的命令失败")
+                            .arg(dependency)
+                            .toStdString());
                     }
 
                     try {
                         py::module_::import("importlib.metadata").attr("version")(dependency);
-                        logger->info(gppTr("checkPythonDependencies", "依赖 %1 安装成功", dependency));
+                        logger->info(gppTr("checkPythonDependencies", "依赖 %1 安装成功")
+                            .arg(dependency)
+                            .toStdString());
                     }
                     catch (const py::error_already_set& eReCheck) {
-                        throw std::runtime_error(gppTr("checkPythonDependencies", "依赖 %1 安装验证失败: %2", dependency, eReCheck.what()));
+                        throw std::runtime_error(gppTr(
+                            "checkPythonDependencies",
+                            "依赖 %1 安装验证失败: %2")
+                            .arg(dependency)
+                            .arg(eReCheck.what())
+                            .toStdString());
                     }
                 }
             };
         PythonMainInterpreterManager::getInstance().submitTask(std::move(checkDependencyTaskFunc)).get();
-        logger->debug(gppTr("checkPythonDependencies", "依赖 %1 检查完毕", dependency));
+        logger->debug(gppTr("checkPythonDependencies", "依赖 %1 检查完毕").arg(dependency).toStdString());
     }
-    logger->debug(gppTr("checkPythonDependencies", "所有依赖均已安装"));
+    logger->debug(gppTr("checkPythonDependencies", "所有依赖均已安装").toStdString());
 }
 
 

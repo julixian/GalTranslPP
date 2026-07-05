@@ -33,7 +33,8 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
 }
 
 void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jsonFiles) {
-    m_logger->info(gppTr("DictionaryGenerator.preprocessAndTokenize", "阶段一：预处理和分词..."));
+    m_logger->info(gppTr("DictionaryGenerator.preprocessAndTokenize", "阶段一：预处理和分词...")
+        .toStdString());
     std::string currentSegment;
     constexpr size_t MAX_SEGMENT_LEN = 512;
 
@@ -108,7 +109,11 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
         m_segments.push_back(std::move(currentSegment));
     }
 
-    m_logger->info(gppTr("DictionaryGenerator.preprocessAndTokenize", "共分割成 %1 个文本块，开始进行分词(使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...", m_segments.size()));
+    m_logger->info(gppTr(
+        "DictionaryGenerator.preprocessAndTokenize",
+        "共分割成 %1 个文本块，开始进行分词(使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...")
+        .arg(m_segments.size())
+        .toStdString());
     m_controller->makeBar((int)m_segments.size(), 1);
     ActiveWorkerGuard workerGuard(m_controller);
     m_segmentWords.reserve(m_segments.size());
@@ -128,7 +133,12 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
 		                }
                         return std::string{};
                     }) | std::views::join_with(' ') | std::ranges::to<std::string>();
-                m_logger->trace(gppTr("DictionaryGenerator.preprocessAndTokenize", "原文: %1\n分词实体结果: %2", segment, entityStr));
+                m_logger->trace(gppTr(
+                    "DictionaryGenerator.preprocessAndTokenize",
+                    "原文: %1\n分词实体结果: %2")
+                    .arg(segment)
+                    .arg(entityStr)
+                    .toStdString());
             }
         };
 
@@ -168,7 +178,8 @@ std::vector<int> DictionaryGenerator::solveSentenceSelection() {
     if (m_controller->shouldStop()) {
         return {};
     }
-    m_logger->info(gppTr("DictionaryGenerator.solveSentenceSelection", "阶段二：搜索并选择信息量最大的文本块(单线程)..."));
+    m_logger->info(gppTr("DictionaryGenerator.solveSentenceSelection", "阶段二：搜索并选择信息量最大的文本块(单线程)...")
+        .toStdString());
 
     // 剔除出现次数小于2的词语，人名除外
     absl::flat_hash_set<std::string> allWords;
@@ -268,7 +279,10 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
         if (!apiOpt) {
-            throw std::runtime_error(gppTr("DictionaryGenerator.callLLMToGenerate", "没有可用的 API key 了"));
+            throw std::runtime_error(gppTr(
+                "DictionaryGenerator.callLLMToGenerate",
+                "没有可用的 API key 了")
+                .toStdString());
         }
         const TranslationApi& currentApi = apiOpt.value();
 
@@ -279,17 +293,26 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
             logBlock += "\nHint:\n" + hint + "\n";
         }
         logBlock += "\ninputBlock:\n" + text;
-        m_logger->info(gppTr("DictionaryGenerator.callLLMToGenerate", "[线程 %1] 开始从段落中生成术语表:\n%2", threadId, logBlock));
+        m_logger->info(gppTr("DictionaryGenerator.callLLMToGenerate", "[线程 %1] 开始从段落中生成术语表:\n%2")
+            .arg(threadId)
+            .arg(logBlock)
+            .toStdString());
 
         ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeoutMs);
 
         if (!checkResponse(
-            response, m_apiPool, currentApi, ascii2Wide(gppTr("DictionaryGenerator.callLLMToGenerate", "字典生成——段落输入")), m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
+            response, m_apiPool, currentApi, ascii2Wide(gppTr(
+                "DictionaryGenerator.callLLMToGenerate",
+                "字典生成——段落输入")
+                .toStdString()), m_apiStrategy, m_controller, m_logger, retryCount, threadId, m_checkQuota
         )) {
             continue;
         }
         else {
-            m_logger->info(gppTr("DictionaryGenerator.callLLMToGenerate", "[线程 %1] AI 字典生成成功:\n %2", threadId, response.content));
+            m_logger->info(gppTr("DictionaryGenerator.callLLMToGenerate", "[线程 %1] AI 字典生成成功:\n %2")
+                .arg(threadId)
+                .arg(response.content)
+                .toStdString());
             const auto lines = splitStringView(response.content, '\n');
             for (const auto& line : lines) {
                 const auto parts = splitStringView(line, '\t');
@@ -299,8 +322,13 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
 
                 std::lock_guard<std::mutex> lock(m_resultMutex);
                 if (int& counter = m_finalCounter[parts[0]]; ++counter == 2) {
-                    m_logger->debug(gppTr("DictionaryGenerator.callLLMToGenerate", "发现重复术语: %1\t%2\t%3",
-                        std::string(parts[0]), std::string(parts[1]), std::string(parts[2])));
+                    m_logger->debug(gppTr(
+                        "DictionaryGenerator.callLLMToGenerate",
+                        "发现重复术语: %1\t%2\t%3")
+                        .arg(std::string(parts[0]))
+                        .arg(std::string(parts[1]))
+                        .arg(std::string(parts[2]))
+                        .toStdString());
                 }
                 m_finalDict.emplace_back(std::string(parts[0]), std::string(parts[1]), std::string(parts[2]));
             }
@@ -308,7 +336,11 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int threadId) {
         }
     }
     if (retryCount >= m_maxRetries) {
-        m_logger->error(gppTr("DictionaryGenerator.callLLMToGenerate", "[线程 %1] AI 字典生成失败，已达到最大重试次数。", threadId));
+        m_logger->error(gppTr(
+            "DictionaryGenerator.callLLMToGenerate",
+            "[线程 %1] AI 字典生成失败，已达到最大重试次数。")
+            .arg(threadId)
+            .toStdString());
     }
 
     m_controller->updateBar();
@@ -341,7 +373,8 @@ DictList DictionaryGenerator::finalizeCoarseCandidates() const {
                     girl = true;
                 }
                 if (boy && girl) {
-                    note += gppTr("DictionaryGenerator.finalizeCoarseCandidates", "，与其它字典存在性别争议");
+                    note += gppTr("DictionaryGenerator.finalizeCoarseCandidates", "，与其它字典存在性别争议")
+                        .toStdString();
                     return false;
                 }
                 return true;
@@ -354,7 +387,8 @@ DictList DictionaryGenerator::finalizeCoarseCandidates() const {
 
 void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const fs::path& outputFilePath) {
     if (jsonFiles.empty()) {
-        throw std::runtime_error(gppTr("DictionaryGenerator.generate", "没有输入文件，无法生成字典。"));
+        throw std::runtime_error(gppTr("DictionaryGenerator.generate", "没有输入文件，无法生成字典。")
+            .toStdString());
     }
 
     preprocessAndTokenize(jsonFiles);
@@ -365,11 +399,14 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
         selectedIndices.resize(maxSelectedIndicesCount);
     }
     if (m_controller->shouldStop()) {
-        m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将不会生成字典文件。"));
+        m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将不会生成字典文件。").toStdString());
         return;
     }
 
-    m_logger->info(gppTr("DictionaryGenerator.generate", "阶段三：启动 %1 个线程，向 AI 发送 %2 个任务...", m_threadsNum, selectedIndices.size()));
+    m_logger->info(gppTr("DictionaryGenerator.generate", "阶段三：启动 %1 个线程，向 AI 发送 %2 个任务...")
+        .arg(m_threadsNum)
+        .arg(selectedIndices.size())
+        .toStdString());
     m_controller->makeBar((int)selectedIndices.size(), m_threadsNum);
 
     ctpl::thread_pool pool(m_threadsNum);
@@ -385,9 +422,9 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
     waitForThreads(pool, results);
 
     if (m_controller->shouldStop()) {
-        m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将保存已经生成的字典结果。"));
+        m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将保存已经生成的字典结果。").toStdString());
     }
-    m_logger->info(gppTr("DictionaryGenerator.generate", "阶段四：整理并保存结果..."));
+    m_logger->info(gppTr("DictionaryGenerator.generate", "阶段四：整理并保存结果...").toStdString());
 
     // 按出现次数排序
     std::ranges::sort(m_finalDict, [&](const auto& a, const auto& b)
@@ -422,10 +459,17 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
             DictionaryReviewAgent reviewAgent(m_controller, m_logger, m_apiPool, m_onPerformApi, std::move(reviewConfig));
             DictList reviewedList = reviewAgent.review(termGroups, m_reviewSourceFiles);
             finalList = m_onDictProcessed ? m_onDictProcessed(std::move(reviewedList)) : std::move(reviewedList);
-            m_logger->info(gppTr("DictionaryGenerator.generate", "阶段四：Review Agent 审校完成，使用审校后的字典结果。"));
+            m_logger->info(gppTr(
+                "DictionaryGenerator.generate",
+                "阶段四：Review Agent 审校完成，使用审校后的字典结果。")
+                .toStdString());
         }
         catch (const std::exception& e) {
-            m_logger->error(gppTr("DictionaryGenerator.generate", "阶段四：Review Agent 失败，将回退到粗候选整理结果。错误: %1", e.what()));
+            m_logger->error(gppTr(
+                "DictionaryGenerator.generate",
+                "阶段四：Review Agent 失败，将回退到粗候选整理结果。错误: %1")
+                .arg(e.what())
+                .toStdString());
             finalList = m_onDictProcessed ? m_onDictProcessed(m_finalDict) : std::move(coarseDefaultList);
         }
     }
@@ -445,5 +489,8 @@ void DictionaryGenerator::generate(const std::vector<fs::path>& jsonFiles, const
     ofs << toml::ordered_value{ toml::ordered_table{{ "gptDict", arr }} };
     ofs.close();
 
-    m_logger->info(gppTr("DictionaryGenerator.generate", "字典生成完成，共 %1 个词语，已保存到 %2", finalList.size(), wide2Ascii(outputFilePath)));
+    m_logger->info(gppTr("DictionaryGenerator.generate", "字典生成完成，共 %1 个词语，已保存到 %2")
+        .arg(finalList.size())
+        .arg(wide2Ascii(outputFilePath))
+        .toStdString());
 }

@@ -80,6 +80,7 @@
       <BuildStlModules>true</BuildStlModules>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;SPDLOG_COMPILED_LIB;SPDLOG_WCHAR_FILENAMES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UseStandardPreprocessor>false</UseStandardPreprocessor>
     </ClCompile>
     <PostBuildEvent>
       <Command>if not exist "$(TargetDir)..\GUICORE" mkdir "$(TargetDir)..\GUICORE"
@@ -92,6 +93,11 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     <Manifest>
       <AdditionalManifestFiles>Updater.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <QtTranslation>
+      <BuildAction>lupdate_lrelease</BuildAction>
+      <FunctionAliases>translate+=gppTr</FunctionAliases>
+      <QmOutputDir>$(OutDir)\translations\</QmOutputDir>
+    </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -131,6 +137,9 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
       <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="qt_gppupdater_en.ts" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

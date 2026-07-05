@@ -87,7 +87,9 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
 	    {
             if (const std::string systemProxy = getSystemProxyUrl(); !systemProxy.empty()) {
                 // 同时设置 http 和 https 代理
-                logger->trace(gppTr("APITool.performApiRequest", "正在使用系统代理: [%1]", systemProxy));
+                logger->trace(gppTr("APITool.performApiRequest", "正在使用系统代理: [%1]")
+                    .arg(systemProxy)
+                    .toStdString());
                 return cpr::Proxies{ {"http", systemProxy}, {"https", systemProxy} };
             }
             return cpr::Proxies{};
@@ -104,7 +106,10 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
         auto callbackLambda = [&](std::string_view data, intptr_t userdata) -> bool
             {
                 // 将接收到的数据块(string_view)追加到缓冲区(string)
-                logger->trace(gppTr("APITool.performApiRequest", "[线程 %1] 接收到流式数据块: %2", threadId, replaceStr(std::string(data), "\n", "[n]")));
+                logger->trace(gppTr("APITool.performApiRequest", "[线程 %1] 接收到流式数据块: %2")
+                    .arg(threadId)
+                    .arg(replaceStr(std::string(data), "\n", "[n]"))
+                    .toStdString());
                 sseBuffer.append(data);
                 size_t pos;
                 while ((pos = sseBuffer.find('\n')) != std::string::npos) {

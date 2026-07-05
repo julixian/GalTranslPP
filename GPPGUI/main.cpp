@@ -2,7 +2,6 @@
 #include "../GalTranslPP/GPPMacros.hpp"
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QCoreApplication>
 #include <QDir>
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -56,12 +55,13 @@ int main(int argc, char* argv[])
     QTranslator coreTranslator;
     QTranslator guiTranslator;
     QApplication app(argc, argv);
+    QCoreApplication::setApplicationName("GalTransl++ GUI");
     QDir::setCurrent(QApplication::applicationDirPath());
     QNetworkProxyFactory::setUseSystemConfiguration(true);
     
     QCommandLineParser parser;
     parser.addHelpOption();
-    parser.addOption({ {"p", "pid"}, "Process ID of the updater application.", "pid" });
+    parser.addOption({ QStringList{"pid"}, "Process ID of the updater application.", "pid" });
     parser.process(app);
     if (parser.isSet("pid")) {
         const qint64 pid = parser.value("pid").toLongLong();
@@ -75,7 +75,11 @@ int main(int argc, char* argv[])
         }
         catch (const fs::filesystem_error& e) {
 #ifdef Q_OS_WIN
-            MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"Updater 更新错误", MB_ICONERROR);
+            MessageBoxW(
+                nullptr,
+                ascii2Wide(std::string_view(e.what())).c_str(),
+                gppTr("GPPGUI.main", "Updater 更新错误").toStdWString().c_str(),
+                MB_ICONERROR);
 #endif
         }
     }
@@ -96,14 +100,14 @@ int main(int argc, char* argv[])
                     app.installTranslator(&baseTranslator);
                 }
             }
-            else if (language == "en") {
-                if (baseTranslator.load("qt_en.qm", "translations")) {
+            else {
+                if (baseTranslator.load(QString("qt_%1.qm").arg(language), "translations")) {
                     app.installTranslator(&baseTranslator);
                 }
-                if (coreTranslator.load("qt_gpp_en.qm", "translations")) {
+                if (coreTranslator.load(QString("qt_gpp_%1.qm").arg(language), "translations")) {
                     app.installTranslator(&coreTranslator);
                 }
-                if (guiTranslator.load("qt_gppgui_en.qm", "translations")) {
+                if (guiTranslator.load(QString("qt_gppgui_%1.qm").arg(language), "translations")) {
                     app.installTranslator(&guiTranslator);
                 }
             }
@@ -132,7 +136,11 @@ int main(int argc, char* argv[])
                 // 尝试创建共享内存段
                 if (!sharedMemory.create(1)) {
 #ifdef Q_OS_WIN
-                    MessageBoxW(nullptr, L"无法创建共享内存段，程序即将退出。", L"错误", MB_ICONERROR);
+                    MessageBoxW(
+                        nullptr,
+                        gppTr("GPPGUI.main", "无法创建共享内存段，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+                        MB_ICONERROR);
 #endif
                     return 1; // 创建失败，退出
                 }
@@ -190,7 +198,11 @@ int main(int argc, char* argv[])
                 // 再次尝试监听
                 if (!server.listen(uniqueKey)) {
 #ifdef Q_OS_WIN
-                    MessageBoxW(nullptr, L"无法启动本地服务，程序即将退出。", L"错误", MB_ICONERROR);
+                    MessageBoxW(
+                        nullptr,
+                        gppTr("GPPGUI.main", "无法启动本地服务，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+                        MB_ICONERROR);
 #endif
                     return 1;
                 }
@@ -209,26 +221,42 @@ int main(int argc, char* argv[])
         }
         catch (const fs::filesystem_error& e) {
 #ifdef Q_OS_WIN
-            MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"缓存删除错误", MB_ICONERROR);
+            MessageBoxW(
+                nullptr,
+                ascii2Wide(std::string_view(e.what())).c_str(),
+                gppTr("GPPGUI.main", "缓存删除错误").toStdWString().c_str(),
+                MB_ICONERROR);
 #endif
         }
         return result;
     }
     catch (const toml::exception& e) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"TOML 错误", MB_ICONERROR);
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.main", "TOML 错误").toStdWString().c_str(),
+            MB_ICONERROR);
 #endif
         return 1;
     }
     catch (const std::exception& e) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"标准错误", MB_ICONERROR);
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.main", "标准错误").toStdWString().c_str(),
+            MB_ICONERROR);
 #endif
         return 1;
     }
     catch (...) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, L"遇到了未知的错误，程序即将退出。", L"错误", MB_ICONERROR);
+        MessageBoxW(
+            nullptr,
+            gppTr("GPPGUI.main", "遇到了未知的错误，程序即将退出。").toStdWString().c_str(),
+            gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+            MB_ICONERROR);
 #endif
         return 1;
     }

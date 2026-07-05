@@ -170,7 +170,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
 {
     const fs::path configFilePath = projectDir / L"config.toml";
     if (!fs::exists(configFilePath)) {
-        throw std::runtime_error(gppTr("createTranslator", "找不到配置文件"));
+        throw std::runtime_error(gppTr("createTranslator", "找不到配置文件").toStdString());
     }
     const auto configData = toml::uparse(configFilePath);
 
@@ -199,7 +199,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         logLevel = spdlog::level::critical;
     }
     else {
-        throw std::runtime_error(gppTr("createTranslator", "无效的日志等级"));
+        throw std::runtime_error(gppTr("createTranslator", "无效的日志等级").toStdString());
     }
 
     constexpr size_t LOG_FILE_MAX_SIZE_DEFAULT = 1024 * 1024 * 10;
@@ -232,7 +232,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         logger->flush_on(spdlog::level::debug);
     }
     logger->set_pattern("[%H:%M:%S.%e %^%l%$] %v");
-    logger->info(gppTr("createTranslator", "日志器初始化完成。"));
+    logger->info(gppTr("createTranslator", "日志器初始化完成。").toStdString());
     // 日志配置结束
 
     const std::string filePluginLower = str2Lower(filePlugin);
@@ -255,7 +255,9 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
             return translator;
         }
         else {
-            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1", baseClassName));
+            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1")
+                .arg(baseClassName)
+                .toStdString());
         }
     }
     else if (filePluginLower.ends_with(".py")) {
@@ -277,7 +279,9 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
             return translator;
         }
         else {
-            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1", baseClassName));
+            throw std::runtime_error(gppTr("createTranslator", "无效的基类名称: %1")
+                .arg(baseClassName)
+                .toStdString());
         }
     }
     else if (filePlugin == "NormalJson") {

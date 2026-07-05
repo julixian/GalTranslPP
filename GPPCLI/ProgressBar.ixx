@@ -70,7 +70,8 @@ inline ProgressBar::ProgressBar(int n, int t) :
 inline void ProgressBar::update(int ticks, bool removeCurrentLine) {
 
     if (n_cycles == 0) {
-        throw std::runtime_error("ProgressBar::update: number of cycles not set");
+        throw std::runtime_error(gppTr("ProgressBar.update", "ProgressBar::update: 未设置循环次数")
+            .toStdString());
     }
 
     int consoleWidth = getConsoleWidth();
@@ -95,16 +96,24 @@ inline void ProgressBar::update(int ticks, bool removeCurrentLine) {
 
     double duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start_time).count() / 1000.0;
 
-    std::string current_bar = std::format("翻译进度 [{}] {}{}{} {}/{} lines [{:.2f}%] in {:.1f}s ({:.2f} lines/s)",
-        progress == n_cycles ? "处理完成" : std::format("{}/{}线程并发", current_thread_num, total_thread_num),
-        opening_bracket_char,
-        fill,
-        closing_bracket_char,
-        progress,
-        n_cycles,
-        perc,
-        duration,
-        progress / duration);
+    const QString status = progress == n_cycles
+        ? gppTr("ProgressBar.update", "处理完成")
+        : gppTr("ProgressBar.update", "%1/%2线程并发")
+            .arg(current_thread_num)
+            .arg(total_thread_num);
+    std::string current_bar = gppTr(
+        "ProgressBar.update",
+        "翻译进度 [%1] %2%3%4 %5/%6 lines [%7%] in %8s (%9 lines/s)")
+        .arg(status)
+        .arg(opening_bracket_char)
+        .arg(fill)
+        .arg(closing_bracket_char)
+        .arg(progress)
+        .arg(n_cycles)
+        .arg(perc, 0, 'f', 2)
+        .arg(duration, 0, 'f', 1)
+        .arg(progress / duration, 0, 'f', 2)
+        .toStdString();
 
     std::vector<std::string> graphemes = splitIntoGraphemes(current_bar);
     current_bar.clear();

@@ -50,7 +50,8 @@ export
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_bar) {
-                throw std::runtime_error("ProgressBar not created");
+                throw std::runtime_error(gppTr("TerminalController.onAddThreadNum", "进度条尚未创建")
+                    .toStdString());
             }
             m_bar->add_thread_num();
         }
@@ -59,7 +60,8 @@ export
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_bar) {
-                throw std::runtime_error("ProgressBar not created");
+                throw std::runtime_error(gppTr("TerminalController.onReduceThreadNum", "进度条尚未创建")
+                    .toStdString());
             }
             m_bar->reduce_thread_num();
         }

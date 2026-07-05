@@ -79,7 +79,8 @@ void PASettingsPage::setupUi()
 	QString punctuationSetStr = QString::fromStdString(punctuationSet);
 	ElaScrollPageArea* punctuationListArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* punctuationListLayout = new QHBoxLayout(punctuationListArea);
-	ElaDoubleText* punctuationListTitle = new ElaDoubleText(tr("标点查错"), 16, tr("规定标点错漏要查哪些标点"), 10, "", punctuationListArea);
+	ElaDoubleText* punctuationListTitle = new ElaDoubleText(tr("标点查错"), 16,
+		tr("规定标点错漏要查哪些标点"), 10, "", punctuationListArea);
 	punctuationListLayout->addWidget(punctuationListTitle);
 	punctuationListLayout->addStretch();
 	ElaLineEdit* punctuationList = new ElaLineEdit(punctuationListArea);
@@ -91,7 +92,8 @@ void PASettingsPage::setupUi()
 	double languageProbability = toml::find_or(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
 	ElaScrollPageArea* languageProbabilityArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* languageProbabilityLayout = new QHBoxLayout(languageProbabilityArea);
-	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(tr("语言置信度"), 16, tr("语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然"), 10, "", languageProbabilityArea);
+	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(tr("语言置信度"), 16,
+		tr("语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然"), 10, "", languageProbabilityArea);
 	languageProbabilityLayout->addWidget(languageProbabilityTitle);
 	languageProbabilityLayout->addStretch();
 	ValueSliderWidget* languageProbabilitySlider = new ValueSliderWidget(0.0, 1.0, languageProbabilityArea);
@@ -104,7 +106,8 @@ void PASettingsPage::setupUi()
 	const std::string codePage = toml::find_or(m_projectConfig, "problemAnalyze", "codePage", "gbk");
 	ElaScrollPageArea* codePageArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* codePageLayout = new QHBoxLayout(codePageArea);
-	ElaDoubleText* codePageTitle = new ElaDoubleText(tr("字符集"), 16, tr("非法字符要检查的字符集"), 10, "", codePageArea);
+	ElaDoubleText* codePageTitle = new ElaDoubleText(tr("字符集"), 16,
+		tr("非法字符要检查的字符集"), 10, "", codePageArea);
 	codePageLayout->addWidget(codePageTitle);
 	codePageLayout->addStretch();
 	ElaLineEdit* codePageEdit = new ElaLineEdit(codePageArea);
@@ -157,6 +160,22 @@ void PASettingsPage::setupUi()
 										continue;
 									}
 									retranslKey = problemList[index].toStdString();
+								}
+							}
+							else if (configKey == "overwriteCompareObj") {
+								for (auto& overwriteCompareObj : newPASettingsArr.as_array()) {
+									if (!overwriteCompareObj.contains("problemKey")) {
+										continue;
+									}
+									auto& problemKey = overwriteCompareObj.at("problemKey");
+									if (!problemKey.is_string()) {
+										continue;
+									}
+									int index = problemListToShow.indexOf(QString::fromStdString(problemKey.as_string()));
+									if (index < 0) {
+										continue;
+									}
+									problemKey = problemList[index].toStdString();
 								}
 							}
 							insertToml(m_projectConfig, "problemAnalyze." + configKey, newPASettingsArr);

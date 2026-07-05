@@ -199,7 +199,7 @@ void StartSettingsPage::setLogPaused(bool paused)
 void StartSettingsPage::enqueuePendingLog(const QString& chunk)
 {
 	const qsizetype chunkBytes = chunk.size();
-	if (m_pendingLogBytes + chunkBytes > MaxPendingLogBytes && !m_pendingLog.contains("```\n问题概览:")) {
+	if (m_pendingLogBytes + chunkBytes > MaxPendingLogBytes && !m_pendingLog.contains(tr("```\n问题概览:"))) {
 		m_pendingLog.clear();
 		m_pendingLogBytes = 0;
 		m_pendingOverflowed = true;
@@ -271,14 +271,17 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 				}
 			};
 
-		if (log.contains("```\n问题概览:")) {
+		static const QString problemOverviewQStr1 = tr("```\n问题概览:");
+		static const QString problemOverviewQStr2 = tr("问题概览结束\n```");
+		static const QString problemOverviewQStr3 = tr("问题概览结束\n```");
+		if (log.contains(problemOverviewQStr1)) {
 			QString logCopy = log;
-			int index = log.indexOf("```\n问题概览:");
+			int index = log.indexOf(problemOverviewQStr2);
 			QString pre = logCopy.left(index);
 			logCopy = logCopy.mid(index);
-			index = logCopy.indexOf("问题概览结束\n```");
-			QString overview = logCopy.left(index + 10);
-			logCopy = logCopy.mid(index + 10);
+			index = logCopy.indexOf(problemOverviewQStr3);
+			QString overview = logCopy.left(index + problemOverviewQStr3.length());
+			logCopy = logCopy.mid(index + problemOverviewQStr3.length());
 			QString post = std::move(logCopy);
 			processLogFunc(pre);
 			QTextCharFormat format;

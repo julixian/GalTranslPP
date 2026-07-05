@@ -12,10 +12,14 @@ PythonTextPlugin::PythonTextPlugin(const fs::path& projectDir, const std::string
     const std::unique_ptr<PythonManager>& pythonManager, const std::shared_ptr<spdlog::logger>& logger)
     : m_logger(logger), m_modulePath(modulePath)
 {
-    m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "正在初始化 Python 插件 %1", m_modulePath));
+    m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "正在初始化 Python 插件 %1")
+        .arg(m_modulePath)
+        .toStdString());
     std::optional<std::shared_ptr<PythonInterpreterInstance>> pythonInterpreterOpt = pythonManager->registerFunction(m_modulePath, "init");
     if (!pythonInterpreterOpt.has_value()) {
-        throw std::runtime_error(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 init 函数初始化失败", m_modulePath));
+        throw std::runtime_error(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 init 函数初始化失败")
+            .arg(m_modulePath)
+            .toStdString());
     }
     m_pythonInterpreter = pythonInterpreterOpt.value();
 
@@ -24,7 +28,10 @@ PythonTextPlugin::PythonTextPlugin(const fs::path& projectDir, const std::string
             pythonInterpreterOpt = pythonManager->registerFunction(m_modulePath, funcName);
             if (pythonInterpreterOpt.has_value()) {
                 func = m_pythonInterpreter->functions[funcName].get();
-                m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 %2 函数注册成功", m_modulePath, funcName));
+                m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 %2 函数注册成功")
+                    .arg(m_modulePath)
+                    .arg(funcName)
+                    .toStdString());
             }
         };
     registerFunctionFunc("dPreRun", m_pythonDPreRunFunc);
@@ -39,11 +46,18 @@ PythonTextPlugin::PythonTextPlugin(const fs::path& projectDir, const std::string
                 (*(m_pythonInterpreter->functions["init"]))(projectDir);
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 init 函数执行失败: %2", m_modulePath, e.what()));
+                throw std::runtime_error(gppTr(
+                    "PythonTextPlugin.PythonTextPlugin",
+                    "%1 init 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 
-    m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 初始化成功", m_modulePath));
+    m_logger->info(gppTr("PythonTextPlugin.PythonTextPlugin", "%1 初始化成功")
+        .arg(m_modulePath)
+        .toStdString());
 }
 
 PythonTextPlugin::~PythonTextPlugin()
@@ -57,7 +71,10 @@ PythonTextPlugin::~PythonTextPlugin()
                 (*m_pythonUnloadFunc)();
             }
             catch (const py::error_already_set& e) {
-                m_logger->error(gppTr("PythonTextPlugin.~PythonTextPlugin", "%1 unload 函数执行失败: %2", m_modulePath, e.what()));
+                m_logger->error(gppTr("PythonTextPlugin.~PythonTextPlugin", "%1 unload 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 }
@@ -72,7 +89,10 @@ void PythonTextPlugin::dPreRun(Sentence* se) {
                 (*m_pythonDPreRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonTextPlugin.dPreRun", "%1 dPreRun 函数执行失败: %2", m_modulePath, e.what()));
+                throw std::runtime_error(gppTr("PythonTextPlugin.dPreRun", "%1 dPreRun 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 }
@@ -87,7 +107,10 @@ void PythonTextPlugin::preRun(Sentence* se) {
                 (*m_pythonPreRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonTextPlugin.preRun", "%1 preRun 函数执行失败: %2", m_modulePath, e.what()));
+                throw std::runtime_error(gppTr("PythonTextPlugin.preRun", "%1 preRun 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 }
@@ -102,7 +125,10 @@ void PythonTextPlugin::postRun(Sentence* se) {
                 (*m_pythonPostRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonTextPlugin.postRun", "%1 postRun 函数执行失败: %2", m_modulePath, e.what()));
+                throw std::runtime_error(gppTr("PythonTextPlugin.postRun", "%1 postRun 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 }
@@ -117,7 +143,10 @@ void PythonTextPlugin::dPostRun(Sentence* se) {
                 (*m_pythonDPostRunFunc)(se);
             }
             catch (const py::error_already_set& e) {
-                throw std::runtime_error(gppTr("PythonTextPlugin.dPostRun", "%1 postRun 函数执行失败: %2", m_modulePath, e.what()));
+                throw std::runtime_error(gppTr("PythonTextPlugin.dPostRun", "%1 postRun 函数执行失败: %2")
+                    .arg(m_modulePath)
+                    .arg(e.what())
+                    .toStdString());
             }
         }).get();
 }

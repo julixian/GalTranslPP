@@ -20,7 +20,9 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
 {
     try {
         if (m_runTime != PluginRunTime::DPre && m_runTime != PluginRunTime::Pre) {
-            m_logger->error(gppTr("SkipTrans.SkipTrans", "SkipTrans 不支持 %1 阶段运行", pluginRunTimeNames[m_runTime]));
+            m_logger->error(gppTr("SkipTrans.SkipTrans", "SkipTrans 不支持 %1 阶段运行")
+                .arg(pluginRunTimeNames[m_runTime])
+                .toStdString());
             return;
         }
 
@@ -48,7 +50,11 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                 pattern.conditionTarget = CachePart::PreprocText;
                 pattern.conditionReg.setPattern(elem.as_string()).setModifier(defaultRegCompileModifier).compile();
                 if (!pattern.conditionReg) {
-                    throw std::runtime_error(gppTr("SkipTrans.SkipTrans", "skipKeys 正则表达式 [%1] 编译失败", elem.as_string()));
+                    throw std::runtime_error(gppTr(
+                        "SkipTrans.SkipTrans",
+                        "skipKeys 正则表达式 [%1] 编译失败")
+                        .arg(elem.as_string())
+                        .toStdString());
                 }
                 GPPCondition gppCondition{ std::move(pattern) };
                 CheckSeCondFunc checkFunc = [condr = std::move(gppCondition)](const Sentence* se) -> bool
@@ -62,14 +68,20 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                 m_skipKeys.push_back(std::move(checkFunc));
             }
             else {
-                throw std::invalid_argument(gppTr("SkipTrans.SkipTrans", "skipKeys 元素必须是字符串、表或表数组"));
+                throw std::invalid_argument(gppTr("SkipTrans.SkipTrans", "skipKeys 元素必须是字符串、表或表数组")
+                    .toStdString());
             }
         }
-        m_logger->info(gppTr("SkipTrans.SkipTrans", "插件 SkipTrans-%1 已加载, skipH: %2",
-            pluginRunTimeNames[m_runTime], m_skipH ? "true" : "false"));
+        m_logger->info(gppTr("SkipTrans.SkipTrans", "插件 SkipTrans-%1 已加载, skipH: %2")
+            .arg(pluginRunTimeNames[m_runTime])
+            .arg(m_skipH ? "true" : "false")
+            .toStdString());
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("SkipTrans.SkipTrans", "SkipTrans-%1 配置文件解析错误: %2", pluginRunTimeNames[m_runTime], e.what()));
+        throw std::runtime_error(gppTr("SkipTrans.SkipTrans", "SkipTrans-%1 配置文件解析错误: %2")
+            .arg(pluginRunTimeNames[m_runTime])
+            .arg(e.what())
+            .toStdString());
     }
 }
 
@@ -97,7 +109,9 @@ void SkipTrans::skipImpl(Sentence* se) {
 
     for (const auto& [index, key] : m_skipKeys | std::views::enumerate) {
         if (key(se)) {
-            processSkipSentence(se, gppTr("SkipTrans.skipImpl", "被第 %1 个 skipKeys 条件匹配到", index + 1));
+            processSkipSentence(se, gppTr("SkipTrans.skipImpl", "被第 %1 个 skipKeys 条件匹配到")
+                .arg(index + 1)
+                .toStdString());
             return;
         }
     }

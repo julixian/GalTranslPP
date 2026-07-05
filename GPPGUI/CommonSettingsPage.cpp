@@ -44,7 +44,8 @@ void CommonSettingsPage::setupUi()
 	int requestNum = toml::find_or(m_projectConfig, "common", "numPerRequestTranslate", 16);
 	ElaScrollPageArea* requestNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* requestNumLayout = new QHBoxLayout(requestNumArea);
-	ElaDoubleText* requestNumText = new ElaDoubleText(tr("单次请求翻译句子数量"), 16, tr("推荐值 <= 16"), 10, "", requestNumArea);
+	ElaDoubleText* requestNumText = new ElaDoubleText(tr("单次请求翻译句子数量"), 16,
+		tr("推荐值 <= 16"), 10, "", requestNumArea);
 	requestNumLayout->addWidget(requestNumText);
 	requestNumLayout->addStretch();
 	ElaSpinBox* requestNumSpinBox = new ElaSpinBox(requestNumArea);
@@ -58,7 +59,8 @@ void CommonSettingsPage::setupUi()
 	int requestNameNum = toml::find_or(m_projectConfig, "common", "numPerRequestNameTranslate", 50);
 	ElaScrollPageArea* requestNameNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* requestNameNumLayout = new QHBoxLayout(requestNameNumArea);
-	ElaDoubleText* requestNameNumText = new ElaDoubleText(tr("单次请求翻译人名数量"), 16, tr("NameTrans 每个线程单次处理的人名数量"), 10, "", requestNameNumArea);
+	ElaDoubleText* requestNameNumText = new ElaDoubleText(tr("单次请求翻译人名数量"), 16,
+		tr("NameTrans 每个线程单次处理的人名数量"), 10, "", requestNameNumArea);
 	requestNameNumLayout->addWidget(requestNameNumText);
 	requestNameNumLayout->addStretch();
 	ElaSpinBox* requestNameNumSpinBox = new ElaSpinBox(requestNameNumArea);
@@ -84,7 +86,8 @@ void CommonSettingsPage::setupUi()
 	const std::string transOrder = toml::find_or(m_projectConfig, "common", "sortMethod", "size");
 	ElaScrollPageArea* transOrderArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* transOrderLayout = new QHBoxLayout(transOrderArea);
-	ElaDoubleText* transOrderText = new ElaDoubleText(tr("翻译顺序"), 16, tr("name为文件名，size为大文件优先，多线程时大文件优先可以提高整体速度"), 10, "", transOrderArea);
+	ElaDoubleText* transOrderText = new ElaDoubleText(tr("翻译顺序"), 16,
+		tr("name为文件名，size为大文件优先，多线程时大文件优先可以提高整体速度"), 10, "", transOrderArea);
 	transOrderLayout->addWidget(transOrderText);
 	transOrderLayout->addStretch();
 	QButtonGroup* transOrderGroup = new QButtonGroup(transOrderArea);
@@ -103,7 +106,8 @@ void CommonSettingsPage::setupUi()
 	QString targetLangQStr = QString::fromStdString(targetLang);
 	ElaScrollPageArea* targetLangArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* targetLangLayout = new QHBoxLayout(targetLangArea);
-	ElaDoubleText* targetLangText = new ElaDoubleText(tr("翻译到的目标语言"), 16, tr("包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr]"), 10, "", targetLangArea);
+	ElaDoubleText* targetLangText = new ElaDoubleText(tr("翻译到的目标语言"), 16,
+		tr("包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr]"), 10, "", targetLangArea);
 	targetLangLayout->addWidget(targetLangText);
 	targetLangLayout->addStretch();
 	ElaLineEdit* targetLangLineEdit = new ElaLineEdit(targetLangArea);
@@ -118,7 +122,8 @@ void CommonSettingsPage::setupUi()
 	QWidget* splitSettingsArea = new QWidget(splitSettingsDrawerArea);
 	splitSettingsDrawerArea->setDrawerHeader(splitSettingsArea);
 	QHBoxLayout* splitSettingsLayout = new QHBoxLayout(splitSettingsArea);
-	ElaDoubleText* splitSettingsText = new ElaDoubleText(tr("单文件分割"), 16, tr("Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割"), 10, "", splitSettingsArea);
+	ElaDoubleText* splitSettingsText = new ElaDoubleText(tr("单文件分割"), 16,
+		tr("Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割"), 10, "", splitSettingsArea);
 	splitSettingsLayout->addWidget(splitSettingsText);
 	splitSettingsLayout->addStretch();
 	QButtonGroup* splitSettingsGroup = new QButtonGroup(splitSettingsArea);
@@ -140,7 +145,8 @@ void CommonSettingsPage::setupUi()
 	int splitNum = toml::find_or(m_projectConfig, "common", "splitFileNum", 1024);
 	ElaScrollPageArea* splitNumArea = new ElaScrollPageArea(splitSettingsDrawerArea);
 	QHBoxLayout* splitNumLayout = new QHBoxLayout(splitNumArea);
-	ElaDoubleText* splitNumText = new ElaDoubleText(tr("分割数量"), 16, tr("Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分"), 10, "", splitNumArea);
+	ElaDoubleText* splitNumText = new ElaDoubleText(tr("分割数量"), 16,
+		tr("Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分"), 10, "", splitNumArea);
 	splitNumLayout->addWidget(splitNumText);
 	splitNumLayout->addStretch();
 	ElaSpinBox* splitNumSpinBox = new ElaSpinBox(splitNumArea);
@@ -153,7 +159,9 @@ void CommonSettingsPage::setupUi()
 	int cacheSearchDistance = toml::find_or(m_projectConfig, "common", "cacheSearchDistance", 5);
 	ElaScrollPageArea* cacheSearchDistanceArea = new ElaScrollPageArea(splitSettingsDrawerArea);
 	QHBoxLayout* cacheSearchDistanceLayout = new QHBoxLayout(cacheSearchDistanceArea);
-	ElaDoubleText* cacheSearchDistanceText = new ElaDoubleText(tr("分割缓存查找距离"), 16, tr("将自身索引 ±N 的分割文件均视为当前分割文件的缓存"), 10, tr("数值越大可能占用更多内存"), cacheSearchDistanceArea);
+	ElaDoubleText* cacheSearchDistanceText = new ElaDoubleText(tr("分割缓存查找距离"), 16,
+		tr("将自身索引 ±N 的分割文件均视为当前分割文件的缓存"), 10,
+		tr("数值越大可能占用更多内存"), cacheSearchDistanceArea);
 	cacheSearchDistanceLayout->addWidget(cacheSearchDistanceText);
 	cacheSearchDistanceLayout->addStretch();
 	ElaSpinBox* cacheSearchDistanceSpinBox = new ElaSpinBox(cacheSearchDistanceArea);
@@ -174,7 +182,9 @@ void CommonSettingsPage::setupUi()
 	QWidget* repeatedBlockArea = new QWidget(repeatedBlockDrawerArea);
 	repeatedBlockDrawerArea->setDrawerHeader(repeatedBlockArea);
 	QHBoxLayout* repeatedBlockLayout = new QHBoxLayout(repeatedBlockArea);
-	ElaDoubleText* repeatedBlockText = new ElaDoubleText(tr("连续重复块引用复用"), 16, tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10, tr("启用时建议将翻译顺序改为文件名排序"), repeatedBlockArea);
+	ElaDoubleText* repeatedBlockText = new ElaDoubleText(tr("连续重复块引用复用"), 16,
+		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10,
+		tr("启用时建议将翻译顺序改为文件名排序"), repeatedBlockArea);
 	repeatedBlockLayout->addWidget(repeatedBlockText);
 	repeatedBlockLayout->addStretch();
 	ElaToggleSwitch* repeatedBlockToggle = new ElaToggleSwitch(repeatedBlockArea);
@@ -185,7 +195,8 @@ void CommonSettingsPage::setupUi()
 	int repeatedBlockMinSize = toml::find_or(m_projectConfig, "common", "repeatedBlockMinSize", 5);
 	ElaScrollPageArea* repeatedBlockMinSizeArea = new ElaScrollPageArea(repeatedBlockDrawerArea);
 	QHBoxLayout* repeatedBlockMinSizeLayout = new QHBoxLayout(repeatedBlockMinSizeArea);
-	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(tr("重复块最小句数"), 16, tr("连续 n 句的说话人和原文完全相同才建立引用"), 10, "", repeatedBlockMinSizeArea);
+	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(tr("重复块最小句数"), 16,
+		tr("连续 n 句的说话人和原文完全相同才建立引用"), 10, "", repeatedBlockMinSizeArea);
 	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeText);
 	repeatedBlockMinSizeLayout->addStretch();
 	ElaSpinBox* repeatedBlockMinSizeSpinBox = new ElaSpinBox(repeatedBlockMinSizeArea);
@@ -198,7 +209,8 @@ void CommonSettingsPage::setupUi()
 	int cacheSaveInterval = toml::find_or(m_projectConfig, "common", "saveCacheInterval", 1);
 	ElaScrollPageArea* cacheSaveIntervalArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* cacheSaveIntervalLayout = new QHBoxLayout(cacheSaveIntervalArea);
-	ElaDoubleText* cacheSaveIntervalText = new ElaDoubleText(tr("缓存保存间隔"), 16, tr("每翻译n次保存一次缓存"), 10, "", cacheSaveIntervalArea);
+	ElaDoubleText* cacheSaveIntervalText = new ElaDoubleText(tr("缓存保存间隔"), 16,
+		tr("每翻译n次保存一次缓存"), 10, "", cacheSaveIntervalArea);
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalText);
 	cacheSaveIntervalLayout->addStretch();
 	ElaSpinBox* cacheSaveIntervalSpinBox = new ElaSpinBox(cacheSaveIntervalArea);
@@ -224,7 +236,8 @@ void CommonSettingsPage::setupUi()
 	int contextNum = toml::find_or(m_projectConfig, "common", "contextHistorySize", 8);
 	ElaScrollPageArea* contextNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* contextNumLayout = new QHBoxLayout(contextNumArea);
-	ElaDoubleText* contextNumText = new ElaDoubleText(tr("携带上文数量"), 16, tr("推荐值 ≤ 10"), 10, "", contextNumArea);
+	ElaDoubleText* contextNumText = new ElaDoubleText(tr("携带上文数量"), 16,
+		tr("推荐值 ≤ 10"), 10, "", contextNumArea);
 	contextNumLayout->addWidget(contextNumText);
 	contextNumLayout->addStretch();
 	ElaSpinBox* contextNumSpinBox = new ElaSpinBox(contextNumArea);
@@ -237,7 +250,9 @@ void CommonSettingsPage::setupUi()
 	bool useSmartRetry = toml::find_or(m_projectConfig, "common", "smartRetry", false);
 	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
-	ElaDoubleText* smartRetryTextWidget = new ElaDoubleText(tr("智能重试"), 16, tr("解析结果失败时尝试折半重翻与清空上下文"), 10, "如果用的打野 key 其实不建议开这个", smartRetryArea);
+	ElaDoubleText* smartRetryTextWidget = new ElaDoubleText(tr("智能重试"), 16,
+		tr("解析结果失败时尝试折半重翻与清空上下文"), 10,
+		"如果用的打野 key 其实不建议开这个", smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();
 	ElaToggleSwitch* smartRetryToggle = new ElaToggleSwitch(smartRetryArea);
@@ -249,7 +264,8 @@ void CommonSettingsPage::setupUi()
 	bool shouldCheckQuota = toml::find_or(m_projectConfig, "common", "checkQuota", true);
 	ElaScrollPageArea* checkQuotaArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* checkQuotaLayout = new QHBoxLayout(checkQuotaArea);
-	ElaDoubleText* checkQuotaTextWidget = new ElaDoubleText(tr("额度检测"), 16, tr("运行时动态检测 key 额度，自动从 API 池中删除额度不足的 key"), 10, "", checkQuotaArea);
+	ElaDoubleText* checkQuotaTextWidget = new ElaDoubleText(tr("额度检测"), 16,
+		tr("运行时动态检测 key 额度，自动从 API 池中删除额度不足的 key"), 10, "", checkQuotaArea);
 	checkQuotaLayout->addWidget(checkQuotaTextWidget);
 	checkQuotaLayout->addStretch();
 	ElaToggleSwitch* checkQuotaToggle = new ElaToggleSwitch(checkQuotaArea);
@@ -261,7 +277,9 @@ void CommonSettingsPage::setupUi()
 	bool retransAllWhenFail = toml::find_or(m_projectConfig, "common", "retransAllWhenFail", false);
 	ElaScrollPageArea* retransAllWhenFailArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* retransAllWhenFailLayout = new QHBoxLayout(retransAllWhenFailArea);
-	ElaDoubleText* retransAllWhenFailText = new ElaDoubleText(tr("解析不完整时重翻整段"), 16, tr("不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错"), 10, tr("默认关闭以节省token/防止因模型截断造成无限循环"), retransAllWhenFailArea);
+	ElaDoubleText* retransAllWhenFailText = new ElaDoubleText(tr("解析不完整时重翻整段"), 16,
+		tr("不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错"), 10,
+		tr("默认关闭以节省token/防止因模型截断造成无限循环"), retransAllWhenFailArea);
 	retransAllWhenFailLayout->addWidget(retransAllWhenFailText);
 	retransAllWhenFailLayout->addStretch();
 	ElaToggleSwitch* retransAllWhenFailToggle = new ElaToggleSwitch(retransAllWhenFailArea);
@@ -359,7 +377,8 @@ void CommonSettingsPage::setupUi()
 	const std::string tokenizerBackend = toml::find_or(m_projectConfig, "common", "tokenizerBackend", "MeCab");
 	ElaScrollPageArea* tokenizerBackendArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* tokenizerBackendLayout = new QHBoxLayout(tokenizerBackendArea);
-	ElaDoubleText* tokenizerBackendTextWidget = new ElaDoubleText(tr("分词器后端"), 16, tr("除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的"), 10, "", tokenizerBackendArea);
+	ElaDoubleText* tokenizerBackendTextWidget = new ElaDoubleText(tr("分词器后端"), 16,
+		tr("除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的"), 10, "", tokenizerBackendArea);
 	tokenizerBackendLayout->addWidget(tokenizerBackendTextWidget);
 	tokenizerBackendLayout->addStretch();
 	ElaComboBox* tokenizerBackendComboBox = new ElaComboBox(tokenizerBackendArea);
@@ -376,7 +395,8 @@ void CommonSettingsPage::setupUi()
 	const std::string mecabDictDir = toml::find_or(m_projectConfig, "common", "mecabDictDir", "BaseConfig/mecabDict/mecab-ipadic-utf8");
 	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* mecabDictDirLayout = new QHBoxLayout(mecabDictDirArea);
-	ElaDoubleText* mecabDictDirText = new ElaDoubleText(tr("MeCab词典目录"), 16, tr("MeCab词典目录，程序自带一个"), 10, "", mecabDictDirArea);
+	ElaDoubleText* mecabDictDirText = new ElaDoubleText(tr("MeCab词典目录"), 16,
+		tr("MeCab词典目录，程序自带一个"), 10, "", mecabDictDirArea);
 	mecabDictDirLayout->addWidget(mecabDictDirText);
 	mecabDictDirLayout->addStretch();
 	ElaLineEdit* mecabDictDirLineEdit = new ElaLineEdit(mecabDictDirArea);
@@ -398,7 +418,9 @@ void CommonSettingsPage::setupUi()
 	const std::string spaCyModelName = toml::find_or(m_projectConfig, "common", "spaCyModelName", "ja_core_news_lg");
 	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* spaCyModelNameLayout = new QHBoxLayout(spaCyModelNameArea);
-	ElaDoubleText* spaCyModelNameText = new ElaDoubleText(tr("spaCy模型名称"), 16, tr("spaCy模型名称，新模型下载后需重启程序"), 10, tr("sm模型的效果有点一言难尽，有条件的建议上trf模型"), spaCyModelNameArea);
+	ElaDoubleText* spaCyModelNameText = new ElaDoubleText(tr("spaCy模型名称"), 16,
+		tr("spaCy模型名称，新模型下载后需重启程序"), 10,
+		tr("sm模型的效果有点一言难尽，有条件的建议上trf模型"), spaCyModelNameArea);
 	spaCyModelNameLayout->addWidget(spaCyModelNameText);
 	spaCyModelNameLayout->addStretch();
 	ElaLineEdit* spaCyModelNameLineEdit = new ElaLineEdit(spaCyModelNameArea);
@@ -417,7 +439,8 @@ void CommonSettingsPage::setupUi()
 	const std::string stanzaLang = toml::find_or(m_projectConfig, "common", "stanzaLang", "ja");
 	ElaScrollPageArea* stanzaLangArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* stanzaLangLayout = new QHBoxLayout(stanzaLangArea);
-	ElaDoubleText* stanzaLangTextWidget = new ElaDoubleText(tr("Stanza语言ID"), 16, tr("Stanza语言ID，新模型下载后需重启程序"), 10, "", stanzaLangArea);
+	ElaDoubleText* stanzaLangTextWidget = new ElaDoubleText(tr("Stanza语言ID"), 16,
+		tr("Stanza语言ID，新模型下载后需重启程序"), 10, "", stanzaLangArea);
 	stanzaLangLayout->addWidget(stanzaLangTextWidget);
 	stanzaLangLayout->addStretch();
 	ElaLineEdit* stanzaLangLineEdit = new ElaLineEdit(stanzaLangArea);

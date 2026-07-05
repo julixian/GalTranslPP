@@ -76,7 +76,8 @@ public:
 						tbl[kv.first.as<std::string>()] = solObj2JsonValue(kv.second);
 					}
 					else {
-						throw std::runtime_error(gppTr("LuaJson.solObj2JsonValue", "LuaJson: key 必须是字符串"));
+						throw std::runtime_error(gppTr("LuaJson.solObj2JsonValue", "LuaJson: key 必须是字符串")
+						    .toStdString());
 					}
 				}
 				return tbl;
@@ -181,7 +182,8 @@ public:
 						tbl.insert({ kv.first.as<std::string>(), solObj2TomlValue(kv.second) });
 					}
 					else {
-						throw std::runtime_error(gppTr("LuaToml.solObj2TomlValue", "LuaToml: key 必须是字符串"));
+						throw std::runtime_error(gppTr("LuaToml.solObj2TomlValue", "LuaToml: key 必须是字符串")
+						    .toStdString());
 					}
 				}
 				return tbl;
@@ -229,7 +231,7 @@ public:
 std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(const std::string& scriptPath, const std::string& functionName) {
 	const fs::path stdScriptPath = fs::weakly_canonical(ascii2Wide(scriptPath));
 	if (!fs::exists(stdScriptPath)) {
-		m_logger->error(gppTr("LuaManager.registerFunction", "脚本不存在: %1", scriptPath));
+		m_logger->error(gppTr("LuaManager.registerFunction", "脚本不存在: %1").arg(scriptPath).toStdString());
 		return std::nullopt;
 	}
 
@@ -246,7 +248,10 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 			it = m_scriptStates.find(stdScriptPath);
 		}
 		catch (const sol::error& e) {
-			m_logger->error(gppTr("LuaManager.registerFunction", "加载脚本 %1 失败: %2", scriptPath, e.what()));
+			m_logger->error(gppTr("LuaManager.registerFunction", "加载脚本 %1 失败: %2")
+			    .arg(scriptPath)
+			    .arg(e.what())
+			    .toStdString());
 			return std::nullopt;
 		}
 	}
@@ -258,7 +263,10 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 	if (!it->second->functions.contains(functionName)) {
 		auto pFunc = std::make_unique<sol::function>((*(it->second->lua))[functionName]);
 		if (!pFunc->valid()) {
-			m_logger->debug(gppTr("LuaManager.registerFunction", "在脚本 %1 中未找到函数 %2", scriptPath, functionName));
+			m_logger->debug(gppTr("LuaManager.registerFunction", "在脚本 %1 中未找到函数 %2")
+			    .arg(scriptPath)
+			    .arg(functionName)
+			    .toStdString());
 			return std::nullopt;
 		}
 		it->second->functions.insert({ functionName, std::move(pFunc) });
@@ -695,9 +703,19 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		{
 			extractFileFromZip(ascii2Wide(zipPath), ascii2Wide(outputDir), fileName);
 		};
+	utilsTable["extractFilesFromZip"] = [](const std::string& zipPath, const std::string& outputDir, std::vector<std::string> fileNames)
+		{
+			const std::set<std::string> fileNameSet(fileNames.begin(), fileNames.end());
+			extractZipExclude(ascii2Wide(zipPath), ascii2Wide(outputDir), fileNameSet);
+		};
+	utilsTable["extractZipInclude"] = [](const std::string& zipPath, const std::string& outputDir, std::vector<std::string> includePrefixes)
+		{
+			const std::set<std::string> includeSet(includePrefixes.begin(), includePrefixes.end());
+			extractZipInclude(ascii2Wide(zipPath), ascii2Wide(outputDir), includeSet);
+		};
 	utilsTable["extractZipExclude"] = [](const std::string& zipPath, const std::string& outputDir, std::vector<std::string> excludePrefixes)
 		{
-			std::set<std::string> excludeSet(excludePrefixes.begin(), excludePrefixes.end());
+			const std::set<std::string> excludeSet(excludePrefixes.begin(), excludePrefixes.end());
 			extractZipExclude(ascii2Wide(zipPath), ascii2Wide(outputDir), excludeSet);
 		};
 	utilsTable["pcre2RegexSearch1"] = [](const std::string& str, const std::string& pattern, std::optional<std::string> modifier)
@@ -725,7 +743,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			jpc::RegexReplace rr(&re);
 			return rr.setModifier(replaceModifier.value_or(defaultRegReplaceModifier)).setSubject(str).replace();
 		};
-	//utilsTable["pcre2RegexMatch"]
+
 
 	// 绑定 spdlog::logger
 	lua.new_enum("spdlogLevel",
@@ -759,25 +777,38 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 				const std::string tokenizerBackend = lua[langMode + "tokenizerBackend"].get<std::string>();
 				if (tokenizerBackend == "MeCab") {
 					const std::string mecabDictDir = lua[langMode + "mecabDictDir"].get<std::string>();
-					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 MeCab 分词器，首次使用时加载。", scriptPath));
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 MeCab 分词器，首次使用时加载。")
+					    .arg(scriptPath)
+					    .toStdString());
 					utilsTable[langMode + "tokenizeFunc"] = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 				}
 				else if (tokenizerBackend == "spaCy") {
 					const std::string spaCyModelName = lua[langMode + "spaCyModelName"].get<std::string>();
-					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 spaCy 分词器，首次使用时加载。", scriptPath));
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 spaCy 分词器，首次使用时加载。")
+					    .arg(scriptPath)
+					    .toStdString());
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "spacy" }, "tokenizer_spacy", spaCyModelName, m_logger);
 				}
 				else if (tokenizerBackend == "Stanza") {
 					const std::string stanzaLang = lua[langMode + "stanzaLang"].get<std::string>();
-					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 Stanza 分词器，首次使用时加载。", scriptPath));
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 Stanza 分词器，首次使用时加载。")
+					    .arg(scriptPath)
+					    .toStdString());
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza", stanzaLang, m_logger);
 				}
 				else if (tokenizerBackend == "pkuseg") {
-					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 pkuseg 分词器，首次使用时加载。", scriptPath));
+					m_logger->info(gppTr("LuaManager.registerCustomTypes", "%1 已配置 pkuseg 分词器，首次使用时加载。")
+					    .arg(scriptPath)
+					    .toStdString());
 					utilsTable[langMode + "tokenizeFunc"] = getNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" }, "tokenizer_pkuseg", "default", m_logger);
 				}
 				else {
-					throw std::invalid_argument(gppTr("LuaManager.registerCustomTypes", "%1 中注册了无效的 tokenizerBackend: %2", scriptPath, tokenizerBackend));
+					throw std::invalid_argument(gppTr(
+					    "LuaManager.registerCustomTypes",
+					    "%1 中注册了无效的 tokenizerBackend: %2")
+					    .arg(scriptPath)
+					    .arg(tokenizerBackend)
+					    .toStdString());
 				}
 			}
 		};

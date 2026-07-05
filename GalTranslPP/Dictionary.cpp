@@ -89,7 +89,8 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
                 break;
 
             default:
-                throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型"));
+                throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型")
+                    .toStdString());
             }
         }
     }
@@ -114,7 +115,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
         return promptContent; // Sakura 模式没有标题
 
     default:
-        throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型"));
+        throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型").toStdString());
     }
 
     return {};
@@ -122,7 +123,9 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
 
 void GptDictionary::loadFromFile(const fs::path& filePath) {
     if (!fs::exists(filePath)) {
-        m_logger->error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件不存在: %1", wide2Ascii(filePath)));
+        m_logger->error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件不存在: %1")
+            .arg(wide2Ascii(filePath))
+            .toStdString());
         return;
     }
 
@@ -155,10 +158,16 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件解析错误: %1: %2", wide2Ascii(filePath), e.what()));
+        throw std::runtime_error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件解析错误: %1: %2")
+            .arg(wide2Ascii(filePath))
+            .arg(e.what())
+            .toStdString());
     }
 
-    m_logger->info(gppTr("GptDictionary.loadFromFile", "已加载 GPT 字典: %1, 共 %2 个词条", wide2Ascii(filePath.filename()), count));
+    m_logger->info(gppTr("GptDictionary.loadFromFile", "已加载 GPT 字典: %1, 共 %2 个词条")
+        .arg(wide2Ascii(filePath.filename()))
+        .arg(count)
+        .toStdString());
 }
 
 std::string GptDictionary::doReplace(const Sentence* se, CachePart targetToModify) const {
@@ -207,14 +216,23 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
                 });
             if (it != entry.otherEntriesWhoseSearchStrContainsThatInThisEntry->end()) {
                 const GptDictEntry& otherEntryRef = m_entries[*it];
-                sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用，但使用了 %3->%4 这一包含性字典",
-                    entry.searchStr, entry.replaceStr, otherEntryRef.searchStr, otherEntryRef.replaceStr));
+                sentence->problems.push_back(gppTr(
+                    "GptDictionary.checkDictUse",
+                    "GPT字典 %1->%2 未使用，但使用了 %3->%4 这一包含性字典")
+                    .arg(entry.searchStr)
+                    .arg(entry.replaceStr)
+                    .arg(otherEntryRef.searchStr)
+                    .arg(otherEntryRef.replaceStr)
+                    .toStdString());
                 continue;
             }
         }
         if (entry.searchStr.length() > 15) {
             // 如果字典单独出现且长度大于 15 字节，则默认认为是字典未正确使用的情况
-            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用", entry.searchStr, entry.replaceStr));
+            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用")
+                .arg(entry.searchStr)
+                .arg(entry.replaceStr)
+                .toStdString());
             continue;
         }
 
@@ -249,7 +267,10 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
 
         if (found) {
             // 如果原文有完整的 searchStr 词组且译文中没有使用对应的词，几乎可以肯定是字典未正确使用的情况
-            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用", entry.searchStr, entry.replaceStr));
+            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用")
+                .arg(entry.searchStr)
+                .arg(entry.replaceStr)
+                .toStdString());
         }
 
     }
@@ -260,7 +281,9 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
 // Normal
 void NormalDictionary::loadFromFile(const fs::path& filePath) {
     if (!fs::exists(filePath)) {
-        m_logger->warn(gppTr("NormalDictionary.loadFromFile", "字典文件不存在: %1", wide2Ascii(filePath)));
+        m_logger->warn(gppTr("NormalDictionary.loadFromFile", "字典文件不存在: %1")
+            .arg(wide2Ascii(filePath))
+            .toStdString());
         return;
     }
 
@@ -290,7 +313,12 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                 const std::string compileModifier = toml::find_or(el, "compile_modifier", defaultRegCompileModifier);
                 entry.searchReg = std::make_unique<jpc::Regex>(str, compileModifier);
                 if (!*entry.searchReg) {
-                    throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件格式错误(正则表达式错误): %1  ——  %2", wide2Ascii(filePath), str));
+                    throw std::runtime_error(gppTr(
+                        "NormalDictionary.loadFromFile",
+                        "Normal 字典文件格式错误(正则表达式错误): %1  ——  %2")
+                        .arg(wide2Ascii(filePath))
+                        .arg(str)
+                        .toStdString());
                 }
                 entry.replaceModifier = std::make_unique<std::string>(toml::find_or(el, "replace_modifier", defaultRegReplaceModifier));
             }
@@ -309,10 +337,16 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件解析错误: %1: %2", wide2Ascii(filePath), e.what()));
+        throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件解析错误: %1: %2")
+            .arg(wide2Ascii(filePath))
+            .arg(e.what())
+            .toStdString());
     }
 
-    m_logger->info(gppTr("NormalDictionary.loadFromFile", "已加载 Normal 字典: %1, 共 %2 个词条", wide2Ascii(filePath.filename()), count));
+    m_logger->info(gppTr("NormalDictionary.loadFromFile", "已加载 Normal 字典: %1, 共 %2 个词条")
+        .arg(wide2Ascii(filePath.filename()))
+        .arg(count)
+        .toStdString());
 }
 
 void NormalDictionary::sort() {

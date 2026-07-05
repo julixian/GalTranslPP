@@ -47,7 +47,12 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         }
 
         if (m_smartRetry && retryCount == 2 && batchToTransThisRound.size() > 1) {
-            m_logger->warn(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 开始拆分批次进行重试...", threadId, wide2Ascii(relInputPath)));
+            m_logger->warn(gppTr(
+                "NormalJsonTranslator.translateBatch",
+                "[线程 %1] [文件 %2] 开始拆分批次进行重试...")
+                .arg(threadId)
+                .arg(wide2Ascii(relInputPath))
+                .toStdString());
 
             const size_t mid = batchToTransThisRound.size() / 2;
             std::span<Sentence*> batchToTransThisRoundSpan(batchToTransThisRound);
@@ -60,7 +65,12 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             return firstOk && secondOk;
         }
         else if (m_smartRetry && retryCount == 3) {
-            m_logger->warn(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 清空上下文后再次尝试...", threadId, wide2Ascii(relInputPath)));
+            m_logger->warn(gppTr(
+                "NormalJsonTranslator.translateBatch",
+                "[线程 %1] [文件 %2] 清空上下文后再次尝试...")
+                .arg(threadId)
+                .arg(wide2Ascii(relInputPath))
+                .toStdString());
             contextHistory.clear();
             backgroundText.clear();
         }
@@ -97,7 +107,11 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             logBlock += "\nDict:\n" + glossary;
         }
         logBlock += "\ninputBlock:\n" + inputBlock;
-        m_logger->info(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 开始翻译:\n%3", threadId, wide2Ascii(relInputPath), logBlock));
+        m_logger->info(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 开始翻译:\n%3")
+            .arg(threadId)
+            .arg(wide2Ascii(relInputPath))
+            .arg(logBlock)
+            .toStdString());
 
         std::string promptReq = m_userPrompt;
         replaceStrInplace(promptReq, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
@@ -115,7 +129,8 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
 
         const std::optional<TranslationApi> apiOpt = m_apiStrategy == "random" ? m_apiPool->getApi() : m_apiPool->getFirstApi();
         if (!apiOpt.has_value()) {
-            throw std::runtime_error(gppTr("NormalJsonTranslator.translateBatch", "没有可用的 API key 了"));
+            throw std::runtime_error(gppTr("NormalJsonTranslator.translateBatch", "没有可用的 API key 了")
+                .toStdString());
         }
         const TranslationApi& currentApi = apiOpt.value();
 
@@ -128,7 +143,13 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         )) {
             continue;
         }
-        m_logger->trace(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 成功响应，响应内容:\n%3", threadId, wide2Ascii(relInputPath), response.content));
+        m_logger->trace(gppTr(
+            "NormalJsonTranslator.translateBatch",
+            "[线程 %1] [文件 %2] 成功响应，响应内容:\n%3")
+            .arg(threadId)
+            .arg(wide2Ascii(relInputPath))
+            .arg(response.content)
+            .toStdString());
 
         int parsedCount = parseContent(
             response.content,
@@ -145,21 +166,38 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             ++retryCount;
             if (!m_controller->shouldStop()) {
                 recordRuntimeError("parse",
-                    gppTr("NormalJsonTranslator.translateBatch", "解析失败或不完整 (%1 / %2)", parsedCount, batchToTransThisRound.size()),
+                    gppTr("NormalJsonTranslator.translateBatch", "解析失败或不完整 (%1 / %2)")
+                        .arg(parsedCount)
+                        .arg(batchToTransThisRound.size())
+                        .toStdString(),
                     relInputPath,
                     std::format("{}-{}", batchToTransThisRound.front()->index, batchToTransThisRound.back()->index),
                     retryCount,
                     currentApi.modelName,
                     -1.0,
                     "warning");
-                m_logger->warn(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 解析失败或不完整 (%3 / %4), 进行第 %5 次重试..., 解析结果: \n%6",
-                    threadId, wide2Ascii(relInputPath), parsedCount, batchToTransThisRound.size(), retryCount, response.content));
+                m_logger->warn(gppTr(
+                    "NormalJsonTranslator.translateBatch",
+                    "[线程 %1] [文件 %2] 解析失败或不完整 (%3 / %4), 进行第 %5 次重试..., 解析结果: \n%6")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(parsedCount)
+                    .arg(batchToTransThisRound.size())
+                    .arg(retryCount)
+                    .arg(response.content)
+                    .toStdString());
             }
             continue;
         }
 
-        m_logger->info(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 成功解析 %3 句，解析结果: \n%4",
-            threadId, wide2Ascii(relInputPath), parsedCount, response.content));
+        m_logger->info(gppTr(
+            "NormalJsonTranslator.translateBatch",
+            "[线程 %1] [文件 %2] 成功解析 %3 句，解析结果: \n%4")
+            .arg(threadId)
+            .arg(wide2Ascii(relInputPath))
+            .arg(parsedCount)
+            .arg(response.content)
+            .toStdString());
         return true;
     }
 
@@ -169,11 +207,22 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         se->pre_translated_text = "(Failed to translate)" + se->pre_processed_text;
         se->complete = true;
     }
-    m_logger->error(gppTr("NormalJsonTranslator.translateBatch", "[线程 %1] [文件 %2] 批次翻译在 %3 次重试后彻底失败，共翻译 %4 / %5 句。",
-        threadId, wide2Ascii(relInputPath), retryCount, batch.size() - failedCount, batch.size())
+    m_logger->error(gppTr(
+        "NormalJsonTranslator.translateBatch",
+        "[线程 %1] [文件 %2] 批次翻译在 %3 次重试后彻底失败，共翻译 %4 / %5 句。")
+        .arg(threadId)
+        .arg(wide2Ascii(relInputPath))
+        .arg(retryCount)
+        .arg(batch.size() - failedCount)
+        .arg(batch.size())
+        .toStdString()
     );
     recordRuntimeError("parse",
-        gppTr("NormalJsonTranslator.translateBatch", "批次翻译在 %1 次重试后彻底失败，共翻译 %2 / %3 句。", retryCount, batch.size() - failedCount, batch.size()),
+        gppTr("NormalJsonTranslator.translateBatch", "批次翻译在 %1 次重试后彻底失败，共翻译 %2 / %3 句。")
+            .arg(retryCount)
+            .arg(batch.size() - failedCount)
+            .arg(batch.size())
+            .toStdString(),
         relInputPath,
         batch.empty() ? std::string{} : std::format("{}-{}", batch.front()->index, batch.back()->index),
         retryCount);

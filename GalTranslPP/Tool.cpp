@@ -222,7 +222,7 @@ std::vector<std::string> splitTsvLine(const std::string& line, const std::vector
             })
         )
     {
-        throw std::runtime_error(gppTr("splitTsvLine", "TSV 行切分不允许使用空分隔符"));
+        throw std::runtime_error(gppTr("splitTsvLine", "TSV 行切分不允许使用空分隔符").toStdString());
     }
 
     while (currentPos < line.length()) {
@@ -271,9 +271,11 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart tar) {
         return sentence->translated_preview;
         break;
     case CachePart::None:
-        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标: None"));
+        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标: None").toStdString());
     default:
-        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标: %1", (int)tar));
+        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标: %1")
+            .arg((int)tar)
+            .toStdString());
     }
     return {};
 }
@@ -318,7 +320,9 @@ CachePart chooseCachePart(std::string_view partName) {
         part = CachePart::TransPreview;
     }
     else {
-        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart: %1", std::string(partName)));
+        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart: %1")
+            .arg(std::string(partName))
+            .toStdString());
     }
     return part;
 }
@@ -341,7 +345,9 @@ std::pair<std::string, int> getMostCommonChar(const std::string& s) {
 
     const std::unique_ptr<icu::BreakIterator> boundary(icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode));
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("getMostCommonChar", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("getMostCommonChar", "创建字符边界迭代器失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
     }
     boundary->setText(ustr);
 
@@ -384,7 +390,9 @@ std::vector<std::string> splitIntoGraphemes(const std::string& sourceString) {
     );
 
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("splitIntoGraphemes", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("splitIntoGraphemes", "创建字符边界迭代器失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
     }
 
     breakIterator->setText(uString);
@@ -411,7 +419,9 @@ size_t countGraphemesImpl(auto&& sourceString)
         icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
     );
     if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("countGraphemes", "创建字符边界迭代器失败: %1", u_errorName(errorCode)));
+        throw std::runtime_error(gppTr("countGraphemes", "创建字符边界迭代器失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
     }
     breakIterator->setText(uString);
 
@@ -487,7 +497,9 @@ std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, const std
         const size_t tokenPos = text.find(token, searchPos);
         // 错误处理：如果在预期位置找不到 token，说明输入有问题
         if (tokenPos == std::string::npos) {
-            throw std::runtime_error(gppTr("splitIntoTokens", "在原句剩余部分中找不到 token '%1'。", token));
+            throw std::runtime_error(gppTr("splitIntoTokens", "在原句剩余部分中找不到 token '%1'。")
+                .arg(token)
+                .toStdString());
         }
         // 1. 提取并添加 token 前面的空白部分
         if (tokenPos > searchPos) {
@@ -641,19 +653,22 @@ std::function<std::string(const std::string&)> getTraditionalChineseExtractor(co
                 }
                 return resultStr;
             };
-        logger->info(gppTr("getTraditionalChineseExtractor", "使用 OpenCC 进行繁体中文检测"));
+        logger->info(gppTr("getTraditionalChineseExtractor", "使用 OpenCC 进行繁体中文检测").toStdString());
         return result;
     }
     catch (...) {
-        logger->error(gppTr("getTraditionalChineseExtractor", "OpenCC 不可用，尝试回退到基于 ICU 的繁体中文检测"));
+        logger->error(gppTr("getTraditionalChineseExtractor", "OpenCC 不可用，尝试回退到基于 ICU 的繁体中文检测")
+            .toStdString());
         UErrorCode status = U_ZERO_ERROR;
         auto toSimplified = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的繁体中文检测不可用"));
+            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的繁体中文检测不可用")
+                .toStdString());
         }
         auto toTraditional = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
         if (U_FAILURE(status)) {
-            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的简体中文检测不可用"));
+            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的简体中文检测不可用")
+                .toStdString());
         }
 
         // 白名单/排除列表：用于解决简繁转换中的歧义问题。
@@ -721,7 +736,7 @@ std::function<std::string(const std::string&)> getTraditionalChineseExtractor(co
                 std::string resultStr;
                 return resultUStr.toUTF8String(resultStr);
             };
-        logger->info(gppTr("getTraditionalChineseExtractor", "使用基于 ICU 的繁体中文检测"));
+        logger->info(gppTr("getTraditionalChineseExtractor", "使用基于 ICU 的繁体中文检测").toStdString());
         return result;
     }
     return {};
@@ -736,11 +751,16 @@ void loadTokenizeCache
             json::parse(ifs).get_to(result);
         }
         else {
-            logger->debug(gppTr("loadTokenizeCache", "未找到分词缓存 %1", wide2Ascii(cachePath)));
+            logger->debug(gppTr("loadTokenizeCache", "未找到分词缓存 %1")
+                .arg(wide2Ascii(cachePath))
+                .toStdString());
         }
     }
     catch (const json::parse_error& e) {
-        logger->error(gppTr("loadTokenizeCache", "读取分词缓存 %1 失败: %2", wide2Ascii(cachePath), e.what()));
+        logger->error(gppTr("loadTokenizeCache", "读取分词缓存 %1 失败: %2")
+            .arg(wide2Ascii(cachePath))
+            .arg(e.what())
+            .toStdString());
     }
 }
 
@@ -752,19 +772,17 @@ void saveTokenizeCache
         std::ofstream ofs(cachePath, std::ios::binary);
         ofs << j.dump(2);
         ofs.close();
-        logger->debug(gppTr("saveTokenizeCache", "分词缓存已保存到 %1", wide2Ascii(cachePath)));
+        logger->debug(gppTr("saveTokenizeCache", "分词缓存已保存到 %1")
+            .arg(wide2Ascii(cachePath))
+            .toStdString());
     }
     catch (...) {
-        logger->error(gppTr("saveTokenizeCache", "分词缓存 %1 保存失败", wide2Ascii(cachePath)));
+        logger->error(gppTr("saveTokenizeCache", "分词缓存 %1 保存失败")
+            .arg(wide2Ascii(cachePath))
+            .toStdString());
     }
 }
 
-void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::string& fileName) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
-    bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
-    extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
-    extractor.extractMatching(wide2Ascii(zipPath), fileName, wide2Ascii(outputDir));
-}
 
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
     const bit7z::Bit7zLibrary library{ "7z.dll" };
@@ -773,25 +791,80 @@ void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
     extractor.extract(wide2Ascii(zipPath), wide2Ascii(outputDir));
 }
 
-void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes) {
+void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::string& fileName) {
+    bool extracted = false;
     const bit7z::Bit7zLibrary library{ "7z.dll" };
-    std::vector<uint32_t> indices;
-
-    bit7z::BitArchiveReader archive{ library, wide2Ascii(zipPath) };
-    for (const auto& item : archive) {
-        if (
-            std::ranges::any_of(excludePrefixes, [&](const std::string& prefix) { return item.path().starts_with(prefix); })
-            )
-        {
-            continue;
-        }
-        indices.push_back(item.index());
-    }
-
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
-    extractor.extractItems(wide2Ascii(zipPath), indices, wide2Ascii(outputDir));
+    extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
+        {
+            if (extracted) {
+                return bit7z::FilterResult::AbortOperation;
+            }
+            if (const std::string genericPath = replaceStr(item.path(), "\\", "/"); fileName == genericPath) {
+                extracted = true;
+                return bit7z::FilterResult::ProcessItem;
+            }
+            return bit7z::FilterResult::SkipItem;
+        });
 }
+
+void extractFilesFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& fileNames) {
+    size_t restFileCount = fileNames.size();
+    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
+    extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
+    extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
+        {
+            if (restFileCount == 0) {
+                return bit7z::FilterResult::AbortOperation;
+            }
+            if (const std::string genericPath = replaceStr(item.path(), "\\", "/"); fileNames.contains(genericPath)) {
+                --restFileCount;
+                return bit7z::FilterResult::ProcessItem;
+            }
+            return bit7z::FilterResult::SkipItem;
+        });
+}
+
+void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& includePrefixes) {
+    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
+    extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
+    extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
+        {
+            if (const std::string genericPath = replaceStr(item.path(), "\\", "/");
+                std::ranges::any_of(includePrefixes, [&](const std::string& prefix)
+                    {
+                        return genericPath.starts_with(prefix);
+                    })
+                )
+            {
+                return bit7z::FilterResult::ProcessItem;
+            }
+            return bit7z::FilterResult::SkipItem;
+        });
+}
+
+void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes) {
+    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
+    extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
+    extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
+        {
+            if (const std::string genericPath = replaceStr(item.path(), "\\", "/");
+                std::ranges::any_of(excludePrefixes, [&](const std::string& prefix)
+                    {
+                        return genericPath.starts_with(prefix);
+                    })
+                )
+            {
+                return bit7z::FilterResult::SkipItem;
+            }
+            return bit7z::FilterResult::ProcessItem;
+        });
+}
+
 
 std::string nowTimestampString() {
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());

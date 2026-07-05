@@ -84,6 +84,7 @@
       <AdditionalIncludeDirectories>..\3rdParty\pybind11\include;..\3rdParty\pybind11\Python\include;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;SPDLOG_COMPILED_LIB;SPDLOG_WCHAR_FILENAMES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UseStandardPreprocessor>false</UseStandardPreprocessor>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -93,31 +94,39 @@
       <AdditionalManifestFiles>GPPGUI.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
     <PreBuildEvent>
-      <Command>if not exist "$(OutDir)translations" mkdir "$(OutDir)translations"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>del "$(TargetDir)$(TargetName).exp"
 del "$(TargetDir)$(TargetName).lib"
 
+if not exist "$(TargetDir)translations" mkdir "$(TargetDir)translations"
+
+
 copy "$(SolutionDir)3rdParty\7z.dll" "$(TargetDir)"
 copy "$(SolutionDir)3rdParty\pybind11\bin\python*.dll" "$(TargetDir)"
-copy "$(SolutionDir)3rdParty\ElaWidgetTools\Install\ElaWidgetTools\bin\ElaWidgetTools.dll" "$(TargetDir)"
 
-copy "$(TargetPath)" "$(TargetDir)..\GUICORE\$(TargetName)$(TargetExt)"
+copy "$(SolutionDir)3rdParty\ElaWidgetTools\Install\ElaWidgetTools\bin\ElaWidgetTools.dll" "$(TargetDir)"
+copy "$(SolutionDir)lib\qt_gpp*.qm" "$(TargetDir)\translations\"
+
+
 if not exist "$(TargetDir)..\GUICORE\translations" mkdir "$(TargetDir)..\GUICORE\translations"
-copy "$(TargetDir)translations\qt_gpp*.*" "$(TargetDir)..\GUICORE\translations\"
+copy "$(TargetPath)" "$(TargetDir)..\GUICORE\$(TargetName)$(TargetExt)"
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GUICORE\"
+copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GUICORE\translations\"
 
 if exist "$(TargetDir)..\GPPGUI_PRIVATE" (
 copy "$(TargetPath)" "$(TargetDir)..\GPPGUI_PRIVATE\$(TargetName)$(TargetExt)"
-copy "$(TargetDir)translations\qt_gpp*.*" "$(TargetDir)..\GPPGUI_PRIVATE\translations\"
+
 copy "$(TargetDir)*.dll" "$(TargetDir)..\GPPGUI_PRIVATE\"
-)
-</Command>
+copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\translations\"
+)</Command>
     </PostBuildEvent>
     <QtTranslation>
       <BuildAction>lupdate_lrelease</BuildAction>
       <QmOutputDir>$(OutDir)translations\</QmOutputDir>
+      <FunctionAliases>translate+=gppTr</FunctionAliases>
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

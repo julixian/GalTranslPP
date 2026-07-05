@@ -40,7 +40,8 @@ void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, 
 
 EpubTranslator::~EpubTranslator() 
 {
-    m_logger->info(gppTr("EpubTranslator.~EpubTranslator", "所有任务已完成！EpubTranslator结束。"));
+    m_logger->info(gppTr("EpubTranslator.~EpubTranslator", "所有任务已完成！EpubTranslator 结束。")
+        .toStdString());
 }
 
 EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger) :
@@ -50,7 +51,8 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
         L"cache" / projectDir.filename() / L"epub_json_input", L"cache" / projectDir.filename() / L"gt_input_cache",
         L"cache" / projectDir.filename() / L"epub_json_output", L"cache" / projectDir.filename() / L"gt_output_cache")
 {
-    m_logger->info(gppTr("EpubTranslator.EpubTranslator", "GalTransl++ EpubTranslator 启动..."));
+    m_logger->info(gppTr("EpubTranslator.EpubTranslator", "GalTransl++ EpubTranslator 启动...")
+        .toStdString());
 }
 
 void EpubTranslator::epubInit()
@@ -83,7 +85,9 @@ void EpubTranslator::epubInit()
                     regexPattern.org->setPattern(regexOrg).setModifier(compileModifier).compile();
                     regexPattern.rep->setModifier(replaceModifier);
                     if (!regexPattern.org) {
-                        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "预处理正则编译失败: %1", regexOrg));
+                        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "预处理正则编译失败: %1")
+                            .arg(regexOrg)
+                            .toStdString());
                     }
                     regexPattern.isCallback = regexTbl.contains("callback");
 
@@ -110,7 +114,11 @@ void EpubTranslator::epubInit()
                             callbackPattern.org->setPattern(callbackOrg).setModifier(callbackCompileModifier).compile();
                             callbackPattern.rep->setModifier(callbackReplaceModifier);
                             if (!callbackPattern.org) {
-                                throw std::runtime_error(gppTr("EpubTranslator.epubInit", "预处理正则回调正则编译失败: [%1]", callbackOrg));
+                                throw std::runtime_error(gppTr(
+                                    "EpubTranslator.epubInit",
+                                    "预处理正则回调正则编译失败: [%1]")
+                                    .arg(callbackOrg)
+                                    .toStdString());
                             }
                             callbackPattern.rep->setReplaceWith(callbackRep);
                             regexPattern.callbackPatterns.insert({ group, std::move(callbackPattern) });
@@ -132,7 +140,9 @@ void EpubTranslator::epubInit()
         readRegexArr(postRegexArr, m_postRegexPatterns);
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "Epub 配置文件解析失败: %1", e.what()));
+        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "Epub 配置文件解析失败: %1")
+            .arg(e.what())
+            .toStdString());
     }
 }
 
@@ -142,7 +152,9 @@ void EpubTranslator::epubBeforeRun()
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
-            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已创建目录: %1", wide2Ascii(dir)));
+            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已创建目录: %1")
+                .arg(wide2Ascii(dir))
+                .toStdString());
         }
     }
 
@@ -158,7 +170,8 @@ void EpubTranslator::epubBeforeRun()
         }
     }
     if (epubFiles.empty()) {
-        throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "未找到 EPUB 文件"));
+        throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "未找到 EPUB 文件")
+            .toStdString());
     }
 
     // 正则替换
@@ -194,7 +207,10 @@ void EpubTranslator::epubBeforeRun()
         const fs::path bookRebuildPath = m_tempRebuildDir / relEpubPath.parent_path() / relEpubPath.stem(); // cache/myproject/epub_rebuild/dir1/book1
 
         // 解压 EPUB 文件
-        m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "正在解压 %1 到 %2", wide2Ascii(epubPath), wide2Ascii(bookUnpackPath)));
+        m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "正在解压 %1 到 %2")
+            .arg(wide2Ascii(epubPath))
+            .arg(wide2Ascii(bookUnpackPath))
+            .toStdString());
         fs::create_directories(bookUnpackPath);
         extractZip(epubPath, bookUnpackPath);
 
@@ -269,7 +285,9 @@ void EpubTranslator::epubBeforeRun()
     m_onFileProcessed = [this, regexReplace](fs::path relProcessedFile)
         {
             if (!m_jsonToInfoMap.contains(relProcessedFile)) {
-                m_logger->error(gppTr("EpubTranslator.epubBeforeRun", "[文件 %1] 未找到对应的元数据", wide2Ascii(relProcessedFile)));
+                m_logger->error(gppTr("EpubTranslator.epubBeforeRun", "[文件 %1] 未找到对应的元数据")
+                    .arg(wide2Ascii(relProcessedFile))
+                    .toStdString());
                 return;
             }
             const JsonInfo& info = m_jsonToInfoMap[relProcessedFile];
@@ -303,8 +321,13 @@ void EpubTranslator::epubBeforeRun()
                 ifs.close();
 
                 if (metadatas.size() != translatedDatas.size()) {
-                    throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "[文件 %1] 元数据和翻译数据数量不匹配，无法重组(%2meta/%3trans)",
-                        wide2Ascii(rebuiltHtmlPath), metadatas.size(), translatedDatas.size()));
+                    throw std::runtime_error(gppTr(
+                        "EpubTranslator.epubBeforeRun",
+                        "[文件 %1] 元数据和翻译数据数量不匹配，无法重组(%2meta/%3trans)")
+                        .arg(wide2Ascii(rebuiltHtmlPath))
+                        .arg(metadatas.size())
+                        .arg(translatedDatas.size())
+                        .toStdString());
                 }
 
                 std::string newContent;
@@ -345,12 +368,18 @@ void EpubTranslator::epubBeforeRun()
 
             const fs::path outputEpubPath = m_epubOutputDir / relEpubPath;
             createParent(outputEpubPath);
-            m_logger->debug(gppTr("EpubTranslator.epubBeforeRun", "正在打包 %1", wide2Ascii(outputEpubPath)));
+            m_logger->debug(gppTr("EpubTranslator.epubBeforeRun", "正在打包 %1")
+                .arg(wide2Ascii(outputEpubPath))
+                .toStdString());
 
             int error = 0;
             zip* za = zip_open(wide2Ascii(outputEpubPath).c_str(), ZIP_CREATE | ZIP_TRUNCATE, &error);
             if (!za) {
-                throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法创建 EPUB (zip) 文件: %1", error));
+                throw std::runtime_error(gppTr(
+                    "EpubTranslator.epubBeforeRun",
+                    "无法创建 EPUB (zip) 文件: %1")
+                    .arg(error)
+                    .toStdString());
             }
 
             // --- 步骤一：优先处理 mimetype 文件，且不压缩 ---
@@ -358,24 +387,37 @@ void EpubTranslator::epubBeforeRun()
                 zip_source_t* s = zip_source_file(za, wide2Ascii(mimetypePath).c_str(), 0, 0);
                 if (!s) {
                     zip_close(za);
-                    throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法为 mimetype 创建 zip_source_file"));
+                    throw std::runtime_error(gppTr(
+                        "EpubTranslator.epubBeforeRun",
+                        "无法为 mimetype 创建 zip_source_file")
+                        .toStdString());
                 }
 
                 zip_int64_t idx = zip_file_add(za, "mimetype", s, ZIP_FL_ENC_UTF_8);
                 if (idx < 0) {
                     zip_source_free(s);
                     zip_close(za);
-                    throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法将 mimetype 添加到 zip"));
+                    throw std::runtime_error(gppTr(
+                        "EpubTranslator.epubBeforeRun",
+                        "无法将 mimetype 添加到 zip")
+                        .toStdString());
                 }
 
                 if (zip_set_file_compression(za, idx, ZIP_CM_STORE, 0) < 0) {
                     zip_source_free(s);
                     zip_close(za);
-                    throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法将 mimetype 设置为不压缩模式。"));
+                    throw std::runtime_error(gppTr(
+                        "EpubTranslator.epubBeforeRun",
+                        "无法将 mimetype 设置为不压缩模式。")
+                        .toStdString());
                 }
             }
             else {
-                m_logger->warn(gppTr("EpubTranslator.epubBeforeRun", "在源目录 %1 中未找到 mimetype 文件，生成的 EPUB 可能无效。", wide2Ascii(bookRebuildPath)));
+                m_logger->warn(gppTr(
+                    "EpubTranslator.epubBeforeRun",
+                    "在源目录 %1 中未找到 mimetype 文件，生成的 EPUB 可能无效。")
+                    .arg(wide2Ascii(bookRebuildPath))
+                    .toStdString());
             }
 
             // --- 步骤二：处理其他所有文件和目录 ---
@@ -395,22 +437,34 @@ void EpubTranslator::epubBeforeRun()
                     zip_source_t* s = zip_source_file(za, wide2Ascii(entry.path()).c_str(), 0, 0);
                     if (!s) {
                         zip_close(za);
-                        throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法为文件 %1 创建 zip_source_file", entryName));
+                        throw std::runtime_error(gppTr(
+                            "EpubTranslator.epubBeforeRun",
+                            "无法为文件 %1 创建 zip_source_file")
+                            .arg(entryName)
+                            .toStdString());
                     }
                     if (zip_file_add(za, entryName.c_str(), s, ZIP_FL_ENC_UTF_8) < 0) {
                         zip_source_free(s);
                         zip_close(za);
-                        throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "无法将文件 %1 添加到 zip", entryName));
+                        throw std::runtime_error(gppTr(
+                            "EpubTranslator.epubBeforeRun",
+                            "无法将文件 %1 添加到 zip")
+                            .arg(entryName)
+                            .toStdString());
                     }
                 }
             }
 
             // 所有 source 都在 zip_close 中被 libzip 自动管理和释放
             if (zip_close(za) < 0) {
-                throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "关闭 zip 存档时出错: %1", zip_strerror(za)));
+                throw std::runtime_error(gppTr("EpubTranslator.epubBeforeRun", "关闭 zip 存档时出错: %1")
+                    .arg(zip_strerror(za))
+                    .toStdString());
             }
 
-            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已重建 EPUB 文件: %1", wide2Ascii(outputEpubPath)));
+            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已重建 EPUB 文件: %1")
+                .arg(wide2Ascii(outputEpubPath))
+                .toStdString());
         };
 }
 

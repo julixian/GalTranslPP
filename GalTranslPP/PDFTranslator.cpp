@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 PDFTranslator::~PDFTranslator() 
 {
-    m_logger->info(gppTr("PDFTranslator.~PDFTranslator", "所有任务已完成！PDFTranslator结束。"));
+    m_logger->info(gppTr("PDFTranslator.~PDFTranslator", "所有任务已完成！PDFTranslator 结束。").toStdString());
 }
 
 PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger) :
@@ -22,7 +22,8 @@ PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<I
         L"cache" / projectDir.filename() / L"pdf_json_input", L"cache" / projectDir.filename() / L"gt_input_cache",
         L"cache" / projectDir.filename() / L"pdf_json_output", L"cache" / projectDir.filename() / L"gt_output_cache")
 {
-    m_logger->info(gppTr("PDFTranslator.PDFTranslator", "GalTransl++ PDFTranslator 启动..."));
+    m_logger->info(gppTr("PDFTranslator.PDFTranslator", "GalTransl++ PDFTranslator 启动...")
+        .toStdString());
 }
 
 void PDFTranslator::pdfInit()
@@ -40,7 +41,9 @@ void PDFTranslator::pdfInit()
         checkPDFDependency(m_logger);
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("PDFTranslator.pdfInit", "PDF 配置文件解析失败: %1", e.what()));
+        throw std::runtime_error(gppTr("PDFTranslator.pdfInit", "PDF 配置文件解析失败: %1")
+            .arg(e.what())
+            .toStdString());
     }
 }
 
@@ -50,7 +53,9 @@ void PDFTranslator::pdfBeforeRun()
     for (const auto& dir : { m_pdfInputDir, m_pdfOutputDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "已创建目录: %1", wide2Ascii(dir)));
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "已创建目录: %1")
+                .arg(wide2Ascii(dir))
+                .toStdString());
         }
     }
 
@@ -66,7 +71,7 @@ void PDFTranslator::pdfBeforeRun()
         }
     }
     if (pdfFilePaths.empty()) {
-        throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "未找到 PDF 文件"));
+        throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "未找到 PDF 文件").toStdString());
     }
 
     for (const auto& pdfFilePath : pdfFilePaths) {
@@ -80,22 +85,30 @@ void PDFTranslator::pdfBeforeRun()
         const fs::path inputJsonFile = m_inputDir / relJsonPath;
         createParent(inputJsonFile);
 
-        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取文件: %1", wide2Ascii(relPDFPath)));
+        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取文件: %1")
+            .arg(wide2Ascii(relPDFPath))
+            .toStdString());
 
         const auto& [success, message] = extractPDF(pdfFilePath, inputJsonFile);
 
         if (success) {
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功提取元数据: %1", message));
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功提取元数据: %1")
+                .arg(message)
+                .toStdString());
         }
         else {
-            throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "提取元数据失败: %1", message));
+            throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "提取元数据失败: %1")
+                .arg(message)
+                .toStdString());
         }
     }
 
     m_onFileProcessed = [this](fs::path relProcessedFile)
         {
             if (!m_jsonToPDFPathMap.contains(relProcessedFile)) {
-                m_logger->warn(gppTr("PDFTranslator.pdfBeforeRun", "未找到与 %1 对应的元数据，跳过", wide2Ascii(relProcessedFile)));
+                m_logger->warn(gppTr("PDFTranslator.pdfBeforeRun", "未找到与 %1 对应的元数据，跳过")
+                    .arg(wide2Ascii(relProcessedFile))
+                    .toStdString());
                 return;
             }
 
@@ -104,16 +117,22 @@ void PDFTranslator::pdfBeforeRun()
             const fs::path outputPDFFile = m_pdfOutputDir / relPDFPath;
             createParent(outputPDFFile);
 
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在回注文件: %1", wide2Ascii(relPDFPath)));
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在回注文件: %1")
+                .arg(wide2Ascii(relPDFPath))
+                .toStdString());
 
             auto [success, message] = rejectPDF(origPDFPath, m_outputDir / relProcessedFile,
                 outputPDFFile.parent_path(), false, !m_bilingualOutput);
 
             if (success) {
-                m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功翻译文件: %1", message));
+                m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功翻译文件: %1")
+                    .arg(message)
+                    .toStdString());
             }
             else {
-                throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "翻译文件失败: %1", message));
+                throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "翻译文件失败: %1")
+                    .arg(message)
+                    .toStdString());
             }
         };
 

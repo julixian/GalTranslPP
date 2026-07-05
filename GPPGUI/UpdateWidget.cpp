@@ -18,7 +18,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     QStringList updateList = {
         "1. GalTransl 核心 i18n 彻底化",
 		"2. 新增设置 允许应用进程多开",
-		"3. 修复缓存管理删除条目的确认框中 思考人生 会导致框被点掉的 bug"
+		"3. 修复缓存管理删除条目的确认框中 思考人生 会导致框被点掉的 bug",
     };
 
     mainLayout->addWidget(updateTitle);

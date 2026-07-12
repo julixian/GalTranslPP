@@ -209,7 +209,7 @@ void OtherSettingsPage::setupUi()
 						throw std::runtime_error("未知的文件类型");
 					}
 					for (const auto& overviewItem : overviewData) {
-						overviewFileMap[overviewItem["file_name"].get<std::string>()].push_back(overviewItem);
+						overviewFileMap[overviewItem["filename"].get<std::string>()].push_back(overviewItem);
 					}
 				}
 
@@ -256,7 +256,7 @@ void OtherSettingsPage::setupUi()
 								.arg(QString::fromStdString(cacheItemOrigText)).toStdString());
 						}
 						cacheItem = overviewItem;
-						cacheItem.erase("file_name");
+						cacheItem.erase("filename");
 						++fileImportCount;
 					}
 					if (fileImportCount != 0) {

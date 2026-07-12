@@ -365,7 +365,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	lua.new_usertype<Sentence>("Sentence",
 		sol::constructors<Sentence()>(),
 		"index", &Sentence::index,
-		"fileName", &Sentence::fileName,
+		"filename", &Sentence::filename,
 		"name", &Sentence::name,
 		"names", &Sentence::names,
 		"nametrans", &Sentence::nametrans,
@@ -506,7 +506,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"speakers", &RuntimeTransSuccessEvent::speakers,
 		"sourcePreview", &RuntimeTransSuccessEvent::sourcePreview,
 		"translationPreview", &RuntimeTransSuccessEvent::translationPreview,
-		"translatedBy", &RuntimeTransSuccessEvent::translatedBy
+		"transby", &RuntimeTransSuccessEvent::transby
 	);
 
 	lua.new_usertype<RuntimeTransErrorEvent>("RuntimeTransErrorEvent",

@@ -600,7 +600,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
     py::class_<Sentence>(m, "Sentence")
         .def(py::init<>()) // 允许在 Python 中创建实例: s = gpp_plugin_api.Sentence()
         .def_readwrite("index", &Sentence::index)
-        .def_readwrite("fileName", &Sentence::fileName)
+        .def_readwrite("filename", &Sentence::filename)
         .def_readwrite("name", &Sentence::name)
         .def_readwrite("names", &Sentence::names) // std::vector<string> <=> list[str]
         .def_readwrite("nametrans", &Sentence::nametrans)
@@ -671,7 +671,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("speakers", &RuntimeTransSuccessEvent::speakers)
         .def_readwrite("sourcePreview", &RuntimeTransSuccessEvent::sourcePreview)
         .def_readwrite("translationPreview", &RuntimeTransSuccessEvent::translationPreview)
-        .def_readwrite("translatedBy", &RuntimeTransSuccessEvent::translatedBy);
+        .def_readwrite("transby", &RuntimeTransSuccessEvent::transby);
 
     py::class_<RuntimeTransErrorEvent>(m, "RuntimeTransErrorEvent")
         .def(py::init<>())

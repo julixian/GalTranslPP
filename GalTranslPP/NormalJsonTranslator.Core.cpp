@@ -886,7 +886,7 @@ void NormalJsonTranslator::recordSentenceDoneHelper(const fs::path& relInputPath
             }
             event.sourcePreview = se.preproc;
             event.translationPreview = se.transraw;
-            event.translatedBy = se.transby;
+            event.transby = se.transby;
             m_controller->recordRuntimeTransSuccess(std::move(event));
         }
     }
@@ -1017,10 +1017,10 @@ void NormalJsonTranslator::postProcess(Sentence* se)
             replaceName();
         }
         else {
-            for (auto& nameTrans : se->namestrans) {
-                se->nametrans = std::move(nameTrans);
+            for (auto& nametrans : se->namestrans) {
+                se->nametrans = std::move(nametrans);
                 replaceName();
-                nameTrans = std::move(se->nametrans);
+                nametrans = std::move(se->nametrans);
             }
         }
     }

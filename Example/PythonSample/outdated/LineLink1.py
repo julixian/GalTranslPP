@@ -155,7 +155,7 @@ def procCPKey1(se: gpp.Sentence):
         if not problem.startswith("Current problem:"):
             continue
         if problem[16:] == "问题键1":
-            se.nameTrans = "ユリス"
+            se.nametrans = "ユリス"
             return True
         break
     return False

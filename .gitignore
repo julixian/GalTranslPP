@@ -5,6 +5,7 @@
 
 # User-specific files
 __exp/
+*.agent
 *.rsuser
 *.suo
 *.user

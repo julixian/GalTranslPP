@@ -73,7 +73,7 @@ priority = 0
 [[normalDict]]
 org = '—'
 rep = '——'
-conditionTarget = 'pretrans'
+conditionTarget = 'transraw'
 conditionReg = '\A(?![\S\s]*——)'
 isReg = false
 priority = 0

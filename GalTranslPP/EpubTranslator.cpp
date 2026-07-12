@@ -82,8 +82,8 @@ void EpubTranslator::epubInit()
                     }
 
                     RegexPattern regexPattern;
-                    const std::string compileModifier = toml::find_or(regexTbl, "compile_modifier", defaultRegCompileModifier);
-                    const std::string replaceModifier = toml::find_or(regexTbl, "replace_modifier", defaultRegReplaceModifier);
+                    const std::string compileModifier = toml::find_or(regexTbl, "compileModifier", defaultRegCompileModifier);
+                    const std::string replaceModifier = toml::find_or(regexTbl, "replaceModifier", defaultRegReplaceModifier);
                     regexPattern.org->setPattern(regexOrg).setModifier(compileModifier).compile();
                     regexPattern.rep->setModifier(replaceModifier);
                     if (!regexPattern.org) {
@@ -109,8 +109,8 @@ void EpubTranslator::epubInit()
                                 continue;
                             }
                             const std::string callbackRep = toml::find_or(callbackTbl, "rep", "");
-                            const std::string callbackCompileModifier = toml::find_or(callbackTbl, "compile_modifier", defaultRegCompileModifier);
-                            const std::string callbackReplaceModifier = toml::find_or(callbackTbl, "replace_modifier", defaultRegReplaceModifier);
+                            const std::string callbackCompileModifier = toml::find_or(callbackTbl, "compileModifier", defaultRegCompileModifier);
+                            const std::string callbackReplaceModifier = toml::find_or(callbackTbl, "replaceModifier", defaultRegReplaceModifier);
                             callbackPattern.org->setPattern(callbackOrg).setModifier(callbackCompileModifier).compile();
                             callbackPattern.rep->setModifier(callbackReplaceModifier);
                             if (!callbackPattern.org) {

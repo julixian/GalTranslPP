@@ -1,11 +1,11 @@
 # 示例: 
 # [[normalDict]]
-# conditionTarget = "orig" # name, orig, preproc, pretrans
+# conditionTarget = "orig" # name, orig, preproc, transraw
 # conditionReg = "人妻|ひとづま"
 # org = '''有夫之妇'''
 # rep = '''人妻'''
 # isReg = false #为true则将 org 和 rep 作为正则表达式带入
 # priority = 50
-# 含义是如果 orig 中含有 人妻 或 ひとづま，则将 pretrans 中的 有夫之妇 替换为 人妻
-# 译后字典会搜索并替换 pretrans 以供 transview 最终输出
+# 含义是如果 orig 中含有 人妻 或 ひとづま，则将 transraw 中的 有夫之妇 替换为 人妻
+# 译后字典会搜索并替换 transraw 以供 transview 最终输出
 # 详细语法规范请参考通用字典

@@ -55,7 +55,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         for (const auto& [index, item] : jSentences | std::views::enumerate) {
             Sentence se;
             se.index = (int)index;
-            se.fileName = relInputFileName;
+            se.filename = relInputFileName;
             if (auto jit = item.find("name"); jit != item.end()) {
                 se.nameType = NameType::Single;
                 jit->get_to(se.name);
@@ -119,7 +119,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     continue;
                 }
                 ordered_json tbl = ordered_json::object();
-                tbl["file_name"] = relInputPathStr;
+                tbl["filename"] = relInputPathStr;
                 tbl["index"] = se.index;
                 if (se.nameType == NameType::Single) {
                     tbl["name"] = se.name;

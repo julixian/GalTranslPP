@@ -15,7 +15,7 @@ struct GuiRuntimeTransSuccessEvent {
     QStringList speakers;
     QString sourcePreview;
     QString translationPreview;
-    QString translatedBy;
+    QString transby;
 };
 Q_DECLARE_METATYPE(GuiRuntimeTransSuccessEvent)
 

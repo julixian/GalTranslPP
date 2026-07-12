@@ -140,11 +140,11 @@ bool NormalDictModel::setData(const QModelIndex& index, const QVariant& value, i
             while (str.startsWith("next_")) {
                 str = str.mid(5);
             }
-            // name, nameTrans, names, namesTrans, orig, preproc, pretrans, problems, otherInfo, translatedBy, transview
+            // name, names, nametrans, namestrans, orig, preproc, problems, otherinfo, transby, transraw, transview
             static const QSet<QString> validNames =
             {
-                "name", "nameTrans", "names", "namesTrans", "orig", "preproc",
-                "pretrans", "problems", "otherInfo", "translatedBy", "transview"
+                "name", "names", "nametrans", "namestrans", "orig", "preproc",
+                "problems", "otherinfo", "transby", "transraw", "transview"
             };
             if (!validNames.contains(str)) {
                 return false;

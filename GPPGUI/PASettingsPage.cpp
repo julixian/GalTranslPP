@@ -71,8 +71,8 @@ void PASettingsPage::setupUi()
 		{ "InvalidCharacter", tr("非法字符"), false, "orig", "transview" },
 	};
 	const QStringList cachePartNames = {
-		"orig", "preproc", "pretrans", "transview", "name", "names",
-		"nameTrans", "namesTrans", "problems", "otherInfo", "translatedBy",
+		"orig", "preproc", "transraw", "transview", "name", "names",
+		"nametrans", "namestrans", "problems", "otherinfo", "transby",
 	};
 	std::vector<ProblemRow> problemRows;
 	ElaText* problemListTitle = new ElaText(tr("要发现的问题清单"), mainWidget);

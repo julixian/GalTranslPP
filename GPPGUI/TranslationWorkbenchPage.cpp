@@ -153,13 +153,13 @@ namespace
             drawLine(content.top() + 51, "SRC", event.sourcePreview);
             drawLine(content.top() + 74, "DST", event.translationPreview);
 
-            if (!event.translatedBy.isEmpty()) {
+            if (!event.transby.isEmpty()) {
                 QFont modelFont = option.font;
                 modelFont.setPixelSize(11);
                 painter->setFont(modelFont);
                 painter->setPen(detailColor);
                 painter->drawText(QRect(content.left(), content.bottom() - 18, content.width(), 18),
-                    Qt::AlignRight | Qt::AlignVCenter, compactModelLabel(event.translatedBy));
+                    Qt::AlignRight | Qt::AlignVCenter, compactModelLabel(event.transby));
             }
 
             painter->restore();

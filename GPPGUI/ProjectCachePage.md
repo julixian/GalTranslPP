@@ -86,7 +86,7 @@
 - 问题文本。
 - 模型名或翻译器名。
 - 原文 `pre_processed_text`。
-- 译文 `pre_translated_text`。
+- 译文 `translated_raw_text`。
 
 右侧条目列表的 item 高度在 `ProjectCachePage.cpp` 中通过 `_entryList->setItemHeight(112)` 设置；卡片内部布局在 `ProjectCachePageDelegates.cpp` 的 `CacheEntryDelegate` 中绘制，两边需要一起调整。
 
@@ -94,7 +94,7 @@
 
 - `original_text` 作为元信息只读显示。
 - `pre_processed_text` 是原文，可编辑。
-- `pre_translated_text` 是译文，可编辑。
+- `translated_raw_text` 是译文，可编辑。
 - `problems` 只读。
 - `translated_preview` 只读。
 
@@ -108,7 +108,7 @@
 
 - 全部。
 - 原文 `pre_processed_text`。
-- 译文 `pre_translated_text`。
+- 译文 `translated_raw_text`。
 - 问题 `problems`。
 
 搜索结果上限是 2000 条，用来避免大项目中输入时过度卡顿。每个命中项保存文件名、JSON 行号、句子序号、命中字段、原文预览、译文预览和问题预览。
@@ -152,7 +152,7 @@
 替换遵循翻译器实际使用的缓存字段：
 
 - `src` 只匹配并修改 `pre_processed_text`。
-- `dst` 只匹配并修改 `pre_translated_text`。
+- `dst` 只匹配并修改 `translated_raw_text`。
 - `all` 同时作用于上述两个字段。
 
 `original_text` 是元信息，永远不会被批量替换修改。
@@ -172,7 +172,7 @@
 ## 关键字段约束
 
 - 原文显示、搜索和编辑使用 `pre_processed_text`。
-- 译文显示、搜索和编辑使用 `pre_translated_text`。
+- 译文显示、搜索和编辑使用 `translated_raw_text`。
 - `original_text` 是元信息，只读，不参与批量替换。
 - 问题来源只使用 GalTranslPP 的 `problems` 数组。
 - 说话人优先使用 `name_preview`，其次使用 `name` 或 `names`。

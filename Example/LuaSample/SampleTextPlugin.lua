@@ -19,10 +19,10 @@ local function appendProblem(sentence, problem)
     sentence.problems = problems
 end
 
-local function setOtherInfo(sentence, key, value)
-    local otherInfo = sentence.otherInfo
-    otherInfo[key] = value
-    sentence.otherInfo = otherInfo
+local function setOtherinfo(sentence, key, value)
+    local otherinfo = sentence.otherinfo
+    otherinfo[key] = value
+    sentence.otherinfo = otherinfo
 end
 
 function init(projectDir)
@@ -44,13 +44,13 @@ function checkConditionForSkipProblemsFunc(sentence, problem)
         return false
     end
 
-    setOtherInfo(sentence, "luaSkippedProblem", problem)
+    setOtherinfo(sentence, "luaSkippedProblem", problem)
     utils.logger:info("Lua skipProblems 示例命中检查: " .. problem)
     return problem ~= "测试问题1"
 end
 
 function dPostRun(sentence)
-    -- dPostRun 在后处理后执行。这里演示调用 tokenizer 并把结果写入 otherInfo。
+    -- dPostRun 在后处理后执行。这里演示调用 tokenizer 并把结果写入 otherinfo。
     if sentence.orig ~= sampleOrig then
         return
     end
@@ -60,7 +60,7 @@ function dPostRun(sentence)
 
     local wordPosVec = utils.targetLangTokenizeFunc("测试目标语言分词器")
     local tokens = utils.splitIntoTokens(wordPosVec, "测试目标语言分词器")
-    setOtherInfo(sentence, "tokensLua", table.concat(tokens, "|"))
+    setOtherinfo(sentence, "tokensLua", table.concat(tokens, "|"))
 
     appendProblem(sentence, "测试问题1")
     appendProblem(sentence, "测试问题2")

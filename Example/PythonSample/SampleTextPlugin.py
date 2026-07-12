@@ -39,7 +39,7 @@ def checkConditionForSkipProblemsFunc(se: gpp.Sentence, problem: str) -> bool:
     if se.index != 2 or se.orig != "\n  「――――きて」\n ":
         return False
 
-    se.otherInfo |= {"pythonSkippedProblem": problem}
+    se.otherinfo |= {"pythonSkippedProblem": problem}
     logger.info("Python skipProblems 示例命中检查: " + problem)
     if problem == "测试问题1":
         return False
@@ -47,7 +47,7 @@ def checkConditionForSkipProblemsFunc(se: gpp.Sentence, problem: str) -> bool:
 
 
 def dPostRun(se: gpp.Sentence) -> None:
-    # dPostRun 在后处理后执行。这里演示调用 tokenizer 并把结果写入 otherInfo。
+    # dPostRun 在后处理后执行。这里演示调用 tokenizer 并把结果写入 otherinfo。
     if targetLangTokenizeFunc is None:
         return
     if se.orig != "\n  「――――きて」\n ":
@@ -55,7 +55,7 @@ def dPostRun(se: gpp.Sentence) -> None:
 
     wordPosVec, _ = targetLangTokenizeFunc("测试目标语言分词器")
     tokens = gpp.utils.splitIntoTokens(wordPosVec, "测试目标语言分词器")
-    se.otherInfo |= {"tokensPython": "|".join(tokens)}
+    se.otherinfo |= {"tokensPython": "|".join(tokens)}
 
     se.problems += ["测试问题1"]
     se.problems += ["测试问题2"]

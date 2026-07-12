@@ -64,7 +64,7 @@ void ProjectCachePage::renderEntries()
         itemRow->setData(sentenceIndexOf(item, i), EntryIndexRole);
         itemRow->setData(speakerString(item), EntrySpeakerRole);
         itemRow->setData(problems, EntryProblemRole);
-        itemRow->setData(entryTranslatedBy(item), EntryEngineRole);
+        itemRow->setData(entryTransby(item), EntryEngineRole);
         itemRow->setData(source, EntrySourceRole);
         itemRow->setData(dst, EntryDstRole);
         itemRow->setEditable(false);
@@ -111,7 +111,7 @@ void ProjectCachePage::updateEntryListItem(int row)
             item->setData(sentenceIndexOf(m_entries[row], row), EntryIndexRole);
             item->setData(speakerString(m_entries[row]), EntrySpeakerRole);
             item->setData(problemString(m_entries[row], " | "), EntryProblemRole);
-            item->setData(entryTranslatedBy(m_entries[row]), EntryEngineRole);
+            item->setData(entryTransby(m_entries[row]), EntryEngineRole);
             item->setData(entrySource(m_entries[row]), EntrySourceRole);
             item->setData(entryDst(m_entries[row]), EntryDstRole);
             return;
@@ -309,7 +309,7 @@ QString ProjectCachePage::entryPreview(const json& object)
     return jsonString(object, "translated_view_text");
 }
 
-QString ProjectCachePage::entryTranslatedBy(const json& object)
+QString ProjectCachePage::entryTransby(const json& object)
 {
     return jsonString(object, "translated_by");
 }
@@ -331,7 +331,7 @@ QString ProjectCachePage::entryListText(const json& object, int row) const
     if (!problems.isEmpty()) {
         header << tr("问题: %1").arg(compactPreview(problems, 120));
     }
-    const QString engine = entryTranslatedBy(object);
+    const QString engine = entryTransby(object);
     if (!engine.isEmpty()) {
         header << engine;
     }

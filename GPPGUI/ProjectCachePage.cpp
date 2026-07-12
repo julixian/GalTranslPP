@@ -258,7 +258,7 @@ void ProjectCachePage::setupUi()
     m_globalSearchField = new ElaNoWheelComboBox(searchTab);
     m_globalSearchField->addItem(tr("全部"), "all");
     m_globalSearchField->addItem("preproc", "src");
-    m_globalSearchField->addItem("pretrans", "dst");
+    m_globalSearchField->addItem("transraw", "dst");
     m_globalSearchField->addItem("problems", "problems");
     connect(m_globalSearchField, &ElaNoWheelComboBox::currentIndexChanged, this, [=](int)
         {
@@ -291,7 +291,7 @@ void ProjectCachePage::setupUi()
     replaceLayout->addWidget(m_replaceWithEdit);
 
     m_replaceField = new ElaNoWheelComboBox(searchTab);
-    m_replaceField->addItem(tr("pretrans"), "dst");
+    m_replaceField->addItem(tr("transraw"), "dst");
     m_replaceField->addItem(tr("preproc"), "src");
     m_replaceField->addItem(tr("全部"), "all");
     replaceLayout->addWidget(m_replaceField);
@@ -386,7 +386,7 @@ void ProjectCachePage::setupUi()
     QHBoxLayout* filterLayout = new QHBoxLayout();
     filterLayout->setSpacing(8);
     m_localSearchEdit = new ElaLineEdit(editorWidget);
-    m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/pretrans/problems..."));
+    m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/transraw/problems..."));
     m_localSearchEdit->setIsClearButtonEnable(true);
     connect(m_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
         {

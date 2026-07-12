@@ -28,7 +28,7 @@ std::optional<ordered_json> buildProblemOverviewItemFromCache(
     }
 
     ordered_json tbl = ordered_json::object();
-    tbl["file_name"] = wide2Ascii(relFilePath);
+    tbl["filename"] = wide2Ascii(relFilePath);
     tbl["index"] = item.value("index", -1);
     if (item.contains("name")) {
         tbl["name"] = item["name"].get<std::string>();
@@ -469,8 +469,8 @@ void NormalJsonTranslator::normalJsonAfterRun()
         auto& overviewArray = m_problemOverview.get_ref<ordered_json::array_t&>();
         std::ranges::sort(overviewArray, [](const ordered_json& a, const ordered_json& b)
             {
-                const int result = StrCmpLogicalW(ascii2Wide(a.at("file_name").get<std::string>()).c_str(),
-                    ascii2Wide(b.at("file_name").get<std::string>()).c_str());
+                const int result = StrCmpLogicalW(ascii2Wide(a.at("filename").get<std::string>()).c_str(),
+                    ascii2Wide(b.at("filename").get<std::string>()).c_str());
                 if (result == 0) {
                     return a.at("index").get<int>() < b.at("index").get<int>();
                 }
@@ -500,7 +500,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
 
         absl::btree_map<std::string_view, absl::btree_set<std::string_view>> problemMap;
         for (const ordered_json& item : m_problemOverview) {
-            const std::string& filename = item.at("file_name").get_ref<const std::string&>();
+            const std::string& filename = item.at("filename").get_ref<const std::string&>();
             for (const ordered_json& problemItem : item.at("problems")) {
                 const std::string& problem = problemItem.get_ref<const std::string&>();
                 auto& fileNames = problemMap[problem];

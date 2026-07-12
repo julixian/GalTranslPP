@@ -3,9 +3,9 @@
 ![GalTransl++ GUI](images/GalTranslPP.png?raw=true)
 ![GalTransl++ GUI En](images/GalTranslPP_en.png?raw=true)
 
-**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量(好吧其实有点重)透明的、拥有高度且方便的扩展能力的翻译核心。
+**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。
 
-**GalTransl++ GUI** 是包装了GalTransl++核心的，以 `在GUI下尽可能保持高度自定义` 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。
+**GalTransl++ GUI** 是包装了 GalTransl++ 核心的，以 `在GUI下尽可能保持高度自定义` 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。
 
 ## ✨ 特性
 
@@ -19,14 +19,12 @@
 * OpenAI / Claude / Gemini 风格接口协议在同一 API 池中管理
 * 多 API key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置
 * Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文
-* 依赖 Python 的分词器使用子进程加载，降低主程序长期占用的内存
-* TOML / JSON 编辑位置带语法高亮
 * 有效的 API 额度耗尽检测
 * 卡片弹出式的完成提示 (仅GUI)
 * 更好的字典未使用检测
 * 可自定义的符号检测
 * 单独生成用以检查的预处理结果
-* 统合生成的翻译问题概览，并可选择 json/toml 输出
+* 统合生成的翻译问题概览
 * 速度更快的Rebuild
 * 更加方便的提示词自定义
 * 更清晰的字典使用设定
@@ -36,52 +34,44 @@
 
 ![notification](images/notification.png?raw=true)
 
-### 相比 GalTransl 与旧版 GalTranslPP 的主要变化
-
-GalTransl++ 仍然沿用 GalTransl 的项目制、缓存、GPT字典、问题分析和 GUI 工作流，但当前版本把配置拆成了更清晰的 `backend` / `plugins` / `common` / `dictionary` / `problemAnalyze` 几部分。旧版中的 `OpenAI-Compatible`、`backendSpecific`、`preDict/gptDict/postDict` 等键已经不再使用。
-
-当前默认目录也已统一为英文路径，例如 `BaseConfig/Dicts`、`BaseConfig/mecab`、`BaseConfig/PythonScripts`、`BaseConfig/PluginConfigs`、`SampleProject`、`SampleProject.zip`。GUI 资源图片在 `GPPGUI/Resource/images` 下，README 截图在仓库根目录的 `images` 下。
-
-接口层现在按每个 API 项的 `protocol` 选择 OpenAI / Claude / Gemini 风格请求，Agent 自身仍使用项目内的文本协议来组织模型回复。这样可以保留原先批量翻译的透明日志与缓存模型，同时让 GUI 侧的 API 查询、测试和高级字段更统一。
-
 ## 📖 流程说明
 
 ### GalTransl++ 翻译流程与替换型字典介绍
 
-对于熟悉GalTransl的人来说，过渡到GalTransl++ CLI版本可谓易如反掌，所以接下来主要讲GUI。
+对于熟悉 GalTransl 的人来说，过渡到 GalTransl++ CLI 版本可谓易如反掌，所以接下来主要讲GUI。
 
-这里还是再稍微谈一下翻译流程吧(默认你已经读过GalTransl的使用说明，翻译接口什么的就略过了)。
+这里还是再稍微谈一下翻译流程吧 (默认你已经读过 GalTransl 的使用说明，翻译接口什么的就略过了)。
 
-GalTransl++无论处理哪种文件格式，最后都是统一化为json来读取。
+GalTransl++ 无论处理哪种文件格式，最后都是统一化为 json 来读取。
 
-每个json文件是一个对象列表，每个对象代表一个『句子』，这是喂给AI进行翻译的基本单位。
+每个 json 文件是一个对象列表，每个对象代表一个『句子』，这是喂给AI进行翻译的基本单位。
 
-读取json时主要关注两个键，分别为 `name` 和 `message`，不同的翻译模式(`transEngine`)就是对这两个键进行各种不同的处理：
+读取 json 时主要关注两个键，分别为 `name` 和 `message`，不同的翻译模式 (`transEngine`) 就是对这两个键进行各种不同的处理：
 
 
 #### 翻译模式 (transEngine)
 
-* **`# ForGalJson`**: 实际翻译模式，向AI输入json格式的句子(包含`name`和`message`)并要求AI以json格式回复，程序将解析返回的JSON。容易出现傻瓜引号解析错误的问题，建议优先使用ForGalTsv。
-* **`# ForGalTsv`**: 实际翻译模式，向AI输入TSV格式的句子(包含`name`和`message`)并要求AI以TSV格式回复，程序将解析返回的TSV，可能比ForGalJson模式更省token。
-* **`# ForNovelTsv`**: 实际翻译模式，和 `ForGalTsv` 的区别主要是变动提示词，向AI输入和解析的时候都不带`name`键。
-* **`# Sakura`**: 实际翻译模式，向AI输入自然语言形式的句子(包含`name`和`message`)，由于Sakura是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。
+* **`# ForGalTsv`**: 实际翻译模式，向 AI 输入 TSV 格式的句子(包含 `name` 和`message`)并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。
+* **`# ForNovelTsv`**: 实际翻译模式，和 `ForGalTsv` 的区别主要是变动提示词，向AI输入和解析的时候都不带 `name` 键。
+* **`# ForGalJson`**: 实际翻译模式，向 AI 输入 json 格式的句子(包含 `name` 和 `message` )并要求 AI 以 json 格式回复，程序将解析返回的 JSON。容易出现傻瓜引号解析错误的问题，建议优先使用 ForGalTsv。
+* **`# Sakura`**: 实际翻译模式，向AI输入自然语言形式的句子(包含 `name` 和 `message` )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。
 * **`# DumpName`**: 提取所有的 `name` 键，在项目文件夹下生成 `NameTable.toml` 以供统一替换人名(已有则仅更新)。
-* **`# NameTrans`**: 翻译人名表(如果没有则先Dump)。
-* **`# GenDict`**: 借助AI自动生成术语表，保存在项目文件夹下的 `ProjGptDict-Gen.toml` 中。
+* **`# NameTrans`**: 翻译人名表 (如果没有则先 Dump)。
+* **`# GenDict`**: 借助 AI 自动生成术语表，保存在项目文件夹下的 `ProjGptDict-Gen.toml` 中。
 * **`# Rebuild`**: 即使 `retranslKeys` 命中也不会重翻，只根据缓存重建结果。
-* **`# ShowNormal`**: 保存预处理后的内容及句子到项目文件夹下带 `show_normal` 字段的文件夹中，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错。
+* **`# ShowNormal`**: 保存预处理后的内容及句子到项目文件夹下带 `show_normal` 字段的文件夹中，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。
 
 ### 缓存机制
 
-在`Rebuild`中所提到的缓存，是指翻译过后留存在项目文件夹下，`trans_cache`文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。
+在 `Rebuild` 中所提到的缓存，是指翻译过后留存在项目文件夹下，`trans_cache`文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。
 
-> **⚠️ 特别注意**：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++会尽可能在这种情况下保证原有缓存的命中(你也可以调整`分割缓存查找距离`来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 `ShowNormal` 模式观察切割后的文件。
+> **⚠️ 特别注意**：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++ 会尽可能在这种情况下保证原有缓存的命中(你也可以调整`分割缓存查找距离`来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 `ShowNormal` 模式观察切割后的文件。
 
 `retranslKeys` 指的是重翻关键字列表。
 
 GalTransl++会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。
 
-一般情况下，如果 `problems` 中包含设定的 `retranslKeys`(当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 `retranslKeys`，要么使用 `Rebuild` 模式忽略翻译。
+一般情况下，如果 `problems` 中包含设定的 `retranslKeys` (当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 `retranslKeys`，要么使用 `Rebuild` 模式忽略翻译。
 
 ### 字典系统
 
@@ -94,7 +84,7 @@ GalTransl++的字典分为 **译前字典**，**GPT字典**，**译后字典** �
 
 这三类字典中，译前和译后字典为 **替换型字典**，GPT字典为 **提示型字典**。
 
-即译前和译后字典执行的是搜索替换，而GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给AI以规范翻译，那至于AI想不想用，用成什么样，就不是程序能管得到的了。
+即译前和译后字典执行的是搜索替换，而 GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。
 
 
 #### GUI中的字典处理
@@ -109,123 +99,38 @@ GalTransl++的字典分为 **译前字典**，**GPT字典**，**译后字典** �
 * **编辑模式与保存逻辑**
   * 人名表和字典都分别有 **纯文本模式** 和 **表模式**，具体在翻译时用哪个模式的数据会在你按开始翻译按钮时决定。
   * 例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 **人名表(表模式)** 中的数据保存到 `NameTable.toml` 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
-  * 按 **刷新** 将会重新从项目文件夹中的 toml 文件读取数据。如果你在GUI中还有修改了没有保存的数据，请务必先确认备份情况再刷新。
-  * 按 **保存** 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 **项目GPT字典** 时会 **删除**  `ProjGptDict-Gen.toml` 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑`ProjGptDict-Gen.toml`。
+  * 按 **刷新** 将会重新从项目文件夹中的 toml 文件读取数据。如果你在 GUI 中还有修改了没有保存的数据，请务必先确认备份情况再刷新。
+  * 按 **保存** 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 **项目GPT字典** 时会 **删除**  `ProjGptDict-Gen.toml` 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑 `ProjGptDict-Gen.toml`。
 
 ### 一个常见的翻译流程
 
 1、  新建项目 -> 输入项目名。  
-2、  在新建的项目文件夹中的`gt_input`文件夹中放入待翻译的文件。  
-3、  填入 API URL、模型名称和 API key。<br>
+2、  在新建的项目文件夹中的 `gt_input` 文件夹中放入待翻译的文件。  
+3、  填入 Api key、Api url、模型名称等并调整好各部分设置。  
 4、  使用 `GenDict` 自动生成术语表。  
 5、  调整术语表，根据需求修改字典并选择要使用的字典。  
-6、  如果文件支持提取name，则可 `DumpName` 并编辑人名表，也可 `NameTrans` 翻译人名表。  
+6、  如果文件支持提取 name，则可 `DumpName` 并编辑人名表，也可 `NameTrans` 翻译人名表。  
 7、  选用合适的实际翻译模式进行翻译。  
 8、  查看问题。  
-9、  根据问题选择编辑`retranslKeys`/`skipProblems`重建/重翻/修改缓存/...。  
-10、 重翻 / 重建。  
-11、 在`gt_output`中查收结果。  
-
-### 当前配置结构速览
-
-项目配置文件为 `Config.toml`。如果只想看完整示例，可以直接参考 `Example/SampleProject/Config.toml`。
-
-```toml
-[backend]
-apiStrategy = "random" # random / fallback
-apiTimeout = 300
-
-[[backend.apis]]
-enable = true
-apikeys = ["sk-example"]
-apiurl = "https://example.com/v1"
-modelName = "model-name"
-protocol = "openai" # openai / claude / gemini
-thinkingLevel = "off" # off / low / medium / high
-stream = false
-# extraHeadersEnable = false
-# extraBodyEnable = false
-# extraHeaders = { "HTTP-Referer" = "https://example.com" }
-# extraBody = { "reasoning_effort" = "low" }
-```
-
-`common` 下的通用设置已经按用途拆分:
-
-```toml
-[common]
-maxRequestCount = 4
-problemOverviewFormat = "json" # json / toml
-contextHistorySize = 8
-
-[common.split]
-method = "No" # No / Num / Equal
-num = 10
-cacheSearchDistance = 5
-
-[common.repeatedBlock]
-enabled = false
-minSize = 5
-
-[common.log]
-level = "info"
-inputBlockMaxLines = 10
-problemMaxLines = 3
-glossaryMaxLines = 5
-
-[common.tokenize]
-backend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
-mecabDictDir = "BaseConfig/mecab/mecab-ipadic-utf8"
-spaCyModelName = "ja_core_news_lg"
-stanzaLang = "ja"
-
-[common.agent]
-enabled = false
-maxTurnsPerChunk = 20
-compactContextThresholdBytes = 150000
-searchResultLimit = 80
-contextLinesLimit = 20
-projectNotePath = "ProjectNote.md"
-```
-
-字典列表使用复数键:
-
-```toml
-[dictionary]
-defaultDictFolder = "BaseConfig/Dicts"
-preDicts = ["PreHUnify.toml", "ProjPreDict.toml"]
-gptDicts = ["CommonGpt.toml", "ProjGptDict.toml", "ProjGptDict-Gen.toml"]
-postDicts = ["PostStd.toml", "ProjPostDict.toml"]
-```
-
-常用文件/文本插件也可以在项目配置中直接设置:
-
-```toml
-[plugins.PDF]
-bilingualOutput = true
-babeldocLangOut = "zh-CN"
-
-[plugins.TextLinebreakFix]
-linebreakMode = "preferPunctuation" # preferPunctuation / keepPosition / average / fixedChars / checkOnly
-useTokenizer = false
-tokenizerBackend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
-```
+9、  根据问题 编辑`retranslKeys`/`skipProblems`/重建/重翻/修改缓存/...。  
+10、 在`gt_output`中查收结果。  
 
 ### 缓存文件结构
 
 GalTransl++的缓存中可能包含如下键:
 
-* `index`: 索引顺序，一般不重要。
-* `name`: 人名，展示的是预处理后的人名(相当于pre_processed_name)，如果没有则为空。 conditionTarget 指代名 `name`
-* `names`: 复数人名，仅见于部分 VNT 提出的文本中。 conditionTarget 指代名 `names`
-* `name_translated`: 将输出的译后人名。
-* `names_translated`: 同上。
-* `original_text`: 原文对照，与原文没有任何区别。 conditionTarget 指代名 `orig`
-* `pre_processed_text`: 经过一系列预处理后，即将执行AI翻译前时句子的样子。 conditionTarget 指代名 `preproc`
-* `other_info`: 其它附加信息。 conditionTarget 指代名 `otherinfo`
-* `problems`: 在自动化找错中找出的问题。 conditionTarget 指代名 `problems`
-* `translated_by`: 翻译此句子所用的 apikey 的设定模型。 conditionTarget 指代名 `transby`
-* `translated_raw_text`: AI返回的，未经过任何后处理的句子的样子。 conditionTarget 指代名 `transraw`
-* `translated_view_text`: 经过所有后处理之后，将输出的 message。 conditionTarget 指代名 `transview`
+* `index`: 索引顺序。
+* `name`: 人名，展示的是预处理后的人名 (相当于 pre_processed_name)，如果没有则为空。 条件对象指代名 `name`
+* `names`: 复数人名，仅见于部分 VNT 提出的文本中。 条件对象指代名 `names`
+* `name_translated`: 将输出的译后人名。 条件对象指代名 `nametrans`
+* `names_translated`: 同上。 条件对象指代名 `namestrans`
+* `original_text`: 原文对照，与原文没有任何区别。 条件对象指代名 `orig`
+* `pre_processed_text`: 经过一系列预处理后，即将执行AI翻译前时句子的样子。 条件对象指代名 `preproc`
+* `other_info`: 其它附加信息。 条件对象指代名 `otherinfo`
+* `problems`: 在自动化找错中找出的问题。 条件对象指代名 `problems`
+* `translated_by`: 翻译此句子所用的 apikey 的设定模型。 条件对象指代名 `transby`
+* `translated_raw_text`: AI 返回的，未经过任何后处理的句子的样子。 条件对象指代名 `transraw`
+* `translated_view_text`: 经过所有后处理之后，将输出的 message。 条件对象指代名 `transview`
 
 开启连续重复块引用复用时，缓存或中间输出中还可能出现 `_gpp_ref_to`、`_gpp_ref_by`、`_gpp_ref_pending` 等调试/引用信息。正式输出文件不会写入这些键。
 
@@ -234,7 +139,7 @@ GalTransl++的缓存中可能包含如下键:
 * **译前字典** 会搜索并替换 `original_text` 以输出 `pre_processed_text` 提供给AI。
 * **译后字典** 会搜索并替换 `translated_raw_text` 以供 `translated_view_text` 最终输出。
 
-**条件对象** 是指条件正则要作用于的文本，可以是 `name`, `orig`, `preproc`, `transraw`, `transview` 中的任意一个。
+**条件对象 (conditionTarget)** 是指条件正则要作用于的缓存文本，可以是 `name`, `orig`, `preproc`, `transraw`, `transview` 等中的任意一个。
 
 当 **启用正则** 为 `true` 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。
 
@@ -334,20 +239,20 @@ LinebreakAdded = { enable = true, base = "orig", check = "transview" }
 
 </summary>
 
-鉴于Epub的多样性以及GalTransl++以项目为本的理念，GalTransl++的Epub提取并不像其它翻译器一样有固定的解析/拼装模式。
+鉴于 Epub 的多样性以及 GalTransl++ 以项目为本的理念，GalTransl++的 Epub 提取并不像其它翻译器一样有固定的解析/拼装模式。
 
-GalTransl++将仅使用GUMBO库遍历Epub中的HTML/XHTML文件
-(epub文件本身只是一个zip包，你可以使用任何解压软件打开它并浏览其中的文件)，
+GalTransl++ 将仅使用GUMBO库遍历 Epub 中的 HTML/XHTML 文件
+(epub文件本身只是一个 zip 包，你可以使用任何解压软件打开它并浏览其中的文件)，
 
-每个文本标签提取出的字符串都将作为一个msg。
+每个文本标签提取出的字符串都将作为一个 message。
 
 但仅仅这样会有一些明显的问题，如下面这个句子:
 ```
 <p class="class_s2C-0">「モテる男は<ruby><rb>辛</rb><rt>つら</rt></ruby>いね」</p>
 ```
-它会被拆解为 `「モテる男は` `辛` `つら` `いね」` 四个部分，作为4个msg喂给AI，这显然不是我们想要的。如果使用固定的html解析方法/固定的正则组进行提取，要么会丢失信息，要么无法兼顾所有情况，总之自定义程度极低，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以GalTransl++选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。
+它会被拆解为 `「モテる男は` `辛` `つら` `いね」` 四个部分，作为4个 message 喂给AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。
 
-Epub正则设置依然使用toml语法解析配置，并支持两种正则写法: **一般正则**和**回调正则**。
+Epub 正则设置依然使用 toml 语法解析配置，并支持两种正则写法: **一般正则**和**回调正则**。
 
 
 #### 一般正则
@@ -379,13 +284,6 @@ rep = '<ruby><rb>$2</rb><rt>$1</rt></ruby>'
 ```
 假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有`<p></p>`标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的正则/正则组来处理这个问题，那么此时就需要使用回调正则。
 
-注: 2.2.4版本之后，想达到这个目的可以简化为一条正则
-```toml
-[[plugins.Epub.postprocRegex]]
-org = '((?i)(?:<p\b[^>]*>|\G(?!\A))[^<]*\K<(?!/p>)[^>]*>)'
-rep = ''
-```
-
 我们可以编写如下回调正则，
 ```toml
 [[plugins.Epub.preprocRegex]]
@@ -396,6 +294,13 @@ callback = [ { group = 2, org = '<[^>]*>', rep = '' } ]
 ```html
 <p class="class_s2C-0">「うっ、レナ!?」</p>
 <p class="class_s2C-0">　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてしまう。</p>
+```
+
+注: 如果你是超级正则高手，想达到这个目的其实也不是不能简化为一条正则
+```toml
+[[plugins.Epub.postprocRegex]]
+org = '((?i)(?:<p\b[^>]*>|\G(?!\A))[^<]*\K<(?!/p>)[^>]*>)'
+rep = ''
 ```
 
 ##### 回调正则处理流程
@@ -441,7 +346,7 @@ PDF 翻译使用 BabelDOC，输出语言码可在 PDF 文件插件配置中设�
 ```cmd
 nvidia-smi
 ```
-以获取当前驱动最高支持的 CUDA 版本(之所以要先更新驱动是因为不同的驱动版本所能支持的 CUDA 版本可能也会有变化)。
+以获取当前驱动最高支持的 CUDA 版本 (之所以要先更新驱动是因为不同的驱动版本所能支持的 CUDA 版本可能也会有变化)。
 - 2、 访问[PyTorch官网](https://pytorch.org/get-started/locally/)，选择合适的 CUDA 版本获取安装命令。
 忘了自己电脑上装的 CUDA 是什么版本的可以运行
 ```cmd
@@ -477,7 +382,7 @@ nvcc --version
 
 可以非常方便的编写自定义的 **文件解析/文本处理/任务结束后处理** 等脚本。
 
-具体的代码示例详见 `Example/LuaSample` 及 `Example/PythonSample`。插件侧的 `Sentence` 字段使用小驼峰/短名风格，缓存 JSON 输出仍使用下划线键名；以示例插件和 `gpp_plugin_api.pyi` 为准。
+具体的代码示例详见 `Example/LuaSample` 及 `Example/PythonSample`。插件侧的 `Sentence` 字段使用全小写短名，缓存 JSON 输出仍使用下划线键名；以示例插件和 `gpp_plugin_api.pyi` 为准。
 
 </details>
 
@@ -519,7 +424,7 @@ start /b 要运行文件的文件名
 
 </summary>
 
-GUI界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:
+GUI 界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:
 
 ![tabView](images/tabView.png?raw=true)
 </details>
@@ -532,8 +437,8 @@ GUI界面所有的以标签页形式呈现的字典、人名表、提示词等�
 
 </summary>
 
-可以使用快捷键(默认为 Ctrl+L)清除当前日志页面的输出。  
-更改快捷键请手动修改 BaseConfig/GlobalConfig.toml 中 `clearLogShortcut` 所存储的值。  
+可以使用快捷键 (默认为 Ctrl+L) 清除当前日志页面的输出。  
+更改快捷键请手动修改 `BaseConfig/GlobalConfig.toml` 中 `clearLogShortcut` 所存储的值。  
 
 </details>
 
@@ -552,11 +457,11 @@ GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除
 
 由于所有的文件处理器需直接/间接继承自 `ITranslator`，如无特殊情况，一般直接继承 `NormalJsonTranslator` 即可。
 
-这样只需要将相应文件提取为json，并重设提取文件夹为 `NormalJsonTranslator` 的 `inputDir` 文件夹，
+这样只需要将相应文件提取为 json，并重设提取文件夹为 `NormalJsonTranslator` 的 `inputDir` 文件夹，
 
-重设期望获取译后json的文件夹为其 `outputDir` 文件夹即可。
+重设期望获取译后 json 的文件夹为其 `outputDir` 文件夹即可。
 
-每当其翻译完一个文件时(如果有单文件分割则只在文件合并后)，其会调用成员变量中的函数对象 `m_onFileProcessed`(在非 pythonTranslator 时线程安全)，
+每当其翻译完一个文件时 (如果有单文件分割则只在文件合并后)，其会调用成员变量中的函数对象 `m_onFileProcessed`，
 
 可以借此来判断文件的写回时机，具体示例可见 `EpubTranslator`。
 
@@ -570,7 +475,7 @@ GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除
 * **对于 dprerun/prerun 阶段**：如果是非过滤型插件，原则上只允许修改 `preproc`。如果是过滤型插件，可以将 `transCompleted` 置为 `true`，并负责填充 `transraw`。如有需要，也可以将 `problemAnalyzeDisabled` 置为 `true` 来阻止对此句的问题分析。
 * **对于 postrun/dpostrun 阶段**：原则上只允许修改 `transview`。
 
-任意插件均可在 `otherInfo` / `otherinfo` 中插入键以在缓存的 `other_info` 中附带信息。
+任意插件均可在 `otherinfo` 中插入键以在缓存的 `other_info` 中附带信息。
 
 具体示例可见 `TextLinebreakFix` 和 `TextFull2Half`。
 

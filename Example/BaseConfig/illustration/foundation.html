@@ -70,14 +70,49 @@
         strong {
             font-weight: 600;
         }
+        pre {
+            overflow: auto;
+            padding: 16px;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+        }
+        pre code {
+            padding: 0;
+            background-color: transparent;
+        }
+        details {
+            margin-bottom: 16px;
+        }
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+        }
+        summary h3 {
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+            border-bottom: 0;
+        }
+        table {
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            overflow: auto;
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 6px 13px;
+            border: 1px solid #dfe2e5;
+        }
     </style>
 </head>
 <body>
 <h1>GalTransl++</h1>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI"></p>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En"></p>
-<p><strong>GalTransl++</strong> 是继承了 <a href="https://github.com/GalTransl/GalTransl" target="_blank">GalTransl</a>  <code>以项目为本</code>的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量透明的、拥有高度且方便的扩展能力的翻译核心。</p>
-<p><strong>GalTransl++ GUI</strong> 是包装了GalTransl++核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。</p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI" />
+<img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En" /></p>
+<p><strong>GalTransl++</strong> 是继承了 <a href="https://github.com/GalTransl/GalTransl">GalTransl</a>  <code>以项目为本</code>的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。</p>
+<p><strong>GalTransl++ GUI</strong> 是包装了 GalTransl++ 核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。</p>
 <h2>✨ 特性</h2>
 <p>本项目在继承了GalTransl基本功能的基础上，包括但不限于对以下模块进行了优化：</p>
 <ul>
@@ -89,14 +124,12 @@
 <li>OpenAI / Claude / Gemini 风格接口协议在同一 API 池中管理</li>
 <li>多 API key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置</li>
 <li>Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文</li>
-<li>依赖 Python 的分词器使用子进程加载，降低主程序长期占用的内存</li>
-<li>TOML / JSON 编辑位置带语法高亮</li>
 <li>有效的 API 额度耗尽检测</li>
 <li>卡片弹出式的完成提示 (仅GUI)</li>
 <li>更好的字典未使用检测</li>
 <li>可自定义的符号检测</li>
 <li>单独生成用以检查的预处理结果</li>
-<li>统合生成的翻译问题概览，并可选择 json/toml 输出</li>
+<li>统合生成的翻译问题概览</li>
 <li>速度更快的Rebuild</li>
 <li>更加方便的提示词自定义</li>
 <li>更清晰的字典使用设定</li>
@@ -104,48 +137,43 @@
 <li>可按问题分别设置启用状态和比较对象</li>
 <li>对 条件判断/文本处理/文件格式处理 的自定义 Lua/Python 语言支持</li>
 </ul>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/notification.png?raw=true" alt="notification"></p>
-<h3>相比 GalTransl 与旧版 GalTranslPP 的主要变化</h3>
-<p>GalTransl++ 仍然沿用 GalTransl 的项目制、缓存、GPT字典、问题分析和 GUI 工作流，但当前版本把配置拆成了更清晰的 <code>backend</code> / <code>plugins</code> / <code>common</code> / <code>dictionary</code> / <code>problemAnalyze</code> 几部分。旧版中的 <code>OpenAI-Compatible</code>、<code>backendSpecific</code>、<code>preDict/gptDict/postDict</code> 等键已经不再使用。</p>
-<p>当前默认目录也已统一为英文路径，例如 <code>BaseConfig/Dicts</code>、<code>BaseConfig/mecab</code>、<code>BaseConfig/PythonScripts</code>、<code>BaseConfig/PluginConfigs</code>、<code>SampleProject</code>、<code>SampleProject.zip</code>。GUI 资源图片在 <code>GPPGUI/Resource/images</code> 下，README 截图在仓库根目录的 <code>images</code> 下。</p>
-<p>接口层现在按每个 API 项的 <code>protocol</code> 选择 OpenAI / Claude / Gemini 风格请求，Agent 自身仍使用项目内的文本协议来组织模型回复。这样可以保留原先批量翻译的透明日志与缓存模型，同时让 GUI 侧的 API 查询、测试和高级字段更统一。</p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/notification.png?raw=true" alt="notification" /></p>
 <h2>📖 流程说明</h2>
 <h3>GalTransl++ 翻译流程与替换型字典介绍</h3>
-<p>对于熟悉GalTransl的人来说，过渡到GalTransl++ CLI版本可谓易如反掌，所以接下来主要讲GUI。</p>
-<p>这里还是再稍微谈一下翻译流程吧(默认你已经读过GalTransl的使用说明，翻译接口什么的就略过了)。</p>
-<p>GalTransl++无论处理哪种文件格式，最后都是统一化为json来读取。</p>
-<p>每个json文件是一个对象列表，每个对象代表一个『句子』，这是喂给AI进行翻译的基本单位。</p>
-<p>读取json时主要关注两个键，分别为 <code>name</code> 和 <code>message</code>，不同的翻译模式(<code>transEngine</code>)就是对这两个键进行各种不同的处理：</p>
+<p>对于熟悉 GalTransl 的人来说，过渡到 GalTransl++ CLI 版本可谓易如反掌，所以接下来主要讲GUI。</p>
+<p>这里还是再稍微谈一下翻译流程吧 (默认你已经读过 GalTransl 的使用说明，翻译接口什么的就略过了)。</p>
+<p>GalTransl++ 无论处理哪种文件格式，最后都是统一化为 json 来读取。</p>
+<p>每个 json 文件是一个对象列表，每个对象代表一个『句子』，这是喂给AI进行翻译的基本单位。</p>
+<p>读取 json 时主要关注两个键，分别为 <code>name</code> 和 <code>message</code>，不同的翻译模式 (<code>transEngine</code>) 就是对这两个键进行各种不同的处理：</p>
 <h4>翻译模式 (transEngine)</h4>
 <ul>
-<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向AI输入json格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以json格式回复，程序将解析返回的JSON。容易出现傻瓜引号解析错误的问题，建议优先使用ForGalTsv。</li>
-<li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向AI输入TSV格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以TSV格式回复，程序将解析返回的TSV，可能比ForGalJson模式更省token。</li>
-<li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向AI输入和解析的时候都不带<code>name</code>键。</li>
-<li><strong><code># Sakura</code></strong>: 实际翻译模式，向AI输入自然语言形式的句子(包含<code>name</code>和<code>message</code>)，由于Sakura是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
+<li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向 AI 输入 TSV 格式的句子(包含 <code>name</code> 和<code>message</code>)并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。</li>
+<li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向AI输入和解析的时候都不带 <code>name</code> 键。</li>
+<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子(包含 <code>name</code> 和 <code>message</code> )并要求 AI 以 json 格式回复，程序将解析返回的 JSON。容易出现傻瓜引号解析错误的问题，建议优先使用 ForGalTsv。</li>
+<li><strong><code># Sakura</code></strong>: 实际翻译模式，向AI输入自然语言形式的句子(包含 <code>name</code> 和 <code>message</code> )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
 <li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名(已有则仅更新)。</li>
-<li><strong><code># NameTrans</code></strong>: 翻译人名表(如果没有则先Dump)。</li>
-<li><strong><code># GenDict</code></strong>: 借助AI自动生成术语表，保存在项目文件夹下的 <code>ProjGptDict-Gen.toml</code> 中。</li>
-<li><strong><code># Rebuild</code></strong>: 即使 <code>problem</code> 或 <code>orig</code> 中包含 <code>retranslKeys</code> 也不会重翻，只根据缓存重建结果。</li>
-<li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错。</li>
+<li><strong><code># NameTrans</code></strong>: 翻译人名表 (如果没有则先 Dump)。</li>
+<li><strong><code># GenDict</code></strong>: 借助 AI 自动生成术语表，保存在项目文件夹下的 <code>ProjGptDict-Gen.toml</code> 中。</li>
+<li><strong><code># Rebuild</code></strong>: 即使 <code>retranslKeys</code> 命中也不会重翻，只根据缓存重建结果。</li>
+<li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。</li>
 </ul>
 <h3>缓存机制</h3>
-<p>在<code>Rebuild</code>中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code>文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
+<p>在 <code>Rebuild</code> 中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code>文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
 <blockquote>
-<p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++会尽可能在这种情况下保证原有缓存的命中(你也可以调整<code>分割缓存查找距离</code>来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
+<p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++ 会尽可能在这种情况下保证原有缓存的命中(你也可以调整<code>分割缓存查找距离</code>来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
 </blockquote>
 <p><code>retranslKeys</code> 指的是重翻关键字列表。</p>
 <p>GalTransl++会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。</p>
-<p>一般情况下，如果 <code>problems</code> 中包含设定的 <code>retranslKeys</code>(当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 <code>retranslKeys</code>，要么使用 <code>Rebuild</code> 模式忽略翻译。</p>
+<p>一般情况下，如果 <code>problems</code> 中包含设定的 <code>retranslKeys</code> (当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 <code>retranslKeys</code>，要么使用 <code>Rebuild</code> 模式忽略翻译。</p>
 <h3>字典系统</h3>
 <p>GalTransl++的字典分为 <strong>译前字典</strong>，<strong>GPT字典</strong>，<strong>译后字典</strong> 三大类。每类字典都有 <strong>通用</strong> 和 <strong>项目</strong> 两种。</p>
 <p>顾名思义，通用字典可以被所有项目所见，项目字典只能被当前项目所见。</p>
 <p>具体一个项目要用哪些字典，可以在项目的 <code>翻译设置-&gt;字典设置</code> 中找到对应的选项进行选择。</p>
 <p>这三类字典中，译前和译后字典为 <strong>替换型字典</strong>，GPT字典为 <strong>提示型字典</strong>。</p>
-<p>即译前和译后字典执行的是搜索替换，而GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给AI以规范翻译，那至于AI想不想用，用成什么样，就不是程序能管得到的了。</p>
+<p>即译前和译后字典执行的是搜索替换，而 GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。</p>
 <h4>GUI中的字典处理</h4>
 <ul>
-<li>
-<p><strong>文件对应关系</strong></p>
+<li><p><strong>文件对应关系</strong></p>
 <ul>
 <li>通用字典可以有多个，而项目字典和人名表每个项目各只有一个。</li>
 <li>GUI会读取项目文件夹下 <code>NameTable.toml</code> 来作为 <strong>人名表</strong> 中的数据。</li>
@@ -154,114 +182,41 @@
 <li>读取 <code>ProjPostDict.toml</code> 来作为 <strong>项目译后字典</strong> 中的数据。</li>
 </ul>
 </li>
-<li>
-<p><strong>编辑模式与保存逻辑</strong></p>
+<li><p><strong>编辑模式与保存逻辑</strong></p>
 <ul>
 <li>人名表和字典都分别有 <strong>纯文本模式</strong> 和 <strong>表模式</strong>，具体在翻译时用哪个模式的数据会在你按开始翻译按钮时决定。</li>
 <li>例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 <strong>人名表(表模式)</strong> 中的数据保存到 <code>NameTable.toml</code> 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。</li>
-<li>按 <strong>刷新</strong> 将会重新从项目文件夹中的 toml 文件读取数据。如果你在GUI中还有修改了没有保存的数据，请务必先确认备份情况再刷新。</li>
-<li>按 <strong>保存</strong> 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 <strong>项目GPT字典</strong> 时会 <strong>删除</strong> <code>ProjGptDict-Gen.toml</code> 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑 <code>ProjGptDict-Gen.toml</code>。</li>
+<li>按 <strong>刷新</strong> 将会重新从项目文件夹中的 toml 文件读取数据。如果你在 GUI 中还有修改了没有保存的数据，请务必先确认备份情况再刷新。</li>
+<li>按 <strong>保存</strong> 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 <strong>项目GPT字典</strong> 时会 <strong>删除</strong>  <code>ProjGptDict-Gen.toml</code> 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑 <code>ProjGptDict-Gen.toml</code>。</li>
 </ul>
 </li>
 </ul>
 <h3>一个常见的翻译流程</h3>
-<p>1、  新建项目 -&gt; 输入项目名。<br>
-2、  在新建的项目文件夹中的<code>gt_input</code>文件夹中放入待翻译的文件。<br>
-3、  填入 API URL、模型名称和 API key。<br>
-4、  使用 <code>GenDict</code> 自动生成术语表。<br>
-5、  调整术语表，根据需求修改字典并选择要使用的字典。<br>
-6、  如果文件支持提取name，则可 <code>DumpName</code> 并编辑人名表，也可 <code>NameTrans</code> 翻译人名表。<br>
-7、  选用合适的实际翻译模式进行翻译。<br>
-8、  查看问题。<br>
-9、  根据问题选择编辑<code>retranslKeys</code>/<code>skipProblems</code>重建/重翻/修改缓存/...。<br>
-10、 重翻 / 重建。<br>
-11、 在<code>gt_output</code>中查收结果。</p>
-<h3>当前配置结构速览</h3>
-<p>项目配置文件为 <code>Config.toml</code>。如果只想看完整示例，可以直接参考 <code>Example/SampleProject/Config.toml</code>。</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[backend]
-apiStrategy = "random" # random / fallback
-apiTimeout = 300
-
-[[backend.apis]]
-enable = true
-apikeys = ["sk-example"]
-apiurl = "https://example.com/v1"
-modelName = "model-name"
-protocol = "openai" # openai / claude / gemini
-thinkingLevel = "off" # off / low / medium / high
-stream = false
-# extraHeadersEnable = false
-# extraBodyEnable = false
-# extraHeaders = { "HTTP-Referer" = "https://example.com" }
-# extraBody = { "reasoning_effort" = "low" }
-</code></pre></div><!--afterend--></div>
-<p><code>common</code> 下的通用设置已经按用途拆分:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[common]
-maxRequestCount = 4
-problemOverviewFormat = "json" # json / toml
-contextHistorySize = 8
-
-[common.split]
-method = "No" # No / Num / Equal
-num = 10
-cacheSearchDistance = 5
-
-[common.repeatedBlock]
-enabled = false
-minSize = 5
-
-[common.log]
-level = "info"
-inputBlockMaxLines = 10
-problemMaxLines = 3
-glossaryMaxLines = 5
-
-[common.tokenize]
-backend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
-mecabDictDir = "BaseConfig/mecab/mecab-ipadic-utf8"
-spaCyModelName = "ja_core_news_lg"
-stanzaLang = "ja"
-
-[common.agent]
-enabled = false
-maxTurnsPerChunk = 20
-compactContextThresholdBytes = 150000
-searchResultLimit = 80
-contextLinesLimit = 20
-projectNotePath = "ProjectNote.md"
-</code></pre></div><!--afterend--></div>
-<p>字典列表使用复数键:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[dictionary]
-defaultDictFolder = "BaseConfig/Dicts"
-preDicts = ["PreHUnify.toml", "ProjPreDict.toml"]
-gptDicts = ["CommonGpt.toml", "ProjGptDict.toml", "ProjGptDict-Gen.toml"]
-postDicts = ["PostStd.toml", "ProjPostDict.toml"]
-</code></pre></div><!--afterend--></div>
-<p>常用文件/文本插件也可以在项目配置中直接设置:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[plugins.PDF]
-bilingualOutput = true
-babeldocLangOut = "zh-CN"
-
-[plugins.TextLinebreakFix]
-linebreakMode = "preferPunctuation" # preferPunctuation / keepPosition / average / fixedChars / checkOnly
-useTokenizer = false
-tokenizerBackend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
-</code></pre></div><!--afterend--></div>
+<p>1、  新建项目 -&gt; 输入项目名。<br />
+2、  在新建的项目文件夹中的 <code>gt_input</code> 文件夹中放入待翻译的文件。<br />
+3、  填入 Api key、Api url、模型名称等并调整好各部分设置。<br />
+4、  使用 <code>GenDict</code> 自动生成术语表。<br />
+5、  调整术语表，根据需求修改字典并选择要使用的字典。<br />
+6、  如果文件支持提取 name，则可 <code>DumpName</code> 并编辑人名表，也可 <code>NameTrans</code> 翻译人名表。<br />
+7、  选用合适的实际翻译模式进行翻译。<br />
+8、  查看问题。<br />
+9、  根据问题 编辑<code>retranslKeys</code>/<code>skipProblems</code>/重建/重翻/修改缓存/...。<br />
+10、 在<code>gt_output</code>中查收结果。</p>
 <h3>缓存文件结构</h3>
 <p>GalTransl++的缓存中可能包含如下键:</p>
 <ul>
-<li><code>index</code>: 索引顺序，一般不重要。</li>
-<li><code>name</code>: 人名，展示的是预处理后的人名，如果没有则为空。conditionTarget 指代名 <code>name</code></li>
-<li><code>names</code>: 复数人名，仅见于部分 VNT 提出的文本中。conditionTarget 指代名 <code>names</code></li>
-<li><code>name_translated</code>: 将输出的译后人名。</li>
-<li><code>names_translated</code>: 同上。</li>
-<li><code>original_text</code>: 原文对照，与原文没有任何区别。conditionTarget 指代名 <code>orig</code></li>
-<li><code>pre_processed_text</code>: 经过一系列预处理后，即将执行AI翻译前时句子的样子。conditionTarget 指代名 <code>preproc</code></li>
-<li><code>other_info</code>: 其它附加信息。conditionTarget 指代名 <code>otherinfo</code></li>
-<li><code>problems</code>: 在自动化找错中找出的问题。conditionTarget 指代名 <code>problems</code></li>
-<li><code>translated_by</code>: 翻译此句子所用的 apikey 的设定模型。conditionTarget 指代名 <code>transby</code></li>
-<li><code>translated_raw_text</code>: AI返回的，未经过任何后处理的句子的样子。conditionTarget 指代名 <code>transraw</code></li>
-<li><code>translated_view_text</code>: 经过所有后处理之后，将输出的 message。conditionTarget 指代名 <code>transview</code></li>
+<li><code>index</code>: 索引顺序。</li>
+<li><code>name</code>: 人名，展示的是预处理后的人名 (相当于 pre_processed_name)，如果没有则为空。 条件对象指代名 <code>name</code></li>
+<li><code>names</code>: 复数人名，仅见于部分 VNT 提出的文本中。 条件对象指代名 <code>names</code></li>
+<li><code>name_translated</code>: 将输出的译后人名。 条件对象指代名 <code>nametrans</code></li>
+<li><code>names_translated</code>: 同上。 条件对象指代名 <code>namestrans</code></li>
+<li><code>original_text</code>: 原文对照，与原文没有任何区别。 条件对象指代名 <code>orig</code></li>
+<li><code>pre_processed_text</code>: 经过一系列预处理后，即将执行AI翻译前时句子的样子。 条件对象指代名 <code>preproc</code></li>
+<li><code>other_info</code>: 其它附加信息。 条件对象指代名 <code>otherinfo</code></li>
+<li><code>problems</code>: 在自动化找错中找出的问题。 条件对象指代名 <code>problems</code></li>
+<li><code>translated_by</code>: 翻译此句子所用的 apikey 的设定模型。 条件对象指代名 <code>transby</code></li>
+<li><code>translated_raw_text</code>: AI 返回的，未经过任何后处理的句子的样子。 条件对象指代名 <code>transraw</code></li>
+<li><code>translated_view_text</code>: 经过所有后处理之后，将输出的 message。 条件对象指代名 <code>transview</code></li>
 </ul>
 <p>开启连续重复块引用复用时，缓存或中间输出中还可能出现 <code>_gpp_ref_to</code>、<code>_gpp_ref_by</code>、<code>_gpp_ref_pending</code> 等调试/引用信息。正式输出文件不会写入这些键。</p>
 <h3>替换型字典语法</h3>
@@ -269,194 +224,143 @@ tokenizerBackend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
 <li><strong>译前字典</strong> 会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
 <li><strong>译后字典</strong> 会搜索并替换 <code>translated_raw_text</code> 以供 <code>translated_view_text</code> 最终输出。</li>
 </ul>
-<p><strong>条件对象</strong> 是指条件正则要作用于的文本，可以是 <code>name</code>, <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code> 中的任意一个。</p>
+<p><strong>条件对象 (conditionTarget)</strong> 是指条件正则要作用于的缓存文本，可以是 <code>name</code>, <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code> 等中的任意一个。</p>
 <p>当 <strong>启用正则</strong> 为 <code>true</code> 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。</p>
 <h2>⚙️ 处理与翻译顺序</h2>
-<p>1、  执行 dprerun 阶段的插件。<br>
-2、  可选: 对 <code>name</code> 执行译前字典替换 (人名表收集的也是这一步后的 <code>name</code>)。<br>
-3、  将 <code>message</code> 中的换行统一替换为 <code>&lt;br&gt;</code>。<br>
-4、  将 <code>message</code> 中的制表符统一替换为 <code>&lt;tab&gt;</code>。<br>
-5、  可选: 对 <code>message</code> 执行译前字典替换。<br>
-6、  执行 prerun 阶段的插件。<br>
-7、  <strong>AI翻译</strong>。<br>
-8、  解析 <strong>翻译失败(Failed to translate)</strong> 和 <strong>GPPCProblem</strong>，如果翻译失败则不分析其它问题。<br>
-9、  执行 postrun 阶段的插件。<br>
-10、  可选: 对 <code>message</code> 执行译后字典替换。<br>
-11、  将 <code>message</code> 中的 <code>&lt;tab&gt;</code> 统一替换回制表符。<br>
-12、 将 <code>message</code> 中的换行从 <code>&lt;br&gt;</code> 换回原符号。<br>
-13、 可选: 对 <code>name</code> 执行GPT字典替换 (此时GPT字典将被临时视为替换型字典)。<br>
-14、 对 <code>name</code> 执行人名表替换 (人名表译名为空则忽略)。<br>
-15、 可选: 对 <code>name</code> 执行译后字典替换。<br>
-16、 执行 dpostrun 阶段的插件。<br>
-17、 问题分析。<br>
-<br>
-GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前加上 <code>(GPPCProblem:xxx)</code> 格式的句子来让模型自己添加问题</p>
-<br>
+<p>1、  执行 dprerun 阶段的插件。<br />
+2、  可选: 对 <code>name</code> 执行译前字典替换 (人名表收集的也是这一步后的 <code>name</code>)。<br />
+3、  将 <code>message</code> 中的换行统一替换为 <code>&lt;br&gt;</code>。<br />
+4、  将 <code>message</code> 中的制表符统一替换为 <code>&lt;tab&gt;</code>。<br />
+5、  可选: 对 <code>message</code> 执行译前字典替换。<br />
+6、  执行 prerun 阶段的插件。<br />
+7、  <strong>AI翻译</strong>。<br />
+8、  解析 <strong>翻译失败(Failed to translate)</strong> 和 <strong>GPPCProblem</strong>，如果翻译失败则不分析其它问题。<br />
+9、  执行 postrun 阶段的插件。<br />
+10、  可选: 对 <code>message</code> 执行译后字典替换。<br />
+11、  将 <code>message</code> 中的 <code>&lt;tab&gt;</code> 统一替换回制表符。<br />
+12、 将 <code>message</code> 中的换行从 <code>&lt;br&gt;</code> 换回原符号。<br />
+13、 可选: 对 <code>name</code> 执行GPT字典替换 (此时GPT字典将被临时视为替换型字典)。<br />
+14、 对 <code>name</code> 执行人名表替换 (人名表译名为空则忽略)。<br />
+15、 可选: 对 <code>name</code> 执行译后字典替换。<br />
+16、 执行 dpostrun 阶段的插件。<br />
+17、 问题分析。</p>
+<p>GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前加上 <code>(GPPCProblem:xxx)</code> 格式的句子来让模型自己添加问题</p>
 <blockquote>
 <p><strong>正则引擎说明</strong></p>
-<p>虽然GalTransl++的核心为C++编写，但由于正则引擎采用pcre2且默认使用unicode参数编译正则，所以可自定义编辑的所有正则依然默认是以字符为单位的。比如即使emoji表情’😪’ 在UTF-8中占用4个字节，在正则中依然是以一个<code>.</code>来匹配的。</p>
+<p>虽然GalTransl++的核心为C++编写，但由于正则引擎采用pcre2且默认使用unicode参数编译正则，所以可自定义编辑的所有正则依然默认是以字符为单位的。比如即使emoji表情'😪' 在UTF-8中占用4个字节，在正则中依然是以一个<code>.</code>来匹配的。</p>
 <p>同时也支持pcre2所支持的所有扩展正则语法，如可以使用<code>\p{P}</code>来匹配任意标点符号，<code>\p{Hangul}</code>来匹配任意韩文字符等。</p>
 </blockquote>
 <h2>其它翻译说明</h2>
+<details>
+<summary>
 <h3>问题分析 语法示例:</h3>
+</summary>
 <p>retranslKeys 语法示例</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code># 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
+<pre><code class="language-toml"># 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
-# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本(conditionFunc 接收 Sentence，返回bool)
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回bool)
 # %PROJECT_DIR% 为代表当前项目路径字符串的宏
-# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果没有则条件失败
+# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果不存在则条件失败
 retranslKeys = [
   #[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},
   #{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],
-  #"残留日文",
-  "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
+  #&quot;本有&quot;,
+  #&quot;本无&quot;,
+  &quot;引入繁体字&quot;,
+  &quot;残留日文&quot;,
+  &quot;翻译失败&quot;, # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
 ]
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>skipProblems 语法示例</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code># 正则表达式列表，如果一条 problem 能被以下任一正则 search 通过，则不加入 problems 列表
+<p>skipProblems 语法示例</p>
+<pre><code class="language-toml"># 正则表达式列表，如果一条 problem 能被以下任一正则 search 通过，则不加入 problems 列表
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本
+# (conditionFunc 接收 Sentence 和 problem，返回bool)
 skipProblems = [
-  # "^引入拉丁字母: Live$"  # 不加任何条件
+  #&quot;^引入拉丁字母: Live$&quot;  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
-  [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
-    { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  # [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
+  #   { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  &quot;^$&quot;,
 ]
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>问题开关与比较对象设定示例:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[problemAnalyze]
+<p>问题开关与比较对象设定示例:</p>
+<pre><code class="language-toml"># enable = true 以启用该问题检查
+# 如 StrictlyLongerThanSource = { enable = false, base = &quot;orig&quot;, check = &quot;transview&quot; }
+# 意思是当 translated_view_text 比 original_text 严格长时，在 problem 中留下对应的问题。
 HighFrequency = { enable = false }
-PunctuationMismatch = { enable = true, base = "orig", check = "transview" }
-LatinIntroduced = { enable = true, base = "preproc", check = "transview" }
+PunctuationMismatch = { enable = true, base = &quot;orig&quot;, check = &quot;transview&quot; }
+LinebreakLost = { enable = true, base = &quot;orig&quot;, check = &quot;transview&quot; }
+LinebreakAdded = { enable = true, base = &quot;orig&quot;, check = &quot;transview&quot; }
+# ... ... ...
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p><code>ProblemName</code> 使用英文，GUI 只翻译按钮显示名。<code>enable = false</code> 时可以只保留开关字段。</p>
+</details>
+<details>
+<summary>
 <h3>Epub 提取与正则自定义</h3>
-<p>鉴于Epub的多样性以及GalTransl++以项目为本的理念，GalTransl++的Epub提取并不像其它翻译器一样有固定的解析/拼装模式。</p>
-<p>GalTransl++将仅使用GUMBO库遍历Epub中的HTML/XHTML文件<br>
-(epub文件本身只是一个zip包，你可以使用任何解压软件打开它并浏览其中的文件)，</p>
-<p>每个文本标签提取出的字符串都将作为一个msg。</p>
+</summary>
+<p>鉴于 Epub 的多样性以及 GalTransl++ 以项目为本的理念，GalTransl++的 Epub 提取并不像其它翻译器一样有固定的解析/拼装模式。</p>
+<p>GalTransl++ 将仅使用GUMBO库遍历 Epub 中的 HTML/XHTML 文件
+(epub文件本身只是一个 zip 包，你可以使用任何解压软件打开它并浏览其中的文件)，</p>
+<p>每个文本标签提取出的字符串都将作为一个 message。</p>
 <p>但仅仅这样会有一些明显的问题，如下面这个句子:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>&lt;p class="class_s2C-0"&gt;「モテる男は&lt;ruby&gt;&lt;rb&gt;辛&lt;/rb&gt;&lt;rt&gt;つら&lt;/rt&gt;&lt;/ruby&gt;いね」&lt;/p&gt;
+<pre><code>&lt;p class=&quot;class_s2C-0&quot;&gt;「モテる男は&lt;ruby&gt;&lt;rb&gt;辛&lt;/rb&gt;&lt;rt&gt;つら&lt;/rt&gt;&lt;/ruby&gt;いね」&lt;/p&gt;
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>它会被拆解为 <code>「モテる男は</code> <code>辛</code> <code>つら</code> <code>いね」</code> 四个部分，作为4个msg喂给AI，这显然不是我们想要的。如果使用固定的html解析方法/固定的正则组进行提取，要么会丢失信息，要么无法兼顾所有情况，总之自定义程度极低，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以GalTransl++选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。</p>
-<p>Epub正则设置依然使用toml语法解析配置，并支持两种正则写法: <strong>一般正则</strong>和<strong>回调正则</strong>。</p>
+<p>它会被拆解为 <code>「モテる男は</code> <code>辛</code> <code>つら</code> <code>いね」</code> 四个部分，作为4个 message 喂给AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。</p>
+<p>Epub 正则设置依然使用 toml 语法解析配置，并支持两种正则写法: <strong>一般正则</strong>和<strong>回调正则</strong>。</p>
 <h4>一般正则</h4>
 <p>一般正则执行简单的匹配替换，例如使用下面的预处理正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.preprocRegex]]
+<pre><code class="language-toml">[[plugins.Epub.preprocRegex]]
 org = '&lt;ruby&gt;&lt;rb&gt;(.+?)&lt;/rb&gt;&lt;rt&gt;(.+?)&lt;/rt&gt;&lt;/ruby&gt;'
 rep = '[$2/$1]'
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>则上面的句子会被替换为:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>&lt;p class="class_s2C-0"&gt;「モテる男は[つら/辛]いね」&lt;/p&gt;
+<p>则上面的句子会被替换为:</p>
+<pre><code class="language-html">&lt;p class=&quot;class_s2C-0&quot;&gt;「モテる男は[つら/辛]いね」&lt;/p&gt;
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>之后再遍历到此处时，「モテる男は[つら/辛]いね」 将被作为一个完整的句子被提取出来。如果之后搭配如下后处理正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.postprocRegex]]
+<p>之后再遍历到此处时，「モテる男は[つら/辛]いね」 将被作为一个完整的句子被提取出来。如果之后搭配如下后处理正则，</p>
+<pre><code class="language-toml">[[plugins.Epub.postprocRegex]]
 org = '\[([^/\[\]]+?)/([^/\[\]]+?)\]'
 rep = '&lt;ruby&gt;&lt;rb&gt;$2&lt;/rb&gt;&lt;rt&gt;$1&lt;/rt&gt;&lt;/ruby&gt;'
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>则可在理想位置还原振假名效果(可以修改提示词告诉AI注音格式[振假名/基本文本]及保留要求来达到更好的保留效果)。当然如果只想在原文中保留振假名而在译文中删去，那也很简单，直接在译前字典中再写一个去注音字典即可。其它很多自定义需求也都可借此满足。</p>
+<p>则可在理想位置还原振假名效果(可以修改提示词告诉AI注音格式[振假名/基本文本]及保留要求来达到更好的保留效果)。当然如果只想在原文中保留振假名而在译文中删去，那也很简单，直接在译前字典中再写一个去注音字典即可。其它很多自定义需求也都可借此满足。</p>
 <h4>回调正则</h4>
 <p>不过如上正则仍有一些缺陷，比如这两句话:</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>&lt;p class="class_s2C-0"&gt;「うっ、レナ&lt;span class="class_s2R"&gt;!?&lt;/span&gt;」&lt;/p&gt;
-&lt;p class="class_s2C-0"&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてし&lt;span id="page_8"/&gt;まう。&lt;/p&gt;
+<pre><code class="language-html">&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ&lt;span class=&quot;class_s2R&quot;&gt;!?&lt;/span&gt;」&lt;/p&gt;
+&lt;p class=&quot;class_s2C-0&quot;&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてし&lt;span id=&quot;page_8&quot;/&gt;まう。&lt;/p&gt;
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有<code>&lt;p&gt;&lt;/p&gt;</code>标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的正则/正则组来处理这个问题，那么此时就需要使用回调正则。</p>
-    <p>注: 2.2.4版本之后，想达到这个目的可以简化为一条正则</p>
-    <pre><code>[[plugins.Epub.postprocRegex]]
-org = '((?i)(?:&lt;p\b[^&gt;]*&gt;|\G(?!\A))[^&lt;]*\K&lt;(?!/p&gt;)[^&gt;]*&gt;)'
-rep = ''</code></pre>
+<p>假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有<code>&lt;p&gt;&lt;/p&gt;</code>标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的正则/正则组来处理这个问题，那么此时就需要使用回调正则。</p>
 <p>我们可以编写如下回调正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.preprocRegex]]
+<pre><code class="language-toml">[[plugins.Epub.preprocRegex]]
 org = '(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'
 callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>则这两句话会被替换为</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>&lt;p class="class_s2C-0"&gt;「うっ、レナ!?」&lt;/p&gt;
-&lt;p class="class_s2C-0"&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてしまう。&lt;/p&gt;
+<p>则这两句话会被替换为</p>
+<pre><code class="language-html">&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ!?」&lt;/p&gt;
+&lt;p class=&quot;class_s2C-0&quot;&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてしまう。&lt;/p&gt;
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><h5>回调正则处理流程</h5>
+<p>注: 如果你是超级正则高手，想达到这个目的其实也不是不能简化为一条正则</p>
+<pre><code class="language-toml">[[plugins.Epub.postprocRegex]]
+org = '((?i)(?:&lt;p\b[^&gt;]*&gt;|\G(?!\A))[^&lt;]*\K&lt;(?!/p&gt;)[^&gt;]*&gt;)'
+rep = ''
+</code></pre>
+<h5>回调正则处理流程</h5>
 <p>回调正则的语法是，处理每个匹配项中的所有捕获组，对每个捕获组使用其对应<code>group</code>的回调正则/正则组进行替换，最后将所有捕获组按顺序合并作为这个匹配项的替换字符串。</p>
-<p>采用第一句话作为例子，第一句话 <code>&lt;p class="class_s2C-0"&gt;「うっ、レナ&lt;span class="class_s2R"&gt;!?&lt;/span&gt;」&lt;/p&gt;</code> 整句被正则 <code>'(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'</code> 匹配到，则这一整句作为一个匹配项。在这个匹配项中，根据捕获组又可以分为三组(没有被分组的部分则直接忽略)：</p>
+<p>采用第一句话作为例子，第一句话 <code>&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ&lt;span class=&quot;class_s2R&quot;&gt;!?&lt;/span&gt;」&lt;/p&gt;</code> 整句被正则 <code>'(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'</code> 匹配到，则这一整句作为一个匹配项。在这个匹配项中，根据捕获组又可以分为三组(没有被分组的部分则直接忽略)：</p>
 <ul>
-<li><strong>第一组:</strong> <code>&lt;p class="class_s2C-0"&gt;</code></li>
-<li><strong>第二组:</strong> <code>「うっ、レナ&lt;span class="class_s2R"&gt;!?&lt;/span&gt;」</code></li>
+<li><strong>第一组:</strong> <code>&lt;p class=&quot;class_s2C-0&quot;&gt;</code></li>
+<li><strong>第二组:</strong> <code>「うっ、レナ&lt;span class=&quot;class_s2R&quot;&gt;!?&lt;/span&gt;」</code></li>
 <li><strong>第三组:</strong> <code>&lt;/p&gt;</code></li>
 </ul>
-<p>对于第一组文本，程序会寻找所有 <code>group = 1</code> 的回调正则，并依次执行替换。显然上面的回调正则并没有 <code>group = 1</code> 的正则，则忽略替换，第一组原样输出，现在的替换字符串暂定为: <code>&lt;p class="class_s2C-0"&gt;</code></p>
-<p>对于第二组文本，程序找到了 <code>group = 2</code> 的正则，则对第二组文本使用 <code>org = '&lt;[^&gt;]*&gt;', rep = ''</code> 进行替换，替换后得到 <code>「うっ、レナ!?」</code> ，则现在的替换字符串暂定为 <code>&lt;p class="class_s2C-0"&gt;「うっ、レナ!?」</code></p>
-<p>第三组文本与第一组文本同理，则最终的替换字符串为 <code>&lt;p class="class_s2C-0"&gt;「うっ、レナ!?」&lt;/p&gt;</code> ，与预期相符。</p>
+<p>对于第一组文本，程序会寻找所有 <code>group = 1</code> 的回调正则，并依次执行替换。显然上面的回调正则并没有 <code>group = 1</code> 的正则，则忽略替换，第一组原样输出，现在的替换字符串暂定为: <code>&lt;p class=&quot;class_s2C-0&quot;&gt;</code></p>
+<p>对于第二组文本，程序找到了 <code>group = 2</code> 的正则，则对第二组文本使用 <code>org = '&lt;[^&gt;]*&gt;', rep = ''</code> 进行替换，替换后得到 <code>「うっ、レナ!?」</code> ，则现在的替换字符串暂定为 <code>&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ!?」</code></p>
+<p>第三组文本与第一组文本同理，则最终的替换字符串为 <code>&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ!?」&lt;/p&gt;</code> ，与预期相符。</p>
+</details>
+<details>
+<summary>
 <h3>Python 模块使用及 GPU 加速</h3>
-<p>由于许多有关深度学习的库(如分词器、PDF提取器等)只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。</p>
+</summary>
+由于许多有关深度学习的库(如分词器、PDF提取器等)只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
 <p>当遇到需要使用Python库的情况时(如<strong>翻译PDF</strong>或<strong>使用依赖Python的分词器</strong>)，程序会自动为嵌入式环境下载对应的库。</p>
 <p>spaCy / Stanza / pkuseg 等分词器会在独立子进程中加载模型，主程序侧只保留调用代理；模型下载完成后会在新的进程中重新导入，以尽量避免分词模型常驻在主解释器里释放不掉。</p>
 <p>PDF 翻译使用 BabelDOC，输出语言码可在 PDF 文件插件配置中设置，例如 <code>zh-CN</code>、<code>zh-TW</code>、<code>en</code>、<code>ja</code>、<code>ko</code>。单语输出文件使用原文件名，双语输出文件使用 <code>原文件名.dual.pdf</code>。</p>
@@ -464,37 +368,23 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 <p><strong>请确保自己有一定的动手和思考能力 &amp;&amp; 一块还不错的显卡！</strong></p>
 <h4>为 <code>Stanza</code> 启用 GPU加速</h4>
 <ul>
-<li>1、 首先确保你安装了适配你显卡的 <strong>最新的N卡驱动</strong>，然后去<a href="https://developer.nvidia.com/cuda-toolkit-archive" target="_blank">NVIDIA CUDA Toolkit官网</a> <strong>选择合适的 CUDA Toolkit 版本</strong>, 下载 CUDA Toolkit Installer 并安装。<br>
+<li>1、 首先确保你安装了适配你显卡的 <strong>最新的N卡驱动</strong>，然后去<a href="https://developer.nvidia.com/cuda-toolkit-archive">NVIDIA CUDA Toolkit官网</a> <strong>选择合适的 CUDA Toolkit 版本</strong>, 下载 CUDA Toolkit Installer 并安装。
 不知道怎么选 CUDA 版本的可以在 cmd 里运行</li>
 </ul>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-cmd extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-cmd"><code>nvidia-smi
+<pre><code class="language-cmd">nvidia-smi
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>以获取当前驱动最高支持的 CUDA 版本(之所以要先更新驱动是因为不同的驱动版本所能支持的 CUDA 版本可能也会有变化)。</p>
+<p>以获取当前驱动最高支持的 CUDA 版本 (之所以要先更新驱动是因为不同的驱动版本所能支持的 CUDA 版本可能也会有变化)。</p>
 <ul>
-<li>2、 访问<a href="https://pytorch.org/get-started/locally/" target="_blank">PyTorch官网</a>，选择合适的 CUDA 版本获取安装命令。<br>
+<li>2、 访问<a href="https://pytorch.org/get-started/locally/">PyTorch官网</a>，选择合适的 CUDA 版本获取安装命令。
 忘了自己电脑上装的 CUDA 是什么版本的可以运行</li>
 </ul>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-cmd extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-cmd"><code>nvcc --version
+<pre><code class="language-cmd">nvcc --version
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。</p>
+<p>以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。</p>
 <ul>
-<li>3、 为嵌入式环境安装 PyTorch，注意启动的必须是 <strong>嵌入式环境中的 Python(之后的操作默认均在此环境中进行)</strong>。<br>
-默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的<strong>绝对路径</strong>以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip…)。</li>
-<li>4、 比如官网给我的命令是 <code>pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 <code>python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>。<br>
+<li>3、 为嵌入式环境安装 PyTorch，注意启动的必须是 <strong>嵌入式环境中的 Python(之后的操作默认均在此环境中进行)</strong>。
+默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的<strong>绝对路径</strong>以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip...)。</li>
+<li>4、 比如官网给我的命令是 <code>pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 <code>python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>。
 注意: 如果你已经安装了torch，最好先卸载它：<code>python -m pip uninstall torch</code></li>
 <li>5、 重装 Stanza，<code>python -m pip uninstall stanza</code>  <code>python -m pip install stanza</code></li>
 <li>6、 尝试运行 <code>BaseConfig\PythonScripts\check_stanza_gpu.py</code>，如果提示成功，则代表所有配置均已就绪。</li>
@@ -502,54 +392,63 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 </ul>
 <h4>为 <code>spaCy</code> 启用 GPU加速</h4>
 <ul>
-<li>1、 同 Stanza 第一条 和 第二条。</li>
+<li>1、 同 Stanza 第一条 至 第四条。</li>
 <li>2、 在 <strong>嵌入式 Python环境(详见 Stanza第三条)中</strong> 重新安装 spacy。<code>python -m pip uninstall spacy</code>，并确保此环境中没有安装 <code>cupy</code>。</li>
 <li>3、 根据自己的 CUDA 版本(查看 Stanza 第二条以查看如何获取 CUDA 版本)，安装 <code>cupy</code> 的特定版本，如 <code>cupy-cuda13x</code>: <code>python -m pip install cupy-cuda13x</code>，然后再把 spacy 装回来 <code>python -m pip install spacy</code>。</li>
 <li>4、 尝试运行 <code>BaseConfig\PythonScripts\check_spacy_gpu.py</code>，如果提示成功，则代表所有配置均已就绪。</li>
 <li>5、 此时打开 <code>BaseConfig\PythonScripts\tokenizer_spacy.py</code> 文件，将 <code>USE_GPU = False</code> 改为 <code>USE_GPU = True</code>，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。</li>
 </ul>
+</details>
+<details>
+<summary>
 <h3>Lua/Python 内嵌</h3>
-<p>这两种语言在程序内均为热更新(只要没有被其它任务占用)，更改后重新运行即可看到新的结果。</p>
+</summary>
+这两种语言在程序内均为热更新(只要没有被其它任务占用)，更改后重新运行即可看到新的结果。
 <p>可以非常方便的编写自定义的 <strong>文件解析/文本处理/任务结束后处理</strong> 等脚本。</p>
-<p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。插件侧的 <code>Sentence</code> 字段使用小驼峰/短名风格，缓存 JSON 输出仍使用下划线键名；以示例插件和 <code>gpp_plugin_api.pyi</code> 为准。</p>
-<div>
+<p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。插件侧的 <code>Sentence</code> 字段使用全小写短名，缓存 JSON 输出仍使用下划线键名；以示例插件和 <code>gpp_plugin_api.pyi</code> 为准。</p>
+</details>
 <h2>其它程序说明</h2>
+<details>
+<summary>
 <h3>自定义主页Popular卡片</h3>
-<p>具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。</p>
+</summary>
+具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。
 <p>卡片数组至少六个，不足六个的将使用程序默认的卡片补齐，最高不限数量。</p>
 <p>当 <code>fromLocal</code> 为 <code>true</code> 且 <code>cardPixmap</code> 为空或不存在时，将自动获取本地文件的图标进行填充。</p>
 <p>当 <code>fromLocal</code> 为 <code>true</code> 时，卡片按钮文本将变为『启动』，同时自动将 <code>pathOrUrl</code> 中的路径进行 fromLocal 转化。</p>
 <p>不过不会改变工作目录，如果遇到一些没有给自己设定工作目录为『程序所在目录』的程序，可能就会出问题。</p>
 <p>这种情况可以写一个中转脚本，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-cmd extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-cmd"><code>chcp 65001
+<pre><code class="language-cmd">chcp 65001
 cd /d %~dp0
 start /b 要运行文件的文件名
 </code></pre>
-
-    <button class="v-md-copy-code-btn" type="button">
-      <i>
-        <svg viewBox="64 64 896 896" focusable="false" data-icon="copy" width="1em" height="1em" fill="currentColor" aria-hidden="true">
-          <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.2c3.5 1.3 7.2 2 11 2H704c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 888H414V746c0-22.1-17.9-40-40-40H232V264h432v624z"></path>
-        </svg>
-      </i>
-    </button><!--beforeend--></div><!--afterend--></div><p>然后启动这个中转脚本就可以了。</p>
+<p>然后启动这个中转脚本就可以了。</p>
 <p><strong>注意:</strong> 不要在程序运行的时候修改 <code>GlobalConfig.toml</code>，会被刷掉，请关闭程序后再进行修改。</p>
+</details>
+<details>
+<summary>
 <h3>可在新窗口打开的标签页</h3>
-<p>GUI界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:</p>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/tabView.png?raw=true" alt="tabView"></p>
+</summary>
+<p>GUI 界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:</p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/tabView.png?raw=true" alt="tabView" /></p>
+</details>
+<details>
+<summary>
 <h3>快捷清屏</h3>
-<p>可以使用快捷键(默认为 Ctrl+L)清除当前日志页面的输出。</p>
-<p>更改快捷键请手动修改 BaseConfig/GlobalConfig.toml 中 <code>clearLogShortcut</code> 所存储的值。</p>
+</summary>
+<p>可以使用快捷键 (默认为 Ctrl+L) 清除当前日志页面的输出。<br />
+更改快捷键请手动修改 <code>BaseConfig/GlobalConfig.toml</code> 中 <code>clearLogShortcut</code> 所存储的值。</p>
+</details>
 <h2>⚙️ 编译指南</h2>
-<p>详见<a href="how-to-build.md">how-to-build.md</a></p>
+<p>详见<a href="https://github.com/julixian/GalTranslPP/blob/master/how-to-build.md" target="_blank">how-to-build.md</a></p>
 <h2>🤝 贡献指南</h2>
 <p>GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加文件处理器/插件。</p>
 <h3>添加文件处理器 (Translator)</h3>
-<p>如你所见，GalTransl++的核心代码文件数量<s>不超过二十个</s>(现在大抵是超了)，接口也十分简单。</p>
+<p>如你所见，GalTransl++ 的接口十分简单。</p>
 <p>由于所有的文件处理器需直接/间接继承自 <code>ITranslator</code>，如无特殊情况，一般直接继承 <code>NormalJsonTranslator</code> 即可。</p>
-<p>这样只需要将相应文件提取为json，并重设提取文件夹为 <code>NormalJsonTranslator</code> 的 <code>inputDir</code> 文件夹，</p>
-<p>重设期望获取译后json的文件夹为其 <code>outputDir</code> 文件夹即可。</p>
-<p>每当其翻译完一个文件时(如果有单文件分割则只在文件合并后)，其会调用成员变量中的函数对象 <code>m_onFileProcessed</code>(线程安全)，</p>
+<p>这样只需要将相应文件提取为 json，并重设提取文件夹为 <code>NormalJsonTranslator</code> 的 <code>inputDir</code> 文件夹，</p>
+<p>重设期望获取译后 json 的文件夹为其 <code>outputDir</code> 文件夹即可。</p>
+<p>每当其翻译完一个文件时 (如果有单文件分割则只在文件合并后)，其会调用成员变量中的函数对象 <code>m_onFileProcessed</code>，</p>
 <p>可以借此来判断文件的写回时机，具体示例可见 <code>EpubTranslator</code>。</p>
 <p>需要注册的工厂函数为 <code>createTranslator</code>。</p>
 <h3>添加插件处理器 (Plugin)</h3>
@@ -558,14 +457,14 @@ start /b 要运行文件的文件名
 <li><strong>对于 dprerun/prerun 阶段</strong>：如果是非过滤型插件，原则上只允许修改 <code>preproc</code>。如果是过滤型插件，可以将 <code>transCompleted</code> 置为 <code>true</code>，并负责填充 <code>transraw</code>。如有需要，也可以将 <code>problemAnalyzeDisabled</code> 置为 <code>true</code> 来阻止对此句的问题分析。</li>
 <li><strong>对于 postrun/dpostrun 阶段</strong>：原则上只允许修改 <code>transview</code>。</li>
 </ul>
-<p>任意插件均可在 <code>otherInfo</code> / <code>otherinfo</code> 中插入键以在缓存的 <code>other_info</code> 中附带信息。</p>
+<p>任意插件均可在 <code>otherinfo</code> 中插入键以在缓存的 <code>other_info</code> 中附带信息。</p>
 <p>具体示例可见 <code>TextLinebreakFix</code> 和 <code>TextFull2Half</code>。</p>
 <p>需要注册的工厂函数为 <code>registerPlugins</code>。</p>
 <h3>其它注意事项</h3>
-<p>由于我的开发环境基本绑定 windows系统，我自己也没有linux设备，所以即使在项目中使用的winapi数量很少也很好替换，</p>
-<p>但是跨平台的事我自己是不会主动考虑的。</p>
+<p>由于我的开发环境（特别是构建）基本绑定 windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 winapi 数量很少也很好替换，</p>
+<p>跨平台的事我自己也是不会主动考虑的。</p>
 <p>另外由于我所使用的环境较新，也可能会有一些比较罕见的问题。</p>
-<p><s>目前已知项目依赖 <code>mecab:x64-windows</code> 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022</s>(此问题已修复)</p>
-
+<p><del>目前已知项目依赖 <code>mecab:x64-windows</code> 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022。</del>(此问题已修复)<br />
+由于 MSVC 的 <a href="https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&amp;refTime=1777570126918&amp;refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676">bug1</a> 和 <a href="https://developercommunity.visualstudio.com/t/MSVC-1452-regression:-C2079-in-std::get/11092704">bug2</a>，目前本项目无法使用 v14.51/v14.52预览 工具集构建。</p>
 </body>
 </html>

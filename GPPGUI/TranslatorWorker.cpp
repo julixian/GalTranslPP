@@ -133,7 +133,7 @@ protected:
             speakers,
             QString::fromStdString(event.sourcePreview),
             QString::fromStdString(event.translationPreview),
-            QString::fromStdString(event.translatedBy)
+            QString::fromStdString(event.transby)
         });
     }
 

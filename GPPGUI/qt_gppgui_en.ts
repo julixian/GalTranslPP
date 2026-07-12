@@ -3104,8 +3104,8 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="-1"/>
-        <source>pretrans</source>
-        <translation>pretrans</translation>
+        <source>transraw</source>
+        <translation>transraw</translation>
     </message>
     <message>
         <location filename="ProjectCachePageSearch.cpp" line="+231"/>
@@ -3159,9 +3159,8 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+17"/>
-        <source>在当前文件中搜索 preproc/pretrans/problems...</source>
-        <oldsource>搜索 preproc/pretrans/problems...</oldsource>
-        <translation>Search preproc/ pretrans / problems in current file...</translation>
+        <source>在当前文件中搜索 preproc/transraw/problems...</source>
+        <translation>Search preproc / transraw / problems in current file...</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3224,7 +3223,6 @@ Cache: %4</translation>
     <message>
         <location line="+1"/>
         <source>translated_raw_text（译文，可编辑）</source>
-        <oldsource>pre_translated_text（译文，可编辑）</oldsource>
         <translation>translated_raw_text (translation, editable)</translation>
     </message>
     <message>

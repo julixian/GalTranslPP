@@ -28,9 +28,9 @@ class NameType(Enum):
 
 class TransEngine(Enum):
     # The C++ enum also exposes a member named "None"; see NameType above.
-    ForGalJson = 1
-    ForGalTsv = 2
-    ForNovelTsv = 3
+    ForGalTsv = 1
+    ForNovelTsv = 2
+    ForGalJson = 3
     Sakura = 4
     DumpName = 5
     NameTrans = 6
@@ -42,15 +42,15 @@ class TransEngine(Enum):
 class CachePart(Enum):
     # The C++ enum also exposes a member named "None"; see NameType above.
     Name = 1
-    NameTrans = 2
-    Names = 3
+    Names = 2
+    NameTrans = 3
     NamesTrans = 4
     Orig = 5
     Preproc = 6
-    Pretrans = 7
-    Problems = 8
-    OtherInfo = 9
-    TranslatedBy = 10
+    Problems = 7
+    OtherInfo = 8
+    TransBy = 9
+    TransRaw = 10
     Transview = 11
 
 
@@ -106,16 +106,16 @@ class Sentence:
     fileName: str
     name: str
     names: list[str]
-    nameTrans: str
-    namesTrans: list[str]
+    nametrans: str
+    namestrans: list[str]
     orig: str
     preproc: str
-    pretrans: str
     problems: list[str]
-    translatedBy: str
+    transby: str
+    transraw: str
     transview: str
     linebreak: str
-    otherInfo: dict[str, str]
+    otherinfo: dict[str, str]
     ref: SentencePosition | None
     refBy: list[SentencePosition]
     nameType: NameType
@@ -169,7 +169,7 @@ class RuntimeTransSuccessEvent:
     speakers: list[str]
     sourcePreview: str
     translationPreview: str
-    translatedBy: str
+    transby: str
 
     def __init__(self) -> None: ...
 

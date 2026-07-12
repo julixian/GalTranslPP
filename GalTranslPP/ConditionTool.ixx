@@ -53,7 +53,7 @@ export
                 if (conditionRegStr.empty()) {
                     return;
                 }
-                const std::string modifier = toml::find_or(conditionTbl, "compile_modifier", defaultRegCompileModifier);
+                const std::string modifier = toml::find_or(conditionTbl, "compileModifier", defaultRegCompileModifier);
                 pattern.conditionReg.setPattern(conditionRegStr).setModifier(modifier).compile();
                 if (!pattern.conditionReg) {
                     throw std::runtime_error(gppTr(

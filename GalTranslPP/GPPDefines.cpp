@@ -15,5 +15,5 @@ const fs::path textPluginConfigPath = pluginConfigsPath / L"TextPlugins";
 const std::wstring transCacheDirName = L"transl_cache";
 const std::wstring otherCacheDirName = L"other_cache";
 
-const std::string defaultRegCompileModifier = "mnsS"; // m: 多行, n: unicode 支持, s: DotAll, S: jit编译
+const std::string defaultRegCompileModifier = "mnS"; // m: 多行, n: unicode 支持, s: DotAll, S: jit编译
 const std::string defaultRegReplaceModifier = "gxE"; // g: gloabl, x: ${n:-replace}/${n:+trueText:falseText} 语法支持, E: 未匹配的引用返回空字符串代替

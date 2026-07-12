@@ -13,7 +13,7 @@ export
         std::vector<std::string> speakers;
         std::string sourcePreview;
         std::string translationPreview;
-        std::string translatedBy;
+        std::string transby;
     };
 
     struct RuntimeTransErrorEvent {

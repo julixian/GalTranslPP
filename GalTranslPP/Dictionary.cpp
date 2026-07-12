@@ -310,7 +310,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
             entry.isReg = toml::find_or(elem, "isReg", false);
             if (entry.isReg) {
-                const std::string compileModifier = toml::find_or(elem, "compile_modifier", defaultRegCompileModifier);
+                const std::string compileModifier = toml::find_or(elem, "compileModifier", defaultRegCompileModifier);
                 entry.searchReg = std::make_unique<jpc::Regex>(str, compileModifier);
                 if (!*entry.searchReg) {
                     throw std::runtime_error(gppTr(
@@ -320,7 +320,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                         .arg(str)
                         .toStdString());
                 }
-                entry.replaceModifier = std::make_unique<std::string>(toml::find_or(elem, "replace_modifier", defaultRegReplaceModifier));
+                entry.replaceModifier = std::make_unique<std::string>(toml::find_or(elem, "replaceModifier", defaultRegReplaceModifier));
             }
             else {
                 entry.org = str;

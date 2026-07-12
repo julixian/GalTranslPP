@@ -94,7 +94,7 @@ private:
     static QString entryDst(const json& object);
     static QString entryOriginal(const json& object);
     static QString entryPreview(const json& object);
-    static QString entryTranslatedBy(const json& object);
+    static QString entryTransby(const json& object);
     static QString truncateForList(const QString& text, int maxChars = 120);
     QString entryListText(const json& object, int row) const;
     static QStringList problemsFromEditorText(const QString& text);

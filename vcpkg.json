@@ -14,26 +14,18 @@
     "icu",
     "libzip",
     "lua",
+    "luabridge3",
     "mecab",
     "nlohmann-json",
     "opencc",
     "pcre2",
     "proxy",
+    "sol2",
     "spdlog",
     "toml11",
     "tree-sitter",
     "utfcpp",
     "vit-vit-ctpl"
-  ],
-  "overrides": [
-    {
-      "name": "lua",
-      "version": "5.4.8"
-    },
-    {
-      "name": "fmt",
-      "version": "12.1.0"
-    }
   ],
   "builtin-baseline": "f87344cac03158cbf1467264565f1fd36b382a24"
 }

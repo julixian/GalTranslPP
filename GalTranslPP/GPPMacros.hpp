@@ -21,11 +21,24 @@
 #endif
 
 #ifdef SOL2_HEADERS
+#define SOL_ALL_SAFETIES_ON 1
+#include <filesystem>
 #include <sol/sol.hpp>
 #define NESTED_CVT(className, memberName) sol::property([](className& self) \
 { \
 	return sol::nested<decltype(className::memberName)>(self.memberName); \
 }, [](className& self, decltype(className::memberName) table) { self.memberName = std::move(table); })
+namespace sol
+{
+	template <>
+	struct is_container<std::filesystem::path> : std::false_type {};
+
+	template <>
+	struct is_to_stringable<std::filesystem::path> : std::false_type {};
+
+	template <>
+	struct is_automagical<std::filesystem::path> : std::false_type {};
+}
 #endif
 
 #define IMPL_LITERAL_TO_STR(x) #x

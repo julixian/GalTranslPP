@@ -1,6 +1,7 @@
 module;
 
 #define PYBIND11_HEADERS
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 

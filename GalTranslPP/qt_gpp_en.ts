@@ -1984,7 +1984,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="+1285"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="+1286"/>
         <source>Agent 建议目标 [%1] 没有缓存文件，已跳过</source>
         <oldsource>Agent 建议目标 [%1] 没有缓存文件，已跳过。</oldsource>
         <translation>Agent suggestion target [%1] has no cache file; skipped</translation>

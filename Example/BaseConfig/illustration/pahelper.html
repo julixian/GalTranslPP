@@ -108,14 +108,14 @@
                 也可以指定 <code>conditionScript</code> 和 <code>conditionFunc</code> 来外接 lua/py 脚本 (<code>conditionFunc</code> 接收 Sentence，返回 bool)。
             </p>
             <p>
-                <code>&lt;PROJECT_DIR&gt;</code> 是一个代表当前项目路径字符串的宏。
+                <code>%PROJECT_DIR%</code> 是一个代表当前项目路径字符串的宏。
             </p>
             <p>
                 <code>conditionTarget</code> 加前缀 <code>prev_</code> 或 <code>next_</code> 可表示前/后句，如 <code>prev_prev_orig</code> 表示上上句原文，如果不存在则条件失败。
             </p>
             <pre><code class="language-toml"><span class="code-key">retranslKeys</span> = [
-  <span class="code-comment">#[{ conditionScript='&lt;PROJECT_DIR&gt;/Lua/SampleTextPlugin.lua',conditionFunc='funcName'},</span>
-  <span class="code-comment">#{ conditionScript='&lt;PROJECT_DIR&gt;/Python/SampleTextPlugin.py',conditionFunc='funcName'}],</span>
+  <span class="code-comment">#[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},</span>
+  <span class="code-comment">#{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],</span>
   <span class="code-string">"残留日文"</span>,
   <span class="code-string">"翻译失败"</span>, <span class="code-comment"># 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]</span>
 ]</code></pre>

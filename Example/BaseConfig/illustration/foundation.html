@@ -74,31 +74,41 @@
 </head>
 <body>
 <h1>GalTransl++</h1>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/img/GalTranslPP.png?raw=true" alt="GalTransl++ GUI"></p>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/img/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En"></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI"></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En"></p>
 <p><strong>GalTransl++</strong> 是继承了 <a href="https://github.com/GalTransl/GalTransl" target="_blank">GalTransl</a>  <code>以项目为本</code>的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量透明的、拥有高度且方便的扩展能力的翻译核心。</p>
 <p><strong>GalTransl++ GUI</strong> 是包装了GalTransl++核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。</p>
 <h2>✨ 特性</h2>
 <p>本项目在继承了GalTransl基本功能的基础上，包括但不限于对以下模块进行了优化：</p>
 <ul>
 <li>更好的单文件分割缓存命中</li>
-<li>优先标点的换行修复</li>
+<li>连续重复块引用复用，减少重复文本反复请求</li>
 <li>可选正则形式的，高度自定义的译前译后字典和明确的优先级</li>
-<li>高度自定义的epub提取</li>
-<li>有效的Api额度耗尽检测</li>
+<li>高度自定义的Epub提取</li>
+<li>基于 BabelDOC 的 PDF 提取和回注</li>
+<li>OpenAI / Claude / Gemini 风格接口协议在同一 API 池中管理</li>
+<li>多 API key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置</li>
+<li>Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文</li>
+<li>依赖 Python 的分词器使用子进程加载，降低主程序长期占用的内存</li>
+<li>TOML / JSON 编辑位置带语法高亮</li>
+<li>有效的 API 额度耗尽检测</li>
 <li>卡片弹出式的完成提示 (仅GUI)</li>
 <li>更好的字典未使用检测</li>
 <li>可自定义的符号检测</li>
 <li>单独生成用以检查的预处理结果</li>
-<li>统合生成的翻译问题概览</li>
-<li>速度更快的rebuild</li>
+<li>统合生成的翻译问题概览，并可选择 json/toml 输出</li>
+<li>速度更快的Rebuild</li>
 <li>更加方便的提示词自定义</li>
 <li>更清晰的字典使用设定</li>
 <li>重翻时附带已知问题</li>
 <li>可按问题分别设置启用状态和比较对象</li>
-<li>对 条件判断/文本处理/文件格式处理 的自定义 Lua/python 语言支持</li>
+<li>对 条件判断/文本处理/文件格式处理 的自定义 Lua/Python 语言支持</li>
 </ul>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/img/notification.png?raw=true" alt="notification"></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/notification.png?raw=true" alt="notification"></p>
+<h3>相比 GalTransl 与旧版 GalTranslPP 的主要变化</h3>
+<p>GalTransl++ 仍然沿用 GalTransl 的项目制、缓存、GPT字典、问题分析和 GUI 工作流，但当前版本把配置拆成了更清晰的 <code>backend</code> / <code>plugins</code> / <code>common</code> / <code>dictionary</code> / <code>problemAnalyze</code> 几部分。旧版中的 <code>OpenAI-Compatible</code>、<code>backendSpecific</code>、<code>preDict/gptDict/postDict</code> 等键已经不再使用。</p>
+<p>当前默认目录也已统一为英文路径，例如 <code>BaseConfig/Dicts</code>、<code>BaseConfig/mecab</code>、<code>BaseConfig/PythonScripts</code>、<code>BaseConfig/PluginConfigs</code>、<code>SampleProject</code>、<code>SampleProject.zip</code>。GUI 资源图片在 <code>GPPGUI/Resource/images</code> 下，README 截图在仓库根目录的 <code>images</code> 下。</p>
+<p>接口层现在按每个 API 项的 <code>protocol</code> 选择 OpenAI / Claude / Gemini 风格请求，Agent 自身仍使用项目内的文本协议来组织模型回复。这样可以保留原先批量翻译的透明日志与缓存模型，同时让 GUI 侧的 API 查询、测试和高级字段更统一。</p>
 <h2>📖 流程说明</h2>
 <h3>GalTransl++ 翻译流程与替换型字典介绍</h3>
 <p>对于熟悉GalTransl的人来说，过渡到GalTransl++ CLI版本可谓易如反掌，所以接下来主要讲GUI。</p>
@@ -108,14 +118,14 @@
 <p>读取json时主要关注两个键，分别为 <code>name</code> 和 <code>message</code>，不同的翻译模式(<code>transEngine</code>)就是对这两个键进行各种不同的处理：</p>
 <h4>翻译模式 (transEngine)</h4>
 <ul>
-<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向AI输入json格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以json格式回复，程序将解析返回的Json。容易出现傻瓜引号解析错误的问题，建议优先使用ForGalTsv。</li>
+<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向AI输入json格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以json格式回复，程序将解析返回的JSON。容易出现傻瓜引号解析错误的问题，建议优先使用ForGalTsv。</li>
 <li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向AI输入TSV格式的句子(包含<code>name</code>和<code>message</code>)并要求AI以TSV格式回复，程序将解析返回的TSV，可能比ForGalJson模式更省token。</li>
 <li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向AI输入和解析的时候都不带<code>name</code>键。</li>
 <li><strong><code># Sakura</code></strong>: 实际翻译模式，向AI输入自然语言形式的句子(包含<code>name</code>和<code>message</code>)，由于Sakura是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
 <li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名(已有则仅更新)。</li>
 <li><strong><code># NameTrans</code></strong>: 翻译人名表(如果没有则先Dump)。</li>
 <li><strong><code># GenDict</code></strong>: 借助AI自动生成术语表，保存在项目文件夹下的 <code>ProjGptDict-Gen.toml</code> 中。</li>
-<li><strong><code># Rebuild</code></strong>: 即使 <code>problem</code> 或 <code>orig</code> 中包含 <code>retranslKey</code> 也不会重翻，只根据缓存重建结果。</li>
+<li><strong><code># Rebuild</code></strong>: 即使 <code>problem</code> 或 <code>orig</code> 中包含 <code>retranslKeys</code> 也不会重翻，只根据缓存重建结果。</li>
 <li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错。</li>
 </ul>
 <h3>缓存机制</h3>
@@ -123,9 +133,9 @@
 <blockquote>
 <p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++会尽可能在这种情况下保证原有缓存的命中(你也可以调整<code>分割缓存查找距离</code>来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
 </blockquote>
-<p><code>retranslKey</code>指的是重翻关键字。</p>
+<p><code>retranslKeys</code> 指的是重翻关键字列表。</p>
 <p>GalTransl++会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。</p>
-<p>一般情况下，如果 <code>problems</code> 中包含设定的<code>retranslKey</code>(当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得删除所有<code>retranslKey</code>，要么使用 <code>Rebuild</code> 模式忽略翻译。</p>
+<p>一般情况下，如果 <code>problems</code> 中包含设定的 <code>retranslKeys</code>(当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 <code>retranslKeys</code>，要么使用 <code>Rebuild</code> 模式忽略翻译。</p>
 <h3>字典系统</h3>
 <p>GalTransl++的字典分为 <strong>译前字典</strong>，<strong>GPT字典</strong>，<strong>译后字典</strong> 三大类。每类字典都有 <strong>通用</strong> 和 <strong>项目</strong> 两种。</p>
 <p>顾名思义，通用字典可以被所有项目所见，项目字典只能被当前项目所见。</p>
@@ -157,37 +167,109 @@
 <h3>一个常见的翻译流程</h3>
 <p>1、  新建项目 -&gt; 输入项目名。<br>
 2、  在新建的项目文件夹中的<code>gt_input</code>文件夹中放入待翻译的文件。<br>
-3、  填入Api和key。<br>
+3、  填入 API URL、模型名称和 API key。<br>
 4、  使用 <code>GenDict</code> 自动生成术语表。<br>
 5、  调整术语表，根据需求修改字典并选择要使用的字典。<br>
 6、  如果文件支持提取name，则可 <code>DumpName</code> 并编辑人名表，也可 <code>NameTrans</code> 翻译人名表。<br>
 7、  选用合适的实际翻译模式进行翻译。<br>
 8、  查看问题。<br>
-9、  根据问题选择编辑<code>retranslKey</code>/<code>skipProblems</code>重建/重翻/修改缓存/...。<br>
+9、  根据问题选择编辑<code>retranslKeys</code>/<code>skipProblems</code>重建/重翻/修改缓存/...。<br>
 10、 重翻 / 重建。<br>
 11、 在<code>gt_output</code>中查收结果。</p>
+<h3>当前配置结构速览</h3>
+<p>项目配置文件为 <code>Config.toml</code>。如果只想看完整示例，可以直接参考 <code>Example/SampleProject/Config.toml</code>。</p>
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[backend]
+apiStrategy = "random" # random / fallback
+apiTimeout = 300
+
+[[backend.apis]]
+enable = true
+apikeys = ["sk-example"]
+apiurl = "https://example.com/v1"
+modelName = "model-name"
+protocol = "openai" # openai / claude / gemini
+thinkingLevel = "off" # off / low / medium / high
+stream = false
+# extraHeadersEnable = false
+# extraBodyEnable = false
+# extraHeaders = { "HTTP-Referer" = "https://example.com" }
+# extraBody = { "reasoning_effort" = "low" }
+</code></pre></div><!--afterend--></div>
+<p><code>common</code> 下的通用设置已经按用途拆分:</p>
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[common]
+maxRequestCount = 4
+problemOverviewFormat = "json" # json / toml
+contextHistorySize = 8
+
+[common.split]
+method = "No" # No / Num / Equal
+num = 10
+cacheSearchDistance = 5
+
+[common.repeatedBlock]
+enabled = false
+minSize = 5
+
+[common.log]
+level = "info"
+inputBlockMaxLines = 10
+problemMaxLines = 3
+glossaryMaxLines = 5
+
+[common.tokenize]
+backend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
+mecabDictDir = "BaseConfig/mecab/mecab-ipadic-utf8"
+spaCyModelName = "ja_core_news_lg"
+stanzaLang = "ja"
+
+[common.agent]
+enabled = false
+maxTurnsPerChunk = 20
+compactContextThresholdBytes = 150000
+searchResultLimit = 80
+contextLinesLimit = 20
+projectNotePath = "ProjectNote.md"
+</code></pre></div><!--afterend--></div>
+<p>字典列表使用复数键:</p>
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[dictionary]
+defaultDictFolder = "BaseConfig/Dicts"
+preDicts = ["PreHUnify.toml", "ProjPreDict.toml"]
+gptDicts = ["CommonGpt.toml", "ProjGptDict.toml", "ProjGptDict-Gen.toml"]
+postDicts = ["PostStd.toml", "ProjPostDict.toml"]
+</code></pre></div><!--afterend--></div>
+<p>常用文件/文本插件也可以在项目配置中直接设置:</p>
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper-toml extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-toml"><code>[plugins.PDF]
+bilingualOutput = true
+babeldocLangOut = "zh-CN"
+
+[plugins.TextLinebreakFix]
+linebreakMode = "preferPunctuation" # preferPunctuation / keepPosition / average / fixedChars / checkOnly
+useTokenizer = false
+tokenizerBackend = "MeCab" # MeCab / spaCy / Stanza / pkuseg
+</code></pre></div><!--afterend--></div>
 <h3>缓存文件结构</h3>
 <p>GalTransl++的缓存中可能包含如下键:</p>
 <ul>
 <li><code>index</code>: 索引顺序，一般不重要。</li>
-<li><code>name</code>: 人名，展示的是预处理后的人名(相当于pre_processed_name)，如果没有则为空。</li>
-<li><code>names</code>: 复数人名，仅见于部分 VNT 提出的文本中。</li>
-<li><code>namePreview</code>: 将输出的译后人名。</li>
-<li><code>namesPreview</code>: 同上</li>
-<li><code>orig</code>: 原文对照，与原文没有任何区别。</li>
-<li><code>preproc</code>: 经过一系列预处理后，即将执行AI翻译前时句子的样子。</li>
-<li><code>pretrans</code>: AI返回的，未经过任何后处理的句子的样子。</li>
-<li><code>otherInfo</code>: 其它附加信息。</li>
-<li><code>problems</code>: 在自动化找错中找出的问题。</li>
-<li><code>translator</code>: 翻译此句子所用的 apikey 的设定模型。</li>
-<li><code>transview</code>: 经过所有后处理之后，将输出的 message。</li>
+<li><code>name</code>: 人名，展示的是预处理后的人名，如果没有则为空。conditionTarget 指代名 <code>name</code></li>
+<li><code>names</code>: 复数人名，仅见于部分 VNT 提出的文本中。conditionTarget 指代名 <code>names</code></li>
+<li><code>name_translated</code>: 将输出的译后人名。</li>
+<li><code>names_translated</code>: 同上。</li>
+<li><code>original_text</code>: 原文对照，与原文没有任何区别。conditionTarget 指代名 <code>orig</code></li>
+<li><code>pre_processed_text</code>: 经过一系列预处理后，即将执行AI翻译前时句子的样子。conditionTarget 指代名 <code>preproc</code></li>
+<li><code>other_info</code>: 其它附加信息。conditionTarget 指代名 <code>otherinfo</code></li>
+<li><code>problems</code>: 在自动化找错中找出的问题。conditionTarget 指代名 <code>problems</code></li>
+<li><code>translated_by</code>: 翻译此句子所用的 apikey 的设定模型。conditionTarget 指代名 <code>transby</code></li>
+<li><code>translated_raw_text</code>: AI返回的，未经过任何后处理的句子的样子。conditionTarget 指代名 <code>transraw</code></li>
+<li><code>translated_view_text</code>: 经过所有后处理之后，将输出的 message。conditionTarget 指代名 <code>transview</code></li>
 </ul>
+<p>开启连续重复块引用复用时，缓存或中间输出中还可能出现 <code>_gpp_ref_to</code>、<code>_gpp_ref_by</code>、<code>_gpp_ref_pending</code> 等调试/引用信息。正式输出文件不会写入这些键。</p>
 <h3>替换型字典语法</h3>
 <ul>
-<li><strong>译前字典</strong> 会搜索并替换 <code>orig</code> 以输出 <code>preproc</code> 提供给AI。</li>
-<li><strong>译后字典</strong> 会搜索并替换 <code>pretrans</code> 以供 <code>transview</code> 最终输出。</li>
+<li><strong>译前字典</strong> 会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
+<li><strong>译后字典</strong> 会搜索并替换 <code>translated_raw_text</code> 以供 <code>translated_view_text</code> 最终输出。</li>
 </ul>
-<p><strong>条件对象</strong> 是指条件正则要作用于的文本，可以是 <code>name</code>, <code>orig</code>, <code>preproc</code>, <code>pretrans</code> 中的任意一个。</p>
+<p><strong>条件对象</strong> 是指条件正则要作用于的文本，可以是 <code>name</code>, <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code> 中的任意一个。</p>
 <p>当 <strong>启用正则</strong> 为 <code>true</code> 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。</p>
 <h2>⚙️ 处理与翻译顺序</h2>
 <p>1、  执行 dprerun 阶段的插件。<br>
@@ -221,11 +303,11 @@ GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前�
 <div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code># 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本(conditionFunc 接收 Sentence，返回bool)
-# &lt;PROJECT_DIR&gt;为代表当前路径字符串的宏
+# %PROJECT_DIR% 为代表当前项目路径字符串的宏
 # conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果没有则条件失败
 retranslKeys = [
-  #[{ conditionScript='&lt;PROJECT_DIR&gt;/Lua/SampleTextPlugin.lua',conditionFunc='funcName'},
-  #{ conditionScript='&lt;PROJECT_DIR&gt;/Python/SampleTextPlugin.py',conditionFunc='funcName'}],
+  #[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},
+  #{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],
   #"残留日文",
   "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
 ]
@@ -288,7 +370,7 @@ LatinIntroduced = { enable = true, base = "preproc", check = "transview" }
 <p>Epub正则设置依然使用toml语法解析配置，并支持两种正则写法: <strong>一般正则</strong>和<strong>回调正则</strong>。</p>
 <h4>一般正则</h4>
 <p>一般正则执行简单的匹配替换，例如使用下面的预处理正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.'预处理正则']]
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.preprocRegex]]
 org = '&lt;ruby&gt;&lt;rb&gt;(.+?)&lt;/rb&gt;&lt;rt&gt;(.+?)&lt;/rt&gt;&lt;/ruby&gt;'
 rep = '[$2/$1]'
 </code></pre>
@@ -310,7 +392,7 @@ rep = '[$2/$1]'
         </svg>
       </i>
     </button><!--beforeend--></div><!--afterend--></div><p>之后再遍历到此处时，「モテる男は[つら/辛]いね」 将被作为一个完整的句子被提取出来。如果之后搭配如下后处理正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.'后处理正则']]
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.postprocRegex]]
 org = '\[([^/\[\]]+?)/([^/\[\]]+?)\]'
 rep = '&lt;ruby&gt;&lt;rb&gt;$2&lt;/rb&gt;&lt;rt&gt;$1&lt;/rt&gt;&lt;/ruby&gt;'
 </code></pre>
@@ -340,7 +422,7 @@ rep = '&lt;ruby&gt;&lt;rb&gt;$2&lt;/rb&gt;&lt;rt&gt;$1&lt;/rt&gt;&lt;/ruby&gt;'
 org = '((?i)(?:&lt;p\b[^&gt;]*&gt;|\G(?!\A))[^&lt;]*\K&lt;(?!/p&gt;)[^&gt;]*&gt;)'
 rep = ''</code></pre>
 <p>我们可以编写如下回调正则，</p>
-<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.'预处理正则']]
+<div><!--beforebegin--><div class="v-md-pre-wrapper copy-code-mode v-md-pre-wrapper- extra-class" extra-attr=""><!--afterbegin--><pre class="v-md-prism-"><code>[[plugins.Epub.preprocRegex]]
 org = '(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'
 callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 </code></pre>
@@ -376,7 +458,8 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 <h3>Python 模块使用及 GPU 加速</h3>
 <p>由于许多有关深度学习的库(如分词器、PDF提取器等)只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。</p>
 <p>当遇到需要使用Python库的情况时(如<strong>翻译PDF</strong>或<strong>使用依赖Python的分词器</strong>)，程序会自动为嵌入式环境下载对应的库。</p>
-<p>但可能在下载之后需要<strong>重启程序</strong>以重新加载Python解释器。请留意日志输出窗口的提示，避免造成程序卡死或崩溃。</p>
+<p>spaCy / Stanza / pkuseg 等分词器会在独立子进程中加载模型，主程序侧只保留调用代理；模型下载完成后会在新的进程中重新导入，以尽量避免分词模型常驻在主解释器里释放不掉。</p>
+<p>PDF 翻译使用 BabelDOC，输出语言码可在 PDF 文件插件配置中设置，例如 <code>zh-CN</code>、<code>zh-TW</code>、<code>en</code>、<code>ja</code>、<code>ko</code>。单语输出文件使用原文件名，双语输出文件使用 <code>原文件名.dual.pdf</code>。</p>
 <p>然而在不启用 GPU加速 的情况下使用如 <code>spaCy最好的trf模型</code> 或 <code>Stanza</code> 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。</p>
 <p><strong>请确保自己有一定的动手和思考能力 &amp;&amp; 一块还不错的显卡！</strong></p>
 <h4>为 <code>Stanza</code> 启用 GPU加速</h4>
@@ -415,7 +498,7 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 注意: 如果你已经安装了torch，最好先卸载它：<code>python -m pip uninstall torch</code></li>
 <li>5、 重装 Stanza，<code>python -m pip uninstall stanza</code>  <code>python -m pip install stanza</code></li>
 <li>6、 尝试运行 <code>BaseConfig\PythonScripts\check_stanza_gpu.py</code>，如果提示成功，则代表所有配置均已就绪。</li>
-<li>7、 此时打开 <code>BaseConfig\PythonScripts\tokenizer_stanza.py</code> 文件，将 <code>self.nlp = stanza.Pipeline(lang=model_name, processors='tokenize,pos,ner', use_gpu=False, verbose=False)</code> 中的 <code>use_gpu</code> 参数改为 <code>True</code>，即可为 Stanza 启用 GPU加速。</li>
+<li>7、 此时打开 <code>BaseConfig\PythonScripts\tokenizer_stanza.py</code> 文件，将脚本中的 GPU 开关改为 <code>True</code>，即可为 Stanza 启用 GPU加速；GPU 不可用时会直接报错。</li>
 </ul>
 <h4>为 <code>spaCy</code> 启用 GPU加速</h4>
 <ul>
@@ -428,7 +511,7 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 <h3>Lua/Python 内嵌</h3>
 <p>这两种语言在程序内均为热更新(只要没有被其它任务占用)，更改后重新运行即可看到新的结果。</p>
 <p>可以非常方便的编写自定义的 <strong>文件解析/文本处理/任务结束后处理</strong> 等脚本。</p>
-<p>具体的代码示例详见 <code>Example/Lua</code> 及 <code>Example/Python</code>，工具函数/类函数的签名需要你自行翻阅一下 <code>LuaManager.cpp</code> 和 <code>PythonManager.cpp</code>。</p>
+<p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。插件侧的 <code>Sentence</code> 字段使用小驼峰/短名风格，缓存 JSON 输出仍使用下划线键名；以示例插件和 <code>gpp_plugin_api.pyi</code> 为准。</p>
 <div>
 <h2>其它程序说明</h2>
 <h3>自定义主页Popular卡片</h3>
@@ -453,7 +536,7 @@ start /b 要运行文件的文件名
 <p><strong>注意:</strong> 不要在程序运行的时候修改 <code>GlobalConfig.toml</code>，会被刷掉，请关闭程序后再进行修改。</p>
 <h3>可在新窗口打开的标签页</h3>
 <p>GUI界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:</p>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/img/tabView.png?raw=true" alt="tabView"></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/tabView.png?raw=true" alt="tabView"></p>
 <h3>快捷清屏</h3>
 <p>可以使用快捷键(默认为 Ctrl+L)清除当前日志页面的输出。</p>
 <p>更改快捷键请手动修改 BaseConfig/GlobalConfig.toml 中 <code>clearLogShortcut</code> 所存储的值。</p>
@@ -464,7 +547,7 @@ start /b 要运行文件的文件名
 <h3>添加文件处理器 (Translator)</h3>
 <p>如你所见，GalTransl++的核心代码文件数量<s>不超过二十个</s>(现在大抵是超了)，接口也十分简单。</p>
 <p>由于所有的文件处理器需直接/间接继承自 <code>ITranslator</code>，如无特殊情况，一般直接继承 <code>NormalJsonTranslator</code> 即可。</p>
-<p>这样只需要将相应文件提取为json，并重设提取文件夹为 <code>NormalJsonTranlator</code> 的 <code>inputDir</code> 文件夹，</p>
+<p>这样只需要将相应文件提取为json，并重设提取文件夹为 <code>NormalJsonTranslator</code> 的 <code>inputDir</code> 文件夹，</p>
 <p>重设期望获取译后json的文件夹为其 <code>outputDir</code> 文件夹即可。</p>
 <p>每当其翻译完一个文件时(如果有单文件分割则只在文件合并后)，其会调用成员变量中的函数对象 <code>m_onFileProcessed</code>(线程安全)，</p>
 <p>可以借此来判断文件的写回时机，具体示例可见 <code>EpubTranslator</code>。</p>
@@ -472,10 +555,10 @@ start /b 要运行文件的文件名
 <h3>添加插件处理器 (Plugin)</h3>
 <p>插件只需满足 <code>PPlugin</code> 约束即可。</p>
 <ul>
-<li><strong>对于 dprerun/prerun 阶段</strong>：如果是非过滤型插件，原则上只允许修改 <code>preproc</code>。如果是过滤型插件，可以将 <code>complete</code> 置为 <code>true</code>，并负责填充 <code>pretrans</code>。如有需要，也可以将 <code>notAnalyzeProblem</code> 置为 <code>true</code> 来阻止对此句的问题分析。</li>
+<li><strong>对于 dprerun/prerun 阶段</strong>：如果是非过滤型插件，原则上只允许修改 <code>preproc</code>。如果是过滤型插件，可以将 <code>transCompleted</code> 置为 <code>true</code>，并负责填充 <code>transraw</code>。如有需要，也可以将 <code>problemAnalyzeDisabled</code> 置为 <code>true</code> 来阻止对此句的问题分析。</li>
 <li><strong>对于 postrun/dpostrun 阶段</strong>：原则上只允许修改 <code>transview</code>。</li>
 </ul>
-<p>任意插件均可在 <code>otherInfo</code> 中插入键以在缓存中附带信息。</p>
+<p>任意插件均可在 <code>otherInfo</code> / <code>otherinfo</code> 中插入键以在缓存的 <code>other_info</code> 中附带信息。</p>
 <p>具体示例可见 <code>TextLinebreakFix</code> 和 <code>TextFull2Half</code>。</p>
 <p>需要注册的工厂函数为 <code>registerPlugins</code>。</p>
 <h3>其它注意事项</h3>

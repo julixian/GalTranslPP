@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="IPlugin.ixx">
@@ -10,7 +10,7 @@
     <ClCompile Include="TextLinebreakFix.ixx">
       <Filter>textPlugins</Filter>
     </ClCompile>
-    <ClCompile Include="APIPool.ixx">
+    <ClCompile Include="ApiPool.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="Dictionary.ixx">
@@ -25,10 +25,10 @@
     <ClCompile Include="AgentToolCommon.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="AgentSourceView.cpp">
+    <ClCompile Include="AgentCommonSourceView.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="AgentSourceView.ixx">
+    <ClCompile Include="AgentCommonSourceView.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="PDFTranslator.ixx">
@@ -100,7 +100,7 @@
     <ClCompile Include="TextLinebreakFix.cpp">
       <Filter>textPlugins</Filter>
     </ClCompile>
-    <ClCompile Include="APIPool.cpp">
+    <ClCompile Include="ApiPool.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="EpubTranslator.cpp">
@@ -127,7 +127,10 @@
     <ClCompile Include="NameTranslator.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.Agent.cpp">
+    <ClCompile Include="NormalJsonTranslator.TransAgent.cpp">
+      <Filter>filePlugins\NormalJsonTranslator</Filter>
+    </ClCompile>
+    <ClCompile Include="NormalJsonTranslator.TransAgent.ixx">
       <Filter>filePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.Batch.cpp">
@@ -151,10 +154,10 @@
     <ClCompile Include="DictionaryGenerator.ixx">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="DictionaryReviewAgent.cpp">
+    <ClCompile Include="DictionaryGenerator.ReviewAgent.cpp">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="DictionaryReviewAgent.ixx">
+    <ClCompile Include="DictionaryGenerator.ReviewAgent.ixx">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
     <ClCompile Include="DictionaryReviewIndex.cpp">
@@ -163,10 +166,10 @@
     <ClCompile Include="DictionaryReviewIndex.ixx">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="APITool.cpp">
+    <ClCompile Include="ApiTool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
-    <ClCompile Include="APITool.ixx">
+    <ClCompile Include="ApiTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslatorHelperTool.cpp">
@@ -201,6 +204,9 @@
     </ClCompile>
     <ClCompile Include="GPPI18n.ixx">
       <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="SafeQueue.ixx">
+      <Filter>Tools\Utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

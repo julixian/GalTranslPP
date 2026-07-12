@@ -1,8 +1,8 @@
 #ifndef PASETTINGSPAGE_H
 #define PASETTINGSPAGE_H
 
-#include <toml.hpp>
 #include "BasePage.h"
+#include <toml.hpp>
 
 class PASettingsPage : public BasePage
 {
@@ -10,7 +10,6 @@ class PASettingsPage : public BasePage
 
 public:
     explicit PASettingsPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~PASettingsPage() override;
 
 private:
 
@@ -18,4 +17,4 @@ private:
     toml::ordered_value& m_projectConfig;
 };
 
-#endif // COMMONSETTINGSPAGE_H
+#endif

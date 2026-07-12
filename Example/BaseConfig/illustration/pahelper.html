@@ -111,11 +111,11 @@
                 <code>&lt;PROJECT_DIR&gt;</code> 是一个代表当前项目路径字符串的宏。
             </p>
             <p>
-                <code>conditionTarget</code> 加前缀 <code>prev_</code> 或 <code>next_</code> 可表示前/后句，如 <code>prev_prev_orig_text</code> 表示上上句原文，如果不存在则条件失败。
+                <code>conditionTarget</code> 加前缀 <code>prev_</code> 或 <code>next_</code> 可表示前/后句，如 <code>prev_prev_orig</code> 表示上上句原文，如果不存在则条件失败。
             </p>
             <pre><code class="language-toml"><span class="code-key">retranslKeys</span> = [
-  <span class="code-comment">#[{ conditionScript='&lt;PROJECT_DIR&gt;/Lua/MySampleTextPlugin.lua',conditionFunc='funcName'},</span>
-  <span class="code-comment">#{ conditionScript='&lt;PROJECT_DIR&gt;/Python/MySampleTextPlugin.py',conditionFunc='funcName'}],</span>
+  <span class="code-comment">#[{ conditionScript='&lt;PROJECT_DIR&gt;/Lua/SampleTextPlugin.lua',conditionFunc='funcName'},</span>
+  <span class="code-comment">#{ conditionScript='&lt;PROJECT_DIR&gt;/Python/SampleTextPlugin.py',conditionFunc='funcName'}],</span>
   <span class="code-string">"残留日文"</span>,
   <span class="code-string">"翻译失败"</span>, <span class="code-comment"># 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]</span>
 ]</code></pre>
@@ -132,29 +132,20 @@
             <pre><code class="language-toml"><span class="code-key">skipProblems</span> = [
   <span class="code-comment"># "^引入拉丁字母: Live$"  # 不加任何条件</span>
   <span class="code-comment"># 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem</span>
-  [ <span class="code-string">'引入拉丁字母'</span>, { <span class="code-key">conditionTarget</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'モチモチ'</span>},
-    { <span class="code-key">conditionTarget</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'Q弹'</span>}],
+  [ <span class="code-string">'引入拉丁字母'</span>, { <span class="code-key">conditionTarget</span> = <span class="code-string">'preproc'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'モチモチ'</span>},
+    { <span class="code-key">conditionTarget</span> = <span class="code-string">'transview'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'Q弹'</span>}],
 ]</code></pre>
         </section>
 
-        <section id="overwritecompareobj">
-            <h2>问题比较对象设定 语法示例</h2>
+        <section id="problemrules">
+            <h2>问题开关与比较对象设定示例</h2>
             <p>
-                此配置用于指定不同问题检查时所使用的比较源（<code>base</code>）和检查目标（<code>check</code>）。
+                <code>ProblemName</code> 使用英文，GUI 只翻译按钮显示名。<code>enable = false</code> 时可以只保留开关字段。
             </p>
-            <pre><code class="language-toml"><span class="code-key">overwriteCompareObj</span> = [
-    { <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'残留日文'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'标点错漏'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'引入拉丁字母'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'引入韩文'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'orig_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'丢失换行'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'orig_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'多加换行'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'字典未使用'</span> },
-    { <span class="code-key">base</span> = <span class="code-string">'preproc_text'</span>, <span class="code-key">check</span> = <span class="code-string">'trans_preview'</span>, <span class="code-key">problemKey</span> = <span class="code-string">'语言不通'</span> }
-]</code></pre>
-            <p>
-                例如，<code>{ problemKey = '比原文长严格', base = 'orig_text', check = 'trans_preview' }</code> 的意思是：当 <code>trans_preview</code> 比 <code>orig_text</code> 严格长时，在 <code>problem</code> 中留下对应的问题。
-            </p>
+            <pre><code class="language-toml">[<span class="code-key">problemAnalyze</span>]
+<span class="code-key">HighFrequency</span> = { <span class="code-key">enable</span> = <span class="code-bool">false</span> }
+<span class="code-key">PunctuationMismatch</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"orig"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }
+<span class="code-key">LatinIntroduced</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"preproc"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }</code></pre>
         </section>
 
     </div>

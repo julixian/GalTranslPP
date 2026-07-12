@@ -8,7 +8,6 @@ class UpdateWidget : public QWidget
     Q_OBJECT
 public:
     explicit UpdateWidget(QWidget* parent = nullptr);
-    ~UpdateWidget() override;
 };
 
-#endif // UPDATEWIDGET_H
+#endif

@@ -14,33 +14,36 @@ import Tool;
 
 namespace fs = std::filesystem;
 
-// 递归遍历 Gumbo 树以提取文本节点
-void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
-    if (node->type == GUMBO_NODE_TEXT) {
-        std::string text = node->v.text.text;
-        if (text.empty() || text.find_first_not_of(" \t\n\r") == std::string::npos) {
+namespace
+{
+    // 递归遍历 Gumbo 树以提取文本节点
+    void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
+        if (node->type == GUMBO_NODE_TEXT) {
+            std::string text = node->v.text.text;
+            if (text.empty() || text.find_first_not_of(" \t\n\r") == std::string::npos) {
+                return;
+            }
+            EpubTextNodeInfo info;
+            info.offset = node->v.text.start_pos.offset;
+            info.length = text.length();
+            sentences.push_back({ std::move(text), info });
             return;
         }
-        EpubTextNodeInfo info;
-        info.offset = node->v.text.start_pos.offset;
-        info.length = text.length();
-        sentences.push_back({ std::move(text), info });
-        return;
-    }
 
-    if (node->type != GUMBO_NODE_ELEMENT || node->v.element.tag == GUMBO_TAG_SCRIPT || node->v.element.tag == GUMBO_TAG_STYLE) {
-        return;
-    }
+        if (node->type != GUMBO_NODE_ELEMENT || node->v.element.tag == GUMBO_TAG_SCRIPT || node->v.element.tag == GUMBO_TAG_STYLE) {
+            return;
+        }
 
-    const GumboVector* children = &node->v.element.children;
-    for (unsigned int i = 0; i < children->length; ++i) {
-        extractTextNodes(static_cast<GumboNode*>(children->data[i]), sentences);
+        const GumboVector* children = &node->v.element.children;
+        for (unsigned int i = 0; i < children->length; ++i) {
+            extractTextNodes(static_cast<GumboNode*>(children->data[i]), sentences);
+        }
     }
 }
 
 EpubTranslator::~EpubTranslator() 
 {
-    m_logger->info(gppTr("EpubTranslator.~EpubTranslator", "所有任务已完成！EpubTranslator 结束。")
+    m_logger->info(gppTr("EpubTranslator.~EpubTranslator", "所有任务已完成！EpubTranslator 结束")
         .toStdString());
 }
 
@@ -63,18 +66,17 @@ void EpubTranslator::epubInit()
     m_tempRebuildDir = L"cache" / m_projectDir.filename() / L"epub_rebuild";
 
     try {
-        const auto projectConfig = toml::uparse(m_projectDir / L"config.toml");
+        const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
         const auto pluginConfig = toml::uparse(filePluginConfigPath / L"Epub.toml");
 
-        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.双语显示");
-        m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.原文颜色");
-        m_originalTextScale = std::to_string(parseToml<double>(projectConfig, pluginConfig, "plugins.Epub.缩小比例"));
+        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.bilingualOutput");
+        m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.originalTextColor");
+        m_originalTextScale = std::to_string(parseToml<double>(projectConfig, pluginConfig, "plugins.Epub.originalTextScale"));
 
         auto readRegexArr = [](const toml::array& regexArr, std::vector<RegexPattern>& patterns)
             {
                 for (const auto& regexTbl : regexArr) {
-                    const std::string regexOrg = regexTbl.contains("org") ? toml::find_or(regexTbl, "org", "") :
-                        toml::find_or(regexTbl, "searchStr", "");
+                    const std::string regexOrg = toml::find_or(regexTbl, "org", "");
                     if (regexOrg.empty()) {
                         continue;
                     }
@@ -85,7 +87,7 @@ void EpubTranslator::epubInit()
                     regexPattern.org->setPattern(regexOrg).setModifier(compileModifier).compile();
                     regexPattern.rep->setModifier(replaceModifier);
                     if (!regexPattern.org) {
-                        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "预处理正则编译失败: %1")
+                        throw std::runtime_error(gppTr("EpubTranslator.epubInit", "预处理正则 `%1` 编译失败")
                             .arg(regexOrg)
                             .toStdString());
                     }
@@ -102,13 +104,11 @@ void EpubTranslator::epubInit()
                             if (group == 0) {
                                 continue;
                             }
-                            const std::string callbackOrg = callbackTbl.contains("org") ? toml::find_or(callbackTbl, "org", "") :
-                                toml::find_or(callbackTbl, "searchStr", "");
+                            const std::string callbackOrg = toml::find_or(callbackTbl, "org", "");
                             if (callbackOrg.empty()) {
                                 continue;
                             }
-                            const std::string callbackRep = callbackTbl.contains("rep") ? toml::find_or(callbackTbl, "rep", "") :
-                                toml::find_or(callbackTbl, "replaceStr", "");
+                            const std::string callbackRep = toml::find_or(callbackTbl, "rep", "");
                             const std::string callbackCompileModifier = toml::find_or(callbackTbl, "compile_modifier", defaultRegCompileModifier);
                             const std::string callbackReplaceModifier = toml::find_or(callbackTbl, "replace_modifier", defaultRegReplaceModifier);
                             callbackPattern.org->setPattern(callbackOrg).setModifier(callbackCompileModifier).compile();
@@ -116,7 +116,7 @@ void EpubTranslator::epubInit()
                             if (!callbackPattern.org) {
                                 throw std::runtime_error(gppTr(
                                     "EpubTranslator.epubInit",
-                                    "预处理正则回调正则编译失败: [%1]")
+                                    "预处理正则回调正则 `%1` 编译失败")
                                     .arg(callbackOrg)
                                     .toStdString());
                             }
@@ -125,8 +125,7 @@ void EpubTranslator::epubInit()
                         }
                     }
                     else {
-                        const std::string& regexRep = regexTbl.contains("rep") ? toml::find_or(regexTbl, "rep", "") :
-                            toml::find_or(regexTbl, "replaceStr", "");
+                        const std::string& regexRep = toml::find_or(regexTbl, "rep", "");
                         regexPattern.rep->setReplaceWith(regexRep);
                     }
 
@@ -152,7 +151,7 @@ void EpubTranslator::epubBeforeRun()
     for (const auto& dir : { m_epubInputDir, m_epubOutputDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
-            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已创建目录: %1")
+            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已创建目录: [%1]")
                 .arg(wide2Ascii(dir))
                 .toStdString());
         }
@@ -207,7 +206,7 @@ void EpubTranslator::epubBeforeRun()
         const fs::path bookRebuildPath = m_tempRebuildDir / relEpubPath.parent_path() / relEpubPath.stem(); // cache/myproject/epub_rebuild/dir1/book1
 
         // 解压 EPUB 文件
-        m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "正在解压 %1 到 %2")
+        m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "正在解压 [%1] 到 [%2]")
             .arg(wide2Ascii(epubPath))
             .arg(wide2Ascii(bookUnpackPath))
             .toStdString());
@@ -218,10 +217,10 @@ void EpubTranslator::epubBeforeRun()
         createParent(bookRebuildPath);
         fs::copy(bookUnpackPath, bookRebuildPath, fs::copy_options::recursive);
         const fs::path relBookDir = relEpubPath.parent_path() / relEpubPath.stem(); // dir1/book1
-        const std::vector<std::wstring> extensionsToProcess{ L".html", L".xhtml", L".htm", L".xhtm" };
+        static constexpr std::array<std::wstring_view, 4> extensionsToProcess{ L".html", L".xhtml", L".htm", L".xhtm" };
         for (const auto& htmlEntry : fs::recursive_directory_iterator(bookUnpackPath)) {
             if (htmlEntry.is_regular_file() &&
-                std::ranges::any_of(extensionsToProcess, [&](const std::wstring& ext)
+                std::ranges::any_of(extensionsToProcess, [&](const auto& ext)
 	                {
                         return isSameExtension(htmlEntry.path(), ext);
 	                })
@@ -237,7 +236,9 @@ void EpubTranslator::epubBeforeRun()
                 extractTextNodes(output->root, sentences);
                 gumbo_destroy_output(&kGumboDefaultOptions, output);
 
-                if (sentences.empty()) continue;
+                if (sentences.empty()) {
+                    continue;
+                }
 
                 // 创建json相对路径
                 const fs::path relativePath = fs::relative(htmlEntry.path(), bookUnpackPath); // OEBPS/chapter1.html
@@ -262,35 +263,29 @@ void EpubTranslator::epubBeforeRun()
                 std::vector<EpubTextNodeInfo> metadata;
                 json j = json::array();
                 for (const auto& [s, m] : sentences) {
-                    // TODO: 添加可选正则区分 name 和 message
                     j.push_back({ {"message", s} });
                     metadata.push_back(m);
                 }
                 info.metadata = std::move(metadata);
 
-                createParent(m_inputDir / relJsonPath); // cache/myproject/epub_json_input/dir1/book1/OEBPS/chapter1.json
                 std::ofstream ofs;
-                ofs.open(m_inputDir / relJsonPath, std::ios::binary);
-                ofs << j.dump(2);
-                ofs.close();
-
-                createParent(showNormalHtmlPath);
-                ofs.open(showNormalHtmlPath, std::ios::binary);
-                ofs << info.content;
-                ofs.close();
+                atomicOutputFile(ofs, m_inputDir / relJsonPath, j.dump(2));
+                atomicOutputFile(ofs, showNormalHtmlPath, info.content);
             }
         }
     }
 
     m_onFileProcessed = [this, regexReplace](fs::path relProcessedFile)
         {
-            if (!m_jsonToInfoMap.contains(relProcessedFile)) {
+            std::unique_lock<std::mutex> lock(m_onFileProcessedMutex);
+            const auto it = m_jsonToInfoMap.find(relProcessedFile);
+            if (it == m_jsonToInfoMap.end()) {
                 m_logger->error(gppTr("EpubTranslator.epubBeforeRun", "[文件 %1] 未找到对应的元数据")
                     .arg(wide2Ascii(relProcessedFile))
                     .toStdString());
                 return;
             }
-            const JsonInfo& info = m_jsonToInfoMap[relProcessedFile];
+            const JsonInfo& info = it->second;
             const fs::path& epubPath = info.epubPath;
             absl::flat_hash_map<fs::path, bool>& jsonsMap = m_epubToJsonsMap[epubPath];
             jsonsMap[relProcessedFile] = true;
@@ -304,7 +299,9 @@ void EpubTranslator::epubBeforeRun()
                 return;
             }
 
+            lock.unlock();
             // 这本epub的所有文件都翻译完毕，可以开始重组
+            std::ifstream ifs;
             for (const auto& relJsonPath : jsonsMap | std::views::keys) {
 
                 const JsonInfo& jsonInfo = m_jsonToInfoMap[relJsonPath];
@@ -313,17 +310,14 @@ void EpubTranslator::epubBeforeRun()
                 const auto& metadatas = jsonInfo.metadata;
 
                 // 替换 HTML 内容的逻辑
-                std::ifstream ifs;
                 const std::string& originalContent = jsonInfo.content;
 
-                ifs.open(m_outputDir / relJsonPath, std::ios::binary);
-                json translatedDatas = json::parse(ifs);
-                ifs.close();
+                const json translatedDatas = parseJson(m_outputDir / relJsonPath, ifs);
 
                 if (metadatas.size() != translatedDatas.size()) {
                     throw std::runtime_error(gppTr(
                         "EpubTranslator.epubBeforeRun",
-                        "[文件 %1] 元数据和翻译数据数量不匹配，无法重组(%2meta/%3trans)")
+                        "[文件 %1] 元数据和翻译数据数量不匹配，无法重组 (%2 meta / %3 trans)")
                         .arg(wide2Ascii(rebuiltHtmlPath))
                         .arg(metadatas.size())
                         .arg(translatedDatas.size())
@@ -338,7 +332,8 @@ void EpubTranslator::epubBeforeRun()
                     newContent.append(originalContent.c_str() + lastPos, metadata.offset - lastPos);
                     const std::string translatedMessage = translatedData["message"].get<std::string>();
                     const std::string replacement = m_bilingualOutput ?
-                        std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>", translatedMessage, m_originalTextColor, m_originalTextScale,
+                        std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>",
+                            translatedMessage, m_originalTextColor, m_originalTextScale,
                             std::string_view(originalContent.data() + metadata.offset, metadata.length))
                         : translatedMessage;
                     newContent.append(replacement);
@@ -352,15 +347,10 @@ void EpubTranslator::epubBeforeRun()
                 regexReplace(m_postRegexPatterns, newContent);
 
                 std::ofstream ofs;
-                ofs.open(rebuiltHtmlPath, std::ios::binary);
-                ofs << newContent;
-                ofs.close();
+                atomicOutputFile(ofs, rebuiltHtmlPath, newContent);
 
                 const fs::path& showNormalPostHtmlPath = jsonInfo.normalPostPath;
-                createParent(showNormalPostHtmlPath);
-                ofs.open(showNormalPostHtmlPath, std::ios::binary);
-                ofs << newContent;
-                ofs.close();
+                atomicOutputFile(ofs, showNormalPostHtmlPath, newContent);
             }
 
             const fs::path relEpubPath = fs::relative(epubPath, m_epubInputDir);
@@ -377,7 +367,7 @@ void EpubTranslator::epubBeforeRun()
             if (!za) {
                 throw std::runtime_error(gppTr(
                     "EpubTranslator.epubBeforeRun",
-                    "无法创建 EPUB (zip) 文件: %1")
+                    "无法创建 EPUB (zip) 文件: [%1]")
                     .arg(error)
                     .toStdString());
             }
@@ -415,7 +405,7 @@ void EpubTranslator::epubBeforeRun()
             else {
                 m_logger->warn(gppTr(
                     "EpubTranslator.epubBeforeRun",
-                    "在源目录 %1 中未找到 mimetype 文件，生成的 EPUB 可能无效。")
+                    "在源目录 [%1] 中未找到 mimetype 文件，生成的 EPUB 可能无效")
                     .arg(wide2Ascii(bookRebuildPath))
                     .toStdString());
             }
@@ -439,7 +429,7 @@ void EpubTranslator::epubBeforeRun()
                         zip_close(za);
                         throw std::runtime_error(gppTr(
                             "EpubTranslator.epubBeforeRun",
-                            "无法为文件 %1 创建 zip_source_file")
+                            "无法为文件 [%1] 创建 zip_source_file")
                             .arg(entryName)
                             .toStdString());
                     }
@@ -448,7 +438,7 @@ void EpubTranslator::epubBeforeRun()
                         zip_close(za);
                         throw std::runtime_error(gppTr(
                             "EpubTranslator.epubBeforeRun",
-                            "无法将文件 %1 添加到 zip")
+                            "无法将文件 [%1] 添加到 zip")
                             .arg(entryName)
                             .toStdString());
                     }
@@ -462,7 +452,7 @@ void EpubTranslator::epubBeforeRun()
                     .toStdString());
             }
 
-            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已重建 EPUB 文件: %1")
+            m_logger->info(gppTr("EpubTranslator.epubBeforeRun", "已重建 EPUB 文件: [%1]")
                 .arg(wide2Ascii(outputEpubPath))
                 .toStdString());
         };

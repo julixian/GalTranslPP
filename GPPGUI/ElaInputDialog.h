@@ -11,11 +11,10 @@ class ElaInputDialog : public ElaContentDialog
 
 public:
     explicit ElaInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent = nullptr);
-    ~ElaInputDialog() override;
 
-private Q_SLOTS:
-    virtual void onRightButtonClicked() override;
-    virtual void onMiddleButtonClicked() override;
+public Q_SLOTS:
+	void onRightButtonClicked() override;
+	void onMiddleButtonClicked() override;
 
 private:
     QString& m_result;
@@ -23,4 +22,4 @@ private:
 
 };
 
-#endif // ELAINPUTDIALOG_H
+#endif

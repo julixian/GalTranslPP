@@ -14,7 +14,7 @@
 #include "ElaMenuBar.h"
 #include "ElaText.h"
 
-#include "APISettingsPage.h"
+#include "ApiSettingsPage.h"
 #include "PluginSettingsPage.h"
 #include "CommonSettingsPage.h"
 #include "PASettingsPage.h"
@@ -35,7 +35,7 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     setTitleVisible(false);
 
     try {
-        m_projectConfig = toml::uoparse(m_projectDir / L"config.toml");
+        m_projectConfig = toml::uoparse(m_projectDir / L"Config.toml");
     }
     catch (...) {
         m_projectConfig = toml::ordered_table{};
@@ -48,10 +48,6 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     setupUi();
 }
 
-ProjectSettingsPage::~ProjectSettingsPage()
-{
-
-}
 
 void ProjectSettingsPage::apply2Config()
 {
@@ -67,14 +63,12 @@ void ProjectSettingsPage::apply2Config()
     m_promptSettingsPage->apply2Config();
 
     try {
-        const std::string configStr = toml::format(m_projectConfig);
-        std::ofstream ofs(m_projectDir / L"config.toml", std::ios::binary);
-        ofs << configStr;
-        ofs.close();
+        atomicOutputFile(m_projectDir / L"Config.toml", toml::format(m_projectConfig));
     }
     catch (const toml::exception& e) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, ascii2Wide(std::string_view(e.what())).c_str(), L"Toml 格式化错误", MB_ICONERROR);
+        MessageBoxW(nullptr, ascii2Wide(e.what()).c_str(),
+            tr("Toml 格式化错误").toStdWString().c_str(),MB_ICONERROR);
 #endif
     }
 }
@@ -110,7 +104,7 @@ void ProjectSettingsPage::setupUi()
     mainLayout->setSpacing(0);
 
     QHBoxLayout* navigationLayout = new QHBoxLayout(centralWidget);
-    m_settingsTitle = new ElaText(tr("API设置"), centralWidget);
+    m_settingsTitle = new ElaText(tr("Api设置"), centralWidget);
     m_settingsTitle->setContentsMargins(0, 10, 0, 0);
     m_settingsTitle->setTextPixelSize(18);
     m_settingsTitle->setFixedWidth(110);
@@ -119,7 +113,7 @@ void ProjectSettingsPage::setupUi()
     navigationLayout->addStretch();
 
     ElaMenu* foundamentalSettingMenu = new ElaMenu(centralWidget);
-    QAction* apiSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::MagnifyingGlassPlus, tr("API设置"));
+    QAction* apiSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::MagnifyingGlassPlus, tr("Api设置"));
     QAction* commonSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::BoxCheck, tr("一般设置"));
     QAction* paSettingAction = foundamentalSettingMenu->addElaIconAction(ElaIconType::Question, tr("问题分析"));
 
@@ -170,7 +164,7 @@ void ProjectSettingsPage::setupUi()
     connect(apiSettingAction, &QAction::triggered, this, [=]()
         {
             m_stackedWidget->setCurrentIndex(0);
-            m_settingsTitle->setText(tr("API设置"));
+            m_settingsTitle->setText(tr("Api设置"));
         });
     connect(commonSettingAction, &QAction::triggered, this, [=]()
         {
@@ -239,7 +233,7 @@ void ProjectSettingsPage::setupUi()
 
 void ProjectSettingsPage::createPages()
 {
-    m_apiSettingsPage = new APISettingsPage(m_projectConfig, m_stackedWidget);
+    m_apiSettingsPage = new ApiSettingsPage(m_projectConfig, m_stackedWidget);
     m_commonSettingsPage = new CommonSettingsPage(m_projectConfig, m_stackedWidget);
     m_paSettingsPage = new PASettingsPage(m_projectConfig, m_stackedWidget);
     m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
@@ -269,7 +263,7 @@ void ProjectSettingsPage::createPages()
     connect(m_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::onRefreshProjectConfig);
     connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [=](const QString& newProjectName)
         {
-            Q_EMIT changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
+            Q_EMIT this->changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
         });
 }
 
@@ -280,7 +274,7 @@ void ProjectSettingsPage::onRefreshProjectConfig()
         return;
     }
     try {
-        m_projectConfig = toml::uoparse(m_projectDir / L"config.toml");
+        m_projectConfig = toml::uoparse(m_projectDir / L"Config.toml");
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft,

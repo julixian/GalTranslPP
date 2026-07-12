@@ -13,7 +13,7 @@ export
 {
 	enum class LinebreakFixMode
 	{
-		None, Average, FixCharCount, KeepPositions, PreferPunctuations, NotFix
+		None, Average, FixCharCount, KeepPositions, PreferPunctuations, CheckOnly
 	};
 
 	class TextLinebreakFix {
@@ -25,7 +25,6 @@ export
 		std::shared_mutex m_tokenizeCacheMapMutex;
 		absl::flat_hash_map<std::string, WordPosVec> m_tokenizeCacheMap;
 
-		absl::btree_set<std::string_view> m_excludePuncts;
 		std::shared_ptr<spdlog::logger> m_logger;
 
 		LinebreakFixMode m_mode;
@@ -36,7 +35,7 @@ export
 		bool m_forceFix;
 		bool m_useTokenizer;
 
-		std::vector<std::string> splitIntoTokens(const std::string& text);
+		std::vector<std::string_view> splitIntoTokenViews(std::string_view str);
 
 	public:
 

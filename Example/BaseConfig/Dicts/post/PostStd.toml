@@ -1,0 +1,24 @@
+[[normalDict]]
+org = 'somehow'
+rep = '不知怎的'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '娘家'
+rep = '本家'
+conditionTarget = 'preproc'
+conditionReg = '実家'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '有夫之妇'
+rep = '人妻'
+conditionTarget = 'preproc'
+conditionReg = '人妻|ひとづま'
+isReg = false
+priority = 0
+

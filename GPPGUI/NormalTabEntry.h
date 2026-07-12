@@ -1,11 +1,11 @@
 #ifndef NORMALTABENTRY_H
 #define NORMALTABENTRY_H
 
+#include "NormalDictModel.h"
 #include <QList>
 #include <QSharedPointer>
 #include <QStackedWidget>
 #include <filesystem>
-#include "NormalDictModel.h"
 
 namespace fs = std::filesystem;
 
@@ -24,4 +24,4 @@ struct NormalTabEntry {
     NormalTabEntry() : withdrawList(new QList<NormalDictEntry>) {}
 };
 
-#endif // NORMALTABENTRY_H
+#endif

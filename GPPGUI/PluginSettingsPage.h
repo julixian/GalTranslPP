@@ -1,9 +1,9 @@
 #ifndef PLUGINSETTINGSPAGE_H
 #define PLUGINSETTINGSPAGE_H
 
+#include "BasePage.h"
 #include <QList>
 #include <toml.hpp>
-#include "BasePage.h"
 
 class QVBoxLayout;
 class PluginItemWidget;
@@ -19,8 +19,6 @@ class PluginSettingsPage : public BasePage
 
 public:
     explicit PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~PluginSettingsPage() override;
-    virtual void apply2Config() override;
 
 private Q_SLOTS:
     void onItemMoveUp(PluginItemWidget* item);
@@ -37,11 +35,10 @@ private:
     fs::path& m_projectDir;
     toml::ordered_value& m_projectConfig;
 
-private:
     // 以下为各个插件的设置页面
     TF2HCfgPage* m_tf2hCfgPage = nullptr;
     TLFCfgPage* m_tlfCfgPage = nullptr;
     SkipTransCfgPage* m_skipTransCfgPage = nullptr;
 };
 
-#endif // PLUGINSETTINGSPAGE_H
+#endif

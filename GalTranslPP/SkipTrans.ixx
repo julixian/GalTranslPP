@@ -16,7 +16,7 @@ export
     class SkipTrans {
     private:
         std::vector<std::string> m_hKeys;
-        std::vector<CheckSeCondFunc> m_skipKeys;
+        std::vector<CheckSeCondNormalFunc> m_skipKeys;
         std::shared_ptr<spdlog::logger> m_logger;
         bool m_skipH;
 

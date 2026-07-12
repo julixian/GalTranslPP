@@ -1,10 +1,10 @@
 module;
 
 #define PYBIND11_HEADERS
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <cpp-base64/base64.h>
 #include <toml.hpp>
-#include <sol/sol.hpp>
 
 module SkipTrans;
 
@@ -26,45 +26,51 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
             return;
         }
 
+        bool reversePriority = false;
         const fs::path pluginConfigPath = [&]()
 	        {
                 fs::path ret = textPluginConfigPath / std::format(L"SkipTrans-{}.toml", ascii2Wide(pluginRunTimeNames[m_runTime]));
                 if (!fs::exists(ret)) {
                     ret = textPluginConfigPath / L"SkipTrans.toml";
                 }
+                else {
+                    reversePriority = true;
+                }
                 return ret;
             }();
         const auto pluginConfig = toml::uparse(pluginConfigPath);
 
-        m_skipH = parseToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH");
+        m_skipH = parseToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH", reversePriority);
         if (m_skipH) {
-            const auto& hKeysBase64 = parseToml<std::string>(projectConfig, pluginConfig, "plugins.SkipTrans.hKeys");
+            const auto& hKeysBase64 = parseToml<std::string>(projectConfig, pluginConfig,
+                "plugins.SkipTrans.hKeys", reversePriority);
             const std::string hKeysStr = base64_decode(hKeysBase64);
             m_hKeys = splitString(hKeysStr, '\n');
         }
 
-        const auto& skipKeys = parseToml<toml::array>(projectConfig, pluginConfig, "plugins.SkipTrans.skipKeys");
+        const auto& skipKeys = parseToml<toml::array>(projectConfig, pluginConfig,
+            "plugins.SkipTrans.skipKeys", reversePriority);
         for (const auto& elem : skipKeys) {
             if (elem.is_string()) {
                 GppConditionPattern pattern;
-                pattern.conditionTarget = CachePart::PreprocText;
+                pattern.conditionTarget = CachePart::Preproc;
                 pattern.conditionReg.setPattern(elem.as_string()).setModifier(defaultRegCompileModifier).compile();
                 if (!pattern.conditionReg) {
                     throw std::runtime_error(gppTr(
                         "SkipTrans.SkipTrans",
-                        "skipKeys 正则表达式 [%1] 编译失败")
+                        "skipKeys 正则表达式 `%1` 编译失败")
                         .arg(elem.as_string())
                         .toStdString());
                 }
                 GPPCondition gppCondition{ std::move(pattern) };
-                CheckSeCondFunc checkFunc = [condr = std::move(gppCondition)](const Sentence* se) -> bool
+                CheckSeCondNormalFunc checkFunc = [condr = std::move(gppCondition)](const Sentence* se) -> bool
                     {
                         return checkGppCondition(condr, se);
                     };
                 m_skipKeys.push_back(std::move(checkFunc));
             }
             else if (elem.is_array() || elem.is_table()) {
-                CheckSeCondFunc checkFunc = getCheckSeCondFunc(elem, projectDir, pythonManager, luaManager, m_logger);
+                CheckSeCondNormalFunc checkFunc = getCheckSeCondFunc(elem, projectDir, pythonManager, luaManager, m_logger);
                 m_skipKeys.push_back(std::move(checkFunc));
             }
             else {
@@ -86,10 +92,10 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
 }
 
 void SkipTrans::processSkipSentence(Sentence* se, const std::string& info) {
-    se->pre_translated_text = se->pre_processed_text;
-    se->other_info["SkipTrans"] = info;
-    se->complete = true;
-    se->notAnalyzeProblem = true;
+    se->pretrans = se->preproc;
+    se->otherInfo["SkipTrans"] = info;
+    se->transCompleted = true;
+    se->problemAnalyzeDisabled = true;
 }
 
 void SkipTrans::skipImpl(Sentence* se) {
@@ -97,7 +103,7 @@ void SkipTrans::skipImpl(Sentence* se) {
         m_skipH &&
         std::ranges::any_of(m_hKeys, [&](const auto& key)
             {
-                if (se->pre_processed_text.contains(key)) {
+                if (se->preproc.contains(key)) {
                     processSkipSentence(se, "skipH: " + key);
                     return true;
                 }

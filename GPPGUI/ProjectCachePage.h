@@ -1,19 +1,16 @@
 #ifndef PROJECTCACHEPAGE_H
 #define PROJECTCACHEPAGE_H
 
-#include <filesystem>
-#include <cstdint>
-#include <toml.hpp>
 
+#include "BasePage.h"
 #include <QDateTime>
 #include <QList>
 #include <QMap>
-#include <QStandardItemModel>
 #include <QSet>
-
+#include <QStandardItemModel>
+#include <filesystem>
 #include <nlohmann/json.hpp>
-
-#include "BasePage.h"
+#include <toml.hpp>
 
 class ElaPlainTextEdit;
 class ElaIconButton;
@@ -21,7 +18,7 @@ class ElaPushButton;
 class ElaText;
 class ElaListView;
 class ElaLineEdit;
-class ElaComboBox;
+class ElaNoWheelComboBox;
 class ElaCheckBox;
 class QButtonGroup;
 class QSplitter;
@@ -38,7 +35,6 @@ class ProjectCachePage : public BasePage
 
 public:
     explicit ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~ProjectCachePage() override;
 
     void ensureCacheFilesLoaded();
     void refreshCacheFiles();
@@ -164,10 +160,10 @@ private:
     ElaLineEdit* m_localSearchEdit = nullptr;
     ElaCheckBox* m_filterProblemsCheck = nullptr;
     ElaLineEdit* m_globalSearchEdit = nullptr;
-    ElaComboBox* m_globalSearchField = nullptr;
+    ElaNoWheelComboBox* m_globalSearchField = nullptr;
     ElaLineEdit* m_replaceQueryEdit = nullptr;
     ElaLineEdit* m_replaceWithEdit = nullptr;
-    ElaComboBox* m_replaceField = nullptr;
+    ElaNoWheelComboBox* m_replaceField = nullptr;
 
     ElaText* m_cacheDirLabel = nullptr;
     ElaText* m_currentFileLabel = nullptr;
@@ -186,4 +182,4 @@ private:
     ElaPushButton* m_replaceExecuteButton = nullptr;
 };
 
-#endif // PROJECTCACHEPAGE_H
+#endif

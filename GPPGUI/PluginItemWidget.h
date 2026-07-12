@@ -6,7 +6,7 @@
 class ElaDoubleText;
 class ElaToggleSwitch;
 class ElaIconButton;
-class ElaComboBox;
+class ElaNoWheelComboBox;
 
 class PluginItemWidget : public ElaScrollPageArea
 {
@@ -14,7 +14,6 @@ class PluginItemWidget : public ElaScrollPageArea
 
 public:
     explicit PluginItemWidget(const QString& pluginName, const QString& runTimeStr, QWidget* parent = nullptr);
-    ~PluginItemWidget() override;
 
     // 公共方法，用于获取当前项的状态
     QString getPluginName() const;
@@ -33,7 +32,7 @@ Q_SIGNALS:
 
 private:
     // 内部控件
-    ElaComboBox* m_pluginRunTimeBox = nullptr;
+    ElaNoWheelComboBox* m_pluginRunTimeBox = nullptr;
     ElaDoubleText* m_pluginNameLabel = nullptr;
     ElaToggleSwitch* m_enableSwitch = nullptr;
     ElaIconButton* m_moveUpButton = nullptr;
@@ -41,4 +40,4 @@ private:
     ElaIconButton* m_settingsButton = nullptr;
 };
 
-#endif // PLUGINITEMWIDGET_H
+#endif

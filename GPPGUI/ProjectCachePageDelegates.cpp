@@ -12,9 +12,8 @@
 #include "ElaTheme.h"
 #include "ElaToolTip.h"
 
-namespace ProjectCachePagePrivate {
-
-
+namespace ProjectCachePagePrivate
+{
     int sentenceIndexOf(const json& object, int fallback)
     {
         if (object.is_object() && object.contains("index") && object["index"].is_number_integer()) {
@@ -27,10 +26,11 @@ namespace ProjectCachePagePrivate {
     {
         text.replace("\r", "\\r");
         text.replace("\n", "\\n");
-        if (text.size() <= maxChars) {
-            return text;
+        const int limit = maxChars < 0 ? 0 : maxChars;
+        if (text.size() > limit) {
+            text = text.left(limit) + "...";
         }
-        return text.left(maxChars - 3) + "...";
+        return text;
     }
 
     QColor themeColor(ElaThemeType::ThemeColor color)

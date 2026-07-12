@@ -10,8 +10,8 @@ export
 {
     struct ProblemCompareObj {
         bool use = false;
-        CachePart base = CachePart::OrigText;
-        CachePart check = CachePart::TransPreview;
+        CachePart base = CachePart::Orig;
+        CachePart check = CachePart::Transview;
     };
 
 	struct Problems {
@@ -46,13 +46,13 @@ export
 
 	public:
 
-        explicit ProblemAnalyzer(const std::unique_ptr<GptDictionary>& gptDictionary, const std::string& targetLang, const std::shared_ptr<spdlog::logger>& logger);
+        explicit ProblemAnalyzer(const std::unique_ptr<GptDictionary>& gptDictionary, const std::string& targetLang,
+            const std::string& punctSet, const std::string& codePage, double langProbability,
+            const std::shared_ptr<spdlog::logger>& logger);
 
         ~ProblemAnalyzer();
 
-		void loadProblems(const std::vector<std::string>& problemList, const std::string& punctSet, const std::string& codePage, double langProbability);
-
-        void overwriteCompareObj(const std::string& problemKey, const std::string& base, const std::string& check);
+		void setProblemRule(const std::string& problemKey, bool enabled, const std::string& base, const std::string& check);
 
 		void analyze(Sentence* sentence);
 	};

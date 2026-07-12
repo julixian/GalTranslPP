@@ -28,15 +28,27 @@ ProblemAnalyzer::~ProblemAnalyzer() {
     simpleConverter.reset();
 }
 
-ProblemAnalyzer::ProblemAnalyzer(const std::unique_ptr<GptDictionary>& gptDictionary, const std::string& targetLang, const std::shared_ptr<spdlog::logger>& logger)
-    : m_gptDictionary(gptDictionary), m_targetLang(targetLang), m_logger(logger) 
+ProblemAnalyzer::ProblemAnalyzer(
+    const std::unique_ptr<GptDictionary>& gptDictionary,
+    const std::string& targetLang,
+    const std::string& punctSet,
+    const std::string& codePage,
+    double langProbability,
+    const std::shared_ptr<spdlog::logger>& logger
+)
+    : m_gptDictionary(gptDictionary),
+    m_punctsToCheck(splitIntoGraphemes(punctSet)),
+    m_probabilityThreshold(langProbability),
+    m_codePage(codePage),
+    m_targetLang(targetLang),
+    m_logger(logger)
 {
 
 }
 
 void ProblemAnalyzer::analyze(Sentence* sentence) {
-    if (sentence->translated_preview.empty()) {
-        if (!sentence->pre_processed_text.empty()) {
+    if (sentence->transview.empty()) {
+        if (!sentence->preproc.empty()) {
             sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "翻译为空").toStdString());
         }
         return;
@@ -97,7 +109,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
     if (m_problems.introLatin.use) {
         const std::string& origText = chooseStringRef(sentence, m_problems.introLatin.base);
         const std::string& transView = chooseStringRef(sentence, m_problems.introLatin.check);
-        if (std::string latins = extractLatin(transView); !latins.empty() && extractLatin(origText).empty()) {
+        if (std::string latins = extractLatin(transView); !latins.empty() && !hasLatin(origText)) {
             sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入拉丁字母: %1")
                 .arg(latins)
                 .toStdString());
@@ -108,7 +120,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
     if (m_problems.introHangul.use) {
         const std::string& origText = chooseStringRef(sentence, m_problems.introHangul.base);
         const std::string& transView = chooseStringRef(sentence, m_problems.introHangul.check);
-        if (std::string hanguls = extractHangul(transView); !hanguls.empty() && extractHangul(origText).empty()) {
+        if (std::string hanguls = extractHangul(transView); !hanguls.empty() && !hasHangul(origText)) {
             sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "引入韩文: %1")
                 .arg(hanguls)
                 .toStdString());
@@ -124,14 +136,14 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         const std::string& transView = chooseStringRef(sentence, m_problems.introTraditionalChinese.check);
         if (const std::string simplifiedView = simpleConverter->Convert(transView); simplifiedView != transView) { // 这一步主要是为了初筛加速
             std::string traditionalGraphemes;
-            for (const auto& origGrapheme : splitIntoGraphemes(transView)
-                | std::views::filter([&](const std::string& g) { return !excludeTraditionalCharList.contains(g); }))
+            for (const std::string_view origGrapheme : splitIntoGraphemeViews(transView)
+                | std::views::filter([&](std::string_view g) { return !excludeTraditionalCharList.contains(g); }))
             {
                 // 经过初筛之后的实际检查还是分单个文字进行的，我测下来这样效果会好一点，大概是因为 opencc/icu 这些库本来搞这个的目的
                 // 是真的用来繁简转换而不是用来测有没有『繁体字』的，让 opencc 联系上下文反而会出现一些误报
                 // 这实际上是放宽了对繁体字的检测，有待观察吧
                 // 但加了不少速是真的（）
-                if (const std::string simplifiedGrapheme = simpleConverter->Convert(origGrapheme); simplifiedGrapheme != origGrapheme)
+                if (const std::string simplifiedGrapheme = simpleConverter->Convert(origGrapheme.data(), origGrapheme.size()); simplifiedGrapheme != origGrapheme)
                 {
                     traditionalGraphemes += std::format("({} -> {})", origGrapheme, simplifiedGrapheme);
                 }
@@ -146,11 +158,11 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
 
     // 换行符不匹配
     if (m_problems.linebreakLost.use) {
-        if (!sentence->originalLinebreak.empty()) {
+        if (!sentence->linebreak.empty()) {
             const std::string& origText = chooseStringRef(sentence, m_problems.linebreakLost.base);
             const std::string& transView = chooseStringRef(sentence, m_problems.linebreakLost.check);
-            int origLinebreaks = countSubstring(origText, m_problems.linebreakLost.base == CachePart::OrigText ? sentence->originalLinebreak : "<br>");
-            int transLinebreaks = countSubstring(transView, m_problems.linebreakLost.check == CachePart::TransPreview ? sentence->originalLinebreak : "<br>");
+            int origLinebreaks = countSubstring(origText, m_problems.linebreakAdded.base == CachePart::Orig ? sentence->linebreak : "<br>");
+            int transLinebreaks = countSubstring(transView, m_problems.linebreakAdded.check == CachePart::Transview ? sentence->linebreak : "<br>");
             if (origLinebreaks > transLinebreaks) {
                 sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "丢失换行(%1/%2)")
                     .arg(transLinebreaks)
@@ -160,11 +172,11 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         }
     }
     if (m_problems.linebreakAdded.use) {
-        if (!sentence->originalLinebreak.empty()) {
+        if (!sentence->linebreak.empty()) {
             const std::string& origText = chooseStringRef(sentence, m_problems.linebreakAdded.base);
             const std::string& transView = chooseStringRef(sentence, m_problems.linebreakAdded.check);
-            int origLinebreaks = countSubstring(origText, m_problems.linebreakLost.base == CachePart::OrigText ? sentence->originalLinebreak : "<br>");
-            int transLinebreaks = countSubstring(transView, m_problems.linebreakLost.check == CachePart::TransPreview ? sentence->originalLinebreak : "<br>");
+            int origLinebreaks = countSubstring(origText, m_problems.linebreakLost.base == CachePart::Orig ? sentence->linebreak : "<br>");
+            int transLinebreaks = countSubstring(transView, m_problems.linebreakLost.check == CachePart::Transview ? sentence->linebreak : "<br>");
             if (origLinebreaks < transLinebreaks) {
                 sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "多加换行(%1/%2)")
                     .arg(transLinebreaks)
@@ -239,7 +251,6 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                     if (result.language == chrome_lang_id::NNetLanguageIdentifier::kUnknown) {
                         break;
                     }
-                    //m_logger->trace("CLD3: {} -> {} ({}, {}, {})", origText, result.language, result.is_reliable, result.probability, result.proportion);
                     if (result.probability < m_probabilityThreshold) {
                         continue;
                     }
@@ -256,7 +267,6 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                     if (result.language == chrome_lang_id::NNetLanguageIdentifier::kUnknown) {
                         break;
                     }
-                    //m_logger->trace("CLD3: {} -> {} ({}, {}, {})", transView, result.language, result.is_reliable, result.probability, result.proportion);
                     if (result.probability < m_probabilityThreshold) {
                         continue;
                     }
@@ -289,127 +299,55 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
 
 }
 
-void ProblemAnalyzer::loadProblems(const std::vector<std::string>& problemList, const std::string& punctSet, const std::string& codePage, double langProbability)
+void ProblemAnalyzer::setProblemRule(const std::string& problemKey, bool enabled, const std::string& base, const std::string& check)
 {
-    for (const auto& problem : problemList)
-    {
-        if (problem.empty()) {
-            continue;
-        }
-        if (problem == "词频过高") {
-            m_problems.highFrequency.use = true;
-        }
-        else if (problem == "标点错漏") {
-            m_problems.punctsMiss.use = true;
-            m_punctsToCheck = splitIntoGraphemes(punctSet);
-        }
-        else if (problem == "残留日文") {
-            m_problems.remainJp.use = true;
-        }
-        else if (problem == "引入拉丁字母") {
-            m_problems.introLatin.use = true;
-        }
-        else if (problem == "引入韩文") {
-            m_problems.introHangul.use = true;
-        }
-        else if (problem == "引入繁体字") {
-            m_problems.introTraditionalChinese.use = true;
-        }
-        else if (problem == "丢失换行") {
-            m_problems.linebreakLost.use = true;
-        }
-        else if (problem == "多加换行") {
-            m_problems.linebreakAdded.use = true;
-        }
-        else if (problem == "比原文长") {
-            m_problems.longer.use = true;
-        }
-        else if (problem == "比原文长严格") {
-            m_problems.strictlyLonger.use = true;
-        }
-        else if (problem == "字典未使用") {
-            m_problems.dictUnused.use = true;
-        }
-        else if (problem == "语言不通") {
-            m_problems.notTargetLang.use = true;
-            m_probabilityThreshold = langProbability;
-        }
-        else if (problem == "非法字符") {
-            m_problems.invalidChar.use = true;
-            m_codePage = codePage;
-        }
-        else {
-            throw std::invalid_argument(gppTr("ProblemAnalyzer.loadProblems", "未知问题: %1")
-                .arg(problem)
-                .toStdString());
-        }
+    ProblemCompareObj* obj = nullptr;
+    if (problemKey == "HighFrequency") {
+        obj = &m_problems.highFrequency;
     }
-}
-
-void ProblemAnalyzer::overwriteCompareObj(const std::string& problemKey, const std::string& base, const std::string& check)
-{
-    auto saveCachePart = [](ProblemCompareObj& obj, const std::string& base, const std::string& check)
-        {
-            obj.base = chooseCachePart(base);
-            obj.check = chooseCachePart(check);
-            if (obj.base == CachePart::None) {
-                throw std::invalid_argument(gppTr(
-                    "ProblemAnalyzer.overwriteCompareObj",
-                    "未知缓存键: %1")
-                    .arg(base)
-                    .toStdString());
-            }
-            if (obj.check == CachePart::None) {
-                throw std::invalid_argument(gppTr(
-                    "ProblemAnalyzer.overwriteCompareObj",
-                    "未知缓存键: %1")
-                    .arg(check)
-                    .toStdString());
-            }
-        };
-
-    if (problemKey == "词频过高") {
-        saveCachePart(m_problems.highFrequency, base, check);
+    else if (problemKey == "PunctuationMismatch") {
+        obj = &m_problems.punctsMiss;
     }
-    else if (problemKey == "标点错漏") {
-        saveCachePart(m_problems.punctsMiss, base, check);
+    else if (problemKey == "JapaneseRemains") {
+        obj = &m_problems.remainJp;
     }
-    else if (problemKey == "残留日文") {
-        saveCachePart(m_problems.remainJp, base, check);
+    else if (problemKey == "LatinIntroduced") {
+        obj = &m_problems.introLatin;
     }
-    else if (problemKey == "引入拉丁字母") {
-        saveCachePart(m_problems.introLatin, base, check);
+    else if (problemKey == "HangulIntroduced") {
+        obj = &m_problems.introHangul;
     }
-    else if (problemKey == "引入韩文") {
-        saveCachePart(m_problems.introHangul, base, check);
+    else if (problemKey == "TraditionalChineseIntroduced") {
+        obj = &m_problems.introTraditionalChinese;
     }
-    else if (problemKey == "引入繁体字") {
-        saveCachePart(m_problems.introTraditionalChinese, base, check);
+    else if (problemKey == "LinebreakLost") {
+        obj = &m_problems.linebreakLost;
     }
-    else if (problemKey == "丢失换行") {
-        saveCachePart(m_problems.linebreakLost, base, check);
+    else if (problemKey == "LinebreakAdded") {
+        obj = &m_problems.linebreakAdded;
     }
-    else if (problemKey == "多加换行") {
-        saveCachePart(m_problems.linebreakAdded, base, check);
+    else if (problemKey == "LongerThanSource") {
+        obj = &m_problems.longer;
     }
-    else if (problemKey == "比原文长") {
-        saveCachePart(m_problems.longer, base, check);
+    else if (problemKey == "StrictlyLongerThanSource") {
+        obj = &m_problems.strictlyLonger;
     }
-    else if (problemKey == "比原文长严格") {
-        saveCachePart(m_problems.strictlyLonger, base, check);
+    else if (problemKey == "DictionaryUnused") {
+        obj = &m_problems.dictUnused;
     }
-    else if (problemKey == "字典未使用") {
-        saveCachePart(m_problems.dictUnused, base, check);
+    else if (problemKey == "NotTargetLanguage") {
+        obj = &m_problems.notTargetLang;
     }
-    else if (problemKey == "语言不通") {
-        saveCachePart(m_problems.notTargetLang, base, check);
-    }
-    else if (problemKey == "非法字符") {
-        saveCachePart(m_problems.invalidChar, base, check);
+    else if (problemKey == "InvalidCharacter") {
+        obj = &m_problems.invalidChar;
     }
     else {
-        throw std::invalid_argument(gppTr("ProblemAnalyzer.overwriteCompareObj", "不支持的问题比较对象覆写: %1")
+        throw std::invalid_argument(gppTr("ProblemAnalyzer.setProblemRule", "未知问题: %1")
             .arg(problemKey)
             .toStdString());
     }
+
+    obj->use = enabled;
+    obj->base = chooseCachePart(base);
+    obj->check = chooseCachePart(check);
 }

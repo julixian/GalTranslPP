@@ -17,22 +17,27 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
 {
     try {
 
+        bool reversePriority = false;
         const fs::path pluginConfigPath = [&]()
 	        {
 		        fs::path ret = textPluginConfigPath / std::format(L"TextFull2Half-{}.toml", ascii2Wide(pluginRunTimeNames[m_runTime]));
                 if (!fs::exists(ret)) {
 	                ret = textPluginConfigPath / L"TextFull2Half.toml";
                 }
+                else {
+                    reversePriority = true;
+                }
                 return ret;
             }();
         const auto pluginConfig = toml::uparse(pluginConfigPath);
 
-        m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.是否替换标点");
-        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.是否反向替换");
+        m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.replacePunctuation", reversePriority);
+        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.reverseConversion", reversePriority);
 
         createConversionMap();
 
-        const std::string excludeChars = parseToml<std::string>(projectConfig, pluginConfig, "plugins.TextFull2Half.不转换的字符");
+        const std::string excludeChars = parseToml<std::string>(projectConfig, pluginConfig,
+            "plugins.TextFull2Half.excludeChars", reversePriority);
         const icu::UnicodeString uExcludeChars = icu::UnicodeString::fromUTF8(excludeChars);
         for (int32_t i = 0; i < uExcludeChars.length();) {
             const UChar32 c = uExcludeChars.char32At(i);
@@ -41,7 +46,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
         }
 
         const auto notConvertRegStrs = 
-            parseToml<std::vector<std::string>>(projectConfig, pluginConfig, "plugins.TextFull2Half.notConvertRegs");
+            parseToml<std::vector<std::string>>(projectConfig, pluginConfig, "plugins.TextFull2Half.notConvertRegs", reversePriority);
         for (const auto& regStr : notConvertRegStrs) {
             jpc::Regex reg(regStr, defaultRegCompileModifier);
             if (!reg) {
@@ -188,7 +193,7 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
     	    | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;}) 
     	    | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
         if (!notConvertedChars.empty()) {
-            se->other_info[m_notConvertedCharsKey] = notConvertedChars;
+            se->otherInfo[m_notConvertedCharsKey] = notConvertedChars;
         }
     }
 
@@ -245,26 +250,26 @@ void TextFull2Half::dPreRun(Sentence* se) {
     if (m_runTime != PluginRunTime::DPre) {
         return;
     }
-    se->pre_processed_text = convertText(se->pre_processed_text, se, false);
+    se->preproc = convertText(se->preproc, se, false);
 }
 
 void TextFull2Half::preRun(Sentence* se) {
     if (m_runTime != PluginRunTime::Pre) {
         return;
     }
-    se->pre_processed_text = convertText(se->pre_processed_text, se, true);
+    se->preproc = convertText(se->preproc, se, true);
 }
 
 void TextFull2Half::postRun(Sentence* se) {
     if (m_runTime != PluginRunTime::Post) {
         return;
     }
-    se->translated_preview = convertText(se->translated_preview, se, true);
+    se->transview = convertText(se->transview, se, true);
 }
 
 void TextFull2Half::dPostRun(Sentence* se) {
     if (m_runTime != PluginRunTime::DPost) {
         return;
     }
-    se->translated_preview = convertText(se->translated_preview, se, false);
+    se->transview = convertText(se->transview, se, false);
 }

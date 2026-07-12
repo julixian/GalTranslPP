@@ -1,0 +1,17 @@
+[plugins.TextLinebreakFix]
+linebreakMode = "preferPunctuation" # 可选: [preferPunctuation|keepPosition|average|fixedChars|checkOnly]
+priorityThreshold = 0.245           # 仅用于 preferPunctuation。
+segmentThreshold = 21               # 仅用于 fixedChars。
+forceFix = false
+errorThreshold = 28                 # 单行超过该字符数时添加问题。
+
+useTokenizer = false
+tokenizerBackend = "MeCab" # 可选: MeCab, spaCy, Stanza, pkuseg
+# 目标语言模型/词典。
+# mecab-chinese:
+# https://github.com/panyang/MeCab-Chinese/tree/master/data/v0.3
+mecabDictDir = "BaseConfig/mecab/mecab-chinese"
+# https://spacy.io/models
+spaCyModelName = "zh_core_web_lg"
+# https://stanfordnlp.github.io/stanza/ner_models.html
+stanzaLang = "zh"

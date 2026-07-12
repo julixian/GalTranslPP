@@ -12,10 +12,9 @@
 本项目在继承了GalTransl基本功能的基础上，包括但不限于对以下模块进行了优化：
 
 * 更好的单文件分割缓存命中
-* 优先标点的换行修复
 * 可选正则形式的，高度自定义的译前译后字典和明确的优先级
 * 高度自定义的Epub提取
-* 有效的API额度耗尽检测
+* 有效的Api额度耗尽检测
 * 卡片弹出式的完成提示 (仅GUI)
 * 更好的字典未使用检测
 * 可自定义的符号检测
@@ -25,7 +24,7 @@
 * 更加方便的提示词自定义
 * 更清晰的字典使用设定
 * 重翻时附带已知问题
-* 可自定义的问题比较对象
+* 可按问题分别设置启用状态和比较对象
 * 对 条件判断/文本处理/文件格式处理 的自定义 Lua/python 语言支持
 
 ![notification](img/notification.png?raw=true)
@@ -51,9 +50,9 @@ GalTransl++无论处理哪种文件格式，最后都是统一化为json来读�
 * **`# ForGalTsv`**: 实际翻译模式，向AI输入TSV格式的句子(包含`name`和`message`)并要求AI以TSV格式回复，程序将解析返回的TSV，可能比ForGalJson模式更省token。
 * **`# ForNovelTsv`**: 实际翻译模式，和 `ForGalTsv` 的区别主要是变动提示词，向AI输入和解析的时候都不带`name`键。
 * **`# Sakura`**: 实际翻译模式，向AI输入自然语言形式的句子(包含`name`和`message`)，由于Sakura是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。
-* **`# DumpName`**: 提取所有的 `name` 键，在项目文件夹下生成 `人名替换表.toml` 以供统一替换人名(已有则仅更新)。
+* **`# DumpName`**: 提取所有的 `name` 键，在项目文件夹下生成 `NameTable.toml` 以供统一替换人名(已有则仅更新)。
 * **`# NameTrans`**: 翻译人名表(如果没有则先Dump)。
-* **`# GenDict`**: 借助AI自动生成术语表，保存在项目文件夹下的 `项目GPT字典-生成.toml` 中。
+* **`# GenDict`**: 借助AI自动生成术语表，保存在项目文件夹下的 `ProjGptDict-Gen.toml` 中。
 * **`# Rebuild`**: 即使 `retranslKey` 命中也不会重翻，只根据缓存重建结果。
 * **`# ShowNormal`**: 保存预处理后的内容及句子到项目文件夹下带 `show_normal` 字段的文件夹中，如Epub格式下可生成预处理后的html/xhtml文件以及生成的json，可用于检查和排错。
 
@@ -87,22 +86,22 @@ GalTransl++的字典分为 **译前字典**，**GPT字典**，**译后字典** �
 
 * **文件对应关系**
   * 通用字典可以有多个，而项目字典和人名表每个项目各只有一个。
-  * GUI会读取项目文件夹下 `人名替换表.toml` 来作为 **人名表** 中的数据。
-  * 读取 `项目字典_译前.toml` 来作为 **项目译前字典** 中的数据。
-  * 读取 `项目GPT字典.toml` 和 `项目GPT字典-生成.toml` 并合并其中的数据来作为 **项目GPT字典** 中的数据。
-  * 读取 `项目字典_译后.toml` 来作为 **项目译后字典** 中的数据。
+  * GUI会读取项目文件夹下 `NameTable.toml` 来作为 **人名表** 中的数据。
+  * 读取 `ProjPreDict.toml` 来作为 **项目译前字典** 中的数据。
+  * 读取 `ProjGptDict.toml` 和 `ProjGptDict-Gen.toml` 并合并其中的数据来作为 **项目GPT字典** 中的数据。
+  * 读取 `ProjPostDict.toml` 来作为 **项目译后字典** 中的数据。
 
 * **编辑模式与保存逻辑**
   * 人名表和字典都分别有 **纯文本模式** 和 **表模式**，具体在翻译时用哪个模式的数据会在你按开始翻译按钮时决定。
-  * 例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 **人名表(表模式)** 中的数据保存到 `人名替换表.toml` 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
+  * 例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 **人名表(表模式)** 中的数据保存到 `NameTable.toml` 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
   * 按 **刷新** 将会重新从项目文件夹中的 toml 文件读取数据。如果你在GUI中还有修改了没有保存的数据，请务必先确认备份情况再刷新。
-  * 按 **保存** 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 **项目GPT字典** 时会 **删除**  `项目GPT字典-生成.toml` 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑`项目GPT字典-生成.toml`。
+  * 按 **保存** 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 **项目GPT字典** 时会 **删除**  `ProjGptDict-Gen.toml` 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑`ProjGptDict-Gen.toml`。
 
 ### 一个常见的翻译流程
 
 1、  新建项目 -> 输入项目名。  
 2、  在新建的项目文件夹中的`gt_input`文件夹中放入待翻译的文件。  
-3、  填入API和key。  
+3、  填入Api和key。  
 4、  使用 `GenDict` 自动生成术语表。  
 5、  调整术语表，根据需求修改字典并选择要使用的字典。  
 6、  如果文件支持提取name，则可 `DumpName` 并编辑人名表，也可 `NameTrans` 翻译人名表。  
@@ -134,7 +133,7 @@ GalTransl++的缓存中可能包含如下键:
 * **译前字典** 会搜索并替换 `original_text` 以输出 `pre_processed_text` 提供给AI。
 * **译后字典** 会搜索并替换 `pre_translated_text` 以供 `translated_preview` 最终输出。
 
-**条件对象** 是指条件正则要作用于的文本，可以是 `name`, `orig_text`, `preproc_text`, `pretrans_text` 中的任意一个。
+**条件对象** 是指条件正则要作用于的文本，可以是 `name`, `orig`, `preproc`, `pretrans`, `transview` 中的任意一个。
 
 当 **启用正则** 为 `true` 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。
 
@@ -178,15 +177,15 @@ GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前�
 
 retranslKeys 语法示例
 
-```
+```toml
 # 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本(conditionFunc 接收 Sentence，返回bool)
-# <PROJECT_DIR>为代表当前路径字符串的宏
-# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig_text 表示上上句原文，如果没有则条件失败
+# %PROJECT_DIR%为代表当前路径字符串的宏
+# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果没有则条件失败
 retranslKeys = [
-  #[{ conditionScript='<PROJECT_DIR>/Lua/MySampleTextPlugin.lua',conditionFunc='funcName'},
-  #{ conditionScript='<PROJECT_DIR>/Python/MySampleTextPlugin.py',conditionFunc='funcName'}],
+  #[{ conditionScript='%PROJECT_DIR%/Lua/SampleTextPlugin.lua',conditionFunc='funcName'},
+  #{ conditionScript='%PROJECT_DIR%/Python/SampleTextPlugin.py',conditionFunc='funcName'}],
   #"残留日文",
   "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
 ]
@@ -194,35 +193,27 @@ retranslKeys = [
 
 skipProblems 语法示例
 
-```
+```toml
 # 正则表达式列表，如果一条 problem 能被以下任一正则 search 通过，则不加入 problems 列表
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
 skipProblems = [
   # "^引入拉丁字母: Live$"  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
-  [ '引入拉丁字母', { conditionTarget = 'preproc_text', conditionReg = 'モチモチ'},
-    { conditionTarget = 'trans_preview', conditionReg = 'Q弹'}],
+  [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
+    { conditionTarget = 'transview', conditionReg = 'Q弹'}],
 ]
 ```
 
-问题比较对象设定 语法示例:
+问题开关与比较对象设定示例:
 
+```toml
+[problemAnalyze]
+HighFrequency = { enable = false }
+PunctuationMismatch = { enable = true, base = "orig", check = "transview" }
+LatinIntroduced = { enable = true, base = "preproc", check = "transview" }
 ```
-overwriteCompareObj = [
-    { check = 'trans_preview', problemKey = '残留日文' },
-    { base = 'preproc_text', check = 'trans_preview', problemKey = '标点错漏' },
-    { base = 'preproc_text', check = 'trans_preview', problemKey = '引入拉丁字母' },
-    { base = 'preproc_text', check = 'trans_preview', problemKey = '引入韩文' },
-    { base = 'orig_text', check = 'trans_preview', problemKey = '丢失换行' },
-    { base = 'orig_text', check = 'trans_preview', problemKey = '多加换行' },
-    { base = 'preproc_text', check = 'trans_preview', problemKey = '字典未使用' },
-    { base = 'preproc_text', check = 'trans_preview', problemKey = '语言不通' }
-]
-```
-如 `{ problemKey = '比原文长严格', base = 'orig_text', check = 'trans_preview' }`， 
-
-意思是当 trans\_preview 比 orig\_text 严格长时，在 problem 中留下对应的问题。
+`ProblemName` 使用英文，GUI 只翻译按钮显示名。`enable = false` 时可以只保留开关字段。
 </details>
 
 <details>
@@ -252,17 +243,17 @@ Epub正则设置依然使用toml语法解析配置，并支持两种正则写法
 #### 一般正则
 
 一般正则执行简单的匹配替换，例如使用下面的预处理正则，
-```
+```toml
 [[plugins.Epub.preprocRegex]]
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'
 ```
 则上面的句子会被替换为:
-```
+```html
 <p class="class_s2C-0">「モテる男は[つら/辛]いね」</p>
 ```
 之后再遍历到此处时，「モテる男は\[つら/辛\]いね」 将被作为一个完整的句子被提取出来。如果之后搭配如下后处理正则，
-```
+```toml
 [[plugins.Epub.postprocRegex]]
 org = '\[([^/\[\]]+?)/([^/\[\]]+?)\]'
 rep = '<ruby><rb>$2</rb><rt>$1</rt></ruby>'
@@ -272,27 +263,27 @@ rep = '<ruby><rb>$2</rb><rt>$1</rt></ruby>'
 #### 回调正则
 
 不过如上正则仍有一些缺陷，比如这两句话:
-```
+```html
 <p class="class_s2C-0">「うっ、レナ<span class="class_s2R">!?</span>」</p>
 <p class="class_s2C-0">　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてし<span id="page_8"/>まう。</p>
 ```
 假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有`<p></p>`标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的正则/正则组来处理这个问题，那么此时就需要使用回调正则。
 
 注: 2.2.4版本之后，想达到这个目的可以简化为一条正则
-```
+```toml
 [[plugins.Epub.postprocRegex]]
 org = '((?i)(?:<p\b[^>]*>|\G(?!\A))[^<]*\K<(?!/p>)[^>]*>)'
 rep = ''
 ```
 
 我们可以编写如下回调正则，
-```
+```toml
 [[plugins.Epub.preprocRegex]]
 org = '(<p[^>/]*>)(.*?)(</p>)'
 callback = [ { group = 2, org = '<[^>]*>', rep = '' } ]
 ```
 则这两句话会被替换为
-```
+```html
 <p class="class_s2C-0">「うっ、レナ!?」</p>
 <p class="class_s2C-0">　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてしまう。</p>
 ```
@@ -346,20 +337,20 @@ nvcc --version
 ```
 以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。
 - 3、 为嵌入式环境安装 PyTorch，注意启动的必须是 **嵌入式环境中的 Python(之后的操作默认均在此环境中进行)**。
-默认目录在 `BaseConfig\python-3.12.10-embed-amd64`，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的**绝对路径**以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip...)。
+默认目录在 `BaseConfig\Python-3.12.10-embed-amd64`，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的**绝对路径**以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip...)。
 - 4、 比如官网给我的命令是 `pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129`，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 `python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129`。
 注意: 如果你已经安装了torch，最好先卸载它：`python -m pip uninstall torch`
 - 5、 重装 Stanza，`python -m pip uninstall stanza`  `python -m pip install stanza`
-- 6、 尝试运行 `BaseConfig\pyScripts\check_stanza_gpu.py`，如果提示成功，则代表所有配置均已就绪。
-- 7、 此时打开 `BaseConfig\pyScripts\tokenizer_stanza.py` 文件，将 `self.nlp = stanza.Pipeline(lang=model_name, processors='tokenize,pos,ner', use_gpu=False, verbose=False)` 中的 `use_gpu` 参数改为 `True`，即可为 Stanza 启用 GPU加速。
+- 6、 尝试运行 `BaseConfig\PythonScripts\check_stanza_gpu.py`，如果提示成功，则代表所有配置均已就绪。
+- 7、 此时打开 `BaseConfig\PythonScripts\tokenizer_stanza.py` 文件，将 `self.nlp = stanza.Pipeline(lang=model_name, processors='tokenize,pos,ner', use_gpu=False, verbose=False)` 中的 `use_gpu` 参数改为 `True`，即可为 Stanza 启用 GPU加速。
 
 #### 为 `spaCy` 启用 GPU加速
 
 - 1、 同 Stanza 第一条 至 第四条。
 - 2、 在 **嵌入式 Python环境(详见 Stanza第三条)中** 重新安装 spacy。`python -m pip uninstall spacy`，并确保此环境中没有安装 `cupy`。
 - 3、 根据自己的 CUDA 版本(查看 Stanza 第二条以查看如何获取 CUDA 版本)，安装 `cupy` 的特定版本，如 `cupy-cuda13x`: `python -m pip install cupy-cuda13x`，然后再把 spacy 装回来 `python -m pip install spacy`。
-- 4、 尝试运行 `BaseConfig\pyScripts\check_spacy_gpu.py`，如果提示成功，则代表所有配置均已就绪。
-- 5、 此时打开 `BaseConfig\pyScripts\tokenizer_spacy.py` 文件，将 `#spacy.require_gpu()` 的#注释去掉，即可为 spaCy 启用 GPU加速。
+- 4、 尝试运行 `BaseConfig\PythonScripts\check_spacy_gpu.py`，如果提示成功，则代表所有配置均已就绪。
+- 5、 此时打开 `BaseConfig\PythonScripts\tokenizer_spacy.py` 文件，将 `USE_GPU = False` 改为 `USE_GPU = True`，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。
 
 </details>
 
@@ -387,7 +378,7 @@ nvcc --version
 ### 自定义主页Popular卡片
 
 </summary>
-具体示例详见 (Example/)BaseConfig/globalConfig.toml 中的 [[popularCards]] 数组。
+具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。
 
 卡片数组至少六个，不足六个的将使用程序默认的卡片补齐，最高不限数量。
 
@@ -405,7 +396,7 @@ start /b 要运行文件的文件名
 ```
 然后启动这个中转脚本就可以了。
 
-**注意:** 不要在程序运行的时候修改 `globalConfig.toml`，会被刷掉，请关闭程序后再进行修改。
+**注意:** 不要在程序运行的时候修改 `GlobalConfig.toml`，会被刷掉，请关闭程序后再进行修改。
 </details>
 
 <details>
@@ -430,7 +421,7 @@ GUI界面所有的以标签页形式呈现的字典、人名表、提示词等�
 </summary>
 
 可以使用快捷键(默认为 Ctrl+L)清除当前日志页面的输出。  
-更改快捷键请手动修改 BaseConfig/globalConfig.toml 中 `clearLogShortcut` 所存储的值。  
+更改快捷键请手动修改 BaseConfig/GlobalConfig.toml 中 `clearLogShortcut` 所存储的值。  
 
 </details>
 

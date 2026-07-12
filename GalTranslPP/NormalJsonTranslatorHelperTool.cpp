@@ -11,159 +11,190 @@ namespace fs = std::filesystem;
 
 namespace
 {
-
-struct RepeatedBlockOccurrence {
-    int start = 0;
-    int length = 0;
-};
-
-template <typename JsonT>
-std::string buildRepeatedBlockSpeakerKey(const JsonT& item) {
-    if (auto it = item.find("name"); it != item.end()) {
-        return "name:" + it->get<std::string>();
-    }
-    if (auto it = item.find("names"); it != item.end()) {
-        return "names:" + it->dump();
-    }
-    return "none:";
-}
-
-template <typename JsonT>
-std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
-    return buildRepeatedBlockSpeakerKey(item) + "\nmessage:" + item.value("message", "");
-}
-
-template <typename JsonT>
-JsonT referenceTargetToJson(const SentencePosition& target) {
-    return JsonT{
-        {"file", target.file},
-        {"index", target.index}
+    struct RepeatedBlockOccurrence {
+        int start = 0;
+        int length = 0;
     };
-}
 
-std::vector<int> buildSuffixArray(const std::vector<int>& tokens) {
-    const int n = (int)tokens.size();
-    std::vector<int> suffixArray(n);
-    std::iota(suffixArray.begin(), suffixArray.end(), 0);
-    if (n <= 1) {
+    template <typename JsonT>
+    std::string buildRepeatedBlockSpeakerKey(const JsonT& item) {
+        if (auto it = item.find("name"); it != item.end()) {
+            return "name:" + it->template get<std::string>();
+        }
+        if (auto it = item.find("names"); it != item.end()) {
+            return "names:" + it->dump();
+        }
+        return "none:";
+    }
+
+    template <typename JsonT>
+    std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
+        return buildRepeatedBlockSpeakerKey(item) + "\nmessage:" + item.value("message", "");
+    }
+
+    template <typename JsonT>
+    JsonT referenceTargetToJson(const SentencePosition& target) {
+        return JsonT{
+            {"file", target.file},
+            {"index", target.index}
+        };
+    }
+
+    std::vector<int> buildSuffixArray(const std::vector<int>& tokens) {
+        const int n = (int)tokens.size();
+        std::vector<int> suffixArray(n);
+        std::iota(suffixArray.begin(), suffixArray.end(), 0);
+        if (n <= 1) {
+            return suffixArray;
+        }
+
+        std::vector<int> rank = tokens;
+        std::vector<int> nextRank(n);
+        for (int k = 1;; k <<= 1) {
+            std::ranges::sort(suffixArray, [&](int lhs, int rhs)
+                {
+                    if (rank[lhs] != rank[rhs]) {
+                        return rank[lhs] < rank[rhs];
+                    }
+                    const int lhsNext = lhs + k < n ? rank[lhs + k] : -1;
+                    const int rhsNext = rhs + k < n ? rank[rhs + k] : -1;
+                    return lhsNext < rhsNext;
+                });
+
+            nextRank[suffixArray.front()] = 0;
+            for (int i = 1; i < n; ++i) {
+                const int prev = suffixArray[i - 1];
+                const int current = suffixArray[i];
+                const bool different =
+                    rank[prev] != rank[current] ||
+                    (prev + k < n ? rank[prev + k] : -1) != (current + k < n ? rank[current + k] : -1);
+                nextRank[current] = nextRank[prev] + (different ? 1 : 0);
+            }
+            rank.swap(nextRank);
+            if (rank[suffixArray.back()] == n - 1) {
+                break;
+            }
+        }
         return suffixArray;
     }
 
-    std::vector<int> rank = tokens;
-    std::vector<int> nextRank(n);
-    for (int k = 1;; k <<= 1) {
-        std::ranges::sort(suffixArray, [&](int lhs, int rhs)
+    std::vector<int> buildLcpArray(const std::vector<int>& tokens, const std::vector<int>& suffixArray) {
+        const int n = (int)tokens.size();
+        std::vector<int> rank(n);
+        for (int i = 0; i < n; ++i) {
+            rank[suffixArray[i]] = i;
+        }
+
+        std::vector<int> lcp(std::max(0, n - 1));
+        int h = 0;
+        for (int i = 0; i < n; ++i) {
+            const int r = rank[i];
+            if (r == 0) {
+                continue;
+            }
+            const int j = suffixArray[r - 1];
+            while (i + h < n && j + h < n && tokens[i + h] == tokens[j + h]) {
+                ++h;
+            }
+            lcp[r - 1] = h;
+            if (h > 0) {
+                --h;
+            }
+        }
+        return lcp;
+    }
+
+    std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::vector<int>& tokens, int minBlockSize) {
+        std::vector<RepeatedBlockOccurrence> occurrences;
+        if ((int)tokens.size() < minBlockSize * 2) {
+            return occurrences;
+        }
+
+        const std::vector<int> suffixArray = buildSuffixArray(tokens);
+        const std::vector<int> lcp = buildLcpArray(tokens, suffixArray);
+
+        absl::flat_hash_set<int> starts;
+        for (const auto& [i, commonLength] : lcp | std::views::enumerate) {
+            if (commonLength < minBlockSize) {
+                continue;
+            }
+            const size_t suffixIndex = (size_t)i;
+            const int lhs = suffixArray[suffixIndex];
+            const int rhs = suffixArray[suffixIndex + 1];
+            const int length = std::min(commonLength, std::abs(lhs - rhs));
+            if (length < minBlockSize) {
+                continue;
+            }
+            if (starts.insert(lhs).second) {
+                occurrences.push_back({ lhs, length });
+            }
+            if (starts.insert(rhs).second) {
+                occurrences.push_back({ rhs, length });
+            }
+        }
+
+        std::ranges::sort(occurrences, [](const RepeatedBlockOccurrence& a, const RepeatedBlockOccurrence& b)
             {
-                if (rank[lhs] != rank[rhs]) {
-                    return rank[lhs] < rank[rhs];
+                if (a.start != b.start) {
+                    return a.start < b.start;
                 }
-                const int lhsNext = lhs + k < n ? rank[lhs + k] : -1;
-                const int rhsNext = rhs + k < n ? rank[rhs + k] : -1;
-                return lhsNext < rhsNext;
+                return a.length > b.length;
             });
-
-        nextRank[suffixArray.front()] = 0;
-        for (int i = 1; i < n; ++i) {
-            const int prev = suffixArray[i - 1];
-            const int current = suffixArray[i];
-            const bool different =
-                rank[prev] != rank[current] ||
-                (prev + k < n ? rank[prev + k] : -1) != (current + k < n ? rank[current + k] : -1);
-            nextRank[current] = nextRank[prev] + (different ? 1 : 0);
-        }
-        rank.swap(nextRank);
-        if (rank[suffixArray.back()] == n - 1) {
-            break;
-        }
-    }
-    return suffixArray;
-}
-
-std::vector<int> buildLcpArray(const std::vector<int>& tokens, const std::vector<int>& suffixArray) {
-    const int n = (int)tokens.size();
-    std::vector<int> rank(n);
-    for (int i = 0; i < n; ++i) {
-        rank[suffixArray[i]] = i;
-    }
-
-    std::vector<int> lcp(std::max(0, n - 1));
-    int h = 0;
-    for (int i = 0; i < n; ++i) {
-        const int r = rank[i];
-        if (r == 0) {
-            continue;
-        }
-        const int j = suffixArray[r - 1];
-        while (i + h < n && j + h < n && tokens[i + h] == tokens[j + h]) {
-            ++h;
-        }
-        lcp[r - 1] = h;
-        if (h > 0) {
-            --h;
-        }
-    }
-    return lcp;
-}
-
-std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::vector<int>& tokens, int minBlockSize) {
-    std::vector<RepeatedBlockOccurrence> occurrences;
-    if ((int)tokens.size() < minBlockSize * 2) {
         return occurrences;
     }
 
-    const std::vector<int> suffixArray = buildSuffixArray(tokens);
-    const std::vector<int> lcp = buildLcpArray(tokens, suffixArray);
+    void normalizeRepeatedBlockReferences(RepeatedBlockReferenceMap& references) {
+        std::vector<SentencePosition> selfReferences;
+        for (auto& [target, source] : references.targetToSourceMap) {
+            absl::flat_hash_set<SentencePosition> visited;
+            SentencePosition root = source;
+            while (true) {
+                if (!visited.insert(root).second) {
+                    break;
+                }
+                const auto it = references.targetToSourceMap.find(root);
+                if (it == references.targetToSourceMap.end()) {
+                    break;
+                }
+                root = it->second;
+            }
+            source = root;
+            if (target == source) {
+                selfReferences.push_back(target);
+            }
+        }
+        for (const SentencePosition& target : selfReferences) {
+            references.targetToSourceMap.erase(target);
+        }
 
-    absl::flat_hash_set<int> starts;
-    for (const auto& [i, commonLength] : lcp | std::views::enumerate) {
-        if (commonLength < minBlockSize) {
-            continue;
-        }
-        const size_t suffixIndex = (size_t)i;
-        const int lhs = suffixArray[suffixIndex];
-        const int rhs = suffixArray[suffixIndex + 1];
-        const int length = std::min(commonLength, std::abs(lhs - rhs));
-        if (length < minBlockSize) {
-            continue;
-        }
-        if (starts.insert(lhs).second) {
-            occurrences.push_back({ lhs, length });
-        }
-        if (starts.insert(rhs).second) {
-            occurrences.push_back({ rhs, length });
+        references.sourceToTargetsMap.clear();
+        for (const auto& [target, source] : references.targetToSourceMap) {
+            if (target == source) {
+                continue;
+            }
+            std::vector<SentencePosition>& targets = references.sourceToTargetsMap[source];
+            if (!std::ranges::contains(targets, target)) {
+                targets.push_back(target);
+            }
         }
     }
-
-    std::ranges::sort(occurrences, [](const RepeatedBlockOccurrence& a, const RepeatedBlockOccurrence& b)
-        {
-            if (a.start != b.start) {
-                return a.start < b.start;
-            }
-            return a.length > b.length;
-        });
-    return occurrences;
 }
 
-} // namespace
-
-RepeatedBlockPlan analyzeRepeatedBlocks(
-    const std::vector<std::pair<fs::path, ordered_json>>& files,
+RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
+    const std::vector<std::pair<fs::path, ordered_json>>& filesWithData,
     int minBlockSize
 ) {
-    RepeatedBlockPlan plan;
-    if (minBlockSize <= 1) {
-        minBlockSize = 2;
-    }
+    RepeatedBlockReferenceMap references;
 
     std::vector<int> tokens;
     std::vector<SentencePosition> positions;
     absl::flat_hash_map<std::string, int> tokenIds;
     int nextTokenId = 1;
 
-    for (const auto& [relFilePath, data] : files) {
+    for (const auto& [relFilePath, data] : filesWithData) {
         for (const auto& [index, item] : data | std::views::enumerate) {
-            const std::string key = buildRepeatedBlockSentenceKey(item);
-            const auto [it, inserted] = tokenIds.emplace(key, nextTokenId);
+            const std::string sentenceKey = buildRepeatedBlockSentenceKey(item);
+            const auto [it, inserted] = tokenIds.emplace(sentenceKey, nextTokenId);
             if (inserted) {
                 ++nextTokenId;
             }
@@ -174,7 +205,7 @@ RepeatedBlockPlan analyzeRepeatedBlocks(
 
     const std::vector<RepeatedBlockOccurrence> occurrences = collectRepeatedBlockOccurrences(tokens, minBlockSize);
     if (occurrences.size() < 2) {
-        return plan;
+        return references;
     }
 
     std::vector<uint64_t> hashPrefix(tokens.size() + 1);
@@ -243,145 +274,34 @@ RepeatedBlockPlan analyzeRepeatedBlocks(
         for (int offset = 0; offset < length; ++offset) {
             const SentencePosition source = positions[sourceStart + offset];
             const SentencePosition target = positions[occurrence.start + offset];
-            plan.refToByTarget[target] = source;
-            plan.refBySource[source].push_back(target);
+            references.targetToSourceMap[target] = source;
+            references.sourceToTargetsMap[source].push_back(target);
             referencedPositions.insert(occurrence.start + offset);
         }
     }
 
-    return plan;
+    normalizeRepeatedBlockReferences(references);
+    return references;
 }
 
-void applyRepeatedBlockPlanToJson(
+void addReferenceInfoToInputJson(
     const fs::path& relFilePath,
     ordered_json& data,
-    const RepeatedBlockPlan& plan
+    const RepeatedBlockReferenceMap& references
 ) {
     for (auto [index, item] : data | std::views::enumerate) {
-        eraseRepeatedBlockReferenceInfo(item);
         const SentencePosition target{ wide2Ascii(relFilePath), (int)index };
-        if (const auto it = plan.refToByTarget.find(target); it != plan.refToByTarget.end()) {
-            item[std::string(repeatedBlockRefToKey)] = referenceTargetToJson<ordered_json>(it->second);
+        if (const auto it = references.targetToSourceMap.find(target); it != references.targetToSourceMap.end()) {
+            item["_gpp_ref_to"] = referenceTargetToJson<ordered_json>(it->second);
         }
-        if (const auto it = plan.refBySource.find(target); it != plan.refBySource.end()) {
+        if (const auto it = references.sourceToTargetsMap.find(target); it != references.sourceToTargetsMap.end()) {
             ordered_json refs = ordered_json::array();
             for (const SentencePosition& refBy : it->second) {
                 refs.push_back(referenceTargetToJson<ordered_json>(refBy));
             }
-            item[std::string(repeatedBlockRefByKey)] = std::move(refs);
+            item["_gpp_ref_by"] = std::move(refs);
         }
     }
-}
-
-bool isEscapedJsonQuote(const std::string& text, size_t pos) {
-    if (pos == 0 || pos >= text.size()) {
-        return false;
-    }
-    size_t slashCount = 0;
-    for (size_t i = pos; i > 0;) {
-        --i;
-        if (text[i] != '\\') {
-            break;
-        }
-        ++slashCount;
-    }
-    return slashCount % 2 == 1;
-}
-
-bool isLikelyJsonKeyPosition(const std::string& text, size_t keyPos) {
-    if (keyPos == std::string::npos) {
-        return false;
-    }
-    for (size_t i = keyPos; i > 0;) {
-        --i;
-        const unsigned char ch = (unsigned char)text[i];
-        if (std::isspace(ch)) {
-            continue;
-        }
-        return text[i] == '{' || text[i] == ',' || text[i] == '[';
-    }
-    return true;
-}
-
-bool isLikelyJsonStringSuffix(const std::string& text, size_t posAfterQuote) {
-    for (size_t i = posAfterQuote; i < text.size(); ++i) {
-        const unsigned char ch = (unsigned char)text[i];
-        if (std::isspace(ch)) {
-            continue;
-        }
-        return text[i] == ',' || text[i] == '}' || text[i] == ']';
-    }
-    return true;
-}
-
-size_t findLikelyJsonStringClosingQuote(const std::string& text, size_t openingQuotePos) {
-    for (size_t pos = openingQuotePos + 1; pos < text.size(); ++pos) {
-        if (text[pos] != '"' || isEscapedJsonQuote(text, pos)) {
-            continue;
-        }
-        if (isLikelyJsonStringSuffix(text, pos + 1)) {
-            return pos;
-        }
-    }
-    return std::string::npos;
-}
-
-std::string lightRepairJsonText(const std::string& text) {
-    if (text.empty()) {
-        return text;
-    }
-
-    static constexpr std::array<std::string_view, 5> repairableFields = {
-        "\"dst\":",
-        "\"note\":",
-        "\"rolling_context\":",
-        "\"context\":",
-        "\"reason\":"
-    };
-
-    std::string newText = text;
-    for (const std::string_view& field : repairableFields) {
-        size_t searchPos = 0;
-        while (searchPos < newText.size()) {
-            const size_t fieldPos = newText.find(field, searchPos);
-            if (fieldPos == std::string::npos) {
-                break;
-            }
-            searchPos = fieldPos + field.size();
-            if (!isLikelyJsonKeyPosition(newText, fieldPos)) {
-                continue;
-            }
-
-            size_t openingQuotePos = searchPos;
-            while (openingQuotePos < newText.size() && std::isspace((unsigned char)newText[openingQuotePos])) {
-                ++openingQuotePos;
-            }
-            if (openingQuotePos >= newText.size() || newText[openingQuotePos] != '"') {
-                continue;
-            }
-
-            const size_t closingQuotePos = findLikelyJsonStringClosingQuote(newText, openingQuotePos);
-            if (closingQuotePos == std::string::npos || closingQuotePos <= openingQuotePos) {
-                continue;
-            }
-
-            std::string repairedValue;
-            repairedValue.reserve(closingQuotePos - openingQuotePos);
-            for (size_t pos = openingQuotePos + 1; pos < closingQuotePos; ++pos) {
-                if (newText[pos] == '"' && !isEscapedJsonQuote(newText, pos)) {
-                    repairedValue.push_back('\\');
-                }
-                repairedValue.push_back(newText[pos]);
-            }
-
-            const std::string_view originalValue = std::string_view(newText).substr(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1);
-            if (repairedValue != originalValue) {
-                newText.replace(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1, repairedValue);
-                searchPos = openingQuotePos + 1 + repairedValue.size() + 1;
-            }
-        }
-    }
-    return newText;
 }
 
 int getSplittedFileIndex(const std::wstring& path) {
@@ -394,15 +314,15 @@ int getSplittedFileIndex(const std::wstring& path) {
 * @brief 根据句子的上下文生成唯一的缓存键，复刻 GalTransl 逻辑
 */
 std::string generateCacheKey(const Sentence* s) {
-    const std::string currentText = getNameString(s) + s->original_text + s->pre_processed_text;
+    const std::string currentText = getNameString(s) + s->orig + s->preproc;
 
     std::string prevText = "None";
     std::string nextText = "None";
     if (s->prev) {
-        prevText = getNameString(s->prev) + s->prev->original_text + s->prev->pre_processed_text;
+        prevText = getNameString(s->prev) + s->prev->orig + s->prev->preproc;
     }
     if (s->next) {
-        nextText = getNameString(s->next) + s->next->original_text + s->next->pre_processed_text;
+        nextText = getNameString(s->next) + s->next->orig + s->next->preproc;
     }
     return prevText + currentText + nextText;
 }
@@ -439,9 +359,9 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         const Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
-            if (current->complete) {
+            if (current->transCompleted) {
                 const std::string name = current->nameType == NameType::None ? "null" : getNameString(current);
-                contextLines.push_back(std::format("{}\t{}\t{}", name, current->pre_translated_text, current->index));
+                contextLines.push_back(std::format("{}\t{}\t{}", name, current->pretrans, current->index));
             }
             current = current->prev;
         }
@@ -456,8 +376,8 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         const Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
-            if (current->complete) {
-                contextLines.push_back(std::format("{}\t{}", current->pre_translated_text, current->index));
+            if (current->transCompleted) {
+                contextLines.push_back(std::format("{}\t{}", current->pretrans, current->index));
             }
             current = current->prev;
         }
@@ -467,19 +387,18 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     break;
 
     case TransEngine::ForGalJson:
-    case TransEngine::DeepseekJson:
     {
         json historyJson = json::array();
         const Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)historyJson.size() < contextHistorySize && i < limit; ++i) {
-            if (current->complete) {
+            if (current->transCompleted) {
                 json item;
                 item["id"] = current->index;
                 if (current->nameType != NameType::None) {
                     item["name"] = getNameString(current);
                 }
-                item["dst"] = current->pre_translated_text;
+                item["dst"] = current->pretrans;
                 historyJson.push_back(std::move(item));
             }
             current = current->prev;
@@ -498,12 +417,12 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         std::vector<std::string> contextLines;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
-            if (current->complete) {
+            if (current->transCompleted) {
                 if (current->nameType != NameType::None) {
-                    contextLines.push_back(std::format("{}:::::{}", getNameString(current), current->pre_translated_text)); // :::::
+                    contextLines.push_back(std::format("{}:::::{}", getNameString(current), current->pretrans)); // :::::
                 }
                 else {
-                    contextLines.push_back(current->pre_translated_text);
+                    contextLines.push_back(current->pretrans);
                 }
             }
             current = current->prev;
@@ -530,9 +449,9 @@ void fillBlockAndMap(
     {
     case TransEngine::ForGalTsv:
     {
-        for (const auto& se : batchToTransThisRound) {
+        for (Sentence* se : batchToTransThisRound) {
             const std::string name = se->nameType == NameType::None ? "null" : getNameString(se);
-            inputBlock += std::format("{}\t{}\t{}\n", name, se->pre_processed_text, se->index);
+            inputBlock += std::format("{}\t{}\t{}\n", name, se->preproc, se->index);
             if (id2SentenceMap != nullptr) {
                 (*id2SentenceMap)[se->index] = se;
             }
@@ -542,8 +461,8 @@ void fillBlockAndMap(
 
     case TransEngine::ForNovelTsv:
     {
-        for (const auto& se : batchToTransThisRound) {
-            inputBlock += std::format("{}\t{}\n", se->pre_processed_text, se->index);
+        for (Sentence* se : batchToTransThisRound) {
+            inputBlock += std::format("{}\t{}\n", se->preproc, se->index);
             if (id2SentenceMap != nullptr) {
                 (*id2SentenceMap)[se->index] = se;
             }
@@ -552,15 +471,14 @@ void fillBlockAndMap(
     break;
 
     case TransEngine::ForGalJson:
-    case TransEngine::DeepseekJson:
     {
-        for (const auto& se : batchToTransThisRound) {
+        for (Sentence* se : batchToTransThisRound) {
             json item;
             item["id"] = se->index;
             if (se->nameType != NameType::None) {
                 item["name"] = getNameString(se);
             }
-            item["src"] = se->pre_processed_text;
+            item["src"] = se->preproc;
             inputBlock += item.dump() + "\n";
             if (id2SentenceMap != nullptr) {
                 (*id2SentenceMap)[se->index] = se;
@@ -571,27 +489,47 @@ void fillBlockAndMap(
 
     case TransEngine::Sakura:
     {
-        for (const auto& se : batchToTransThisRound) {
+        for (Sentence* se : batchToTransThisRound) {
             if (se->nameType != NameType::None) {
-                inputBlock += std::format("{}:::::{}\n", getNameString(se), se->pre_processed_text);
+                inputBlock += std::format("{}:::::{}\n", getNameString(se), se->preproc);
             }
             else {
-                inputBlock += se->pre_processed_text + "\n";
+                inputBlock += se->preproc + "\n";
             }
         }
         if (!inputBlock.empty()) {
-            inputBlock.pop_back(); // 移除最后一个换行符
+            inputBlock.pop_back(); // Sakura 引擎需要移除最后一个换行符？大概
         }
     }
     break;
 
     default:
-        throw std::runtime_error(gppTr("fillBlockAndMap", "不支持的 TransEngine 用于构建输入").toStdString());
+        throw std::runtime_error(gppTr("fillBlockAndMap", "内部错误: 不支持的 TransEngine 用于构建输入").toStdString());
     }
 }
 
-int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
-    std::string& backgroudText, TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail) 
+std::string limitLogLines(std::string_view text, int maxLines, std::string_view tail) {
+    int lineCount = 0;
+    for (size_t i = 0; i < text.size(); ++i) {
+        if (text[i] != '\n') {
+            continue;
+        }
+        ++lineCount;
+        if (lineCount == maxLines && i + 1 < text.size()) {
+            std::string result(text.substr(0, i + 1));
+            result += tail;
+            if (!result.ends_with('\n')) {
+                result += '\n';
+            }
+            return result;
+        }
+    }
+    return std::string(text);
+}
+
+int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound,
+    const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
+    std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail)
 {
     int parsedCount = 0;
 
@@ -603,29 +541,30 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
     }
 
     {
-        static jpc::Regex backgroundRegex{ R"(<background>\n*([\S\s]*?)\n*</background>)", defaultRegCompileModifier };
+        static jpc::Regex rollingContextRegex{ R"(<rolling_context>\n*([\S\s]*?)\n*</rolling_context>)", defaultRegCompileModifier };
         jpc::VecNum vecNum;
         jpcre2::VecOff vecOff;
-        jpc::RegexMatch rm(&backgroundRegex);
+        jpc::RegexMatch rm(&rollingContextRegex);
         rm.setSubject(&content).setNumberedSubstringVector(&vecNum).setMatchStartOffsetVector(&vecOff);
         if (rm.match() > 0 && vecNum.size() > 0 && vecNum[0].size() > 1) {
-
-            backgroudText = std::move(replaceStrInplace(vecNum[0][1], "<ORIGINAL>", backgroudText));
-            if (backgroudText.contains("<ORIGINAL>")) {
-                backgroudText.clear();
+            rollingContext = std::move(replaceStrInplace(vecNum[0][1], "<ORIGINAL>", rollingContext));
+            if (rollingContext.contains("<ORIGINAL>")) {
+                rollingContext.clear();
             }
             else {
-                backgroudText = truncateUtf8Prefix(backgroudText, 256);
+                rollingContext = truncateUtf8Prefix(rollingContext, 256);
             }
 
-            if (!showBackgroundText && vecNum.size() == vecOff.size()) {
-	            for (const auto& [matchedOff, matchedVec] : std::views::zip(vecOff, vecNum) | std::views::reverse) {
+            if (!showRollingContext && vecNum.size() == vecOff.size()) {
+	            for (const auto& [matchedOff, matchedVec] :
+                    std::views::zip(vecOff, vecNum) | std::views::reverse)
+                {
                     content.erase(matchedOff, matchedVec.front().length());
 	            }
             }
         }
         else {
-            backgroudText.clear();
+            rollingContext.clear();
         }
     }
 
@@ -652,10 +591,12 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
             }
             try {
                 const int id = str2Int(parts[2]).value();
-                if (const auto it = id2SentenceMap.find(id); it != id2SentenceMap.end() && !it->second->complete) {
-                    it->second->pre_translated_text = parts[1];
-                    it->second->translated_by = modelName;
-                    it->second->complete = true;
+                if (const auto it = id2SentenceMap.find(id);
+                    it != id2SentenceMap.end() && !it->second->transCompleted)
+                {
+                    it->second->pretrans = parts[1];
+                    it->second->translatedBy = modelName;
+                    it->second->transCompleted = true;
                     ++parsedCount;
                 }
             }
@@ -685,10 +626,12 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
             }
             try {
                 const int id = str2Int(parts[1]).value();
-                if (const auto it = id2SentenceMap.find(id); it != id2SentenceMap.end() && !it->second->complete) {
-                    it->second->pre_translated_text = parts[0];
-                    it->second->translated_by = modelName;
-                    it->second->complete = true;
+                if (const auto it = id2SentenceMap.find(id);
+                    it != id2SentenceMap.end() && !it->second->transCompleted)
+                {
+                    it->second->pretrans = parts[0];
+                    it->second->translatedBy = modelName;
+                    it->second->transCompleted = true;
                     ++parsedCount;
                 }
             }
@@ -698,7 +641,6 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
     break;
 
     case TransEngine::ForGalJson:
-    case TransEngine::DeepseekJson:
     {
         const size_t start = std::min(content.find("{\"id\""), content.find("{\"dst\""));
         if (start == std::string::npos) {
@@ -725,10 +667,12 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     }();
                 const int id = item["id"];
                 const std::string dst = item["dst"].get<std::string>();
-                if (const auto it = id2SentenceMap.find(id); it != id2SentenceMap.end() && !it->second->complete) {
-                    it->second->pre_translated_text = dst;
-                    it->second->translated_by = modelName;
-                    it->second->complete = true;
+                if (const auto it = id2SentenceMap.find(id);
+                    it != id2SentenceMap.end() && !it->second->transCompleted)
+                {
+                    it->second->pretrans = dst;
+                    it->second->translatedBy = modelName;
+                    it->second->transCompleted = true;
                     ++parsedCount;
                 }
             }
@@ -753,23 +697,23 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 }
             }
 
-            currentSentence->pre_translated_text = translatedLine;
-            currentSentence->translated_by = modelName;
-            currentSentence->complete = true;
+            currentSentence->pretrans = translatedLine;
+            currentSentence->translatedBy = modelName;
+            currentSentence->transCompleted = true;
             ++parsedCount;
         }
     }
     break;
 
     default:
-        throw std::runtime_error(gppTr("parseContent", "不支持的 TransEngine 用于解析输出").toStdString());
+        throw std::runtime_error(gppTr("parseContent", "内部错误: 不支持的 TransEngine 用于解析输出").toStdString());
     }
 
     if (retransAllWhenFail && parsedCount != batchToTransThisRound.size()) {
-        for (Sentence* se : batchToTransThisRound | std::views::filter([](const auto& s) { return s->complete; })) {
-            se->pre_translated_text.clear();
-            se->translated_by.clear();
-            se->complete = false;
+        for (Sentence* se : batchToTransThisRound | std::views::filter([](const auto& s) { return s->transCompleted; })) {
+            se->pretrans.clear();
+            se->translatedBy.clear();
+            se->transCompleted = false;
 	    }
     }
     return parsedCount;
@@ -794,19 +738,8 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
 
     for (const auto& relPartPath : partPaths) {
         if (const fs::path partPath = outputCacheDir / relPartPath; fs::exists(partPath)) {
-            try {
-                ifs.open(partPath, std::ios::binary);
-                ordered_json partData = ordered_json::parse(ifs);
-                ifs.close();
-                combinedJson.insert(combinedJson.end(), partData.begin(), partData.end());
-            }
-            catch (const json::exception& e) {
-                ifs.close();
-                throw std::runtime_error(gppTr("combineOutputFiles", "合并文件 %1 时出错: %2")
-                    .arg(wide2Ascii(partPath))
-                    .arg(e.what())
-                    .toStdString());
-            }
+            const ordered_json partData = parseOrderedJson(partPath, ifs);
+            combinedJson.insert(combinedJson.end(), partData.begin(), partData.end());
         }
         else {
             throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 %1 时出错，缺少文件 %2")
@@ -817,10 +750,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
     }
 
     const fs::path finalOutputPath = outputDir / originalRelFilePath;
-    createParent(finalOutputPath);
-    std::ofstream ofs(finalOutputPath, std::ios::binary);
-    ofs << combinedJson.dump(2);
-    ofs.close();
+    atomicOutputFile(finalOutputPath, combinedJson.dump(2));
     logger->info(gppTr("combineOutputFiles", "文件 %1 合并完成，已保存到 %2")
         .arg(wide2Ascii(originalRelFilePath))
         .arg(wide2Ascii(finalOutputPath))
@@ -828,77 +758,75 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
 }
 
 
-bool hasRetranslKey(const std::vector<CheckSeCondFunc>& retranslKeys, const json& item, const Sentence* currentSe) {
+bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSe) {
     if (retranslKeys.empty()) {
         return false;
     }
 
-    Sentence se;
-    if (item.contains("name")) {
-        se.nameType = NameType::Single;
-        se.name = item.at("name");
-        se.name_preview = item.at("name_preview");
+    Sentence probeSentence = currentSe;
+    if (probeSentence.nameType == NameType::Single) {
+        if (const auto jit = item.find("name_translated"); jit != item.end()) {
+            jit->get_to(probeSentence.nameTrans);
+        }
     }
-    else if (item.contains("names")) {
-        se.nameType = NameType::Multiple;
-        se.names = item.at("names");
-        se.names_preview = item.at("names_preview");
+    else if (probeSentence.nameType == NameType::Multiple) {
+        if (const auto jit = item.find("names_translated"); jit != item.end()) {
+            jit->get_to(probeSentence.namesTrans);
+        }
     }
-    se.original_text = item.value("original_text", "");
-    se.pre_processed_text = item.value("pre_processed_text", "");
-    se.pre_translated_text = item.value("pre_translated_text", "");
-    if (item.contains("problems")) {
-        item.at("problems").get_to(se.problems);
+    if (const auto jit = item.find("problems"); jit != item.end()) {
+        jit->get_to(probeSentence.problems);
     }
-    if (item.contains("other_info")) {
-        item.at("other_info").get_to(se.other_info);
+    if (const auto jit = item.find("translated_raw_text"); jit != item.end()) {
+        jit->get_to(probeSentence.pretrans);
     }
-    se.translated_by = item.value("translated_by", "");
-    se.translated_preview = item.value("translated_preview", "");
-    se.prev = currentSe->prev;
-    se.next = currentSe->next;
+    if (const auto jit = item.find("other_info"); jit != item.end()) {
+        jit->get_to(probeSentence.otherInfo);
+    }
+    if (const auto jit = item.find("translated_by"); jit != item.end()) {
+        jit->get_to(probeSentence.translatedBy);
+    }
+    if (const auto jit = item.find("translated_view_text"); jit != item.end()) {
+        jit->get_to(probeSentence.transview);
+    }
 
-    return std::ranges::any_of(retranslKeys, [&](const CheckSeCondFunc& key)
+    return std::ranges::any_of(retranslKeys, [&](const CheckSeCondNormalFunc& key)
         {
-            return key(&se);
+            return key(&probeSentence);
         });
 }
 
 void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cachePath) {
     json cacheJson = json::array();
     for (const auto& se : allSentences) {
-        if (!se.complete) {
+        if (!se.transCompleted) {
             continue;
         }
         json cacheObj;
         cacheObj["index"] = se.index;
         if (se.nameType == NameType::Single) {
             cacheObj["name"] = se.name;
-            cacheObj["name_preview"] = se.name_preview;
+            cacheObj["name_translated"] = se.nameTrans;
         }
         else if (se.nameType == NameType::Multiple) {
             cacheObj["names"] = se.names;
-            cacheObj["names_preview"] = se.names_preview;
+            cacheObj["names_translated"] = se.namesTrans;
         }
-        cacheObj["original_text"] = se.original_text;
-        if (!se.other_info.empty()) {
-            cacheObj["other_info"] = se.other_info;
+        cacheObj["original_text"] = se.orig;
+        if (!se.otherInfo.empty()) {
+            cacheObj["other_info"] = se.otherInfo;
         }
-        cacheObj["pre_processed_text"] = se.pre_processed_text;
-        cacheObj["pre_translated_text"] = se.pre_translated_text;
+        cacheObj["pre_processed_text"] = se.preproc;
+        cacheObj["translated_raw_text"] = se.pretrans;
         if (!se.problems.empty()) {
             cacheObj["problems"] = se.problems;
         }
-        cacheObj["translated_by"] = se.translated_by;
-        cacheObj["translated_preview"] = se.translated_preview;
-        writeRepeatedBlockReferenceInfo(cacheObj, se, true);
+        cacheObj["translated_by"] = se.translatedBy;
+        cacheObj["translated_view_text"] = se.transview;
+        sentenceReferenceInfoToItem(cacheObj, se, true);
         cacheJson.push_back(std::move(cacheObj));
     }
-    const fs::path tempPath = cachePath.wstring() + L"__gpp__temp";
-    std::ofstream ofs(tempPath, std::ios::binary);
-    ofs << cacheJson.dump(2);
-    ofs.close();
-    fs::rename(tempPath, cachePath);
+    atomicOutputFile(cachePath, cacheJson.dump(2));
 }
 
 
@@ -940,64 +868,4 @@ std::vector<ordered_json> splitJsonArrayEqual(const ordered_json& originalData, 
 
 int calculateCachePartIndexDiff(const std::wstring& path1, const std::wstring& path2) {
     return getSplittedFileIndex(path1) - getSplittedFileIndex(path2);
-}
-
-json toml2Json(const toml::value& value) {
-    if (value.is_table()) {
-        json resultMap = json::object();
-        for (const auto& [key, val] : value.as_table()) {
-            resultMap[key] = toml2Json(val);
-        }
-        return resultMap;
-    }
-    else if (value.is_array()) {
-        json resultVec = json::array();
-        for (const auto& elem : value.as_array()) {
-            resultVec.push_back(toml2Json(elem));
-        }
-        return resultVec;
-    }
-    else if (value.is_string()) {
-        return value.as_string();
-    }
-    else if (value.is_integer()) {
-        return value.as_integer();
-    }
-    else if (value.is_floating()) {
-        return value.as_floating();
-    }
-    else if (value.is_boolean()) {
-        return value.as_boolean();
-    }
-    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型").toStdString());
-}
-
-ordered_json toml2Json(const toml::ordered_value& value) {
-    if (value.is_table()) {
-        ordered_json resultMap = ordered_json::object();
-        for (const auto& [key, val] : value.as_table()) {
-            resultMap[key] = toml2Json(val);
-        }
-        return resultMap;
-    }
-    else if (value.is_array()) {
-        ordered_json resultVec = ordered_json::array();
-        for (const auto& elem : value.as_array()) {
-            resultVec.push_back(toml2Json(elem));
-        }
-        return resultVec;
-    }
-    else if (value.is_string()) {
-        return value.as_string();
-    }
-    else if (value.is_integer()) {
-        return value.as_integer();
-    }
-    else if (value.is_floating()) {
-        return value.as_floating();
-    }
-    else if (value.is_boolean()) {
-        return value.as_boolean();
-    }
-    throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型").toStdString());
 }

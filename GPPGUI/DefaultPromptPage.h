@@ -1,9 +1,8 @@
 #ifndef DEFAULTPROMPTPAGE_H
 #define DEFAULTPROMPTPAGE_H
 
-#include <toml.hpp>
-#include <QStackedWidget>
 #include "BasePage.h"
+#include <toml.hpp>
 
 class DefaultPromptPage : public BasePage
 {
@@ -20,4 +19,4 @@ private:
     void setupUi();
 };
 
-#endif // DEFAULTPROMPTPAGE_H
+#endif

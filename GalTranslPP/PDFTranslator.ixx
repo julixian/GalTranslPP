@@ -22,20 +22,24 @@ export
 
         // PDF 处理相关的配置
         bool m_bilingualOutput{};
+        std::string m_babeldocLangOut;
 
         // 存储json文件相对路径到其所属PDF完整路径的映射
         absl::flat_hash_map<fs::path, fs::path> m_jsonToPDFPathMap;
 
+        std::mutex m_onFileProcessedMutex;
+
     public:
 
-        PDFTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
+        PDFTranslator(const fs::path& projectDir,
+            const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
 
-        virtual ~PDFTranslator() override;
+    	~PDFTranslator() override;
 
 
         void pdfInit();
         void pdfBeforeRun();
 
-        virtual void run() override;
+    	void run() override;
     };
 }

@@ -5,7 +5,6 @@
 
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
-#include "ElaToolTip.h"
 #include "ElaMultiSelectComboBox.h"
 #include "ElaToggleSwitch.h"
 
@@ -18,11 +17,6 @@ DictExSettingsPage::DictExSettingsPage(toml::ordered_value& globalConfig, toml::
 	setTitleVisible(false);
 
 	setupUi();
-}
-
-DictExSettingsPage::~DictExSettingsPage()
-{
-
 }
 
 void DictExSettingsPage::refreshCommonDictsList()
@@ -39,9 +33,9 @@ void DictExSettingsPage::setupUi()
 	mainLayout->setContentsMargins(20, 15, 15, 0);
 
 	auto createDictSelectAreaFunc =
-		[=](const QString& text, const QString& defaultItem, const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
+		[=](const QString& text, const QString& defaultItem, const std::vector<std::string>& projectDictFileNames,
+			const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
 		{
-			const std::set<QString> projectFixedDictNames = { "项目译前字典", "项目GPT字典", "项目译后字典" };
 			ElaScrollPageArea* dictNamesArea = new ElaScrollPageArea(mainWidget);
 			QHBoxLayout* dictNamesLayout = new QHBoxLayout(dictNamesArea);
 			ElaText* dictNamesText = new ElaText(dictNamesArea);
@@ -63,12 +57,15 @@ void DictExSettingsPage::setupUi()
 			QList<int> indexesToSelect;
 			for (const auto& dictName : projectConfigDictNames) {
 				if (dictName.is_string()) {
-					QString dictNameStr = QString::fromStdWString(fs::path(ascii2Wide(dictName.as_string())).stem().wstring());
-					if (projectFixedDictNames.contains(dictNameStr)) {
+					QString dictNameStr;
+					if (std::ranges::contains(projectDictFileNames, dictName.as_string())) {
 						dictNameStr = defaultItem;
 					}
+					else {
+						dictNameStr = QString::fromStdWString(fs::path(ascii2Wide(dictName.as_string())).stem().wstring());
+					}
 					int index = dictNamesComboBox->findText(dictNameStr);
-					if (index < 0) {
+					if (index < 0 || indexesToSelect.contains(index)) {
 						continue;
 					}
 					indexesToSelect.append(index);
@@ -81,9 +78,15 @@ void DictExSettingsPage::setupUi()
 			return dictNamesComboBox;
 		};
 
-	ElaMultiSelectComboBox* comboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), tr("项目译前字典"), "commonPreDicts", "preDict");
-	ElaMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), tr("项目GPT字典"), "commonGptDicts", "gptDict");
-	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), tr("项目译后字典"), "commonPostDicts", "postDict");
+	const QString projectPreDictItem = tr("项目译前字典");
+	const QString projectGptDictItem = tr("项目GPT字典");
+	const QString projectPostDictItem = tr("项目译后字典");
+	const std::vector<std::string> projectPreDictFiles = { "ProjPreDict.toml" };
+	const std::vector<std::string> projectGptDictFiles = { "ProjGptDict.toml" };
+	const std::vector<std::string> projectPostDictFiles = { "ProjPostDict.toml" };
+	ElaMultiSelectComboBox* comboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), projectPreDictItem, projectPreDictFiles, "commonPreDicts", "preDicts");
+	ElaMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), projectGptDictItem, projectGptDictFiles, "commonGptDicts", "gptDicts");
+	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), projectPostDictItem, projectPostDictFiles, "commonPostDicts", "postDicts");
 
 
 	bool usePreDictInName = toml::find_or(m_projectConfig, "dictionary", "usePreDictInName", false);
@@ -196,31 +199,39 @@ void DictExSettingsPage::setupUi()
 					comboBox_->setCurrentSelection(commonDictsChosen);
 				};
 
-			refreshCommonDictsListFunc(tr("项目译前字典"), "commonPreDicts", comboBox);
-			refreshCommonDictsListFunc(tr("项目GPT字典"), "commonGptDicts", gptDictNamesComboBox);
-			refreshCommonDictsListFunc(tr("项目译后字典"), "commonPostDicts", postDictNamesComboBox);
+			refreshCommonDictsListFunc(projectPreDictItem, "commonPreDicts", comboBox);
+			refreshCommonDictsListFunc(projectGptDictItem, "commonGptDicts", gptDictNamesComboBox);
+			refreshCommonDictsListFunc(projectPostDictItem, "commonPostDicts", postDictNamesComboBox);
 
 		};
 
 
 	m_applyFunc = [=]()
 		{
+			auto appendDictNames = [](toml::array& dictNamesArr, const QStringList& selectedNames,
+				const QString& projectDictItem, const std::vector<std::string>& projectDictFileNames)
+				{
+					for (const auto& name : selectedNames) {
+						if (name == projectDictItem) {
+							for (const std::string& fileName : projectDictFileNames) {
+								dictNamesArr.push_back(fileName);
+							}
+						}
+						else {
+							dictNamesArr.push_back(name.toStdString() + ".toml");
+						}
+					}
+				};
 			toml::array preDictNamesArr, gptDictNamesArr, postDictNamesArr;
 			QStringList preDictNamesStr = comboBox->getCurrentSelection(),
 				gptDictNames = gptDictNamesComboBox->getCurrentSelection(),
 				postDictNames = postDictNamesComboBox->getCurrentSelection();
-			for (const auto& name : preDictNamesStr) {
-				preDictNamesArr.push_back(name.toStdString() + ".toml");
-			}
-			for (const auto& name : gptDictNames) {
-				gptDictNamesArr.push_back(name.toStdString() + ".toml");
-			}
-			for (const auto& name : postDictNames) {
-				postDictNamesArr.push_back(name.toStdString() + ".toml");
-			}
-			insertToml(m_projectConfig, "dictionary.preDict", preDictNamesArr);
-			insertToml(m_projectConfig, "dictionary.gptDict", gptDictNamesArr);
-			insertToml(m_projectConfig, "dictionary.postDict", postDictNamesArr);
+			appendDictNames(preDictNamesArr, preDictNamesStr, projectPreDictItem, projectPreDictFiles);
+			appendDictNames(gptDictNamesArr, gptDictNames, projectGptDictItem, projectGptDictFiles);
+			appendDictNames(postDictNamesArr, postDictNames, projectPostDictItem, projectPostDictFiles);
+			insertToml(m_projectConfig, "dictionary.preDicts", preDictNamesArr);
+			insertToml(m_projectConfig, "dictionary.gptDicts", gptDictNamesArr);
+			insertToml(m_projectConfig, "dictionary.postDicts", postDictNamesArr);
 
 			insertToml(m_projectConfig, "dictionary.usePreDictInName", usePreDictInNameSwitch->getIsToggled());
 			insertToml(m_projectConfig, "dictionary.usePostDictInName", usePostDictInNameSwitch->getIsToggled());

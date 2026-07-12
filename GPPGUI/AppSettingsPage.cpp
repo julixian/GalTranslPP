@@ -7,7 +7,7 @@
 
 #include "ElaApplication.h"
 #include "ElaMessageBar.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaDoubleText.h"
 #include "ElaRadioButton.h"
 #include "ElaScrollPageArea.h"
@@ -53,12 +53,12 @@ void AppSettingsPage::setupUi()
     themeSwitchText->setTextPixelSize(16);
     themeSwitchLayout->addWidget(themeSwitchText);
     themeSwitchLayout->addStretch();
-    ElaComboBox* themeComboBox = new ElaComboBox(themeSwitchArea);
+    ElaNoWheelComboBox* themeComboBox = new ElaNoWheelComboBox(themeSwitchArea);
     themeComboBox->addItem(tr("日间模式"));
     themeComboBox->addItem(tr("夜间模式"));
     themeComboBox->setCurrentIndex((int)eTheme->getThemeMode());
     themeSwitchLayout->addWidget(themeComboBox);
-    connect(themeComboBox, QOverload<int>::of(&ElaComboBox::currentIndexChanged), this, [=](int index)
+    connect(themeComboBox, QOverload<int>::of(&ElaNoWheelComboBox::currentIndexChanged), this, [=](int index)
         {
             if (index == 0) {
                 eTheme->setThemeMode(ElaThemeType::Light);
@@ -101,7 +101,7 @@ void AppSettingsPage::setupUi()
     windowModeButtonGroup->addButton(micaAltButton, 3);
     windowModeButtonGroup->addButton(acrylicButton, 4);
     windowModeButtonGroup->addButton(dwmBlurnormalButton, 5);
-    int windowDisplayMode = toml::find_or(m_globalConfig, "windowDisplayMode", 0); // 不知道为什么3及以上的值会失效
+    int windowDisplayMode = toml::find_or(m_globalConfig, "windowDisplayMode", 1); // 不知道为什么3及以上的值会失效
     QAbstractButton* abstractButton = windowModeButtonGroup->button(windowDisplayMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -349,7 +349,7 @@ void AppSettingsPage::setupUi()
         tr("重启生效"), 10, "", languageArea);
     languageLayout->addWidget(languageText);
     languageLayout->addStretch();
-    ElaComboBox* languageComboBox = new ElaComboBox(languageArea);
+    ElaNoWheelComboBox* languageComboBox = new ElaNoWheelComboBox(languageArea);
     languageComboBox->addItem("zh_CN");
     languageComboBox->addItem("en");
     if (int languageIndex = languageComboBox->findText(QString::fromStdString(toml::find_or(m_globalConfig, "language", "zh_CN")));
@@ -369,7 +369,7 @@ void AppSettingsPage::setupUi()
     pyEnvPathLayout->addStretch();
     ElaLineEdit* pyEnvPathLineEdit = new ElaLineEdit(pyEnvPathArea);
     pyEnvPathLineEdit->setFixedWidth(400);
-    pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pyEnvPath", "BaseConfig/python-3.12.10-embed-amd64")));
+    pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
     pyEnvPathLayout->addWidget(pyEnvPathLineEdit);
     ElaPushButton* pyEnvPathButton = new ElaPushButton(tr("浏览"), pyEnvPathArea);
     pyEnvPathLayout->addWidget(pyEnvPathButton);

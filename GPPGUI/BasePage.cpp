@@ -4,23 +4,20 @@
 BasePage::BasePage(QWidget* parent)
     : ElaScrollPage(parent)
 {
-    connect(eTheme, &ElaTheme::themeModeChanged, this, [=]() {
-        if (!parent)
-        {
-            update();
-        }
-    });
-
+    if (!parent) {
+        connect(eTheme, &ElaTheme::themeModeChanged, this, [=]()
+            {
+                update();
+            });
+    }
     setContentsMargins(0, 0, 0, 0);
 }
+
+BasePage::~BasePage() = default;
 
 void BasePage::apply2Config()
 {
     if (m_applyFunc) {
         m_applyFunc();
     }
-}
-
-BasePage::~BasePage()
-{
 }

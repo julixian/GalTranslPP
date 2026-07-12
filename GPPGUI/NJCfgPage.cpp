@@ -19,7 +19,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出带原文
-	bool outputWithSrc = toml::find_or(m_projectConfig, "plugins", "NormalJson", "output_with_src", true);
+	bool outputWithSrc = toml::find_or(m_projectConfig, "plugins", "NormalJson", "outputWithSrc", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("输出带原文"), outputArea);
@@ -34,7 +34,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 
 	m_applyFunc = [=]()
 		{
-			insertToml(m_projectConfig, "plugins.NormalJson.output_with_src", outputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.NormalJson.outputWithSrc", outputSwitch->getIsToggled());
 		};
 
 	mainLayout->addStretch();

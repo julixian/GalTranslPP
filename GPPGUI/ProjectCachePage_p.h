@@ -1,6 +1,5 @@
-#pragma once
-
-#include <nlohmann/json.hpp>
+#ifndef PROJECTCACHEPAGE_P_H
+#define PROJECTCACHEPAGE_P_H
 
 #include <QColor>
 #include <QString>
@@ -8,6 +7,8 @@
 
 #include "ElaDef.h"
 #include "ElaTheme.h"
+
+#include <nlohmann/json.hpp>
 
 class ElaIconButton;
 class ElaPlainTextEdit;
@@ -17,7 +18,8 @@ class QStandardItem;
 class QStyledItemDelegate;
 class QWidget;
 
-namespace ProjectCachePagePrivate {
+namespace ProjectCachePagePrivate
+{
     using json = nlohmann::json;
 
     // Model 和自绘 delegate 共用的 role，新增展示字段时两边要一起更新。
@@ -57,3 +59,5 @@ namespace ProjectCachePagePrivate {
     QStyledItemDelegate* createCacheEntryDelegate(QObject* parent);
     QStyledItemDelegate* createCacheSearchDelegate(QObject* parent);
 }
+
+#endif

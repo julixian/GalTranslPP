@@ -7,50 +7,21 @@
 export module PythonManager;
 
 export import GPPDefines;
+export import SafeQueue;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
 export
 {
-    template <typename T>
-    class SafeQueue {
-    public:
-        void push(T value) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_queue.push(std::move(value));
-            m_cond.notify_one();
-        }
-
-        std::optional<T> pop() {
-            std::unique_lock<std::mutex> lock(m_mutex);
-            m_cond.wait(lock, [this] { return !m_queue.empty() || m_stopped; });
-            if (m_stopped && m_queue.empty()) {
-                return std::nullopt;
-            }
-            T value = std::move(m_queue.front());
-            m_queue.pop();
-            return value;
-        }
-
-        void stop() {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_stopped = true;
-            m_cond.notify_all();
-        }
-
-    private:
-        std::queue<T> m_queue;
-        std::mutex m_mutex;
-        std::condition_variable m_cond;
-        bool m_stopped = false;
-    };
-
-
-
     struct PythonTask {
         std::function<void()> taskFunc;
         std::promise<void> promise; // 用于返回结果
+    };
+
+    struct PythonNLPFunction {
+        py::object proc;
+        py::object close;
     };
 
 
@@ -67,8 +38,8 @@ export
 
         std::future<void> submitTask(std::function<void()> taskFunc);
 
-        std::shared_ptr<py::object> registerNLPFunction
-        (const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger, bool& needReboot);
+        std::shared_ptr<PythonNLPFunction> registerNLPFunction
+        (const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger);
 
         void stop();
 
@@ -78,8 +49,6 @@ export
 
         void daemonThreadFunc();
 
-        std::mutex m_mutex;
-        absl::btree_map<std::string, absl::btree_map<std::string, std::weak_ptr<py::object>>> m_nlpModuleFunctions;
         std::thread m_daemonThread; // 守护线程
         SafeQueue<std::unique_ptr<PythonTask>> m_taskQueue;
     };
@@ -101,7 +70,7 @@ export
 
         void daemonThreadFunc();
 
-        std::thread daemonThread;
+        std::thread m_daemonThread;
         SafeQueue<std::unique_ptr<PythonTask>> m_taskQueue;
         std::unique_ptr<py::subinterpreter> subInterpreter;
     };

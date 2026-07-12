@@ -38,7 +38,7 @@ std::vector<DictionaryReviewValueFrequency> buildValueFrequencies(
     return values;
 }
 
-std::vector<DictionaryReviewTermGroup> DictionaryReviewIndex::build(
+std::vector<DictionaryReviewTermGroup> buildDictionaryReviewTermGroups(
     const DictList& coarseCandidates,
     const absl::flat_hash_map<std::string, int>& finalCounter,
     const std::vector<std::string>& segments,

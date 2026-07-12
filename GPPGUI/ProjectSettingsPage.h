@@ -1,16 +1,15 @@
 #ifndef PROJECTSETTINGSPAGE_H
 #define PROJECTSETTINGSPAGE_H
 
-#include <QList>
-#include <toml.hpp>
-#include <filesystem>
 #include "BasePage.h"
+#include <filesystem>
+#include <toml.hpp>
 
 namespace fs = std::filesystem;
 
 class ElaText;
 class QStackedWidget;
-class APISettingsPage;
+class ApiSettingsPage;
 class PluginSettingsPage;
 class CommonSettingsPage;
 class PASettingsPage;
@@ -28,13 +27,12 @@ class ProjectSettingsPage : public BasePage
 
 public:
     explicit ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~ProjectSettingsPage() override;
 
     QString getProjectName();
     fs::path getProjectDir();
     bool getIsRunning();
 
-    virtual void apply2Config() override;
+	void apply2Config() override;
     void refreshCommonDicts();
     void clearLog(bool forceClear);
 
@@ -50,7 +48,7 @@ private:
     // UI 控件
     QStackedWidget* m_stackedWidget = nullptr;
 
-    APISettingsPage* m_apiSettingsPage = nullptr;
+    ApiSettingsPage* m_apiSettingsPage = nullptr;
     PluginSettingsPage* m_pluginSettingsPage = nullptr;
     CommonSettingsPage* m_commonSettingsPage = nullptr;
     PASettingsPage* m_paSettingsPage = nullptr;
@@ -72,4 +70,4 @@ private Q_SLOTS:
     void onRefreshProjectConfig();
 };
 
-#endif // PROJECTSETTINGSPAGE_H
+#endif

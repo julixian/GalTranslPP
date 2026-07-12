@@ -2,13 +2,13 @@
 #define TRANSLATORWORKER_H
 
 #include <QObject>
-#include <filesystem>
 #include <QStringList>
 #include <QVector>
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
-struct GuiRuntimeSuccessEvent {
+struct GuiRuntimeTransSuccessEvent {
     QString timestamp;
     QString filename;
     int index{};
@@ -17,20 +17,20 @@ struct GuiRuntimeSuccessEvent {
     QString translationPreview;
     QString translatedBy;
 };
-Q_DECLARE_METATYPE(GuiRuntimeSuccessEvent)
+Q_DECLARE_METATYPE(GuiRuntimeTransSuccessEvent)
 
-struct GuiRuntimeErrorEvent {
+struct GuiRuntimeTransErrorEvent {
     QString timestamp;
     QString kind;
     QString level;
     QString message;
     QString filename;
     QString indexRange;
-    int retryCount = -1;
+    int requestCount = -1;
     QString model;
     double sleepSeconds = -1.0;
 };
-Q_DECLARE_METATYPE(GuiRuntimeErrorEvent)
+Q_DECLARE_METATYPE(GuiRuntimeTransErrorEvent)
 
 struct GuiRuntimeFileProgress {
     QString filename;
@@ -46,13 +46,9 @@ class TranslatorWorker : public QObject
 public:
     explicit TranslatorWorker(const fs::path& projectDir, QObject* parent = nullptr);
 
-    void stopTranslation();
     bool getShouldStop() const { return m_shouldStop; }
-
-
-public Q_SLOTS:
-    // 执行翻译任务的槽函数
     void doTranslation();
+    void stopTranslation();
 
 Q_SIGNALS:
     // 任务完成信号（无论是正常结束还是被中断）
@@ -65,8 +61,8 @@ Q_SIGNALS:
     void updateBarSignal(int ticks);
     void runtimeFilesResetSignal(const QVector<GuiRuntimeFileProgress>& files);
     void runtimeFileProgressBatchSignal(const QVector<GuiRuntimeFileProgress>& files);
-    void runtimeSuccessBatchSignal(const QVector<GuiRuntimeSuccessEvent>& events);
-    void runtimeErrorBatchSignal(const QVector<GuiRuntimeErrorEvent>& events);
+    void runtimeTransSuccessBatchSignal(const QVector<GuiRuntimeTransSuccessEvent>& events);
+    void runtimeTransErrorBatchSignal(const QVector<GuiRuntimeTransErrorEvent>& events);
     void runtimeStageChangedSignal(const QString& stage, const QString& currentFile);
 
 private:
@@ -74,4 +70,4 @@ private:
     bool m_shouldStop = false;
 };
 
-#endif // TRANSLATORWORKER_H
+#endif

@@ -36,11 +36,6 @@ ElaInputDialog::ElaInputDialog(const QString& label, const QString& text, QStrin
 	setCentralWidget(centerWidget);
 }
 
-ElaInputDialog::~ElaInputDialog()
-{
-
-}
-
 void ElaInputDialog::onRightButtonClicked()
 {
 	m_result = m_lineEdit->text();

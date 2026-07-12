@@ -19,15 +19,10 @@ import Tool;
 NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
-	setWindowTitle(tr("人名替换表"));
+	setWindowTitle("NameTable");
 	setTitleVisible(false);
 
 	setupUi();
-}
-
-NameTableSettingsPage::~NameTableSettingsPage()
-{
-
 }
 
 void NameTableSettingsPage::refreshTable()
@@ -40,7 +35,7 @@ void NameTableSettingsPage::refreshTable()
 QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 {
 	QList<NameTableEntry> result;
-	fs::path nameTablePath = m_projectDir / L"人名替换表.toml";
+	fs::path nameTablePath = m_projectDir / L"NameTable.toml";
 	if (!fs::exists(nameTablePath)) {
 		return result;
 	}
@@ -63,7 +58,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 			});*/
 	}
 	catch (...) {
-		ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("人名替换表 不符合 toml 规范"), 3000);
+		ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("NameTable.toml 不符合 toml 规范"), 3000);
 		return result;
 	}
 
@@ -72,7 +67,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 
 QString NameTableSettingsPage::readNameTableStr()
 {
-	return ReadDicts::readDictsStr(m_projectDir / L"人名替换表.toml");
+	return ReadDicts::readDictsStr(m_projectDir / L"NameTable.toml");
 }
 
 void NameTableSettingsPage::setupUi()
@@ -149,7 +144,7 @@ void NameTableSettingsPage::setupUi()
 	nameTableView->setColumnWidth(1, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "1", 258));
 	nameTableView->setColumnWidth(2, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "2", 258));
 	stackedWidget->addWidget(nameTableView);
-	stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 0)));
+	stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 1)));
 
 	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 	TableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
@@ -178,7 +173,7 @@ void NameTableSettingsPage::setupUi()
 		{
 			plainTextEdit->setPlainText(readNameTableStr());
 			nameTableModel->loadData(readNameTable());
-			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("重新载入了 人名替换表"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("重新载入了 NameTable.toml"), 3000);
 		};
 	connect(refreshButton, &ElaPushButton::clicked, this, refreshFunc);
 	connect(addNameButton, &ElaPushButton::clicked, this, [=]()
@@ -219,7 +214,7 @@ void NameTableSettingsPage::setupUi()
 			if (m_applyFunc) {
 				m_applyFunc();
 			}
-			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("已保存 人名替换表"), 3000);
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("已保存 NameTable.toml"), 3000);
 		});
 	connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
 		{
@@ -240,11 +235,11 @@ void NameTableSettingsPage::setupUi()
 
 	m_applyFunc = [=]()
 		{
-			std::ofstream ofs(m_projectDir / L"人名替换表.toml", std::ios::binary);
+			const fs::path nameTablePath = m_projectDir / L"NameTable.toml";
+			std::ofstream ofs;
 			int index = stackedWidget->currentIndex();
 			if (index == 0) {
-				ofs << plainTextEdit->toPlainText().toStdString();
-				ofs.close();
+				atomicOutputFile(ofs, nameTablePath, plainTextEdit->toPlainText().toStdString());
 				nameTableModel->loadData(readNameTable());
 			}
 			else if (index == 1) {
@@ -257,8 +252,7 @@ void NameTableSettingsPage::setupUi()
 					}
 					tbl[entry.original.toStdString()] = toml::array{ entry.translation.toStdString(), entry.count };
 				}
-				ofs << tbl;
-				ofs.close();
+				atomicOutputFile(ofs, nameTablePath, toml::format(tbl));
 				plainTextEdit->setPlainText(readNameTableStr());
 			}
 			insertToml(m_projectConfig, "GUIConfig.nameTableOpenMode", stackedWidget->currentIndex());

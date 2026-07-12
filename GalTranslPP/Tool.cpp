@@ -21,10 +21,10 @@ module;
 
 #include <toml.hpp>
 
-#include <unicode/unistr.h>
 #include <unicode/brkiter.h>
 #include <unicode/uscript.h>
 #include <unicode/translit.h>
+#include <unicode/utext.h>
 
 #include <utf8cpp/utf8.h>
 
@@ -41,16 +41,6 @@ namespace fs = std::filesystem;
 
 
 #ifdef _WIN32
-std::string wide2Ascii(const std::wstring& wide, UINT codePage, LPBOOL usedDefaultChar) {
-    int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(), 
-        nullptr, 0, nullptr, usedDefaultChar);
-    if (len == 0) return {};
-    std::string ascii(len, '\0');
-    WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(), 
-        ascii.data(), len, nullptr, nullptr);
-    return ascii;
-}
-
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         nullptr, 0, nullptr, usedDefaultChar);
@@ -61,22 +51,836 @@ std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefault
     return ascii;
 }
 
-std::wstring ascii2Wide(const std::string& ascii, UINT codePage) {
-    int len = MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(), nullptr, 0);
-    if (len == 0) return {};
-    std::wstring wide(len, L'\0');
-    MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(), wide.data(), len);
-    return wide;
-}
-
 std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
-    int len = MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(), nullptr, 0);
+    int len = MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
+        nullptr, 0);
     if (len == 0) return {};
     std::wstring wide(len, L'\0');
-    MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(), wide.data(), len);
+    MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
+        wide.data(), len);
     return wide;
 }
+#endif
 
+
+
+std::optional<int> str2Int(std::string_view str) {
+    int value = 0;
+    // 注意：from_chars 不会跳过前导空格！如果需要，得自己 trim 一下
+    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+    // ec == std::errc() 表示解析动作成功
+    // ptr == str.data() + str.size() 表示整个字符串都被消耗完了（没有剩余垃圾字符）
+    if (ec == std::errc() && ptr == str.data() + str.size()) {
+        return value;
+    }
+    return std::nullopt;
+}
+
+
+
+template<typename T>
+std::vector<T> splitStringImpl(auto&& str, auto&& delimiter)
+{
+    std::vector<T> result;
+    for (auto&& subStrView : str | std::views::split(delimiter)) {
+        result.emplace_back(subStrView.begin(), subStrView.end());
+    }
+    return result;
+}
+std::vector<std::string_view> splitStringView(std::string_view str, char delimiter) {
+    return splitStringImpl<std::string_view>(str, delimiter);
+}
+std::vector<std::string_view> splitStringView(std::string_view str, std::string_view delimiter) {
+    return splitStringImpl<std::string_view>(str, delimiter);
+}
+std::vector<std::string> splitString(std::string_view str, char delimiter) {
+    return splitStringImpl<std::string>(str, delimiter);
+}
+std::vector<std::string> splitString(std::string_view str, std::string_view delimiter) {
+    return splitStringImpl<std::string>(str, delimiter);
+}
+
+
+
+std::vector<std::string_view> splitTsvLineView(std::string_view line, std::span<const std::string_view> delimiters) {
+    std::vector<std::string_view> parts;
+    size_t currentPos = 0;
+
+    if (
+        std::ranges::any_of(delimiters, [](const auto& delimiter)
+            {
+                return delimiter.empty();
+            })
+        )
+    {
+        throw std::runtime_error(gppTr("splitTsvLine", "内部错误: TSV 行切分不允许使用空分隔符").toStdString());
+    }
+
+    while (currentPos < line.length()) {
+        size_t splitPos = std::string_view::npos;
+        size_t delimiterLength = 0;
+        for (std::string_view delimiter : delimiters) {
+            if (const size_t pos = line.find(delimiter, currentPos); pos != std::string_view::npos && pos < splitPos) {
+                splitPos = pos;
+                delimiterLength = delimiter.length();
+            }
+        }
+        parts.push_back(line.substr(currentPos, splitPos - currentPos));
+
+        if (splitPos == std::string_view::npos) {
+            break;
+        }
+        currentPos = splitPos + delimiterLength;
+    }
+
+    return parts;
+}
+
+std::vector<std::string> splitTsvLine(std::string_view line, std::span<const std::string_view> delimiters) {
+    const std::vector<std::string_view> partViews = splitTsvLineView(line, delimiters);
+    std::vector<std::string> parts;
+    parts.reserve(partViews.size());
+    for (std::string_view part : partViews) {
+        parts.emplace_back(part);
+    }
+    return parts;
+}
+
+
+
+class UTextWrapper {
+public:
+    explicit UTextWrapper(std::string_view sourceString, UErrorCode& errorCode) {
+        utext_openUTF8(&m_text, sourceString.data(), (int64_t)sourceString.size(), &errorCode);
+    }
+    UTextWrapper(const UTextWrapper&) = delete;
+    UTextWrapper& operator=(const UTextWrapper&) = delete;
+    UTextWrapper(UTextWrapper&&) = delete;
+    UTextWrapper& operator=(UTextWrapper&&) = delete;
+    ~UTextWrapper() {
+        utext_close(&m_text);
+    }
+
+    UText* get() {
+        return &m_text;
+    }
+
+private:
+    UText m_text = UTEXT_INITIALIZER;
+};
+
+std::vector<std::string_view> splitIntoGraphemeViews(std::string_view str) {
+    std::vector<std::string_view> resultVector;
+
+    if (str.empty()) {
+        return resultVector;
+    }
+
+    UErrorCode errorCode = U_ZERO_ERROR;
+    UTextWrapper uText(str, errorCode);
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("splitIntoGraphemes", "打开 UTF-8 文本失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+
+    const std::unique_ptr<icu::BreakIterator> breakIterator(
+        icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
+    );
+
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("splitIntoGraphemes", "创建字符边界迭代器失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+
+    breakIterator->setText(uText.get(), errorCode);
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("splitIntoGraphemes", "设置字符边界迭代文本失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+
+    int32_t start = breakIterator->first();
+    for (int32_t end = breakIterator->next(); end != icu::BreakIterator::DONE; start = end, end = breakIterator->next()) {
+        resultVector.push_back(str.substr((size_t)start, (size_t)(end - start)));
+    }
+
+    return resultVector;
+}
+
+std::vector<std::string> splitIntoGraphemes(std::string_view str) {
+    const std::vector<std::string_view> graphemeViews = splitIntoGraphemeViews(str);
+    std::vector<std::string> resultVector;
+    resultVector.reserve(graphemeViews.size());
+    for (const auto& grapheme : graphemeViews) {
+        resultVector.emplace_back(grapheme);
+    }
+    return resultVector;
+}
+
+
+
+size_t countGraphemes(std::string_view str) {
+    if (str.empty()) {
+        return 0;
+    }
+    UErrorCode errorCode = U_ZERO_ERROR;
+    UTextWrapper uText(str, errorCode);
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("countGraphemes", "打开 UTF-8 文本失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+
+    const std::unique_ptr<icu::BreakIterator> breakIterator(
+        icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
+    );
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("countGraphemes", "创建字符边界迭代器失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+    breakIterator->setText(uText.get(), errorCode);
+    if (U_FAILURE(errorCode)) {
+        throw std::runtime_error(gppTr("countGraphemes", "设置字符边界迭代文本失败: %1")
+            .arg(u_errorName(errorCode))
+            .toStdString());
+    }
+
+    breakIterator->first();
+    size_t count = 0;
+    for (int32_t end = breakIterator->next(); end != icu::BreakIterator::DONE; end = breakIterator->next()) {
+        ++count;
+    }
+    return count;
+}
+
+
+
+int countSubstring(std::string_view str, std::string_view sub) {
+    return (int)std::ranges::distance(str | std::views::split(sub)) - 1;
+}
+
+// 计算的是子串在删去子串后的主串中出现的位置
+std::vector<double> getSubstringPositions(std::string_view str, std::string_view sub) {
+    if (str.empty() || sub.empty()) return {};
+    std::vector<size_t> positions;
+    std::vector<double> relpositions;
+
+    for (size_t offset = str.find(sub); offset != std::string_view::npos; offset = str.find(sub, offset + sub.length())) {
+        positions.push_back(offset);
+    }
+    const size_t newTotalLength = str.length() - positions.size() * sub.length();
+    if (newTotalLength == 0) {
+        return {};
+    }
+    for (size_t i = 0; i < positions.size(); i++) {
+        const size_t newPos = positions[i] - i * sub.length();
+        relpositions.push_back((double)newPos / newTotalLength);
+    }
+    return relpositions;
+}
+
+// MostCommonChar 和 Grapheme 都遍历的是字形簇而不是码点
+std::pair<std::string_view, int> getMostCommonCharView(std::string_view str) {
+    if (str.empty()) {
+        return { {}, 0 };
+    }
+
+    absl::btree_map<std::string_view, int> counts;
+    for (const auto& grapheme : splitIntoGraphemeViews(str)) {
+        ++counts[grapheme];
+    }
+
+    if (counts.empty()) {
+        return { {}, 0 };
+    }
+
+    const auto maxIterator = std::ranges::max_element(counts, [](const auto& a, const auto& b)
+        {
+            return a.second < b.second;
+        });
+
+    return { maxIterator->first, maxIterator->second };
+}
+
+std::pair<std::string, int> getMostCommonChar(std::string_view str) {
+    const auto [charView, count] = getMostCommonCharView(str);
+    return { std::string(charView), count };
+}
+
+
+
+std::string& replaceStrInplace(std::string& str, std::string_view org, std::string_view rep) {
+    boost::replace_all(str, org, rep);
+    return str;
+}
+
+std::string replaceStr(const std::string& str, std::string_view org, std::string_view rep) {
+    return boost::replace_all_copy(str, org, rep);
+}
+
+
+
+bool isEscapedJsonQuote(const std::string& text, size_t pos) {
+    if (pos == 0 || pos >= text.size()) {
+        return false;
+    }
+    size_t slashCount = 0;
+    for (size_t i = pos; i > 0;) {
+        --i;
+        if (text[i] != '\\') {
+            break;
+        }
+        ++slashCount;
+    }
+    return slashCount % 2 == 1;
+}
+
+bool isLikelyJsonKeyPosition(const std::string& text, size_t keyPos) {
+    if (keyPos == std::string::npos) {
+        return false;
+    }
+    for (size_t i = keyPos; i > 0;) {
+        --i;
+        const unsigned char ch = (unsigned char)text[i];
+        if (std::isspace(ch)) {
+            continue;
+        }
+        return text[i] == '{' || text[i] == ',' || text[i] == '[';
+    }
+    return true;
+}
+
+bool isLikelyJsonStringSuffix(const std::string& text, size_t posAfterQuote) {
+    for (size_t i = posAfterQuote; i < text.size(); ++i) {
+        const unsigned char ch = (unsigned char)text[i];
+        if (std::isspace(ch)) {
+            continue;
+        }
+        return text[i] == ',' || text[i] == '}' || text[i] == ']';
+    }
+    return true;
+}
+
+size_t findLikelyJsonStringClosingQuote(const std::string& text, size_t openingQuotePos) {
+    for (size_t pos = openingQuotePos + 1; pos < text.size(); ++pos) {
+        if (text[pos] != '"' || isEscapedJsonQuote(text, pos)) {
+            continue;
+        }
+        if (isLikelyJsonStringSuffix(text, pos + 1)) {
+            return pos;
+        }
+    }
+    return std::string::npos;
+}
+
+std::string lightRepairJsonText(std::string_view jsonStr) {
+    if (jsonStr.empty()) {
+        return std::string(jsonStr);
+    }
+
+    static constexpr std::array<std::string_view, 15> repairableFields = {
+        "\"dst\":",
+        "\"note\":",
+        "\"rolling_context\":",
+        "\"query\":",
+        "\"source_term\":",
+        "\"target_term\":",
+        "\"final_target\":",
+        "\"final_note\":",
+        "\"merge_into\":",
+        "\"suggestion\":",
+        "\"summary\":",
+        "\"scene_state\":",
+        "\"unresolved_clues\":",
+        "\"relationship_updates\":",
+        "\"term_hints\":"
+    };
+
+    std::string newText = std::string(jsonStr);
+    for (const std::string_view& field : repairableFields) {
+        size_t searchPos = 0;
+        while (searchPos < newText.size()) {
+            const size_t fieldPos = newText.find(field, searchPos);
+            if (fieldPos == std::string::npos) {
+                break;
+            }
+            searchPos = fieldPos + field.size();
+            if (!isLikelyJsonKeyPosition(newText, fieldPos)) {
+                continue;
+            }
+
+            size_t openingQuotePos = searchPos;
+            while (openingQuotePos < newText.size() && std::isspace((unsigned char)newText[openingQuotePos])) {
+                ++openingQuotePos;
+            }
+            if (openingQuotePos >= newText.size() || newText[openingQuotePos] != '"') {
+                continue;
+            }
+
+            const size_t closingQuotePos = findLikelyJsonStringClosingQuote(newText, openingQuotePos);
+            if (closingQuotePos == std::string::npos || closingQuotePos <= openingQuotePos) {
+                continue;
+            }
+
+            std::string repairedValue;
+            repairedValue.reserve(closingQuotePos - openingQuotePos);
+            for (size_t pos = openingQuotePos + 1; pos < closingQuotePos; ++pos) {
+                if (newText[pos] == '"' && !isEscapedJsonQuote(newText, pos)) {
+                    repairedValue.push_back('\\');
+                }
+                repairedValue.push_back(newText[pos]);
+            }
+
+            const std::string_view originalValue = std::string_view(newText).substr(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1);
+            if (repairedValue != originalValue) {
+                newText.replace(openingQuotePos + 1, closingQuotePos - openingQuotePos - 1, repairedValue);
+                searchPos = openingQuotePos + 1 + repairedValue.size() + 1;
+            }
+        }
+    }
+    return newText;
+}
+
+
+
+bool hasPunctuation(std::string_view str) {
+    const uint8_t* s = (const uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (u_ispunct(c)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool hasWhitespace(std::string_view str) {
+    const uint8_t* s = (const uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (u_isspace(c)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string removePunctuation(std::string_view str) {
+    std::string resultString;
+    const uint8_t* s = (uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (!u_ispunct(c)) {
+            utf8::unchecked::append(c, std::back_inserter(resultString));
+        }
+    }
+    return resultString;
+}
+
+std::string removeWhitespace(std::string_view str) {
+    std::string resultString;
+    const uint8_t* s = (uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (!u_isspace(c)) {
+            utf8::unchecked::append(c, std::back_inserter(resultString));
+        }
+    }
+    return resultString;
+}
+
+
+
+std::string_view truncateUtf8PrefixView(std::string_view str, size_t maxCodepoints) {
+    if (str.empty() || str.length() <= maxCodepoints) {
+        return str;
+    }
+    if (maxCodepoints == 0) {
+        return {};
+    }
+    const uint8_t* s = (const uint8_t*)str.data();
+    const int32_t length = (int32_t)str.size();
+    int32_t i = 0;
+    size_t count = 0;
+    while (i < length && count < maxCodepoints) {
+        U8_FWD_1(s, i, length);
+        ++count;
+    }
+    if (i >= length) {
+        return str;
+    }
+    return str.substr(0, (size_t)i);
+}
+
+std::string truncateUtf8Prefix(std::string_view str, size_t maxCodepoints, std::string_view ellipsis) {
+    const std::string_view prefix = truncateUtf8PrefixView(str, maxCodepoints);
+    if (prefix.size() == str.size()) {
+        return std::string(str);
+    }
+    return prefix + ellipsis;
+}
+
+std::string_view truncateUtf8SuffixView(std::string_view str, size_t maxCodepoints) {
+    if (str.empty() || str.length() < maxCodepoints) {
+        return str;
+    }
+    if (maxCodepoints == 0) {
+        return {};
+    }
+    const uint8_t* s = (const uint8_t*)str.data();
+    int32_t i = (int32_t)str.size();
+    size_t count = 0;
+    while (i > 0 && count < maxCodepoints) {
+        U8_BACK_1(s, 0, i);
+        ++count;
+    }
+    if (i <= 0) {
+        return str;
+    }
+    return str.substr(i);
+}
+
+std::string truncateUtf8Suffix(std::string_view str, size_t maxCodepoints, std::string_view ellipsis) {
+    const std::string_view suffix = truncateUtf8SuffixView(str, maxCodepoints);
+    if (suffix.size() == str.size()) {
+        return std::string(str);
+    }
+    return ellipsis + suffix;
+}
+
+std::string maskApiKey(std::string_view apiKey) {
+    constexpr size_t prefixLength = 8;
+    constexpr size_t suffixLength = 6;
+    if (apiKey.size() <= prefixLength + suffixLength + 3) {
+        apiKey.remove_suffix(1);
+        return std::string(apiKey) + '*';
+    }
+    return std::string(apiKey.substr(0, prefixLength)) + "..." + std::string(apiKey.substr(apiKey.size() - suffixLength));
+}
+
+
+
+bool hasCharactersByScripts(std::string_view sourceString, std::span<const UScriptCode> targetScripts) {
+    UErrorCode errorCode = U_ZERO_ERROR;
+
+    const uint8_t* s = (const uint8_t*)sourceString.data();
+    const int32_t length = (int32_t)sourceString.length();
+    int32_t i = 0;
+    UChar32 c;
+
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        const UScriptCode script = uscript_getScript(c, &errorCode);
+
+        if (U_SUCCESS(errorCode) && std::ranges::contains(targetScripts, script)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+bool hasKatakana(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_KATAKANA };
+    return hasCharactersByScripts(sourceString, targetScripts);
+}
+bool hasKana(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HIRAGANA, USCRIPT_KATAKANA };
+    return hasCharactersByScripts(sourceString, targetScripts);
+}
+bool hasLatin(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_LATIN };
+    return hasCharactersByScripts(sourceString, targetScripts);
+}
+bool hasHangul(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HANGUL };
+    return hasCharactersByScripts(sourceString, targetScripts);
+}
+bool hasCJK(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HAN };
+    return hasCharactersByScripts(sourceString, targetScripts);
+}
+
+// 核心辅助函数
+// 接受一个源字符串和一组目标脚本，返回所有匹配字符组成的UTF-8字符串
+// 这个和 removeXXX 一样都是遍历的码点，所以可以用宏和 utf8cpp 来加速
+std::string extractCharactersByScripts(std::string_view str, std::span<const UScriptCode> targetScripts) {
+
+    std::string resultString;
+    UErrorCode errorCode = U_ZERO_ERROR;
+
+    const uint8_t* s = (uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        const UScriptCode script = uscript_getScript(c, &errorCode);
+
+        if (U_SUCCESS(errorCode)) {
+            if (std::ranges::contains(targetScripts, script)) {
+                utf8::unchecked::append(c, std::back_inserter(resultString));
+            }
+        }
+    }
+
+    return resultString;
+}
+std::string extractKatakana(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_KATAKANA };
+    return extractCharactersByScripts(sourceString, targetScripts);
+}
+std::string extractKana(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HIRAGANA, USCRIPT_KATAKANA };
+    return extractCharactersByScripts(sourceString, targetScripts);
+}
+std::string extractLatin(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_LATIN };
+    return extractCharactersByScripts(sourceString, targetScripts);
+}
+std::string extractHangul(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HANGUL };
+    return extractCharactersByScripts(sourceString, targetScripts);
+}
+std::string extractCJK(std::string_view sourceString) {
+    static constexpr std::array targetScripts = { USCRIPT_HAN };
+    return extractCharactersByScripts(sourceString, targetScripts);
+}
+
+std::function<std::string(const std::string&)> getTraditionalChineseExtractor()
+{
+    static const absl::btree_set<std::string_view> excludeList = {
+        "乾", "阪", "篠", "塚"
+    };
+    auto converter = std::make_shared<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
+    std::function<std::string(const std::string&)> result = [converterR = std::move(converter)](const std::string& sourceString)
+        {
+            if (const std::string simplified = converterR->Convert(sourceString); simplified == sourceString) {
+                return std::string{};
+            }
+            std::string resultStr;
+            for (const auto& grapheme : splitIntoGraphemeViews(sourceString)
+                | std::views::filter([&](const auto& g) { return !excludeList.contains(g); }))
+            {
+                if (const std::string simplified = converterR->Convert(grapheme.data(), grapheme.size());
+                    simplified != grapheme)
+                {
+                    resultStr += grapheme;
+                }
+            }
+            return resultStr;
+        };
+    return result;
+}
+
+
+
+std::string names2String(const std::vector<std::string>& names) {
+    std::string result;
+    for (const auto& name : names) {
+        result += name + "|";
+    }
+    if (!result.empty()) {
+        result.pop_back();
+    }
+    return result;
+}
+
+std::string names2String(const json& j) {
+    std::string result;
+    for (const auto& name : j) {
+        result += name.get<std::string>() + "|";
+    }
+    if (!result.empty()) {
+        result.pop_back();
+    }
+    return result;
+}
+
+std::string getNameString(const Sentence* se) {
+    if (se->nameType == NameType::Single) {
+        return se->name;
+    }
+    if (se->nameType == NameType::Multiple) {
+        return names2String(se->names);
+    }
+    return {};
+}
+
+std::string getNameString(const json& j) {
+    if (j.contains("name")) {
+        return j["name"].get<std::string>();
+    }
+    if (j.contains("names")) {
+        return names2String(j["names"]);
+    }
+    return {};
+}
+
+const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
+    switch (target) {
+    case CachePart::Name:
+        return sentence->name;
+        break;
+    case CachePart::NameTrans:
+        return sentence->nameTrans;
+        break;
+    case CachePart::Orig:
+        return sentence->orig;
+        break;
+    case CachePart::Preproc:
+        return sentence->preproc;
+        break;
+    case CachePart::Pretrans:
+        return sentence->pretrans;
+        break;
+    case CachePart::TranslatedBy:
+        return sentence->translatedBy;
+        break;
+    case CachePart::Transview:
+        return sentence->transview;
+        break;
+    case CachePart::None:
+        throw std::runtime_error(gppTr("chooseStringRef", "内部错误: 无效的条件目标 None").toStdString());
+    default:
+        throw std::runtime_error(gppTr("chooseStringRef", "内部错误: 无法获取字符串的无效条件目标 %1")
+            .arg((int)target)
+            .toStdString());
+    }
+    return {};
+}
+
+std::string chooseString(const Sentence* sentence, CachePart target) {
+    return chooseStringRef(sentence, target);
+}
+
+CachePart chooseCachePart(std::string_view partName) {
+    CachePart part;
+    if (partName == "name") {
+        part = CachePart::Name;
+    }
+    else if (partName == "names") {
+        part = CachePart::Names;
+    }
+    else if (partName == "nameTrans") {
+        part = CachePart::NameTrans;
+    }
+    else if (partName == "namesTrans") {
+        part = CachePart::NamesTrans;
+    }
+    else if (partName == "orig") {
+        part = CachePart::Orig;
+    }
+    else if (partName == "preproc") {
+        part = CachePart::Preproc;
+    }
+    else if (partName == "pretrans") {
+        part = CachePart::Pretrans;
+    }
+    else if (partName == "problems") {
+        part = CachePart::Problems;
+    }
+    else if (partName == "otherInfo") {
+        part = CachePart::OtherInfo;
+    }
+    else if (partName == "translatedBy") {
+        part = CachePart::TranslatedBy;
+    }
+    else if (partName == "transview") {
+        part = CachePart::Transview;
+    }
+    else {
+        throw std::invalid_argument(gppTr("chooseCachePart", "内部错误: 无效的 CachePart %1")
+            .arg(std::string(partName))
+            .toStdString());
+    }
+    return part;
+}
+
+
+
+ActiveWorkerGuard::ActiveWorkerGuard(const std::shared_ptr<IController>& controller)
+    : m_controller(controller)
+{
+    if (m_controller) {
+        m_controller->addThreadNum();
+    }
+}
+
+ActiveWorkerGuard::~ActiveWorkerGuard()
+{
+    if (m_controller) {
+        m_controller->reduceThreadNum();
+    }
+}
+
+
+
+bool isApiTranslationEngine(TransEngine transEngine) {
+    switch (transEngine)
+    {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForGalTsv:
+    case TransEngine::ForNovelTsv:
+    case TransEngine::Sakura:
+        return true;
+    default:
+        return false;
+    }
+}
+
+PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTime defaultTime) {
+    if (pluginNameLower.contains("dprerun:")) {
+        return PluginRunTime::DPre;
+    }
+    else if (pluginNameLower.contains("dpostrun:")) {
+        return PluginRunTime::DPost;
+    }
+    else if (pluginNameLower.contains("prerun:")) {
+        return PluginRunTime::Pre;
+    }
+    else if (pluginNameLower.contains("postrun:")) {
+        return PluginRunTime::Post;
+    }
+    return defaultTime;
+}
+
+void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& results) {
+    std::exception_ptr firstException = nullptr;
+    for (auto& result : results) {
+        try {
+            result.get();
+        }
+        catch (...) {
+            if (!firstException) {
+                pool.stop();
+                firstException = std::current_exception();
+            }
+        }
+    }
+    if (firstException) {
+        std::rethrow_exception(firstException);
+    }
+}
+
+
+
+#ifdef _WIN32
 bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow, int timeDelayAfterCommand) {
 
     std::wstring commandLineStr;
@@ -150,48 +954,6 @@ int getConsoleWidth() {
 
 
 
-std::string names2String(const std::vector<std::string>& names) {
-    std::string result;
-    for (const auto& name : names) {
-        result += name + "|";
-    }
-    if (!result.empty()) {
-        result.pop_back();
-    }
-    return result;
-}
-
-std::string names2String(const json& j) {
-    std::string result;
-    for (const auto& name : j) {
-        result += name.get<std::string>() + "|";
-    }
-    if (!result.empty()) {
-        result.pop_back();
-    }
-    return result;
-}
-
-std::string getNameString(const Sentence* se) {
-    if (se->nameType == NameType::Single) {
-        return se->name;
-    }
-    if (se->nameType == NameType::Multiple) {
-        return names2String(se->names);
-    }
-    return {};
-}
-
-std::string getNameString(const json& j) {
-    if (j.contains("name")) {
-        return j["name"].get<std::string>();
-    }
-    if (j.contains("names")) {
-        return names2String(j["names"]);
-    }
-    return {};
-}
-
 bool createParent(const fs::path& path) {
     if (path.has_parent_path() && !fs::exists(path.parent_path())) {
         return fs::create_directories(path.parent_path());
@@ -199,589 +961,10 @@ bool createParent(const fs::path& path) {
     return false;
 }
 
-std::optional<int> str2Int(std::string_view sv) {
-    int value = 0;
-    // 注意：from_chars 不会跳过前导空格！如果需要，得自己 trim 一下
-    auto [ptr, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), value);
-    // ec == std::errc() 表示解析动作成功
-    // ptr == sv.data() + sv.size() 表示整个字符串都被消耗完了（没有剩余垃圾字符）
-    if (ec == std::errc() && ptr == sv.data() + sv.size()) {
-        return value;
-    }
-    return std::nullopt;
-}
-
-std::vector<std::string> splitTsvLine(const std::string& line, const std::vector<std::string>& delimiters) {
-    std::vector<std::string> parts;
-    size_t currentPos = 0;
-
-    if (
-        std::ranges::any_of(delimiters, [](const std::string& delimiter)
-            {
-                return delimiter.empty();
-            })
-        )
-    {
-        throw std::runtime_error(gppTr("splitTsvLine", "TSV 行切分不允许使用空分隔符").toStdString());
-    }
-
-    while (currentPos < line.length()) {
-        size_t splitPos = std::string::npos;
-        size_t delimiterLength = 0;
-        for (const auto& delimiter : delimiters) {
-            if (const size_t pos = line.find(delimiter, currentPos); pos != std::string::npos && pos < splitPos) {
-                splitPos = pos;
-                delimiterLength = delimiter.length();
-            }
-        }
-        std::string part = line.substr(currentPos, splitPos - currentPos);
-        parts.push_back(std::move(part));
-
-        if (splitPos == std::string::npos) {
-            break;
-        }
-        currentPos = splitPos + delimiterLength;
-    }
-
-    return parts;
-}
-
-
-const std::string& chooseStringRef(const Sentence* sentence, CachePart tar) {
-    switch (tar) {
-    case CachePart::Name:
-        return sentence->name;
-        break;
-    case CachePart::NamePreview:
-        return sentence->name_preview;
-        break;
-    case CachePart::OrigText:
-        return sentence->original_text;
-        break;
-    case CachePart::PreprocText:
-        return sentence->pre_processed_text;
-        break;
-    case CachePart::PretransText:
-        return sentence->pre_translated_text;
-        break;
-    case CachePart::TranslatedBy:
-        return sentence->translated_by;
-        break;
-    case CachePart::TransPreview:
-        return sentence->translated_preview;
-        break;
-    case CachePart::None:
-        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标: None").toStdString());
-    default:
-        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标: %1")
-            .arg((int)tar)
-            .toStdString());
-    }
-    return {};
-}
-
-std::string chooseString(const Sentence* sentence, CachePart tar) {
-    return chooseStringRef(sentence, tar);
-}
-
-CachePart chooseCachePart(std::string_view partName) {
-    CachePart part;
-    if (partName == "name") {
-        part = CachePart::Name;
-    }
-    else if (partName == "names") {
-        part = CachePart::Names;
-    }
-    else if (partName == "name_preview") {
-        part = CachePart::NamePreview;
-    }
-    else if (partName == "names_preview") {
-        part = CachePart::NamesPreview;
-    }
-    else if (partName == "orig_text") {
-        part = CachePart::OrigText;
-    }
-    else if (partName == "preproc_text") {
-        part = CachePart::PreprocText;
-    }
-    else if (partName == "pretrans_text") {
-        part = CachePart::PretransText;
-    }
-    else if (partName == "problems") {
-        part = CachePart::Problems;
-    }
-    else if (partName == "other_info") {
-        part = CachePart::OtherInfo;
-    }
-    else if (partName == "translated_by") {
-        part = CachePart::TranslatedBy;
-    }
-    else if (partName == "trans_preview") {
-        part = CachePart::TransPreview;
-    }
-    else {
-        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart: %1")
-            .arg(std::string(partName))
-            .toStdString());
-    }
-    return part;
-}
-
-bool isSameExtension(const fs::path& filePath, const std::wstring& ext) {
+bool isSameExtension(const fs::path& filePath, std::wstring_view ext) {
     return str2Lower(filePath.extension()) == str2Lower(ext);
 }
 
-
-// MostCommonChar 和 Grapheme 都遍历的是字形簇而不是码点
-std::pair<std::string, int> getMostCommonChar(const std::string& s) {
-    if (s.empty()) {
-        return { {}, 0 };
-    }
-
-    UErrorCode errorCode = U_ZERO_ERROR;
-    const icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(s);
-
-    absl::btree_map<icu::UnicodeString, int> counts;
-
-    const std::unique_ptr<icu::BreakIterator> boundary(icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode));
-    if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("getMostCommonChar", "创建字符边界迭代器失败: %1")
-            .arg(u_errorName(errorCode))
-            .toStdString());
-    }
-    boundary->setText(ustr);
-
-    int32_t start = boundary->first();
-    for (int32_t end = boundary->next(); end != icu::BreakIterator::DONE; start = end, end = boundary->next()) {
-        icu::UnicodeString grapheme;
-        ustr.extract(start, end - start, grapheme);
-        ++counts[grapheme];
-    }
-
-    if (counts.empty()) {
-        return { {}, 0 };
-    }
-
-    const auto maxIterator = std::ranges::max_element(counts, [](const auto& a, const auto& b) 
-        {
-            return a.second < b.second;
-        });
-
-    const icu::UnicodeString mostCommonGrapheme = maxIterator->first;
-    int maxCount = maxIterator->second;
-
-    std::string resultStr;
-
-    return { mostCommonGrapheme.toUTF8String(resultStr), maxCount };
-}
-
-std::vector<std::string> splitIntoGraphemes(const std::string& sourceString) {
-    std::vector<std::string> resultVector;
-
-    if (sourceString.empty()) {
-        return resultVector;
-    }
-
-    UErrorCode errorCode = U_ZERO_ERROR;
-    const icu::UnicodeString uString = icu::UnicodeString::fromUTF8(sourceString);
-
-    const std::unique_ptr<icu::BreakIterator> breakIterator(
-        icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
-    );
-
-    if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("splitIntoGraphemes", "创建字符边界迭代器失败: %1")
-            .arg(u_errorName(errorCode))
-            .toStdString());
-    }
-
-    breakIterator->setText(uString);
-
-    int32_t start = breakIterator->first();
-    for (int32_t end = breakIterator->next(); end != icu::BreakIterator::DONE; start = end, end = breakIterator->next()) {
-        icu::UnicodeString graphemeUString;
-        uString.extract(start, end - start, graphemeUString);
-        std::string graphemeStdString;
-        resultVector.push_back(graphemeUString.toUTF8String(graphemeStdString));
-    }
-
-    return resultVector;
-}
-
-size_t countGraphemesImpl(auto&& sourceString)
-{
-    if (sourceString.empty()) {
-        return 0;
-    }
-    UErrorCode errorCode = U_ZERO_ERROR;
-    const icu::UnicodeString uString = icu::UnicodeString::fromUTF8(sourceString);
-    const std::unique_ptr<icu::BreakIterator> breakIterator(
-        icu::BreakIterator::createCharacterInstance(icu::Locale::getRoot(), errorCode)
-    );
-    if (U_FAILURE(errorCode)) {
-        throw std::runtime_error(gppTr("countGraphemes", "创建字符边界迭代器失败: %1")
-            .arg(u_errorName(errorCode))
-            .toStdString());
-    }
-    breakIterator->setText(uString);
-
-    int32_t start = breakIterator->first();
-    size_t count = 0;
-    for (int32_t end = breakIterator->next(); end != icu::BreakIterator::DONE; end = breakIterator->next()) {
-        ++count;
-    }
-    return count;
-}
-
-size_t countGraphemes(std::string_view sourceString) {
-    return countGraphemesImpl(sourceString);
-}
-
-size_t countGraphemes(const std::string& sourceString) {
-    return countGraphemesImpl(sourceString);
-}
-
-std::string truncateUtf8Prefix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
-    if (text.empty() || text.length() < maxCodepoints) {
-        return std::string(text);
-    }
-    if (maxCodepoints == 0) {
-        return std::string(ellipsis);
-    }
-    const uint8_t* s = (const uint8_t*)text.data();
-    const int32_t length = (int32_t)text.size();
-    int32_t i = 0;
-    size_t count = 0;
-    while (i < length && count < maxCodepoints) {
-        U8_FWD_1(s, i, length);
-        ++count;
-    }
-    if (i >= length) {
-        return std::string(text);
-    }
-    std::string result(text.substr(0, (size_t)i));
-    result += ellipsis;
-    return result;
-}
-
-std::string truncateUtf8Suffix(std::string_view text, size_t maxCodepoints, std::string_view ellipsis) {
-    if (text.empty() || text.length() < maxCodepoints) {
-        return std::string(text);
-    }
-    if (maxCodepoints == 0) {
-        return std::string(ellipsis);
-    }
-    const uint8_t* s = (const uint8_t*)text.data();
-    int32_t i = (int32_t)text.size();
-    size_t count = 0;
-    while (i > 0 && count < maxCodepoints) {
-        U8_BACK_1(s, 0, i);
-        ++count;
-    }
-    if (i <= 0) {
-        return std::string(text);
-    }
-    std::string result(ellipsis);
-    result += text.substr((size_t)i);
-    return result;
-}
-
-std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, const std::string& text)
-{
-    std::vector<std::string> tokens;
-
-    size_t searchPos = 0; // 在原始句子中搜索的起始位置
-    for (const auto& wordPos : wordPosVec) {
-        const auto& token = wordPos.front();
-        // 从 searchPos 开始查找当前 token
-        const size_t tokenPos = text.find(token, searchPos);
-        // 错误处理：如果在预期位置找不到 token，说明输入有问题
-        if (tokenPos == std::string::npos) {
-            throw std::runtime_error(gppTr("splitIntoTokens", "在原句剩余部分中找不到 token '%1'。")
-                .arg(token)
-                .toStdString());
-        }
-        // 1. 提取并添加 token 前面的空白部分
-        if (tokenPos > searchPos) {
-            tokens.push_back(text.substr(searchPos, tokenPos - searchPos));
-        }
-        // 2. 更新下一次搜索的起始位置
-        searchPos = tokenPos + token.length();
-        // 3. 添加 token 本身
-        tokens.push_back(std::move(token));
-    }
-    // 4. 处理最后一个 token 后面的尾随空白
-    if (searchPos < text.length()) {
-        tokens.push_back(text.substr(searchPos));
-    }
-
-    return tokens;
-}
-
-// 计算子串出现次数
-int countSubstring(const std::string& text, std::string_view sub) {
-    return (int)std::ranges::distance(text | std::views::split(sub)) - 1;
-}
-
-// 计算的是子串在删去子串后的主串中出现的位置
-std::vector<double> getSubstringPositions(const std::string& text, std::string_view sub) {
-    if (text.empty() || sub.empty()) return {};
-    std::vector<size_t> positions;
-    std::vector<double> relpositions;
-
-    for (size_t offset = text.find(sub); offset != std::string::npos; offset = text.find(sub, offset + sub.length())) {
-        positions.push_back(offset);
-    }
-    const size_t newTotalLength = text.length() - positions.size() * sub.length();
-    if (newTotalLength == 0) {
-        return {};
-    }
-    for (size_t i = 0; i < positions.size(); i++) {
-        const size_t newPos = positions[i] - i * sub.length();
-        relpositions.push_back((double)newPos / newTotalLength);
-    }
-    return relpositions;
-}
-
-std::string& replaceStrInplace(std::string& str, std::string_view org, std::string_view rep) {
-    boost::replace_all(str, org, rep);
-    return str;
-}
-
-std::string replaceStr(const std::string& str, std::string_view org, std::string_view rep) {
-    return boost::replace_all_copy(str, org, rep);
-}
-
-// 核心辅助函数
-// 接受一个源字符串和一组目标脚本，返回所有匹配字符组成的UTF-8字符串
-// 这个和 removeXXX 一样都是遍历的码点，所以可以用宏和 utf8cpp 来加速
-std::string extractCharactersByScripts(const std::string& sourceString, const std::vector<UScriptCode>& targetScripts) {
-
-    std::string resultString;
-    UErrorCode errorCode = U_ZERO_ERROR;
-
-    const uint8_t* s = (uint8_t*)sourceString.c_str();
-    const int32_t length = (int32_t)sourceString.length();
-    int32_t i = 0;
-    UChar32 c;
-
-    while (i < length) {
-        U8_NEXT(s, i, length, c);
-        const UScriptCode script = uscript_getScript(c, &errorCode);
-
-        if (U_SUCCESS(errorCode)) {
-            if (std::ranges::contains(targetScripts, script)) {
-                utf8::unchecked::append(c, std::back_inserter(resultString));
-            }
-        }
-    }
-
-    return resultString;
-}
-
-std::string extractKatakana(const std::string& sourceString) {
-    return extractCharactersByScripts(sourceString, { USCRIPT_KATAKANA });
-}
-
-std::string extractKana(const std::string& sourceString) {
-    return extractCharactersByScripts(sourceString, { USCRIPT_HIRAGANA, USCRIPT_KATAKANA });
-}
-
-std::string extractLatin(const std::string& sourceString) {
-    return extractCharactersByScripts(sourceString, { USCRIPT_LATIN });
-}
-
-std::string extractHangul(const std::string& sourceString) {
-    return extractCharactersByScripts(sourceString, { USCRIPT_HANGUL });
-}
-
-std::string extractCJK(const std::string& sourceString) {
-    return extractCharactersByScripts(sourceString, { USCRIPT_HAN });
-}
-
-std::string removePunctuation(const std::string& sourceString) {
-    std::string resultString;
-    const uint8_t* s = (uint8_t*)sourceString.c_str();
-    const int32_t length = (int32_t)sourceString.length();
-    int32_t i = 0;
-    UChar32 c;
-    while (i < length) {
-        U8_NEXT(s, i, length, c);
-        if (!u_ispunct(c)) {
-            utf8::unchecked::append(c, std::back_inserter(resultString));
-        }
-    }
-    return resultString;
-}
-
-std::string removeWhitespace(const std::string& sourceString) {
-    std::string resultString;
-    const uint8_t* s = (uint8_t*)sourceString.c_str();
-    const int32_t length = (int32_t)sourceString.length();
-    int32_t i = 0;
-    UChar32 c;
-    while (i < length) {
-        U8_NEXT(s, i, length, c);
-        if (!u_isspace(c)) {
-            utf8::unchecked::append(c, std::back_inserter(resultString));
-        }
-    }
-    return resultString;
-}
-
-std::function<std::string(const std::string&)> getTraditionalChineseExtractor(const std::shared_ptr<spdlog::logger>& logger)
-{
-    // 是否需要线程安全？(似乎是不需要)
-    try {
-        auto converter = std::make_shared<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
-        absl::btree_set<std::string_view> excludeList = {
-            "乾", "阪", "篠", "塚"
-        };
-        std::function<std::string(const std::string&)> result = [excludeListR = std::move(excludeList), converterR = std::move(converter)](const std::string& sourceString)
-            {
-                if (const std::string simplified = converterR->Convert(sourceString); simplified == sourceString) {
-                    return std::string{};
-                }
-                std::string resultStr;
-                for (const auto& grapheme : splitIntoGraphemes(sourceString)
-                    | std::views::filter([&](const std::string& g) { return !excludeListR.contains(g); }))
-                {
-                    if (const std::string simplified = converterR->Convert(grapheme); simplified != grapheme)
-                    {
-                        resultStr += grapheme;
-                    }
-                }
-                return resultStr;
-            };
-        logger->info(gppTr("getTraditionalChineseExtractor", "使用 OpenCC 进行繁体中文检测").toStdString());
-        return result;
-    }
-    catch (...) {
-        logger->error(gppTr("getTraditionalChineseExtractor", "OpenCC 不可用，尝试回退到基于 ICU 的繁体中文检测")
-            .toStdString());
-        UErrorCode status = U_ZERO_ERROR;
-        auto toSimplified = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Traditional-Simplified", UTRANS_FORWARD, status));
-        if (U_FAILURE(status)) {
-            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的繁体中文检测不可用")
-                .toStdString());
-        }
-        auto toTraditional = std::shared_ptr<icu::Transliterator>(icu::Transliterator::createInstance("Simplified-Traditional", UTRANS_FORWARD, status));
-        if (U_FAILURE(status)) {
-            throw std::runtime_error(gppTr("getTraditionalChineseExtractor", "基于 ICU 的简体中文检测不可用")
-                .toStdString());
-        }
-
-        // 白名单/排除列表：用于解决简繁转换中的歧义问题。
-        // "著" (U+8457) 是一个典型例子，它在简体中文里也是合法字符，但T->S的转换规则可能导致误判。
-        absl::btree_set<UChar32> excludeList = {
-            U'著', U'乾', U'阪', U'篠', U'塚'
-        };
-        std::function<std::string(const std::string&)>result = [excludeListR = std::move(excludeList), toSimplifiedR = std::move(toSimplified),
-            toTraditionalR = std::move(toTraditional)](const std::string& sourceString)
-            {
-				{
-                    icu::UnicodeString ustr = icu::UnicodeString::fromUTF8(sourceString);
-                    icu::UnicodeString ustrS = ustr;
-                    toSimplifiedR->transliterate(ustrS);
-                    if (ustrS == ustr) {
-                        return std::string{};
-                    }
-				}
-
-                absl::btree_set<UChar32> traditionalChars;
-
-                const uint8_t* s = (uint8_t*)sourceString.c_str();
-                const int32_t length = (int32_t)sourceString.length();
-                int32_t i = 0;
-                UChar32 c;
-
-                while (i < length) {
-
-                    U8_NEXT(s, i, length, c);
-
-                    // 1. 必须是汉字
-                    UErrorCode scriptErr = U_ZERO_ERROR;
-                    if (uscript_getScript(c, &scriptErr) != USCRIPT_HAN || U_FAILURE(scriptErr)) {
-                        continue;
-                    }
-
-                    // 2. 检查是否在排除列表中
-                    if (excludeListR.contains(c)) {
-                        continue;
-                    }
-
-                    const icu::UnicodeString uCharSource(c);
-
-                    icu::UnicodeString uSimplified = uCharSource;
-                    toSimplifiedR->transliterate(uSimplified);
-                    // 3. 繁体转简体后必须有变化
-                    if (uCharSource == uSimplified) {
-                        continue;
-                    }
-
-                    // 4. 核心双向检查：简体转回繁体，必须能得到原始字符，确保转换是明确且可逆的
-                    icu::UnicodeString uReTraditional = uSimplified;
-                    toTraditionalR->transliterate(uReTraditional);
-
-                    if (uReTraditional == uCharSource) {
-                        traditionalChars.insert(c);
-                    }
-                }
-
-                icu::UnicodeString resultUStr;
-                for (const UChar32 ch : traditionalChars) {
-                    resultUStr.append(ch);
-                }
-
-                std::string resultStr;
-                return resultUStr.toUTF8String(resultStr);
-            };
-        logger->info(gppTr("getTraditionalChineseExtractor", "使用基于 ICU 的繁体中文检测").toStdString());
-        return result;
-    }
-    return {};
-}
-
-
-void loadTokenizeCache
-(absl::flat_hash_map<std::string, std::vector<std::vector<std::string>>>& result, const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger) {
-    try {
-        if (fs::exists(cachePath)) {
-            std::ifstream ifs(cachePath, std::ios::binary);
-            json::parse(ifs).get_to(result);
-        }
-        else {
-            logger->debug(gppTr("loadTokenizeCache", "未找到分词缓存 %1")
-                .arg(wide2Ascii(cachePath))
-                .toStdString());
-        }
-    }
-    catch (const json::parse_error& e) {
-        logger->error(gppTr("loadTokenizeCache", "读取分词缓存 %1 失败: %2")
-            .arg(wide2Ascii(cachePath))
-            .arg(e.what())
-            .toStdString());
-    }
-}
-
-void saveTokenizeCache
-(const absl::flat_hash_map<std::string, std::vector<std::vector<std::string>>>& cache, const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger) {
-    try {
-        createParent(cachePath);
-        const json j = cache;
-        std::ofstream ofs(cachePath, std::ios::binary);
-        ofs << j.dump(2);
-        ofs.close();
-        logger->debug(gppTr("saveTokenizeCache", "分词缓存已保存到 %1")
-            .arg(wide2Ascii(cachePath))
-            .toStdString());
-    }
-    catch (...) {
-        logger->error(gppTr("saveTokenizeCache", "分词缓存 %1 保存失败")
-            .arg(wide2Ascii(cachePath))
-            .toStdString());
-    }
-}
 
 
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
@@ -791,7 +974,7 @@ void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
     extractor.extract(wide2Ascii(zipPath), wide2Ascii(outputDir));
 }
 
-void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::string& fileName) {
+void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, std::string_view fileName) {
     bool extracted = false;
     const bit7z::Bit7zLibrary library{ "7z.dll" };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
@@ -866,16 +1049,94 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 }
 
 
-std::string nowTimestampString() {
+
+namespace toml
+{
+    ::toml::value uparse(const fs::path& path) {
+        std::ifstream ifs(path, std::ios::binary);
+        return ::toml::parse(ifs, wide2Ascii(path));
+    }
+
+    ::toml::ordered_value uoparse(const fs::path& path) {
+        std::ifstream ifs(path, std::ios::binary);
+        return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
+    }
+}
+
+
+
+json parseJson(const fs::path& path, std::ifstream& ifs) {
+    ifs.open(path, std::ios::binary);
+    struct CloseGuard {
+        std::ifstream& stream;
+        ~CloseGuard() { stream.close(); }
+    } closeGuard{ ifs };
+    return json::parse(ifs);
+}
+
+json parseJson(const fs::path& path) {
+    std::ifstream ifs;
+    return parseJson(path, ifs);
+}
+
+ordered_json parseOrderedJson(const fs::path& path, std::ifstream& ifs) {
+    ifs.open(path, std::ios::binary);
+    struct CloseGuard {
+        std::ifstream& stream;
+        ~CloseGuard() { stream.close(); }
+    } closeGuard{ ifs };
+    return ordered_json::parse(ifs);
+}
+
+ordered_json parseOrderedJson(const fs::path& path) {
+    std::ifstream ifs;
+    return parseOrderedJson(path, ifs);
+}
+
+
+
+void loadTokenizeCache
+(absl::flat_hash_map<std::string, WordPosVec>& result, const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger) {
+    try {
+        if (fs::exists(cachePath)) {
+            parseJson(cachePath).get_to(result);
+        }
+        else {
+            logger->debug(gppTr("loadTokenizeCache", "未找到分词缓存 [%1]")
+                .arg(wide2Ascii(cachePath))
+                .toStdString());
+        }
+    }
+    catch (const std::exception& e) {
+        logger->error(gppTr("loadTokenizeCache", "读取分词缓存 [%1] 失败: %2")
+            .arg(wide2Ascii(cachePath))
+            .arg(e.what())
+            .toStdString());
+    }
+}
+
+void saveTokenizeCache
+(const absl::flat_hash_map<std::string, WordPosVec>& cache, const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger) {
+    try {
+        const json j = cache;
+        atomicOutputFile(cachePath, j.dump(2));
+        logger->debug(gppTr("saveTokenizeCache", "分词缓存已保存到 [%1]")
+            .arg(wide2Ascii(cachePath))
+            .toStdString());
+    }
+    catch (...) {
+        logger->error(gppTr("saveTokenizeCache", "分词缓存 [%1] 保存失败")
+            .arg(wide2Ascii(cachePath))
+            .toStdString());
+    }
+}
+
+
+
+std::string currentTimestampString() {
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
     const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
     return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
-}
-
-void saveJsonFile(const fs::path& path, const json& value) {
-    createParent(path);
-    std::ofstream ofs(path, std::ios::binary);
-    ofs << value.dump(2);
 }
 
 uint64_t calculateFileCRC64(const fs::path& filePath) {
@@ -892,140 +1153,48 @@ uint64_t calculateFileCRC64(const fs::path& filePath) {
     return crc.checksum();
 }
 
-bool cmpVer(const std::string& latestVer, const std::string& currentVer, bool& isCompatible)
+int compareVersion(std::string_view latestVer, std::string_view currentVer)
 {
-    bool isCurrentVerPre = false;
-    auto removePostfix = [&](std::string v) -> std::string
+    auto parseVersion = [](std::string_view version) -> std::optional<std::array<int, 3>>
         {
-            while (true) {
-                if (
-                    !v.empty() &&
-                    (v.back() < '0' || v.back() > '9')
-                    ) {
-                    v.pop_back();
-                    isCurrentVerPre = true;
-                }
-                else {
-                    break;
-                }
+            if (const size_t versionPrefixPos = version.find_last_of('v'); versionPrefixPos != std::string_view::npos) {
+                version.remove_prefix(versionPrefixPos + 1);
             }
-            return v;
+            const std::vector<std::string_view> parts = splitStringView(version, '.');
+            if (parts.size() != 3) {
+                return std::nullopt;
+            }
+            std::array<int, 3> result{};
+            for (size_t i = 0; i < result.size(); ++i) {
+                const std::optional<int> part = str2Int(parts[i]);
+                if (!part.has_value()) {
+                    return std::nullopt;
+                }
+                result[i] = part.value();
+            }
+            return result;
         };
 
-    const std::string fixedCurrentVer = removePostfix(currentVer);
-    const std::string v1s = latestVer.find_last_of("v") == std::string::npos ? latestVer : latestVer.substr(latestVer.find_last_of("v") + 1);
-    const std::string v2s = fixedCurrentVer.find_last_of("v") == std::string::npos ? fixedCurrentVer : fixedCurrentVer.substr(fixedCurrentVer.find_last_of("v") + 1);
+    const std::optional<std::array<int, 3>> latestVersion = parseVersion(latestVer);
+    const std::optional<std::array<int, 3>> currentVersion = parseVersion(currentVer);
+    if (!latestVersion.has_value() || !currentVersion.has_value()) {
+        return -2;
+    }
 
-    const std::vector<std::string> latestVerParts = splitString(v1s, '.');
-    const std::vector<std::string> currentVerParts = splitString(v2s, '.');
+    if (latestVersion->at(0) > currentVersion->at(0)) {
+        return 2;
+    }
+    if (latestVersion->at(0) < currentVersion->at(0)) {
+        return -1;
+    }
 
-    const size_t len = std::max(latestVerParts.size(), currentVerParts.size());
-
-    for (size_t i = 0; i < len; i++) {
-        const int latestVerPart = i < latestVerParts.size() ? str2Int(latestVerParts[i]).value_or(0) : 0;
-        const int currentVerPart = i < currentVerParts.size() ? str2Int(currentVerParts[i]).value_or(0) : 0;
-        if (i == 0) {
-            isCompatible = latestVerPart <= currentVerPart;
+    for (size_t i = 1; i < latestVersion->size(); ++i) {
+        if (latestVersion->at(i) > currentVersion->at(i)) {
+            return 1;
         }
-
-        if (latestVerPart > currentVerPart) {
-            return true;
-        }
-        else if (latestVerPart < currentVerPart) {
-            return false;
+        if (latestVersion->at(i) < currentVersion->at(i)) {
+            return -1;
         }
     }
-
-    if (isCurrentVerPre) {
-        return true;
-    }
-
-    return false;
+    return 0;
 }
-
-PluginRunTime choosePluginRunTime(const std::string& pluginNameLower, PluginRunTime defaultTime) {
-    if (pluginNameLower.contains("dprerun:")) {
-        return PluginRunTime::DPre;
-    }
-    else if (pluginNameLower.contains("dpostrun:")) {
-        return PluginRunTime::DPost;
-    }
-    else if (pluginNameLower.contains("prerun:")) {
-        return PluginRunTime::Pre;
-    }
-    else if (pluginNameLower.contains("postrun:")) {
-        return PluginRunTime::Post;
-    }
-    return defaultTime;
-}
-
-namespace toml
-{
-    ::toml::value uparse(const fs::path& path) {
-        std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse(ifs, wide2Ascii(path));
-    }
-
-    ::toml::ordered_value uoparse(const fs::path& path) {
-        std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
-    }
-}
-
-void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& results) {
-    std::exception_ptr firstException = nullptr;
-    for (auto& result : results) {
-        try {
-            result.get();
-        }
-        catch (...) {
-            if (!firstException) {
-                pool.stop();
-                firstException = std::current_exception();
-            }
-        }
-    }
-    if (firstException) {
-        std::rethrow_exception(firstException);
-    }
-}
-
-bool isApiTranslationEngine(TransEngine transEngine) {
-    switch (transEngine)
-    {
-    case TransEngine::ForGalJson:
-    case TransEngine::ForGalTsv:
-    case TransEngine::ForNovelTsv:
-    case TransEngine::DeepseekJson:
-    case TransEngine::Sakura:
-        return true;
-    default:
-        return false;
-    }
-}
-
-ActiveWorkerGuard::ActiveWorkerGuard(const std::shared_ptr<IController>& controller)
-    : m_controller(controller)
-{
-    if (m_controller) {
-        m_controller->addThreadNum();
-    }
-}
-
-ActiveWorkerGuard::~ActiveWorkerGuard()
-{
-    if (m_controller) {
-        m_controller->reduceThreadNum();
-    }
-}
-
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const std::string& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const int& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const double& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const bool& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::array& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::table& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::value& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::ordered_array& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::ordered_table& value);
-template toml::ordered_value& insertToml(toml::ordered_value& table, const std::string& path, const toml::ordered_value& value);

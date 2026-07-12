@@ -20,12 +20,15 @@
 #include <pybind11/subinterpreter.h>
 #endif
 
-#define IMPL_LITERAL_TO_STR(x) #x
-#define LITERAL_TO_STR(x) IMPL_LITERAL_TO_STR(x)
-
+#ifdef SOL2_HEADERS
+#include <sol/sol.hpp>
 #define NESTED_CVT(className, memberName) sol::property([](className& self) \
 { \
 	return sol::nested<decltype(className::memberName)>(self.memberName); \
-}, [](className& self, decltype(className::memberName) table) { self.memberName = std::move(table); }) 
+}, [](className& self, decltype(className::memberName) table) { self.memberName = std::move(table); })
+#endif
+
+#define IMPL_LITERAL_TO_STR(x) #x
+#define LITERAL_TO_STR(x) IMPL_LITERAL_TO_STR(x)
 
 #endif

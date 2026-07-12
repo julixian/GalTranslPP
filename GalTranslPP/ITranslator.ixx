@@ -1,4 +1,4 @@
-﻿export module ITranslator;
+export module ITranslator;
 
 export import GPPDefines;
 
@@ -6,7 +6,7 @@ namespace fs = std::filesystem;
 
 export
 {
-    struct RuntimeSuccessEvent {
+    struct RuntimeTransSuccessEvent {
         std::string timestamp;
         std::string filename;
         int index{0};
@@ -16,14 +16,14 @@ export
         std::string translatedBy;
     };
 
-    struct RuntimeErrorEvent {
+    struct RuntimeTransErrorEvent {
         std::string timestamp;
         std::string kind;
         std::string level{"error"};
         std::string message;
         std::string filename;
         std::string indexRange;
-        int retryCount{-1};
+        int requestCount{-1};
         std::string model;
         double sleepSeconds{-1.0};
     };
@@ -40,8 +40,8 @@ export
 
 		std::atomic<int> m_totalSentences{ 0 };
 		std::atomic<int> m_completedSentences{ 0 };
-		std::atomic<int> m_workersActive{ 0 };
-		std::atomic<int> m_workersConfigured{ 0 };
+		std::atomic<int> m_activeThreads{ 0 };
+		std::atomic<int> m_totalThreads{ 0 };
 
 		void makeBar(int totalSentences, int totalThreads);
 
@@ -57,11 +57,12 @@ export
 
 		void setRuntimeStage(const std::string& stage, const std::string& currentFile = {});
 
+		// 语义解释：SentenceDone 不一定是 TransSuccess，更不一定 Runtime
 		void recordFileSentenceDone(const std::string& runtimeFile, bool hasProblem);
 
-		void recordRuntimeSuccess(RuntimeSuccessEvent event);
+		void recordRuntimeTransSuccess(RuntimeTransSuccessEvent event);
 
-		void recordRuntimeError(RuntimeErrorEvent event);
+		void recordRuntimeTransError(RuntimeTransErrorEvent event);
 
 		virtual bool shouldStop() = 0;
 
@@ -73,14 +74,14 @@ export
 
 	protected:
 		virtual void onMakeBar(int totalSentences, int totalThreads) {}
-		virtual void onAddThreadNum(int workersActive) {}
-		virtual void onReduceThreadNum(int workersActive) {}
+		virtual void onAddThreadNum(int activeThreads) {}
+		virtual void onReduceThreadNum(int activeThreads) {}
 		virtual void onUpdateBar(int ticks, int completedSentences, int totalSentences) {}
 		virtual void onRuntimeFilesReset(const std::vector<RuntimeFileProgress>& files) {}
 		virtual void onRuntimeStageChanged(const std::string& stage, const std::string& currentFile) {}
 		virtual void onRuntimeFileProgress(const RuntimeFileProgress& file) {}
-		virtual void onRuntimeSuccess(const RuntimeSuccessEvent& event) {}
-		virtual void onRuntimeError(const RuntimeErrorEvent& event) {}
+		virtual void onRuntimeTransSuccess(const RuntimeTransSuccessEvent& event) {}
+		virtual void onRuntimeTransError(const RuntimeTransErrorEvent& event) {}
 
 	private:
 		mutable std::mutex m_runtimeMutex;

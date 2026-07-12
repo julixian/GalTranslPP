@@ -14,6 +14,7 @@
 #include "ElaContentDialog.h"
 #include "ElaInputDialog.h"
 #include "ElaDoubleText.h"
+#include "ElaRadioButton.h"
 
 import Tool;
 import NormalJsonTranslatorHelperTool;
@@ -25,11 +26,6 @@ OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, toml::ordered_value& 
 	setTitleVisible(false);
 
 	setupUi();
-}
-
-OtherSettingsPage::~OtherSettingsPage()
-{
-
 }
 
 void OtherSettingsPage::setupUi()
@@ -60,6 +56,29 @@ void OtherSettingsPage::setupUi()
 		});
 	pathLayout->addWidget(openButton);
 	mainLayout->addWidget(pathArea);
+
+	// 问题概览输出格式
+	const std::string problemOverviewFormat = toml::find_or(m_projectConfig, "common", "problemOverviewFormat", "json");
+	ElaScrollPageArea* overviewFormatArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* overviewFormatLayout = new QHBoxLayout(overviewFormatArea);
+	ElaDoubleText* overviewFormatLabel = new ElaDoubleText(tr("问题概览输出格式"), 16,
+		tr("翻译完成后输出 ProblemOverview 的文件格式"), 10, "", overviewFormatArea);
+	overviewFormatLayout->addWidget(overviewFormatLabel);
+	overviewFormatLayout->addStretch();
+	ElaRadioButton* overviewTomlRadio = new ElaRadioButton("toml", overviewFormatArea);
+	ElaRadioButton* overviewJsonRadio = new ElaRadioButton("json", overviewFormatArea);
+	QButtonGroup* overviewFormatGroup = new QButtonGroup(overviewFormatArea);
+	overviewFormatGroup->addButton(overviewTomlRadio);
+	overviewFormatGroup->addButton(overviewJsonRadio);
+	overviewTomlRadio->setChecked(problemOverviewFormat != "json");
+	overviewJsonRadio->setChecked(problemOverviewFormat == "json");
+	overviewFormatLayout->addWidget(overviewTomlRadio);
+	overviewFormatLayout->addWidget(overviewJsonRadio);
+	m_applyFunc = [=]()
+		{
+			insertToml(m_projectConfig, "common.problemOverviewFormat", overviewFormatGroup->checkedButton()->text().toStdString());
+		};
+	mainLayout->addWidget(overviewFormatArea);
 
 
 	// 项目移动/更名
@@ -154,7 +173,7 @@ void OtherSettingsPage::setupUi()
 	ElaScrollPageArea* importArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* importLayout = new QHBoxLayout(importArea);
 	ElaDoubleText* importLabel = new ElaDoubleText(tr("导入翻译问题概览至翻译缓存"), 16,
-		tr("使用 翻译问题概览.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence"), 10, "", importArea);
+		tr("使用 ProblemOverview.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence"), 10, "", importArea);
 	importLayout->addWidget(importLabel);
 	importLayout->addStretch();
 	ElaPushButton* importButton = new ElaPushButton(importArea);
@@ -180,9 +199,7 @@ void OtherSettingsPage::setupUi()
 				{
 					json overviewData;
 					if (importOverviewPathQStr.endsWith(".json", Qt::CaseInsensitive)) {
-						ifs.open(importOverviewPathQStr.toStdWString(), std::ios::binary);
-						overviewData = json::parse(ifs);
-						ifs.close();
+						overviewData = parseJson(fs::path(importOverviewPathQStr.toStdWString()));
 					}
 					else if (importOverviewPathQStr.endsWith(".toml", Qt::CaseInsensitive)) {
 						const auto tomlData = toml::uparse(fs::path(importOverviewPathQStr.toStdWString()));
@@ -192,7 +209,7 @@ void OtherSettingsPage::setupUi()
 						throw std::runtime_error("未知的文件类型");
 					}
 					for (const auto& overviewItem : overviewData) {
-						overviewFileMap[overviewItem["filename"].get<std::string>()].push_back(overviewItem);
+						overviewFileMap[overviewItem["file_name"].get<std::string>()].push_back(overviewItem);
 					}
 				}
 
@@ -208,19 +225,16 @@ void OtherSettingsPage::setupUi()
 					std::unordered_map<int, std::reference_wrapper<json>> cacheIndexMap;
 
 					try {
-						ifs.open(cachePath, std::ios::binary);
-						cacheData = json::parse(ifs);
+						cacheData = parseJson(cachePath, ifs);
 						for (auto& cacheItem : cacheData) {
 							cacheIndexMap.insert({ cacheItem["index"].get<int>(), cacheItem });
 						}
 					}
 					catch (...) {
-						ifs.close();
 						problems.push_back(tr("[文件 %1] 无法解析，跳过导入")
 							.arg(QString::fromStdString(cacheFileName)).toStdString());
 						continue;
 					}
-					ifs.close();
 					size_t fileImportCount = 0;
 					for (const auto& overviewItem : overviewItems) {
 						int overviewItemIndex = overviewItem["index"].get<int>();
@@ -242,18 +256,18 @@ void OtherSettingsPage::setupUi()
 								.arg(QString::fromStdString(cacheItemOrigText)).toStdString());
 						}
 						cacheItem = overviewItem;
-						cacheItem.erase("filename");
+						cacheItem.erase("file_name");
 						++fileImportCount;
 					}
 					if (fileImportCount != 0) {
-						ofs.open(cachePath, std::ios::binary);
-						if (!ofs.is_open()) {
+						try {
+							atomicOutputFile(ofs, cachePath, cacheData.dump(2));
+						}
+						catch (...) {
 							problems.push_back(tr("[文件 %1] 无法写入，跳过导入")
 								.arg(QString::fromStdString(cacheFileName)).toStdString());
 							continue;
 						}
-						ofs << cacheData.dump(2);
-						ofs.close();
 						importCount += fileImportCount;
 					}
 				}
@@ -261,12 +275,12 @@ void OtherSettingsPage::setupUi()
 				const QString completeQStr = tr("成功导入 %1 个句子至 trans_cache").arg(QString::number(importCount));
 				if (!problems.empty()) {
 					const fs::path problemPath = m_projectDir / L"import_problems.log";
-					std::ofstream ofs(problemPath);
+					std::string problemLog;
 					for (const auto& problem : problems) {
-						ofs << problem << "\n";
+						problemLog += problem + "\n";
 					}
-					ofs << completeQStr.toStdString() << "\n";
-					ofs.close();
+					problemLog += completeQStr.toStdString() + "\n";
+					atomicOutputFile(ofs, problemPath, problemLog);
 					ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入完毕"), tr("导入中出现的问题记录在 import_problems.log 中"), 3000);
 				}
 				else {

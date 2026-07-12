@@ -25,15 +25,12 @@ export
         bool isTokenizerWord = false;
     };
 
-    class DictionaryReviewIndex {
-    public:
-        static std::vector<DictionaryReviewTermGroup> build(
-            const DictList& coarseCandidates,
-            const absl::flat_hash_map<std::string, int>& finalCounter,
-            const std::vector<std::string>& segments,
-            const std::vector<int>& selectedIndices,
-            const absl::flat_hash_set<std::string>& nameSet,
-            const absl::flat_hash_map<std::string, int>& wordCounter
-        );
-    };
+    std::vector<DictionaryReviewTermGroup> buildDictionaryReviewTermGroups(
+        const DictList& coarseCandidates,
+        const absl::flat_hash_map<std::string, int>& finalCounter,
+        const std::vector<std::string>& segments,
+        const std::vector<int>& selectedIndices,
+        const absl::flat_hash_set<std::string>& nameSet,
+        const absl::flat_hash_map<std::string, int>& wordCounter
+    );
 }

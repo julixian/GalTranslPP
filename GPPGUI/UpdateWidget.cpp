@@ -3,7 +3,7 @@
 #include <QVBoxLayout>
 #include "ElaText.h"
 
-import GPPDefines;
+import GPPVersion;
 
 UpdateWidget::UpdateWidget(QWidget* parent)
     : QWidget(parent)
@@ -14,11 +14,10 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     mainLayout->setContentsMargins(5, 10, 5, 5);
     mainLayout->setSpacing(4);
 
-    ElaText* updateTitle = new ElaText("v" + QString::fromStdString(GPPVERSION) + " 更新", 15, this);
+    ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. GalTransl 核心 i18n 彻底化",
-		"2. 新增设置 允许应用进程多开",
-		"3. 修复缓存管理删除条目的确认框中 思考人生 会导致框被点掉的 bug",
+        "1. ",
+
     };
 
     mainLayout->addWidget(updateTitle);
@@ -29,9 +28,4 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     }
 
     mainLayout->addStretch();
-}
-
-UpdateWidget::~UpdateWidget()
-{
-
 }

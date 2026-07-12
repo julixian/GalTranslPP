@@ -184,15 +184,7 @@ fs::path ProjectCachePage::cachePathForRelativeName(const QString& filename) con
 bool ProjectCachePage::readCacheFile(const QString& filename, json& entries, QString* errorMessage) const
 {
     try {
-        // 缓存文件是翻译核心生成的 UTF-8 JSON 数组。
-        std::ifstream ifs(cachePathForRelativeName(filename), std::ios::binary);
-        if (!ifs.is_open()) {
-            if (errorMessage) {
-                *errorMessage = tr("无法打开缓存文件: %1").arg(filename);
-            }
-            return false;
-        }
-        entries = json::parse(ifs);
+        entries = parseJson(cachePathForRelativeName(filename));
         return true;
     }
     catch (const std::exception& e) {
@@ -207,15 +199,7 @@ bool ProjectCachePage::writeCacheFile(const QString& filename, const json& entri
 {
     try {
         const fs::path path = cachePathForRelativeName(filename);
-        createParent(path);
-        std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
-        if (!ofs.is_open()) {
-            if (errorMessage) {
-                *errorMessage = tr("无法写入缓存文件: %1").arg(filename);
-            }
-            return false;
-        }
-        ofs << entries.dump(2);
+        atomicOutputFile(path, entries.dump(2));
         return true;
     }
     catch (const std::exception& e) {

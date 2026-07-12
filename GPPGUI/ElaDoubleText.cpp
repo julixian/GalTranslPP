@@ -29,8 +29,3 @@ QString ElaDoubleText::getFirstLineText() const
 {
 	return m_firstLine->text();
 }
-
-ElaDoubleText::~ElaDoubleText()
-{
-
-}

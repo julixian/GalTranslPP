@@ -130,7 +130,7 @@ void ProjectCachePage::updateEntryField(int row, const char* key, const QString&
     if (jsonString(m_entries[row], key) == value) {
         return;
     }
-    // 编辑窗口只允许写回 pre_processed_text / pre_translated_text；
+    // 编辑窗口只允许写回 pre_processed_text / translated_raw_text；
     // original_text 在这个页面始终当作元信息。
     m_entries[row][key] = value.toStdString();
     markDirty(m_currentFile);
@@ -176,10 +176,10 @@ void ProjectCachePage::openEntryEditor(int row)
     ElaPlainTextEdit* originalEdit = addEditor(tr("original_text（元信息，只读）"), entryOriginal(item), true, 60);
     Q_UNUSED(originalEdit);
     ElaPlainTextEdit* sourceEdit = addEditor(tr("pre_processed_text（原文，可编辑）"), entrySource(item), !writable, 80);
-    ElaPlainTextEdit* dstEdit = addEditor(tr("pre_translated_text（译文，可编辑）"), entryDst(item), !writable, 80);
+    ElaPlainTextEdit* dstEdit = addEditor(tr("translated_raw_text（译文，可编辑）"), entryDst(item), !writable, 80);
     ElaPlainTextEdit* problemsEdit = addEditor(tr("problems（只读）"), problemString(item), true, 60);
     Q_UNUSED(problemsEdit);
-    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_preview（只读）"), entryPreview(item), true, 60);
+    ElaPlainTextEdit* previewEdit = addEditor(tr("translated_view_text（只读）"), entryPreview(item), true, 60);
     Q_UNUSED(previewEdit);
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
@@ -193,7 +193,7 @@ void ProjectCachePage::openEntryEditor(int row)
     connect(saveButton, &ElaPushButton::clicked, this, [=, &dialog]()
         {
             updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
-            updateEntryField(row, "pre_translated_text", dstEdit->toPlainText());
+            updateEntryField(row, "translated_raw_text", dstEdit->toPlainText());
             dialog.accept();
         });
     buttonLayout->addWidget(saveButton);
@@ -251,8 +251,8 @@ QString ProjectCachePage::jsonString(const json& object, const char* key)
 
 QString ProjectCachePage::speakerString(const json& object)
 {
-    if (object.contains("name_preview")) {
-        const QString preview = jsonString(object, "name_preview");
+    if (object.contains("name_translated")) {
+        const QString preview = jsonString(object, "name_translated");
         if (!preview.isEmpty()) {
             return preview;
         }
@@ -296,7 +296,7 @@ QString ProjectCachePage::entrySource(const json& object)
 
 QString ProjectCachePage::entryDst(const json& object)
 {
-    return jsonString(object, "pre_translated_text");
+    return jsonString(object, "translated_raw_text");
 }
 
 QString ProjectCachePage::entryOriginal(const json& object)
@@ -306,7 +306,7 @@ QString ProjectCachePage::entryOriginal(const json& object)
 
 QString ProjectCachePage::entryPreview(const json& object)
 {
-    return jsonString(object, "translated_preview");
+    return jsonString(object, "translated_view_text");
 }
 
 QString ProjectCachePage::entryTranslatedBy(const json& object)

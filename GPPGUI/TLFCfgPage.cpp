@@ -7,7 +7,7 @@
 
 #include "ElaScrollPageArea.h"
 #include "ElaSpinBox.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaToggleSwitch.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
@@ -15,6 +15,7 @@
 #include "ElaToolTip.h"
 #include "ValueSliderWidget.h"
 #include "ElaDoubleText.h"
+#include "ElaDrawerArea.h"
 
 import Tool;
 
@@ -28,16 +29,16 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 换行模式
-	QStringList fixModes = { "优先标点", "保持位置", "固定字数", "平均", "不修改" };
-	QStringList fixModesToShow = { tr("优先标点"), tr("保持位置"), tr("固定字数"), tr("平均"), tr("不修改") };
-	QString fixMode = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "换行模式", ""));
+	QStringList fixModes = { "preferPunctuation", "keepPosition", "fixedChars", "average", "checkOnly" };
+	QStringList fixModesToShow = { tr("优先标点"), tr("保持位置"), tr("固定字数"), tr("平均"), tr("仅检查") };
+	QString fixMode = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "linebreakMode", "preferPunctuation"));
 	ElaScrollPageArea* fixModeArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* fixModeLayout = new QHBoxLayout(fixModeArea);
 	ElaText* fixModeText = new ElaText(tr("换行模式"), fixModeArea);
 	fixModeText->setTextPixelSize(16);
 	fixModeLayout->addWidget(fixModeText);
 	fixModeLayout->addStretch();
-	ElaComboBox* fixModeComboBox = new ElaComboBox(fixModeArea);
+	ElaNoWheelComboBox* fixModeComboBox = new ElaNoWheelComboBox(fixModeArea);
 	fixModeComboBox->addItems(fixModesToShow);
 	if (!fixMode.isEmpty()) {
 		int index = fixModes.indexOf(fixMode);
@@ -49,7 +50,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addWidget(fixModeArea);
 
 	// 优先阈值
-	double priorityThreshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "优先阈值", 0.245);
+	double priorityThreshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "priorityThreshold", 0.245);
 	ElaScrollPageArea* priorityThresholdArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* priorityThresholdLayout = new QHBoxLayout(priorityThresholdArea);
 	ElaDoubleText* priorityThresholdText = new ElaDoubleText(tr("优先阈值"), 16,
@@ -64,7 +65,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addWidget(priorityThresholdArea);
 
 	// 分段字数阈值
-	int threshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "分段字数阈值", 21);
+	int threshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "segmentThreshold", 21);
 	ElaScrollPageArea* segmentThresholdArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* segmentThresholdLayout = new QHBoxLayout(segmentThresholdArea);
 	ElaDoubleText* segmentThresholdText = new ElaDoubleText(tr("分段字数阈值"), 16,
@@ -78,7 +79,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addWidget(segmentThresholdArea);
 
 	// 强制修复
-	bool forceFix = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "强制修复", false);
+	bool forceFix = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "forceFix", false);
 	ElaScrollPageArea* forceFixArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* forceFixLayout = new QHBoxLayout(forceFixArea);
 	ElaText* forceFixText = new ElaText(tr("强制修复"), forceFixArea);
@@ -91,7 +92,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addWidget(forceFixArea);
 
 	// 报错阈值
-	int errorThreshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "报错阈值", 28);
+	int errorThreshold = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "errorThreshold", 28);
 	ElaScrollPageArea* errorThresholdArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* errorThresholdLayout = new QHBoxLayout(errorThresholdArea);
 	ElaDoubleText* errorThresholdText = new ElaDoubleText(tr("报错阈值"), 16,
@@ -113,7 +114,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addSpacing(10);
 
 	// 使用分词器
-	bool useTokenizer = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "使用分词器", false);
+	bool useTokenizer = toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "useTokenizer", false);
 	ElaScrollPageArea* useTokenizerArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* useTokenizerLayout = new QHBoxLayout(useTokenizerArea);
 	ElaDoubleText* useTokenizerText = new ElaDoubleText(tr("使用分词器"), 16,
@@ -128,13 +129,15 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	// tokenizerBackend
 	QStringList tokenizerBackends = { "MeCab", "spaCy", "Stanza", "pkuseg" };
 	QString tokenizerBackend = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "tokenizerBackend", "MeCab"));
-	ElaScrollPageArea* tokenizerBackendArea = new ElaScrollPageArea(centerWidget);
+	ElaDrawerArea* tokenizerSettingsDrawerArea = new ElaDrawerArea(centerWidget);
+	QWidget* tokenizerBackendArea = new QWidget(tokenizerSettingsDrawerArea);
+	tokenizerSettingsDrawerArea->setDrawerHeader(tokenizerBackendArea);
 	QHBoxLayout* tokenizerBackendLayout = new QHBoxLayout(tokenizerBackendArea);
 	ElaDoubleText* tokenizerBackendText = new ElaDoubleText(tr("分词器后端"), 16,
 		tr("应选择适合目标语言的后端/模型/字典"), 10, "", tokenizerBackendArea);
 	tokenizerBackendLayout->addWidget(tokenizerBackendText);
 	tokenizerBackendLayout->addStretch();
-	ElaComboBox* tokenizerBackendComboBox = new ElaComboBox(tokenizerBackendArea);
+	ElaNoWheelComboBox* tokenizerBackendComboBox = new ElaNoWheelComboBox(tokenizerBackendArea);
 	tokenizerBackendComboBox->addItems(tokenizerBackends);
 	if (!tokenizerBackend.isEmpty()) {
 		int index = tokenizerBackends.indexOf(tokenizerBackend);
@@ -143,11 +146,11 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 		}
 	}
 	tokenizerBackendLayout->addWidget(tokenizerBackendComboBox);
-	mainLayout->addWidget(tokenizerBackendArea);
+	mainLayout->addWidget(tokenizerSettingsDrawerArea);
 
 	// mecabDictDir
-	QString mecabDictDir = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "mecabDictDir", "BaseConfig/mecabDict/mecab-chinese"));
-	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(centerWidget);
+	QString mecabDictDir = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "mecabDictDir", "BaseConfig/mecab/mecab-chinese"));
+	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* mecabDictDirLayout = new QHBoxLayout(mecabDictDirArea);
 	ElaDoubleText* mecabDictDirText = new ElaDoubleText(tr("MeCab词典目录"), 16,
 		tr("MeCab中文词典需手动下载"), 10, "", mecabDictDirArea);
@@ -166,11 +169,11 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 				mecabDictDirLineEdit->setText(dir);
 			}
 		});
-	mainLayout->addWidget(mecabDictDirArea);
+	tokenizerSettingsDrawerArea->addDrawer(mecabDictDirArea);
 
 	// spaCyModelName https://spacy.io/models
 	QString spaCyModelName = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "spaCyModelName", "zh_core_web_lg"));
-	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(centerWidget);
+	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* spaCyModelNameLayout = new QHBoxLayout(spaCyModelNameArea);
 	ElaDoubleText* spaCyModelNameText = new ElaDoubleText(tr("spaCy模型名称"), 16,
 		tr("spaCy模型名称，新模型下载后需重启程序"), 10, "", spaCyModelNameArea);
@@ -187,11 +190,11 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 		{
 			QDesktopServices::openUrl(QUrl("https://spacy.io/models"));
 		});
-	mainLayout->addWidget(spaCyModelNameArea);
+	tokenizerSettingsDrawerArea->addDrawer(spaCyModelNameArea);
 
 	// Stanza https://stanfordnlp.github.io/stanza/ner_models.html
 	QString stanzaLang = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "TextLinebreakFix", "stanzaLang", "zh"));
-	ElaScrollPageArea* stanzaArea = new ElaScrollPageArea(centerWidget);
+	ElaScrollPageArea* stanzaArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* stanzaLayout = new QHBoxLayout(stanzaArea);
 	ElaDoubleText* stanzaText = new ElaDoubleText(tr("Stanza语言ID"), 16,
 		tr("Stanza语言ID，新模型下载后需重启程序"), 10, "", stanzaArea);
@@ -208,29 +211,29 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 		{
 			QDesktopServices::openUrl(QUrl("https://stanfordnlp.github.io/stanza/ner_models.html"));
 		});
-	mainLayout->addWidget(stanzaArea);
-
-
+	tokenizerSettingsDrawerArea->addDrawer(stanzaArea);
+	if (toml::find_or(m_projectConfig, "GUIConfig", "textLinebreakFixTokenizerSettingsExpanded", false)) {
+		tokenizerSettingsDrawerArea->expand();
+	}
+	else {
+		tokenizerSettingsDrawerArea->collapse();
+	}
 	m_applyFunc = [=]()
 		{
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.换行模式", fixModes[fixModeComboBox->currentIndex()].toStdString());
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.优先阈值", priorityThresholdSlider->value());
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.分段字数阈值", segmentThresholdSpinBox->value());
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.强制修复", forceFixToggleSwitch->getIsToggled());
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.报错阈值", errorThresholdSpinBox->value());
-			insertToml(m_projectConfig, "plugins.TextLinebreakFix.使用分词器", useTokenizerToggleSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.linebreakMode", fixModes[fixModeComboBox->currentIndex()].toStdString());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.priorityThreshold", priorityThresholdSlider->value());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.segmentThreshold", segmentThresholdSpinBox->value());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.forceFix", forceFixToggleSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.errorThreshold", errorThresholdSpinBox->value());
+			insertToml(m_projectConfig, "plugins.TextLinebreakFix.useTokenizer", useTokenizerToggleSwitch->getIsToggled());
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.tokenizerBackend", tokenizerBackends[tokenizerBackendComboBox->currentIndex()].toStdString());
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.mecabDictDir", mecabDictDirLineEdit->text().toStdString());
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.spaCyModelName", spaCyModelNameLineEdit->text().toStdString());
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.stanzaLang", stanzaLineEdit->text().toStdString());
+			insertToml(m_projectConfig, "GUIConfig.textLinebreakFixTokenizerSettingsExpanded", tokenizerSettingsDrawerArea->getIsExpand());
 		};
 
 	mainLayout->addStretch();
 	centerWidget->setWindowTitle(tr("换行修复设置"));
 	addCentralWidget(centerWidget, true, false, 0);
-}
-
-TLFCfgPage::~TLFCfgPage()
-{
-
 }

@@ -5,7 +5,6 @@ export import AbslContainers;
 export import jpcre2;
 export import nlohmann.json;
 export import spdlog;
-export import GPPVersion;
 export import GPPI18n;
 
 namespace fs = std::filesystem;
@@ -27,6 +26,9 @@ export
 
     extern const std::string defaultRegCompileModifier;
     extern const std::string defaultRegReplaceModifier;
+
+    using json = nlohmann::json;
+    using ordered_json = nlohmann::ordered_json;
 
     enum class NameType
     {
@@ -50,34 +52,34 @@ export
         std::string fileName;
         std::string name;
         std::vector<std::string> names;
-        std::string name_preview;
-        std::vector<std::string> names_preview;
-        std::string original_text;
-        std::string pre_processed_text;
-        std::string pre_translated_text;
+        std::string nameTrans;
+        std::vector<std::string> namesTrans;
+        std::string orig;
+        std::string preproc;
+        std::string pretrans;
         std::vector<std::string> problems;
-        std::string translated_by;
-        std::string translated_preview;
-        std::string originalLinebreak;
-        std::map<std::string, std::string> other_info;
-        std::optional<SentencePosition> repeatedBlockRefTo;
-        std::vector<SentencePosition> repeatedBlockRefBy;
+        std::string translatedBy;
+        std::string transview;
+        std::string linebreak;
+        std::map<std::string, std::string> otherInfo;
+        std::optional<SentencePosition> ref;
+        std::vector<SentencePosition> refBy;
 
         NameType nameType = NameType::None;
         Sentence* prev = nullptr;
         Sentence* next = nullptr;
-        bool complete = false;
-        bool notAnalyzeProblem = false;
-        bool repeatedBlockRefPending = false;
+        bool transCompleted = false;
+        bool problemAnalyzeDisabled = false;
+        bool isRefPending = false;
 
-        std::optional<std::string> problems_get_by_index(int index) {
+        std::optional<std::string> getProblemByIndex(int index) {
             if (index < 0 || index >= problems.size()) {
                 return std::nullopt;
             }
             return problems[index];
         }
 
-        bool problems_set_by_index(int index, const std::string& problem) {
+        bool setProblemByIndex(int index, const std::string& problem) {
             if (index < 0 || index >= problems.size()) {
                 return false;
             }
@@ -88,12 +90,12 @@ export
 
     enum class TransEngine
     {
-        None, ForGalJson, ForGalTsv, ForNovelTsv, DeepseekJson, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
+        None, ForGalJson, ForGalTsv, ForNovelTsv, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
     };
 
-    enum class CachePart 
+    enum class CachePart
     { 
-        None, Name, NamePreview, Names, NamesPreview, OrigText, PreprocText, PretransText, Problems, OtherInfo, TranslatedBy, TransPreview 
+        None, Name, NameTrans, Names, NamesTrans, Orig, Preproc, Pretrans, Problems, OtherInfo, TranslatedBy, Transview
     };
 
     enum class ConditionType
@@ -115,15 +117,18 @@ export
         { PluginRunTime::DPost, "dpostrun" }
     };
 
-    using WordPosVec = std::vector<std::vector<std::string>>;
-    using EntityVec = std::vector<std::vector<std::string>>;
+    using NLPPair = std::array<std::string, 2>;
+    using WordPosVec = std::vector<NLPPair>;
+    using EntityVec = std::vector<NLPPair>;
     using NLPResult = std::tuple<WordPosVec, EntityVec>;
 
-    using CheckSeCondFunc = std::function<bool(const Sentence*)>;
+    template<typename ...Args>
+    using CheckSeCondBaseFunc = std::function<bool(const Sentence* se, Args...)>;
+    using CheckSeCondNormalFunc = CheckSeCondBaseFunc<>;
+    using CheckSkipProblemCondFunc = CheckSeCondBaseFunc<const std::string&>;
+    // first: 要忽略的问题正则表达式，second: 对应的忽略条件
+    using SkipProblemCondition = std::pair<jpc::Regex, std::optional<CheckSkipProblemCondFunc>>;
 
     using DictList = std::vector<std::tuple<std::string, std::string, std::string>>;
-
-    using json = nlohmann::json;
-    using ordered_json = nlohmann::ordered_json;
 
 }

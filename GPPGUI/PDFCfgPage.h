@@ -10,10 +10,9 @@ class PDFCfgPage : public BasePage
 
 public:
     explicit PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~PDFCfgPage() override;
 
 private:
     toml::ordered_value& m_projectConfig;
 };
 
-#endif // PDFCFGPAGE_H
+#endif

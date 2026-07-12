@@ -1,10 +1,10 @@
 #ifndef COMMONNORMALDICTPAGE_H
 #define COMMONNORMALDICTPAGE_H
 
-#include <toml.hpp>
-#include <string>
 #include "BasePage.h"
 #include "NormalTabEntry.h"
+#include <string>
+#include <toml.hpp>
 
 namespace fs = std::filesystem;
 
@@ -32,4 +32,4 @@ private:
     fs::path m_modeDictDir;
 };
 
-#endif // COMMONNORMALDICTPAGE_H
+#endif

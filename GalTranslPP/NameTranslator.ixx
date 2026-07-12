@@ -1,10 +1,10 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 
 export module NameTranslator;
 
-export import APIPool;
+export import ApiPool;
 export import Dictionary;
 export import ITranslator;
 
@@ -16,7 +16,7 @@ export
     private:
         std::shared_ptr<IController> m_controller;
         std::shared_ptr<spdlog::logger> m_logger;
-        const std::unique_ptr<APIPool>& m_apiPool;
+        const std::unique_ptr<ApiPool>& m_apiPool;
         const std::unique_ptr<GptDictionary>& m_gptDictionary;
 
         const std::function<std::string(std::string)>& m_onPerformApi;
@@ -25,34 +25,36 @@ export
         std::string m_userPrompt;
         std::string m_apiStrategy;
         std::string m_targetLang;
-        int m_maxRetries;
-        int m_apiTimeoutMs;
         int m_threadsNum;
         int m_batchSize;
+        int m_inputBlockMaxLines;
+        int m_maxRequestCount;
+        int m_apiTimeoutMs;
         bool m_checkQuota;
 
-        // 内部辅助函数
-        absl::flat_hash_map<std::string, std::string> translateBatch(std::span<const std::string> batchNames, int threadId);
+        // 翻译一个批次，并将成功解析的译名写入共享结果。
+        void translateBatch(std::span<const std::string> batchNames, int threadId, size_t batchIndex,
+            absl::flat_hash_map<std::string, std::string>& translationResults, std::mutex& translationResultsMutex);
 
     public:
         NameTranslator(
             const std::shared_ptr<IController>& controller,
             const std::shared_ptr<spdlog::logger>& logger,
-            const std::unique_ptr<APIPool>& apiPool,
+            const std::unique_ptr<ApiPool>& apiPool,
             const std::unique_ptr<GptDictionary>& gptDictionary,
             const std::function<std::string(std::string)>& onPerformApi,
             const std::string& systemPrompt,
             const std::string& userPrompt,
             const std::string& apiStrategy,
             const std::string& targetLang,
-            int maxRetries,
-            int apiTimeoutMs,
             int threadsNum,
             int batchSize,
+            int inputBlockMaxLines,
+            int maxRequestCount,
+            int apiTimeoutMs,
             bool checkQuota
         );
 
-        // 核心运行函数
         void run(const fs::path& nameTablePath);
     };
 }

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -199,22 +199,22 @@
     <ClCompile Include="..\3rdParty\jpcre2\jpcre2.ixx" />
     <ClCompile Include="..\3rdParty\json.ixx" />
     <ClCompile Include="..\3rdParty\spdlog.ixx" />
-    <ClCompile Include="APIPool.cpp" />
-    <ClCompile Include="APIPool.ixx" />
-    <ClCompile Include="APITool.cpp" />
-    <ClCompile Include="APITool.ixx" />
+    <ClCompile Include="ApiPool.cpp" />
+    <ClCompile Include="ApiPool.ixx" />
+    <ClCompile Include="ApiTool.cpp" />
+    <ClCompile Include="ApiTool.ixx" />
     <ClCompile Include="AgentToolCommon.cpp" />
     <ClCompile Include="AgentToolCommon.ixx" />
-    <ClCompile Include="AgentSourceView.cpp" />
-    <ClCompile Include="AgentSourceView.ixx" />
+    <ClCompile Include="AgentCommonSourceView.cpp" />
+    <ClCompile Include="AgentCommonSourceView.ixx" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />
     <ClCompile Include="Dictionary.cpp" />
     <ClCompile Include="Dictionary.ixx" />
     <ClCompile Include="DictionaryGenerator.cpp" />
+    <ClCompile Include="DictionaryGenerator.ReviewAgent.ixx" />
     <ClCompile Include="DictionaryGenerator.ixx" />
-    <ClCompile Include="DictionaryReviewAgent.cpp" />
-    <ClCompile Include="DictionaryReviewAgent.ixx" />
+    <ClCompile Include="DictionaryGenerator.ReviewAgent.cpp" />
     <ClCompile Include="DictionaryReviewIndex.cpp" />
     <ClCompile Include="DictionaryReviewIndex.ixx" />
     <ClCompile Include="EpubTranslator.cpp" />
@@ -237,7 +237,8 @@
     <ClCompile Include="NornalJsonTranslatorHelperTool.ixx" />
     <ClCompile Include="NLPTool.cpp" />
     <ClCompile Include="NLPTool.ixx" />
-    <ClCompile Include="NormalJsonTranslator.Agent.cpp" />
+    <ClCompile Include="NormalJsonTranslator.TransAgent.ixx" />
+    <ClCompile Include="NormalJsonTranslator.TransAgent.cpp" />
     <ClCompile Include="NormalJsonTranslator.Batch.cpp" />
     <ClCompile Include="NormalJsonTranslator.Core.cpp" />
     <ClCompile Include="NormalJsonTranslator.File.cpp" />
@@ -254,6 +255,7 @@
     <ClCompile Include="PythonTextPlugin.cpp" />
     <ClCompile Include="PythonTextPlugin.ixx" />
     <ClCompile Include="PythonTranslator.ixx" />
+    <ClCompile Include="SafeQueue.ixx" />
     <ClCompile Include="SkipTrans.cpp" />
     <ClCompile Include="SkipTrans.ixx" />
     <ClCompile Include="TextFull2Half.cpp" />
@@ -265,11 +267,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPPMacros.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
-      <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gpp_en.ts" />

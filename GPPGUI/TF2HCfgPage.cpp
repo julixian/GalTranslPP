@@ -10,6 +10,7 @@
 #include "ElaDoubleText.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaMessageBar.h"
+#include "TreeSitterHighlighter.h"
 
 import Tool;
 
@@ -24,7 +25,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
     // 标点符号转换
-    bool convertPunctuation = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "是否替换标点", true);
+    bool convertPunctuation = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "replacePunctuation", true);
     ElaScrollPageArea* punctuationArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* punctuationLayout = new QHBoxLayout(punctuationArea);
     ElaText* punctuationText = new ElaText(tr("转换标点符号"), punctuationArea);
@@ -38,7 +39,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addWidget(punctuationArea);
 
     // 反向替换
-    bool reverseConvert = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "是否反向替换", false);
+    bool reverseConvert = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "reverseConversion", false);
     ElaScrollPageArea* reverseArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* reverseLayout = new QHBoxLayout(reverseArea);
     ElaDoubleText* reverseText = new ElaDoubleText(tr("反向替换"), 16,
@@ -51,7 +52,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addWidget(reverseArea);
 
     // 不转换的字符
-    const std::string excludeChars = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "不转换的字符", "");
+    const std::string excludeChars = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "excludeChars", "");
     ElaScrollPageArea* excludeArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* excludeLayout = new QHBoxLayout(excludeArea);
     ElaText* excludeText = new ElaText(tr("不转换的字符"), excludeArea);
@@ -67,14 +68,15 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addSpacing(10);
     // notConvertRegs
     toml::ordered_array notConvertRegsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "TextFull2Half", "notConvertRegs");
-    ElaText* notConvertRegsTitle = new ElaText("Not convert regular expressions", 18, centerWidget);
+    ElaText* notConvertRegsTitle = new ElaText("不转换的正则组", 18, centerWidget);
     notConvertRegsTitle->setWordWrap(false);
     mainLayout->addWidget(notConvertRegsTitle);
     ElaPlainTextEdit* notConvertRegsEdit = new ElaPlainTextEdit(centerWidget);
-    QFont font = notConvertRegsEdit->font();
-    font.setPixelSize(14);
-    notConvertRegsEdit->setFont(font);
-    notConvertRegsEdit->setPlainText(
+	QFont font = notConvertRegsEdit->font();
+	font.setPixelSize(14);
+	notConvertRegsEdit->setFont(font);
+	installTreeSitterHighlighter(notConvertRegsEdit->document(), SyntaxLanguage::Toml);
+	notConvertRegsEdit->setPlainText(
         QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "notConvertRegs", notConvertRegsArr }} }))
     );
     notConvertRegsEdit->moveCursor(QTextCursor::Start);
@@ -82,9 +84,9 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
 
     m_applyFunc = [=]
         {
-            insertToml(m_projectConfig, "plugins.TextFull2Half.是否替换标点", punctuationSwitch->getIsToggled());
-            insertToml(m_projectConfig, "plugins.TextFull2Half.是否反向替换", reverseSwitch->getIsToggled());
-            insertToml(m_projectConfig, "plugins.TextFull2Half.不转换的字符", excludeEdit->text().toStdString());
+            insertToml(m_projectConfig, "plugins.TextFull2Half.replacePunctuation", punctuationSwitch->getIsToggled());
+            insertToml(m_projectConfig, "plugins.TextFull2Half.reverseConversion", reverseSwitch->getIsToggled());
+            insertToml(m_projectConfig, "plugins.TextFull2Half.excludeChars", excludeEdit->text().toStdString());
 
             toml::ordered_array newNotConvertRegsArr;
             try {
@@ -107,9 +109,4 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addStretch();
     centerWidget->setWindowTitle(tr("全角半角转换设置"));
     addCentralWidget(centerWidget, true, false, 0);
-}
-
-TF2HCfgPage::~TF2HCfgPage()
-{
-
 }

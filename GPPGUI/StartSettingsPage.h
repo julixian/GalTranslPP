@@ -1,20 +1,20 @@
 #ifndef STARTSETTINGSPAGE_H
 #define STARTSETTINGSPAGE_H
 
-#include <QThread>
-#include <toml.hpp>
-#include <filesystem>
-#include <QSystemTrayIcon>
 #include "BasePage.h"
-#include "TranslatorWorker.h"
 #include "EtaEstimator.hpp"
+#include "TranslatorWorker.h"
+#include <QThread>
+#include <QSystemTrayIcon>
+#include <filesystem>
+#include <toml.hpp>
 
 namespace fs = std::filesystem;
 
 class ElaPushButton;
 class ElaIconButton;
 class ElaProgressBar;
-class ElaComboBox;
+class ElaNoWheelComboBox;
 class ElaPlainTextEdit;
 class ElaProgressRing;
 class ElaLCDNumber;
@@ -33,30 +33,36 @@ public:
     explicit StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
 
-    virtual void apply2Config() override;
+	void apply2Config() override;
 
     void clearLog();
 
+
 Q_SIGNALS:
-    void startTranslatingSignal();  // 让projectSettings去保存配置
-    void finishTranslatingSignal(const QString& transEngine, int exitCode); // 这两个向projectSettings页发送
-    void startWorkSignal();
-    void stopWorkSignal();  // 这两个向worker发送
+    void startTranslatingSignal();  // 让 ProjectSettings 去保存配置
+    void finishTranslatingSignal(const QString& transEngine, int exitCode); // 让 MainWindow 加点
+
+
+private Q_SLOTS:
+    void onStartTranslatingClicked();
+    void onStopTranslatingClicked();
+    void workFinished(int exitCode); // worker结束了的信号
+
 
 private:
     static constexpr qsizetype MaxPendingLogBytes = 5 * 1024 * 1024;
     static constexpr int MaxLogLineCount = 10000;
 
-    bool isLogScrollAtBottom() const;
     void ensureWorkerThread();
     void disposeWorkerThread();
+
+    bool isLogScrollAtBottom() const;
     void setLogPaused(bool paused);
     void enqueuePendingLog(const QString& chunk);
     void flushPendingLogToView();
     void appendLogChunkToView(const QString& log);
     void resetLogBufferState(bool keepViewContent);
 
-private:
 
     void setupUi();
     fs::path& m_projectDir;
@@ -83,9 +89,9 @@ private:
     bool m_pendingOverflowed{};
     bool m_timerStarted{};
 
-    ElaComboBox* m_fileFormatComboBox = nullptr;
+    ElaNoWheelComboBox* m_filePluginComboBox = nullptr;
 
-    QString m_transEngine;
+    QString m_workerTransEngine; // 当前工作的线程正在运行什么 transEngine
     ElaProgressRing* m_threadNumRing = nullptr;
     ElaText* m_speedLabel = nullptr;
     ElaLCDNumber* m_usedTimeLabel = nullptr;
@@ -94,20 +100,14 @@ private:
     EtaEstimator m_estimator;
     std::chrono::high_resolution_clock::time_point m_startTime;
 
-private Q_SLOTS:
-
-    void onStartTranslatingClicked();
-    void onStopTranslatingClicked();
-    void workFinished(int exitCode); // worker结束了的信号
-    void onOutputSettingClicked();
-
-private:
     // 文件格式输出配置页
     NJCfgPage* m_njCfgPage = nullptr;
     EpubCfgPage* m_epubCfgPage = nullptr;
     PDFCfgPage* m_pdfCfgPage = nullptr;
     CustomFilePluginCfgPage* m_customFilePluginCfgPage = nullptr;
+
+    // 翻译详情页
     TranslationWorkbenchPage* m_translationWorkbenchPage = nullptr;
 };
 
-#endif // STARTSETTINGSPAGE_H
+#endif

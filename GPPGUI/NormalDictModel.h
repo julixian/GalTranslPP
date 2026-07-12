@@ -3,7 +3,6 @@
 
 #include <QAbstractTableModel>
 #include <QList>
-#include <QStringList>
 
 // 定义一个结构体来表示一条字典记录
 struct NormalDictEntry
@@ -54,4 +53,4 @@ private:
     QStringList m_headerLabels;       // 存储表头标题
 };
 
-#endif // NORMALDICTMODEL_H
+#endif

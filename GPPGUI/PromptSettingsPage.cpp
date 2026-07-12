@@ -45,11 +45,6 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 	setupUi();
 }
 
-PromptSettingsPage::~PromptSettingsPage()
-{
-
-}
-
 
 void PromptSettingsPage::setupUi()
 {
@@ -157,15 +152,15 @@ void PromptSettingsPage::setupUi()
 			return result;
 		};
 
-	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_TRANS_PROMPT_EN", "FORGALTSV_SYSTEM",
-		"FORGALTSV_AGENT_PROMPT_EN", "FORGALTSV_AGENT_SYSTEM");
-	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_TRANS_PROMPT_EN", "FORNOVELTSV_SYSTEM",
-		"FORNOVELTSV_AGENT_PROMPT_EN", "FORNOVELTSV_AGENT_SYSTEM");
-	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_TRANS_PROMPT_EN", "FORGALJSON_SYSTEM");
-	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_TRANS_PROMPT", "SAKURA_SYSTEM_PROMPT");
-	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_PROMPT", "GENDICT_SYSTEM",
-		"GENDICT_REVIEW_PROMPT", "GENDICT_REVIEW_SYSTEM");
-	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_PROMPT", "NAMETRANS_SYSTEM");
+	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_USER", "FORGALTSV_SYSTEM",
+		"FORGALTSV_AGENT_USER", "FORGALTSV_AGENT_SYSTEM");
+	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_USER", "FORNOVELTSV_SYSTEM",
+		"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM");
+	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_USER", "FORGALJSON_SYSTEM");
+	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_USER", "SAKURA_SYSTEM");
+	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM",
+		"GENDICT_REVIEW_USER", "GENDICT_REVIEW_SYSTEM");
+	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_USER", "NAMETRANS_SYSTEM");
 
 	m_applyFunc = [=]()
 		{
@@ -175,9 +170,7 @@ void PromptSettingsPage::setupUi()
 			sakuraApplyFunc();
 			gendictApplyFunc();
 			nametransApplyFunc();
-			std::ofstream ofs(m_projectDir / L"Prompt.toml", std::ios::binary);
-			ofs << m_promptConfig;
-			ofs.close();
+			atomicOutputFile(m_projectDir / L"Prompt.toml", toml::format(m_promptConfig));
 		};
 
 	mainLayout->addWidget(tabWidget);

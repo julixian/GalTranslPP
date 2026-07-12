@@ -15,7 +15,8 @@
 #include "ElaText.h"
 #include "ElaTheme.h"
 
-namespace {
+namespace
+{
     constexpr int SuccessRole = Qt::UserRole + 1;
     constexpr int ErrorRole = Qt::UserRole + 2;
     constexpr int FileRole = Qt::UserRole + 3;
@@ -29,10 +30,10 @@ namespace {
         text.replace("\n", " ");
         text.replace("\t", " ");
         text = text.trimmed();
-        if (text.size() <= maxChars) {
-            return text;
+        if (maxChars >= 0 && text.size() > maxChars) {
+            text = text.left(maxChars) + "...";
         }
-        return text.left(qMax(0, maxChars - 3)) + "...";
+        return text;
     }
 
     QColor themeColor(ElaThemeType::ThemeColor color)
@@ -80,7 +81,7 @@ namespace {
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
-            const auto event = index.data(SuccessRole).value<GuiRuntimeSuccessEvent>();
+            const auto event = index.data(SuccessRole).value<GuiRuntimeTransSuccessEvent>();
             const bool selected = option.state.testFlag(QStyle::State_Selected);
             const bool hovered = option.state.testFlag(QStyle::State_MouseOver);
             QRectF card = option.rect.adjusted(6, 4, -6, -5);
@@ -172,10 +173,10 @@ namespace {
 
         void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
         {
-            // 错误卡片默认只展示短摘要，完整错误放 tooltip，避免 API 长报文拖慢绘制。
+            // 错误卡片默认只展示短摘要，完整错误放 tooltip，避免 Api 长报文拖慢绘制。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-            const auto event = index.data(ErrorRole).value<GuiRuntimeErrorEvent>();
+            const auto event = index.data(ErrorRole).value<GuiRuntimeTransErrorEvent>();
             const bool selected = option.state.testFlag(QStyle::State_Selected);
             const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
             QRectF card = option.rect.adjusted(5, 5, -7, -7);
@@ -215,12 +216,12 @@ namespace {
             const int tagWidth = tagMetrics.horizontalAdvance(kind) + 18;
             drawPill(painter, QRectF(content.left(), content.top(), tagWidth, 22), kind, dangerFill, danger);
             int cursorX = content.left() + tagWidth + 8;
-            if (event.retryCount > 0) {
-                const QString retryText = QObject::tr("重试 %1").arg(event.retryCount);
-                const int retryWidth = tagMetrics.horizontalAdvance(retryText) + 18;
-                drawPill(painter, QRectF(cursorX, content.top(), retryWidth, 22), retryText,
+            if (event.requestCount > 0) {
+                const QString requestText = QObject::tr("请求 %1").arg(event.requestCount);
+                const int requestWidth = tagMetrics.horizontalAdvance(requestText) + 18;
+                drawPill(painter, QRectF(cursorX, content.top(), requestWidth, 22), requestText,
                     themeColor(ElaThemeType::BasicHoverAlpha), detailColor);
-                cursorX += retryWidth + 8;
+                cursorX += requestWidth + 8;
             }
             painter->setPen(detailColor);
             painter->drawText(QRect(cursorX, content.top(), content.right() - cursorX, 22),
@@ -500,7 +501,7 @@ void TranslationWorkbenchPage::updateRuntimeFiles(const QVector<GuiRuntimeFilePr
     refreshHeader();
 }
 
-void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEvent>& events)
+void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeTransSuccessEvent>& events)
 {
     if (events.isEmpty()) {
         return;
@@ -515,7 +516,7 @@ void TranslationWorkbenchPage::appendSuccesses(const QVector<GuiRuntimeSuccessEv
     refreshHeader();
 }
 
-void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>& events)
+void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeTransErrorEvent>& events)
 {
     if (events.isEmpty()) {
         return;
@@ -524,7 +525,7 @@ void TranslationWorkbenchPage::appendErrors(const QVector<GuiRuntimeErrorEvent>&
     for (const auto& event : events) {
         m_errors.push_front(event);
     }
-    // 错误只保留最近若干条，避免一次 API 风暴把 GUI 模型撑爆。
+    // 错误只保留最近若干条，避免一次 Api 风暴把 GUI 模型撑爆。
     trimErrors();
     renderErrors();
     refreshHeader();
@@ -545,9 +546,9 @@ void TranslationWorkbenchPage::renderSuccesses()
         m_successList->setUpdatesEnabled(false);
     }
     m_successModel->clear();
-    QVector<GuiRuntimeSuccessEvent> visible;
+    QVector<GuiRuntimeTransSuccessEvent> visible;
     visible.reserve(qMin(m_successes.size(), MaxRenderedSuccessEvents));
-    for (const GuiRuntimeSuccessEvent& event : m_successes) {
+    for (const GuiRuntimeTransSuccessEvent& event : m_successes) {
         if (!m_successFileFilters.isEmpty() && !m_successFileFilters.contains(event.filename)) {
             continue;
         }
@@ -575,7 +576,7 @@ void TranslationWorkbenchPage::renderErrors()
     }
     m_errorModel->clear();
     for (const auto& event : m_errors) {
-        GuiRuntimeErrorEvent displayEvent = event;
+        GuiRuntimeTransErrorEvent displayEvent = event;
         displayEvent.message = compactPreview(displayEvent.message, 240);
         QStandardItem* item = new QStandardItem(displayEvent.message);
         item->setData(QVariant::fromValue(displayEvent), ErrorRole);

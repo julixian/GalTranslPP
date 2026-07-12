@@ -162,7 +162,7 @@
       <EnableModules>true</EnableModules>
       <BuildStlModules>true</BuildStlModules>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>GeneratedFiles\$(ConfigurationName);GeneratedFiles;..\3rdParty\pybind11\include;..\3rdParty\pybind11\Python\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty\pybind11\include;..\3rdParty\pybind11\Python\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
     </ClCompile>
@@ -196,13 +196,19 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPCLI_PRIVATE\transl
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GPPCLI.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="ProgressBar.ixx" />
     <ClCompile Include="TerminalController.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
       <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
+      <Private>false</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+    <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
+      <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

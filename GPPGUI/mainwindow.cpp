@@ -32,15 +32,16 @@
 #include "ProjectSettingsPage.h"
 #include "AppSettingsPage.h"
 
+import GPPVersion;
 import Tool;
 import PythonManager;
 
 MainWindow::MainWindow(QWidget* parent)
     : ElaWindow(parent)
 {
-    if (fs::exists(L"BaseConfig/globalConfig.toml")) {
+    if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
-            m_globalConfig = toml::uoparse(fs::path(L"BaseConfig/globalConfig.toml"));
+            m_globalConfig = toml::uoparse(fs::path(L"BaseConfig/GlobalConfig.toml"));
         }
         catch (...) {
 #ifdef Q_OS_WIN
@@ -166,19 +167,19 @@ void MainWindow::initWindow()
 {
     // 详见 ElaWidgetTool 开源项目的示例
     setFocusPolicy(Qt::StrongFocus);
-    setWindowIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
+    setWindowIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.jpeg"));
 
-    int width = toml::find_or(m_globalConfig, "windowWidth", 1450);
-    int height = toml::find_or(m_globalConfig, "windowHeight", 770);
+    int width = toml::find_or(m_globalConfig, "windowWidth", 1308);
+    int height = toml::find_or(m_globalConfig, "windowHeight", 676);
     resize(width, height - 30);
-    int x = toml::find_or(m_globalConfig, "windowPosX", 0);
-    int y = toml::find_or(m_globalConfig, "windowPosY", 0);
+    int x = toml::find_or(m_globalConfig, "windowPosX", 84);
+    int y = toml::find_or(m_globalConfig, "windowPosY", 53);
     if (x < 0)x = 0;
     if (y < 0)y = 0;
     move(x, y);
 
-    setUserInfoCardPixmap(QPixmap(":/GPPGUI/Resource/Image/julixian_s.jpeg"));
-    setUserInfoCardTitle(QString::fromStdString("Galtransl++ v" + GPPVERSION));
+    setUserInfoCardPixmap(QPixmap(":/GPPGUI/Resource/images/julixian_s.jpeg"));
+    setUserInfoCardTitle("Galtransl++ v" + QString::fromUtf8(GPPVERSION));
     setUserInfoCardSubTitle("tianquyesss@gmail.com");
     connect(this, &MainWindow::userInfoCardClicked, this, [=]()
         {
@@ -233,7 +234,7 @@ void MainWindow::initEdgeLayout()
     updateDockWidget->setWidget(new UpdateWidget(this));
     this->addDockWidget(Qt::RightDockWidgetArea, updateDockWidget);
     resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
-    std::string gppversion = GPPVERSION;
+    std::string gppversion(GPPVERSION);
     std::erase_if(gppversion, [](char ch) { return ch == '.'; });
     updateDockWidget->setVisible(toml::find_or(m_globalConfig, "showDockWidget", gppversion, true));
     insertToml(m_globalConfig, "showDockWidget", toml::ordered_table{});
@@ -303,7 +304,7 @@ void MainWindow::initContent()
     for (const auto& project : projects) {
             if (project.is_string()) {
                 fs::path projectDir(ascii2Wide(project.as_string()));
-                if (!fs::exists(projectDir / L"config.toml")) {
+                if (!fs::exists(projectDir / L"Config.toml")) {
                     continue;
                 }
                 createProjectSettingsPage(projectDir);
@@ -401,9 +402,9 @@ void MainWindow::onNewProjectTriggered()
 
     fs::create_directories(newProjectDir);
 
-    QFile resourceFile(":/GPPGUI/Resource/sampleProject.zip");
+    QFile resourceFile(":/GPPGUI/Resource/SampleProject.zip");
     if (resourceFile.open(QIODevice::ReadOnly)) {
-        QFile outputFile(parentPath + "/" + projectName + "/sampleProject.zip");
+        QFile outputFile(parentPath + "/" + projectName + "/SampleProject.zip");
         if (outputFile.open(QIODevice::WriteOnly)) {
             outputFile.write(resourceFile.readAll());
             outputFile.close();
@@ -418,16 +419,16 @@ void MainWindow::onNewProjectTriggered()
         return;
     }
 
-    extractZip(newProjectDir / L"sampleProject.zip", newProjectDir);
+    extractZip(newProjectDir / L"SampleProject.zip", newProjectDir);
 
     try {
-        fs::remove(newProjectDir / L"sampleProject.zip");
+        fs::remove(newProjectDir / L"SampleProject.zip");
 
         if (fs::exists(L"BaseConfig/Prompt.toml")) {
             fs::copy(L"BaseConfig/Prompt.toml", newProjectDir / L"Prompt.toml", fs::copy_options::overwrite_existing);
         }
 
-        toml::ordered_value configData = toml::uoparse(newProjectDir / L"config.toml");
+        toml::ordered_value configData = toml::uoparse(newProjectDir / L"Config.toml");
 
         auto addCommonDictsToProjectConfig = [&](const std::string& globalConfigKey, const std::string& projectConfigKey)
             {
@@ -450,34 +451,16 @@ void MainWindow::onNewProjectTriggered()
                 }
             };
 
-        addCommonDictsToProjectConfig("commonPreDicts", "preDict");
-        addCommonDictsToProjectConfig("commonGptDicts", "gptDict");
-        addCommonDictsToProjectConfig("commonPostDicts", "postDict");
+        addCommonDictsToProjectConfig("commonPreDicts", "preDicts");
+        addCommonDictsToProjectConfig("commonGptDicts", "gptDicts");
+        addCommonDictsToProjectConfig("commonPostDicts", "postDicts");
 
-        std::ofstream ofs(newProjectDir / L"config.toml", std::ios::binary);
-        ofs << configData;
-        ofs.close();
+        atomicOutputFile(newProjectDir / L"Config.toml", toml::format(configData));
     }
     catch (...) {
         ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法写入配置文件！"), 3000);
         return;
     }
-
-    auto renameDictFileFunc = [&](const QString& orgName, const QString& newName)
-        {
-            if (orgName == newName) {
-                return;
-            }
-            try {
-                fs::rename(newProjectDir / (orgName.toStdWString() + L".toml"), newProjectDir / (newName.toStdWString() + L".toml"));
-            }
-            catch (...) {
-
-            }
-        };
-    renameDictFileFunc("项目GPT字典", tr("项目GPT字典"));
-    renameDictFileFunc("项目译前字典", tr("项目译前字典"));
-    renameDictFileFunc("项目译后字典", tr("项目译后字典"));
 
     ProjectSettingsPage* newPage = createProjectSettingsPage(newProjectDir);
     this->navigation(newPage->property("ElaPageKey").toString());
@@ -496,8 +479,8 @@ void MainWindow::onOpenProjectTriggered()
     }
     insertToml(m_globalConfig, "lastProjectPath", projectPath.toStdString());
     const fs::path projectDir(projectPath.toStdWString());
-    if (!fs::exists(projectDir / L"config.toml")) {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("打开失败"), tr("目录下不存在 config.toml 文件！"), 3000);
+    if (!fs::exists(projectDir / L"Config.toml")) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("打开失败"), tr("目录下不存在 Config.toml 文件！"), 3000);
         return;
     }
 
@@ -673,9 +656,7 @@ void MainWindow::onCloseWindowClicked(bool restart)
     m_appSettingsPage->apply2Config();
     insertToml(m_globalConfig, "clearLogShortcut", m_clearLogShortcut->key().toString().toStdString());
 
-    std::ofstream ofs(L"BaseConfig/globalConfig.toml", std::ios::binary);
-    ofs << m_globalConfig;
-    ofs.close();
+    atomicOutputFile(L"BaseConfig/GlobalConfig.toml", toml::format(m_globalConfig));
 
     if (m_updateChecker->shouldStartUpdater()) {
         QStringList arguments;
@@ -687,7 +668,7 @@ void MainWindow::onCloseWindowClicked(bool restart)
         }
         QProcess::startDetached("Updater.exe", arguments, QDir::currentPath());
     }
-    MainWindow::closeWindow();
+    MainWindow::close();
 }
 
 void MainWindow::checkUpdate()

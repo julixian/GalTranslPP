@@ -1,12 +1,10 @@
 #ifndef PROMPTSSETTINGSPAGE_H
 #define PROMPTSSETTINGSPAGE_H
 
-#include <QList>
-#include <toml.hpp>
-#include <filesystem>
 #include "BasePage.h"
-#include "GptDictModel.h"
 #include "NormalDictModel.h"
+#include <filesystem>
+#include <toml.hpp>
 
 namespace fs = std::filesystem;
 
@@ -16,7 +14,6 @@ class PromptSettingsPage : public BasePage
 
 public:
     explicit PromptSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~PromptSettingsPage() override;
 
 private:
 
@@ -27,4 +24,4 @@ private:
 
 };
 
-#endif // PROMPTSSETTINGSPAGE_H
+#endif

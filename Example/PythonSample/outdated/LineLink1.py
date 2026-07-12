@@ -1,0 +1,185 @@
+# 必须: 导入 C++ 绑定的模块
+import gpp_plugin_api as gpp
+from pathlib import Path
+import re
+import json
+
+# Sentence 的声明详见 Example/LuaSample/SampleTextPlugin.lua
+
+# 全局变量，由 C++ 注入
+# python 中的 logger 和 toknizeFunc 不在 utils 中而是在当前模块的全局变量中
+logger = None
+
+# sourceLang_useTokenizer = True
+targetLang_tokenizerBackend = "spaCy"
+# sourceLang_meCabDictDir = "..."
+# sourceLang_spaCyModelName = "ja_core_news_sm"
+targetLang_spaCyModelName = "zh_core_web_trf"
+# targetLang_stanzaLang = "..."
+# sourceLang_tokenizeFunc = None
+# ...
+
+tokenizeCachePath = Path(r"D:\GALGAME\GALGAMETOOLS\AIGC\GPPGUI\Projects\夏の魔女のパレード\other_cache\tokenizeCache_linelink.json")
+tokenizeCache = {}
+if tokenizeCachePath.exists():
+    with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
+        tokenizeCache = json.load(f)
+
+targetLang_useTokenizer = True
+# 如果使用提供的分词器则必须先定义 tokenizeFunc
+targetLang_tokenizeFunc = None
+
+excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖" }
+
+def init(project_dir: Path):
+    """
+    插件初始化函数，由 C++ 调用一次。
+    """
+    logger.info(f"LineLink 初始化成功，projectDir: {project_dir}")
+
+MAX_LEN = 25
+def has_long_part(transView: str):
+    max_len = 0
+    segments = transView.split("<br>")
+    if not segments:
+        return False
+    dialogue = segments[0].startswith("「")
+    for index, segment in enumerate(segments):
+        if dialogue:
+            if index == 0:
+                max_len = MAX_LEN
+            else:
+                max_len = MAX_LEN - 1
+        else:
+            max_len = MAX_LEN
+        if len(segment) > max_len:
+            return True
+    return False
+
+def processSentence(se: gpp.Sentence):
+    transView: str = se.transview
+    if "[" in transView:
+        return
+    if not has_long_part(transView):
+        return
+    transView = transView.replace("<br>", "")
+    max_len = 0
+    tokens = []
+    if transView in tokenizeCache:
+        wordPosVec = tokenizeCache[transView]
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, transView)
+    else:
+        wordPosVec, entityVec = targetLang_tokenizeFunc(transView)
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, transView)
+        tokenizeCache[transView] = wordPosVec
+    if not tokens:
+        return
+    
+    dialogue = transView.startswith("「")
+    new_lines = []
+    current_line: str = tokens[0]
+    residual_tokens = tokens[1:]
+
+    for index, current_token in enumerate(residual_tokens):
+        if dialogue:
+            if not new_lines:
+                max_len = MAX_LEN
+            else:
+                max_len = MAX_LEN - 1
+        else:
+            max_len = MAX_LEN
+        if len(current_line) + len(current_token) <= max_len:
+            if index + 1 < len(residual_tokens):
+                next_token = residual_tokens[index + 1]
+                if len(current_line) + len(current_token) + len(next_token) > max_len:
+                    if current_token in excludePuncts:
+                        new_lines.append(current_line)
+                        current_line = current_token
+                        continue
+                    removed = gpp.utils.removePunctuation(next_token)
+                    if not removed and next_token not in excludePuncts:
+                        if any(current_line.endswith(excludePunct) for excludePunct in excludePuncts):
+                            new_lines.append(current_line[:-1])
+                            current_line = current_line[-1] + current_token
+                        else:
+                            new_lines.append(current_line)
+                            current_line = current_token
+                        continue
+            current_line += current_token
+        else:
+            new_lines.append(current_line)
+            current_line = current_token
+    new_lines.append(current_line)
+    se.transview = "<br>".join(new_lines)
+
+def linkLine(se: gpp.Sentence):
+    transView: str = se.transview
+    dialogue = transView.startswith("「")
+    max_len = 0
+    segments = transView.split("<br>")
+    # segments = [s.strip() for s in segments if s.strip()]
+    
+    if not segments:
+        return
+
+    # 2. 开始重新组装
+    new_lines = []
+    current_line = segments[0]  # 初始化当前行
+
+    for current_segment in segments[1:]:
+        if dialogue:
+            if not new_lines:
+                max_len = MAX_LEN
+            else:
+                max_len = MAX_LEN - 1
+        else:
+            max_len = MAX_LEN
+        # 判断：如果 (当前行 + 下一段) 的长度 <= max_len
+        if len(current_line) + len(current_segment) <= max_len:
+            # 可以合并（直接拼接）
+            current_line += current_segment
+
+        else:
+            # 不能合并了，把当前行存入结果列表
+            new_lines.append(current_line)
+            # 开启新的一行
+            current_line = current_segment
+
+    # 3. 循环结束后，别忘了把最后一行加进去
+    new_lines.append(current_line)
+    # 4. 用 <br> 将新分好的段落连接起来返回
+    se.transview = "<br>".join(new_lines)
+
+def procCPKey1(se: gpp.Sentence):
+    for problem in se.problems:
+        if not problem.startswith("Current problem:"):
+            continue
+        if problem[16:] == "问题键1":
+            se.nameTrans = "ユリス"
+            return True
+        break
+    return False
+
+
+qStr1 = "「那当然！这点程度就死心可不是尤加蒙学姐的作风哦！<br>值得纪念的第１００次我会准备得更豪华、<br>更轰动地来告白，做好觉悟吧！」"
+def run(se: gpp.Sentence):
+    """
+    处理每个句子的主函数。
+    se 是一个 C++ Sentence 对象的代理。
+    """
+    try:
+        processSentence(se)
+        linkLine(se)
+        if se.transview == qStr1:
+            se.transview = qStr1 + "<br>（尤加蒙(YuGaMoNn)：汤鸭(YuGaMo)加上ん音的梗读法）"
+        if se.name == "ユリス" and not se.orig:
+            se.problems += [ "问题键1" ]
+    except Exception as e:
+        logger.error(f"Error during LineLink run(): {e}")
+
+
+def unload():
+    with open(tokenizeCachePath, 'w', encoding='utf-8') as f:
+        json.dump(tokenizeCache, f, ensure_ascii=False, indent=2)
+    logger.info(f"LineLink tokenizeCache 已保存至 {tokenizeCachePath}")
+    

@@ -19,7 +19,7 @@ mono_crash.*
 
 # Build results
 Example/BaseConfig/opencc/
-Example/BaseConfig/python-3.12.10-embed-amd64/
+Example/BaseConfig/Python-3.12.10-embed-amd64/
 lib/
 vcpkg_installed/
 

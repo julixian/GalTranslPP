@@ -1,8 +1,6 @@
 #ifndef UPDATECHECKER_H
 #define UPDATECHECKER_H
 
-#include <optional>
-
 #include <QNetworkReply>
 #include <QUrl>
 #include <QTimer>
@@ -95,4 +93,4 @@ private:
     const QString m_tempPackagePath = "GUICORE.7z.download";
 };
 
-#endif // UPDATECHECKER_H
+#endif

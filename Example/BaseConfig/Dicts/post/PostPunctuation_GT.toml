@@ -1,0 +1,216 @@
+[[normalDict]]
+org = '‘'
+rep = '“'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '’'
+rep = '”'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = ','
+rep = '，'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '?'
+rep = '？'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '!'
+rep = '！'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '~'
+rep = '～'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '&'
+rep = '＆'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '・'
+rep = '·'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = 'ー'
+rep = '—'
+conditionTarget = ''
+conditionReg = ''
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '—'
+rep = '——'
+conditionTarget = 'pretrans'
+conditionReg = '\A(?![\S\s]*——)'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '『'
+rep = '《'
+conditionTarget = 'orig'
+conditionReg = '《'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '』'
+rep = '》'
+conditionTarget = 'orig'
+conditionReg = '》'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '《'
+rep = '『'
+conditionTarget = 'orig'
+conditionReg = '『'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '》'
+rep = '』'
+conditionTarget = 'orig'
+conditionReg = '』'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '“'
+rep = '「'
+conditionTarget = 'preproc'
+conditionReg = '「'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '”'
+rep = '」'
+conditionTarget = 'preproc'
+conditionReg = '」'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '‘'
+rep = '『'
+conditionTarget = 'preproc'
+conditionReg = '『'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '’'
+rep = '』'
+conditionTarget = 'preproc'
+conditionReg = '』'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '“'
+rep = '『'
+conditionTarget = 'preproc'
+conditionReg = '『'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '”'
+rep = '』'
+conditionTarget = 'preproc'
+conditionReg = '』'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '『'
+rep = '“'
+conditionTarget = 'orig'
+conditionReg = '“'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '』'
+rep = '”'
+conditionTarget = 'orig'
+conditionReg = '”'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '《'
+rep = '“'
+conditionTarget = 'orig'
+conditionReg = '“'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '》'
+rep = '”'
+conditionTarget = 'orig'
+conditionReg = '”'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '‘'
+rep = '“'
+conditionTarget = 'orig'
+conditionReg = '“'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '’'
+rep = '”'
+conditionTarget = 'orig'
+conditionReg = '”'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '。。'
+rep = '。'
+conditionTarget = 'orig'
+conditionReg = '\A(?![\S\s]*。。)'
+isReg = false
+priority = 0
+

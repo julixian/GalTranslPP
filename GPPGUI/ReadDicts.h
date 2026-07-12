@@ -1,5 +1,5 @@
-#ifndef READDICTS_h
-#define READDICTS_h
+#ifndef READDICTS_H
+#define READDICTS_H
 
 #include "NormalDictModel.h"
 #include "GptDictModel.h"
@@ -15,7 +15,6 @@ class ReadDicts : public QObject
 
 public:
 	explicit ReadDicts(QObject* parent = nullptr);
-	~ReadDicts() override;
 
 	static QList<GptDictEntry> readGptDicts(const fs::path& dictPath);
 	static QList<GptDictEntry> readGptDicts(const std::vector<fs::path>& dictPaths);
@@ -27,6 +26,5 @@ public:
 
 
 };
-
 
 #endif

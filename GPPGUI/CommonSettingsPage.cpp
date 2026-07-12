@@ -10,7 +10,7 @@
 #include "ElaMessageBar.h"
 #include "ElaDrawerArea.h"
 #include "ElaLineEdit.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaScrollPageArea.h"
 #include "ElaRadioButton.h"
 #include "ElaSpinBox.h"
@@ -29,11 +29,6 @@ CommonSettingsPage::CommonSettingsPage(toml::ordered_value& projectConfig, QWidg
 	setupUi();
 }
 
-CommonSettingsPage::~CommonSettingsPage()
-{
-
-}
-
 void CommonSettingsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
@@ -45,7 +40,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* requestNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* requestNumLayout = new QHBoxLayout(requestNumArea);
 	ElaDoubleText* requestNumText = new ElaDoubleText(tr("单次请求翻译句子数量"), 16,
-		tr("推荐值 <= 16"), 10, "", requestNumArea);
+		tr("根据模型从十几到一百多不等"), 10, "", requestNumArea);
 	requestNumLayout->addWidget(requestNumText);
 	requestNumLayout->addStretch();
 	ElaSpinBox* requestNumSpinBox = new ElaSpinBox(requestNumArea);
@@ -70,7 +65,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(requestNameNumArea);
 
 	// 最大线程数
-	int maxThread = toml::find_or(m_projectConfig, "common", "threadsNum", 1);
+	int maxThread = toml::find_or(m_projectConfig, "common", "threadsNum", 5);
 	ElaScrollPageArea* maxThreadArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* maxThreadLayout = new QHBoxLayout(maxThreadArea);
 	ElaText* maxThreadText = new ElaText(tr("最大线程数"), 16, maxThreadArea);
@@ -117,7 +112,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(targetLangArea);
 
 	// 是否启用单文件分割。Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割。[No/Num/Equal]
-	const std::string splitFileSetting = toml::find_or(m_projectConfig, "common", "splitFile", "No");
+	const std::string splitFileMethodSetting = toml::find_or(m_projectConfig, "common", "split", "method", "No");
 	ElaDrawerArea* splitSettingsDrawerArea = new ElaDrawerArea(mainWidget);
 	QWidget* splitSettingsArea = new QWidget(splitSettingsDrawerArea);
 	splitSettingsDrawerArea->setDrawerHeader(splitSettingsArea);
@@ -128,13 +123,13 @@ void CommonSettingsPage::setupUi()
 	splitSettingsLayout->addStretch();
 	QButtonGroup* splitSettingsGroup = new QButtonGroup(splitSettingsArea);
 	ElaRadioButton* splitNoRadio = new ElaRadioButton("No", splitSettingsArea);
-	splitNoRadio->setChecked(splitFileSetting == "No");
+	splitNoRadio->setChecked(splitFileMethodSetting == "No");
 	splitSettingsLayout->addWidget(splitNoRadio);
 	ElaRadioButton* splitNumRadio = new ElaRadioButton("Num", splitSettingsArea);
-	splitNumRadio->setChecked(splitFileSetting == "Num");
+	splitNumRadio->setChecked(splitFileMethodSetting == "Num");
 	splitSettingsLayout->addWidget(splitNumRadio);
 	ElaRadioButton* splitEqualRadio = new ElaRadioButton("Equal", splitSettingsArea);
-	splitEqualRadio->setChecked(splitFileSetting == "Equal");
+	splitEqualRadio->setChecked(splitFileMethodSetting == "Equal");
 	splitSettingsLayout->addWidget(splitEqualRadio);
 	splitSettingsGroup->addButton(splitNoRadio, 0);
 	splitSettingsGroup->addButton(splitNumRadio, 1);
@@ -142,7 +137,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(splitSettingsDrawerArea);
 
 	// Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分。
-	int splitNum = toml::find_or(m_projectConfig, "common", "splitFileNum", 1024);
+	int splitNum = toml::find_or(m_projectConfig, "common", "split", "num", 10);
 	ElaScrollPageArea* splitNumArea = new ElaScrollPageArea(splitSettingsDrawerArea);
 	QHBoxLayout* splitNumLayout = new QHBoxLayout(splitNumArea);
 	ElaDoubleText* splitNumText = new ElaDoubleText(tr("分割数量"), 16,
@@ -156,7 +151,7 @@ void CommonSettingsPage::setupUi()
 	splitSettingsDrawerArea->addDrawer(splitNumArea);
 
 	// 分割缓存查找距离
-	int cacheSearchDistance = toml::find_or(m_projectConfig, "common", "cacheSearchDistance", 5);
+	int cacheSearchDistance = toml::find_or(m_projectConfig, "common", "split", "cacheSearchDistance", 5);
 	ElaScrollPageArea* cacheSearchDistanceArea = new ElaScrollPageArea(splitSettingsDrawerArea);
 	QHBoxLayout* cacheSearchDistanceLayout = new QHBoxLayout(cacheSearchDistanceArea);
 	ElaDoubleText* cacheSearchDistanceText = new ElaDoubleText(tr("分割缓存查找距离"), 16,
@@ -169,7 +164,8 @@ void CommonSettingsPage::setupUi()
 	cacheSearchDistanceSpinBox->setValue(cacheSearchDistance);
 	cacheSearchDistanceLayout->addWidget(cacheSearchDistanceSpinBox);
 	splitSettingsDrawerArea->addDrawer(cacheSearchDistanceArea);
-	if (splitFileSetting == "No") {
+	const bool splitSettingsExpanded = toml::find_or(m_projectConfig, "GUIConfig", "commonSplitSettingsExpanded", splitFileMethodSetting != "No");
+	if (!splitSettingsExpanded) {
 		splitSettingsDrawerArea->collapse();
 	}
 	else {
@@ -177,14 +173,14 @@ void CommonSettingsPage::setupUi()
 	}
 
 	// 连续重复块引用复用
-	bool reuseRepeatedBlocks = toml::find_or(m_projectConfig, "common", "reuseRepeatedBlocks", false);
+	bool reuseRepeatedBlocks = toml::find_or(m_projectConfig, "common", "repeatedBlock", "enabled", false);
 	ElaDrawerArea* repeatedBlockDrawerArea = new ElaDrawerArea(mainWidget);
 	QWidget* repeatedBlockArea = new QWidget(repeatedBlockDrawerArea);
 	repeatedBlockDrawerArea->setDrawerHeader(repeatedBlockArea);
 	QHBoxLayout* repeatedBlockLayout = new QHBoxLayout(repeatedBlockArea);
 	ElaDoubleText* repeatedBlockText = new ElaDoubleText(tr("连续重复块引用复用"), 16,
 		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10,
-		tr("启用时建议将翻译顺序改为文件名排序"), repeatedBlockArea);
+		tr("会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序"), repeatedBlockArea);
 	repeatedBlockLayout->addWidget(repeatedBlockText);
 	repeatedBlockLayout->addStretch();
 	ElaToggleSwitch* repeatedBlockToggle = new ElaToggleSwitch(repeatedBlockArea);
@@ -192,7 +188,7 @@ void CommonSettingsPage::setupUi()
 	repeatedBlockLayout->addWidget(repeatedBlockToggle);
 	mainLayout->addWidget(repeatedBlockDrawerArea);
 
-	int repeatedBlockMinSize = toml::find_or(m_projectConfig, "common", "repeatedBlockMinSize", 5);
+	int repeatedBlockMinSize = toml::find_or(m_projectConfig, "common", "repeatedBlock", "minSize", 5);
 	ElaScrollPageArea* repeatedBlockMinSizeArea = new ElaScrollPageArea(repeatedBlockDrawerArea);
 	QHBoxLayout* repeatedBlockMinSizeLayout = new QHBoxLayout(repeatedBlockMinSizeArea);
 	ElaDoubleText* repeatedBlockMinSizeText = new ElaDoubleText(tr("重复块最小句数"), 16,
@@ -204,6 +200,111 @@ void CommonSettingsPage::setupUi()
 	repeatedBlockMinSizeSpinBox->setValue(repeatedBlockMinSize);
 	repeatedBlockMinSizeLayout->addWidget(repeatedBlockMinSizeSpinBox);
 	repeatedBlockDrawerArea->addDrawer(repeatedBlockMinSizeArea);
+	if (toml::find_or(m_projectConfig, "GUIConfig", "commonRepeatedBlockExpanded", false)) {
+		repeatedBlockDrawerArea->expand();
+	}
+	else {
+		repeatedBlockDrawerArea->collapse();
+	}
+
+	// Agent 模式
+	const bool agentEnabled = toml::find_or(m_projectConfig, "common", "agent", "enabled", false);
+	ElaDrawerArea* agentSettingsDrawerArea = new ElaDrawerArea(mainWidget);
+	QWidget* agentSettingsArea = new QWidget(agentSettingsDrawerArea);
+	agentSettingsDrawerArea->setDrawerHeader(agentSettingsArea);
+	QHBoxLayout* agentSettingsLayout = new QHBoxLayout(agentSettingsArea);
+	ElaDoubleText* agentSettingsText = new ElaDoubleText(tr("Agent 模式"), 16,
+		tr("当前仅 ForGalTsv、ForNovelTsv、GenDict 会实际启用"), 10,
+		tr("让模型可以调用一定的工具以获取更多上下文"), agentSettingsArea);
+	agentSettingsLayout->addWidget(agentSettingsText);
+	agentSettingsLayout->addStretch();
+	ElaToggleSwitch* agentEnabledToggle = new ElaToggleSwitch(agentSettingsArea);
+	agentEnabledToggle->setIsToggled(agentEnabled);
+	agentSettingsLayout->addWidget(agentEnabledToggle);
+	mainLayout->addWidget(agentSettingsDrawerArea);
+
+	const int agentMaxTurnsPerChunk = toml::find_or(m_projectConfig, "common", "agent", "maxTurnsPerChunk", 20);
+	ElaScrollPageArea* agentMaxTurnsArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentMaxTurnsLayout = new QHBoxLayout(agentMaxTurnsArea);
+	ElaDoubleText* agentMaxTurnsText = new ElaDoubleText(tr("单块最大轮数"), 16,
+		tr("Agent 处理一个文本块时允许的最大问答轮数"), 10, "", agentMaxTurnsArea);
+	agentMaxTurnsLayout->addWidget(agentMaxTurnsText);
+	agentMaxTurnsLayout->addStretch();
+	ElaSpinBox* agentMaxTurnsSpinBox = new ElaSpinBox(agentMaxTurnsArea);
+	agentMaxTurnsSpinBox->setRange(1, 9999);
+	agentMaxTurnsSpinBox->setValue(agentMaxTurnsPerChunk);
+	agentMaxTurnsLayout->addWidget(agentMaxTurnsSpinBox);
+	agentSettingsDrawerArea->addDrawer(agentMaxTurnsArea);
+
+	const int agentCompactContextThresholdBytes = toml::find_or(m_projectConfig, "common", "agent", "compactContextThresholdBytes", 150000);
+	ElaScrollPageArea* agentCompactThresholdArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
+	ElaDoubleText* agentCompactThresholdText = new ElaDoubleText(tr("压缩上下文阈值"), 16,
+		tr("Agent 消息上下文超过该字节数后触发压缩"), 10, tr("单位为字节"), agentCompactThresholdArea);
+	agentCompactThresholdLayout->addWidget(agentCompactThresholdText);
+	agentCompactThresholdLayout->addStretch();
+	ElaSpinBox* agentCompactThresholdSpinBox = new ElaSpinBox(agentCompactThresholdArea);
+	agentCompactThresholdSpinBox->setRange(1, 1000000000);
+	agentCompactThresholdSpinBox->setFixedWidth(180);
+	agentCompactThresholdSpinBox->setValue(agentCompactContextThresholdBytes);
+	agentCompactThresholdLayout->addWidget(agentCompactThresholdSpinBox);
+	agentSettingsDrawerArea->addDrawer(agentCompactThresholdArea);
+
+	const int agentSearchResultLimit = toml::find_or(m_projectConfig, "common", "agent", "searchResultLimit", 80);
+	ElaScrollPageArea* agentSearchResultLimitArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentSearchResultLimitLayout = new QHBoxLayout(agentSearchResultLimitArea);
+	ElaDoubleText* agentSearchResultLimitText = new ElaDoubleText(tr("工具搜索结果上限"), 16,
+		tr("Agent 工具一次返回的搜索结果数量上限"), 10, "", agentSearchResultLimitArea);
+	agentSearchResultLimitLayout->addWidget(agentSearchResultLimitText);
+	agentSearchResultLimitLayout->addStretch();
+	ElaSpinBox* agentSearchResultLimitSpinBox = new ElaSpinBox(agentSearchResultLimitArea);
+	agentSearchResultLimitSpinBox->setRange(1, 9999);
+	agentSearchResultLimitSpinBox->setValue(agentSearchResultLimit);
+	agentSearchResultLimitLayout->addWidget(agentSearchResultLimitSpinBox);
+	agentSettingsDrawerArea->addDrawer(agentSearchResultLimitArea);
+
+	const int agentContextLinesLimit = toml::find_or(m_projectConfig, "common", "agent", "contextLinesLimit", 20);
+	ElaScrollPageArea* agentContextLinesLimitArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentContextLinesLimitLayout = new QHBoxLayout(agentContextLinesLimitArea);
+	ElaDoubleText* agentContextLinesLimitText = new ElaDoubleText(tr("工具上下文行数上限"), 16,
+		tr("search_text 附近行数上限，0 表示不返回附近行"), 10, "", agentContextLinesLimitArea);
+	agentContextLinesLimitLayout->addWidget(agentContextLinesLimitText);
+	agentContextLinesLimitLayout->addStretch();
+	ElaSpinBox* agentContextLinesLimitSpinBox = new ElaSpinBox(agentContextLinesLimitArea);
+	agentContextLinesLimitSpinBox->setRange(0, 9999);
+	agentContextLinesLimitSpinBox->setValue(agentContextLinesLimit);
+	agentContextLinesLimitLayout->addWidget(agentContextLinesLimitSpinBox);
+	agentSettingsDrawerArea->addDrawer(agentContextLinesLimitArea);
+
+	const std::string agentProjectNotePath = toml::find_or(m_projectConfig, "common", "agent", "projectNotePath", "ProjectNote.md");
+	ElaScrollPageArea* agentProjectNotePathArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentProjectNotePathLayout = new QHBoxLayout(agentProjectNotePathArea);
+	ElaDoubleText* agentProjectNotePathText = new ElaDoubleText(tr("ProjectNote 路径"), 16,
+		tr("Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词"), 10,
+		"", agentProjectNotePathArea);
+	agentProjectNotePathLayout->addWidget(agentProjectNotePathText);
+	agentProjectNotePathLayout->addStretch();
+	ElaLineEdit* agentProjectNotePathLineEdit = new ElaLineEdit(agentProjectNotePathArea);
+	agentProjectNotePathLineEdit->setFixedWidth(400);
+	agentProjectNotePathLineEdit->setText(QString::fromStdString(agentProjectNotePath));
+	agentProjectNotePathLayout->addWidget(agentProjectNotePathLineEdit);
+	agentSettingsDrawerArea->addDrawer(agentProjectNotePathArea);
+	const bool agentSettingsExpanded = toml::find_or(m_projectConfig, "GUIConfig", "commonAgentSettingsExpanded", agentEnabled);
+	if (agentSettingsExpanded) {
+		agentSettingsDrawerArea->expand();
+	}
+	else {
+		agentSettingsDrawerArea->collapse();
+	}
+	connect(agentEnabledToggle, &ElaToggleSwitch::toggled, this, [=](bool checked)
+		{
+			if (checked) {
+				agentSettingsDrawerArea->expand();
+			}
+			else {
+				agentSettingsDrawerArea->collapse();
+			}
+		});
 
 	// 每翻译n次保存一次缓存
 	int cacheSaveInterval = toml::find_or(m_projectConfig, "common", "saveCacheInterval", 1);
@@ -219,25 +320,25 @@ void CommonSettingsPage::setupUi()
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalSpinBox);
 	mainLayout->addWidget(cacheSaveIntervalArea);
 
-	// 最大重试次数
-	int maxRetryNum = toml::find_or(m_projectConfig, "common", "maxRetries", 5);
-	ElaScrollPageArea* maxRetryArea = new ElaScrollPageArea(mainWidget);
-	QHBoxLayout* maxRetryLayout = new QHBoxLayout(maxRetryArea);
-	ElaText* retryText = new ElaText(tr("最大重试次数"), 16, maxRetryArea);
-	maxRetryLayout->addWidget(retryText);
-	maxRetryLayout->addStretch();
-	ElaSpinBox* retrySpinBox = new ElaSpinBox(maxRetryArea);
-	retrySpinBox->setRange(1, 9999);
-	retrySpinBox->setValue(maxRetryNum);
-	maxRetryLayout->addWidget(retrySpinBox);
-	mainLayout->addWidget(maxRetryArea);
+	// 最大请求次数
+	int maxRequestCount = toml::find_or(m_projectConfig, "common", "maxRequestCount", 4);
+	ElaScrollPageArea* maxRequestArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* maxRequestLayout = new QHBoxLayout(maxRequestArea);
+	ElaText* requestText = new ElaText(tr("最大请求次数"), 16, maxRequestArea);
+	maxRequestLayout->addWidget(requestText);
+	maxRequestLayout->addStretch();
+	ElaSpinBox* requestSpinBox = new ElaSpinBox(maxRequestArea);
+	requestSpinBox->setRange(1, 9999);
+	requestSpinBox->setValue(maxRequestCount);
+	maxRequestLayout->addWidget(requestSpinBox);
+	mainLayout->addWidget(maxRequestArea);
 
 	// 携带上文数量
 	int contextNum = toml::find_or(m_projectConfig, "common", "contextHistorySize", 8);
 	ElaScrollPageArea* contextNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* contextNumLayout = new QHBoxLayout(contextNumArea);
 	ElaDoubleText* contextNumText = new ElaDoubleText(tr("携带上文数量"), 16,
-		tr("推荐值 ≤ 10"), 10, "", contextNumArea);
+		tr("对现代模型而言意义不大了，推荐值 ≤ 10"), 10, "", contextNumArea);
 	contextNumLayout->addWidget(contextNumText);
 	contextNumLayout->addStretch();
 	ElaSpinBox* contextNumSpinBox = new ElaSpinBox(contextNumArea);
@@ -265,7 +366,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* checkQuotaArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* checkQuotaLayout = new QHBoxLayout(checkQuotaArea);
 	ElaDoubleText* checkQuotaTextWidget = new ElaDoubleText(tr("额度检测"), 16,
-		tr("运行时动态检测 key 额度，自动从 API 池中删除额度不足的 key"), 10, "", checkQuotaArea);
+		tr("运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key"), 10, "", checkQuotaArea);
 	checkQuotaLayout->addWidget(checkQuotaTextWidget);
 	checkQuotaLayout->addStretch();
 	ElaToggleSwitch* checkQuotaToggle = new ElaToggleSwitch(checkQuotaArea);
@@ -288,7 +389,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(retransAllWhenFailArea);
 
 	// 项目日志设置
-	bool shouldSaveLog = toml::find_or(m_projectConfig, "common", "saveLog", true);
+	bool shouldSaveLog = toml::find_or(m_projectConfig, "common", "log", "saveLog", true);
 	ElaDrawerArea* logSettingsDrawerArea = new ElaDrawerArea(mainWidget);
 	QWidget* logSettingsArea = new QWidget(logSettingsDrawerArea);
 	logSettingsDrawerArea->setDrawerHeader(logSettingsArea);
@@ -306,14 +407,14 @@ void CommonSettingsPage::setupUi()
 
 
 	// 项目日志级别
-	const std::string logLevel = toml::find_or(m_projectConfig, "common", "logLevel", "info");
+	const std::string logLevel = toml::find_or(m_projectConfig, "common", "log", "level", "info");
 	QString logLevelQStr = QString::fromStdString(logLevel);
 	ElaScrollPageArea* logLevelArea = new ElaScrollPageArea(logSettingsDrawerArea);
 	QHBoxLayout* logLevelLayout = new QHBoxLayout(logLevelArea);
 	ElaText* logLevelText = new ElaText(tr("日志级别"), 16, logLevelArea);
 	logLevelLayout->addWidget(logLevelText);
 	logLevelLayout->addStretch();
-	ElaComboBox* logLevelComboBox = new ElaComboBox(logLevelArea);
+	ElaNoWheelComboBox* logLevelComboBox = new ElaNoWheelComboBox(logLevelArea);
 	logLevelComboBox->addItem("trace");
 	logLevelComboBox->addItem("debug");
 	logLevelComboBox->addItem("info");
@@ -330,7 +431,7 @@ void CommonSettingsPage::setupUi()
 	logSettingsDrawerArea->addDrawer(logLevelArea);
 
 	// logFileMaxSize/log 文件大小限制
-	int logFileMaxSize = toml::find_or(m_projectConfig, "common", "logFileMaxSize", 1024 * 1024 * 10);
+	int logFileMaxSize = toml::find_or(m_projectConfig, "common", "log", "fileMaxSize", 1024 * 1024 * 10);
 	int logFileMaxSizeKb = logFileMaxSize / 1024;
 	if (logFileMaxSizeKb == 0) {
 		logFileMaxSizeKb = 1;
@@ -344,13 +445,14 @@ void CommonSettingsPage::setupUi()
 	ElaSpinBox* logFileMaxSizeSpinBox = new ElaSpinBox(logFileMaxSizeArea);
 	logFileMaxSizeSpinBox->setRange(1, 1024 * 1024);
 	logFileMaxSizeSpinBox->setValue(logFileMaxSizeKb);
+	logFileMaxSizeSpinBox->setFixedWidth(180);
 	logFileMaxSizeLayout->addWidget(logFileMaxSizeSpinBox);
 	ElaText* kbText = new ElaText("KB", 16, logFileMaxSizeArea);
 	logFileMaxSizeLayout->addWidget(kbText);
 	logSettingsDrawerArea->addDrawer(logFileMaxSizeArea);
 
 	// maxRotateFiles/log 文件滚动数量上限
-	int maxRotateFiles = toml::find_or(m_projectConfig, "common", "maxRotateFiles", 1);
+	int maxRotateFiles = toml::find_or(m_projectConfig, "common", "log", "maxRotateFiles", 10);
 	if (maxRotateFiles == 0) {
 		maxRotateFiles = 1;
 	}
@@ -366,22 +468,72 @@ void CommonSettingsPage::setupUi()
 	maxRotateFilesLayout->addWidget(maxRotateFilesSpinBox);
 	logSettingsDrawerArea->addDrawer(maxRotateFilesArea);
 
+	int inputBlockMaxLines = toml::find_or(m_projectConfig, "common", "log", "inputBlockMaxLines", 10);
+	ElaScrollPageArea* inputBlockMaxLinesArea = new ElaScrollPageArea(logSettingsDrawerArea);
+	QHBoxLayout* inputBlockMaxLinesLayout = new QHBoxLayout(inputBlockMaxLinesArea);
+	ElaDoubleText* inputBlockMaxLinesText = new ElaDoubleText(tr("单次日志翻译文本行数上限"), 16,
+		tr("限制日志里 inputBlock 和解析结果显示的行数"), 10,
+		tr("实际请求和解析仍使用完整内容"), inputBlockMaxLinesArea);
+	inputBlockMaxLinesLayout->addWidget(inputBlockMaxLinesText);
+	inputBlockMaxLinesLayout->addStretch();
+	ElaSpinBox* inputBlockMaxLinesSpinBox = new ElaSpinBox(inputBlockMaxLinesArea);
+	inputBlockMaxLinesSpinBox->setRange(1, 9999);
+	inputBlockMaxLinesSpinBox->setValue(inputBlockMaxLines);
+	inputBlockMaxLinesLayout->addWidget(inputBlockMaxLinesSpinBox);
+	logSettingsDrawerArea->addDrawer(inputBlockMaxLinesArea);
+
+	int problemMaxLines = toml::find_or(m_projectConfig, "common", "log", "problemMaxLines", 3);
+	ElaScrollPageArea* problemMaxLinesArea = new ElaScrollPageArea(logSettingsDrawerArea);
+	QHBoxLayout* problemMaxLinesLayout = new QHBoxLayout(problemMaxLinesArea);
+	ElaDoubleText* problemMaxLinesText = new ElaDoubleText(tr("单次日志问题行数上限"), 16,
+		tr("只限制日志里 Problems 显示的行数"), 10,
+		tr("实际请求仍发送完整内容"), problemMaxLinesArea);
+	problemMaxLinesLayout->addWidget(problemMaxLinesText);
+	problemMaxLinesLayout->addStretch();
+	ElaSpinBox* problemMaxLinesSpinBox = new ElaSpinBox(problemMaxLinesArea);
+	problemMaxLinesSpinBox->setRange(1, 9999);
+	problemMaxLinesSpinBox->setValue(problemMaxLines);
+	problemMaxLinesLayout->addWidget(problemMaxLinesSpinBox);
+	logSettingsDrawerArea->addDrawer(problemMaxLinesArea);
+
+	int glossaryMaxLines = toml::find_or(m_projectConfig, "common", "log", "glossaryMaxLines", 5);
+	ElaScrollPageArea* glossaryMaxLinesArea = new ElaScrollPageArea(logSettingsDrawerArea);
+	QHBoxLayout* glossaryMaxLinesLayout = new QHBoxLayout(glossaryMaxLinesArea);
+	ElaDoubleText* glossaryMaxLinesText = new ElaDoubleText(tr("单次日志字典行数上限"), 16,
+		tr("只限制日志里 Dict/Glossary 显示的行数"), 10,
+		tr("实际请求仍发送完整内容"), glossaryMaxLinesArea);
+	glossaryMaxLinesLayout->addWidget(glossaryMaxLinesText);
+	glossaryMaxLinesLayout->addStretch();
+	ElaSpinBox* glossaryMaxLinesSpinBox = new ElaSpinBox(glossaryMaxLinesArea);
+	glossaryMaxLinesSpinBox->setRange(1, 9999);
+	glossaryMaxLinesSpinBox->setValue(glossaryMaxLines);
+	glossaryMaxLinesLayout->addWidget(glossaryMaxLinesSpinBox);
+	logSettingsDrawerArea->addDrawer(glossaryMaxLinesArea);
+	if (toml::find_or(m_projectConfig, "GUIConfig", "commonLogSettingsExpanded", false)) {
+		logSettingsDrawerArea->expand();
+	}
+	else {
+		logSettingsDrawerArea->collapse();
+	}
+
 
 	mainLayout->addSpacing(15);
 	ElaText* tokenizerConfigText = new ElaText(tr("分词器设置"), 18, this);
 	ElaToolTip* tokenizerConfigTip = new ElaToolTip(tokenizerConfigText);
-	tokenizerConfigTip->setToolTip(tr("用于生成字典和查错的分词器后端及其设置(应选择适合原文的后端/模型/字典)"));
+	tokenizerConfigTip->setToolTip(tr("用于生成字典和查错的分词器后端及其设置 (应选择适合原文的后端/模型/字典)"));
 	mainLayout->addWidget(tokenizerConfigText);
 
 	// tokenizerBackend
-	const std::string tokenizerBackend = toml::find_or(m_projectConfig, "common", "tokenizerBackend", "MeCab");
-	ElaScrollPageArea* tokenizerBackendArea = new ElaScrollPageArea(mainWidget);
+	const std::string tokenizerBackend = toml::find_or(m_projectConfig, "common", "tokenize", "backend", "MeCab");
+	ElaDrawerArea* tokenizerSettingsDrawerArea = new ElaDrawerArea(mainWidget);
+	QWidget* tokenizerBackendArea = new QWidget(tokenizerSettingsDrawerArea);
+	tokenizerSettingsDrawerArea->setDrawerHeader(tokenizerBackendArea);
 	QHBoxLayout* tokenizerBackendLayout = new QHBoxLayout(tokenizerBackendArea);
 	ElaDoubleText* tokenizerBackendTextWidget = new ElaDoubleText(tr("分词器后端"), 16,
 		tr("除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的"), 10, "", tokenizerBackendArea);
 	tokenizerBackendLayout->addWidget(tokenizerBackendTextWidget);
 	tokenizerBackendLayout->addStretch();
-	ElaComboBox* tokenizerBackendComboBox = new ElaComboBox(tokenizerBackendArea);
+	ElaNoWheelComboBox* tokenizerBackendComboBox = new ElaNoWheelComboBox(tokenizerBackendArea);
 	tokenizerBackendComboBox->addItem("MeCab");
 	tokenizerBackendComboBox->addItem("spaCy");
 	tokenizerBackendComboBox->addItem("Stanza");
@@ -389,11 +541,12 @@ void CommonSettingsPage::setupUi()
 		tokenizerBackendComboBox->setCurrentIndex(index);
 	}
 	tokenizerBackendLayout->addWidget(tokenizerBackendComboBox);
-	mainLayout->addWidget(tokenizerBackendArea);
+	mainLayout->addWidget(tokenizerSettingsDrawerArea);
 
 	// mecabDictDir
-	const std::string mecabDictDir = toml::find_or(m_projectConfig, "common", "mecabDictDir", "BaseConfig/mecabDict/mecab-ipadic-utf8");
-	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(mainWidget);
+	const std::string mecabDictDir = toml::find_or(m_projectConfig, "common", "tokenize", "mecabDictDir",
+		"BaseConfig/mecab/mecab-ipadic-utf8");
+	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* mecabDictDirLayout = new QHBoxLayout(mecabDictDirArea);
 	ElaDoubleText* mecabDictDirText = new ElaDoubleText(tr("MeCab词典目录"), 16,
 		tr("MeCab词典目录，程序自带一个"), 10, "", mecabDictDirArea);
@@ -403,7 +556,7 @@ void CommonSettingsPage::setupUi()
 	mecabDictDirLineEdit->setFixedWidth(400);
 	mecabDictDirLineEdit->setText(QString::fromStdString(mecabDictDir));
 	mecabDictDirLayout->addWidget(mecabDictDirLineEdit);
-	mainLayout->addWidget(mecabDictDirArea);
+	tokenizerSettingsDrawerArea->addDrawer(mecabDictDirArea);
 	ElaPushButton* mecabDictDirButton = new ElaPushButton(tr("浏览"), mecabDictDirArea);
 	mecabDictDirLayout->addWidget(mecabDictDirButton);
 	connect(mecabDictDirButton, &QPushButton::clicked, this, [=]()
@@ -415,8 +568,8 @@ void CommonSettingsPage::setupUi()
 		});
 
 	// spaCyModelName  https://spacy.io/models
-	const std::string spaCyModelName = toml::find_or(m_projectConfig, "common", "spaCyModelName", "ja_core_news_lg");
-	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(mainWidget);
+	const std::string spaCyModelName = toml::find_or(m_projectConfig, "common", "tokenize", "spaCyModelName", "ja_core_news_lg");
+	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* spaCyModelNameLayout = new QHBoxLayout(spaCyModelNameArea);
 	ElaDoubleText* spaCyModelNameText = new ElaDoubleText(tr("spaCy模型名称"), 16,
 		tr("spaCy模型名称，新模型下载后需重启程序"), 10,
@@ -427,7 +580,7 @@ void CommonSettingsPage::setupUi()
 	spaCyModelNameLineEdit->setFixedWidth(200);
 	spaCyModelNameLineEdit->setText(QString::fromStdString(spaCyModelName));
 	spaCyModelNameLayout->addWidget(spaCyModelNameLineEdit);
-	mainLayout->addWidget(spaCyModelNameArea);
+	tokenizerSettingsDrawerArea->addDrawer(spaCyModelNameArea);
 	ElaPushButton* spaCyModelNameButton = new ElaPushButton(tr("浏览"), spaCyModelNameArea);
 	spaCyModelNameLayout->addWidget(spaCyModelNameButton);
 	connect(spaCyModelNameButton, &QPushButton::clicked, this, [=]()
@@ -436,8 +589,8 @@ void CommonSettingsPage::setupUi()
 		});
 
 	// stanzaLang https://stanfordnlp.github.io/stanza/ner_models.html
-	const std::string stanzaLang = toml::find_or(m_projectConfig, "common", "stanzaLang", "ja");
-	ElaScrollPageArea* stanzaLangArea = new ElaScrollPageArea(mainWidget);
+	const std::string stanzaLang = toml::find_or(m_projectConfig, "common", "tokenize", "stanzaLang", "ja");
+	ElaScrollPageArea* stanzaLangArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* stanzaLangLayout = new QHBoxLayout(stanzaLangArea);
 	ElaDoubleText* stanzaLangTextWidget = new ElaDoubleText(tr("Stanza语言ID"), 16,
 		tr("Stanza语言ID，新模型下载后需重启程序"), 10, "", stanzaLangArea);
@@ -447,15 +600,19 @@ void CommonSettingsPage::setupUi()
 	stanzaLangLineEdit->setFixedWidth(200);
 	stanzaLangLineEdit->setText(QString::fromStdString(stanzaLang));
 	stanzaLangLayout->addWidget(stanzaLangLineEdit);
-	mainLayout->addWidget(stanzaLangArea);
+	tokenizerSettingsDrawerArea->addDrawer(stanzaLangArea);
 	ElaPushButton* stanzaLangButton = new ElaPushButton(tr("浏览"), stanzaLangArea);
 	stanzaLangLayout->addWidget(stanzaLangButton);
 	connect(stanzaLangButton, &QPushButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl("https://stanfordnlp.github.io/stanza/ner_models.html"));
 		});
-
-
+	if (toml::find_or(m_projectConfig, "GUIConfig", "commonTokenizerSettingsExpanded", false)) {
+		tokenizerSettingsDrawerArea->expand();
+	}
+	else {
+		tokenizerSettingsDrawerArea->collapse();
+	}
 	// 项目所用的换行
 	const std::string linebreakSymbol = toml::find_or(m_projectConfig, "common", "linebreakSymbol", "auto");
 	toml::ordered_value lbsVal = linebreakSymbol;
@@ -487,27 +644,41 @@ void CommonSettingsPage::setupUi()
 			}
 			insertToml(m_projectConfig, "common.sortMethod", orderValueStr.toStdString());
 			insertToml(m_projectConfig, "common.targetLang", targetLangLineEdit->text().toStdString());
-			insertToml(m_projectConfig, "common.splitFile", splitSettingsGroup->checkedButton()->text().toStdString());
-			insertToml(m_projectConfig, "common.splitFileNum", splitNumSpinBox->value());
-			insertToml(m_projectConfig, "common.cacheSearchDistance", cacheSearchDistanceSpinBox->value());
-			insertToml(m_projectConfig, "common.reuseRepeatedBlocks", repeatedBlockToggle->getIsToggled());
-			insertToml(m_projectConfig, "common.repeatedBlockMinSize", repeatedBlockMinSizeSpinBox->value());
+			insertToml(m_projectConfig, "common.split.method", splitSettingsGroup->checkedButton()->text().toStdString());
+			insertToml(m_projectConfig, "common.split.num", splitNumSpinBox->value());
+			insertToml(m_projectConfig, "common.split.cacheSearchDistance", cacheSearchDistanceSpinBox->value());
+			insertToml(m_projectConfig, "common.repeatedBlock.enabled", repeatedBlockToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.repeatedBlock.minSize", repeatedBlockMinSizeSpinBox->value());
+			insertToml(m_projectConfig, "common.agent.enabled", agentEnabledToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.agent.maxTurnsPerChunk", agentMaxTurnsSpinBox->value());
+			insertToml(m_projectConfig, "common.agent.compactContextThresholdBytes", agentCompactThresholdSpinBox->value());
+			insertToml(m_projectConfig, "common.agent.searchResultLimit", agentSearchResultLimitSpinBox->value());
+			insertToml(m_projectConfig, "common.agent.contextLinesLimit", agentContextLinesLimitSpinBox->value());
+			insertToml(m_projectConfig, "common.agent.projectNotePath", agentProjectNotePathLineEdit->text().toStdString());
 			insertToml(m_projectConfig, "common.saveCacheInterval", cacheSaveIntervalSpinBox->value());
-			insertToml(m_projectConfig, "common.maxRetries", retrySpinBox->value());
+			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.contextHistorySize", contextNumSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 
-			insertToml(m_projectConfig, "common.saveLog", saveLogToggle->getIsToggled());
-			insertToml(m_projectConfig, "common.logLevel", logLevelComboBox->currentText().toStdString());
-			insertToml(m_projectConfig, "common.logFileMaxSize", logFileMaxSizeSpinBox->value() * 1024);
-			insertToml(m_projectConfig, "common.maxRotateFiles", maxRotateFilesSpinBox->value());
+			insertToml(m_projectConfig, "common.log.saveLog", saveLogToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.log.level", logLevelComboBox->currentText().toStdString());
+			insertToml(m_projectConfig, "common.log.fileMaxSize", logFileMaxSizeSpinBox->value() * 1024);
+			insertToml(m_projectConfig, "common.log.maxRotateFiles", maxRotateFilesSpinBox->value());
+			insertToml(m_projectConfig, "common.log.inputBlockMaxLines", inputBlockMaxLinesSpinBox->value());
+			insertToml(m_projectConfig, "common.log.problemMaxLines", problemMaxLinesSpinBox->value());
+			insertToml(m_projectConfig, "common.log.glossaryMaxLines", glossaryMaxLinesSpinBox->value());
+			insertToml(m_projectConfig, "GUIConfig.commonSplitSettingsExpanded", splitSettingsDrawerArea->getIsExpand());
+			insertToml(m_projectConfig, "GUIConfig.commonRepeatedBlockExpanded", repeatedBlockDrawerArea->getIsExpand());
+			insertToml(m_projectConfig, "GUIConfig.commonAgentSettingsExpanded", agentSettingsDrawerArea->getIsExpand());
+			insertToml(m_projectConfig, "GUIConfig.commonLogSettingsExpanded", logSettingsDrawerArea->getIsExpand());
+			insertToml(m_projectConfig, "GUIConfig.commonTokenizerSettingsExpanded", tokenizerSettingsDrawerArea->getIsExpand());
 
-			insertToml(m_projectConfig, "common.tokenizerBackend", tokenizerBackendComboBox->currentText().toStdString());
-			insertToml(m_projectConfig, "common.mecabDictDir", mecabDictDirLineEdit->text().toStdString());
-			insertToml(m_projectConfig, "common.spaCyModelName", spaCyModelNameLineEdit->text().toStdString());
-			insertToml(m_projectConfig, "common.stanzaLang", stanzaLangLineEdit->text().toStdString());
+			insertToml(m_projectConfig, "common.tokenize.backend", tokenizerBackendComboBox->currentText().toStdString());
+			insertToml(m_projectConfig, "common.tokenize.mecabDictDir", mecabDictDirLineEdit->text().toStdString());
+			insertToml(m_projectConfig, "common.tokenize.spaCyModelName", spaCyModelNameLineEdit->text().toStdString());
+			insertToml(m_projectConfig, "common.tokenize.stanzaLang", stanzaLangLineEdit->text().toStdString());
 
 			try {
 				toml::ordered_value newTbl = toml::parse_str<toml::ordered_type_config>(linebreakEdit->toPlainText().toStdString());

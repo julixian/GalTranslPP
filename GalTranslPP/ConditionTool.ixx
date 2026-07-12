@@ -1,9 +1,9 @@
 module;
 
 #define PYBIND11_HEADERS
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
-#include <sol/sol.hpp>
 
 export module ConditionTool;
 
@@ -105,11 +105,13 @@ export
         return ConditionType::None;
     }
 
-    template<typename TC>
-    CheckSeCondFunc getCheckSeCondFunc(const toml::basic_value<TC>& condElem, const fs::path& projectDir,
-        const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager, const std::shared_ptr<spdlog::logger>& logger) 
+    template<typename ...Args, typename TC>
+    CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& condElem, const fs::path& projectDir,
+        const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
+        const std::shared_ptr<spdlog::logger>& logger) 
     {
-        std::vector<CheckSeCondFunc> funcs;
+        using RetFuncType = CheckSeCondBaseFunc<Args...>;
+        std::vector<RetFuncType> funcs;
 
         auto appendFunctionFunc = [&](const auto& tbl)
             {
@@ -119,7 +121,7 @@ export
                 case ConditionType::Gpp:
                 {
                     GPPCondition gppCondition = createGppCondition(tbl);
-                    CheckSeCondFunc checkFunc = [condr = std::move(gppCondition)](const Sentence* se) -> bool
+                    RetFuncType checkFunc = [condr = std::move(gppCondition)](const Sentence* se, Args...) -> bool
                         {
                             return checkGppCondition(condr, se);
                         };
@@ -130,24 +132,26 @@ export
                 case ConditionType::Lua:
                 {
                     std::string conditionLuaStr = tbl.at("conditionScript").as_string();
-                    replaceStrInplace(conditionLuaStr, "<PROJECT_DIR>", wide2Ascii(projectDir));
+                    replaceStrInplace(conditionLuaStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
                     const std::string& conditionFuncStr = tbl.at("conditionFunc").as_string();
                     const std::optional<std::shared_ptr<LuaStateInstance>> luaStateOpt = luaManager->registerFunction(
                         conditionLuaStr, conditionFuncStr);
                     if (luaStateOpt) {
                         std::shared_ptr<LuaStateInstance> luaState = *luaStateOpt;
-                        sol::function* pConditionFunc = luaState->functions[conditionFuncStr].get();
-                        CheckSeCondFunc checkFunc = [luaState, pConditionFunc, conditionFuncStr](const Sentence* se) -> bool
+                        sol::function* pConditionFunc = luaState->m_functions[conditionFuncStr].get();
+                        RetFuncType checkFunc = [luaState, pConditionFunc, conditionFuncStr](const Sentence* se, Args... args) -> bool
                             {
-                                std::lock_guard<std::mutex> lock(luaState->executionMutex);
-                                bool result;
+                                bool result = false;
                                 try {
-                                    result = (*pConditionFunc)(se).get<bool>();
+                                    luaState->submitTask([&]()
+                                        {
+                                            result = pConditionFunc->call<bool>(se, args...);
+                                        }).get();
                                 }
-                                catch (const sol::error& e) {
+                                catch (const std::exception& e) {
                                     throw std::runtime_error(gppTr(
                                         "ConditionTool.getCheckSeCondFunc",
-                                        "执行Lua条件函数 %1 时发生错误: %2")
+                                        "执行 Lua 条件函数 %1 时发生错误: %2")
                                         .arg(conditionFuncStr)
                                         .arg(e.what())
                                         .toStdString());
@@ -155,11 +159,17 @@ export
                                 return result;
                             };
                         funcs.push_back(std::move(checkFunc));
+                        logger->info(gppTr(
+                            "ConditionTool.getCheckSeCondFunc",
+                            "注册 Lua 脚本 [%1] 中的条件函数 %2 成功")
+                            .arg(conditionLuaStr)
+                            .arg(conditionFuncStr)
+                            .toStdString());
                     }
                     else {
                         throw std::runtime_error(gppTr(
                             "ConditionTool.getCheckSeCondFunc",
-                            "注册Lua脚本 %1 中的条件函数 %2 失败")
+                            "注册 Lua 脚本 [%1] 中的条件函数 %2 失败")
                             .arg(conditionLuaStr)
                             .arg(conditionFuncStr)
                             .toStdString());
@@ -170,25 +180,25 @@ export
                 case ConditionType::Python:
                 {
                     std::string conditionPythonStr = tbl.at("conditionScript").as_string();
-                    replaceStrInplace(conditionPythonStr, "<PROJECT_DIR>", wide2Ascii(projectDir));
+                    replaceStrInplace(conditionPythonStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
                     const std::string conditionFuncStr = tbl.at("conditionFunc").as_string();
                     const std::optional<std::shared_ptr<PythonInterpreterInstance>> pythonInterpreterOpt = pythonManager->registerFunction(
                         conditionPythonStr, conditionFuncStr);
                     if (pythonInterpreterOpt) {
                         std::shared_ptr<PythonInterpreterInstance> pythonInterpreter = *pythonInterpreterOpt;
                         py::object* pConditionFunc = pythonInterpreter->functions[conditionFuncStr].get();
-                        CheckSeCondFunc checkFunc = [pythonInterpreter, pConditionFunc, conditionFuncStr](const Sentence* se) -> bool
+                        RetFuncType checkFunc = [pythonInterpreter, pConditionFunc, conditionFuncStr](const Sentence* se, Args... args) -> bool
                             {
                                 bool result;
                                 pythonInterpreter->submitTask([&]()
                                     {
                                         try {
-                                            result = (*pConditionFunc)(se).cast<bool>();
+                                            result = (*pConditionFunc)(se, args...).template cast<bool>();
                                         }
                                         catch (const py::error_already_set& e) {
                                             throw std::runtime_error(gppTr(
                                                 "ConditionTool.getCheckSeCondFunc",
-                                                "执行Python条件函数 %1 时发生错误: %2")
+                                                "执行 Python 条件函数 %1 时发生错误: %2")
                                                 .arg(conditionFuncStr)
                                                 .arg(e.what())
                                                 .toStdString());
@@ -197,11 +207,17 @@ export
                                 return result;
                             };
                         funcs.push_back(std::move(checkFunc));
+                        logger->info(gppTr(
+                            "ConditionTool.getCheckSeCondFunc",
+                            "注册 Python 脚本 [%1] 中的条件函数 %2 成功")
+                            .arg(conditionPythonStr)
+                            .arg(conditionFuncStr)
+                            .toStdString());
                     }
                     else {
                         throw std::runtime_error(gppTr(
                             "ConditionTool.getCheckSeCondFunc",
-                            "注册Python脚本 %1 中的条件函数 %2 失败")
+                            "注册 Python 脚本 [%1] 中的条件函数 %2 失败")
                             .arg(conditionPythonStr)
                             .arg(conditionFuncStr)
                             .toStdString());
@@ -226,19 +242,19 @@ export
             appendFunctionFunc(condElem);
         }
 
-        CheckSeCondFunc resultFunc;
+        RetFuncType resultFunc;
         if (funcs.empty()) {
-            resultFunc = [](const Sentence*) -> bool
+            resultFunc = [](const Sentence*, Args...) -> bool
                 {
                     return true;
                 };
         }
         else {
-            resultFunc = [funcsR = std::move(funcs)](const Sentence* se) -> bool
+            resultFunc = [funcsR = std::move(funcs)](const Sentence* se, Args... args) -> bool
                 {
-                    return std::ranges::all_of(funcsR, [&](const CheckSeCondFunc& func)
+                    return std::ranges::all_of(funcsR, [&](const RetFuncType& func)
                         {
-                            return func(se);
+                            return func(se, args...);
                         });
                 };
         }
@@ -291,12 +307,12 @@ bool checkGppCondition(const GPPCondition& gppCondition, const Sentence* se) {
     		    {
             case CachePart::Names:
                 return checkAnyOf(sentenceToCheck->names);
-            case CachePart::NamesPreview:
-                return checkAnyOf(sentenceToCheck->names_preview);
+            case CachePart::NamesTrans:
+                return checkAnyOf(sentenceToCheck->namesTrans);
             case CachePart::Problems:
                 return checkAnyOf(sentenceToCheck->problems);
             case CachePart::OtherInfo:
-                return checkAnyOf(sentenceToCheck->other_info);
+                return checkAnyOf(sentenceToCheck->otherInfo);
             default:
                 return checkString(pattern.conditionReg, chooseStringRef(sentenceToCheck, pattern.conditionTarget));
             }

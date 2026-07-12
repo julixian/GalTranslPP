@@ -78,7 +78,7 @@ cd GalTranslPP
 
 还需将一些文件复制到文件夹内程序才可正常运行。  
 
-- 0、 先将项目根目录的`Example\BaseConfig`文件夹内的`python-3.12.10-embed-amd64.zip`文件解压到当前文件夹
+- 0、 先将项目根目录的`Example\BaseConfig`文件夹内的`Python-3.12.10-embed-amd64.zip`文件解压到当前文件夹
 
 ### 6.1 GPPCLI
 

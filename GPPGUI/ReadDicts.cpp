@@ -34,10 +34,8 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 					continue;
 				}
 				GptDictEntry entry;
-				entry.original = dict.contains("org") ? QString::fromStdString(toml::find_or(dict, "org", "")) :
-					QString::fromStdString(toml::find_or(dict, "searchStr", ""));
-				entry.translation = dict.contains("rep") ? QString::fromStdString(toml::find_or(dict, "rep", "")) :
-					QString::fromStdString(toml::find_or(dict, "replaceStr", ""));
+				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
+				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
 				entry.description = dict.contains("note") ? QString::fromStdString(toml::find_or(dict, "note", "")) : QString{};
 				result.push_back(entry);
 			}
@@ -51,9 +49,7 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 	}
 	else if (isSameExtension(dictPath, L".json")) {
 		try {
-			std::ifstream ifs(dictPath, std::ios::binary);
-			json j = json::parse(ifs);
-			ifs.close();
+			const json j = parseJson(dictPath);
 			if (!j.is_array()) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
 					tr("%1 不是预期的 json 格式").arg(QString::fromStdWString(dictPath.filename().wstring())), 3000);
@@ -84,15 +80,16 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 			if (line.starts_with("//")) {
 				continue;
 			}
-			std::vector<std::string> tokens = splitTsvLine(line, { "\t", "    " }); // GalTransl支持4空格分割
+			static constexpr std::array<std::string_view, 2> delimiters = { "\t", "    " };
+			const std::vector<std::string_view> tokens = splitTsvLineView(line, delimiters); // GalTransl支持4空格分割
 			if (tokens.size() < 2) {
 				continue;
 			}
 			GptDictEntry entry;
-			entry.original = QString::fromStdString(tokens[0]);
-			entry.translation = QString::fromStdString(tokens[1]);
+			entry.original = QString::fromUtf8(tokens[0]);
+			entry.translation = QString::fromUtf8(tokens[1]);
 			if (tokens.size() > 2) {
-				entry.description = QString::fromStdString(tokens[2]);
+				entry.description = QString::fromUtf8(tokens[2]);
 			}
 			result.push_back(entry);
 		}
@@ -164,10 +161,8 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 					continue;
 				}
 				NormalDictEntry entry;
-				entry.original = dict.contains("org") ? QString::fromStdString(toml::find_or(dict, "org", "")) :
-					QString::fromStdString(toml::find_or(dict, "searchStr", ""));
-				entry.translation = dict.contains("rep") ? QString::fromStdString(toml::find_or(dict, "rep", "")) :
-					QString::fromStdString(toml::find_or(dict, "replaceStr", ""));
+				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
+				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
 				entry.conditionTar = QString::fromStdString(toml::find_or(dict, "conditionTarget", ""));
 				entry.conditionReg = QString::fromStdString(toml::find_or(dict, "conditionReg", ""));
 				entry.isReg = toml::find_or(dict, "isReg", false);
@@ -184,9 +179,7 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 	}
 	else if (isSameExtension(dictPath, L".json")) {
 		try {
-			std::ifstream ifs(dictPath, std::ios::binary);
-			json j = json::parse(ifs);
-			ifs.close();
+			const json j = parseJson(dictPath);
 			if (!j.is_array()) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"),
 					tr("%1 不是预期的 json 格式").arg(QString::fromStdWString(dictPath.filename().wstring())), 3000);
@@ -202,7 +195,7 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 				entry.conditionReg = QString::fromStdString(elem.value("regex", ""));
 				entry.isReg = !(entry.conditionReg.isEmpty());
 				if (entry.isReg) {
-					entry.conditionTar = "preproc_text";
+					entry.conditionTar = "preproc";
 				}
 				result.push_back(entry);
 			}
@@ -223,11 +216,6 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 }
 
 ReadDicts::ReadDicts(QObject* parent) : QObject(parent)
-{
-
-}
-
-ReadDicts::~ReadDicts()
 {
 
 }

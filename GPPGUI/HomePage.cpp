@@ -36,55 +36,55 @@ namespace
             "https://github.com/satan53x/SExtractor",
             "SExTractor",
             "草佬味大，无需多盐",
-            ":/GPPGUI/Resource/Image/satan53x.jpg",
+            ":/GPPGUI/Resource/images/satan53x.jpg",
             "Satan53x",
             "从GalGame脚本提取和导入文本",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
         DefaultPopularCard{
             "https://github.com/morkt/GARbro",
             "GARbro",
             "无敌了",
-            ":/GPPGUI/Resource/Image/gar.png",
+            ":/GPPGUI/Resource/images/gar.png",
             "morkt",
             "神一样的解封包工具",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
         DefaultPopularCard{
             "https://github.com/arcusmaximus/VNTranslationTools",
             "VNTranslationTools",
             "能少用就少用",
-            ":/GPPGUI/Resource/Image/vnt.png",
+            ":/GPPGUI/Resource/images/vnt.png",
             "arcusmaximus",
             "萌新拯救者一般的文本提取与回封工具",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
         DefaultPopularCard{
             "https://github.com/shangjiaxuan/Crass-source",
             "Crass",
             "专治老游戏",
-            ":/GPPGUI/Resource/Image/crass.png",
+            ":/GPPGUI/Resource/images/crass.png",
             "痴漢公賊",
             "早期Galgame解包工具，多看看它的说明文档",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
         DefaultPopularCard{
             "https://www.sublimetext.com",
             "Sublime",
             "和Em互补长短",
-            ":/GPPGUI/Resource/Image/sublime.png",
+            ":/GPPGUI/Resource/images/sublime.png",
             "Sublime HQ",
             "高亮很好使，但编码转换不如emeditor",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
         DefaultPopularCard{
             "https://github.com/ZQF-ReVN",
             "ReVN",
             "拜见祖师爷",
-            ":/GPPGUI/Resource/Image/revn.png",
+            ":/GPPGUI/Resource/images/revn.png",
             "Dir-A",
             "别说你是搞机翻的",
-            ":/GPPGUI/Resource/Image/IARC_7+.svg.png"
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
     };
 
@@ -123,7 +123,7 @@ namespace
         ElaImageCard* backgroundCard = new ElaImageCard(parent);
         backgroundCard->setBorderRadius(10);
         backgroundCard->setFixedHeight(400);
-        backgroundCard->setCardImage(QImage(":/GPPGUI/Resource/Image/homebackground.png"));
+        backgroundCard->setCardImage(QImage(":/GPPGUI/Resource/images/homebackground.png"));
 
         ElaScrollArea* cardScrollArea = new ElaScrollArea(parent);
         cardScrollArea->setWidgetResizable(true);
@@ -141,13 +141,13 @@ namespace
         urlCardLayout->setContentsMargins(30, 0, 0, 6);
         urlCardLayout->addWidget(createUrlCard(
             "https://github.com/julixian/GalTranslPP",
-            ":/GPPGUI/Resource/Image/github.png",
+            ":/GPPGUI/Resource/images/github.png",
             "GalTransl++\nGithub",
             QObject::tr("AI 自动化翻译解决方案"),
             parent));
         urlCardLayout->addWidget(createUrlCard(
             "https://julixian-siw.worldsystem.net/",
-            ":/GPPGUI/Resource/Image/webIcon.jpeg",
+            ":/GPPGUI/Resource/images/webIcon.jpeg",
             "julixian",
             "LAMUNATION FOREVER！！！",
             parent));

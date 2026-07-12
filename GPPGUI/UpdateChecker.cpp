@@ -10,6 +10,7 @@
 #include "ElaMessageBar.h"
 #include "ElaText.h"
 
+import GPPVersion;
 import Tool;
 
 namespace
@@ -34,7 +35,7 @@ UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusT
     connect(m_downloadManager, &QNetworkAccessManager::finished, this, &UpdateChecker::onDownloadFinished);
 
     m_trayIcon = new QSystemTrayIcon(this);
-    m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
+    m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.ico"));
     connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
         {
             Q_EMIT applyUpdateAndRestartSignal();
@@ -209,9 +210,15 @@ bool UpdateChecker::parseLatestRelease(const QByteArray& responseData, LatestRel
         return false;
     }
 
-    bool isCompatible = true;
-    info.hasNewVersion = cmpVer(info.version.toStdString(), GPPVERSION, isCompatible);
-    info.isCompatible = isCompatible;
+    const int versionCompare = compareVersion(info.version.toStdString(), GPPVERSION);
+    if (versionCompare == -2) {
+        if (errorMessage) {
+            *errorMessage = tr("版本号解析失败。");
+        }
+        return false;
+    }
+    info.hasNewVersion = versionCompare > 0;
+    info.isCompatible = versionCompare != 2;
     info.asset = findGuiCoreAsset(jsonObj["assets"].toArray()).value_or(UpdateAssetInfo{});
 
     if (info.hasNewVersion && !info.asset.downloadUrl.isValid()) {

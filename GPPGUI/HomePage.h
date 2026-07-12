@@ -1,15 +1,15 @@
 #ifndef HOMEPAGE_H
 #define HOMEPAGE_H
 
-#include <toml.hpp>
 #include "BasePage.h"
+#include <toml.hpp>
 
 class HomePage : public BasePage
 {
     Q_OBJECT
 
 public:
-    Q_INVOKABLE explicit HomePage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+	explicit HomePage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
     ~HomePage() override;
 
 private:
@@ -18,4 +18,4 @@ private:
     toml::ordered_value& m_globalConfig;
 };
 
-#endif // HOMEPAGE_H
+#endif

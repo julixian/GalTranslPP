@@ -5,30 +5,26 @@
 
 export module NormalJsonTranslatorHelperTool;
 
-export import Tool;
-export import ITranslator;
+export import Dictionary;
 
 namespace fs = std::filesystem;
 
 export
 {
-    constexpr std::string_view repeatedBlockRefToKey = "_gpp_ref_to";
-    constexpr std::string_view repeatedBlockRefByKey = "_gpp_ref_by";
-    constexpr std::string_view repeatedBlockRefPendingKey = "_gpp_ref_pending";
 
-    struct RepeatedBlockPlan {
-        absl::flat_hash_map<SentencePosition, SentencePosition> refToByTarget;
-        absl::flat_hash_map<SentencePosition, std::vector<SentencePosition>> refBySource;
+    struct RepeatedBlockReferenceMap {
+        absl::flat_hash_map<SentencePosition, SentencePosition> targetToSourceMap;
+        absl::flat_hash_map<SentencePosition, std::vector<SentencePosition>> sourceToTargetsMap;
     };
 
     template <typename JsonT>
-    bool isRepeatedBlockRefPendingCache(const JsonT& item) {
-        return item.value(std::string(repeatedBlockRefPendingKey), false);
+    bool isRefPendingFromItem(const JsonT& item) {
+        return item.value("_gpp_ref_pending", false);
     }
 
     template <typename JsonT>
-    std::optional<SentencePosition> getRepeatedBlockRefTo(const JsonT& item) {
-        const auto it = item.find(std::string(repeatedBlockRefToKey));
+    std::optional<SentencePosition> getRefToFromItem(const JsonT& item) {
+        const auto it = item.find("_gpp_ref_to");
         if (it == item.end() || !it->is_object()) {
             return std::nullopt;
         }
@@ -41,9 +37,9 @@ export
     }
 
     template <typename JsonT>
-    std::vector<SentencePosition> getRepeatedBlockRefBy(const JsonT& item) {
+    std::vector<SentencePosition> getRefByFromItem(const JsonT& item) {
         std::vector<SentencePosition> refs;
-        const auto it = item.find(std::string(repeatedBlockRefByKey));
+        const auto it = item.find("_gpp_ref_by");
         if (it == item.end() || !it->is_array()) {
             return refs;
         }
@@ -61,56 +57,55 @@ export
     }
 
     template <typename JsonT>
-    void readRepeatedBlockReferenceInfo(const JsonT& item, Sentence& se) {
-        se.repeatedBlockRefTo = getRepeatedBlockRefTo(item);
-        se.repeatedBlockRefBy = getRepeatedBlockRefBy(item);
-        se.repeatedBlockRefPending = isRepeatedBlockRefPendingCache(item);
+    void itemReferenceInfoToSentence(const JsonT& item, Sentence& se) {
+        se.ref = getRefToFromItem(item);
+        se.refBy = getRefByFromItem(item);
+        se.isRefPending = isRefPendingFromItem(item);
     }
 
     template <typename JsonT>
-    void writeRepeatedBlockReferenceInfo(JsonT& item, const Sentence& se, bool includePending) {
-        if (se.repeatedBlockRefTo.has_value()) {
-            item[std::string(repeatedBlockRefToKey)] = JsonT{
-                {"file", se.repeatedBlockRefTo->file},
-                {"index", se.repeatedBlockRefTo->index}
+    void sentenceReferenceInfoToItem(JsonT& item, const Sentence& se, bool includePending) {
+        if (se.ref.has_value()) {
+            item["_gpp_ref_to"] = JsonT{
+                {"file", se.ref->file},
+                {"index", se.ref->index}
             };
         }
-        if (!se.repeatedBlockRefBy.empty()) {
+        if (!se.refBy.empty()) {
             JsonT refBy = JsonT::array();
-            for (const auto& ref : se.repeatedBlockRefBy) {
+            for (const auto& ref : se.refBy) {
                 refBy.push_back({ {"file", ref.file}, {"index", ref.index} });
             }
-            item[std::string(repeatedBlockRefByKey)] = std::move(refBy);
+            item["_gpp_ref_by"] = std::move(refBy);
         }
-        if (includePending && se.repeatedBlockRefPending) {
-            item[std::string(repeatedBlockRefPendingKey)] = true;
+        if (includePending && se.isRefPending) {
+            item["_gpp_ref_pending"] = true;
         }
     }
 
     template <typename JsonT>
-    void eraseRepeatedBlockReferenceInfo(JsonT& item) {
-        item.erase(std::string(repeatedBlockRefToKey));
-        item.erase(std::string(repeatedBlockRefByKey));
-        item.erase(std::string(repeatedBlockRefPendingKey));
+    void eraseItemReferenceInfo(JsonT& item) {
+        item.erase("_gpp_ref_to");
+        item.erase("_gpp_ref_by");
+        item.erase("_gpp_ref_pending");
     }
 
-    RepeatedBlockPlan analyzeRepeatedBlocks(
-        const std::vector<std::pair<fs::path, ordered_json>>& files,
+    RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
+        const std::vector<std::pair<fs::path, ordered_json>>& filesWithData,
         int minBlockSize
     );
 
-    void applyRepeatedBlockPlanToJson(
+    void addReferenceInfoToInputJson(
         const fs::path& relFilePath,
         ordered_json& data,
-        const RepeatedBlockPlan& plan
+        const RepeatedBlockReferenceMap& references
     );
 
     std::string generateCacheKey(const Sentence* s);
     std::string generateCacheKey(const json& jsonArr, size_t i);
 
     std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);
-    std::string lightRepairJsonText(const std::string& text);
-
+    std::string limitLogLines(std::string_view text, int maxLines, std::string_view tail = ".........");
     void fillBlockAndMap(
         std::span<Sentence*> batchToTransThisRound,
         std::string& inputBlock,
@@ -119,12 +114,12 @@ export
     );
 
     int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
-        std::string& backgroudText, TransEngine transEngine, bool showBackgroundText, bool retransAllWhenFail);
+        std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail);
 
     void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
         const fs::path& outputCacheDir, const fs::path& outputDir, std::shared_ptr<spdlog::logger>& logger);
 
-    bool hasRetranslKey(const std::vector<CheckSeCondFunc>& retranslKeys, const json& item, const Sentence* currentSe);
+    bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSe);
 
     void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cachePath);
 
@@ -133,7 +128,4 @@ export
 
     int getSplittedFileIndex(const std::wstring& path);
     int calculateCachePartIndexDiff(const std::wstring& path1, const std::wstring& path2);
-
-    json toml2Json(const toml::value& value);
-    ordered_json toml2Json(const toml::ordered_value& tomlData);
 }

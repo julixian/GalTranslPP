@@ -7,18 +7,20 @@
 #include <QSignalBlocker>
 #include <QDesktopServices>
 #include <QTimer>
+#include <QMetaObject>
 
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaPushButton.h"
 #include "ElaIconButton.h"
+#include "ElaMenu.h"
+#include "ElaToolButton.h"
 #include "ElaProgressRing.h"
-#include "NoWheelComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaMessageBar.h"
 #include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
-#include "ElaToggleSwitch.h"
 
 #include "NJCfgPage.h"
 #include "EpubCfgPage.h"
@@ -35,7 +37,7 @@ StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::ordered_value& 
 	setTitleVisible(false);
 
 	m_trayIcon = new QSystemTrayIcon(this);
-	m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/Image/julixian_s.ico"));
+	m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.ico"));
 	connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
 		{
 			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
@@ -85,7 +87,6 @@ void StartSettingsPage::ensureWorkerThread()
 	m_worker = new TranslatorWorker(m_projectDir);
 	m_worker->moveToThread(m_workThread);
 	connect(m_workThread, &QThread::finished, m_worker, &TranslatorWorker::deleteLater);
-	connect(this, &StartSettingsPage::startWorkSignal, m_worker, &TranslatorWorker::doTranslation);
 	connect(m_worker, &TranslatorWorker::translationFinishedSignal, this, &StartSettingsPage::workFinished);
 
 	connect(m_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
@@ -99,7 +100,7 @@ void StartSettingsPage::ensureWorkerThread()
 			m_usedTimeLabel->display("00:00:00");
 			m_remainTimeLabel->display("--:--");
 			m_estimator.reset();
-			if (m_translationWorkbenchPage && m_transEngine != "Rebuild") {
+			if (m_translationWorkbenchPage && m_workerTransEngine != "Rebuild") {
 				m_translationWorkbenchPage->updateStage(tr("翻译中"), QString());
 			}
 		});
@@ -136,7 +137,7 @@ void StartSettingsPage::ensureWorkerThread()
 			}
 			const auto etaWithSpeed = m_estimator.recordProgressAndGetSpeedWithEta(progressDelta, m_progressBar->value(), m_progressBar->maximum());
 			const double& speed = etaWithSpeed.first;
-			const Duration& eta = etaWithSpeed.second;
+			const std::chrono::duration<double>& eta = etaWithSpeed.second;
 			if (m_speedLabel) {
 				m_speedLabel->setText(QString::fromStdString(
 					std::format("{:.2f} lines/s", speed)
@@ -158,11 +159,11 @@ void StartSettingsPage::ensureWorkerThread()
 		{
 			m_translationWorkbenchPage->updateRuntimeFiles(files);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeSuccessBatchSignal, this, [=](const QVector<GuiRuntimeSuccessEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeTransSuccessBatchSignal, this, [=](const QVector<GuiRuntimeTransSuccessEvent>& events)
 		{
 			m_translationWorkbenchPage->appendSuccesses(events);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeErrorBatchSignal, this, [=](const QVector<GuiRuntimeErrorEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeTransErrorBatchSignal, this, [=](const QVector<GuiRuntimeTransErrorEvent>& events)
 		{
 			m_translationWorkbenchPage->appendErrors(events);
 		});
@@ -428,36 +429,52 @@ void StartSettingsPage::setupUi()
 	buttonArea->setMaximumHeight(600);
 	QVBoxLayout* buttonLayout = new QVBoxLayout(buttonArea);
 
-	// 文件格式
+	// 文件处理器
 	const std::string filePlugin = toml::find_or(m_projectConfig, "plugins", "filePlugin", "NormalJson");
 	QString filePluginStr = QString::fromStdString(filePlugin);
 	ElaText* fileFormatLabel = new ElaText(buttonArea);
 	fileFormatLabel->setTextPixelSize(16);
-	fileFormatLabel->setText(tr("文件格式:"));
+	fileFormatLabel->setText(tr("文件处理器:"));
 	buttonLayout->addWidget(fileFormatLabel);
-	m_fileFormatComboBox = new NoWheelComboBox(buttonArea);
-	m_fileFormatComboBox->addItem("NormalJson");
-	m_fileFormatComboBox->addItem("Epub");
-	m_fileFormatComboBox->addItem("PDF");
-	m_fileFormatComboBox->addItem("Custom");
+	m_filePluginComboBox = new ElaNoWheelComboBox(buttonArea);
+	m_filePluginComboBox->addItem("NormalJson");
+	m_filePluginComboBox->addItem("Epub");
+	m_filePluginComboBox->addItem("PDF");
+	m_filePluginComboBox->addItem("Custom");
 	if (!filePluginStr.isEmpty()) {
 		if (filePluginStr.toLower().endsWith(".lua") || filePluginStr.toLower().endsWith(".py")) {
-			m_fileFormatComboBox->setCurrentIndex(3);
+			m_filePluginComboBox->setCurrentIndex(3);
 		}
 		else {
-			int index = m_fileFormatComboBox->findText(filePluginStr);
+			int index = m_filePluginComboBox->findText(filePluginStr);
 			if (index >= 0) {
-				m_fileFormatComboBox->setCurrentIndex(index);
+				m_filePluginComboBox->setCurrentIndex(index);
 			}
 		}
 	}
-	buttonLayout->addWidget(m_fileFormatComboBox);
+	buttonLayout->addWidget(m_filePluginComboBox);
 
-	// 针对文件格式的输出设置
-	ElaPushButton* outputSetting = new ElaPushButton(buttonArea);
+	// 文件处理器输出设置
+	ElaMenu* filePluginSettingMenu = new ElaMenu(buttonArea);
+	filePluginSettingMenu->setFixedWidth(125);
+	QAction* normalJsonSettingAction = filePluginSettingMenu->addAction("NormalJson");
+	QAction* epubSettingAction = filePluginSettingMenu->addAction("Epub");
+	QAction* pdfSettingAction = filePluginSettingMenu->addAction("PDF");
+	QAction* customFilePluginSettingAction = filePluginSettingMenu->addAction("Custom");
+	connect(normalJsonSettingAction, &QAction::triggered, this, [this]() { navigation(1); });
+	connect(epubSettingAction, &QAction::triggered, this, [this]() { navigation(2); });
+	connect(pdfSettingAction, &QAction::triggered, this, [this]() { navigation(3); });
+	connect(customFilePluginSettingAction, &QAction::triggered, this, [this]() { navigation(4); });
+
+	ElaToolButton* outputSetting = new ElaToolButton(buttonArea);
+	outputSetting->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	outputSetting->setElaIcon(ElaIconType::Gear);
 	outputSetting->setText(tr("文件处理器设置"));
-	buttonLayout->addWidget(outputSetting);
-	connect(outputSetting, &ElaPushButton::clicked, this, &StartSettingsPage::onOutputSettingClicked);
+	outputSetting->setMenu(filePluginSettingMenu);
+	QHBoxLayout* outputSettingLayout = new QHBoxLayout();
+	outputSettingLayout->setContentsMargins(10, 0, 0, 0);
+	outputSettingLayout->addWidget(outputSetting);
+	buttonLayout->addLayout(outputSettingLayout);
 
 	// 线程数
 	ElaText* threadNumLabel = new ElaText(buttonArea);
@@ -493,51 +510,29 @@ void StartSettingsPage::setupUi()
 	buttonLayout->addWidget(m_remainTimeLabel);
 
 	// 翻译模式
-	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalJson");
+	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalTsv");
 	QString transEngineStr = QString::fromStdString(transEngine);
 	ElaText* translateModeLabel = new ElaText(buttonArea);
 	translateModeLabel->setTextPixelSize(16);
 	translateModeLabel->setText(tr("翻译模式:"));
 	buttonLayout->addWidget(translateModeLabel);
-	ElaComboBox* translateMode = new NoWheelComboBox(buttonArea);
-	// 不要被鼠标滚轮的滚动改变选项
-	translateMode->addItem("ForGalTsv");
-	translateMode->addItem("ForNovelTsv");
-	translateMode->addItem("ForGalJson");
-	translateMode->addItem("Sakura");
-	translateMode->addItem("DumpName");
-	translateMode->addItem("NameTrans");
-	translateMode->addItem("GenDict");
-	translateMode->addItem("Rebuild");
-	translateMode->addItem("ShowNormal");
+	ElaNoWheelComboBox* transEngineComboBox = new ElaNoWheelComboBox(buttonArea);
+	transEngineComboBox->addItem("ForGalTsv");
+	transEngineComboBox->addItem("ForNovelTsv");
+	transEngineComboBox->addItem("ForGalJson");
+	transEngineComboBox->addItem("Sakura");
+	transEngineComboBox->addItem("DumpName");
+	transEngineComboBox->addItem("NameTrans");
+	transEngineComboBox->addItem("GenDict");
+	transEngineComboBox->addItem("Rebuild");
+	transEngineComboBox->addItem("ShowNormal");
 	if (!transEngineStr.isEmpty()) {
-		int index = translateMode->findText(transEngineStr);
+		int index = transEngineComboBox->findText(transEngineStr);
 		if (index >= 0) {
-			translateMode->setCurrentIndex(index);
+			transEngineComboBox->setCurrentIndex(index);
 		}
 	}
-	buttonLayout->addWidget(translateMode);
-
-	const bool agentEnabled = toml::find_or(m_projectConfig, "agent", "enabled", false);
-	ElaText* agentModeLabel = new ElaText(buttonArea);
-	agentModeLabel->setTextPixelSize(14);
-	agentModeLabel->setText(tr("实验性: Agent 模式"));
-	buttonLayout->addWidget(agentModeLabel);
-	ElaToggleSwitch* agentModeToggle = new ElaToggleSwitch(buttonArea);
-	agentModeToggle->setIsToggled(agentEnabled);
-	buttonLayout->addWidget(agentModeToggle);
-	auto refreshAgentControls = [=]()
-		{
-			const QString currentMode = translateMode->currentText();
-			const bool supportsAgent = currentMode == "ForGalTsv" || currentMode == "ForNovelTsv" || currentMode == "GenDict";
-			agentModeToggle->setEnabled(supportsAgent);
-			if (!supportsAgent) {
-				agentModeToggle->setIsToggled(false);
-			}
-		};
-	connect(translateMode, &ElaComboBox::currentTextChanged, this, [=](const QString&) { refreshAgentControls(); });
-	connect(agentModeToggle, &ElaToggleSwitch::toggled, this, [=](bool) { refreshAgentControls(); });
-	refreshAgentControls();
+	buttonLayout->addWidget(transEngineComboBox);
 
 	// 开始翻译
 	m_startTranslateButton = new ElaPushButton(buttonArea);
@@ -594,23 +589,24 @@ void StartSettingsPage::setupUi()
 
 	m_applyFunc = [=]()
 		{
-			if (m_fileFormatComboBox->currentText() != "Custom") {
-				insertToml(m_projectConfig, "plugins.filePlugin", m_fileFormatComboBox->currentText().toStdString());
+			if (m_filePluginComboBox->currentText() != "Custom") {
+				insertToml(m_projectConfig, "plugins.filePlugin", m_filePluginComboBox->currentText().toStdString());
 			}
 			else {
-				const std::string customFilePluginStr = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
+				const std::string customFilePluginStr = toml::find_or(m_projectConfig, "plugins", "customFilePlugin",
+					"Lua/SampleNormalJsonFilePlugin.lua");
 				const fs::path customFilePluginPath = ascii2Wide(customFilePluginStr);
 				if (
 					!isSameExtension(customFilePluginPath, L".lua") &&
 					!isSameExtension(customFilePluginPath, L".py")
 					)
 				{
-					ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("文件格式错误"), tr("自定义文件插件的格式必须是 .lua 或 .py 格式。"), 3000);
+					ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("文件格式错误"),
+						tr("自定义文件插件的格式必须是 .lua 或 .py 格式。"), 3000);
 				}
 				insertToml(m_projectConfig, "plugins.filePlugin", customFilePluginStr);
 			}
-			insertToml(m_projectConfig, "plugins.transEngine", translateMode->currentText().toStdString());
-			insertToml(m_projectConfig, "agent.enabled", agentModeToggle->getIsToggled());
+			insertToml(m_projectConfig, "plugins.transEngine", transEngineComboBox->currentText().toStdString());
 		};
 
 	// 顺序和_onOutputSettingClicked里的索引一致
@@ -622,29 +618,11 @@ void StartSettingsPage::setupUi()
 	addCentralWidget(m_pdfCfgPage, true, false, 0);
 	m_customFilePluginCfgPage = new CustomFilePluginCfgPage(m_projectDir, m_globalConfig, m_projectConfig, this);
 	addCentralWidget(m_customFilePluginCfgPage, true, false, 0);
+
 	addCentralWidget(m_translationWorkbenchPage, true, false, 0);
 }
 
-void StartSettingsPage::onOutputSettingClicked()
-{
-	QString fileFormat = m_fileFormatComboBox->currentText();
-	if (fileFormat == "NormalJson") {
-		this->navigation(1);
-	}
-	else if (fileFormat == "Epub") {
-		this->navigation(2);
-	}
-	else if (fileFormat == "PDF") {
-		this->navigation(3);
-	}
-	else if (fileFormat == "Custom") {
-		this->navigation(4);
-	}
-}
-
-
 // 底下的可以不用看
-
 void StartSettingsPage::onStartTranslatingClicked()
 {
 	resetLogBufferState(true);
@@ -652,7 +630,7 @@ void StartSettingsPage::onStartTranslatingClicked()
 		m_translationWorkbenchPage->clearRuntime();
 	}
 	Q_EMIT startTranslatingSignal();
-	m_transEngine = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "transEngine", ""));
+	m_workerTransEngine = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "transEngine", ""));
 
 	m_startTime = std::chrono::high_resolution_clock::now();
 	m_usedTimeLabel->display("00:00:00");
@@ -660,7 +638,7 @@ void StartSettingsPage::onStartTranslatingClicked()
 	m_progressBar->setValue(0);
 	ensureWorkerThread();
 
-	Q_EMIT startWorkSignal();
+	QMetaObject::invokeMethod(m_worker, &TranslatorWorker::doTranslation, Qt::QueuedConnection);
 	m_stopTranslateButton->setEnabled(true);
 }
 
@@ -701,7 +679,7 @@ void StartSettingsPage::workFinished(int exitCode)
 			tr("项目 %1 连工厂函数都失败了，玩毛啊").arg(projectName), 3000);
 		break;
 	case 0:
-		if (m_transEngine == "DumpName" || m_transEngine == "GenDict") {
+		if (m_workerTransEngine == "DumpName" || m_workerTransEngine == "GenDict") {
 			const QString message = tr("项目 %1 的生成任务已完成。").arg(projectName);
 			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 3000);
 			m_trayIcon->showMessage(
@@ -711,7 +689,7 @@ void StartSettingsPage::workFinished(int exitCode)
 				5000                          // 显示时长 (毫秒)
 			);
 		}
-		else if (m_transEngine == "ShowNormal") {
+		else if (m_workerTransEngine == "ShowNormal") {
 			const QString message = tr("请在 show_normal 文件夹中查收项目 %1 的预处理结果。").arg(projectName);
 			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 3000);
 			m_trayIcon->showMessage(
@@ -756,7 +734,7 @@ void StartSettingsPage::workFinished(int exitCode)
 			}
 		}).detach();
 
-	Q_EMIT finishTranslatingSignal(m_transEngine, exitCode);
+	Q_EMIT finishTranslatingSignal(m_workerTransEngine, exitCode);
 	m_startTranslateButton->setEnabled(true);
 	m_stopTranslateButton->setEnabled(false);
 	disposeWorkerThread();

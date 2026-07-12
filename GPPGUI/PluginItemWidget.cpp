@@ -7,7 +7,7 @@
 #include "ElaToolTip.h"
 #include "ElaIconButton.h"
 #include "ElaDoubleText.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 
 PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& runTimeStr, QWidget* parent)
     : ElaScrollPageArea(parent)
@@ -30,7 +30,7 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
     // 插件名称
     m_pluginNameLabel = new ElaDoubleText(pluginName, 16, toolTipMap[pluginName], 10, "", this);
 
-    m_pluginRunTimeBox = new ElaComboBox(this);
+    m_pluginRunTimeBox = new ElaNoWheelComboBox(this);
     m_pluginRunTimeBox->setFixedWidth(150);
     m_pluginRunTimeBox->addItems(boxItemMap[pluginName]);
     m_pluginRunTimeBox->setCurrentText(runTimeStr);
@@ -69,10 +69,6 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
     mainLayout->addWidget(m_settingsButton);
     mainLayout->addWidget(m_moveUpButton);
     mainLayout->addWidget(m_moveDownButton);
-}
-
-PluginItemWidget::~PluginItemWidget()
-{
 }
 
 QString PluginItemWidget::getPluginName() const

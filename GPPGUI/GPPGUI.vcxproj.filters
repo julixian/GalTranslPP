@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -48,7 +48,7 @@
     <ClCompile Include="mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="APISettingsPage.cpp">
+    <ClCompile Include="ApiSettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
     <ClCompile Include="PluginSettingsPage.cpp">
@@ -177,6 +177,18 @@
     <ClCompile Include="ElaDoubleText.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
+    <ClCompile Include="TreeSitterHighlighter.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeSitterGrammars\json\TreeSitterJsonParser.c">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlParser.c">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlScanner.c">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -185,7 +197,7 @@
     <QtMoc Include="PluginSettingsPage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
-    <QtMoc Include="APISettingsPage.h">
+    <QtMoc Include="ApiSettingsPage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
     <QtMoc Include="ProjectSettingsPage.h">
@@ -311,14 +323,17 @@
     <ClInclude Include="NormalTabEntry.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
-    <ClInclude Include="NoWheelComboBox.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
-    </ClInclude>
     <ClInclude Include="EtaEstimator.hpp">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <ClInclude Include="ProjectCachePage_p.h">
       <Filter>Header Files\ProjectSettingH</Filter>
+    </ClInclude>
+    <ClInclude Include="ElaNoWheelComboBox.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeSitterHighlighter.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

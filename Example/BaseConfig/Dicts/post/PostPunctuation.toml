@@ -1,0 +1,72 @@
+[[normalDict]]
+org = '\A“([\S\s]*)”\z'
+rep = '『$1』'
+conditionTarget = 'preproc'
+conditionReg = '\A『[\S\s]*』\z'
+isReg = true
+priority = 99
+
+[[normalDict]]
+org = '\A“([\S\s]*)”\z'
+rep = '「$1」'
+conditionTarget = 'preproc'
+conditionReg = '\A「[\S\s]*」\z'
+isReg = true
+priority = 99
+
+[[normalDict]]
+org = '\A"([\S\s]*)"\z'
+rep = '『$1』'
+conditionTarget = 'preproc'
+conditionReg = '\A『[\S\s]*』\z'
+isReg = true
+priority = 99
+
+[[normalDict]]
+org = '\A"([\S\s]*)"\z'
+rep = '「$1」'
+conditionTarget = 'preproc'
+conditionReg = '\A「[\S\s]*」\z'
+isReg = true
+priority = 99
+
+[[normalDict]]
+org = '...'
+rep = '…'
+conditionTarget = 'preproc'
+conditionReg = '\A(?![\S\s]*...)'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '…'
+rep = '……'
+conditionTarget = 'pretrans'
+conditionReg = '\A(?![\S\s]*……)'
+isReg = false
+priority = 0
+
+[[normalDict]]
+org = '"([^"]*?)"'
+rep = '『$1』'
+conditionTarget = 'preproc'
+conditionReg = '\A(?![\S\s]*?"[\S\s]*?")'
+isReg = true
+priority = 0
+
+[[normalDict]]
+org = '“([^“”]*?)”'
+rep = '『$1』'
+conditionTarget = 'preproc'
+conditionReg = '\A(?![\S\s]*?“[\S\s]*?”)'
+isReg = true
+priority = 0
+
+[[normalDict]]
+org = '。）'
+rep = '）'
+conditionTarget = 'preproc'
+conditionReg = '\A(?![\S\s]*。）)'
+isReg = false
+priority = 0
+

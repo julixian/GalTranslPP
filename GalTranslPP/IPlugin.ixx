@@ -62,7 +62,7 @@ export
 		::add_convention<pro::weak_dispatch<MemDPreRun>, void(Sentence*)>
 		::add_convention<pro::weak_dispatch<MemPreRun>, void(Sentence*)>
 		::add_convention<pro::weak_dispatch<MemPostRun>, void(Sentence*)>
-		::add_convention<pro::weak_dispatch<MemDPostRun>, void(Sentence*)> // 弱 proxy 约束的实现不是必须的，如果没有实现则默认返回 false
+		::add_convention<pro::weak_dispatch<MemDPostRun>, void(Sentence*)> // 弱 proxy 约束的实现不是必须的，如果没有实现则默认空实现
 		::build { };
 
 	void registerPlugins(std::vector<pro::proxy<PPlugin>>& plugins, const std::vector<std::string>& pluginNames, const fs::path& projectDir, const fs::path& otherCacheDir,

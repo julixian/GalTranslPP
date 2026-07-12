@@ -18,6 +18,7 @@
 #include "ElaTabWidget.h"
 #include "ElaInputDialog.h"
 #include "ReadDicts.h"
+#include "TreeSitterHighlighter.h"
 
 import Tool;
 
@@ -44,10 +45,7 @@ CommonNormalDictPage::CommonNormalDictPage(const std::string& mode, toml::ordere
 	setupUi();
 }
 
-CommonNormalDictPage::~CommonNormalDictPage()
-{
-
-}
+CommonNormalDictPage::~CommonNormalDictPage() = default;
 
 void CommonNormalDictPage::setupUi()
 {
@@ -150,6 +148,7 @@ void CommonNormalDictPage::setupUi()
 			QFont plainTextFont = plainTextEdit->font();
 			plainTextFont.setPixelSize(15);
 			plainTextEdit->setFont(plainTextFont);
+			installTreeSitterHighlighter(plainTextEdit->document(), SyntaxLanguage::Toml);
 			plainTextEdit->setPlainText(ReadDicts::readDictsStr(orgDictPath));
 			stackedWidget->addWidget(plainTextEdit);
 			ElaTableView* tableView = new ElaTableView(stackedWidget);
@@ -222,39 +221,50 @@ void CommonNormalDictPage::setupUi()
 						return false;
 					}
 
-					const std::string tmpDictName = wide2Ascii(it->dictPath.stem().wstring());
-					std::ofstream ofs(it->dictPath, std::ios::binary);
-					if (!ofs.is_open()) {
-						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"),
-							tr("无法打开字典: %1").arg(QString::fromStdWString(dictPath.wstring())), 3000);
+					auto writeDictFile = [&]() -> bool
+						{
+							try {
+								if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
+									atomicOutputFile(it->dictPath, plainTextEdit->toPlainText().toStdString());
+								}
+								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
+									const QList<NormalDictEntry> dictEntries = model->getEntries();
+									toml::ordered_value dictArr= toml::array{};
+									for (const auto& entry : dictEntries) {
+										toml::ordered_table dictTbl;
+										dictTbl.insert({ "org", entry.original.toStdString() });
+										dictTbl.insert({ "rep", entry.translation.toStdString() });
+										dictTbl.insert({ "conditionTarget", entry.conditionTar.toStdString() });
+										dictTbl.insert({ "conditionReg", entry.conditionReg.toStdString() });
+										dictTbl.insert({ "isReg", entry.isReg });
+										dictTbl.insert({ "priority", entry.priority });
+										dictTbl["org"].as_string_fmt().fmt = toml::string_format::literal;
+										dictTbl["rep"].as_string_fmt().fmt = toml::string_format::literal;
+										dictTbl["conditionTarget"].as_string_fmt().fmt = toml::string_format::literal;
+										dictTbl["conditionReg"].as_string_fmt().fmt = toml::string_format::literal;
+										dictArr.push_back(dictTbl);
+									}
+									atomicOutputFile(it->dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"normalDict", dictArr}} }));
+								}
+							}
+							catch (...) {
+								ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"),
+									tr("无法打开字典: %1").arg(QString::fromStdWString(dictPath.wstring())), 3000);
+								return false;
+							}
+							return true;
+						};
+					if (!writeDictFile()) {
 						return false;
 					}
 
+					const std::string tmpDictName = wide2Ascii(it->dictPath.stem().wstring());
+
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-						ofs << plainTextEdit->toPlainText().toStdString();
-						ofs.close();
 						const QList<NormalDictEntry> newDictEntries = ReadDicts::readNormalDicts(it->dictPath);
 						model->loadData(newDictEntries);
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						const QList<NormalDictEntry> dictEntries = model->getEntries();
-						toml::ordered_value dictArr= toml::array{};
-						for (const auto& entry : dictEntries) {
-							toml::ordered_table dictTbl;
-							dictTbl.insert({ "org", entry.original.toStdString() });
-							dictTbl.insert({ "rep", entry.translation.toStdString() });
-							dictTbl.insert({ "conditionTarget", entry.conditionTar.toStdString() });
-							dictTbl.insert({ "conditionReg", entry.conditionReg.toStdString() });
-							dictTbl.insert({ "isReg", entry.isReg });
-							dictTbl.insert({ "priority", entry.priority });
-							dictTbl["org"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["rep"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["conditionTarget"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["conditionReg"].as_string_fmt().fmt = toml::string_format::literal;
-							dictArr.push_back(dictTbl);
-						}
-						ofs << toml::ordered_value{ toml::ordered_table{{"normalDict", dictArr}} };
-						ofs.close();
 						plainTextEdit->setPlainText(ReadDicts::readDictsStr(it->dictPath));
 					}
 
@@ -582,13 +592,14 @@ void CommonNormalDictPage::setupUi()
 				return;
 			}
 
-			std::ofstream ofs(newDictPath, std::ios::binary);
-			if (!ofs.is_open()) {
+			try {
+				atomicOutputFile(newDictPath, std::string{});
+			}
+			catch (...) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
 					tr("无法创建 %1 文件").arg(QString::fromStdWString(newDictPath.wstring())), 3000);
 				return;
 			}
-			ofs.close();
 
 			QWidget* pageMainWidget = createNormalTab(newDictPath);
 			tabWidget->addTab(pageMainWidget, dictName);

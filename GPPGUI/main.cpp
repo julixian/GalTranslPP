@@ -50,6 +50,8 @@ int main(int argc, char* argv[])
 
     // 使用一个唯一的key
     const QString uniqueKey = "{957C27D8-37BB-4F54-9EBE-D0F5C701CBBF}";
+    // 使用 QSharedMemory 防止多实例运行
+    QSharedMemory sharedMemory(uniqueKey);
 
     QTranslator baseTranslator;
     QTranslator coreTranslator;
@@ -61,7 +63,7 @@ int main(int argc, char* argv[])
     
     QCommandLineParser parser;
     parser.addHelpOption();
-    parser.addOption({ QStringList{"pid"}, "Process ID of the updater application.", "pid" });
+    parser.addOption({ QStringList{"pid"}, "pid", "pid" });
     parser.process(app);
     if (parser.isSet("pid")) {
         const qint64 pid = parser.value("pid").toLongLong();
@@ -113,8 +115,6 @@ int main(int argc, char* argv[])
             }
             allowMultiInstance = toml::find_or(globalConfig, "allowMultiInstance", false);
             if (!allowMultiInstance) {
-                // 使用 QSharedMemory 防止多实例运行
-                QSharedMemory sharedMemory(uniqueKey);
                 // 尝试附加到共享内存。
                 // 如果成功，说明已有实例在运行。
                 if (sharedMemory.attach()) {
@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
                 }
             }
 
-            const std::string pyEnvPathStr = toml::find_or(globalConfig, "pyEnvPath", "BaseConfig/python-3.12.10-embed-amd64");
+            const std::string pyEnvPathStr = toml::find_or(globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
             const fs::path pyEnvPath = ascii2Wide(pyEnvPathStr);
             startUpPythonEnv(pyEnvPath, release);
         }

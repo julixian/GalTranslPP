@@ -71,22 +71,24 @@ export
         std::vector<RegexPattern> m_preRegexPatterns;
         std::vector<RegexPattern> m_postRegexPatterns;
 
-
         // 存储json文件相对路径到各种元数据的映射
         absl::flat_hash_map<fs::path, JsonInfo> m_jsonToInfoMap;
 
         // 每个epub完整路径对应的多个json文件相对路径以及有没有处理完毕
         absl::flat_hash_map<fs::path, absl::flat_hash_map<fs::path, bool>> m_epubToJsonsMap;
 
+        std::mutex m_onFileProcessedMutex;
+
     public:
 
-        EpubTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
+        EpubTranslator(const fs::path& projectDir,
+            const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
 
-        virtual ~EpubTranslator() override;
+    	~EpubTranslator() override;
 
         void epubInit();
         void epubBeforeRun();
 
-        virtual void run() override;
+    	void run() override;
     };
 }

@@ -1,8 +1,8 @@
 #ifndef BASEPAGE_H
 #define BASEPAGE_H
 
+#include "ElaScrollPage.h"
 #include <functional>
-#include <ElaScrollPage.h>
 
 class BasePage : public ElaScrollPage
 {
@@ -18,4 +18,4 @@ protected:
     std::function<void()> m_applyFunc;
 };
 
-#endif // BASEPAGE_H
+#endif

@@ -1,13 +1,13 @@
 #ifndef TRANSLATIONWORKBENCHPAGE_H
 #define TRANSLATIONWORKBENCHPAGE_H
 
+#include "BasePage.h"
+#include "TranslatorWorker.h"
 #include <QMap>
 #include <QSet>
 #include <QStandardItemModel>
 #include <QVector>
 
-#include "BasePage.h"
-#include "TranslatorWorker.h"
 
 class ElaListView;
 class ElaPushButton;
@@ -24,8 +24,8 @@ public:
 
     void resetRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files);
     void updateRuntimeFiles(const QVector<GuiRuntimeFileProgress>& files);
-    void appendSuccesses(const QVector<GuiRuntimeSuccessEvent>& events);
-    void appendErrors(const QVector<GuiRuntimeErrorEvent>& events);
+    void appendSuccesses(const QVector<GuiRuntimeTransSuccessEvent>& events);
+    void appendErrors(const QVector<GuiRuntimeTransErrorEvent>& events);
     void updateStage(const QString& stage, const QString& currentFile);
     void clearRuntime();
 
@@ -39,8 +39,8 @@ private:
     void trimSuccesses();
     void trimErrors();
 
-    QVector<GuiRuntimeSuccessEvent> m_successes;
-    QVector<GuiRuntimeErrorEvent> m_errors;
+    QVector<GuiRuntimeTransSuccessEvent> m_successes;
+    QVector<GuiRuntimeTransErrorEvent> m_errors;
     QMap<QString, GuiRuntimeFileProgress> m_files;
     QSet<QString> m_successFileFilters;
     int m_successTotal{};
@@ -64,4 +64,4 @@ private:
     QStackedWidget* m_sideStack = nullptr;
 };
 
-#endif // TRANSLATIONWORKBENCHPAGE_H
+#endif

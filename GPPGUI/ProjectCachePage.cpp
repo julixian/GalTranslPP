@@ -3,8 +3,8 @@
 #include <QButtonGroup>
 #include <QDesktopServices>
 #include <QHBoxLayout>
-#include <QItemSelectionModel>
 #include <QVBoxLayout>
+#include <QItemSelectionModel>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -12,13 +12,12 @@
 #include <QUrl>
 
 #include "ElaCheckBox.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
-#include "NoWheelComboBox.h"
 
 #include "ProjectCachePage_p.h"
 
@@ -31,8 +30,6 @@ ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& pr
     setTitleVisible(false);
     setupUi();
 }
-
-ProjectCachePage::~ProjectCachePage() = default;
 
 void ProjectCachePage::ensureCacheFilesLoaded()
 {
@@ -258,12 +255,12 @@ void ProjectCachePage::setupUi()
         });
     searchLayout->addWidget(m_globalSearchEdit);
 
-    m_globalSearchField = new NoWheelComboBox(searchTab);
+    m_globalSearchField = new ElaNoWheelComboBox(searchTab);
     m_globalSearchField->addItem(tr("全部"), "all");
-    m_globalSearchField->addItem("preproc_text", "src");
-    m_globalSearchField->addItem("pretrans_text", "dst");
+    m_globalSearchField->addItem("preproc", "src");
+    m_globalSearchField->addItem("pretrans", "dst");
     m_globalSearchField->addItem("problems", "problems");
-    connect(m_globalSearchField, &ElaComboBox::currentIndexChanged, this, [=](int)
+    connect(m_globalSearchField, &ElaNoWheelComboBox::currentIndexChanged, this, [=](int)
         {
             runGlobalSearch();
         });
@@ -293,9 +290,9 @@ void ProjectCachePage::setupUi()
     m_replaceWithEdit->setIsClearButtonEnable(true);
     replaceLayout->addWidget(m_replaceWithEdit);
 
-    m_replaceField = new ElaComboBox(searchTab);
-    m_replaceField->addItem(tr("pretrans_text"), "dst");
-    m_replaceField->addItem(tr("preproc_text"), "src");
+    m_replaceField = new ElaNoWheelComboBox(searchTab);
+    m_replaceField->addItem(tr("pretrans"), "dst");
+    m_replaceField->addItem(tr("preproc"), "src");
     m_replaceField->addItem(tr("全部"), "all");
     replaceLayout->addWidget(m_replaceField);
 

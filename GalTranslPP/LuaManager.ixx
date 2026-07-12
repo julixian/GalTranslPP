@@ -1,25 +1,40 @@
 ﻿module;
 
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
-#include <sol/sol.hpp>
 
 export module LuaManager;
 
 export import GPPDefines;
+export import SafeQueue;
 
 namespace fs = std::filesystem;
 
 export
 {
-	struct LuaStateInstance {
-		std::unique_ptr<sol::state> lua;
-		absl::btree_map<std::string, std::unique_ptr<sol::function>> functions;
-		std::mutex executionMutex; // 用于保护这个特定 lua 实例的执行
-		LuaStateInstance() : lua(std::make_unique<sol::state>()) {}
+	struct LuaTask {
+		std::function<void()> taskFunc;
+		std::promise<void> promise;
 	};
 
-	class LuaManager {
+	class LuaStateInstance {
+	public:
+		std::unique_ptr<sol::state> m_lua;
+		absl::btree_map<std::string, std::unique_ptr<sol::function>> m_functions;
+		LuaStateInstance();
+		~LuaStateInstance();
 
+		std::future<void> submitTask(std::function<void()> taskFunc);
+
+	private:
+		void daemonThreadFunc();
+
+		SafeQueue<std::unique_ptr<LuaTask>> m_taskQueue;
+		std::thread m_daemonThread;
+	};
+
+
+	class LuaManager {
 	public:
 
 		explicit LuaManager(const std::shared_ptr<spdlog::logger>& logger) : m_logger(logger) {}
@@ -28,7 +43,6 @@ export
 		(const std::string& scriptPath, const std::string& functionName);
 
 	private:
-
 		absl::btree_map<fs::path, std::shared_ptr<LuaStateInstance>> m_scriptStates;
 
 		std::shared_ptr<spdlog::logger> m_logger;

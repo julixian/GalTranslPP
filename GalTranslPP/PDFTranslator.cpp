@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 PDFTranslator::~PDFTranslator() 
 {
-    m_logger->info(gppTr("PDFTranslator.~PDFTranslator", "所有任务已完成！PDFTranslator 结束。").toStdString());
+    m_logger->info(gppTr("PDFTranslator.~PDFTranslator", "所有任务已完成！PDFTranslator 结束").toStdString());
 }
 
 PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger) :
@@ -28,15 +28,15 @@ PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<I
 
 void PDFTranslator::pdfInit()
 {
-    NormalJsonTranslator::normalJsonInit();
     m_pdfInputDir = m_projectDir / L"gt_input";
     m_pdfOutputDir = m_projectDir / L"gt_output";
 
     try {
-        const auto projectConfig = toml::uparse(m_projectDir / L"config.toml");
+        const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
         const auto pluginConfig = toml::uparse(filePluginConfigPath / L"PDF.toml");
 
-        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.PDF.输出双语翻译文件");
+        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.PDF.bilingualOutput");
+        m_babeldocLangOut = parseToml<std::string>(projectConfig, pluginConfig, "plugins.PDF.babeldocLangOut");
 
         checkPDFDependency(m_logger);
     }
@@ -53,7 +53,7 @@ void PDFTranslator::pdfBeforeRun()
     for (const auto& dir : { m_pdfInputDir, m_pdfOutputDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "已创建目录: %1")
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "已创建目录: [%1]")
                 .arg(wide2Ascii(dir))
                 .toStdString());
         }
@@ -85,11 +85,11 @@ void PDFTranslator::pdfBeforeRun()
         const fs::path inputJsonFile = m_inputDir / relJsonPath;
         createParent(inputJsonFile);
 
-        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取文件: %1")
+        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取文件: [%1]")
             .arg(wide2Ascii(relPDFPath))
             .toStdString());
 
-        const auto& [success, message] = extractPDF(pdfFilePath, inputJsonFile);
+        const auto& [success, message] = extractPDF(pdfFilePath, inputJsonFile, m_babeldocLangOut);
 
         if (success) {
             m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功提取元数据: %1")
@@ -105,14 +105,17 @@ void PDFTranslator::pdfBeforeRun()
 
     m_onFileProcessed = [this](fs::path relProcessedFile)
         {
-            if (!m_jsonToPDFPathMap.contains(relProcessedFile)) {
-                m_logger->warn(gppTr("PDFTranslator.pdfBeforeRun", "未找到与 %1 对应的元数据，跳过")
+            std::unique_lock<std::mutex> lock(m_onFileProcessedMutex);
+            const auto it = m_jsonToPDFPathMap.find(relProcessedFile);
+            if (it == m_jsonToPDFPathMap.end()) {
+                m_logger->error(gppTr("PDFTranslator.pdfBeforeRun", "[文件 %1] 未找到对应的元数据")
                     .arg(wide2Ascii(relProcessedFile))
                     .toStdString());
                 return;
             }
 
-            const fs::path& origPDFPath = m_jsonToPDFPathMap[relProcessedFile];
+            const fs::path& origPDFPath = it->second;
+            lock.unlock();
             const fs::path relPDFPath = fs::relative(origPDFPath, m_pdfInputDir);
             const fs::path outputPDFFile = m_pdfOutputDir / relPDFPath;
             createParent(outputPDFFile);
@@ -121,8 +124,8 @@ void PDFTranslator::pdfBeforeRun()
                 .arg(wide2Ascii(relPDFPath))
                 .toStdString());
 
-            auto [success, message] = rejectPDF(origPDFPath, m_outputDir / relProcessedFile,
-                outputPDFFile.parent_path(), false, !m_bilingualOutput);
+            auto [success, message] = reinjectPDF(origPDFPath, m_outputDir / relProcessedFile,
+                outputPDFFile.parent_path(), m_babeldocLangOut, m_bilingualOutput);
 
             if (success) {
                 m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功翻译文件: %1")

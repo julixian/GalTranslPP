@@ -6,7 +6,7 @@
 #include <QDesktopServices>
 
 #include "ElaScrollPageArea.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
 #include "ElaPushButton.h"
@@ -24,7 +24,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 创建自定义文件处理插件路径设置
-	const std::string customFilePluginPath = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/MySampleFilePlugin.lua");
+	const std::string customFilePluginPath = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/SampleNormalJsonFilePlugin.lua");
 	ElaScrollPageArea* filePluginArea = new ElaScrollPageArea(this);
 	QHBoxLayout* filePluginLayout = new QHBoxLayout(filePluginArea);
 	ElaText* filePluginText = new ElaText(tr("自定义文件处理插件路径"), 16, filePluginArea);
@@ -54,7 +54,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	QHBoxLayout* inheritLayout = new QHBoxLayout(inheritArea);
 	ElaText* inheritText = new ElaText(tr("基类继承"), 16, inheritArea);
 	inheritLayout->addWidget(inheritText);
-	ElaComboBox* inheritCombo = new ElaComboBox(inheritArea);
+	ElaNoWheelComboBox* inheritCombo = new ElaNoWheelComboBox(inheritArea);
 	inheritCombo->setFixedWidth(150);
 	inheritCombo->addItem("NormalJson");
 	inheritCombo->addItem("Epub");
@@ -78,9 +78,4 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	mainLayout->addStretch();
 	centerWidget->setWindowTitle(tr("自定义文件处理插件配置"));
 	addCentralWidget(centerWidget, true, false, 0);
-}
-
-CustomFilePluginCfgPage::~CustomFilePluginCfgPage()
-{
-
 }

@@ -12,7 +12,6 @@ class ValueSliderWidget : public QWidget
 
 public:
     explicit ValueSliderWidget(double minValue = 0.0, double maxValue = 1.0, QWidget* parent = nullptr);
-    ~ValueSliderWidget() override;
 
     // 公共接口，用于设置和获取 minValue - maxValue 之间的值
     void setValue(double value);
@@ -35,4 +34,4 @@ private:
     double m_minValue;
 };
 
-#endif // VALUESLIDERWIDGET_H
+#endif

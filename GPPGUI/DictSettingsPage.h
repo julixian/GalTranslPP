@@ -1,24 +1,23 @@
 #ifndef DICTSETTINGSPAGE_H
 #define DICTSETTINGSPAGE_H
 
-#include <QList>
-#include <toml.hpp>
-#include <filesystem>
 #include "BasePage.h"
 #include "GptDictModel.h"
 #include "NormalDictModel.h"
-
-namespace fs = std::filesystem;
+#include <QList>
+#include <filesystem>
+#include <toml.hpp>
 
 class QStackedWidget;
+namespace fs = std::filesystem;
 
 class DictSettingsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit DictSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~DictSettingsPage() override;
+    explicit DictSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig,
+        toml::ordered_value& projectConfig, QWidget* parent = nullptr);
     void refreshDicts();
 
 private:
@@ -35,4 +34,4 @@ private:
     QList<NormalDictEntry> m_withdrawPostList;
 };
 
-#endif // COMMONSETTINGSPAGE_H
+#endif

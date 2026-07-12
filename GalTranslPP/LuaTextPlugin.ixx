@@ -1,7 +1,7 @@
 ﻿module;
 
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
-#include <sol/sol.hpp>
 
 export module LuaTextPlugin;
 

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -81,14 +81,14 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <EnableModules>true</EnableModules>
       <BuildStlModules>true</BuildStlModules>
-      <AdditionalIncludeDirectories>..\3rdParty\pybind11\include;..\3rdParty\pybind11\Python\include;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\3rdParty\pybind11\include;..\3rdParty\pybind11\Python\include;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\include;..\vcpkg_installed\gpp-x64-windows-release\gpp-x64-windows-release\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NOMINMAX;_CRT_SECURE_NO_WARNINGS;SPDLOG_COMPILED_LIB;SPDLOG_WCHAR_FILENAMES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>tree-sitter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\lib;..\vcpkg_installed\gpp-x64-windows-release\gpp-x64-windows-release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
       <AdditionalManifestFiles>GPPGUI.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -159,7 +159,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AboutDialog.cpp" />
-    <ClCompile Include="APISettingsPage.cpp" />
+    <ClCompile Include="ApiSettingsPage.cpp" />
     <ClCompile Include="BasePage.cpp" />
     <ClCompile Include="CommonGptDictPage.cpp" />
     <ClCompile Include="CommonNormalDictPage.cpp" />
@@ -195,6 +195,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="SkipTransCfgPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
     <ClCompile Include="TranslationWorkbenchPage.cpp" />
+    <ClCompile Include="TreeSitterHighlighter.cpp" />
     <ClCompile Include="TranslatorWorker.cpp" />
     <ClCompile Include="UpdateChecker.cpp" />
     <QtMoc Include="UpdateChecker.h" />
@@ -204,6 +205,9 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="TF2HCfgPage.cpp" />
     <ClCompile Include="TLFCfgPage.cpp" />
     <ClCompile Include="ProjectSettingsPage.cpp" />
+    <ClCompile Include="TreeSitterGrammars\json\TreeSitterJsonParser.c" />
+    <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlParser.c" />
+    <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlScanner.c" />
     <QtRcc Include="GPPGUI.qrc" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -217,7 +221,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="ProjectCachePage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="APISettingsPage.h" />
+    <QtMoc Include="ApiSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PluginItemWidget.h" />
@@ -266,6 +270,9 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
       <Project>{17a925f5-fb9d-4298-ac21-b5b8d1ae4467}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\GPPVersion\GPPVersion.vcxproj">
+      <Project>{ddf53174-80c0-4331-b135-6e64362b1d87}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Updater\Updater.vcxproj">
       <Project>{6bea6d92-b958-40cf-a670-d63793d84555}</Project>
     </ProjectReference>
@@ -313,7 +320,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="CustomFilePluginCfgPage.h" />
     <QtMoc Include="ElaDoubleText.h" />
     <ClInclude Include="EtaEstimator.hpp" />
-    <ClInclude Include="NoWheelComboBox.h" />
+    <ClInclude Include="ElaNoWheelComboBox.h" />
     <QtMoc Include="SkipTransCfgPage.h" />
     <QtMoc Include="ReadDicts.h" />
     <QtMoc Include="PDFCfgPage.h" />
@@ -321,6 +328,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
+    <ClInclude Include="TreeSitterHighlighter.h" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gppgui_en.ts" />

@@ -6,60 +6,58 @@
 #include <limits>
 #include <utility>
 
-using Clock = std::chrono::steady_clock;
-using TimePoint = std::chrono::time_point<Clock>;
-using Duration = std::chrono::duration<double>; // 使用 double 类型的秒
-
 class EtaEstimator {
 private:
     static constexpr double SpeedWindowSeconds = 120.0;
 
     struct ProgressEvent {
-        TimePoint time;
+        std::chrono::steady_clock::time_point time;
         double amount;
     };
 
-    std::deque<ProgressEvent> progressEvents;
+    std::deque<ProgressEvent> m_progressEvents;
 
-    void trim(TimePoint now)
+    void trimProgressEvents(std::chrono::steady_clock::time_point now)
     {
-        while (!progressEvents.empty() && Duration(now - progressEvents.front().time).count() > SpeedWindowSeconds) {
-            progressEvents.pop_front();
+        while (!m_progressEvents.empty() &&
+            std::chrono::duration<double>(now - m_progressEvents.front().time).count() > SpeedWindowSeconds) {
+            m_progressEvents.pop_front();
         }
     }
 
 public:
-    std::pair<double, Duration> updateAndGetSpeedWithEta(double currentProgress, double totalProgress) {
-        TimePoint currentTime = Clock::now();
-        trim(currentTime);
+    std::pair<double, std::chrono::duration<double>> updateAndGetSpeedWithEta(double currentProgress, double totalProgress) {
+        const std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+        trimProgressEvents(currentTime);
 
         double processedInWindow = 0.0;
-        for (const ProgressEvent& event : progressEvents) {
+        for (const ProgressEvent& event : m_progressEvents) {
             processedInWindow += event.amount;
         }
 
         const double speed = processedInWindow / SpeedWindowSeconds;
         if (speed <= 1e-9) {
-            return std::make_pair(0.0, Duration(std::numeric_limits<double>::infinity()));
+            return std::make_pair(0.0, std::chrono::duration<double>(std::numeric_limits<double>::infinity()));
         }
 
-        double remainingWork = totalProgress - currentProgress;
-        return std::make_pair(speed, Duration(remainingWork / speed));
+        const double remainingWork = totalProgress - currentProgress;
+        return std::make_pair(speed, std::chrono::duration<double>(remainingWork / speed));
     }
 
-    std::pair<double, Duration> recordProgressAndGetSpeedWithEta(double progressDelta, double currentProgress, double totalProgress) {
-        TimePoint currentTime = Clock::now();
+    std::pair<double, std::chrono::duration<double>> recordProgressAndGetSpeedWithEta(
+        double progressDelta, double currentProgress, double totalProgress) {
+        const std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
         if (progressDelta > 0.0) {
-            progressEvents.push_back({ currentTime, progressDelta });
+            m_progressEvents.push_back({ currentTime, progressDelta });
         }
-        trim(currentTime);
+        trimProgressEvents(currentTime);
         return updateAndGetSpeedWithEta(currentProgress, totalProgress);
     }
 
     void reset()
     {
-        progressEvents.clear();
+        m_progressEvents.clear();
     }
 };
 
-#endif // ETAESTIMATOR_HPP
+#endif

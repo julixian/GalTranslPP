@@ -15,6 +15,7 @@
 #include "TF2HCfgPage.h"
 #include "TLFCfgPage.h"
 #include "SkipTransCfgPage.h"
+#include "TreeSitterHighlighter.h"
 
 import Tool;
 
@@ -27,16 +28,6 @@ PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value
     setupUi();
 }
 
-PluginSettingsPage::~PluginSettingsPage()
-{
-}
-
-void PluginSettingsPage::apply2Config()
-{
-    if (m_applyFunc) {
-        m_applyFunc();
-    }
-}
 
 void PluginSettingsPage::setupUi()
 {
@@ -64,25 +55,25 @@ void PluginSettingsPage::setupUi()
     };
     toml::ordered_array customPlugins;
     // 先处理项目已经启用的插件
-    const auto pluginsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "textPlugins");
+    const auto pluginsArr = toml::find_or_default<toml::array>(m_projectConfig, "plugins", "textPlugins");
     for (const auto& pluginNameStr : pluginsArr) {
         if (!pluginNameStr.is_string()) {
             continue;
         }
-        QString pluginName = QString::fromStdString(pluginNameStr.as_string());
+        QString logicalPluginName = QString::fromStdString(pluginNameStr.as_string());
         bool isEnabled = true;
-        if (pluginName.startsWith('>')) {
-            pluginName = pluginName.mid(1);
+        if (logicalPluginName.startsWith('>')) {
+            logicalPluginName = logicalPluginName.mid(1);
             isEnabled = false;
         }
-        QString pluginNormalName = pluginName.contains(':') ? pluginName.split(':').last() : pluginName;
-        if (!pluginNamesMap.contains(pluginNormalName)) {
+        QString pluginName = logicalPluginName.contains(':') ? logicalPluginName.split(':').last() : logicalPluginName;
+        if (!pluginNamesMap.contains(pluginName)) {
             customPlugins.push_back(pluginNameStr);
             continue;
         }
-        PluginRunTime runTime = choosePluginRunTime(pluginName.toLower().toStdString(), pluginNamesMap[pluginNormalName]);
+        PluginRunTime runTime = choosePluginRunTime(logicalPluginName.toLower().toStdString(), pluginNamesMap[pluginName]);
         QString runTimeStr = QString::fromStdString(pluginRunTimeNames[runTime]);
-        PluginItemWidget* item = new PluginItemWidget(pluginNormalName, runTimeStr, this);
+        PluginItemWidget* item = new PluginItemWidget(pluginName, runTimeStr, this);
         item->setIsToggled(isEnabled);
         m_pluginItems.append(item);
         m_pluginListLayout->addWidget(item);
@@ -90,7 +81,7 @@ void PluginSettingsPage::setupUi()
         connect(item, &PluginItemWidget::moveDownRequestedSignal, this, &PluginSettingsPage::onItemMoveDown);
         connect(item, &PluginItemWidget::settingsRequestedSignal, this, &PluginSettingsPage::onItemSettings);
         // 防止重复添加
-        pluginNamesMap.erase(pluginNamesMap.find(pluginNormalName));
+        pluginNamesMap.erase(pluginNamesMap.find(pluginName));
     }
 
     // 遍历剩下的名称列表，创建并添加 PluginItemWidget
@@ -134,6 +125,7 @@ void PluginSettingsPage::setupUi()
             customPluginsEdit->setFont(font);
             customPluginsEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ configKey, customPlugins_ }} })));
             customPluginsEdit->moveCursor(QTextCursor::Start);
+            installTreeSitterHighlighter(customPluginsEdit->document(), SyntaxLanguage::Toml);
             mainLayout->addWidget(customPluginsEdit);
 
             connect(browserButton, &ElaPushButton::clicked, this, [=]()

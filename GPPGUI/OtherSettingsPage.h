@@ -1,9 +1,10 @@
 #ifndef OTHERSETTINGSPAGE_H
 #define OTHERSETTINGSPAGE_H
 
-#include <toml.hpp>
-#include <filesystem>
 #include "BasePage.h"
+#include <filesystem>
+#include <toml.hpp>
+
 namespace fs = std::filesystem;
 
 class OtherSettingsPage : public BasePage
@@ -11,8 +12,8 @@ class OtherSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    ~OtherSettingsPage() override;
+    explicit OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig,
+        toml::ordered_value& projectConfig, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void saveConfigSignal();
@@ -27,4 +28,4 @@ private:
     toml::ordered_value& m_projectConfig;
 };
 
-#endif // OTHERSETTINGSPAGE_H
+#endif

@@ -1,13 +1,14 @@
 #ifndef COMMONGPTDICTPAGE_H
 #define COMMONGPTDICTPAGE_H
 
+#include "BasePage.h"
+#include "GptDictModel.h"
+
 #include <QList>
 #include <QStackedWidget>
 #include <QSharedPointer>
-#include <toml.hpp>
 #include <filesystem>
-#include "BasePage.h"
-#include "GptDictModel.h"
+#include <toml.hpp>
 
 class ElaPlainTextEdit;
 class ElaTableView;
@@ -46,4 +47,4 @@ private:
     QList<GptTabEntry> m_gptTabEntries;
 };
 
-#endif // COMMONGPTDICTPAGE_H
+#endif

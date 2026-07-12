@@ -34,10 +34,6 @@ ValueSliderWidget::ValueSliderWidget(double minValue, double maxValue, QWidget* 
     setValue((m_minValue + m_maxValue) / 2);
 }
 
-ValueSliderWidget::~ValueSliderWidget()
-{
-}
-
 // 公共接口：设置值
 void ValueSliderWidget::setValue(double value)
 {

@@ -1,9 +1,9 @@
 module;
 
 #define PYBIND11_HEADERS
+#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
-#include <sol/sol.hpp>
 
 module Dictionary;
 
@@ -32,17 +32,17 @@ void GptDictionary::sort() {
             if (a.priority != b.priority) {
                 return a.priority > b.priority;
             }
-            return a.searchStr.length() > b.searchStr.length();
+            return a.org.length() > b.org.length();
         });
     for (auto& entry : m_entries) {
         for (const auto& [index, otherEntry] : m_entries | std::views::enumerate) {
-            if (otherEntry.searchStr.length() > entry.searchStr.length() &&
-                otherEntry.searchStr.contains(entry.searchStr))
+            if (otherEntry.org.length() > entry.org.length() &&
+                otherEntry.org.contains(entry.org))
             {
-                if (!entry.otherEntriesWhoseSearchStrContainsThatInThisEntry) {
-                    entry.otherEntriesWhoseSearchStrContainsThatInThisEntry = std::make_unique<std::vector<size_t>>();
+                if (!entry.supersetEntryIndices) {
+                    entry.supersetEntryIndices = std::make_unique<std::vector<size_t>>();
                 }
-                entry.otherEntriesWhoseSearchStrContainsThatInThisEntry->push_back(index);
+                entry.supersetEntryIndices->push_back(index);
             }
         }
     }
@@ -50,20 +50,19 @@ void GptDictionary::sort() {
 
 std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngine transEngine) const {
 
-	std::string batchText = batch | std::views::transform([](const auto& se) { return se->name + ":::::" + se->pre_processed_text; })
+	std::string batchText = batch | std::views::transform([](const auto& se) { return se->name + ":::::" + se->preproc; })
         | std::views::join_with('\n') | std::ranges::to<std::string>();
     replaceStrInplace(batchText, "<tab>", "");
     replaceStrInplace(batchText, "<br>", "");
 
     std::string promptContent;
     for (const auto& entry : m_entries) {
-        if (batchText.contains(entry.searchStr)) {
+        if (batchText.contains(entry.org)) {
             // *** 根据 transEngine 选择格式 ***
             switch (transEngine)
             {
             case TransEngine::ForGalJson:
-            case TransEngine::DeepseekJson:
-                promptContent += "| " + entry.searchStr + " | " + entry.replaceStr + " |";
+                promptContent += "| " + entry.org + " | " + entry.rep + " |";
                 if (!entry.note.empty()) {
                     promptContent += " " + entry.note;
                 }
@@ -73,7 +72,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
             case TransEngine::ForGalTsv:
             case TransEngine::ForNovelTsv:
             case TransEngine::NameTrans:
-                promptContent += entry.searchStr + "\t" + entry.replaceStr;
+                promptContent += entry.org + "\t" + entry.rep;
                 if (!entry.note.empty()) {
                     promptContent += "\t" + entry.note;
                 }
@@ -81,7 +80,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
                 break;
 
             case TransEngine::Sakura:
-                promptContent += entry.searchStr + "->" + entry.replaceStr;
+                promptContent += entry.org + "->" + entry.rep;
                 if (!entry.note.empty()) {
                     promptContent += " #" + entry.note;
                 }
@@ -89,7 +88,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
                 break;
 
             default:
-                throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型")
+                throw std::runtime_error(gppTr("GptDictionary.getPrompt", "内部错误: 无效的提示词类型")
                     .toStdString());
             }
         }
@@ -103,19 +102,18 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
     switch (transEngine)
     {
     case TransEngine::ForGalJson:
-    case TransEngine::DeepseekJson:
-        return "# Glossary\n| Src | Dst(/Dst2/..) | Note |\n| --- | --- | --- |\n" + promptContent;
+        return "| Src | Dst(||Dst2||..) | Note |\n| --- | --- | --- |\n" + promptContent;
 
     case TransEngine::ForGalTsv:
     case TransEngine::ForNovelTsv:
     case TransEngine::NameTrans:
-        return "SRC\tDST\tNOTE\n" + promptContent;
+        return "SRC\tDST(||Dst2||..)\tNOTE\n" + promptContent;
 
     case TransEngine::Sakura:
         return promptContent; // Sakura 模式没有标题
 
     default:
-        throw std::runtime_error(gppTr("GptDictionary.getPrompt", "无效的提示词类型").toStdString());
+        throw std::runtime_error(gppTr("GptDictionary.getPrompt", "内部错误: 无效的提示词类型").toStdString());
     }
 
     return {};
@@ -123,7 +121,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
 
 void GptDictionary::loadFromFile(const fs::path& filePath) {
     if (!fs::exists(filePath)) {
-        m_logger->error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件不存在: %1")
+        m_logger->error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件 [%1] 不存在")
             .arg(wide2Ascii(filePath))
             .toStdString());
         return;
@@ -139,18 +137,18 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         const auto& dictTbls = dictData.at("gptDict").as_array();
         for (const auto& el : dictTbls) {
             GptDictEntry entry;
-            if (!el.contains("org") && !el.contains("searchStr")) {
+            if (!el.contains("org")) {
                 continue;
             }
-            if (!el.contains("rep") && !el.contains("replaceStr")) {
+            if (!el.contains("rep")) {
                 continue;
             }
 
-            entry.searchStr = el.contains("org") ? el.at("org").as_string() : el.at("searchStr").as_string();
-            if (entry.searchStr.empty()) {
+            entry.org = el.at("org").as_string();
+            if (entry.org.empty()) {
                 continue;
             }
-            entry.replaceStr = el.contains("rep") ? el.at("rep").as_string() : el.at("replaceStr").as_string();
+            entry.rep = el.at("rep").as_string();
             entry.note = toml::find_or(el, "note", "");
             entry.priority = toml::find_or(el, "priority", 0);
             m_entries.push_back(std::move(entry));
@@ -158,13 +156,13 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件解析错误: %1: %2")
+        throw std::runtime_error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件 [%1] 解析错误: %2")
             .arg(wide2Ascii(filePath))
             .arg(e.what())
             .toStdString());
     }
 
-    m_logger->info(gppTr("GptDictionary.loadFromFile", "已加载 GPT 字典: %1, 共 %2 个词条")
+    m_logger->info(gppTr("GptDictionary.loadFromFile", "已加载 GPT 字典文件 [%1], 共 %2 个词条")
         .arg(wide2Ascii(filePath.filename()))
         .arg(count)
         .toStdString());
@@ -173,15 +171,16 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
 std::string GptDictionary::doReplace(const Sentence* se, CachePart targetToModify) const {
     std::string textToModify = chooseString(se, targetToModify);
     for (const auto& entry : m_entries) {
-        if (textToModify.contains(entry.searchStr)) {
-            replaceStrInplace(textToModify, entry.searchStr, entry.replaceStr);
+        if (textToModify.contains(entry.org)) {
+            replaceStrInplace(textToModify, entry.org, entry.rep);
         }
     }
     return textToModify;
 }
 
 uint8_t checkTransIncludeReplace(const std::string& trans, const std::string& replace) {
-    return std::ranges::any_of(replace | std::views::split('/') | std::views::transform([](const auto& subStrView)
+    return std::ranges::any_of(replace | std::views::split(std::string_view("||"))
+        | std::views::transform([](const auto& subStrView)
         {
             return std::string_view(subStrView.begin(), subStrView.end());
         }),
@@ -197,10 +196,10 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
 
     std::vector<uint8_t> checkResults(m_entries.size(), 0); // 0: 原文不包含, 1: 原文包含且译文使用字典, 2: 原文包含但译文没有使用字典
     for (auto [checkResult, entry] : std::views::zip(checkResults, m_entries | std::views::as_const)) {
-        if (!origText.contains(entry.searchStr)) {
+        if (!origText.contains(entry.org)) {
             continue;
         }
-        checkResult = checkTransIncludeReplace(transView, entry.replaceStr);
+        checkResult = checkTransIncludeReplace(transView, entry.rep);
     }
 
     for (auto [checkResult, entry] : std::views::zip(checkResults, m_entries | std::views::as_const)) {
@@ -209,39 +208,40 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
             continue;
         }
 
-        if (entry.otherEntriesWhoseSearchStrContainsThatInThisEntry) {
-            const auto it = std::ranges::find_if(*entry.otherEntriesWhoseSearchStrContainsThatInThisEntry, [&](const size_t otherEntryIndex)
+        if (entry.supersetEntryIndices) {
+            const auto it = std::ranges::find_if(*entry.supersetEntryIndices,
+                [&](const size_t otherEntryIndex)
                 {
                     return checkResults[otherEntryIndex] == 1;
                 });
-            if (it != entry.otherEntriesWhoseSearchStrContainsThatInThisEntry->end()) {
+            if (it != entry.supersetEntryIndices->end()) {
                 const GptDictEntry& otherEntryRef = m_entries[*it];
                 sentence->problems.push_back(gppTr(
                     "GptDictionary.checkDictUse",
-                    "GPT字典 %1->%2 未使用，但使用了 %3->%4 这一包含性字典")
-                    .arg(entry.searchStr)
-                    .arg(entry.replaceStr)
-                    .arg(otherEntryRef.searchStr)
-                    .arg(otherEntryRef.replaceStr)
+                    "GPT字典 `%1`->`%2` 未使用，但使用了 `%3`->`%4` 这一包含性字典")
+                    .arg(entry.org)
+                    .arg(entry.rep)
+                    .arg(otherEntryRef.org)
+                    .arg(otherEntryRef.rep)
                     .toStdString());
                 continue;
             }
         }
-        if (entry.searchStr.length() > 15) {
+        if (entry.org.length() > 15) {
             // 如果字典单独出现且长度大于 15 字节，则默认认为是字典未正确使用的情况
-            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用")
-                .arg(entry.searchStr)
-                .arg(entry.replaceStr)
+            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 `%1`->`%2` 未使用")
+                .arg(entry.org)
+                .arg(entry.rep)
                 .toStdString());
             continue;
         }
 
-        // 未出现则分词检查原文中是否有完整的 searchStr 词组
+        // 未出现则分词检查原文中是否有完整的 org 词组
         bool found = false;
         auto checkTokenFunc = [&](const WordPosVec& wordPosVec)
             {
                 for (const auto& wordPos : wordPosVec) {
-                    if (wordPos[0] == entry.searchStr) {
+                    if (wordPos[0] == entry.org) {
                         found = true;
                         break;
                     }
@@ -266,10 +266,10 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
         }
 
         if (found) {
-            // 如果原文有完整的 searchStr 词组且译文中没有使用对应的词，几乎可以肯定是字典未正确使用的情况
-            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 %1->%2 未使用")
-                .arg(entry.searchStr)
-                .arg(entry.replaceStr)
+            // 如果原文有完整的 org 词组且译文中没有使用对应的词，几乎可以肯定是字典未正确使用的情况
+            sentence->problems.push_back(gppTr("GptDictionary.checkDictUse", "GPT字典 `%1`->`%2` 未使用")
+                .arg(entry.org)
+                .arg(entry.rep)
                 .toStdString());
         }
 
@@ -281,7 +281,7 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
 // Normal
 void NormalDictionary::loadFromFile(const fs::path& filePath) {
     if (!fs::exists(filePath)) {
-        m_logger->warn(gppTr("NormalDictionary.loadFromFile", "字典文件不存在: %1")
+        m_logger->warn(gppTr("NormalDictionary.loadFromFile", "字典文件 [%1] 不存在")
             .arg(wide2Ascii(filePath))
             .toStdString());
         return;
@@ -294,56 +294,57 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
             return;
         }
         const auto& dicts = dictData.at("normalDict").as_array();
-        for (const auto& el : dicts) {
+        for (const auto& elem : dicts) {
             NormalDictEntry entry;
-            if (!el.contains("org") && !el.contains("searchStr")) {
+            if (!elem.contains("org")) {
                 continue;
             }
-            if (!el.contains("rep") && !el.contains("replaceStr")) {
+            if (!elem.contains("rep")) {
                 continue;
             }
-            entry.isReg = toml::find_or(el, "isReg", false);
 
-            const std::string str = el.contains("org") ? el.at("org").as_string() : el.at("searchStr").as_string();
+            const std::string str = elem.at("org").as_string();
             if (str.empty()) {
                 continue;
             }
 
+            entry.isReg = toml::find_or(elem, "isReg", false);
             if (entry.isReg) {
-                const std::string compileModifier = toml::find_or(el, "compile_modifier", defaultRegCompileModifier);
+                const std::string compileModifier = toml::find_or(elem, "compile_modifier", defaultRegCompileModifier);
                 entry.searchReg = std::make_unique<jpc::Regex>(str, compileModifier);
                 if (!*entry.searchReg) {
                     throw std::runtime_error(gppTr(
                         "NormalDictionary.loadFromFile",
-                        "Normal 字典文件格式错误(正则表达式错误): %1  ——  %2")
+                        "Normal 字典文件 [%1] 正则表达式 `%2` 编译失败")
                         .arg(wide2Ascii(filePath))
                         .arg(str)
                         .toStdString());
                 }
-                entry.replaceModifier = std::make_unique<std::string>(toml::find_or(el, "replace_modifier", defaultRegReplaceModifier));
+                entry.replaceModifier = std::make_unique<std::string>(toml::find_or(elem, "replace_modifier", defaultRegReplaceModifier));
             }
             else {
-                entry.searchStr = str;
+                entry.org = str;
             }
 
-            entry.replaceStr = el.contains("rep") ? el.at("rep").as_string() : el.at("replaceStr").as_string();
-            entry.priority = toml::find_or(el, "priority", 0);
+            entry.rep = elem.at("rep").as_string();
+            entry.priority = toml::find_or(elem, "priority", 0);
 
-            if (getConditionType(el) != ConditionType::None) {
-                entry.dictCondition = std::make_unique<CheckSeCondFunc>(getCheckSeCondFunc(el, m_projectDir, m_pythonManager, m_luaManager, m_logger));
+            if (getConditionType(elem) != ConditionType::None) {
+                entry.dictCondition = std::make_unique<CheckSeCondNormalFunc>(getCheckSeCondFunc(elem, m_projectDir,
+                    m_pythonManager, m_luaManager, m_logger));
             }
             m_entries.push_back(std::move(entry));
             ++count;
         }
     }
     catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件解析错误: %1: %2")
+        throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件 [%1] 解析错误: %2")
             .arg(wide2Ascii(filePath))
             .arg(e.what())
             .toStdString());
     }
 
-    m_logger->info(gppTr("NormalDictionary.loadFromFile", "已加载 Normal 字典: %1, 共 %2 个词条")
+    m_logger->info(gppTr("NormalDictionary.loadFromFile", "已加载 Normal 字典文件 [%1], 共 %2 个词条")
         .arg(wide2Ascii(filePath.filename()))
         .arg(count)
         .toStdString());
@@ -361,7 +362,7 @@ void NormalDictionary::sort() {
             else if (!a.isReg && b.isReg) {
                 return false;
             }
-            return a.searchStr.length() > b.searchStr.length();
+            return a.org.length() > b.org.length();
         });
 }
 
@@ -369,18 +370,18 @@ std::string NormalDictionary::doReplace(const Sentence* sentence, CachePart targ
     std::string textToModify = chooseString(sentence, targetToModify);
 
     for (const NormalDictEntry& entry : m_entries
-        | std::views::filter([&](const NormalDictEntry& e)
+        | std::views::filter([&](const NormalDictEntry& entry_)
             {
-                return !e.dictCondition.operator bool() || e.dictCondition->operator ()(sentence);
+                return !entry_.dictCondition.operator bool() || entry_.dictCondition->operator ()(sentence);
             }))
     {
         if (entry.isReg) {
             // 避免竞态
             jpc::RegexReplace rr(entry.searchReg.get());
-            textToModify = rr.setModifier(*entry.replaceModifier).setSubject(&textToModify).setReplaceWith(&entry.replaceStr).replace();
+            textToModify = rr.setModifier(*entry.replaceModifier).setSubject(&textToModify).setReplaceWith(&entry.rep).replace();
         }
         else {
-            replaceStrInplace(textToModify, entry.searchStr, entry.replaceStr);
+            replaceStrInplace(textToModify, entry.org, entry.rep);
         }
     }
 

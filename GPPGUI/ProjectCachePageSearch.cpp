@@ -8,7 +8,7 @@
 #include <QStandardItem>
 
 #include "ElaCheckBox.h"
-#include "ElaComboBox.h"
+#include "ElaNoWheelComboBox.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
@@ -71,7 +71,7 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(c
                 continue;
             }
             // 替换字段和翻译缓存实际字段保持一致：
-            // src -> pre_processed_text，dst -> pre_translated_text。
+            // src -> pre_processed_text，dst -> translated_raw_text。
             if (field == "src" || field == "all") {
                 fileMatches += countOccurrences(entrySource(item), query);
             }
@@ -109,7 +109,7 @@ int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query,
             QString dst = entryDst(item);
             const int matches = replaceInString(dst, query, replacement);
             if (matches > 0) {
-                item["pre_translated_text"] = dst.toStdString();
+                item["translated_raw_text"] = dst.toStdString();
                 total += matches;
             }
         }

@@ -1,15 +1,17 @@
-﻿module;
+module;
 
 #include "GPPMacros.hpp"
 
-export module APIPool;
+export module ApiPool;
 
-export import APITool;
+export import ApiTool;
 export import ITranslator;
+
+namespace fs = std::filesystem;
 
 export
 {
-    class APIPool {
+    class ApiPool {
     private:
         std::vector<TranslationApi> m_apis;
         std::shared_ptr<spdlog::logger> m_logger;
@@ -18,23 +20,23 @@ export
         std::unique_ptr<std::mt19937> m_gen;
 
     public:
-        explicit APIPool(const std::shared_ptr<spdlog::logger>& logger);
+        explicit ApiPool(const std::shared_ptr<spdlog::logger>& logger);
 
         void loadApis(const std::vector<TranslationApi>& apis);
 
-        std::optional<TranslationApi> getApi();
-
+        std::optional<TranslationApi> getApi(const std::string& apiStrategy);
         std::optional<TranslationApi> getFirstApi();
 
         void resortTokens();
 
-        void reportProblem(const TranslationApi& badAPI);
+        void reportProblem(const TranslationApi& badApi);
 
         bool isEmpty();
+        size_t size();
     };
 
-    bool checkResponse(ApiResponse& response, const std::unique_ptr<APIPool>& apiPool, const TranslationApi& currentAPI,
-        const std::filesystem::path& relInputPath, const std::string& apiStrategy, 
+    bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
+        const std::string& logPrefix, const fs::path& relFilePath, const std::string& apiStrategy,
         const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
-        int& retryCount, int threadId, bool m_checkQuota);
+        int& requestCount, bool checkQuota);
 }

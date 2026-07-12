@@ -1,16 +1,16 @@
 [plugins.TextLinebreakFix]
-"换行模式" = "优先标点"   # [优先标点|保持位置|平均|固定字数|不修改]
-"优先阈值" = 0.245       # 仅在 优先标点 模式有效，值越高，换行的相对位置的可以变动以去匹配标点的限度就越大
-"分段字数阈值" = 21      # 仅在 固定字数 模式有效
-"强制修复" = false
-"报错阈值" = 28        # 某一行字数超过此值将会添加进problem
+linebreakMode = "preferPunctuation" # 可选: [preferPunctuation|keepPosition|average|fixedChars|checkOnly]
+priorityThreshold = 0.245           # 仅用于 preferPunctuation。
+segmentThreshold = 21               # 仅用于 fixedChars。
+forceFix = false
+errorThreshold = 28                 # 单行超过该字符数时添加问题。
 
-"使用分词器" = false   # 可能可以获得更好的换行效果
-tokenizerBackend = "MeCab" # MeCab, spaCy, Stanza, pkuseg (除了MeCab，剩下的都依赖Python，自动安装需重启程序)
-# 填目标语言的模型/字典
-# mecab-chinese 下载地址:
+useTokenizer = false
+tokenizerBackend = "MeCab" # 可选: MeCab, spaCy, Stanza, pkuseg
+# 目标语言模型/词典。
+# mecab-chinese:
 # https://github.com/panyang/MeCab-Chinese/tree/master/data/v0.3
-mecabDictDir = "BaseConfig/mecabDict/mecab-chinese" 
+mecabDictDir = "BaseConfig/mecab/mecab-chinese"
 # https://spacy.io/models
 spaCyModelName = "zh_core_web_lg"
 # https://stanfordnlp.github.io/stanza/ner_models.html

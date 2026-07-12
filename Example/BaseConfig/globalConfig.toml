@@ -9,7 +9,7 @@ defaultNameTableOpenMode = 1
 language = "zh_CN"
 navigationMode = 0
 projects = []
-pyEnvPath = "BaseConfig/python-3.12.10-embed-amd64"
+pyEnvPath = "BaseConfig/Python-3.12.10-embed-amd64"
 stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
@@ -113,8 +113,8 @@ dictNames = ["译前H统一", "译前H口吃矫正"]
 276 = true
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/satan53x.jpg'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/satan53x.jpg'
 detailedText = '从GalGame脚本提取和导入文本'
 fromLocal = false
 interactiveTips = 'Satan53x'
@@ -123,8 +123,8 @@ subTitle = '草佬味大，无需多盐'
 title = 'SExTractor'
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/gar.png'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/gar.png'
 detailedText = '神一样的解封包工具'
 fromLocal = false
 interactiveTips = 'morkt'
@@ -133,8 +133,8 @@ subTitle = '无敌了'
 title = 'GARbro'
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/vnt.png'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/vnt.png'
 detailedText = '萌新拯救者一般的文本提取与回封工具'
 fromLocal = false
 interactiveTips = 'arcusmaximus'
@@ -143,8 +143,8 @@ subTitle = '能少用就少用'
 title = 'VNTranslationTools'
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/crass.png'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/crass.png'
 detailedText = '早期Galgame解包工具，多看看它的说明文档'
 fromLocal = false
 interactiveTips = '痴漢公賊'
@@ -153,8 +153,8 @@ subTitle = '专治老游戏'
 title = 'Crass'
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/sublime.png'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/sublime.png'
 detailedText = '高亮很好使，但编码转换不如emeditor'
 fromLocal = false
 interactiveTips = 'Sublime HQ'
@@ -163,12 +163,11 @@ subTitle = '和Em互补长短'
 title = 'Sublime'
 
 [[popularCards]]
-cardFloatPixmap = ':/GPPGUI/Resource/Image/IARC_7+.svg.png'
-cardPixmap = ':/GPPGUI/Resource/Image/revn.png'
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/revn.png'
 detailedText = '别说你是搞机翻的'
 fromLocal = false
 interactiveTips = 'Dir-A'
 pathOrUrl = 'https://github.com/ZQF-ReVN'
 subTitle = '拜见祖师爷'
 title = 'ReVN'
-

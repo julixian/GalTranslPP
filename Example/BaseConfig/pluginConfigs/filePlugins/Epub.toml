@@ -1,9 +1,9 @@
 [plugins.Epub]
-"双语显示" = true      # 默认开启双语显示
-"原文颜色" = "#808080" # 默认灰色
-"缩小比例" = 0.8       # 默认缩小到原始大小的80%
+bilingualOutput = true        # 默认输出双语文件。
+originalTextColor = "#808080" # 原文默认颜色。
+originalTextScale = 0.8       # 原文默认缩放比例。
 
-# 具体语法详见BaseConfig/illustration/epub.html
+# 正则语法见 BaseConfig/illustration/epub.html。
 [[plugins.Epub.preprocRegex]]
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'

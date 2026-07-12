@@ -1,5 +1,5 @@
 [plugins.TextFull2Half]
-"是否替换标点" = true
-"是否反向替换" = false  # false=全角->半角，true=半角->全角
-"不转换的字符" = ""
-notConvertRegs = [] # 例: '\$[a-zA-Z_]+'
+replacePunctuation = true
+reverseConversion = false  # false: 全角转半角，true: 半角转全角。
+excludeChars = ""
+notConvertRegs = [] # 示例: '\$[a-zA-Z_]+'

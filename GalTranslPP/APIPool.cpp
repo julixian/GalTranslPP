@@ -1,68 +1,66 @@
 module;
 
 #include "GPPMacros.hpp"
+#include <expected>
 
-module APIPool;
+module ApiPool;
 
 import Tool;
 
 namespace fs = std::filesystem;
 
-APIPool::APIPool(const std::shared_ptr<spdlog::logger>& logger) 
-    : m_logger(logger), 
-    m_gen(std::make_unique<std::mt19937>(std::random_device{}())) 
+ApiPool::ApiPool(const std::shared_ptr<spdlog::logger>& logger) 
+    : m_logger(logger),  m_gen(std::make_unique<std::mt19937>(std::random_device{}())) 
 {
 	
 }
 
-void APIPool::loadApis(const std::vector<TranslationApi>& apis) {
+void ApiPool::loadApis(const std::vector<TranslationApi>& apis) {
     std::lock_guard<std::mutex> lock(m_mutex);
-
-    m_apis.insert(m_apis.end(), apis.begin(), apis.end());
-    m_logger->info(gppTr("APIPool.loadApis", "令牌池新加载 %1 个 API keys， 现共有 %2 个API keys")
+    m_apis.insert_range(m_apis.end(), apis);
+    m_logger->info(gppTr("ApiPool.loadApis", "令牌池新加载 %1 个 Api keys， 现共有 %2 个Api keys")
         .arg(apis.size())
         .arg(m_apis.size())
         .toStdString());
 }
 
-std::optional<TranslationApi> APIPool::getApi() {
+std::optional<TranslationApi> ApiPool::getApi(const std::string& apiStrategy) {
+    if (apiStrategy == "fallback") {
+        return getFirstApi();
+    }
     std::lock_guard<std::mutex> lock(m_mutex);
-
     if (m_apis.empty()) {
         return std::nullopt; // 没有可用的 token
     }
-
+    if (m_apis.size() == 1) {
+        return m_apis[0];
+    }
     // 生成一个随机索引
     std::uniform_int_distribution<> distrib(0, (int)m_apis.size() - 1);
     const int index = distrib(*m_gen);
-
     return m_apis[index];
 }
 
-std::optional<TranslationApi> APIPool::getFirstApi() {
+std::optional<TranslationApi> ApiPool::getFirstApi() {
     std::lock_guard<std::mutex> lock(m_mutex);
-
     if (m_apis.empty()) {
         return std::nullopt;
     }
-
     return m_apis.front();
 }
 
-void APIPool::resortTokens() {
+void ApiPool::resortTokens() {
     std::lock_guard<std::mutex> lock(m_mutex);
-
     if (m_apis.size() > 1) {
         std::ranges::rotate(m_apis, m_apis.begin() + 1);
     }
 }
 
-void APIPool::reportProblem(const TranslationApi& badAPI) {
+void ApiPool::reportProblem(const TranslationApi& badApi) {
     std::lock_guard<std::mutex> lock(m_mutex);
-
     const auto it = std::ranges::find_if(m_apis, [&](const TranslationApi& api)
         {
-            return api.apikey == badAPI.apikey;
+            return api.apikey == badApi.apikey;
         });
     if (it == m_apis.end()) {
         return;
@@ -77,161 +75,155 @@ void APIPool::reportProblem(const TranslationApi& badAPI) {
     }
     it->lastReportTime = std::chrono::steady_clock::now();
     if (it->reportCount >= 30) {
-        m_logger->warn(gppTr("APIPool.reportProblem", "API key [%1] 已被标记为不可用。")
-            .arg(it->apikey)
+        m_logger->warn(gppTr("ApiPool.reportProblem", "Api key [%1] 已被标记为不可用")
+            .arg(maskApiKey(it->apikey))
             .toStdString());
         m_apis.erase(it);
     }
 }
 
-bool APIPool::isEmpty() {
+bool ApiPool::isEmpty() {
     std::lock_guard<std::mutex> lock(m_mutex); // 加锁
     return m_apis.empty();
 }
 
-namespace
-{
-    std::string apiLogPrefix(int threadId, const fs::path& relInputPath, const TranslationApi& currentAPI, long statusCode)
-    {
-        return gppTr("APIPool.apiLogPrefix", "[线程 %1] [文件 %2] [模型 %3] [HTTP %4]")
-            .arg(threadId)
-            .arg(wide2Ascii(relInputPath))
-            .arg(currentAPI.modelName)
-            .arg(statusCode)
-            .toStdString();
-    }
-
-    std::string apiMessage(const ApiResponse& response, std::string_view fallback)
-    {
-        if (!response.content.empty()) {
-            return response.content;
-        }
-        return std::string(fallback);
-    }
+size_t ApiPool::size() {
+    std::lock_guard<std::mutex> lock(m_mutex); // 加锁
+    return m_apis.size();
 }
 
-bool checkResponse(ApiResponse& response, const std::unique_ptr<APIPool>& apiPool, const TranslationApi& currentAPI,
-    const std::filesystem::path& relInputPath, const std::string& apiStrategy, 
+bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
+    const std::string& logPrefix, const fs::path& relFilePath, const std::string& apiStrategy,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
-    int& retryCount, int threadId, bool m_checkQuota)
+    int& requestCount, bool checkQuota)
 {
-    response.success = false;
-    const std::string prefix = apiLogPrefix(threadId, relInputPath, currentAPI, response.statusCode);
+    const std::string filename = wide2Ascii(relFilePath);
+    const std::string prefix = gppTr("checkResponse", "%1 [HTTP %2]")
+        .arg(logPrefix)
+        .arg(response.statusCode)
+        .toStdString();
 
     if (response.statusCode == 200) {
-        if (currentAPI.stream) {
-            response.success = true;
+        if (currentApi.stream) {
             return true;
         }
 
-        try {
-            response.content = json::parse(response.content)["choices"][0]["message"]["content"].get<std::string>();
-            response.success = true;
+        const std::expected<std::string, std::string> extractedContent = extractApiResponseContent(response.content, currentApi.protocol);
+        if (extractedContent.has_value()) {
+            response.content = extractedContent.value();
             return true;
         }
-        catch (const json::exception& e) {
-            ++retryCount;
-            logger->warn(gppTr("checkResponse", "%1 API 响应 JSON 解析失败，进行第 %2 次重试。错误: %3，原始响应: %4")
-                .arg(prefix)
-                .arg(retryCount)
-                .arg(e.what())
-                .arg(truncateUtf8Prefix(response.content, 4000))
+
+        logger->warn(gppTr("checkResponse", "%1 Api 响应 JSON 解析失败。错误: %2，原始响应:\n%3")
+            .arg(prefix)
+            .arg(extractedContent.error())
+            .arg(response.content.empty()
+                ? gppTr("checkResponse", "空").toStdString()
+                : response.content)
+            .toStdString());
+        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
+            .kind = "api",
+            .level = "warning",
+            .message = gppTr("checkResponse", "Api 响应 JSON 解析失败: %1")
+                .arg(extractedContent.error())
+                .toStdString(),
+            .filename = filename,
+            .requestCount = requestCount + 1,
+            .model = currentApi.modelName,
+            .sleepSeconds = 2.0
+        });
+        ++requestCount;
+
+        if (apiStrategy == "fallback" && apiPool->size() > 1) {
+            apiPool->resortTokens();
+            logger->warn(gppTr("checkResponse", "%1 切换到下一个 Api key")
+                .arg(logPrefix)
                 .toStdString());
-            controller->recordRuntimeError(RuntimeErrorEvent{
-                .kind = "api",
-                .level = "warning",
-                .message = gppTr("checkResponse", "API 响应 JSON 解析失败: %1")
-                    .arg(e.what())
-                    .toStdString(),
-                .filename = wide2Ascii(relInputPath),
-                .retryCount = retryCount,
-                .model = currentAPI.modelName,
-                .sleepSeconds = 2.0
-            });
-            if (apiStrategy == "fallback") {
-                logger->warn(gppTr("checkResponse", "[线程 %1] 将切换到下一个 API key(如果有多个API key的话)")
-                    .arg(threadId)
-                    .toStdString());
-                apiPool->resortTokens();
-            }
-            if (!controller->shouldStop()) {
-                std::this_thread::sleep_for(std::chrono::seconds(2));
-            }
-            return false;
         }
+        if (!controller->shouldStop()) {
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
+        return false;
     }
 
-    std::string lowerErrorMsg = response.content;
-    str2LowerInplace(lowerErrorMsg);
+    // response.statusCode != 200 就是有错误
+    const std::string errorMessageLower = str2Lower(response.content);
 
-    // 情况一：额度用尽 (Quota)
+    // 额度用尽 (Quota)
     if (
-        m_checkQuota &&
-        (lowerErrorMsg.contains("quota") ||
-            lowerErrorMsg.contains("invalid tokens"))
+        checkQuota &&
+        (errorMessageLower.contains("quota") ||
+            errorMessageLower.contains("invalid tokens"))
         )
     {
-        logger->error(gppTr("checkResponse", "%1 API key [%2] 疑似额度用尽，短期内多次报告将从池中移除。响应: %3")
+        logger->error(gppTr("checkResponse", "%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
-            .arg(currentAPI.apikey)
-            .arg(truncateUtf8Prefix(response.content, 4000))
+            .arg(maskApiKey(currentApi.apikey))
+            .arg(response.content.empty()
+                ? gppTr("checkResponse", "空").toStdString()
+                : response.content)
             .toStdString());
-        controller->recordRuntimeError(RuntimeErrorEvent{
+        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "error",
-            .message = gppTr("checkResponse", "API key 疑似额度用尽: %1")
-                .arg(apiMessage(response, gppTr("checkResponse", "响应为空").toStdString()))
+            .message = gppTr("checkResponse", "Api key 疑似额度用尽: %1")
+                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
-            .filename = wide2Ascii(relInputPath),
-            .model = currentAPI.modelName
+            .filename = filename,
+            .model = currentApi.modelName
         });
-        apiPool->reportProblem(currentAPI);
-        // 不需要增加 retryCount
+        apiPool->reportProblem(currentApi);
+        // 不需要增加 requestCount
         return false;
     }
 
     // key 没有这个模型
-    if (lowerErrorMsg.contains("no available")) {
-        logger->error(gppTr("checkResponse", "%1 API key [%2] 没有可用模型，短期内多次报告将从池中移除。响应: %3")
+    if (errorMessageLower.contains("no available")) {
+        logger->error(gppTr("checkResponse", "%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
-            .arg(currentAPI.apikey)
-            .arg(truncateUtf8Prefix(response.content, 4000))
+            .arg(maskApiKey(currentApi.apikey))
+            .arg(response.content.empty()
+                ? gppTr("checkResponse", "空").toStdString()
+                : response.content)
             .toStdString());
-        controller->recordRuntimeError(RuntimeErrorEvent{
+        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "error",
-            .message = gppTr("checkResponse", "API key 没有模型 %1: %2")
-                .arg(currentAPI.modelName)
-                .arg(apiMessage(response, gppTr("checkResponse", "响应为空").toStdString()))
+            .message = gppTr("checkResponse", "Api key 没有模型 %1: %2")
+                .arg(currentApi.modelName)
+                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
-            .filename = wide2Ascii(relInputPath),
-            .model = currentAPI.modelName
+            .filename = filename,
+            .model = currentApi.modelName
         });
-        apiPool->reportProblem(currentAPI);
+        apiPool->reportProblem(currentApi);
         return false;
     }
 
-    // 情况二：频率限制 (429) 或其他可重试错误
+    // 频率限制 (429) 或其他可再次请求错误
     // 状态码 429 是最明确的信号
-    if (response.statusCode == 429 || lowerErrorMsg.contains("rate limit") || lowerErrorMsg.contains("try again") || lowerErrorMsg.contains("饱和")) {
-        // 429 也不加 retryCount
+    if (response.statusCode == 429 || errorMessageLower.contains("rate limit") ||
+        errorMessageLower.contains("try again") || errorMessageLower.contains("饱和"))
+    {
+        // 429 也不加 requestCount
         // 实现指数退避与抖动
         const int maxSleepSeconds = (int)std::pow(2, 6);
         const int sleepSeconds = std::rand() % maxSleepSeconds;
-        logger->warn(gppTr("checkResponse", "%1 遇到频率限制或可重试错误，将等待 %2 秒后重试。响应: %3")
+        logger->warn(gppTr("checkResponse", "%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:\n%3")
             .arg(prefix)
             .arg(sleepSeconds)
-            .arg(truncateUtf8Prefix(apiMessage(response, gppTr("checkResponse", "空")
-                .toStdString()), 4000))
+            .arg(response.content.empty()
+                ? gppTr("checkResponse", "空").toStdString()
+                : response.content)
             .toStdString());
-        controller->recordRuntimeError(RuntimeErrorEvent{
+        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "warning",
-            .message = gppTr("checkResponse", "遇到频率限制或可重试错误: %1")
-                .arg(apiMessage(response, gppTr("checkResponse", "响应为空").toStdString()))
+            .message = gppTr("checkResponse", "遇到频率限制或可再次请求错误: %1")
+                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
-            .filename = wide2Ascii(relInputPath),
-            .model = currentAPI.modelName,
+            .filename = filename,
+            .model = currentApi.modelName,
             .sleepSeconds = (double)sleepSeconds
         });
         if (sleepSeconds > 0 && !controller->shouldStop()) {
@@ -241,27 +233,30 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<APIPool>& apiPoo
     }
 
     // 其他无法识别的硬性错误
-    ++retryCount;
-    logger->warn(gppTr("checkResponse", "%1 遇到未知 API 错误，进行第 %2 次重试。响应: %3")
+    logger->warn(gppTr("checkResponse", "%1 遇到未知 Api 错误，原始响应:\n%2")
         .arg(prefix)
-        .arg(retryCount)
-        .arg(truncateUtf8Prefix(apiMessage(response, gppTr("checkResponse", "空")
-            .toStdString()), 4000))
+        .arg(response.content.empty()
+            ? gppTr("checkResponse", "空").toStdString()
+            : response.content)
         .toStdString());
-    controller->recordRuntimeError(RuntimeErrorEvent{
+    controller->recordRuntimeTransError(RuntimeTransErrorEvent{
         .kind = "api",
         .level = "warning",
-        .message = apiMessage(response, gppTr("checkResponse", "未知 API 错误").toStdString()),
-        .filename = wide2Ascii(relInputPath),
-        .retryCount = retryCount,
-        .model = currentAPI.modelName,
+        .message = gppTr("checkResponse", "遇到未知 Api 错误: %1")
+                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
+                .toStdString(),
+        .filename = filename,
+        .requestCount = requestCount + 1,
+        .model = currentApi.modelName,
         .sleepSeconds = 2.0
     });
-    if (apiStrategy == "fallback") {
-        logger->warn(gppTr("checkResponse", "[线程 %1] 将切换到下一个 API key(如果有多个API key的话)")
-            .arg(threadId)
-            .toStdString());
+    ++requestCount;
+
+    if (apiStrategy == "fallback" && apiPool->size() > 1) {
         apiPool->resortTokens();
+        logger->warn(gppTr("checkResponse", "%1 将切换到下一个 Api key")
+            .arg(logPrefix)
+            .toStdString());
     }
     if (!controller->shouldStop()) {
         std::this_thread::sleep_for(std::chrono::seconds(2)); // 简单等待

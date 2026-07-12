@@ -1,2 +1,3 @@
 [plugins.PDF]
-"输出双语翻译文件" = true
+bilingualOutput = true
+babeldocLangOut = "zh-CN"

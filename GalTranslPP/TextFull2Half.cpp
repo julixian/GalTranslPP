@@ -193,7 +193,7 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
     	    | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;}) 
     	    | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
         if (!notConvertedChars.empty()) {
-            se->otherInfo[m_notConvertedCharsKey] = notConvertedChars;
+            se->otherinfo[m_notConvertedCharsKey] = notConvertedChars;
         }
     }
 

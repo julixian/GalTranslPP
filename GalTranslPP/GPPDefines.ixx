@@ -50,18 +50,20 @@ export
     struct Sentence {
         int index = -1;
         std::string fileName;
+
         std::string name;
         std::vector<std::string> names;
-        std::string nameTrans;
-        std::vector<std::string> namesTrans;
+        std::string nametrans;
+        std::vector<std::string> namestrans;
         std::string orig;
         std::string preproc;
-        std::string pretrans;
         std::vector<std::string> problems;
-        std::string translatedBy;
+        std::string transby;
+        std::string transraw;
         std::string transview;
         std::string linebreak;
-        std::map<std::string, std::string> otherInfo;
+        std::map<std::string, std::string> otherinfo;
+
         std::optional<SentencePosition> ref;
         std::vector<SentencePosition> refBy;
 
@@ -90,12 +92,12 @@ export
 
     enum class TransEngine
     {
-        None, ForGalJson, ForGalTsv, ForNovelTsv, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
+        None, ForGalTsv, ForNovelTsv, ForGalJson, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
     };
 
     enum class CachePart
     { 
-        None, Name, NameTrans, Names, NamesTrans, Orig, Preproc, Pretrans, Problems, OtherInfo, TranslatedBy, Transview
+        None, Name, Names, NameTrans, NamesTrans, Orig, Preproc, Problems, OtherInfo, TransBy, TransRaw, Transview
     };
 
     enum class ConditionType

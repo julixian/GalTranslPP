@@ -738,7 +738,7 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
         return sentence->name;
         break;
     case CachePart::NameTrans:
-        return sentence->nameTrans;
+        return sentence->nametrans;
         break;
     case CachePart::Orig:
         return sentence->orig;
@@ -746,11 +746,11 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
     case CachePart::Preproc:
         return sentence->preproc;
         break;
-    case CachePart::Pretrans:
-        return sentence->pretrans;
+    case CachePart::TransBy:
+        return sentence->transby;
         break;
-    case CachePart::TranslatedBy:
-        return sentence->translatedBy;
+    case CachePart::TransRaw:
+        return sentence->transraw;
         break;
     case CachePart::Transview:
         return sentence->transview;
@@ -777,10 +777,10 @@ CachePart chooseCachePart(std::string_view partName) {
     else if (partName == "names") {
         part = CachePart::Names;
     }
-    else if (partName == "nameTrans") {
+    else if (partName == "nametrans") {
         part = CachePart::NameTrans;
     }
-    else if (partName == "namesTrans") {
+    else if (partName == "namestrans") {
         part = CachePart::NamesTrans;
     }
     else if (partName == "orig") {
@@ -789,17 +789,17 @@ CachePart chooseCachePart(std::string_view partName) {
     else if (partName == "preproc") {
         part = CachePart::Preproc;
     }
-    else if (partName == "pretrans") {
-        part = CachePart::Pretrans;
-    }
     else if (partName == "problems") {
         part = CachePart::Problems;
     }
-    else if (partName == "otherInfo") {
+    else if (partName == "otherinfo") {
         part = CachePart::OtherInfo;
     }
-    else if (partName == "translatedBy") {
-        part = CachePart::TranslatedBy;
+    else if (partName == "transby") {
+        part = CachePart::TransBy;
+    }
+    else if (partName == "transraw") {
+        part = CachePart::TransRaw;
     }
     else if (partName == "transview") {
         part = CachePart::Transview;

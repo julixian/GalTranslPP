@@ -3,7 +3,7 @@
 ![GalTransl++ GUI](img/GalTranslPP.png?raw=true)
 ![GalTransl++ GUI En](img/GalTranslPP_en.png?raw=true)
 
-**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量透明的、拥有高度且方便的扩展能力的翻译核心。
+**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量(好吧其实有点重)透明的、拥有高度且方便的扩展能力的翻译核心。
 
 **GalTransl++ GUI** 是包装了GalTransl++核心的，以 `在GUI下尽可能保持高度自定义` 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。
 
@@ -107,7 +107,7 @@ GalTransl++的字典分为 **译前字典**，**GPT字典**，**译后字典** �
 6、  如果文件支持提取name，则可 `DumpName` 并编辑人名表，也可 `NameTrans` 翻译人名表。  
 7、  选用合适的实际翻译模式进行翻译。  
 8、  查看问题。  
-9、  根据问题选择编辑`retranslKey`/`skipProblems`重建/重翻/修改缓存/...。  
+9、  根据问题选择编辑`retranslKeys`/`skipProblems`重建/重翻/修改缓存/...。  
 10、 重翻 / 重建。  
 11、 在`gt_output`中查收结果。  
 
@@ -116,22 +116,22 @@ GalTransl++的字典分为 **译前字典**，**GPT字典**，**译后字典** �
 GalTransl++的缓存中可能包含如下键:
 
 * `index`: 索引顺序，一般不重要。
-* `name`: 人名，展示的是预处理后的人名(相当于pre_processed_name)，如果没有则为空。
-* `names`: 复数人名，仅见于部分 VNT 提出的文本中。
-* `name_preview`: 将输出的译后人名。
-* `names_preview`: 同上
-* `original_text`: 原文对照，与原文没有任何区别。
-* `pre_processed_text`: 经过一系列预处理后，即将执行AI翻译前时句子的样子。
-* `pre_translated_text`: AI返回的，未经过任何后处理的句子的样子。
-* `other_info`: 其它附加信息。
-* `problems`: 在自动化找错中找出的问题。
-* `translated_by`: 翻译此句子所用的 apikey 的设定模型。
-* `translated_preview`: 经过所有后处理之后，将输出的 message。
+* `name`: 人名，展示的是预处理后的人名(相当于pre_processed_name)，如果没有则为空。 conditionTarget 指代名 `name`
+* `names`: 复数人名，仅见于部分 VNT 提出的文本中。 conditionTarget 指代名 `names`
+* `name_translated`: 将输出的译后人名。
+* `names_translated`: 同上。
+* `original_text`: 原文对照，与原文没有任何区别。 conditionTarget 指代名 `orig`
+* `pre_processed_text`: 经过一系列预处理后，即将执行AI翻译前时句子的样子。 conditionTarget 指代名 `preproc`
+* `other_info`: 其它附加信息。 conditionTarget 指代名 `otherinfo`
+* `problems`: 在自动化找错中找出的问题。 conditionTarget 指代名 `problems`
+* `translated_by`: 翻译此句子所用的 apikey 的设定模型。 conditionTarget 指代名 `transby`
+* `translated_raw_text`: AI返回的，未经过任何后处理的句子的样子。 conditionTarget 指代名 `transraw`
+* `translated_view_text`: 经过所有后处理之后，将输出的 message。 conditionTarget 指代名 `transview`
 
 ### 替换型字典语法
 
 * **译前字典** 会搜索并替换 `original_text` 以输出 `pre_processed_text` 提供给AI。
-* **译后字典** 会搜索并替换 `pre_translated_text` 以供 `translated_preview` 最终输出。
+* **译后字典** 会搜索并替换 `translated_raw_text` 以供 `translated_view_text` 最终输出。
 
 **条件对象** 是指条件正则要作用于的文本，可以是 `name`, `orig`, `preproc`, `pretrans`, `transview` 中的任意一个。
 
@@ -180,13 +180,16 @@ retranslKeys 语法示例
 ```toml
 # 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
-# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本(conditionFunc 接收 Sentence，返回bool)
-# %PROJECT_DIR%为代表当前路径字符串的宏
-# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果没有则条件失败
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回bool)
+# %PROJECT_DIR% 为代表当前项目路径字符串的宏
+# conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果不存在则条件失败
 retranslKeys = [
-  #[{ conditionScript='%PROJECT_DIR%/Lua/SampleTextPlugin.lua',conditionFunc='funcName'},
-  #{ conditionScript='%PROJECT_DIR%/Python/SampleTextPlugin.py',conditionFunc='funcName'}],
-  #"残留日文",
+  #[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},
+  #{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],
+  #"本有",
+  #"本无",
+  "引入繁体字",
+  "残留日文",
   "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
 ]
 ```
@@ -197,23 +200,29 @@ skipProblems 语法示例
 # 正则表达式列表，如果一条 problem 能被以下任一正则 search 通过，则不加入 problems 列表
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本
+# (conditionFunc 接收 Sentence 和 problem，返回bool)
 skipProblems = [
-  # "^引入拉丁字母: Live$"  # 不加任何条件
+  #"^引入拉丁字母: Live$"  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
-  [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
-    { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  # [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
+  #   { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  "^$",
 ]
 ```
 
 问题开关与比较对象设定示例:
 
 ```toml
-[problemAnalyze]
+# enable = true 以启用该问题检查
+# 如 StrictlyLongerThanSource = { enable = false, base = "orig", check = "transview" }
+# 意思是当 translated_view_text 比 original_text 严格长时，在 problem 中留下对应的问题。
 HighFrequency = { enable = false }
 PunctuationMismatch = { enable = true, base = "orig", check = "transview" }
-LatinIntroduced = { enable = true, base = "preproc", check = "transview" }
+LinebreakLost = { enable = true, base = "orig", check = "transview" }
+LinebreakAdded = { enable = true, base = "orig", check = "transview" }
+# ... ... ...
 ```
-`ProblemName` 使用英文，GUI 只翻译按钮显示名。`enable = false` 时可以只保留开关字段。
 </details>
 
 <details>
@@ -365,7 +374,7 @@ nvcc --version
 
 可以非常方便的编写自定义的 **文件解析/文本处理/任务结束后处理** 等脚本。
 
-具体的代码示例详见 `Example/Lua` 及 `Example/Python`，工具函数/类函数的签名需要你自行翻阅一下 `LuaManager.cpp` 和 `PythonManager.cpp`。
+具体的代码示例详见 `Example/LuaSample` 及 `Example/PythonSample`，工具函数/类函数的签名需要你自行翻阅一下 `LuaManager.cpp` 和 `PythonManager.cpp`。
 
 </details>
 
@@ -436,7 +445,7 @@ GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除
 
 ### 添加文件处理器 (Translator)
 
-如你所见，GalTransl++的接口也十分简单。
+如你所见，GalTransl++ 的接口十分简单。
 
 由于所有的文件处理器需直接/间接继承自 `ITranslator`，如无特殊情况，一般直接继承 `NormalJsonTranslator` 即可。
 
@@ -455,8 +464,8 @@ GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除
 
 插件只需满足 `PPlugin` 约束即可。
 
-* **对于 dprerun/prerun 阶段**：如果是非过滤型插件，原则上只允许修改 `pre_processed_text`。如果是过滤型插件，可以将 `complete` 置为 `true`，并负责填充 `pre_translated_text`。如有需要，也可以将 `notAnalyzeProblem` 置为 `true` 来阻止对此句的问题分析。
-* **对于 postrun/dpostrun 阶段**：原则上只允许修改 `translated_preview`。
+* **对于 dprerun/prerun 阶段**：如果是非过滤型插件，原则上只允许修改 `pre_processed_text`。如果是过滤型插件，可以将 `transCompleted` 置为 `true`，并负责填充 `translated_raw_text`。如有需要，也可以将 `notAnalyzeProblem` 置为 `true` 来阻止对此句的问题分析。
+* **对于 postrun/dpostrun 阶段**：原则上只允许修改 `translated_view_text`。
 
 任意插件均可在 `other_info` 中插入键以在缓存中附带信息。
 

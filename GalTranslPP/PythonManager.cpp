@@ -579,10 +579,10 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .value("NamesTrans", CachePart::NamesTrans)
         .value("Orig", CachePart::Orig)
         .value("Preproc", CachePart::Preproc)
-        .value("Pretrans", CachePart::Pretrans)
         .value("Problems", CachePart::Problems)
         .value("OtherInfo", CachePart::OtherInfo)
-        .value("TranslatedBy", CachePart::TranslatedBy)
+        .value("TransBy", CachePart::TransBy)
+        .value("TransRaw", CachePart::TransRaw)
         .value("Transview", CachePart::Transview);
 
     py::enum_<ApiProtocol>(m, "ApiProtocol")
@@ -603,16 +603,16 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("fileName", &Sentence::fileName)
         .def_readwrite("name", &Sentence::name)
         .def_readwrite("names", &Sentence::names) // std::vector<string> <=> list[str]
-        .def_readwrite("nameTrans", &Sentence::nameTrans)
-        .def_readwrite("namesTrans", &Sentence::namesTrans)
+        .def_readwrite("nametrans", &Sentence::nametrans)
+        .def_readwrite("namestrans", &Sentence::namestrans)
         .def_readwrite("orig", &Sentence::orig)
         .def_readwrite("preproc", &Sentence::preproc)
-        .def_readwrite("pretrans", &Sentence::pretrans)
         .def_readwrite("problems", &Sentence::problems)
-        .def_readwrite("translatedBy", &Sentence::translatedBy)
+        .def_readwrite("transby", &Sentence::transby)
+        .def_readwrite("transraw", &Sentence::transraw)
         .def_readwrite("transview", &Sentence::transview)
         .def_readwrite("linebreak", &Sentence::linebreak)
-        .def_readwrite("otherInfo", &Sentence::otherInfo) // std::map<string, string> <=> dict[str, str]
+        .def_readwrite("otherinfo", &Sentence::otherinfo) // std::map<string, string> <=> dict[str, str]
         .def_readwrite("ref", &Sentence::ref)
         .def_readwrite("refBy", &Sentence::refBy)
         .def_readwrite("nameType", &Sentence::nameType)

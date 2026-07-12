@@ -783,8 +783,8 @@ void NormalJsonTranslator::normalJsonInit()
                 m_problemAnalyzer->setProblemRule(
                     problemDefault.key,
                     toml::find_or(configData, "problemAnalyze", problemDefault.key, "enable", problemDefault.enabled),
-                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "base", std::string(problemDefault.base)),
-                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "check", std::string(problemDefault.check))
+                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "base", problemDefault.base),
+                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "check", problemDefault.check)
                 );
             }
 
@@ -878,15 +878,15 @@ void NormalJsonTranslator::recordSentenceDoneHelper(const fs::path& relInputPath
             RuntimeTransSuccessEvent event;
             event.filename = wide2Ascii(relInputPath);
             event.index = se.index;
-            if (se.nameType == NameType::Single && !se.nameTrans.empty()) {
-                event.speakers.push_back(se.nameTrans);
+            if (se.nameType == NameType::Single && !se.nametrans.empty()) {
+                event.speakers.push_back(se.nametrans);
             }
             else if (se.nameType == NameType::Multiple) {
-                event.speakers = se.namesTrans;
+                event.speakers = se.namestrans;
             }
             event.sourcePreview = se.preproc;
-            event.translationPreview = se.pretrans;
-            event.translatedBy = se.translatedBy;
+            event.translationPreview = se.transraw;
+            event.translatedBy = se.transby;
             m_controller->recordRuntimeTransSuccess(std::move(event));
         }
     }
@@ -965,9 +965,9 @@ void NormalJsonTranslator::preProcess(Sentence* se)
 
 void NormalJsonTranslator::postProcess(Sentence* se)
 {
-    se->nameTrans = se->name;
-    se->namesTrans = se->names;
-    se->transview = se->pretrans;
+    se->nametrans = se->name;
+    se->namestrans = se->names;
+    se->transview = se->transraw;
 
     if (se->transview.starts_with("(Failed to translate)")) {
             se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "翻译失败").toStdString());
@@ -999,16 +999,16 @@ void NormalJsonTranslator::postProcess(Sentence* se)
     auto replaceName = [&]()
         {
             if (m_useGptDictToReplaceName) {
-                se->nameTrans = m_gptDictionary->doReplace(se, CachePart::NameTrans);
+                se->nametrans = m_gptDictionary->doReplace(se, CachePart::NameTrans);
             }
-            if (!se->nameTrans.empty()) {
-                const auto it = m_nameMap.find(se->nameTrans);
+            if (!se->nametrans.empty()) {
+                const auto it = m_nameMap.find(se->nametrans);
                 if (it != m_nameMap.end() && !it->second.empty()) {
-                    se->nameTrans = it->second;
+                    se->nametrans = it->second;
                 }
             }
             if (m_usePostDictInName) {
-                se->nameTrans = m_postDictionary->doReplace(se, CachePart::NameTrans);
+                se->nametrans = m_postDictionary->doReplace(se, CachePart::NameTrans);
             }
         };
 
@@ -1017,10 +1017,10 @@ void NormalJsonTranslator::postProcess(Sentence* se)
             replaceName();
         }
         else {
-            for (auto& nameTrans : se->namesTrans) {
-                se->nameTrans = std::move(nameTrans);
+            for (auto& nameTrans : se->namestrans) {
+                se->nametrans = std::move(nameTrans);
                 replaceName();
-                nameTrans = std::move(se->nameTrans);
+                nameTrans = std::move(se->nametrans);
             }
         }
     }

@@ -308,11 +308,11 @@ bool checkGppCondition(const GPPCondition& gppCondition, const Sentence* se) {
             case CachePart::Names:
                 return checkAnyOf(sentenceToCheck->names);
             case CachePart::NamesTrans:
-                return checkAnyOf(sentenceToCheck->namesTrans);
+                return checkAnyOf(sentenceToCheck->namestrans);
             case CachePart::Problems:
                 return checkAnyOf(sentenceToCheck->problems);
             case CachePart::OtherInfo:
-                return checkAnyOf(sentenceToCheck->otherInfo);
+                return checkAnyOf(sentenceToCheck->otherinfo);
             default:
                 return checkString(pattern.conditionReg, chooseStringRef(sentenceToCheck, pattern.conditionTarget));
             }

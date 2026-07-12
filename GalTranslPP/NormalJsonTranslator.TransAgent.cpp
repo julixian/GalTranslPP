@@ -893,8 +893,8 @@ int NormalJsonTranslatorTransAgent::applyCommit(
 
     int committedCount = 0;
     for (const auto& patch : sentencePatches) {
-        patch.sentence->pretrans = patch.dst;
-        patch.sentence->translatedBy = modelName;
+        patch.sentence->transby = modelName;
+        patch.sentence->transraw = patch.dst;
         patch.sentence->transCompleted = true;
         ++committedCount;
     }
@@ -1240,7 +1240,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     size_t failedCount = 0;
     for (Sentence* se : batch | std::views::filter([](const Sentence* s) { return !s->transCompleted; })) {
         ++failedCount;
-        se->pretrans = "(Failed to translate)" + se->preproc;
+        se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;
     }
     if (!retryExhausted) {

@@ -98,8 +98,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 showNormalObj["names"] = se.names;
             }
             showNormalObj["original_text"] = se.orig;
-            if (!se.otherInfo.empty()) {
-                showNormalObj["other_info"] = se.otherInfo;
+            if (!se.otherinfo.empty()) {
+                showNormalObj["other_info"] = se.otherinfo;
             }
             sentenceReferenceInfoToItem(showNormalObj, se, false);
             showNormalObj["pre_processed_text"] = se.preproc;
@@ -123,20 +123,20 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 tbl["index"] = se.index;
                 if (se.nameType == NameType::Single) {
                     tbl["name"] = se.name;
-                    tbl["name_translated"] = se.nameTrans;
+                    tbl["name_translated"] = se.nametrans;
                 }
                 else if (se.nameType == NameType::Multiple) {
                     tbl["names"] = se.names;
-                    tbl["names_translated"] = se.namesTrans;
+                    tbl["names_translated"] = se.namestrans;
                 }
                 tbl["original_text"] = se.orig;
-                if (!se.otherInfo.empty()) {
-                    tbl["other_info"] = se.otherInfo;
+                if (!se.otherinfo.empty()) {
+                    tbl["other_info"] = se.otherinfo;
                 }
                 tbl["pre_processed_text"] = se.preproc;
-                tbl["translated_raw_text"] = se.pretrans;
                 tbl["problems"] = se.problems;
-                tbl["translated_by"] = se.translatedBy;
+                tbl["translated_by"] = se.transby;
+                tbl["translated_raw_text"] = se.transraw;
                 tbl["translated_view_text"] = se.transview;
                 m_problemOverview.push_back(std::move(tbl));
             }
@@ -270,11 +270,11 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
         for (Sentence& se : sentences) {
             if (se.ref.has_value()) {
-                se.pretrans = se.preproc;
+                se.nametrans = se.name;
+                se.namestrans = se.names;
+                se.transby = "GPP-Reference";
+                se.transraw = se.preproc;
                 se.transview = se.preproc;
-                se.translatedBy = "GPP-Reference";
-                se.nameTrans = se.name;
-                se.namesTrans = se.names;
                 se.transCompleted = true;
                 se.problemAnalyzeDisabled = true;
                 se.isRefPending = true;
@@ -296,8 +296,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             if (m_transEngine == TransEngine::Rebuild ||
                 !hasRetranslKey(m_retranslKeys, item, se))
             {
-                se.pretrans = item.value("translated_raw_text", "");
-                se.translatedBy = item.value("translated_by", "");
+                se.transby = item.value("translated_by", "");
+                se.transraw = item.value("translated_raw_text", "");
                 se.transCompleted = true;
                 postProcess(&se);
                 recordSentenceDoneHelper(relInputPath, se);
@@ -444,10 +444,10 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             item.erase("_gpp_ref_pending");
         }
         if (se.nameType == NameType::Single) {
-            item["name"] = se.nameTrans;
+            item["name"] = se.nametrans;
         }
         else if (se.nameType == NameType::Multiple) {
-            item["names"] = se.namesTrans;
+            item["names"] = se.namestrans;
         }
         item["message"] = se.transview;
         if (m_outputWithSrc) {

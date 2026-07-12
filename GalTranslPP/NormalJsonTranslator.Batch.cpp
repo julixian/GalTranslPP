@@ -239,7 +239,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     size_t failedCount = 0;
     for (Sentence* se : batch | std::views::filter([](const Sentence* s) { return !s->transCompleted; })) {
         ++failedCount;
-        se->pretrans = "(Failed to translate)" + se->preproc;
+        se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;
     }
     m_logger->error(gppTr(

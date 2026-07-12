@@ -156,7 +156,9 @@ projectNotePath = "ProjectNote.md"
 
 
 [problemAnalyze]
-# 要发现的问题
+# enable = true 以启用该问题检查
+# 如 StrictlyLongerThanSource = { enable = false, base = "orig", check = "transview" }
+# 意思是当 translated_view_text 比 original_text 严格长时，在 problem 中留下对应的问题。
 HighFrequency = { enable = false }
 PunctuationMismatch = { enable = true, base = "orig", check = "transview" }
 LinebreakLost = { enable = true, base = "orig", check = "transview" }

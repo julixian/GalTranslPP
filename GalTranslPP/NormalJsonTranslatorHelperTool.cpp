@@ -361,7 +361,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
                 const std::string name = current->nameType == NameType::None ? "null" : getNameString(current);
-                contextLines.push_back(std::format("{}\t{}\t{}", name, current->pretrans, current->index));
+                contextLines.push_back(std::format("{}\t{}\t{}", name, current->transraw, current->index));
             }
             current = current->prev;
         }
@@ -377,7 +377,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
-                contextLines.push_back(std::format("{}\t{}", current->pretrans, current->index));
+                contextLines.push_back(std::format("{}\t{}", current->transraw, current->index));
             }
             current = current->prev;
         }
@@ -398,7 +398,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
                 if (current->nameType != NameType::None) {
                     item["name"] = getNameString(current);
                 }
-                item["dst"] = current->pretrans;
+                item["dst"] = current->transraw;
                 historyJson.push_back(std::move(item));
             }
             current = current->prev;
@@ -419,10 +419,10 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
                 if (current->nameType != NameType::None) {
-                    contextLines.push_back(std::format("{}:::::{}", getNameString(current), current->pretrans)); // :::::
+                    contextLines.push_back(std::format("{}:::::{}", getNameString(current), current->transraw)); // :::::
                 }
                 else {
-                    contextLines.push_back(current->pretrans);
+                    contextLines.push_back(current->transraw);
                 }
             }
             current = current->prev;
@@ -594,8 +594,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 if (const auto it = id2SentenceMap.find(id);
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
-                    it->second->pretrans = parts[1];
-                    it->second->translatedBy = modelName;
+                    it->second->transraw = parts[1];
+                    it->second->transby = modelName;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -629,8 +629,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 if (const auto it = id2SentenceMap.find(id);
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
-                    it->second->pretrans = parts[0];
-                    it->second->translatedBy = modelName;
+                    it->second->transraw = parts[0];
+                    it->second->transby = modelName;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -670,8 +670,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 if (const auto it = id2SentenceMap.find(id);
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
-                    it->second->pretrans = dst;
-                    it->second->translatedBy = modelName;
+                    it->second->transraw = dst;
+                    it->second->transby = modelName;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -697,8 +697,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                 }
             }
 
-            currentSentence->pretrans = translatedLine;
-            currentSentence->translatedBy = modelName;
+            currentSentence->transraw = translatedLine;
+            currentSentence->transby = modelName;
             currentSentence->transCompleted = true;
             ++parsedCount;
         }
@@ -711,8 +711,8 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
 
     if (retransAllWhenFail && parsedCount != batchToTransThisRound.size()) {
         for (Sentence* se : batchToTransThisRound | std::views::filter([](const auto& s) { return s->transCompleted; })) {
-            se->pretrans.clear();
-            se->translatedBy.clear();
+            se->transraw.clear();
+            se->transby.clear();
             se->transCompleted = false;
 	    }
     }
@@ -766,25 +766,25 @@ bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, cons
     Sentence probeSentence = currentSe;
     if (probeSentence.nameType == NameType::Single) {
         if (const auto jit = item.find("name_translated"); jit != item.end()) {
-            jit->get_to(probeSentence.nameTrans);
+            jit->get_to(probeSentence.nametrans);
         }
     }
     else if (probeSentence.nameType == NameType::Multiple) {
         if (const auto jit = item.find("names_translated"); jit != item.end()) {
-            jit->get_to(probeSentence.namesTrans);
+            jit->get_to(probeSentence.namestrans);
         }
     }
     if (const auto jit = item.find("problems"); jit != item.end()) {
         jit->get_to(probeSentence.problems);
     }
-    if (const auto jit = item.find("translated_raw_text"); jit != item.end()) {
-        jit->get_to(probeSentence.pretrans);
-    }
     if (const auto jit = item.find("other_info"); jit != item.end()) {
-        jit->get_to(probeSentence.otherInfo);
+        jit->get_to(probeSentence.otherinfo);
     }
     if (const auto jit = item.find("translated_by"); jit != item.end()) {
-        jit->get_to(probeSentence.translatedBy);
+        jit->get_to(probeSentence.transby);
+    }
+    if (const auto jit = item.find("translated_raw_text"); jit != item.end()) {
+        jit->get_to(probeSentence.transraw);
     }
     if (const auto jit = item.find("translated_view_text"); jit != item.end()) {
         jit->get_to(probeSentence.transview);
@@ -806,22 +806,22 @@ void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cacheP
         cacheObj["index"] = se.index;
         if (se.nameType == NameType::Single) {
             cacheObj["name"] = se.name;
-            cacheObj["name_translated"] = se.nameTrans;
+            cacheObj["name_translated"] = se.nametrans;
         }
         else if (se.nameType == NameType::Multiple) {
             cacheObj["names"] = se.names;
-            cacheObj["names_translated"] = se.namesTrans;
+            cacheObj["names_translated"] = se.namestrans;
         }
         cacheObj["original_text"] = se.orig;
-        if (!se.otherInfo.empty()) {
-            cacheObj["other_info"] = se.otherInfo;
+        if (!se.otherinfo.empty()) {
+            cacheObj["other_info"] = se.otherinfo;
         }
         cacheObj["pre_processed_text"] = se.preproc;
-        cacheObj["translated_raw_text"] = se.pretrans;
         if (!se.problems.empty()) {
             cacheObj["problems"] = se.problems;
         }
-        cacheObj["translated_by"] = se.translatedBy;
+        cacheObj["translated_by"] = se.transby;
+        cacheObj["translated_raw_text"] = se.transraw;
         cacheObj["translated_view_text"] = se.transview;
         sentenceReferenceInfoToItem(cacheObj, se, true);
         cacheJson.push_back(std::move(cacheObj));

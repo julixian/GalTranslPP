@@ -17,7 +17,6 @@
 #include "ElaRadioButton.h"
 
 import Tool;
-import NormalJsonTranslatorHelperTool;
 
 OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)

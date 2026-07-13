@@ -2692,7 +2692,7 @@ sk-...</source>
 <context>
     <name>OtherSettingsPage</name>
     <message>
-        <location filename="OtherSettingsPage.cpp" line="+25"/>
+        <location filename="OtherSettingsPage.cpp" line="+24"/>
         <source>其它设置</source>
         <translation>Other settings</translation>
     </message>

@@ -1,6 +1,7 @@
 module;
 
 #define PYBIND11_HEADERS
+#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <cpp-base64/base64.h>
 #include <toml.hpp>

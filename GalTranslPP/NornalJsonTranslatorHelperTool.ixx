@@ -5,13 +5,12 @@
 
 export module NormalJsonTranslatorHelperTool;
 
-export import Dictionary;
+export import GPPDefines;
 
 namespace fs = std::filesystem;
 
 export
 {
-
     struct RepeatedBlockReferenceMap {
         absl::flat_hash_map<SentencePosition, SentencePosition> targetToSourceMap;
         absl::flat_hash_map<SentencePosition, std::vector<SentencePosition>> sourceToTargetsMap;

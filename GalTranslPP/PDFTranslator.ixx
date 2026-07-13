@@ -1,6 +1,7 @@
 ﻿module;
 
 #define PYBIND11_HEADERS
+#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 export module PDFTranslator;
@@ -34,12 +35,12 @@ export
         PDFTranslator(const fs::path& projectDir,
             const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
 
-    	~PDFTranslator() override;
+        	~PDFTranslator() override;
 
 
         void pdfInit();
         void pdfBeforeRun();
 
-    	void run() override;
+    	    void run() override;
     };
 }

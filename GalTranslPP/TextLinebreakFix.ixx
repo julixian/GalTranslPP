@@ -11,14 +11,13 @@ namespace fs = std::filesystem;
 
 export
 {
-	enum class LinebreakFixMode
-	{
-		None, Average, FixCharCount, KeepPositions, PreferPunctuations, CheckOnly
-	};
-
 	class TextLinebreakFix {
 
 	private:
+		enum class LinebreakFixMode
+		{
+			None, Average, FixCharCount, KeepPositions, PreferPunctuations, CheckOnly
+		};
 
 		std::function<NLPResult(const std::string&)> m_tokenizeTargetLangFunc;
 		fs::path m_tokenizeCachePath;

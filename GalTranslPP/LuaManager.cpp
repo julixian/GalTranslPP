@@ -1,5 +1,7 @@
 module;
 
+#define PYBIND11_HEADERS
+#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 #include <ctpl_stl.h>
@@ -15,6 +17,61 @@ import ITranslator;
 import Tool;
 
 namespace fs = std::filesystem;
+
+namespace luabridge
+{
+	template <typename K, typename V, typename Hash, typename Eq, typename Allocator>
+	struct Stack<absl::flat_hash_map<K, V, Hash, Eq, Allocator>>
+	{
+		using Type = absl::flat_hash_map<K, V, Hash, Eq, Allocator>;
+
+		static Result push(lua_State* lua, const Type& value)
+		{
+			const std::unordered_map<K, V> converted(value.begin(), value.end());
+			return Stack<std::unordered_map<K, V>>::push(lua, converted);
+		}
+
+		static TypeResult<Type> get(lua_State* lua, int index)
+		{
+			auto converted = Stack<std::unordered_map<K, V>>::get(lua, index);
+			if (!converted) {
+				return converted.error();
+			}
+			return Type(converted->begin(), converted->end());
+		}
+
+		static bool isInstance(lua_State* lua, int index)
+		{
+			return Stack<std::unordered_map<K, V>>::isInstance(lua, index);
+		}
+	};
+
+	template <typename K, typename Hash, typename Eq, typename Allocator>
+	struct Stack<absl::flat_hash_set<K, Hash, Eq, Allocator>>
+	{
+		using Type = absl::flat_hash_set<K, Hash, Eq, Allocator>;
+
+		static Result push(lua_State* lua, const Type& value)
+		{
+			const std::unordered_set<K> converted(value.begin(), value.end());
+			return Stack<std::unordered_set<K>>::push(lua, converted);
+		}
+
+		static TypeResult<Type> get(lua_State* lua, int index)
+		{
+			auto converted = Stack<std::unordered_set<K>>::get(lua, index);
+			if (!converted) {
+				return converted.error();
+			}
+			return Type(converted->begin(), converted->end());
+		}
+
+		static bool isInstance(lua_State* lua, int index)
+		{
+			return Stack<std::unordered_set<K>>::isInstance(lua, index);
+		}
+	};
+}
 
 namespace lua_binding
 {

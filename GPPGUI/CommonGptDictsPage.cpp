@@ -21,6 +21,7 @@
 #include "ElaContentDialog.h"
 #include "DictionaryEntryDialog.h"
 #include "DictionaryReader.h"
+#include "DictionarySearchBar.h"
 #include "ReorderableTableView.h"
 #include "TreeSitterHighlighter.h"
 
@@ -172,6 +173,9 @@ void CommonGptDictsPage::setupUi()
 			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 360));
 			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 215));
 			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 425));
+			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("备注"), pageMainWidget);
+			searchBar->setVisible(stackedWidget->currentIndex() == 1);
+			pageMainLayout->addWidget(searchBar);
 			pageMainLayout->addWidget(stackedWidget);
 
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
@@ -192,6 +196,7 @@ void CommonGptDictsPage::setupUi()
 					removeDictButton->setEnabled(false);
 					editEntryButton->setEnabled(false);
 					withdrawButton->setEnabled(false);
+					searchBar->hide();
 				});
 
 			connect(tableModeButton, &ElaToolButton::clicked, this, [=]()
@@ -203,6 +208,7 @@ void CommonGptDictsPage::setupUi()
 					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
 					editEntryButton->setEnabled(tableView->currentIndex().isValid());
 					withdrawButton->setEnabled(!gptTabEntry.withdrawList->empty());
+					searchBar->show();
 				});
 
 			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
@@ -511,6 +517,7 @@ void CommonGptDictsPage::setupUi()
 					if (helpDialog.exec() == QDialog::Accepted) {
 						pageMainWidget->deleteLater();
 						tabWidget->removeTab(tabWidget->indexOf(pageMainWidget));
+						saveAllButton->setEnabled(tabWidget->count() > 0);
 						try {
 							fs::remove(gptTabEntryIt->dictPath);
 						}
@@ -572,6 +579,11 @@ void CommonGptDictsPage::setupUi()
 	}
 
 	tabWidget->setCurrentIndex(0);
+	saveAllButton->setEnabled(tabWidget->count() > 0);
+	connect(tabWidget, &QTabWidget::currentChanged, saveAllButton, [=](int)
+		{
+			saveAllButton->setEnabled(tabWidget->count() > 0);
+		});
 
 	connect(saveAllButton, &ElaToolButton::clicked, this, [=]()
 		{

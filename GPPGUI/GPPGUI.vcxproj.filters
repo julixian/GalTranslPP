@@ -132,6 +132,9 @@
     <ClCompile Include="DictionaryEntryDialog.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
+    <ClCompile Include="DictionarySearchBar.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
     <ClCompile Include="BasePage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
@@ -353,6 +356,9 @@
     <ClInclude Include="ReorderableTableView.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
+    <QtMoc Include="DictionarySearchBar.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gppgui_en.ts">

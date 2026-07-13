@@ -498,7 +498,7 @@ sk-...</source>
 <context>
     <name>CommonGptDictsPage</name>
     <message>
-        <location filename="CommonGptDictsPage.cpp" line="+33"/>
+        <location filename="CommonGptDictsPage.cpp" line="+34"/>
         <source>默认GPT字典设置</source>
         <translation type="unfinished">Default gptDict settings</translation>
     </message>
@@ -578,7 +578,12 @@ sk-...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+41"/>
+        <source>备注</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+74"/>
         <source>保存失败</source>
         <translation type="unfinished">Fail to save</translation>
     </message>
@@ -589,12 +594,12 @@ sk-...</source>
     </message>
     <message>
         <location line="+53"/>
-        <location line="+281"/>
+        <location line="+287"/>
         <source>保存成功</source>
         <translation type="unfinished">Saved successfully</translation>
     </message>
     <message>
-        <location line="-280"/>
+        <location line="-286"/>
         <source>字典 %1 已保存</source>
         <translation type="unfinished">Dict %1 saved</translation>
     </message>
@@ -626,27 +631,27 @@ sk-...</source>
     </message>
     <message>
         <location line="-44"/>
-        <location line="+199"/>
+        <location line="+205"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation type="unfinished">Dict name can not be empty or contain point symbol, slash, backslash!</translation>
     </message>
     <message>
-        <location line="-190"/>
-        <location line="+190"/>
+        <location line="-196"/>
+        <location line="+196"/>
         <location line="+9"/>
         <location line="+10"/>
         <source>新建失败</source>
         <translation type="unfinished">Fail to create</translation>
     </message>
     <message>
-        <location line="-208"/>
-        <location line="+169"/>
+        <location line="-214"/>
+        <location line="+175"/>
         <location line="+30"/>
         <source>字典 %1 已存在</source>
         <translation type="unfinished">Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-169"/>
+        <location line="-175"/>
         <source>重命名成功</source>
         <translation type="unfinished">Renamed successfully</translation>
     </message>
@@ -686,7 +691,7 @@ sk-...</source>
         <translation type="unfinished">The dict file will be deleted forever, make a backup if you need!</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>删除成功</source>
         <translation type="unfinished">Deleted successfully</translation>
     </message>
@@ -696,7 +701,7 @@ sk-...</source>
         <translation type="unfinished">Dict %1 removed from list and disk!</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+50"/>
         <source>所有默认字典配置均已保存</source>
         <translation type="unfinished">All dicts are saved successfully</translation>
     </message>
@@ -747,7 +752,7 @@ sk-...</source>
 <context>
     <name>CommonNormalDictsPage</name>
     <message>
-        <location filename="CommonNormalDictsPage.cpp" line="+33"/>
+        <location filename="CommonNormalDictsPage.cpp" line="+34"/>
         <source>默认译前字典设置</source>
         <translation type="unfinished">Common preDicts settings</translation>
     </message>
@@ -842,7 +847,12 @@ sk-...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+122"/>
+        <location line="+42"/>
+        <source>条件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+85"/>
         <source>保存失败</source>
         <translation type="unfinished">Fail to save</translation>
     </message>
@@ -853,12 +863,12 @@ sk-...</source>
     </message>
     <message>
         <location line="+55"/>
-        <location line="+281"/>
+        <location line="+287"/>
         <source>保存成功</source>
         <translation type="unfinished">Saved successfully</translation>
     </message>
     <message>
-        <location line="-280"/>
+        <location line="-286"/>
         <source>字典 %1 已保存</source>
         <translation type="unfinished">Dict %1 saved</translation>
     </message>
@@ -890,27 +900,27 @@ sk-...</source>
     </message>
     <message>
         <location line="-46"/>
-        <location line="+201"/>
+        <location line="+207"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation type="unfinished">Dict name can not be empty or contain point symbol, slash, backslash!</translation>
     </message>
     <message>
-        <location line="-192"/>
-        <location line="+192"/>
+        <location line="-198"/>
+        <location line="+198"/>
         <location line="+10"/>
         <location line="+9"/>
         <source>新建失败</source>
         <translation type="unfinished">Fail to create</translation>
     </message>
     <message>
-        <location line="-210"/>
-        <location line="+171"/>
+        <location line="-216"/>
+        <location line="+177"/>
         <location line="+31"/>
         <source>字典 %1 已存在</source>
         <translation type="unfinished">Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-172"/>
+        <location line="-178"/>
         <source>重命名成功</source>
         <translation type="unfinished">Renamed successfully</translation>
     </message>
@@ -950,7 +960,7 @@ sk-...</source>
         <translation type="unfinished">The dict file will be deleted forever, make a backup if you need!</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>删除成功</source>
         <translation type="unfinished">Deleted successfully</translation>
     </message>
@@ -960,7 +970,7 @@ sk-...</source>
         <translation type="unfinished">Dict %1 removed from list and disk!</translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+50"/>
         <source>所有默认字典配置均已保存</source>
         <translation type="unfinished">All dicts are saved successfully</translation>
     </message>
@@ -1585,7 +1595,7 @@ sk-...</source>
 <context>
     <name>DictSettingsPage</name>
     <message>
-        <location filename="DictSettingsPage.cpp" line="+29"/>
+        <location filename="DictSettingsPage.cpp" line="+30"/>
         <source>项目字典设置</source>
         <translation>Project dicts settings</translation>
     </message>
@@ -1635,7 +1645,17 @@ sk-...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+67"/>
+        <location line="+56"/>
+        <source>备注</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>条件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>
@@ -1670,7 +1690,7 @@ sk-...</source>
         <translation>Import successfully</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+32"/>
         <source>%1 已保存</source>
         <translation>%1 saved</translation>
     </message>
@@ -1690,12 +1710,12 @@ sk-...</source>
         <translation type="unfinished">Project PostDict</translation>
     </message>
     <message>
-        <location line="-176"/>
+        <location line="-178"/>
         <source>从文件 %1 中导入了 %2 个词条</source>
         <translation>Imported %2 entries from %1</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+30"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
@@ -1881,6 +1901,30 @@ sk-...</source>
         <location line="+143"/>
         <source>%1 不是支持的格式</source>
         <translation type="unfinished">%1 is unsupported</translation>
+    </message>
+</context>
+<context>
+    <name>DictionarySearchBar</name>
+    <message>
+        <location filename="DictionarySearchBar.cpp" line="+23"/>
+        <source>搜索字典...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+9"/>
+        <source>全部</source>
+        <translation type="unfinished">All</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>原文</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>译文</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

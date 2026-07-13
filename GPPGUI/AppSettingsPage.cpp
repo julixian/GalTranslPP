@@ -360,42 +360,42 @@ void AppSettingsPage::setupUi()
     languageLayout->addWidget(languageComboBox);
     centerLayout->addWidget(languageArea);
 
-    // pyEnvPath(重启生效)
-    ElaScrollPageArea* pyEnvPathArea = new ElaScrollPageArea(centralWidget);
-    QHBoxLayout* pyEnvPathLayout = new QHBoxLayout(pyEnvPathArea);
-    ElaDoubleText* pyEnvPathText = new ElaDoubleText(tr("Python环境路径"), 16,
-        tr("重启生效"), 10, "", pyEnvPathArea);
-    pyEnvPathLayout->addWidget(pyEnvPathText);
-    pyEnvPathLayout->addStretch();
-    ElaLineEdit* pyEnvPathLineEdit = new ElaLineEdit(pyEnvPathArea);
-    pyEnvPathLineEdit->setFixedWidth(400);
-    pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
-    pyEnvPathLayout->addWidget(pyEnvPathLineEdit);
-    ElaToolButton* pyEnvPathButton = new ElaToolButton(pyEnvPathArea);
-    pyEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    pyEnvPathButton->setElaIcon(ElaIconType::FolderOpen);
-    pyEnvPathButton->setText(tr("浏览"));
-    pyEnvPathLayout->addWidget(pyEnvPathButton);
-    connect(pyEnvPathButton, &ElaToolButton::clicked, this, [=]()
+    // pythonEnvPath(重启生效)
+    ElaScrollPageArea* pythonEnvPathArea = new ElaScrollPageArea(centralWidget);
+    QHBoxLayout* pythonEnvPathLayout = new QHBoxLayout(pythonEnvPathArea);
+    ElaDoubleText* pythonEnvPathText = new ElaDoubleText(tr("Python环境路径"), 16,
+        tr("重启生效"), 10, "", pythonEnvPathArea);
+    pythonEnvPathLayout->addWidget(pythonEnvPathText);
+    pythonEnvPathLayout->addStretch();
+    ElaLineEdit* pythonEnvPathLineEdit = new ElaLineEdit(pythonEnvPathArea);
+    pythonEnvPathLineEdit->setFixedWidth(400);
+    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
+    pythonEnvPathLayout->addWidget(pythonEnvPathLineEdit);
+    ElaToolButton* pythonEnvPathButton = new ElaToolButton(pythonEnvPathArea);
+    pythonEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    pythonEnvPathButton->setElaIcon(ElaIconType::FolderOpen);
+    pythonEnvPathButton->setText(tr("浏览"));
+    pythonEnvPathLayout->addWidget(pythonEnvPathButton);
+    connect(pythonEnvPathButton, &ElaToolButton::clicked, this, [=]()
         {
             const QString pyExePath = QFileDialog::getOpenFileName(this->window(), tr("选择Python.exe"),
-                pyEnvPathLineEdit->text(), "Python.exe (python.exe)");
+                pythonEnvPathLineEdit->text(), "Python.exe (python.exe)");
             if (!pyExePath.isEmpty()) {
-                const fs::path newPyEnvPath = fs::path(pyExePath.toStdWString()).parent_path();
+                const fs::path newPythonEnvPath = fs::path(pyExePath.toStdWString()).parent_path();
                 if (std::ranges::all_of(std::initializer_list<std::wstring_view>{ L"310", L"311", L"312", L"313", L"314", L"315" },
                     [&](const auto& pyVer)
 	                {
-                        return !fs::exists(newPyEnvPath / std::format(L"python{}.zip", pyVer));
+                        return !fs::exists(newPythonEnvPath / std::format(L"python{}.zip", pyVer));
 	                }))
                 {
                     ElaMessageBar::error(ElaMessageBarType::TopRight, tr("错误"),
                         tr("目录下没有 python{ver}.zip 文件"), 3000);
                     return;
                 }
-                pyEnvPathLineEdit->setText(QString::fromStdWString(newPyEnvPath.wstring()));
+                pythonEnvPathLineEdit->setText(QString::fromStdWString(newPythonEnvPath.wstring()));
             }
         });
-    centerLayout->addWidget(pyEnvPathArea);
+    centerLayout->addWidget(pythonEnvPathArea);
 
 
     m_applyFunc = [=]()
@@ -418,7 +418,7 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "autoDownloadUpdate", autoDownloadSwitch->getIsToggled());
             insertToml(m_globalConfig, "autoCheckUpdate", checkUpdateSwitch->getIsToggled());
             insertToml(m_globalConfig, "language", languageComboBox->currentText().toStdString());
-            insertToml(m_globalConfig, "pyEnvPath", pyEnvPathLineEdit->text().toStdString());
+            insertToml(m_globalConfig, "pythonEnvPath", pythonEnvPathLineEdit->text().toStdString());
         };
 
     centerLayout->addStretch();

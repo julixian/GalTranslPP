@@ -58,10 +58,10 @@ int main(int argc, char* argv[])
                 app.installTranslator(&cliTranslator);
             }
         }
-        const std::string pyEnvPathStr = toml::find_or(globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
+        const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
         try {
-            const fs::path pyEnvPath = ascii2Wide(pyEnvPathStr);
-            if (!startUpPythonEnv(pyEnvPath, release)) {
+            const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
+            if (!startUpPythonEnv(pythonEnvPath, release)) {
                 spdlog::warn(gppTr("GPPCLI.main", "未设置 Python 环境，将无法使用需要 Python 环境的模块")
                     .toStdString());
             }

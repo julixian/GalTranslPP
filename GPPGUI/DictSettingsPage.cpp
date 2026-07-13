@@ -18,6 +18,7 @@
 #include "ElaPlainTextEdit.h"
 #include "DictionaryEntryDialog.h"
 #include "DictionaryReader.h"
+#include "DictionarySearchBar.h"
 #include "ReorderableTableView.h"
 #include "TreeSitterHighlighter.h"
 
@@ -154,6 +155,10 @@ void DictSettingsPage::setupUi()
 		stackedWidget->addWidget(dictTableView);
 		stackedWidget->setCurrentIndex(toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableOpenMode",
 			toml::find_or(m_globalConfig, "defaultDictOpenMode", 1)));
+		DictionarySearchBar* searchBar = new DictionarySearchBar(dictTableView,
+			std::is_same_v<EntryType, GptDictEntry> ? tr("备注") : tr("条件"), dictWidget);
+		searchBar->setVisible(stackedWidget->currentIndex() == 1);
+		dictLayout->addWidget(searchBar);
 		plainTextModeButtom->setEnabled(stackedWidget->currentIndex() != 0);
 		tableModeButtom->setEnabled(stackedWidget->currentIndex() != 1);
 		addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
@@ -286,6 +291,7 @@ void DictSettingsPage::setupUi()
 				plainTextModeButtom->setEnabled(false);
 				tableModeButtom->setEnabled(true);
 				withdrawDictButton->setEnabled(false);
+				searchBar->hide();
 			});
 		connect(tableModeButtom, &ElaToolButton::clicked, this, [=, &withdrawList]()
 			{
@@ -296,6 +302,7 @@ void DictSettingsPage::setupUi()
 				plainTextModeButtom->setEnabled(true);
 				tableModeButtom->setEnabled(false);
 				withdrawDictButton->setEnabled(!withdrawList.empty());
+				searchBar->show();
 			});
 		connect(refreshDictButton, &ElaPushButton::clicked, this, refreshDictFunc);
 		connect(saveDictButton, &ElaPushButton::clicked, this, [=]()

@@ -101,7 +101,7 @@ export
 
 
 
-    bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_release>& release);
+    bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release);
     void shutDownPythonEnv(std::unique_ptr<py::gil_scoped_release>& release);
 
 }

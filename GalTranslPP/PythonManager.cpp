@@ -491,12 +491,12 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
 
 // 开启关闭 Python 解释器
 static const fs::path pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt";
-bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
-    if (fs::exists(pyEnvPath) && fs::exists(pyEnvPath / L"python.exe")) {
+bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
+    if (fs::exists(pythonEnvPath) && fs::exists(pythonEnvPath / L"python.exe")) {
 
         const fs::path envZipPath = [&]()
 	        {
-                for (const auto& entry : fs::directory_iterator(pyEnvPath)) {
+                for (const auto& entry : fs::directory_iterator(pythonEnvPath)) {
                     if (isSameExtension(entry.path(), L".zip") &&
                         str2Lower(entry.path().filename().wstring()).starts_with(L"python"))
                     {
@@ -507,11 +507,11 @@ bool startUpPythonEnv(const fs::path& pyEnvPath, std::unique_ptr<py::gil_scoped_
             }();
 
         if (!envZipPath.empty()) {
-            s_pythonExePath = fs::canonical(pyEnvPath / L"python.exe");
+            s_pythonExePath = fs::canonical(pythonEnvPath / L"python.exe");
             PyConfig config;
             PyConfig_InitPythonConfig(&config);
-            PyConfig_SetString(&config, &config.home, fs::canonical(pyEnvPath).c_str());
-            PyConfig_SetString(&config, &config.executable, fs::canonical(pyEnvPath / L"python.exe").c_str());
+            PyConfig_SetString(&config, &config.home, fs::canonical(pythonEnvPath).c_str());
+            PyConfig_SetString(&config, &config.executable, fs::canonical(pythonEnvPath / L"python.exe").c_str());
             PyConfig_SetString(&config, &config.pythonpath_env, envZipPath.c_str());
             py::initialize_interpreter(&config);
             {

@@ -146,9 +146,9 @@ int main(int argc, char* argv[])
                 }
             }
 
-            const std::string pyEnvPathStr = toml::find_or(globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
-            const fs::path pyEnvPath = ascii2Wide(pyEnvPathStr);
-            startUpPythonEnv(pyEnvPath, release);
+            const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
+            const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
+            startUpPythonEnv(pythonEnvPath, release);
         }
         catch (...) { }
 

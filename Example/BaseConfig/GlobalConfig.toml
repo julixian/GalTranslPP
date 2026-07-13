@@ -9,7 +9,7 @@ defaultNameTableOpenMode = 1
 language = "zh_CN"
 navigationMode = 0
 projects = []
-pyEnvPath = "BaseConfig/Python-3.12.10-embed-amd64"
+pythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64"
 stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
@@ -184,4 +184,3 @@ interactiveTips = 'Dir-A'
 pathOrUrl = 'https://github.com/ZQF-ReVN'
 subTitle = '拜见祖师爷'
 title = 'ReVN'
-

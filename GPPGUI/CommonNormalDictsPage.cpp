@@ -22,6 +22,7 @@
 #include "ElaContentDialog.h"
 #include "DictionaryEntryDialog.h"
 #include "DictionaryReader.h"
+#include "DictionarySearchBar.h"
 #include "ReorderableTableView.h"
 #include "TreeSitterHighlighter.h"
 
@@ -195,6 +196,9 @@ void CommonNormalDictsPage::setupUi()
 			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "2", 360));
 			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "3", 75));
 			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "4", 60));
+			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("条件"), pageMainWidget);
+			searchBar->setVisible(stackedWidget->currentIndex() == 1);
+			pageMainLayout->addWidget(searchBar);
 			pageMainLayout->addWidget(stackedWidget, 1);
 
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
@@ -215,6 +219,7 @@ void CommonNormalDictsPage::setupUi()
 					removeDictButton->setEnabled(false);
 					editEntryButton->setEnabled(false);
 					withdrawButton->setEnabled(false);
+					searchBar->hide();
 				});
 
 			connect(tableModeButton, &ElaToolButton::clicked, this, [=]()
@@ -226,6 +231,7 @@ void CommonNormalDictsPage::setupUi()
 					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
 					editEntryButton->setEnabled(tableView->currentIndex().isValid());
 					withdrawButton->setEnabled(!normalTabEntry.withdrawList->empty());
+					searchBar->show();
 				});
 
 			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
@@ -547,6 +553,7 @@ void CommonNormalDictsPage::setupUi()
 					if (helpDialog.exec() == QDialog::Accepted) {
 						pageMainWidget->deleteLater();
 						tabWidget->removeTab(tabWidget->indexOf(pageMainWidget));
+						saveAllButton->setEnabled(tabWidget->count() > 0);
 						try {
 							fs::remove(normalTabEntryIt->dictPath);
 						}
@@ -608,6 +615,11 @@ void CommonNormalDictsPage::setupUi()
 	}
 
 	tabWidget->setCurrentIndex(0);
+	saveAllButton->setEnabled(tabWidget->count() > 0);
+	connect(tabWidget, &QTabWidget::currentChanged, saveAllButton, [=](int)
+		{
+			saveAllButton->setEnabled(tabWidget->count() > 0);
+		});
 
 	connect(saveAllButton, &ElaToolButton::clicked, this, [=]()
 		{

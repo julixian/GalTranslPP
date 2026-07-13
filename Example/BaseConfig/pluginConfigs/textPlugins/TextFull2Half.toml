@@ -1,5 +1,0 @@
-[plugins.TextFull2Half]
-replacePunctuation = true
-reverseConversion = false  # false: 全角转半角，true: 半角转全角。
-excludeChars = ""
-notConvertRegs = [] # 示例: '\$[a-zA-Z_]+'

@@ -58,42 +58,42 @@
     <message>
         <location filename="main.cpp" line="65"/>
         <source>未设置 Python 环境，将无法使用需要 Python 环境的模块</source>
-        <translation type="unfinished"></translation>
+        <translation>Python environment is not set; modules requiring Python will be unavailable</translation>
     </message>
     <message>
         <location filename="main.cpp" line="70"/>
         <source>Python 环境配置失败</source>
-        <translation type="unfinished"></translation>
+        <translation>Python environment setup failed</translation>
     </message>
     <message>
         <location filename="main.cpp" line="74"/>
         <source>无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在</source>
-        <translation type="unfinished"></translation>
+        <translation>Cannot read global config; check whether BaseConfig/GlobalConfig.toml exists</translation>
     </message>
     <message>
         <location filename="main.cpp" line="81"/>
         <source>检测到异常退出，请注意备份相关翻译缓存</source>
-        <translation type="unfinished"></translation>
+        <translation>Abnormal exit detected; back up related translation caches</translation>
     </message>
     <message>
         <location filename="main.cpp" line="102"/>
         <source>请输入项目文件夹或 Config.toml 的路径。</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter the path to the project folder or Config.toml</translation>
     </message>
     <message>
         <location filename="main.cpp" line="132"/>
         <source>首次运行，请输入一个有效的项目路径</source>
-        <translation type="unfinished"></translation>
+        <translation>First run: enter a valid project path</translation>
     </message>
     <message>
         <location filename="main.cpp" line="155"/>
         <source>路径 &apos;%1&apos; 不存在或不是一个有效的文件夹，请重新输入</source>
-        <translation type="unfinished"></translation>
+        <translation>Path &apos;%1&apos; does not exist or is not a valid folder; please enter it again</translation>
     </message>
     <message>
         <location filename="main.cpp" line="170"/>
         <source>创建翻译器实例失败，请检查项目配置</source>
-        <translation type="unfinished"></translation>
+        <translation>Translator creation failed; check project config</translation>
     </message>
     <message>
         <location filename="main.cpp" line="179"/>
@@ -118,12 +118,12 @@
     <message>
         <location filename="main.cpp" line="200"/>
         <source>发生未知错误</source>
-        <translation type="unfinished"></translation>
+        <translation>Unknown error</translation>
     </message>
     <message>
         <location filename="main.cpp" line="215"/>
         <source>程序退出</source>
-        <translation type="unfinished"></translation>
+        <translation>Program exited</translation>
     </message>
     <message>
         <source>发生未知错误。</source>

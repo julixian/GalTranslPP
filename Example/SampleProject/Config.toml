@@ -33,7 +33,7 @@ baseClassName = "NormalJson"
 # Sakura: 使用 SAKURA_SYSTEM 和 SAKURA_USER 作为提示词
 # DumpName: 更新 NameTable.toml 以供替换人名
 # NameTrans: 翻译人名表(如果没有则先Dump)，使用 NAMETRANS_SYSTEM 和 NAMETRANS_USER 作为提示词
-# GenDict: 借助AI自动生成术语表，使用 GENDICT_SYSTEM 和 GENDICT_USER 作为提示词
+# GenDict: 借助 AI 自动生成术语表，使用 GENDICT_SYSTEM 和 GENDICT_USER 作为提示词
 # Rebuild: 即使 problem 或 orig 中包含 retranslKey 也不会重翻，只根据缓存翻译重建结果
 # ShowNormal: 展示预处理后的内容及句子，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错
 # PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去 BaseConfig 下寻找
@@ -44,7 +44,7 @@ transEngine = "ForGalTsv"
 # "TextLinebreakFix"，只有 dpostrun 阶段模式，默认开启为 dpostrun 阶段模式
 # 使用 lua/py 脚本作为自定义扩展插件的加载格式为 "path/to/script.lua" / "path/to/script.py"
 # 如 "Lua/SampleTextPlugin.lua"
-# %PROJECT_DIR%为代表当前项目路径字符串的宏
+# %PROJECT_DIR% 为代表当前项目路径字符串的宏
 # 插件中必须定义 init 函数，具体示例详见 git 仓库中的 Example 文件夹中的 SampleTextPlugin
 textPlugins = [
   # 以 '>' 开头表示此插件不生效，和注释掉一个效果
@@ -128,17 +128,17 @@ level = "info"
 saveLog = true
 fileMaxSize = 10485760          # 1024 * 1024 * 10
 maxRotateFiles = 10
-inputBlockMaxLines = 10         # 请求日志中 inputBlock/解析结果最多显示的行数，实际请求和解析仍使用完整内容
+inputBlockMaxLines = 10         # 请求日志中 inputBlock/解析结果 最多显示的行数，实际请求和解析仍使用完整内容
 problemMaxLines = 3             # 请求日志中 Problems 最多显示的行数，实际请求仍发送完整文本
 glossaryMaxLines = 5            # 请求日志中 Dict/Glossary 最多显示的行数，实际请求仍发送完整文本
 
-# 用于生成字典和查错的分词器后端及其设置 (除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的)
+# 用于生成字典和查错的分词器后端及其设置 (除了MeCab，剩下的都依赖Python，所以速度变慢是正常的)
 # 但 MeCab 只限于日文分词，如果想分词其它语言需要使用别的分词器并指定对应语言的模型
 [common.tokenize]
 backend = "MeCab" # MeCab, spaCy, Stanza
 # MeCab 分词器所用的词典的路径
-mecabDictDir = "BaseConfig/mecab/mecab-ipadic-utf8" # 也可以用 mecab-ipadic-neologd 或 unidic(均需从网上下载字典)
-# spaCy(Python) 分词器所用的模型名，可从 https://spacy.io/models 查询，自动下载需重启程序
+mecabDictDir = "BaseConfig/mecab/mecab-ipadic-utf8" # 也可以用 mecab-ipadic-neologd 或 unidic (均需从网上下载字典)
+# spaCy 分词器所用的模型名，可从 https://spacy.io/models 查询，自动下载需重启程序
 spaCyModelName = "ja_core_news_lg" # sm模型的效果有点一言难尽，有条件的建议上trf模型
 # stanza 使用 LangID 来获取模型, 语言ID列表 https://stanfordnlp.github.io/stanza/ner_models.html
 stanzaLang = "ja"

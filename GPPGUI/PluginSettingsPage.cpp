@@ -6,7 +6,7 @@
 #include <QFileDialog>
 
 #include "ElaText.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaMessageBar.h"
@@ -112,7 +112,10 @@ void PluginSettingsPage::setupUi()
             customPluginsTip->setToolTip("用来加载自定义的 Lua/Python 插件");
             customPluginsLayout->addWidget(customPluginsTitle);
             customPluginsLayout->addStretch();
-            ElaPushButton* browserButton = new ElaPushButton(tr("浏览"), mainWidget);
+            ElaToolButton* browserButton = new ElaToolButton(mainWidget);
+            browserButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            browserButton->setElaIcon(ElaIconType::FolderOpen);
+            browserButton->setText(tr("浏览"));
             customPluginsLayout->addWidget(browserButton);
 
             mainLayout->addLayout(customPluginsLayout);
@@ -128,7 +131,7 @@ void PluginSettingsPage::setupUi()
             installTreeSitterHighlighter(customPluginsEdit->document(), SyntaxLanguage::Toml);
             mainLayout->addWidget(customPluginsEdit);
 
-            connect(browserButton, &ElaPushButton::clicked, this, [=]()
+            connect(browserButton, &ElaToolButton::clicked, this, [=]()
                 {
                     toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
                     auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];

@@ -207,6 +207,7 @@
     <ClCompile Include="AgentToolCommon.ixx" />
     <ClCompile Include="AgentCommonSourceView.cpp" />
     <ClCompile Include="AgentCommonSourceView.ixx" />
+    <ClCompile Include="CodePageChecker.cpp" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />
     <ClCompile Include="Dictionary.cpp" />
@@ -233,6 +234,8 @@
     <ClCompile Include="LuaTranslator.ixx" />
     <ClCompile Include="NameTranslator.cpp" />
     <ClCompile Include="NameTranslator.ixx" />
+    <ClCompile Include="NNetLanguageIdentifierWrapper.cpp" />
+    <ClCompile Include="NNetLanguageIdentifierWrapper.ixx" />
     <ClCompile Include="NormalJsonTranslatorHelperTool.cpp" />
     <ClCompile Include="NornalJsonTranslatorHelperTool.ixx" />
     <ClCompile Include="NLPTool.cpp" />

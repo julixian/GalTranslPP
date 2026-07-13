@@ -1,104 +1,78 @@
 [[normalDict]]
 org = '(雄)?チ[ン○●〇◯]チ[ン○●〇◯]'
 rep = '${1:+オ}チンチン'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = '(雄)?チ[ン○●〇◯]([ポコ])'
 rep = '${1:+オ}チン$2'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = '(雄)?[ぢち][ん○●〇◯][ぢち][ん○●〇◯]'
 rep = '${1:+お}ちんちん'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = '(雄)?[ぢち][○●〇◯]([ぽこ])'
 rep = '${1:+お}ちん$2'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = '(オ)?チンチン'
 rep = '${1:+お}ちんちん'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 0
 
 [[normalDict]]
 org = '(オ)?チンポ'
 rep = '${1:+お}ちんぽ'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 0
 
 [[normalDict]]
 org = '(オ)?チンコ'
 rep = '${1:+お}ちんこ'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 0
 
 [[normalDict]]
 org = 'マ[○●〇◯]コ'
 rep = 'マンコ'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = 'ま[○●〇◯]こ'
 rep = 'まんこ'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 1
 
 [[normalDict]]
 org = '(オ)?マンコ'
 rep = '${1:+お}まんこ'
-conditionTarget = ''
-conditionReg = ''
 isReg = true
 priority = 0
 
 [[normalDict]]
 org = 'アヌス'
 rep = '肛門'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'アナル'
 rep = '肛門'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ザーメン'
 rep = '精液'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 

@@ -583,7 +583,7 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
             {
                 ActiveWorkerGuard workerGuard(m_controller);
                 try {
-                    this->processFile(relFilePath, id);
+                    this->processFile(relFilePath, id + 1);
                 }
                 catch (const std::exception& e) {
                     if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {

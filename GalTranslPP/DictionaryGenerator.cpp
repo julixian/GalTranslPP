@@ -138,7 +138,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             }
         };
 
-    const absl::btree_set<std::string_view> excludeEntities =
+    static const absl::btree_set<std::string_view> excludeEntities =
     {
         "TITLE_AFFIX", "QUANTITY", "ORDINAL", "DATE", "MONEY"
     };
@@ -150,7 +150,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
         else {
             NLPResult result = m_tokenizeSourceLangFunc(segment);
             EntityVec& entityVec = std::get<1>(result);
-            std::erase_if(entityVec, [&excludeEntities](const NLPPair& entity)
+            std::erase_if(entityVec, [](const NLPPair& entity)
                 {
                     if (excludeEntities.contains(entity[1])) {
                         return true;
@@ -380,7 +380,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
         results.emplace_back(pool.push([=](int threadId)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
-                this->callLLMToGenerate(segmentIdx, (int)taskIndex + 1, threadId);
+                this->callLLMToGenerate(segmentIdx, (int)taskIndex + 1, threadId + 1);
                 m_controller->updateBar();
             }));
     }

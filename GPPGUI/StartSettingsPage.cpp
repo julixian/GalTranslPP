@@ -472,7 +472,7 @@ void StartSettingsPage::setupUi()
 	outputSetting->setText(tr("文件处理器设置"));
 	outputSetting->setMenu(filePluginSettingMenu);
 	QHBoxLayout* outputSettingLayout = new QHBoxLayout();
-	outputSettingLayout->setContentsMargins(10, 0, 0, 0);
+	outputSettingLayout->setContentsMargins(4, 0, 0, 0);
 	outputSettingLayout->addWidget(outputSetting);
 	buttonLayout->addLayout(outputSettingLayout);
 

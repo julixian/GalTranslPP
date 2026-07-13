@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QButtonGroup>
+#include <QEvent>
 #include <QPointer>
 
 #include "ElaText.h"
@@ -10,12 +11,13 @@
 #include "ElaPlainTextEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaRadioButton.h"
 #include "ElaIconButton.h"
 #include "ElaSpinBox.h"
 #include "ElaToggleSwitch.h"
 #include "ElaDoubleText.h"
-#include "ElaCheckBox.h"
+#include "ElaAlignedCheckBox.h"
 #include "ElaNoWheelComboBox.h"
 #include "ElaTabWidget.h"
 #include "ElaScrollArea.h"
@@ -29,6 +31,8 @@
 import Tool;
 import ApiTool;
 
+QSize ApiSettingsPage::s_configWidgetSize(980, 820);
+
 ApiSettingsPage::ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent)
     : BasePage(parent), m_projectConfig(projectConfig)
 {
@@ -36,6 +40,23 @@ ApiSettingsPage::ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* pa
     setTitleVisible(false);
 
     setupUi();
+}
+
+ApiSettingsPage::~ApiSettingsPage()
+{
+    for (const ApiRowControls& apiRow : m_apiRows) {
+        delete apiRow.configWidget;
+    }
+}
+
+bool ApiSettingsPage::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::Resize && watched->property("apiConfigWidget").toBool()) {
+        if (QWidget* configWidget = qobject_cast<QWidget*>(watched)) {
+            s_configWidgetSize = configWidget->size();
+        }
+    }
+    return BasePage::eventFilter(watched, event);
 }
 
 void ApiSettingsPage::apply2Config()
@@ -110,9 +131,12 @@ void ApiSettingsPage::setupUi()
     apiTimeoutLayout->addWidget(apiTimeoutSpinBox);
 
     // “增加新 Api”按钮
-    ElaPushButton* addApiButton = new ElaPushButton(tr("增加新 Api"), this);
+    ElaToolButton* addApiButton = new ElaToolButton(this);
+    addApiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    addApiButton->setElaIcon(ElaIconType::Plus);
+    addApiButton->setText(tr("增加新 Api"));
     addApiButton->setFixedWidth(120);
-    connect(addApiButton, &ElaPushButton::clicked, this, &ApiSettingsPage::addApiInputRow);
+    connect(addApiButton, &ElaToolButton::clicked, this, &ApiSettingsPage::addApiInputRow);
 
     m_applyFunc = [=]()
         {
@@ -149,7 +173,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     std::vector<std::string> apiKeys;
     if (api.contains("apikeys")) {
         for (const toml::value& keyValue : api.at("apikeys").as_array()) {
-            const std::string keyValueString = keyValue.as_string();
+            const std::string& keyValueString = keyValue.as_string();
             if (!keyValueString.empty()) {
                 apiKeys.push_back(keyValueString);
             }
@@ -273,8 +297,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     ElaText* enableLabel = new ElaText(tr("启用"), 13, rightWidget);
     enableLabel->setWordWrap(false);
-    enableLabel->setContentsMargins(0, 0, 0, 8);
-    ElaCheckBox* enableCheckBox = new ElaCheckBox(rightWidget);
+    ElaAlignedCheckBox* enableCheckBox = new ElaAlignedCheckBox(rightWidget);
     enableCheckBox->setChecked(enable);
     QHBoxLayout* enableLayout = new QHBoxLayout();
     enableLayout->setContentsMargins(0, 0, 0, 0);
@@ -291,6 +314,9 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     configWidget->setWindowTitle(tr("Api 详细配置"));
     configWidget->setWindowModality(Qt::ApplicationModal);
     configWidget->setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
+    configWidget->resize(s_configWidgetSize);
+    configWidget->setProperty("apiConfigWidget", true);
+    configWidget->installEventFilter(this);
     QVBoxLayout* configLayout = new QVBoxLayout(configWidget);
     configLayout->setContentsMargins(10, 0, 10, 10);
     configLayout->setSpacing(0);
@@ -407,7 +433,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     temperatureSlider->setDecimals(2);
     temperatureSlider->setValue(temperature.value_or(1.0));
     temperatureConfigLayout->addWidget(temperatureSlider);
-    ElaCheckBox* temperatureCheckBox = new ElaCheckBox(temperatureConfigArea);
+    ElaAlignedCheckBox* temperatureCheckBox = new ElaAlignedCheckBox(temperatureConfigArea);
     temperatureCheckBox->setChecked(temperature.has_value());
     temperatureConfigLayout->addWidget(temperatureCheckBox);
     advancedLayout->addWidget(temperatureConfigArea);
@@ -421,7 +447,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     topPSlider->setDecimals(2);
     topPSlider->setValue(topP.value_or(1.0));
     topPConfigLayout->addWidget(topPSlider);
-    ElaCheckBox* topPCheckBox = new ElaCheckBox(topPConfigArea);
+    ElaAlignedCheckBox* topPCheckBox = new ElaAlignedCheckBox(topPConfigArea);
     topPCheckBox->setChecked(topP.has_value());
     topPConfigLayout->addWidget(topPCheckBox);
     advancedLayout->addWidget(topPConfigArea);
@@ -435,7 +461,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     frequencyPenaltySlider->setDecimals(2);
     frequencyPenaltySlider->setValue(frequencyPenalty.value_or(0.0));
     frequencyPenaltyConfigLayout->addWidget(frequencyPenaltySlider);
-    ElaCheckBox* frequencyPenaltyCheckBox = new ElaCheckBox(frequencyPenaltyConfigArea);
+    ElaAlignedCheckBox* frequencyPenaltyCheckBox = new ElaAlignedCheckBox(frequencyPenaltyConfigArea);
     frequencyPenaltyCheckBox->setChecked(frequencyPenalty.has_value());
     frequencyPenaltyConfigLayout->addWidget(frequencyPenaltyCheckBox);
     advancedLayout->addWidget(frequencyPenaltyConfigArea);
@@ -449,7 +475,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     presencePenaltySlider->setDecimals(2);
     presencePenaltySlider->setValue(presencePenalty.value_or(0.0));
     presencePenaltyConfigLayout->addWidget(presencePenaltySlider);
-    ElaCheckBox* presencePenaltyCheckBox = new ElaCheckBox(presencePenaltyConfigArea);
+    ElaAlignedCheckBox* presencePenaltyCheckBox = new ElaAlignedCheckBox(presencePenaltyConfigArea);
     presencePenaltyCheckBox->setChecked(presencePenalty.has_value());
     presencePenaltyConfigLayout->addWidget(presencePenaltyCheckBox);
     advancedLayout->addWidget(presencePenaltyConfigArea);
@@ -480,7 +506,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     extraHeadersTitleLayout->addWidget(new ElaDoubleText("extraHeaders", 16,
         tr("JSON 对象，用于追加自定义 HTTP header"), 10, "", extraHeadersArea));
     extraHeadersTitleLayout->addStretch();
-    ElaCheckBox* extraHeadersCheckBox = new ElaCheckBox(extraHeadersArea);
+    ElaAlignedCheckBox* extraHeadersCheckBox = new ElaAlignedCheckBox(extraHeadersArea);
     extraHeadersCheckBox->setChecked(extraHeadersEnable);
     extraHeadersTitleLayout->addWidget(extraHeadersCheckBox);
     extraHeadersLayout->addLayout(extraHeadersTitleLayout);
@@ -503,7 +529,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     extraBodyTitleLayout->addWidget(new ElaDoubleText("extraBody", 16,
         tr("JSON 对象，用于追加或覆盖请求 body 字段"), 10, "", extraBodyArea));
     extraBodyTitleLayout->addStretch();
-    ElaCheckBox* extraBodyCheckBox = new ElaCheckBox(extraBodyArea);
+    ElaAlignedCheckBox* extraBodyCheckBox = new ElaAlignedCheckBox(extraBodyArea);
     extraBodyCheckBox->setChecked(extraBodyEnable);
     extraBodyTitleLayout->addWidget(extraBodyCheckBox);
     extraBodyLayout->addLayout(extraBodyTitleLayout);
@@ -790,8 +816,10 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     connect(configButton, &ElaPushButton::clicked, this, [=]()
         {
             QWidget* mainWindow = window();
-            configWidget->resize(980, mainWindow ? mainWindow->height() : 820);
-            configWidget->moveToCenter();
+            if (mainWindow) {
+                configWidget->move(mainWindow->frameGeometry().center()
+                    - configWidget->rect().center());
+            }
             configWidget->show();
             configWidget->raise();
             configWidget->activateWindow();

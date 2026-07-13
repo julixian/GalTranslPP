@@ -11,6 +11,7 @@
 
 class ElaListView;
 class ElaPushButton;
+class ElaToolButton;
 class ElaText;
 class QButtonGroup;
 class QStackedWidget;
@@ -58,8 +59,8 @@ private:
     ElaText* m_summaryText = nullptr;
     ElaText* m_filterText = nullptr;
     ElaPushButton* m_clearFilterButton = nullptr;
-    ElaPushButton* m_errorsTabButton = nullptr;
-    ElaPushButton* m_filesTabButton = nullptr;
+    ElaToolButton* m_errorsTabButton = nullptr;
+    ElaToolButton* m_filesTabButton = nullptr;
     QButtonGroup* m_sideTabGroup = nullptr;
     QStackedWidget* m_sideStack = nullptr;
 };

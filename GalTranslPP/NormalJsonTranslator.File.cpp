@@ -382,13 +382,13 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }
 
             if (m_agentEnabled) {
-                m_transAgent->translateBatch(relInputPath, batchView, rollingContext, threadId, batchIndex);
+                m_transAgent->translateBatch(relInputPath, batchView, rollingContext, threadId, batchIndex + 1);
             }
             else {
                 int recursionIndex = 0;
                 int recursionConut = 0;
                 translateBatch(relInputPath, batchView, rollingContext,
-                    threadId, batchIndex, recursionIndex, recursionConut);
+                    threadId, batchIndex + 1, recursionIndex, recursionConut);
             }
             for (Sentence* se : batchView) {
                 postProcess(se);

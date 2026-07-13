@@ -14,7 +14,7 @@
 #include "ElaIconButton.h"
 #include "ElaListView.h"
 #include "ElaMessageBar.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaText.h"
 
 using namespace ProjectCachePagePrivate;
@@ -151,6 +151,7 @@ void ProjectCachePage::setReplacePanelVisible(bool visible)
             QSignalBlocker blocker(m_replaceToggleButton);
             m_replaceToggleButton->setChecked(visible);
         }
+        m_replaceToggleButton->setElaIcon(visible ? ElaIconType::AngleUp : ElaIconType::AngleDown);
         m_replaceToggleButton->setText(visible ? tr("收起批量替换") : tr("展开批量替换"));
     }
 }

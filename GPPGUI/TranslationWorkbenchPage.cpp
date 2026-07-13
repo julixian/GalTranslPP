@@ -12,6 +12,7 @@
 
 #include "ElaListView.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
 
@@ -392,9 +393,15 @@ void TranslationWorkbenchPage::setupUi()
     tabLayout->setSpacing(5);
     m_sideTabGroup = new QButtonGroup(this);
     m_sideTabGroup->setExclusive(true);
-    m_errorsTabButton = new ElaPushButton(tr("最近错误"), sidePane);
+    m_errorsTabButton = new ElaToolButton(sidePane);
+    m_errorsTabButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_errorsTabButton->setElaIcon(ElaIconType::CircleExclamation);
+    m_errorsTabButton->setText(tr("最近错误"));
     m_errorsTabButton->setCheckable(true);
-    m_filesTabButton = new ElaPushButton(tr("文件进度"), sidePane);
+    m_filesTabButton = new ElaToolButton(sidePane);
+    m_filesTabButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_filesTabButton->setElaIcon(ElaIconType::ListCheck);
+    m_filesTabButton->setText(tr("文件进度"));
     m_filesTabButton->setCheckable(true);
     m_sideTabGroup->addButton(m_errorsTabButton, 0);
     m_sideTabGroup->addButton(m_filesTabButton, 1);
@@ -447,7 +454,7 @@ void TranslationWorkbenchPage::setupUi()
 
 void TranslationWorkbenchPage::setSideTab(int index)
 {
-    // ElaPushButton 分段按钮不依赖额外导航控件，切换时只同步 stacked widget 和 checked 状态。
+    // 侧栏分段按钮切换时只同步 stacked widget 和 checked 状态。
     m_sideStack->setCurrentIndex(index);
     m_errorsTabButton->setChecked(index == 0);
     m_filesTabButton->setChecked(index == 1);

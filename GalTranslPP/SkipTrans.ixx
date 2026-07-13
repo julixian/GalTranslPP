@@ -22,7 +22,7 @@ export
 
         PluginRunTime m_runTime;
 
-        static void processSkipSentence(Sentence* se, const std::string& info);
+        static void processSkippedSentence(Sentence* se, const std::string& info);
         void skipImpl(Sentence* se);
 
     public:

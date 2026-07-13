@@ -91,7 +91,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
     }
 }
 
-void SkipTrans::processSkipSentence(Sentence* se, const std::string& info) {
+void SkipTrans::processSkippedSentence(Sentence* se, const std::string& info) {
     se->transraw = se->preproc;
     se->otherinfo["SkipTrans"] = info;
     se->transCompleted = true;
@@ -104,7 +104,7 @@ void SkipTrans::skipImpl(Sentence* se) {
         std::ranges::any_of(m_hKeys, [&](const auto& key)
             {
                 if (se->preproc.contains(key)) {
-                    processSkipSentence(se, "skipH: " + key);
+                    processSkippedSentence(se, "skipH: " + key);
                     return true;
                 }
                 return false;
@@ -115,7 +115,7 @@ void SkipTrans::skipImpl(Sentence* se) {
 
     for (const auto& [index, key] : m_skipKeys | std::views::enumerate) {
         if (key(se)) {
-            processSkipSentence(se, gppTr("SkipTrans.skipImpl", "被第 %1 个 skipKeys 条件匹配到")
+            processSkippedSentence(se, gppTr("SkipTrans.skipImpl", "被第 %1 个 skipKeys 条件匹配到")
                 .arg(index + 1)
                 .toStdString());
             return;

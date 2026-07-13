@@ -5,6 +5,7 @@
 #include <QHeaderView>
 #include <QStackedWidget>
 #include <QFileDialog>
+#include <QItemSelectionModel>
 
 #include "ElaIconButton.h"
 #include "ElaTabWidget.h"
@@ -12,9 +13,12 @@
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaPlainTextEdit.h"
-#include "ReadDicts.h"
+#include "DictionaryEntryDialog.h"
+#include "DictionaryReader.h"
+#include "ReorderableTableView.h"
 #include "TreeSitterHighlighter.h"
 
 import Tool;
@@ -58,9 +62,13 @@ void DictSettingsPage::setupUi()
 		dictLayout->setContentsMargins(0, 0, 0, 0);
 
 		QHBoxLayout* buttonLayout = new QHBoxLayout(dictWidget);
-		ElaPushButton* plainTextModeButtom = new ElaPushButton(dictWidget);
-		plainTextModeButtom->setText(tr("纯文本模式"));
-		ElaPushButton* tableModeButtom = new ElaPushButton(dictWidget);
+		ElaToolButton* plainTextModeButtom = new ElaToolButton(dictWidget);
+		plainTextModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+		plainTextModeButtom->setElaIcon(ElaIconType::Text);
+		plainTextModeButtom->setText(tr("纯文本"));
+		ElaToolButton* tableModeButtom = new ElaToolButton(dictWidget);
+		tableModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+		tableModeButtom->setElaIcon(ElaIconType::Table);
 		tableModeButtom->setText(tr("表模式"));
 
 		ElaIconButton* saveDictButton = new ElaIconButton(ElaIconType::Check, dictWidget);
@@ -88,6 +96,10 @@ void DictSettingsPage::setupUi()
 		delDictButton->setFixedWidth(30);
 		ElaToolTip* delDictButtonToolTip = new ElaToolTip(delDictButton);
 		delDictButtonToolTip->setToolTip(tr("删除词条"));
+		ElaIconButton* editEntryButton = new ElaIconButton(ElaIconType::PenToSquare, dictWidget);
+		editEntryButton->setFixedWidth(30);
+		ElaToolTip* editEntryButtonToolTip = new ElaToolTip(editEntryButton);
+		editEntryButtonToolTip->setToolTip(tr("编辑词条"));
 		buttonLayout->addWidget(plainTextModeButtom);
 		buttonLayout->addWidget(tableModeButtom);
 		buttonLayout->addStretch();
@@ -96,6 +108,7 @@ void DictSettingsPage::setupUi()
 		buttonLayout->addWidget(withdrawDictButton);
 		buttonLayout->addWidget(refreshDictButton);
 		buttonLayout->addWidget(addDictButton);
+		buttonLayout->addWidget(editEntryButton);
 		buttonLayout->addWidget(delDictButton);
 		dictLayout->addLayout(buttonLayout);
 
@@ -112,7 +125,7 @@ void DictSettingsPage::setupUi()
 		stackedWidget->addWidget(plainTextEdit);
 
 		// 表格模式
-		ElaTableView* dictTableView = new ElaTableView(stackedWidget);
+		ReorderableTableView* dictTableView = new ReorderableTableView(stackedWidget);
 		ModelType* dictModel = new ModelType(dictTableView);
 		QList<EntryType> dictData = readEntriesFunc();
 		dictModel->loadData(dictData);
@@ -123,19 +136,19 @@ void DictSettingsPage::setupUi()
 		dictTableView->verticalHeader()->setHidden(true);
 		dictTableView->setAlternatingRowColors(true);
 		dictTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+		dictTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 		if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
-			dictTableView->setColumnWidth(0, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 360));
-			dictTableView->setColumnWidth(1, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 215));
-			dictTableView->setColumnWidth(2, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 425));
+			dictTableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 360));
+			dictTableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 215));
+			dictTableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 425));
 		}
 		else {
-			dictTableView->setColumnWidth(0, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "0", 285));
-			dictTableView->setColumnWidth(1, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "1", 195));
-			dictTableView->setColumnWidth(2, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 135));
-			dictTableView->setColumnWidth(3, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 250));
-			dictTableView->setColumnWidth(4, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 75));
-			dictTableView->setColumnWidth(5, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "5", 60));
+			dictTableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "0", 285));
+			dictTableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "1", 195));
+			dictTableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 360));
+			dictTableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 75));
+			dictTableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 60));
 		}
 
 		stackedWidget->addWidget(dictTableView);
@@ -144,7 +157,9 @@ void DictSettingsPage::setupUi()
 		plainTextModeButtom->setEnabled(stackedWidget->currentIndex() != 0);
 		tableModeButtom->setEnabled(stackedWidget->currentIndex() != 1);
 		addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
-		delDictButton->setEnabled(stackedWidget->currentIndex() == 1);
+		delDictButton->setEnabled(stackedWidget->currentIndex() == 1
+			&& dictTableView->selectionModel()->hasSelection());
+		editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && dictTableView->currentIndex().isValid());
 
 		dictLayout->addWidget(stackedWidget);
 		auto refreshDictFunc = [=]()
@@ -169,7 +184,7 @@ void DictSettingsPage::setupUi()
 					}
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
 						atomicOutputFile(ofs, dictPath, plainTextEdit->toPlainText().toStdString());
-						dictModel->loadData(ReadDicts::readGptDicts(dictPath));
+						dictModel->loadData(DictionaryReader::readGptDict(dictPath));
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
 						toml::ordered_value dictArr = toml::array{};
@@ -183,11 +198,11 @@ void DictSettingsPage::setupUi()
 						}
 						dictArr.as_array_fmt().fmt = toml::array_format::multiline;
 						atomicOutputFile(ofs, dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictArr}} }));
-						plainTextEdit->setPlainText(ReadDicts::readDictsStr(dictPath));
+						plainTextEdit->setPlainText(DictionaryReader::readDictStr(dictPath));
 					}
-					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", dictTableView->columnWidth(0));
-					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", dictTableView->columnWidth(1));
-					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", dictTableView->columnWidth(2));
+					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", dictTableView->columnWidth(GptDictModel::Original));
+					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.1", dictTableView->columnWidth(GptDictModel::Translation));
+					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.2", dictTableView->columnWidth(GptDictModel::Description));
 					insertToml(m_projectConfig, "GUIConfig.gptDictTableOpenMode", stackedWidget->currentIndex());
 				}
 				else {
@@ -198,30 +213,33 @@ void DictSettingsPage::setupUi()
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
 						toml::ordered_value dictArr = toml::array{};
-						const QList<EntryType>& entries = dictModel->getEntriesRef();
-						for (const auto& entry : entries) {
+						for (const NormalDictEntry& entry : dictModel->getEntriesRef()) {
 							toml::ordered_table dictTbl;
 							dictTbl.insert({ "org", entry.original.toStdString() });
 							dictTbl.insert({ "rep", entry.translation.toStdString() });
-							dictTbl.insert({ "conditionTarget", entry.conditionTar.toStdString() });
-							dictTbl.insert({ "conditionReg", entry.conditionReg.toStdString() });
+							if (!entry.conditions.isEmpty()) {
+								toml::ordered_value conditions = toml::array{};
+								for (const NormalCondition& condition : entry.conditions) {
+									toml::ordered_table conditionTbl;
+									conditionTbl.insert({ "conditionReg", condition.pattern.toStdString() });
+									conditionTbl.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
+									conditions.push_back(std::move(conditionTbl));
+								}
+								dictTbl.insert({ "conditions", std::move(conditions) });
+							}
 							dictTbl.insert({ "isReg", entry.isReg });
 							dictTbl.insert({ "priority", entry.priority });
-							dictTbl["org"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["rep"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["conditionTarget"].as_string_fmt().fmt = toml::string_format::literal;
-							dictTbl["conditionReg"].as_string_fmt().fmt = toml::string_format::literal;
-							dictArr.push_back(dictTbl);
+							dictArr.push_back(std::move(dictTbl));
 						}
-						atomicOutputFile(ofs, dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"normalDict", dictArr}} }));
+						atomicOutputFile(ofs, dictPath,
+							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictArr) }} }));
 						plainTextEdit->setPlainText(readPlainTextFunc());
 					}
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.0", dictTableView->columnWidth(0));
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.1", dictTableView->columnWidth(1));
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.2", dictTableView->columnWidth(2));
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.3", dictTableView->columnWidth(3));
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.4", dictTableView->columnWidth(4));
-					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.5", dictTableView->columnWidth(5));
+					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.0", dictTableView->columnWidth(NormalDictModel::Original));
+					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.1", dictTableView->columnWidth(NormalDictModel::Translation));
+					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.2", dictTableView->columnWidth(NormalDictModel::Conditions));
+					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.3", dictTableView->columnWidth(NormalDictModel::IsReg));
+					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.4", dictTableView->columnWidth(NormalDictModel::Priority));
 					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableOpenMode", stackedWidget->currentIndex());
 				}
 			};
@@ -243,10 +261,10 @@ void DictSettingsPage::setupUi()
 				fs::path importDictPath = dictPathStr.toStdWString();
 				QList<EntryType> entries;
 				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
-					entries = ReadDicts::readGptDicts(importDictPath);
+					entries = DictionaryReader::readGptDict(importDictPath);
 				}
 				else {
-					entries = ReadDicts::readNormalDicts(importDictPath);
+					entries = DictionaryReader::readNormalDict(importDictPath);
 				}
 				if (entries.isEmpty()) {
 					ElaMessageBar::warning(ElaMessageBarType::TopLeft, tr("导入失败"), tr("字典文件中没有词条"), 3000);
@@ -259,20 +277,22 @@ void DictSettingsPage::setupUi()
 					.arg(QString::fromStdWString(importDictPath.filename().wstring()))
 					.arg(QString::number(entries.size())), 3000);
 			});
-		connect(plainTextModeButtom, &ElaPushButton::clicked, this, [=]()
+		connect(plainTextModeButtom, &ElaToolButton::clicked, this, [=]()
 			{
 				stackedWidget->setCurrentIndex(0);
 				addDictButton->setEnabled(false);
 				delDictButton->setEnabled(false);
+				editEntryButton->setEnabled(false);
 				plainTextModeButtom->setEnabled(false);
 				tableModeButtom->setEnabled(true);
 				withdrawDictButton->setEnabled(false);
 			});
-		connect(tableModeButtom, &ElaPushButton::clicked, this, [=, &withdrawList]()
+		connect(tableModeButtom, &ElaToolButton::clicked, this, [=, &withdrawList]()
 			{
 				stackedWidget->setCurrentIndex(1);
 				addDictButton->setEnabled(true);
-				delDictButton->setEnabled(true);
+				delDictButton->setEnabled(dictTableView->selectionModel()->hasSelection());
+				editEntryButton->setEnabled(dictTableView->currentIndex().isValid());
 				plainTextModeButtom->setEnabled(true);
 				tableModeButtom->setEnabled(false);
 				withdrawDictButton->setEnabled(!withdrawList.empty());
@@ -284,19 +304,76 @@ void DictSettingsPage::setupUi()
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
 					tr("%1 已保存").arg(tabName), 3000);
 			});
-		connect(addDictButton, &ElaPushButton::clicked, this, [=]()
+		auto openEntryDialog = [=](const EntryType& entry, EntryType& result) -> bool
 			{
-				QModelIndexList index = dictTableView->selectionModel()->selectedIndexes();
-				if (index.isEmpty()) {
-					dictModel->insertRow(dictModel->rowCount());
+				DictionaryEntryDialog dialog(entry, window());
+				if (dialog.exec() != QDialog::Accepted) {
+					return false;
+				}
+				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
+					result = dialog.getGptEntry();
 				}
 				else {
-					dictModel->insertRow(index.first().row());
+					result = dialog.getNormalEntry();
 				}
+				return true;
+			};
+
+		auto editEntry = [=](int row)
+			{
+				const QList<EntryType>& entries = dictModel->getEntriesRef();
+				if (row < 0 || row >= entries.size()) {
+					return;
+				}
+				EntryType editedEntry;
+				if (openEntryDialog(entries.at(row), editedEntry)) {
+					dictModel->setEntry(row, editedEntry);
+				}
+			};
+
+		connect(addDictButton, &ElaPushButton::clicked, this, [=]()
+			{
+				EntryType newEntry;
+				if (!openEntryDialog(EntryType{}, newEntry)) {
+					return;
+				}
+				const QModelIndexList selectedRows = dictTableView->selectionModel()->selectedRows();
+				const int insertRow = selectedRows.isEmpty() ? dictModel->rowCount() : selectedRows.first().row();
+				dictModel->insertRow(insertRow, newEntry);
+				dictTableView->setCurrentIndex(dictModel->index(insertRow, 0));
+				dictTableView->selectRow(insertRow);
+			});
+		connect(editEntryButton, &ElaIconButton::clicked, this, [=]()
+			{
+				editEntry(dictTableView->currentIndex().row());
+			});
+		connect(dictTableView, &QAbstractItemView::doubleClicked, this, [=](const QModelIndex& index)
+			{
+				editEntry(index.row());
+			});
+		connect(dictTableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
+			[=](const QModelIndex& current)
+			{
+				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && current.isValid());
+			});
+		connect(dictTableView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+			[=]()
+			{
+				delDictButton->setEnabled(stackedWidget->currentIndex() == 1
+					&& dictTableView->selectionModel()->hasSelection());
 			});
 		connect(delDictButton, &ElaPushButton::clicked, this, [=, &withdrawList]()
 			{
 				QModelIndexList selectedRows = dictTableView->selectionModel()->selectedRows();
+				if (selectedRows.isEmpty()) {
+					return;
+				}
+
+				DictionaryEntryDeleteDialog confirmDialog(selectedRows.size(), window());
+				if (confirmDialog.exec() != QDialog::Accepted) {
+					return;
+				}
+
 				const QList<EntryType>& entries = dictModel->getEntriesRef();
 				std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 					{
@@ -336,11 +413,11 @@ void DictSettingsPage::setupUi()
 	const std::vector<fs::path> gptDictPaths = { gptDictPath, generatedGptDictPath };
 	std::function<QString()> gptReadPlainTextFunc = [=]() -> QString
 		{
-			return ReadDicts::readGptDictsStr(gptDictPaths);
+			return DictionaryReader::readGptDictsStr(gptDictPaths);
 		};
 	std::function<QList<GptDictEntry>()> gptReadEntriesFunc = [=]() -> QList<GptDictEntry>
 		{
-			return ReadDicts::readGptDicts(gptDictPaths);
+			return DictionaryReader::readGptDicts(gptDictPaths);
 		};
 	auto refreshAndSaveGptDictFunc =
 		createDictTabFunc(gptReadPlainTextFunc, gptReadEntriesFunc, m_withdrawGptList,
@@ -350,11 +427,11 @@ void DictSettingsPage::setupUi()
 	fs::path preDictPath = m_projectDir / L"ProjPreDict.toml";
 	std::function<QString()> preReadPlainTextFunc = [=]() -> QString
 		{
-			return ReadDicts::readDictsStr(preDictPath);
+			return DictionaryReader::readDictStr(preDictPath);
 		};
 	std::function<QList<NormalDictEntry>()> preReadEntriesFunc = [=]() -> QList<NormalDictEntry>
 		{
-			return ReadDicts::readNormalDicts(preDictPath);
+			return DictionaryReader::readNormalDict(preDictPath);
 		};
 	auto refreshAndSavePreDictFunc =
 		createDictTabFunc(preReadPlainTextFunc, preReadEntriesFunc, m_withdrawPreList,
@@ -364,11 +441,11 @@ void DictSettingsPage::setupUi()
 	fs::path postDictPath = m_projectDir / L"ProjPostDict.toml";
 	std::function<QString()> postReadPlainTextFunc = [=]() -> QString
 		{
-			return ReadDicts::readDictsStr(postDictPath);
+			return DictionaryReader::readDictStr(postDictPath);
 		};
 	std::function<QList<NormalDictEntry>()> postReadEntriesFunc = [=]() -> QList<NormalDictEntry>
 		{
-			return ReadDicts::readNormalDicts(postDictPath);
+			return DictionaryReader::readNormalDict(postDictPath);
 		};
 	auto refreshAndSavePostDictFunc =
 		createDictTabFunc(postReadPlainTextFunc, postReadEntriesFunc, m_withdrawPostList,

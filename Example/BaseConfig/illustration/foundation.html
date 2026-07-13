@@ -224,8 +224,22 @@
 <li><strong>译前字典</strong> 会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
 <li><strong>译后字典</strong> 会搜索并替换 <code>translated_raw_text</code> 以供 <code>translated_view_text</code> 最终输出。</li>
 </ul>
-<p><strong>条件对象 (conditionTarget)</strong> 是指条件正则要作用于的缓存文本，可以是 <code>name</code>, <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code> 等中的任意一个。</p>
-<p>当 <strong>启用正则</strong> 为 <code>true</code> 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。</p>
+<p>替换型字典的每个词条使用 <code>[[normalDict]]</code> 表示。无条件词条可以省略 <code>conditions</code>；有条件词条只使用 <code>conditions</code> 表数组，每项通过 <code>conditionReg</code> 和 <code>conditionTarget</code> 指定一个条件：</p>
+<pre><code class="language-toml">[[normalDict]]
+org = '(老婆|夫人)'
+rep = '妻子'
+isReg = true
+compileModifier = 'mnS'
+replaceModifier = 'gxE'
+priority = 50
+conditions = [
+  { conditionReg = '人妻|ひとづま', conditionTarget = 'orig' },
+  { conditionReg = '母親', conditionTarget = 'prev_preproc', compileModifier = 'mnS' },
+]
+</code></pre>
+<p>同一 <code>conditions</code> 中的所有条件为隐式 AND，必须全部命中才执行词条。需要 OR 时请拆成多个词条；需要 NOT 时请直接在 <code>conditionReg</code> 中使用否定正则。</p>
+<p><code>conditionTarget</code> 可使用 <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。它们是当前全部 CachePart 指代名，不包含 <code>linebreak</code>。目标前可重复添加 <code>prev_</code> 或 <code>next_</code> 以检查相邻句，例如 <code>prev_orig</code> 和 <code>prev_prev_preproc</code>。</p>
+<p>当 <code>isReg = true</code> 时，<code>org</code> 和 <code>rep</code> 将作为正则搜索与替换表达式；词条级 <code>compileModifier</code> 控制 <code>org</code> 的编译修饰符，<code>replaceModifier</code> 控制替换修饰符。条件项也可通过 <code>compileModifier</code> 单独设置 <code>conditionReg</code> 的编译修饰符。优先级越高的词条越先执行。</p>
 <h2>⚙️ 处理与翻译顺序</h2>
 <p>1、  执行 dprerun 阶段的插件。<br />
 2、  可选: 对 <code>name</code> 执行译前字典替换 (人名表收集的也是这一步后的 <code>name</code>)。<br />

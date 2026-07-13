@@ -145,10 +145,12 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	mainLayout->addSpacing(20);
 
     const std::string hKeysBase64 = toml::find_or(m_projectConfig, "plugins", "SkipTrans", "hKeys", hKeysBase64Default);
-    ElaWidget* hKeysWidget = new ElaWidget();
+    m_hKeysWidget = new ElaWidget();
+    ElaWidget* hKeysWidget = m_hKeysWidget;
     hKeysWidget->setWindowTitle(tr("编辑 H 关键词"));
     hKeysWidget->setWindowModality(Qt::ApplicationModal);
     hKeysWidget->setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
+    hKeysWidget->resize(640, 720);
     QVBoxLayout* hKeysLayout = new QVBoxLayout(hKeysWidget);
     hKeysLayout->setContentsMargins(10, 0, 10, 10);
     hKeysLayout->setSpacing(8);
@@ -167,19 +169,17 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     connect(editHKeysButton, &ElaPushButton::clicked, this, [=]()
         {
             QWidget* mainWindow = window();
-            hKeysWidget->resize(640, mainWindow ? mainWindow->height() : 720);
-            hKeysWidget->moveToCenter();
+            if (mainWindow) {
+                hKeysWidget->move(mainWindow->frameGeometry().center()
+                    - hKeysWidget->rect().center());
+            }
             hKeysWidget->show();
             hKeysWidget->raise();
             hKeysWidget->activateWindow();
         });
 
     // skipKeys
-	toml::ordered_value skipKeysArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "SkipTrans", "skipKeys");
-	if (!skipKeysArr.is_array()) {
-		skipKeysArr = toml::array{};
-	}
-	skipKeysArr.comments().clear();
+	toml::ordered_array skipKeysArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "SkipTrans", "skipKeys");
 	ElaText* skipKeysHelperText = new ElaText("skipKeys", 18, centerWidget);
 	skipKeysHelperText->setWordWrap(false);
 	ElaToolTip* skipKeysHelperTip = new ElaToolTip(skipKeysHelperText);
@@ -223,4 +223,9 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 
     centerWidget->setWindowTitle(tr("跳过翻译设置"));
     addCentralWidget(centerWidget, true, false, 0);
+}
+
+SkipTransCfgPage::~SkipTransCfgPage()
+{
+    delete m_hKeysWidget;
 }

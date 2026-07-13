@@ -15,6 +15,7 @@
 class ElaPlainTextEdit;
 class ElaIconButton;
 class ElaPushButton;
+class ElaToolButton;
 class ElaText;
 class ElaListView;
 class ElaLineEdit;
@@ -175,11 +176,11 @@ private:
 
     ElaIconButton* m_saveButton = nullptr;
     ElaIconButton* m_saveAllButton = nullptr;
-    ElaPushButton* m_deleteEntriesButton = nullptr;
-    ElaPushButton* m_deleteFilesButton = nullptr;
-    ElaPushButton* m_editEntryButton = nullptr;
-    ElaPushButton* m_replaceToggleButton = nullptr;
-    ElaPushButton* m_replaceExecuteButton = nullptr;
+    ElaToolButton* m_deleteEntriesButton = nullptr;
+    ElaToolButton* m_deleteFilesButton = nullptr;
+    ElaToolButton* m_editEntryButton = nullptr;
+    ElaToolButton* m_replaceToggleButton = nullptr;
+    ElaToolButton* m_replaceExecuteButton = nullptr;
 };
 
 #endif

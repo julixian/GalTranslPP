@@ -1,9 +1,6 @@
 #include "ProjectCachePage.h"
 #include "ProjectCachePage_p.h"
 
-#include <algorithm>
-#include <functional>
-
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
 #include <QVBoxLayout>
@@ -199,7 +196,9 @@ void ProjectCachePage::openEntryEditor(int row)
     buttonLayout->addWidget(saveButton);
     mainLayout->addLayout(buttonLayout);
 
-    dialog.moveToCenter();
+    if (QWidget* mainWindow = window()) {
+        dialog.move(mainWindow->frameGeometry().center() - dialog.rect().center());
+    }
     dialog.exec();
 }
 

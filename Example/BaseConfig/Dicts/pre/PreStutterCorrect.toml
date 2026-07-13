@@ -1,1104 +1,828 @@
 [[normalDict]]
 org = 'あなひゃ'
 rep = 'あなた'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'わたひ'
 rep = '私'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'わらひ'
 rep = '私'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'わらし'
 rep = '私'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ひょ'
 rep = 'と'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'りゅ'
 rep = 'る'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しへぇ'
 rep = 'して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しへっ'
 rep = 'して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しひな'
 rep = 'しいな'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しひゃ'
 rep = 'しちゃ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゃま'
 rep = '様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゃみゃ'
 rep = '様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゃん'
 rep = 'さん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅぎ'
 rep = 'すぎ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅごひ	すごい'
 rep = ''
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅごイ'
 rep = 'すごい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅゴい'
 rep = 'すごい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅご'
 rep = 'すご'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅきぃ	しゅき'
 rep = ''
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅき'
 rep = '好き'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しなひ'
 rep = 'しない'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しぇいえき'
 rep = '精液'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゅけべ'
 rep = 'スケベ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しきゅ'
 rep = '子宮'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゃれれ'
 rep = 'されて'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しゃれて'
 rep = 'されて'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'しょこ'
 rep = 'そこ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らい好き'
 rep = '大好き'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'かみ様'
 rep = '神様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ひんぽ'
 rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ひんこ'
 rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ひんひん'
 rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ヒンポ'
 rep = 'ちんぽ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'きもち'
 rep = '気持ち'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'きもひ'
 rep = '気持ち'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ぎもひ'
 rep = '気持ち'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ぎもぢい'
 rep = '気持ち'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'きひゃ'
 rep = 'きた'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'うれひい'
 rep = '嬉しい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'せーえき'
 rep = '精液'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'せ～えき'
 rep = '精液'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'じゃーめん'
 rep = '精液'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'せーし'
 rep = '精子'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らかりゃ'
 rep = 'だがら'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らけれ'
 rep = 'だけで'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'れふかりゃ'
 rep = 'ですから'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'かりゃ'
 rep = 'から'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめだがら'
 rep = 'ダメだがら'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らしへっ'
 rep = '出して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らひへ'
 rep = '出して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らひて'
 rep = '出して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '、らして'
 rep = '、出して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'にらして'
 rep = 'に出して'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らしゃれ'
 rep = '出され'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめらめ'
 rep = 'ダメダメ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめっ'
 rep = 'ダメ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめ、'
 rep = 'ダメ、'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめ…'
 rep = 'ダメ…'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめぇ'
 rep = 'ダメ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめ！'
 rep = 'ダメ！'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめです'
 rep = 'ダメです'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめなの'
 rep = 'ダメなの'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'らめらの'
 rep = 'ダメなの'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'なからし'
 rep = '中出し'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ながりゃ'
 rep = 'ながら'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'なきゃに'
 rep = '中に'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'あちゅい'
 rep = '暑い'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'あちゅイ'
 rep = '暑い'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'あちゅく'
 rep = '暑く'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'あちゅあちゅ'
 rep = 'あつあつ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'あちゅし'
 rep = '暑し'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'おぐに'
 rep = '奥に'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'おいひい'
 rep = '美味しい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'おかひ'
 rep = 'おかし'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'おしおき'
 rep = 'お仕置き'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'もっろ'
 rep = 'もっと'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'れひゅ'
 rep = 'です'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'れしゅ'
 rep = 'です'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'まひゅ'
 rep = 'ます'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'えっひな'
 rep = 'エッチな'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '可愛がっれ'
 rep = '可愛がって'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '赤ひゃん'
 rep = '赤ちゃん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '主ひゃん'
 rep = '主ちゃん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'でちゅ'
 rep = 'です'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'けろ'
 rep = 'けど'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '恥じゅ'
 rep = '恥ず'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '恥ずかひ'
 rep = '恥ずかし'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'かひい'
 rep = 'かしい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '止まらなひ'
 rep = '止まらない'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'トロけひゃ'
 rep = '蕩けちゃ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'トロけ'
 rep = '蕩け'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'みるく'
 rep = 'ミルク'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'まひゃ'
 rep = 'また'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イきゅ'
 rep = 'イく'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イっく'
 rep = 'イく'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イクぅ'
 rep = 'イクぅ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イぐ'
 rep = 'イく'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'れふっ'
 rep = 'です'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'はげひ'
 rep = '激しい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'されへ'
 rep = 'されて'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イカしぇ'
 rep = 'イカせ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'イカしゃ'
 rep = 'イカせ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'たくひゃん'
 rep = 'たくさん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'いひょに'
 rep = '一緒に'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'いっふぁい'
 rep = 'いっぱい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'みたひに'
 rep = 'みたいに'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'かっひゃ'
 rep = 'かった'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ちょうらい'
 rep = 'ちょうだい'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごしゅじんひゃま'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごしゅじん'
 rep = 'ご主人'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅいんふん'
 rep = 'ご主人くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごしゅいん'
 rep = 'ご主人'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごしゅりん'
 rep = 'ご主人'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごしゅりんきゅん'
 rep = 'ご主人くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅりんはま'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅりんひゃは'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅりんひゃま'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅりん'
 rep = 'ご主人'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅじんひゃみゃ'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅじんきゅん'
 rep = 'ご主人くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ごひゅじん'
 rep = 'ご主人'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ご主人きゅん'
 rep = 'ご主人くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '主きゅん'
 rep = '主くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '主クン'
 rep = '主くん'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ご主人ひゃま'
 rep = 'ご主人様'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ありゅじ'
 rep = '主'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'こにょまま'
 rep = 'このまま'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'くれへっ'
 rep = 'くれてっ'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'くらひゃイ'
 rep = 'ください'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'くらさイ'
 rep = 'ください'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'くらさい'
 rep = 'ください'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'くらさぁい'
 rep = 'ください'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'まらまら'
 rep = 'またまた'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '、まら'
 rep = '、また'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '…まら'
 rep = '…また'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'にまら'
 rep = 'にまた'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'もまら'
 rep = 'もまた'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'れふ'
 rep = 'です'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 

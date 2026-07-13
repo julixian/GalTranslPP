@@ -139,9 +139,27 @@ GalTransl++的缓存中可能包含如下键:
 * **译前字典** 会搜索并替换 `original_text` 以输出 `pre_processed_text` 提供给AI。
 * **译后字典** 会搜索并替换 `translated_raw_text` 以供 `translated_view_text` 最终输出。
 
-**条件对象 (conditionTarget)** 是指条件正则要作用于的缓存文本，可以是 `name`, `orig`, `preproc`, `transraw`, `transview` 等中的任意一个。
+替换型字典的每个词条使用 `[[normalDict]]` 表示。无条件词条可以省略 `conditions`；有条件词条只使用 `conditions` 表数组，每项通过 `conditionReg` 和 `conditionTarget` 指定一个条件：
 
-当 **启用正则** 为 `true` 时，原文和译文将被视为正则表达式进行替换，优先级越高的字典越先执行。
+```toml
+[[normalDict]]
+org = '(老婆|夫人)'
+rep = '妻子'
+isReg = true
+compileModifier = 'mnS'
+replaceModifier = 'gxE'
+priority = 50
+conditions = [
+  { conditionReg = '人妻|ひとづま', conditionTarget = 'orig' },
+  { conditionReg = '母親', conditionTarget = 'prev_preproc', compileModifier = 'mnS' },
+]
+```
+
+同一 `conditions` 中的所有条件为隐式 AND，必须全部命中才执行词条。需要 OR 时请拆成多个词条；需要 NOT 时请直接在 `conditionReg` 中使用否定正则。
+
+`conditionTarget` 可使用 `name`, `names`, `nametrans`, `namestrans`, `orig`, `preproc`, `problems`, `otherinfo`, `transby`, `transraw`, `transview`。它们是当前全部 CachePart 指代名，不包含 `linebreak`。目标前可重复添加 `prev_` 或 `next_` 以检查相邻句，例如 `prev_orig` 和 `prev_prev_preproc`。
+
+当 `isReg = true` 时，`org` 和 `rep` 将作为正则搜索与替换表达式；词条级 `compileModifier` 控制 `org` 的编译修饰符，`replaceModifier` 控制替换修饰符。条件项也可通过 `compileModifier` 单独设置 `conditionReg` 的编译修饰符。优先级越高的词条越先执行。
 
 ## ⚙️ 处理与翻译顺序
 

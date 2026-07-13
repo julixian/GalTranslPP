@@ -9,7 +9,7 @@
 #include "ElaNoWheelComboBox.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 
 import Tool;
 
@@ -33,8 +33,11 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	ElaLineEdit* filePluginEdit = new ElaLineEdit(filePluginArea);
 	filePluginEdit->setText(QString::fromStdString(customFilePluginPath));
 	filePluginLayout->addWidget(filePluginEdit);
-	ElaPushButton* filePluginBtn = new ElaPushButton(tr("浏览"), filePluginArea);
-	connect(filePluginBtn, &ElaPushButton::clicked, this, [=]()
+	ElaToolButton* filePluginBtn = new ElaToolButton(filePluginArea);
+	filePluginBtn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	filePluginBtn->setElaIcon(ElaIconType::FolderOpen);
+	filePluginBtn->setText(tr("浏览"));
+	connect(filePluginBtn, &ElaToolButton::clicked, this, [=]()
 		{
 			QString path = QFileDialog::getOpenFileName(window(), tr("选择自定义文件处理插件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastPluginPath", "./")),

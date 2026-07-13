@@ -1,8 +1,6 @@
 #include "ProjectCachePage.h"
 #include "ProjectCachePage_p.h"
 
-#include <algorithm>
-
 #include <QItemSelectionModel>
 #include <QSignalBlocker>
 #include <QStandardItem>
@@ -19,7 +17,7 @@ using namespace ProjectCachePagePrivate;
 QStringList ProjectCachePage::problemsFromEditorText(const QString& text)
 {
     QStringList result;
-    for (QString line : text.split('\n')) {
+    for (const QString& line : text.split('\n')) {
         if (!line.isEmpty()) {
             result.push_back(line);
         }
@@ -33,7 +31,7 @@ int ProjectCachePage::countOccurrences(const QString& text, const QString& query
         return 0;
     }
     int count = 0;
-    int pos = 0;
+    qsizetype pos = 0;
     while ((pos = text.indexOf(query, pos, Qt::CaseSensitive)) >= 0) {
         ++count;
         pos += query.size();
@@ -216,7 +214,7 @@ void ProjectCachePage::previewReplace()
     int total = 0;
     const QList<ReplaceDetail> details = collectReplaceDetails(query, m_replaceField->currentData().toString(), &total);
     QString text = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
-    const int limit = std::min(static_cast<int>(details.size()), 8);
+    const int limit = std::min((int)details.size(), 8);
     for (int i = 0; i < limit; ++i) {
         text += QString("\n%1: %2").arg(details[i].filename).arg(details[i].matches);
     }

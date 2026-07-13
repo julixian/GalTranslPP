@@ -1,28 +1,33 @@
-#include "CommonGptDictPage.h"
+#include "CommonGptDictsPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QFileDialog>
+#include <QItemSelectionModel>
 
 #include "ElaText.h"
 #include "ElaIconButton.h"
+#include "ElaToolButton.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
 #include "ElaMessageBar.h"
-#include "ElaToggleButton.h"
+#include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaTabWidget.h"
 #include "ElaInputDialog.h"
-#include "ReadDicts.h"
+#include "ElaContentDialog.h"
+#include "DictionaryEntryDialog.h"
+#include "DictionaryReader.h"
+#include "ReorderableTableView.h"
 #include "TreeSitterHighlighter.h"
 
 import Tool;
 namespace fs = std::filesystem;
 
-CommonGptDictPage::CommonGptDictPage(toml::ordered_value& globalConfig, QWidget* parent) :
+CommonGptDictsPage::CommonGptDictsPage(toml::ordered_value& globalConfig, QWidget* parent) :
 	BasePage(parent), m_globalConfig(globalConfig)
 {
 	setWindowTitle(tr("默认GPT字典设置"));
@@ -31,9 +36,9 @@ CommonGptDictPage::CommonGptDictPage(toml::ordered_value& globalConfig, QWidget*
 	setupUi();
 }
 
-CommonGptDictPage::~CommonGptDictPage() = default;
+CommonGptDictsPage::~CommonGptDictsPage() = default;
 
-void CommonGptDictPage::setupUi()
+void CommonGptDictsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
@@ -42,15 +47,24 @@ void CommonGptDictPage::setupUi()
 	QHBoxLayout* mainButtonLayout = new QHBoxLayout(mainWidget);
 	ElaText* dictNameLabel = new ElaText(tr("通用GPT字典"), mainWidget);
 	dictNameLabel->setTextPixelSize(18);
-	ElaPushButton* importButton = new ElaPushButton(mainWidget);
+	ElaToolButton* importButton = new ElaToolButton(mainWidget);
+	importButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	importButton->setElaIcon(ElaIconType::ArrowDownFromLine);
 	importButton->setText(tr("导入字典页"));
-	ElaPushButton* addNewTabButton = new ElaPushButton(mainWidget);
+	ElaToolButton* addNewTabButton = new ElaToolButton(mainWidget);
+	addNewTabButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	addNewTabButton->setElaIcon(ElaIconType::Plus);
 	addNewTabButton->setText(tr("添加新字典页"));
+	ElaToolButton* saveAllButton = new ElaToolButton(mainWidget);
+	saveAllButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	saveAllButton->setElaIcon(ElaIconType::CheckDouble);
+	saveAllButton->setText(tr("保存所有页"));
 	mainButtonLayout->addSpacing(10);
 	mainButtonLayout->addWidget(dictNameLabel);
 	mainButtonLayout->addStretch();
 	mainButtonLayout->addWidget(importButton);
 	mainButtonLayout->addWidget(addNewTabButton);
+	mainButtonLayout->addWidget(saveAllButton);
 	mainLayout->addLayout(mainButtonLayout);
 
 	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
@@ -68,16 +82,23 @@ void CommonGptDictPage::setupUi()
 			pageMainLayout->setContentsMargins(0, 0, 0, 0);
 
 			QHBoxLayout* pageButtonLayout = new QHBoxLayout(pageMainWidget);
-			ElaPushButton* plainTextModeButton = new ElaPushButton(pageMainWidget);
-			plainTextModeButton->setText(tr("纯文本模式"));
-			ElaPushButton* tableModeButton = new ElaPushButton(pageMainWidget);
+			ElaToolButton* plainTextModeButton = new ElaToolButton(pageMainWidget);
+			plainTextModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+			plainTextModeButton->setElaIcon(ElaIconType::Text);
+			plainTextModeButton->setText(tr("纯文本"));
+			ElaToolButton* tableModeButton = new ElaToolButton(pageMainWidget);
+			tableModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+			tableModeButton->setElaIcon(ElaIconType::Table);
 			tableModeButton->setText(tr("表模式"));
-			ElaToggleButton* defaultOnButton = new ElaToggleButton(pageMainWidget);
-			defaultOnButton->setText(tr("默认启用"));
-			ElaIconButton* saveAllButton = new ElaIconButton(ElaIconType::CheckDouble, pageMainWidget);
-			saveAllButton->setFixedWidth(30);
-			ElaToolTip* saveAllButtonToolTip = new ElaToolTip(saveAllButton);
-			saveAllButtonToolTip->setToolTip(tr("保存所有页"));
+			QWidget* defaultOnWidget = new QWidget(pageMainWidget);
+			QHBoxLayout* defaultOnLayout = new QHBoxLayout(defaultOnWidget);
+			defaultOnLayout->setContentsMargins(4, 0, 4, 0);
+			defaultOnLayout->setSpacing(6);
+			ElaText* defaultOnLabel = new ElaText(tr("默认启用"), 14, defaultOnWidget);
+			defaultOnLabel->setWordWrap(false);
+			ElaToggleSwitch* defaultOnSwitch = new ElaToggleSwitch(defaultOnWidget);
+			defaultOnLayout->addWidget(defaultOnLabel);
+			defaultOnLayout->addWidget(defaultOnSwitch);
 			ElaIconButton* saveButton = new ElaIconButton(ElaIconType::Check, pageMainWidget);
 			saveButton->setFixedWidth(30);
 			ElaToolTip* saveButtonToolTip = new ElaToolTip(saveButton);
@@ -107,17 +128,21 @@ void CommonGptDictPage::setupUi()
 			removeDictButton->setFixedWidth(30);
 			ElaToolTip* removeDictButtonToolTip = new ElaToolTip(removeDictButton);
 			removeDictButtonToolTip->setToolTip(tr("删除词条"));
+			ElaIconButton* editEntryButton = new ElaIconButton(ElaIconType::PenToSquare, pageMainWidget);
+			editEntryButton->setFixedWidth(30);
+			ElaToolTip* editEntryButtonToolTip = new ElaToolTip(editEntryButton);
+			editEntryButtonToolTip->setToolTip(tr("编辑词条"));
 			pageButtonLayout->addWidget(plainTextModeButton);
 			pageButtonLayout->addWidget(tableModeButton);
-			pageButtonLayout->addWidget(defaultOnButton);
+			pageButtonLayout->addWidget(defaultOnWidget);
 			pageButtonLayout->addStretch();
-			pageButtonLayout->addWidget(saveAllButton);
 			pageButtonLayout->addWidget(saveButton);
 			pageButtonLayout->addWidget(removeTabButton);
 			pageButtonLayout->addWidget(renameTabButton);
 			pageButtonLayout->addWidget(withdrawButton);
 			pageButtonLayout->addWidget(refreshButton);
 			pageButtonLayout->addWidget(addDictButton);
+			pageButtonLayout->addWidget(editEntryButton);
 			pageButtonLayout->addWidget(removeDictButton);
 			pageMainLayout->addLayout(pageButtonLayout);
 
@@ -128,63 +153,62 @@ void CommonGptDictPage::setupUi()
 			plainTextFont.setPixelSize(15);
 			plainTextEdit->setFont(plainTextFont);
 			installTreeSitterHighlighter(plainTextEdit->document(), SyntaxLanguage::Toml);
-			plainTextEdit->setPlainText(ReadDicts::readDictsStr(orgDictPath));
+			plainTextEdit->setPlainText(DictionaryReader::readDictStr(orgDictPath));
 			stackedWidget->addWidget(plainTextEdit);
-			ElaTableView* tableView = new ElaTableView(stackedWidget);
+			ReorderableTableView* tableView = new ReorderableTableView(stackedWidget);
 			QFont tableHeaderFont = tableView->horizontalHeader()->font();
 			tableHeaderFont.setPixelSize(16);
 			tableView->horizontalHeader()->setFont(tableHeaderFont);
 			tableView->verticalHeader()->setHidden(true);
 			tableView->setAlternatingRowColors(true);
 			tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+			tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 			GptDictModel* model = new GptDictModel(tableView);
-			const QList<GptDictEntry> gptData = ReadDicts::readGptDicts(orgDictPath);
+			const QList<GptDictEntry> gptData = DictionaryReader::readGptDict(orgDictPath);
 			model->loadData(gptData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
 			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "openMode", 1));
-			tableView->setColumnWidth(0, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 360));
-			tableView->setColumnWidth(1, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 215));
-			tableView->setColumnWidth(2, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 425));
+			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 360));
+			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 215));
+			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 425));
 			pageMainLayout->addWidget(stackedWidget);
 
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 			tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
-			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1);
-			defaultOnButton->setIsToggled(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "defaultOn", true));
-			insertToml(m_globalConfig, "commonGptDicts.spec." + dictName + ".defaultOn", defaultOnButton->getIsToggled());
+			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
+				&& tableView->selectionModel()->hasSelection());
+			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && tableView->currentIndex().isValid());
+			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "defaultOn", true));
+			insertToml(m_globalConfig, "commonGptDicts.spec." + dictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
-			connect(plainTextModeButton, &ElaPushButton::clicked, this, [=]()
+			connect(plainTextModeButton, &ElaToolButton::clicked, this, [=]()
 				{
 					stackedWidget->setCurrentIndex(0);
 					plainTextModeButton->setEnabled(false);
 					tableModeButton->setEnabled(true);
 					addDictButton->setEnabled(false);
 					removeDictButton->setEnabled(false);
+					editEntryButton->setEnabled(false);
 					withdrawButton->setEnabled(false);
 				});
 
-			connect(tableModeButton, &ElaPushButton::clicked, this, [=]()
+			connect(tableModeButton, &ElaToolButton::clicked, this, [=]()
 				{
 					stackedWidget->setCurrentIndex(1);
 					plainTextModeButton->setEnabled(true);
 					tableModeButton->setEnabled(false);
 					addDictButton->setEnabled(true);
-					removeDictButton->setEnabled(true);
+					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
+					editEntryButton->setEnabled(tableView->currentIndex().isValid());
 					withdrawButton->setEnabled(!gptTabEntry.withdrawList->empty());
 				});
 
-			connect(defaultOnButton, &ElaToggleButton::toggled, this, [=](bool checked)
+			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
 				{
 					insertToml(m_globalConfig, "commonGptDicts.spec." + dictName
 						+ ".defaultOn", checked);
-				});
-
-			connect(saveAllButton, &ElaPushButton::clicked, this, [=]()
-				{
-					this->apply2Config();
-					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("所有默认字典配置均已保存"), 3000);
 				});
 
 			auto saveFunc = [=](bool forceSaveInTableModeToInit) -> bool
@@ -230,11 +254,11 @@ void CommonGptDictPage::setupUi()
 					const std::string tmpDictName = wide2Ascii(it->dictPath.stem().wstring());
 
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-						const QList<GptDictEntry> newDictEntries = ReadDicts::readGptDicts(it->dictPath);
+						const QList<GptDictEntry> newDictEntries = DictionaryReader::readGptDict(it->dictPath);
 						model->loadData(newDictEntries);
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						plainTextEdit->setPlainText(ReadDicts::readDictsStr(it->dictPath));
+						plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
 					}
 
 					auto& dictNamesArr = m_globalConfig["commonGptDicts"]["dictNames"];
@@ -253,9 +277,9 @@ void CommonGptDictPage::setupUi()
 					}
 
 					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".openMode", stackedWidget->currentIndex());
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.0", tableView->columnWidth(0));
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.1", tableView->columnWidth(1));
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.2", tableView->columnWidth(2));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.0", tableView->columnWidth(GptDictModel::Original));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.1", tableView->columnWidth(GptDictModel::Translation));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.2", tableView->columnWidth(GptDictModel::Description));
 					return true;
 				};
 			gptTabEntry.saveFunc = saveFunc;
@@ -276,20 +300,72 @@ void CommonGptDictPage::setupUi()
 					}
 				});
 
+			auto openEntryDialog = [=](const GptDictEntry& entry, GptDictEntry& result) -> bool
+				{
+					DictionaryEntryDialog dialog(entry, window());
+					if (dialog.exec() != QDialog::Accepted) {
+						return false;
+					}
+					result = dialog.getGptEntry();
+					return true;
+				};
+
+			auto editEntry = [=](int row)
+				{
+					const QList<GptDictEntry>& entries = model->getEntriesRef();
+					if (row < 0 || row >= entries.size()) {
+						return;
+					}
+					GptDictEntry editedEntry;
+					if (openEntryDialog(entries.at(row), editedEntry)) {
+						model->setEntry(row, editedEntry);
+					}
+				};
+
 			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
 				{
+					GptDictEntry newEntry;
+					if (!openEntryDialog(GptDictEntry{}, newEntry)) {
+						return;
+					}
 					const QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
-					if (selectedRows.isEmpty()) {
-						model->insertRow(model->rowCount());
-					}
-					else {
-						model->insertRow(selectedRows.first().row());
-					}
+					const int insertRow = selectedRows.isEmpty() ? model->rowCount() : selectedRows.first().row();
+					model->insertRow(insertRow, newEntry);
+					tableView->setCurrentIndex(model->index(insertRow, 0));
+					tableView->selectRow(insertRow);
+				});
+			connect(editEntryButton, &ElaIconButton::clicked, this, [=]()
+				{
+					editEntry(tableView->currentIndex().row());
+				});
+			connect(tableView, &QAbstractItemView::doubleClicked, this, [=](const QModelIndex& index)
+				{
+					editEntry(index.row());
+				});
+			connect(tableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
+				[=](const QModelIndex& current)
+				{
+					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && current.isValid());
+				});
+			connect(tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+				[=]()
+				{
+					removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
+						&& tableView->selectionModel()->hasSelection());
 				});
 
 			connect(removeDictButton, &ElaPushButton::clicked, this, [=]()
 				{
 					QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
+					if (selectedRows.isEmpty()) {
+						return;
+					}
+
+					DictionaryEntryDeleteDialog confirmDialog(selectedRows.size(), window());
+					if (confirmDialog.exec() != QDialog::Accepted) {
+						return;
+					}
+
 					const QList<GptDictEntry>& entries = model->getEntriesRef();
 					std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 						{
@@ -327,8 +403,8 @@ void CommonGptDictPage::setupUi()
 					if (it == m_gptTabEntries.end()) {
 						return;
 					}
-					plainTextEdit->setPlainText(ReadDicts::readDictsStr(it->dictPath));
-					model->loadData(ReadDicts::readGptDicts(it->dictPath));
+					plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
+					model->loadData(DictionaryReader::readGptDict(it->dictPath));
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 						tr("字典 %1 已刷新").arg(QString::fromStdWString(it->dictPath.filename().wstring())), 3000);
 				});
@@ -497,7 +573,13 @@ void CommonGptDictPage::setupUi()
 
 	tabWidget->setCurrentIndex(0);
 
-	connect(importButton, &ElaPushButton::clicked, this, [=]()
+	connect(saveAllButton, &ElaToolButton::clicked, this, [=]()
+		{
+			this->apply2Config();
+			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("所有默认字典配置均已保存"), 3000);
+		});
+
+	connect(importButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString importDictPathStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonGptDictPath", "./")),
@@ -533,7 +615,7 @@ void CommonGptDictPage::setupUi()
 				tr("字典页 %1 已创建").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 		});
 
-	connect(addNewTabButton, &ElaPushButton::clicked, this, [=]()
+	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString dictName;
 			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), dictName, window());

@@ -12,8 +12,8 @@
 class HomePage;
 class AboutDialog;
 class DefaultPromptPage;
-class CommonGptDictPage;
-class CommonNormalDictPage;
+class CommonGptDictsPage;
+class CommonNormalDictsPage;
 class AppSettingsPage;
 class ProjectSettingsPage;
 class ElaContentDialog;
@@ -57,9 +57,9 @@ private:
     HomePage* m_homePage = nullptr;
     AboutDialog* m_aboutDialog = nullptr;
     DefaultPromptPage* m_defaultPromptPage = nullptr;
-    CommonNormalDictPage* m_commonPreDictPage = nullptr;
-    CommonGptDictPage* m_commonGptDictPage = nullptr;
-    CommonNormalDictPage* m_commonPostDictPage = nullptr;
+    CommonNormalDictsPage* m_commonPreDictsPage = nullptr;
+    CommonGptDictsPage* m_commonGptDictsPage = nullptr;
+    CommonNormalDictsPage* m_commonPostDictsPage = nullptr;
     AppSettingsPage* m_appSettingsPage = nullptr;
 
     QString m_commonDictExpanderKey;

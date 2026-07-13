@@ -329,9 +329,15 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
             entry.rep = elem.at("rep").as_string();
             entry.priority = toml::find_or(elem, "priority", 0);
 
-            if (getConditionType(elem) != ConditionType::None) {
-                entry.dictCondition = std::make_unique<CheckSeCondNormalFunc>(getCheckSeCondFunc(elem, m_projectDir,
-                    m_pythonManager, m_luaManager, m_logger));
+            if (elem.contains("conditions") && elem.at("conditions").is_array()) {
+                const auto& conditions = elem.at("conditions");
+                GPPCondition gppCondition = createGppCondition(conditions);
+                if (!gppCondition.empty()) {
+                    entry.dictCondition = std::make_unique<CheckSeCondNormalFunc>(
+                        [condition = std::move(gppCondition)](const Sentence* se) {
+                            return checkGppCondition(condition, se);
+                        });
+                }
             }
             m_entries.push_back(std::move(entry));
             ++count;

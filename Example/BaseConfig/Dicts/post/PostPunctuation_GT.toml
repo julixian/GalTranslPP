@@ -1,216 +1,180 @@
 [[normalDict]]
 org = '‘'
 rep = '“'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '’'
 rep = '”'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = ','
 rep = '，'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '?'
 rep = '？'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '!'
 rep = '！'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '~'
 rep = '～'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '&'
 rep = '＆'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '・'
 rep = '·'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = 'ー'
 rep = '—'
-conditionTarget = ''
-conditionReg = ''
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '—'
 rep = '——'
-conditionTarget = 'transraw'
-conditionReg = '\A(?![\S\s]*——)'
+conditions = [{ conditionTarget = 'transraw', conditionReg = '\A(?![\S\s]*——)' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '『'
 rep = '《'
-conditionTarget = 'orig'
-conditionReg = '《'
+conditions = [{ conditionTarget = 'orig', conditionReg = '《' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '』'
 rep = '》'
-conditionTarget = 'orig'
-conditionReg = '》'
+conditions = [{ conditionTarget = 'orig', conditionReg = '》' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '《'
 rep = '『'
-conditionTarget = 'orig'
-conditionReg = '『'
+conditions = [{ conditionTarget = 'orig', conditionReg = '『' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '》'
 rep = '』'
-conditionTarget = 'orig'
-conditionReg = '』'
+conditions = [{ conditionTarget = 'orig', conditionReg = '』' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '“'
 rep = '「'
-conditionTarget = 'preproc'
-conditionReg = '「'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '「' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '”'
 rep = '」'
-conditionTarget = 'preproc'
-conditionReg = '」'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '」' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '‘'
 rep = '『'
-conditionTarget = 'preproc'
-conditionReg = '『'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '『' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '’'
 rep = '』'
-conditionTarget = 'preproc'
-conditionReg = '』'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '』' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '“'
 rep = '『'
-conditionTarget = 'preproc'
-conditionReg = '『'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '『' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '”'
 rep = '』'
-conditionTarget = 'preproc'
-conditionReg = '』'
+conditions = [{ conditionTarget = 'preproc', conditionReg = '』' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '『'
 rep = '“'
-conditionTarget = 'orig'
-conditionReg = '“'
+conditions = [{ conditionTarget = 'orig', conditionReg = '“' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '』'
 rep = '”'
-conditionTarget = 'orig'
-conditionReg = '”'
+conditions = [{ conditionTarget = 'orig', conditionReg = '”' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '《'
 rep = '“'
-conditionTarget = 'orig'
-conditionReg = '“'
+conditions = [{ conditionTarget = 'orig', conditionReg = '“' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '》'
 rep = '”'
-conditionTarget = 'orig'
-conditionReg = '”'
+conditions = [{ conditionTarget = 'orig', conditionReg = '”' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '‘'
 rep = '“'
-conditionTarget = 'orig'
-conditionReg = '“'
+conditions = [{ conditionTarget = 'orig', conditionReg = '“' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '’'
 rep = '”'
-conditionTarget = 'orig'
-conditionReg = '”'
+conditions = [{ conditionTarget = 'orig', conditionReg = '”' }]
 isReg = false
 priority = 0
 
 [[normalDict]]
 org = '。。'
 rep = '。'
-conditionTarget = 'orig'
-conditionReg = '\A(?![\S\s]*。。)'
+conditions = [{ conditionTarget = 'orig', conditionReg = '\A(?![\S\s]*。。)' }]
 isReg = false
 priority = 0
 

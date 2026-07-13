@@ -1,5 +1,5 @@
-#ifndef COMMONGPTDICTPAGE_H
-#define COMMONGPTDICTPAGE_H
+#ifndef COMMONGPTDICTSPAGE_H
+#define COMMONGPTDICTSPAGE_H
 
 #include "BasePage.h"
 #include "GptDictModel.h"
@@ -27,13 +27,13 @@ struct GptTabEntry {
     GptTabEntry() : withdrawList(new QList<GptDictEntry>){}
 };
 
-class CommonGptDictPage : public BasePage
+class CommonGptDictsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit CommonGptDictPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~CommonGptDictPage() override;
+    explicit CommonGptDictsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+    ~CommonGptDictsPage() override;
 
 Q_SIGNALS:
     void commonDictsChangedSignal();

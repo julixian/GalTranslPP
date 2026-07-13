@@ -40,6 +40,9 @@
     <ClCompile Include="CodePageChecker.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="CodePageChecker.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
     <ClCompile Include="SkipTrans.ixx">
       <Filter>textPlugins</Filter>
     </ClCompile>
@@ -84,6 +87,12 @@
     </ClCompile>
     <ClCompile Include="NameTranslator.ixx">
       <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="NNetLanguageIdentifierWrapper.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="NNetLanguageIdentifierWrapper.ixx">
+      <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Tool.ixx">
       <Filter>Tools\Utils</Filter>

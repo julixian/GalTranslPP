@@ -1,22 +1,17 @@
 module;
 
 #include "GPPMacros.hpp"
-#pragma  warning( push ) 
-#pragma  warning( disable: 4244 )
-#pragma  warning( disable: 4251 )
-#pragma  warning( disable: 4267 )
-#include <cld3/nnet_language_identifier.h>
-#pragma  warning(  pop  ) 
 #include <opencc/opencc.h>
 
 module ProblemAnalyzer;
 
 import CodePageChecker;
+import NNetLanguageIdentifierWrapper;
 import Tool;
 
 namespace fs = std::filesystem;
 
-static thread_local std::unique_ptr<chrome_lang_id::NNetLanguageIdentifier> langIdentifier;
+static thread_local std::unique_ptr<NNetLanguageIdentifierWrapper> langIdentifier;
 static thread_local std::unique_ptr<CodePageChecker> codePageChecker;
 static thread_local std::unique_ptr<opencc::SimpleConverter> simpleConverter;
 static absl::btree_set<std::string_view> excludeTraditionalCharList = { "乾", "阪", "篠", "塚" };
@@ -137,7 +132,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         if (const std::string simplifiedView = simpleConverter->Convert(transView); simplifiedView != transView) { // 这一步主要是为了初筛加速
             std::string traditionalGraphemes;
             for (const std::string_view origGrapheme : splitIntoGraphemeViews(transView)
-                | std::views::filter([&](std::string_view g) { return !excludeTraditionalCharList.contains(g); }))
+                | std::views::filter([&](const auto& g) { return !excludeTraditionalCharList.contains(g); }))
             {
                 // 经过初筛之后的实际检查还是分单个文字进行的，我测下来这样效果会好一点，大概是因为 opencc/icu 这些库本来搞这个的目的
                 // 是真的用来繁简转换而不是用来测有没有『繁体字』的，让 opencc 联系上下文反而会出现一些误报
@@ -243,12 +238,12 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         if (origTextLen > 6 || transTextLen > 6) {
             std::set<std::string> langSet;
             if (!langIdentifier) {
-                langIdentifier = std::make_unique<chrome_lang_id::NNetLanguageIdentifier>(3, 300);
+                langIdentifier = std::make_unique<NNetLanguageIdentifierWrapper>(3, 300);
             }
             if (origTextLen > 6) {
-                auto results = langIdentifier->FindTopNMostFreqLangs(origTextToCheck, 3);
+                const std::vector<NNetLanguageResult> results = langIdentifier->findTopNMostFreqLangs(origTextToCheck, 3);
                 for (const auto& result : results) {
-                    if (result.language == chrome_lang_id::NNetLanguageIdentifier::kUnknown) {
+                    if (result.isUnknown) {
                         break;
                     }
                     if (result.probability < m_probabilityThreshold) {
@@ -258,13 +253,13 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                 }
             }
             if (transTextLen > 6) {
-                auto results = langIdentifier->FindTopNMostFreqLangs(transTextToCheck, 3);
-                if (results[0].language == chrome_lang_id::NNetLanguageIdentifier::kUnknown && !langSet.empty()) {
+                const std::vector<NNetLanguageResult> results = langIdentifier->findTopNMostFreqLangs(transTextToCheck, 3);
+                if (!results.empty() && results.front().isUnknown && !langSet.empty()) {
                     sentence->problems.push_back(gppTr("ProblemAnalyzer.analyze", "无法识别的语言")
                         .toStdString());
                 }
                 for (const auto& result : results) {
-                    if (result.language == chrome_lang_id::NNetLanguageIdentifier::kUnknown) {
+                    if (result.isUnknown) {
                         break;
                     }
                     if (result.probability < m_probabilityThreshold) {
@@ -279,13 +274,12 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                 }
             }
         }
-
     }
 
     // 非法字符
     if (m_problems.invalidChar.use) {
         if (!codePageChecker) {
-            codePageChecker = std::make_unique<CodePageChecker>(m_codePage, m_logger);
+            codePageChecker = std::make_unique<CodePageChecker>(m_codePage);
         }
         const std::string& transView = chooseStringRef(sentence, m_problems.invalidChar.check);
         const std::string& unmappedChars = codePageChecker->findUnmappableChars(transView);

@@ -1,5 +1,5 @@
-#ifndef COMMONNORMALDICTPAGE_H
-#define COMMONNORMALDICTPAGE_H
+#ifndef COMMONNORMALDICTSPAGE_H
+#define COMMONNORMALDICTSPAGE_H
 
 #include "BasePage.h"
 #include "NormalTabEntry.h"
@@ -8,13 +8,13 @@
 
 namespace fs = std::filesystem;
 
-class CommonNormalDictPage : public BasePage
+class CommonNormalDictsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit CommonNormalDictPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~CommonNormalDictPage() override;
+    explicit CommonNormalDictsPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+    ~CommonNormalDictsPage() override;
 
 Q_SIGNALS:
     void commonDictsChangedSignal();

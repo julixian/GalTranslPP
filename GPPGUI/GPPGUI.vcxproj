@@ -161,13 +161,15 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="ApiSettingsPage.cpp" />
     <ClCompile Include="BasePage.cpp" />
-    <ClCompile Include="CommonGptDictPage.cpp" />
-    <ClCompile Include="CommonNormalDictPage.cpp" />
+    <ClCompile Include="CommonGptDictsPage.cpp" />
+    <ClCompile Include="CommonNormalDictsPage.cpp" />
     <ClCompile Include="CommonSettingsPage.cpp" />
     <ClCompile Include="CustomFilePluginCfgPage.cpp" />
     <ClCompile Include="DefaultPromptPage.cpp" />
+    <ClCompile Include="DictionaryEntryDialog.cpp" />
     <ClCompile Include="DictExSettingsPage.cpp" />
     <ClCompile Include="ElaDoubleText.cpp" />
+    <ClCompile Include="ElaAlignedCheckBox.cpp" />
     <ClCompile Include="GptDictModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
     <ClCompile Include="ElaInputDialog.cpp" />
@@ -190,7 +192,8 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="ProjectCachePageFiles.cpp" />
     <ClCompile Include="ProjectCachePageSearch.cpp" />
     <ClCompile Include="PromptSettingsPage.cpp" />
-    <ClCompile Include="ReadDicts.cpp" />
+    <ClCompile Include="DictionaryReader.cpp" />
+    <ClCompile Include="ReorderableTableView.cpp" />
     <ClCompile Include="AppSettingsPage.cpp" />
     <ClCompile Include="SkipTransCfgPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
@@ -314,20 +317,23 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <Manifest Include="GPPGUI.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="CommonNormalDictPage.h" />
+    <QtMoc Include="CommonNormalDictsPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CustomFilePluginCfgPage.h" />
     <QtMoc Include="ElaDoubleText.h" />
     <ClInclude Include="EtaEstimator.hpp" />
     <ClInclude Include="ElaNoWheelComboBox.h" />
+    <QtMoc Include="ElaAlignedCheckBox.h" />
+    <QtMoc Include="DictionaryEntryDialog.h" />
     <QtMoc Include="SkipTransCfgPage.h" />
-    <QtMoc Include="ReadDicts.h" />
+    <QtMoc Include="DictionaryReader.h" />
     <QtMoc Include="PDFCfgPage.h" />
-    <QtMoc Include="CommonGptDictPage.h" />
+    <QtMoc Include="CommonGptDictsPage.h" />
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
+    <ClInclude Include="ReorderableTableView.h" />
     <ClInclude Include="TreeSitterHighlighter.h" />
   </ItemGroup>
   <ItemGroup>

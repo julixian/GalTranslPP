@@ -38,11 +38,12 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
 
         const std::string excludeChars = parseToml<std::string>(projectConfig, pluginConfig,
             "plugins.TextFull2Half.excludeChars", reversePriority);
-        const icu::UnicodeString uExcludeChars = icu::UnicodeString::fromUTF8(excludeChars);
-        for (int32_t i = 0; i < uExcludeChars.length();) {
-            const UChar32 c = uExcludeChars.char32At(i);
-            m_conversionMap.erase(c);
-            i += U16_LENGTH(c);
+        {
+            auto begin = excludeChars.begin();
+            const auto end = excludeChars.end();
+            while (begin != end) {
+                m_conversionMap.erase(utf8::next(begin, end));
+            }
         }
 
         const auto notConvertRegStrs = 
@@ -190,8 +191,8 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
             }
         }
         const std::string notConvertedChars = std::views::iota(0uz, notConvertFlags.size()) 
-    	    | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;}) 
-    	    | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
+    	        | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;}) 
+    	        | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
         if (!notConvertedChars.empty()) {
             se->otherinfo[m_notConvertedCharsKey] = notConvertedChars;
         }

@@ -1,9 +1,6 @@
 #include "ProjectCachePage.h"
 #include "ProjectCachePage_p.h"
 
-#include <algorithm>
-#include <fstream>
-
 #include <QCollator>
 #include <QFileInfo>
 #include <QItemSelectionModel>

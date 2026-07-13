@@ -756,9 +756,9 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
         return sentence->transview;
         break;
     case CachePart::None:
-        throw std::runtime_error(gppTr("chooseStringRef", "内部错误: 无效的条件目标 None").toStdString());
+        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标 None").toStdString());
     default:
-        throw std::runtime_error(gppTr("chooseStringRef", "内部错误: 无法获取字符串的无效条件目标 %1")
+        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标 %1")
             .arg((int)target)
             .toStdString());
     }
@@ -805,7 +805,7 @@ CachePart chooseCachePart(std::string_view partName) {
         part = CachePart::Transview;
     }
     else {
-        throw std::invalid_argument(gppTr("chooseCachePart", "内部错误: 无效的 CachePart %1")
+        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart %1")
             .arg(std::string(partName))
             .toStdString());
     }

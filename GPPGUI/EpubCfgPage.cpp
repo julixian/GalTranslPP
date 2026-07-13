@@ -7,9 +7,10 @@
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaToggleSwitch.h"
-#include "ElaToolTip.h"
 #include "ElaColorDialog.h"
+#include "ElaDoubleText.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ValueSliderWidget.h"
 #include "ElaText.h"
@@ -28,106 +29,115 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 
 	// 双语显示
 	bool bilingual = toml::find_or(m_projectConfig, "plugins", "Epub", "bilingualOutput", true);
-	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
-	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
-	ElaText* outputText = new ElaText(tr("双语显示"), outputArea);
-	outputText->setTextPixelSize(16);
-	outputLayout->addWidget(outputText);
-	outputLayout->addStretch();
-	ElaToggleSwitch* outputSwitch = new ElaToggleSwitch(outputArea);
-	outputSwitch->setIsToggled(bilingual);
-	outputLayout->addWidget(outputSwitch);
-	mainLayout->addWidget(outputArea);
+	ElaScrollPageArea* bilingualOutputArea = new ElaScrollPageArea(centerWidget);
+	QHBoxLayout* bilingualOutputLayout = new QHBoxLayout(bilingualOutputArea);
+	ElaDoubleText* bilingualOutputText = new ElaDoubleText(tr("双语显示"), 16,
+		tr("在每句译文下以设置的颜色和比例显示原文"), 10, "");
+	bilingualOutputLayout->addWidget(bilingualOutputText);
+	bilingualOutputLayout->addStretch();
+	ElaToggleSwitch* bilingualOutputSwitch = new ElaToggleSwitch(bilingualOutputArea);
+	bilingualOutputSwitch->setIsToggled(bilingual);
+	bilingualOutputLayout->addWidget(bilingualOutputSwitch);
+	mainLayout->addWidget(bilingualOutputArea);
 
 	// 原文颜色
-	const std::string colorStr = toml::find_or(m_projectConfig, "plugins", "Epub", "originalTextColor", "#808080");
-	QColor color = QColor(colorStr.c_str());
-	ElaScrollPageArea* colorArea = new ElaScrollPageArea(centerWidget);
-	QHBoxLayout* colorLayout = new QHBoxLayout(colorArea);
-	ElaText* colorDialogText = new ElaText(tr("原文颜色"), colorArea);
-	colorDialogText->setWordWrap(false);
-	colorDialogText->setTextPixelSize(16);
-	colorLayout->addWidget(colorDialogText);
-	colorLayout->addStretch();
-	ElaColorDialog* colorDialog = new ElaColorDialog(colorArea);
-	colorDialog->setCurrentColor(color);
-	ElaText* colorText = new ElaText(colorDialog->getCurrentColorRGB(), colorArea);
-	colorText->setTextPixelSize(15);
-	ElaPushButton* colorButton = new ElaPushButton(colorArea);
-	colorButton->setFixedSize(35, 35);
-	colorButton->setLightDefaultColor(colorDialog->getCurrentColor());
-	colorButton->setLightHoverColor(colorDialog->getCurrentColor());
-	colorButton->setLightPressColor(colorDialog->getCurrentColor());
-	colorButton->setDarkDefaultColor(colorDialog->getCurrentColor());
-	colorButton->setDarkHoverColor(colorDialog->getCurrentColor());
-	colorButton->setDarkPressColor(colorDialog->getCurrentColor());
-	connect(colorButton, &ElaPushButton::clicked, this, [=]() {
-		colorDialog->exec();
+	const std::string origTextColorStr = toml::find_or(m_projectConfig, "plugins", "Epub", "originalTextColor", "#808080");
+	QColor origTextColor = QColor(origTextColorStr.c_str());
+	ElaScrollPageArea* origTextColorArea = new ElaScrollPageArea(centerWidget);
+	QHBoxLayout* origTextColorLayout = new QHBoxLayout(origTextColorArea);
+	ElaText* origTextColorText = new ElaText(tr("原文颜色"), origTextColorArea);
+	origTextColorText->setWordWrap(false);
+	origTextColorText->setTextPixelSize(16);
+	origTextColorLayout->addWidget(origTextColorText);
+	origTextColorLayout->addStretch();
+	ElaColorDialog* origTextColorDialog = new ElaColorDialog(origTextColorArea);
+	origTextColorDialog->setCurrentColor(origTextColor);
+	ElaText* origTextColorHexNumText = new ElaText(origTextColorDialog->getCurrentColorRGB(), origTextColorArea);
+	origTextColorHexNumText->setTextPixelSize(15);
+	ElaPushButton* origTextColorButton = new ElaPushButton(origTextColorArea);
+	origTextColorButton->setFixedSize(35, 35);
+	origTextColorButton->setLightDefaultColor(origTextColorDialog->getCurrentColor());
+	origTextColorButton->setLightHoverColor(origTextColorDialog->getCurrentColor());
+	origTextColorButton->setLightPressColor(origTextColorDialog->getCurrentColor());
+	origTextColorButton->setDarkDefaultColor(origTextColorDialog->getCurrentColor());
+	origTextColorButton->setDarkHoverColor(origTextColorDialog->getCurrentColor());
+	origTextColorButton->setDarkPressColor(origTextColorDialog->getCurrentColor());
+	connect(origTextColorButton, &ElaPushButton::clicked, this, [=]()
+		{
+			origTextColorDialog->exec();
 		});
-	connect(colorDialog, &ElaColorDialog::colorSelected, this, [=](const QColor& color) {
-		colorButton->setLightDefaultColor(color);
-		colorButton->setLightHoverColor(color);
-		colorButton->setLightPressColor(color);
-		colorButton->setDarkDefaultColor(color);
-		colorButton->setDarkHoverColor(color);
-		colorButton->setDarkPressColor(color);
-		colorText->setText(colorDialog->getCurrentColorRGB());
+	connect(origTextColorDialog, &ElaColorDialog::colorSelected, this, [=](const QColor& color)
+		{
+			origTextColorButton->setLightDefaultColor(color);
+			origTextColorButton->setLightHoverColor(color);
+			origTextColorButton->setLightPressColor(color);
+			origTextColorButton->setDarkDefaultColor(color);
+			origTextColorButton->setDarkHoverColor(color);
+			origTextColorButton->setDarkPressColor(color);
+			origTextColorHexNumText->setText(origTextColorDialog->getCurrentColorRGB());
 		});
-	colorLayout->addWidget(colorButton);
-	colorLayout->addWidget(colorText);
-	mainLayout->addWidget(colorArea);
+	origTextColorLayout->addWidget(origTextColorButton);
+	origTextColorLayout->addWidget(origTextColorHexNumText);
+	mainLayout->addWidget(origTextColorArea);
 
 
 	// 缩小比例
-	double scale = toml::find_or(m_projectConfig, "plugins", "Epub", "originalTextScale", 0.8);
-	ElaScrollPageArea* scaleArea = new ElaScrollPageArea(centerWidget);
-	QHBoxLayout* scaleLayout = new QHBoxLayout(scaleArea);
-	ElaText* scaleText = new ElaText(tr("缩小比例"), scaleArea);
-	scaleText->setTextPixelSize(16);
-	scaleLayout->addWidget(scaleText);
-	scaleLayout->addStretch();
-	ValueSliderWidget* scaleSlider = new ValueSliderWidget(0.0, 1.0, scaleArea);
-	scaleSlider->setDecimals(2);
-	scaleSlider->setValue(scale);
-	scaleLayout->addWidget(scaleSlider);
-	mainLayout->addWidget(scaleArea);
+	double origTextScale = toml::find_or(m_projectConfig, "plugins", "Epub", "originalTextScale", 0.8);
+	ElaScrollPageArea* origTextScaleArea = new ElaScrollPageArea(centerWidget);
+	QHBoxLayout* origTextScaleLayout = new QHBoxLayout(origTextScaleArea);
+	ElaText* origTextScaleText = new ElaText(tr("缩小比例"), origTextScaleArea);
+	origTextScaleText->setTextPixelSize(16);
+	origTextScaleLayout->addWidget(origTextScaleText);
+	origTextScaleLayout->addStretch();
+	ValueSliderWidget* origTextScaleSlider = new ValueSliderWidget(0.0, 1.0, origTextScaleArea);
+	origTextScaleSlider->setDecimals(2);
+	origTextScaleSlider->setValue(origTextScale);
+	origTextScaleLayout->addWidget(origTextScaleSlider);
+	mainLayout->addWidget(origTextScaleArea);
 
 	// 预处理正则
-	toml::ordered_value preRegexArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "Epub", "preprocRegex");
-	if (!preRegexArr.is_array()) {
-		preRegexArr = toml::array{};
-	}
-	ElaText* preRegexText = new ElaText(tr("预处理正则"), centerWidget);
-	preRegexText->setTextPixelSize(18);
+	toml::ordered_array preRegexArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "Epub", "preprocRegex");
+	ElaScrollPageArea* preRegexArea = new ElaScrollPageArea(centerWidget);
+	preRegexArea->setFixedHeight(365);
+	QVBoxLayout* preRegexLayout = new QVBoxLayout(preRegexArea);
+	preRegexLayout->setContentsMargins(12, 6, 12, 8);
+	preRegexLayout->setSpacing(6);
 	mainLayout->addSpacing(10);
-	mainLayout->addWidget(preRegexText);
-	ElaPlainTextEdit* preRegexEdit = new ElaPlainTextEdit(centerWidget);
+	preRegexLayout->addWidget(new ElaDoubleText(tr("预处理正则"), 16,
+		tr("提取正文后、送入翻译前应用的正则规则"), 10, "", preRegexArea));
+	ElaPlainTextEdit* preRegexEdit = new ElaPlainTextEdit(preRegexArea);
 	preRegexEdit->setMinimumHeight(300);
 	preRegexEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "preprocRegex", preRegexArr }} })));
 	installTreeSitterHighlighter(preRegexEdit->document(), SyntaxLanguage::Toml);
-	mainLayout->addWidget(preRegexEdit);
+	preRegexLayout->addWidget(preRegexEdit);
+	mainLayout->addWidget(preRegexArea);
 
 	// 后处理正则
-	toml::ordered_value postRegexArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "plugins", "Epub", "postprocRegex");
-	if (!postRegexArr.is_array()) {
-		postRegexArr = toml::array{};
-	}
-	ElaText* postRegexText = new ElaText(tr("后处理正则"), centerWidget);
-	postRegexText->setTextPixelSize(18);
+	toml::ordered_array postRegexArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "Epub", "postprocRegex");
+	ElaScrollPageArea* postRegexArea = new ElaScrollPageArea(centerWidget);
+	postRegexArea->setFixedHeight(365);
+	QVBoxLayout* postRegexLayout = new QVBoxLayout(postRegexArea);
+	postRegexLayout->setContentsMargins(12, 6, 12, 8);
+	postRegexLayout->setSpacing(6);
 	mainLayout->addSpacing(10);
-	mainLayout->addWidget(postRegexText);
-	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(centerWidget);
+	postRegexLayout->addWidget(new ElaDoubleText(tr("后处理正则"), 16,
+		tr("翻译完成后、写回 Epub 前应用的正则规则"), 10, "", postRegexArea));
+	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(postRegexArea);
 	postRegexEdit->setMinimumHeight(300);
 	postRegexEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "postprocRegex", postRegexArr }} })));
 	installTreeSitterHighlighter(postRegexEdit->document(), SyntaxLanguage::Toml);
-	mainLayout->addWidget(postRegexEdit);
+	postRegexLayout->addWidget(postRegexEdit);
+	mainLayout->addWidget(postRegexArea);
 
 	QWidget* tipButtonWidget = new QWidget(centerWidget);
 	QHBoxLayout* tipLayout = new QHBoxLayout(tipButtonWidget);
 	tipLayout->addStretch();
-	ElaPushButton* tipButton = new ElaPushButton(tr("说明"), centerWidget);
+	ElaToolButton* tipButton = new ElaToolButton(tipButtonWidget);
+	tipButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	tipButton->setElaIcon(ElaIconType::BookOpen);
+	tipButton->setText(tr("说明"));
 	tipLayout->addWidget(tipButton);
-	connect(tipButton, &ElaPushButton::clicked, this, [=]()
+	connect(tipButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/epub.html"));
 		});
@@ -135,35 +145,35 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 
 	m_applyFunc = [=]()
 		{
-			insertToml(m_projectConfig, "plugins.Epub.bilingualOutput", outputSwitch->getIsToggled());
-			insertToml(m_projectConfig, "plugins.Epub.originalTextColor", colorDialog->getCurrentColorRGB().toStdString());
-			insertToml(m_projectConfig, "plugins.Epub.originalTextScale", scaleSlider->value());
+			insertToml(m_projectConfig, "plugins.Epub.bilingualOutput", bilingualOutputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.Epub.originalTextColor", origTextColorDialog->getCurrentColorRGB().toStdString());
+			insertToml(m_projectConfig, "plugins.Epub.originalTextScale", origTextScaleSlider->value());
 
 			try {
-				toml::ordered_value preTbl = toml::parse_str<toml::ordered_type_config>(preRegexEdit->toPlainText().toStdString());
-				auto& preArr = preTbl["preprocRegex"];
-				if (preArr.is_array()) {
-					insertToml(m_projectConfig, "plugins.Epub.preprocRegex", preArr);
+				toml::ordered_value newPreRegexTbl = toml::parse_str<toml::ordered_type_config>(preRegexEdit->toPlainText().toStdString());
+				auto& newPreRegexArr = newPreRegexTbl["preprocRegex"];
+				if (newPreRegexArr.is_array()) {
+					insertToml(m_projectConfig, "plugins.Epub.preprocRegex", newPreRegexArr);
 				}
 				else {
 					insertToml(m_projectConfig, "plugins.Epub.preprocRegex", toml::array{});
 				}
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("Epub预处理正则格式错误"), 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("Epub 预处理正则不符合 toml 规范"), 3000);
 			}
 			try {
-				toml::ordered_value postTbl = toml::parse_str<toml::ordered_type_config>(postRegexEdit->toPlainText().toStdString());
-				auto& postArr = postTbl["postprocRegex"];
-				if (postArr.is_array()) {
-					insertToml(m_projectConfig, "plugins.Epub.postprocRegex", postArr);
+				toml::ordered_value newPostRegexTbl = toml::parse_str<toml::ordered_type_config>(postRegexEdit->toPlainText().toStdString());
+				auto& newPostRegexArr = newPostRegexTbl["postprocRegex"];
+				if (newPostRegexArr.is_array()) {
+					insertToml(m_projectConfig, "plugins.Epub.postprocRegex", newPostRegexArr);
 				}
 				else {
 					insertToml(m_projectConfig, "plugins.Epub.postprocRegex", toml::array{});
 				}
 			}
 			catch (...) {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("Epub后处理正则格式错误"), 3000);
+				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("Epub 后处理正则不符合 toml 规范"), 3000);
 			}
 		};
 

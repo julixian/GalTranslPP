@@ -8,7 +8,7 @@
 #include "ElaLineEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaTabWidget.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaPlainTextEdit.h"
 
@@ -67,21 +67,29 @@ void PromptSettingsPage::setupUi()
 			promptLayout->setContentsMargins(0, 0, 0, 0);
 
 			QHBoxLayout* promptButtonLayout = new QHBoxLayout(promptWidget);
-			ElaPushButton* promptUserModeButtom = new ElaPushButton(promptWidget);
+			ElaToolButton* promptUserModeButtom = new ElaToolButton(promptWidget);
+			promptUserModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+			promptUserModeButtom->setElaIcon(ElaIconType::User);
 			promptUserModeButtom->setText(tr("用户提示词"));
 			promptUserModeButtom->setEnabled(false);
-			ElaPushButton* promptSystemModeButtom = new ElaPushButton(promptWidget);
+			ElaToolButton* promptSystemModeButtom = new ElaToolButton(promptWidget);
+			promptSystemModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+			promptSystemModeButtom->setElaIcon(ElaIconType::Gear);
 			promptSystemModeButtom->setText(tr("系统提示词"));
 			promptSystemModeButtom->setEnabled(true);
 			promptButtonLayout->addWidget(promptUserModeButtom);
 			promptButtonLayout->addWidget(promptSystemModeButtom);
-			ElaPushButton* agentPromptUserModeButtom = nullptr;
-			ElaPushButton* agentPromptSystemModeButtom = nullptr;
+			ElaToolButton* agentPromptUserModeButtom = nullptr;
+			ElaToolButton* agentPromptSystemModeButtom = nullptr;
 			if (hasAgentPrompt) {
-				agentPromptUserModeButtom = new ElaPushButton(promptWidget);
+				agentPromptUserModeButtom = new ElaToolButton(promptWidget);
+				agentPromptUserModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+				agentPromptUserModeButtom->setElaIcon(ElaIconType::UserRobot);
 				agentPromptUserModeButtom->setText(tr("agent用户"));
 				agentPromptUserModeButtom->setEnabled(true);
-				agentPromptSystemModeButtom = new ElaPushButton(promptWidget);
+				agentPromptSystemModeButtom = new ElaToolButton(promptWidget);
+				agentPromptSystemModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+				agentPromptSystemModeButtom->setElaIcon(ElaIconType::Robot);
 				agentPromptSystemModeButtom->setText(tr("agent系统"));
 				agentPromptSystemModeButtom->setEnabled(true);
 				promptButtonLayout->addWidget(agentPromptUserModeButtom);

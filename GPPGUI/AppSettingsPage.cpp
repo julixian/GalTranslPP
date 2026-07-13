@@ -14,7 +14,7 @@
 #include "ElaTheme.h"
 #include "ElaLineEdit.h"
 #include "ElaToggleSwitch.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaWindow.h"
 
 import Tool;
@@ -199,7 +199,7 @@ void AppSettingsPage::setupUi()
     centerLayout->addWidget(stackSwitchModeArea);
 
 
-    ElaText* helperText = new ElaText(tr("GalTransl 设置"), centralWidget);
+    ElaText* helperText = new ElaText(tr("GalTransl++ 设置"), centralWidget);
     helperText->setWordWrap(false);
     helperText->setTextPixelSize(18);
     centerLayout->addSpacing(15);
@@ -371,9 +371,12 @@ void AppSettingsPage::setupUi()
     pyEnvPathLineEdit->setFixedWidth(400);
     pyEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pyEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
     pyEnvPathLayout->addWidget(pyEnvPathLineEdit);
-    ElaPushButton* pyEnvPathButton = new ElaPushButton(tr("浏览"), pyEnvPathArea);
+    ElaToolButton* pyEnvPathButton = new ElaToolButton(pyEnvPathArea);
+    pyEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    pyEnvPathButton->setElaIcon(ElaIconType::FolderOpen);
+    pyEnvPathButton->setText(tr("浏览"));
     pyEnvPathLayout->addWidget(pyEnvPathButton);
-    connect(pyEnvPathButton, &ElaPushButton::clicked, this, [=]()
+    connect(pyEnvPathButton, &ElaToolButton::clicked, this, [=]()
         {
             const QString pyExePath = QFileDialog::getOpenFileName(this->window(), tr("选择Python.exe"),
                 pyEnvPathLineEdit->text(), "Python.exe (python.exe)");

@@ -17,6 +17,14 @@ class GptDictModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
+    enum Column : int {
+        DragHandle = 0,
+        Original,
+        Translation,
+        Description,
+        ColumnCount
+    };
+
     explicit GptDictModel(QObject* parent = nullptr);
 
     // --- 必须重写的核心虚函数 ---
@@ -28,11 +36,14 @@ public:
     // --- 实现可编辑性所需重写的函数 ---
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
+    bool moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
+        const QModelIndex& destinationParent, int destinationChild) override;
 
     // --- 用于操作模型的公共方法 ---
     void loadData(const QList<GptDictEntry>& entries); // 从外部加载数据
     bool insertRow(int row, const GptDictEntry& entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
+    bool setEntry(int row, const GptDictEntry& entry);
     QList<GptDictEntry> getEntries() const;
     const QList<GptDictEntry>& getEntriesRef() const;
 

@@ -36,7 +36,7 @@ namespace
 
         const GumboVector* children = &node->v.element.children;
         for (unsigned int i = 0; i < children->length; ++i) {
-            extractTextNodes(static_cast<GumboNode*>(children->data[i]), sentences);
+            extractTextNodes((GumboNode*)children->data[i], sentences);
         }
     }
 }
@@ -331,12 +331,15 @@ void EpubTranslator::epubBeforeRun()
                 for (auto [metadata, translatedData] : std::views::zip(metadatas, translatedDatas)) {
                     newContent.append(originalContent.c_str() + lastPos, metadata.offset - lastPos);
                     const std::string translatedMessage = translatedData["message"].get<std::string>();
-                    const std::string replacement = m_bilingualOutput ?
-                        std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>",
+                    if (m_bilingualOutput) {
+                        const std::string formattedBilingualText = std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>",
                             translatedMessage, m_originalTextColor, m_originalTextScale,
-                            std::string_view(originalContent.data() + metadata.offset, metadata.length))
-                        : translatedMessage;
-                    newContent.append(replacement);
+                            std::string_view(originalContent.data() + metadata.offset, metadata.length));
+                        newContent.append(formattedBilingualText);
+                    }
+                    else {
+                        newContent.append(translatedMessage);
+                    }
                     lastPos = metadata.offset + metadata.length;
                 }
                 if (lastPos < originalContent.length()) {

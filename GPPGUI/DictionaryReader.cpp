@@ -1,11 +1,11 @@
-﻿#include "ReadDicts.h"
+﻿#include "DictionaryReader.h"
 #include "ElaMessageBar.h"
 #include <toml.hpp>
 
 import Tool;
 
 
-QString ReadDicts::readDictsStr(const fs::path& dictPath)
+QString DictionaryReader::readDictStr(const fs::path& dictPath)
 {
 	if (!fs::exists(dictPath)) {
 		return {};
@@ -15,7 +15,7 @@ QString ReadDicts::readDictsStr(const fs::path& dictPath)
 	return QString::fromStdString(result);
 }
 
-QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
+QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 {
 	QList<GptDictEntry> result;
 	if (!fs::exists(dictPath)) {
@@ -105,16 +105,16 @@ QList<GptDictEntry> ReadDicts::readGptDicts(const fs::path& dictPath)
 	return result;
 }
 
-QList<GptDictEntry> ReadDicts::readGptDicts(const std::vector<fs::path>& dictPaths)
+QList<GptDictEntry> DictionaryReader::readGptDicts(const std::vector<fs::path>& dictPaths)
 {
 	QList<GptDictEntry> result;
 	for (const auto& dictPath : dictPaths) {
-		result.append(readGptDicts(dictPath));
+		result.append(readGptDict(dictPath));
 	}
 	return result;
 }
 
-QString ReadDicts::readGptDictsStr(const std::vector<fs::path>& dictPaths)
+QString DictionaryReader::readGptDictsStr(const std::vector<fs::path>& dictPaths)
 {
 	toml::ordered_value newDictArr = toml::array{};
 	for (const auto& dictPath : dictPaths) {
@@ -142,7 +142,7 @@ QString ReadDicts::readGptDictsStr(const std::vector<fs::path>& dictPaths)
 	return QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "gptDict", newDictArr }} }));
 }
 
-QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
+QList<NormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath)
 {
 	QList<NormalDictEntry> result;
 	if (!fs::exists(dictPath)) {
@@ -163,10 +163,42 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 				NormalDictEntry entry;
 				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
 				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
-				entry.conditionTar = QString::fromStdString(toml::find_or(dict, "conditionTarget", ""));
-				entry.conditionReg = QString::fromStdString(toml::find_or(dict, "conditionReg", ""));
 				entry.isReg = toml::find_or(dict, "isReg", false);
 				entry.priority = toml::find_or(dict, "priority", 0);
+
+				if (dict.contains("conditions") && dict.at("conditions").is_array()) {
+					const auto& conditions = dict.at("conditions");
+					for (const auto& conditionValue : conditions.as_array()) {
+						if (!conditionValue.is_table() || !conditionValue.contains("conditionTarget")
+							|| !conditionValue.contains("conditionReg")
+							|| !conditionValue.at("conditionTarget").is_string()
+							|| !conditionValue.at("conditionReg").is_string()) {
+							continue;
+						}
+						NormalCondition condition;
+						QString target = QString::fromStdString(conditionValue.at("conditionTarget").as_string());
+						while (target.startsWith("prev_")) {
+							--condition.sentenceOffset;
+							target = target.mid(5);
+						}
+						while (target.startsWith("next_")) {
+							++condition.sentenceOffset;
+							target = target.mid(5);
+						}
+						if (target != "name" && target != "names" && target != "nametrans" && target != "namestrans"
+							&& target != "orig" && target != "preproc" && target != "problems" && target != "otherinfo"
+							&& target != "transby" && target != "transraw" && target != "transview") {
+							continue;
+						}
+						const QString pattern = QString::fromStdString(conditionValue.at("conditionReg").as_string());
+						if (pattern.isEmpty()) {
+							continue;
+						}
+						condition.target = target;
+						condition.pattern = pattern;
+						entry.conditions.push_back(std::move(condition));
+					}
+				}
 				result.push_back(entry);
 			}
 			return result;
@@ -192,10 +224,10 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 				NormalDictEntry entry;
 				entry.original = QString::fromStdString(elem.value("src", ""));
 				entry.translation = QString::fromStdString(elem.value("dst", ""));
-				entry.conditionReg = QString::fromStdString(elem.value("regex", ""));
-				entry.isReg = !(entry.conditionReg.isEmpty());
+				const QString conditionPattern = QString::fromStdString(elem.value("regex", ""));
+				entry.isReg = !conditionPattern.isEmpty();
 				if (entry.isReg) {
-					entry.conditionTar = "preproc";
+					entry.conditions.push_back({ conditionPattern, "preproc" });
 				}
 				result.push_back(entry);
 			}
@@ -215,7 +247,7 @@ QList<NormalDictEntry> ReadDicts::readNormalDicts(const fs::path& dictPath)
 	return result;
 }
 
-ReadDicts::ReadDicts(QObject* parent) : QObject(parent)
+DictionaryReader::DictionaryReader(QObject* parent) : QObject(parent)
 {
 
 }

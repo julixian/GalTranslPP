@@ -1,7 +1,6 @@
 # 示例: 
 # [[normalDict]]
-# conditionTarget = "orig" # name, orig, preproc, transraw
-# conditionReg = "人妻|ひとづま"
+# conditions = [{ conditionTarget = "orig", conditionReg = "人妻|ひとづま" }] # target: name, orig, preproc, transraw
 # org = '''有夫之妇'''
 # rep = '''人妻'''
 # isReg = false #为true则将 org 和 rep 作为正则表达式带入

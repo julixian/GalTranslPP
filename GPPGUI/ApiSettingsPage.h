@@ -3,8 +3,10 @@
 
 #include "BasePage.h"
 #include <QList>
+#include <QSize>
 #include <toml.hpp>
 
+class QEvent;
 class QVBoxLayout;
 class ElaScrollPageArea;
 class ElaIconButton;
@@ -15,13 +17,19 @@ class ApiSettingsPage : public BasePage
 
 public:
     explicit ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+	~ApiSettingsPage() override;
 	void apply2Config() override;
 
 private Q_SLOTS:
     void addApiInputRow();
     void onDeleteApiRow();
 
+protected:
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 private:
+    static QSize s_configWidgetSize;
+
     // 成员变量
     QVBoxLayout* m_mainLayout = nullptr; // 页面主布局(用来增删 Api key 输入控件)
     toml::ordered_value& m_projectConfig;

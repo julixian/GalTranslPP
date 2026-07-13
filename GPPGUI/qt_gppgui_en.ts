@@ -11,18 +11,17 @@
     <message>
         <location line="+52"/>
         <source>版权所有 © 2025-2026</source>
-        <oldsource>版权所有 © 2025-2026 julixian</oldsource>
-        <translation>All rights reserved © 2025-2026</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+28"/>
         <source>跳转到 Github 发布页</source>
-        <translation>Open GitHub releases</translation>
+        <translation>Jump to github release page</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>检查更新</source>
-        <translation>Check for updates</translation>
+        <translation>Check update</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -33,349 +32,324 @@
 <context>
     <name>ApiSettingsPage</name>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="+35"/>
-        <location line="+21"/>
+        <location filename="ApiSettingsPage.cpp" line="+39"/>
+        <location line="+38"/>
         <source>Api 设置</source>
-        <translation>Api settings</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+46"/>
-        <source>Api 超时时间</source>
-        <oldsource>Api 瓒呮椂鏃堕棿</oldsource>
-        <translation>Api timeout</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>增加新 Api</source>
-        <oldsource>澧炲姞鏂?Api</oldsource>
-        <translation>Add new Api</translation>
-    </message>
-    <message>
-        <location line="-33"/>
+        <location line="+24"/>
         <source>Api 使用策略</source>
-        <translation>Api strategy</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>令牌策略，random随机轮询，fallback优先第一个，出现非额度/频率错误时使用下一个</source>
-        <oldsource>令牌策略，random随机轮询，fallback优先第一个，出现[请求错误]时使用下一个</oldsource>
-        <translation>Api key strategy: random polls keys randomly; fallback prefers the first key and uses the next one on non-quota/non-rate errors</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
+        <source>Api 超时时间</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Api 请求超时时间，单位为秒</source>
-        <translation>in seconds</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+123"/>
-        <source>接口协议</source>
-        <translation>Protocol</translation>
+        <location line="+13"/>
+        <source>增加新 Api</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-29"/>
+        <location line="+84"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
-        <oldsource>请输入 Api Key(Sakura引擎或有Extra Keys时可不填)</oldsource>
-        <translation>Enter Api key (optional for Sakura engine or when Extra keys are configured)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
         <source>请输入 Api url</source>
-        <oldsource>请输入 Api Url</oldsource>
-        <translation>Enter Api url</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
         <source>模型名称</source>
-        <translation>Model</translation>
+        <translation type="unfinished">Model name</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>请输入模型名称(Sakura引擎可不填)</source>
-        <translation>Enter model name (optional for Sakura engine)</translation>
+        <translation type="unfinished">Please type in model name(Sakura transEngine can ignore this)</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+7"/>
+        <source>接口协议</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+48"/>
         <source>启用</source>
-        <translation>Enable</translation>
+        <translation type="unfinished">Enable</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+11"/>
+        <source>详细配置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Api 详细配置</source>
-        <oldsource>Api 高级配置</oldsource>
-        <translation>Api details</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+65"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
-        <translation>One key per line; saved after the first Api key</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+3"/>
         <source>sk-...
 sk-...</source>
-        <translation>sk-...
-sk-...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+10"/>
         <source>模型</source>
-        <translation>Model</translation>
+        <translation type="unfinished">Model</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>获取模型</source>
-        <translation>Fetch models</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>测试模型</source>
-        <translation>Test model</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+180"/>
+        <location line="+6"/>
+        <source>思考等级</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>off/low/medium/high，具体效果由接口协议和模型支持情况决定</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>流式输出</source>
+        <translation type="unfinished">Stream output</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>基础设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>温度</source>
+        <translation type="unfinished">Temperature</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>勾选选框则使用自定义温度，否则使用供应商默认温度</source>
+        <translation type="unfinished">Use custom temperature if box is checked, otherwise use default value provided by api server</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>top_p</source>
+        <translation type="unfinished">top_p</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>核采样(也是控制随机性的)</source>
+        <translation type="unfinished">Another parameter to controll randomness</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>frequency_penalty</source>
+        <translation type="unfinished">frequency_penalty</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>频率惩罚</source>
+        <translation type="unfinished">Reduce the probability of frequently used words</translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>presence_penalty</source>
+        <translation type="unfinished">presence_penalty</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>存在惩罚</source>
+        <translation type="unfinished">Penalizes the reuse of tokens</translation>
+    </message>
+    <message>
+        <location line="+36"/>
+        <source>JSON 对象，用于追加自定义 HTTP header</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>JSON 对象，用于追加或覆盖请求 body 字段</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>高级设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>请求类型: 获取模型列表</source>
-        <oldsource>请求类型：获取模型列表</oldsource>
-        <translation>Request type: fetch model list</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>请求方法: GET</source>
-        <oldsource>请求方法：GET</oldsource>
-        <translation>Request method: GET</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
         <location line="+28"/>
         <source>HTTP 状态: %1</source>
-        <oldsource>HTTP 状态：%1</oldsource>
-        <translation>HTTP status: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-27"/>
         <location line="+28"/>
         <source>请求结果: %1</source>
-        <oldsource>请求结果：%1</oldsource>
-        <translation>Request result: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-28"/>
         <location line="+28"/>
         <source>成功</source>
-        <translation>Success</translation>
+        <translation type="unfinished">Success</translation>
     </message>
     <message>
         <location line="-28"/>
         <location line="+28"/>
         <source>失败</source>
-        <translation>Failed</translation>
+        <translation type="unfinished">Failed</translation>
     </message>
     <message>
         <location line="-26"/>
         <source>解析到的模型: </source>
-        <oldsource>解析到的模型：</oldsource>
-        <translation>Parsed models: </translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>(没有解析到模型)</source>
-        <translation>(no models parsed)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
         <location line="+17"/>
         <source>错误信息: </source>
-        <oldsource>错误信息：</oldsource>
-        <translation>Error message: </translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-8"/>
         <source>请求类型: 测试模型回复</source>
-        <oldsource>请求类型：测试模型回复</oldsource>
-        <translation>Request type: test model reply</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>请求方法: POST</source>
-        <oldsource>请求方法：POST</oldsource>
-        <translation>Request method: POST</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>发出的请求体: </source>
-        <oldsource>发出的请求体：</oldsource>
-        <translation>Request body sent: </translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+6"/>
         <source>解析出的模型回复: </source>
-        <translation>Parsed model reply: </translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>(空)</source>
-        <translation>(empty)</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+47"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
-        <translation>Request failed</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-13"/>
         <source>Api url 不能为空</source>
-        <translation>Api url cannot be empty</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+5"/>
         <source>模型名称不能为空</source>
-        <translation>Model name cannot be empty</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+69"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
-        <translation>Model fetch</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-39"/>
+        <location line="-40"/>
+        <location line="+63"/>
+        <location line="+4"/>
+        <location line="+3"/>
+        <source>模型测试</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-69"/>
         <source>正在获取模型列表...</source>
-        <translation>Fetching model list...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
         <source>正在测试模型请求...</source>
-        <translation>Testing model request...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+35"/>
         <source>获取到 %1 个模型</source>
-        <translation>Fetched %1 models</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+5"/>
         <source>模型列表</source>
-        <translation>Model list</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-1"/>
         <source>请求成功，但没有解析到模型</source>
-        <translation>Request succeeded, but no models were parsed</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
         <source>模型列表请求失败</source>
-        <translation>Model list request failed</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+23"/>
         <source>模型请求成功</source>
-        <translation>Model request succeeded</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>模型请求失败</source>
-        <translation>Model request failed</translation>
-    </message>
-    <message>
-        <location line="-68"/>
-        <location line="+63"/>
-        <location line="+4"/>
-        <location line="+3"/>
-        <source>模型测试</source>
-        <translation>Model test</translation>
-    </message>
-    <message>
-        <location line="-399"/>
-        <source>off/low/medium/high，具体效果由接口协议和模型支持情况决定</source>
-        <oldsource>模型测试请求入口已保留，后续可直接接入 ApiTool。</oldsource>
-        <translation>off/low/medium/high; exact behavior depends on protocol and model support</translation>
-    </message>
-    <message>
-        <location line="-1"/>
-        <source>思考等级</source>
-        <translation>Thinking level</translation>
-    </message>
-    <message>
-        <location line="+13"/>
-        <source>流式输出</source>
-        <translation>Stream output</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>基础设置</source>
-        <translation>Basic settings</translation>
-    </message>
-    <message>
-        <location line="+123"/>
-        <source>高级设置</source>
-        <translation>Advanced settings</translation>
-    </message>
-    <message>
-        <location line="-87"/>
-        <source>频率惩罚</source>
-        <oldsource>棰戠巼鎯╃綒</oldsource>
-        <translation>Frequency penalty</translation>
-    </message>
-    <message>
-        <location line="+50"/>
-        <source>JSON 对象，用于追加自定义 HTTP header</source>
-        <oldsource>JSON 瀵硅薄锛岀敤浜庤拷鍔犺嚜瀹氫箟 HTTP header</oldsource>
-        <translation>JSON object for appending custom HTTP headers</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>JSON 对象，用于追加或覆盖请求 body 字段</source>
-        <oldsource>JSON 瀵硅薄锛岀敤浜庤拷鍔犳垨瑕嗙洊璇锋眰 body 瀛楁</oldsource>
-        <translation>JSON object for appending or overriding request body fields</translation>
-    </message>
-    <message>
-        <location line="-101"/>
-        <source>勾选选框则使用自定义温度，否则使用供应商默认温度</source>
-        <translation>Use custom temperature if box is checked, otherwise use default value provided by api server</translation>
-    </message>
-    <message>
-        <location line="+13"/>
-        <source>top_p</source>
-        <translation>top_p</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>核采样(也是控制随机性的)</source>
-        <translation>Another parameter to controll randomness</translation>
-    </message>
-    <message>
-        <location line="+13"/>
-        <source>frequency_penalty</source>
-        <translation>frequency_penalty</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>presence_penalty</source>
-        <translation>presence_penalty</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>存在惩罚</source>
-        <translation>Penalizes the reuse of tokens</translation>
-    </message>
-    <message>
-        <source>一行一个 key</source>
-        <translation type="vanished">One key per line</translation>
-    </message>
-    <message>
-        <location line="-43"/>
-        <source>温度</source>
-        <translation>Temperature</translation>
-    </message>
-    <message>
-        <location line="-116"/>
-        <source>详细配置</source>
-        <oldsource>高级配置</oldsource>
-        <translation>Advanced</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -423,14 +397,14 @@ sk-...</translation>
     </message>
     <message>
         <location line="+35"/>
-        <source>GalTransl 设置</source>
-        <oldsource>应用程序设置</oldsource>
-        <translation>GalTransl settings</translation>
+        <source>GalTransl++ 设置</source>
+        <oldsource>GalTransl 设置</oldsource>
+        <translation type="unfinished">GalTransl settings</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>(DumpName/NameTrans)/GenDict任务成功后自动刷新人名表/项目GPT字典</source>
-        <translation>Auto-refresh NameTable/project GPT dictionary after (DumpName/NameTrans)/GenDict task succeeds</translation>
+        <translation>Auto refresh NameTable/GptDict after (DumpName/NameTrans)/GenDict</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -501,7 +475,7 @@ sk-...</translation>
         <translation>Python Environment Path</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>浏览</source>
         <translation>Browse</translation>
     </message>
@@ -522,530 +496,526 @@ sk-...</translation>
     </message>
 </context>
 <context>
-    <name>CommonGptDictPage</name>
+    <name>CommonGptDictsPage</name>
     <message>
-        <location filename="CommonGptDictPage.cpp" line="+28"/>
+        <location filename="CommonGptDictsPage.cpp" line="+33"/>
         <source>默认GPT字典设置</source>
-        <translation>Default GPT dictionary settings</translation>
+        <translation type="unfinished">Default gptDict settings</translation>
     </message>
     <message>
         <location line="+15"/>
         <source>通用GPT字典</source>
-        <translation>Common GPT dictionary</translation>
+        <translation type="unfinished">Common gptDicts</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>导入字典页</source>
-        <translation>Import dictionary page</translation>
+        <translation type="unfinished">Import dict page</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>添加新字典页</source>
-        <translation>Add dictionary page</translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>纯文本模式</source>
-        <translation>Plaintext mode</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>表模式</source>
-        <translation>Table mode</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>默认启用</source>
-        <translation>Default on</translation>
+        <translation type="unfinished">Add new dict page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>保存所有页</source>
-        <translation>Save all pages</translation>
+        <translation type="unfinished">Save all pages</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>纯文本</source>
+        <translation type="unfinished">Plain text</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>表模式</source>
+        <translation type="unfinished">Table mode</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>默认启用</source>
+        <translation type="unfinished">Default on</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>保存当前页</source>
-        <translation>Save current page</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除当前页</source>
-        <translation>Remove current page</translation>
+        <translation type="unfinished">Remove current page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>重命名当前页</source>
-        <translation>Rename current page</translation>
+        <translation type="unfinished">Rename current page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>撤回删除行</source>
-        <translation>Cancel deleted row</translation>
+        <translation type="unfinished">Cancel deleted row</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>刷新当前页</source>
-        <translation>Refresh current page</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>添加词条</source>
-        <translation>Add entry</translation>
+        <translation type="unfinished">Add new dict</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除词条</source>
-        <translation>Delete entry</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+78"/>
-        <location line="+87"/>
-        <source>保存成功</source>
-        <translation>Saved successfully</translation>
+        <location line="+4"/>
+        <source>编辑词条</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-87"/>
-        <source>所有默认字典配置均已保存</source>
-        <translation>All default dictionary configs have been saved</translation>
-    </message>
-    <message>
-        <location line="+33"/>
+        <location line="+110"/>
         <source>保存失败</source>
-        <translation>Fail to save</translation>
+        <translation type="unfinished">Fail to save</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>无法打开文件: %1</source>
-        <translation>Failed to open file: %1</translation>
+        <translation type="unfinished">Cannot open file: %1</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+53"/>
+        <location line="+281"/>
+        <source>保存成功</source>
+        <translation type="unfinished">Saved successfully</translation>
+    </message>
+    <message>
+        <location line="-280"/>
         <source>字典 %1 已保存</source>
-        <oldsource> 已保存</oldsource>
-        <translation>Dictionary %1 saved</translation>
+        <translation type="unfinished">Dict %1 saved</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+109"/>
         <source>刷新成功</source>
-        <translation>Refreshed successfully</translation>
+        <translation type="unfinished">Refreshed successfully</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>字典 %1 已刷新</source>
-        <oldsource> 已刷新</oldsource>
-        <translation>Dictionary %1 refreshed</translation>
+        <translation type="unfinished">Dict %1 refreshed</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>请输入新名称</source>
-        <translation>Enter new name</translation>
+        <translation type="unfinished">Please type in new name</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>重命名字典</source>
-        <translation>Rename dictionaryionary</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+44"/>
         <source>重命名失败</source>
-        <translation>Fail to rename</translation>
+        <translation type="unfinished">Fail to rename</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-44"/>
+        <location line="+199"/>
+        <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
+        <translation type="unfinished">Dict name can not be empty or contain point symbol, slash, backslash!</translation>
+    </message>
+    <message>
+        <location line="-190"/>
+        <location line="+190"/>
+        <location line="+9"/>
+        <location line="+10"/>
+        <source>新建失败</source>
+        <translation type="unfinished">Fail to create</translation>
+    </message>
+    <message>
+        <location line="-208"/>
+        <location line="+169"/>
+        <location line="+30"/>
+        <source>字典 %1 已存在</source>
+        <translation type="unfinished">Dict %1 exists</translation>
+    </message>
+    <message>
+        <location line="-169"/>
         <source>重命名成功</source>
-        <translation>Renamed successfully</translation>
+        <translation type="unfinished">Renamed successfully</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>字典 %1 已重命名为 %2</source>
-        <oldsource> 已重命名为 </oldsource>
-        <translation>Dictionary %1 renamed to %2</translation>
+        <translation type="unfinished">Dict %1 renamed to %2</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>字典 %1 重命名失败</source>
-        <oldsource> 重命名失败</oldsource>
-        <translation>Failed to rename dictionary %1</translation>
+        <translation type="unfinished">Failed to rename dict %1</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+19"/>
+        <source>是</source>
+        <translation type="unfinished">Yes</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>思考人生</source>
+        <translation type="unfinished">Reflect on life</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>否</source>
+        <translation type="unfinished">No</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>你确定要删除 %1 吗？</source>
+        <translation type="unfinished">Delete %1?</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>将永久删除该字典文件，如有需要请先备份！</source>
+        <translation type="unfinished">The dict file will be deleted forever, make a backup if you need!</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>删除成功</source>
+        <translation type="unfinished">Deleted successfully</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>字典 %1 已从字典管理和磁盘中移除！</source>
+        <translation type="unfinished">Dict %1 removed from list and disk!</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>所有默认字典配置均已保存</source>
+        <translation type="unfinished">All dicts are saved successfully</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>选择字典文件</source>
-        <translation>Choose dictionary file</translation>
+        <translation type="unfinished">Choose dict file</translation>
     </message>
     <message>
         <location line="+14"/>
         <location line="+9"/>
         <source>导入失败</source>
-        <translation>Fail to import</translation>
+        <translation type="unfinished">Fail to import</translation>
     </message>
     <message>
-        <location line="-162"/>
-        <location line="+163"/>
-        <location line="+30"/>
-        <source>字典 %1 已存在</source>
-        <oldsource> 已存在</oldsource>
-        <translation>Dictionary %1 already exists</translation>
+        <location line="-9"/>
+        <source>原文件删除失败</source>
+        <translation type="unfinished">Fail to remove original file</translation>
     </message>
     <message>
-        <location line="-24"/>
+        <location line="+16"/>
         <location line="+41"/>
         <source>创建成功</source>
-        <translation>Created successfully</translation>
+        <translation type="unfinished">Created successfully</translation>
     </message>
     <message>
         <location line="-40"/>
         <location line="+41"/>
         <source>字典页 %1 已创建</source>
-        <oldsource> 已创建</oldsource>
-        <translation>Dictionary page %1 created</translation>
+        <translation type="unfinished">Dict page %1 created</translation>
     </message>
     <message>
         <location line="-35"/>
         <source>请输入字典表名称</source>
-        <translation>Enter dictionary table name</translation>
+        <translation type="unfinished">Please type in dict name</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>新建字典</source>
-        <translation>New dictionary</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-177"/>
-        <location line="+184"/>
-        <location line="+9"/>
-        <location line="+10"/>
-        <source>新建失败</source>
-        <translation>Fail to create</translation>
-    </message>
-    <message>
-        <location line="-212"/>
-        <location line="+193"/>
-        <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
-        <translation>Dictionary name cannot be empty or contain dots, slashes, or backslashes!</translation>
-    </message>
-    <message>
-        <location line="-30"/>
-        <source>原文件删除失败</source>
-        <translation>Failed to delete original file</translation>
-    </message>
-    <message>
-        <location line="+50"/>
+        <location line="+27"/>
         <source>无法创建 %1 文件</source>
-        <oldsource> 文件</oldsource>
-        <translation>Cannot create %1 file</translation>
-    </message>
-    <message>
-        <location line="-149"/>
-        <source>是</source>
-        <translation>Yes</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>思考人生</source>
-        <translation>Let me think</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>否</source>
-        <translation>No</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>你确定要删除 %1 吗？</source>
-        <oldsource>你确定要删除 </oldsource>
-        <translation>Delete %1?</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>将永久删除该字典文件，如有需要请先备份！</source>
-        <translation>This dictionary file will be permanently deleted; back it up first if needed!</translation>
-    </message>
-    <message>
-        <location line="+28"/>
-        <source>删除成功</source>
-        <translation>Deleted successfully</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>字典 %1 已从字典管理和磁盘中移除！</source>
-        <oldsource> 已从字典管理和磁盘中移除！</oldsource>
-        <translation>Dictionary %1 removed from dictionary manager and disk!</translation>
+        <translation type="unfinished">Cannot create %1 file</translation>
     </message>
 </context>
 <context>
-    <name>CommonNormalDictPage</name>
+    <name>CommonNormalDictsPage</name>
     <message>
-        <location filename="CommonNormalDictPage.cpp" line="+28"/>
+        <location filename="CommonNormalDictsPage.cpp" line="+33"/>
         <source>默认译前字典设置</source>
-        <translation>Common pre-translation dictionary settings</translation>
+        <translation type="unfinished">Common preDicts settings</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>内部错误</source>
-        <oldsource>错误</oldsource>
-        <translation>Internal error</translation>
+        <translation type="unfinished">Internal error</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>未知通用字典模式</source>
-        <translation>Unknown common dictionary mode</translation>
+        <translation type="unfinished">Unkown common dict mode</translation>
     </message>
     <message>
         <location line="+20"/>
         <source>通用译前字典</source>
-        <translation>Common pre-translation dictionary</translation>
+        <translation type="unfinished">Common preDicts</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>通用译后字典</source>
-        <translation>Common post-translation dictionary</translation>
+        <translation type="unfinished">Common postDicts</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>导入字典页</source>
+        <translation type="unfinished">Import dict page</translation>
     </message>
     <message>
         <location line="+4"/>
-        <source>导入字典页</source>
-        <translation>Import dictionary page</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>添加新字典页</source>
-        <translation>Add dictionary page</translation>
-    </message>
-    <message>
-        <location line="+24"/>
-        <source>纯文本模式</source>
-        <translation>Plaintext mode</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>表模式</source>
-        <translation>Table mode</translation>
-    </message>
-    <message>
-        <location line="+2"/>
-        <source>默认启用</source>
-        <translation>Default on</translation>
+        <translation type="unfinished">Add new dict page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>保存所有页</source>
-        <translation>Save all pages</translation>
+        <translation type="unfinished">Save all pages</translation>
+    </message>
+    <message>
+        <location line="+27"/>
+        <source>纯文本</source>
+        <translation type="unfinished">Plain text</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>表模式</source>
+        <translation type="unfinished">Table mode</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>默认启用</source>
+        <translation type="unfinished">Default on</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>保存当前页</source>
-        <translation>Save current page</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除当前页</source>
-        <translation>Remove current page</translation>
+        <translation type="unfinished">Remove current page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>重命名当前页</source>
-        <translation>Rename current page</translation>
+        <translation type="unfinished">Rename current page</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>撤回删除行</source>
-        <translation>Cancel deleted row</translation>
+        <translation type="unfinished">Cancel deleted row</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>刷新当前页</source>
-        <translation>Refresh current page</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+4"/>
         <source>添加词条</source>
-        <translation>Add entry</translation>
+        <translation type="unfinished">Add new dict</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除词条</source>
-        <translation>Delete entry</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+80"/>
-        <location line="+97"/>
-        <source>保存成功</source>
-        <translation>Saved successfully</translation>
+        <location line="+4"/>
+        <source>编辑词条</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-97"/>
-        <source>所有默认字典配置均已保存</source>
-        <translation>All default dictionary configs have been saved</translation>
-    </message>
-    <message>
-        <location line="+40"/>
+        <location line="+122"/>
         <source>保存失败</source>
-        <translation>Fail to save</translation>
+        <translation type="unfinished">Fail to save</translation>
     </message>
     <message>
-        <location line="+316"/>
-        <location line="+41"/>
-        <source>字典页 %1 已创建</source>
-        <translation>Dictionary page %1 created</translation>
-    </message>
-    <message>
-        <location line="-8"/>
-        <source>无法创建 %1 文件</source>
-        <translation>Cannot create %1 file</translation>
-    </message>
-    <message>
-        <location line="-348"/>
+        <location line="+1"/>
         <source>无法打开字典: %1</source>
-        <translation>Failed to open dictionary: %1</translation>
-    </message>
-    <message>
-        <location line="+57"/>
-        <source>字典 %1 已保存</source>
-        <oldsource> 已保存</oldsource>
-        <translation>Dictionary %1 saved</translation>
+        <translation type="unfinished">Cannot open dict: %1</translation>
     </message>
     <message>
         <location line="+55"/>
+        <location line="+281"/>
+        <source>保存成功</source>
+        <translation type="unfinished">Saved successfully</translation>
+    </message>
+    <message>
+        <location line="-280"/>
+        <source>字典 %1 已保存</source>
+        <translation type="unfinished">Dict %1 saved</translation>
+    </message>
+    <message>
+        <location line="+107"/>
         <source>刷新成功</source>
-        <translation>Refreshed successfully</translation>
+        <translation type="unfinished">Refreshed successfully</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>字典 %1 已刷新</source>
-        <oldsource> 已刷新</oldsource>
-        <translation>Dictionary %1 refreshed</translation>
+        <translation type="unfinished">Dict %1 refreshed</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>请输入新名称</source>
-        <translation>Enter new name</translation>
+        <translation type="unfinished">Please type in new name</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>重命名字典</source>
-        <translation>Rename dictionaryionary</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
         <location line="+46"/>
         <source>重命名失败</source>
-        <translation>Fail to rename</translation>
+        <translation type="unfinished">Fail to rename</translation>
     </message>
     <message>
-        <location line="-6"/>
+        <location line="-46"/>
+        <location line="+201"/>
+        <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
+        <translation type="unfinished">Dict name can not be empty or contain point symbol, slash, backslash!</translation>
+    </message>
+    <message>
+        <location line="-192"/>
+        <location line="+192"/>
+        <location line="+10"/>
+        <location line="+9"/>
+        <source>新建失败</source>
+        <translation type="unfinished">Fail to create</translation>
+    </message>
+    <message>
+        <location line="-210"/>
+        <location line="+171"/>
+        <location line="+31"/>
+        <source>字典 %1 已存在</source>
+        <translation type="unfinished">Dict %1 exists</translation>
+    </message>
+    <message>
+        <location line="-172"/>
         <source>重命名成功</source>
-        <translation>Renamed successfully</translation>
+        <translation type="unfinished">Renamed successfully</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>字典 %1 已重命名为 %2</source>
-        <oldsource> 已重命名为 </oldsource>
-        <translation>Dictionary %1 renamed to %2</translation>
+        <translation type="unfinished">Dict %1 renamed to %2</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+6"/>
+        <source>字典 %1 重命名失败</source>
+        <translation type="unfinished">Failed to rename dict %1</translation>
+    </message>
+    <message>
+        <location line="+19"/>
+        <source>是</source>
+        <translation type="unfinished">Yes</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>思考人生</source>
+        <translation type="unfinished">Reflect on life</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>否</source>
+        <translation type="unfinished">No</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>你确定要删除 %1 吗？</source>
+        <translation type="unfinished">Delete %1?</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>将永久删除该字典文件，如有需要请先备份！</source>
+        <translation type="unfinished">The dict file will be deleted forever, make a backup if you need!</translation>
+    </message>
+    <message>
+        <location line="+28"/>
+        <source>删除成功</source>
+        <translation type="unfinished">Deleted successfully</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>字典 %1 已从字典管理和磁盘中移除！</source>
+        <translation type="unfinished">Dict %1 removed from list and disk!</translation>
+    </message>
+    <message>
+        <location line="+45"/>
+        <source>所有默认字典配置均已保存</source>
+        <translation type="unfinished">All dicts are saved successfully</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>选择字典文件</source>
-        <translation>Choose dictionary file</translation>
+        <translation type="unfinished">Choose dict file</translation>
     </message>
     <message>
         <location line="+14"/>
         <location line="+9"/>
         <source>导入失败</source>
-        <translation>Fail to import</translation>
+        <translation type="unfinished">Fail to import</translation>
     </message>
     <message>
-        <location line="-164"/>
-        <location line="+165"/>
-        <location line="+31"/>
-        <source>字典 %1 已存在</source>
-        <oldsource> 已存在</oldsource>
-        <translation>Dictionary %1 already exists</translation>
-    </message>
-    <message>
-        <location line="-159"/>
-        <source>字典 %1 重命名失败</source>
-        <translation>Failed to rename dictionary %1</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>你确定要删除 %1 吗？</source>
-        <translation>Delete %1?</translation>
-    </message>
-    <message>
-        <location line="+34"/>
-        <source>字典 %1 已从字典管理和磁盘中移除！</source>
-        <translation>Dictionary %1 removed from dictionary manager and disk!</translation>
-    </message>
-    <message>
-        <location line="+58"/>
+        <location line="-9"/>
         <source>原文件删除失败</source>
-        <translation>Failed to delete original file</translation>
+        <translation type="unfinished">Fail to remove original file</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>创建成功</source>
-        <translation>Created successfully</translation>
+        <translation type="unfinished">Created successfully</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+1"/>
+        <location line="+41"/>
+        <source>字典页 %1 已创建</source>
+        <translation type="unfinished">Dict page %1 created</translation>
+    </message>
+    <message>
+        <location line="-35"/>
         <source>请输入字典表名称</source>
-        <translation>Enter dictionary table name</translation>
+        <translation type="unfinished">Please type in dict name</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>新建字典</source>
-        <translation>New dictionary</translation>
-    </message>
-    <message>
-        <location line="-179"/>
-        <location line="+186"/>
-        <location line="+10"/>
-        <location line="+9"/>
-        <source>新建失败</source>
-        <translation>Fail to create</translation>
-    </message>
-    <message>
-        <location line="-214"/>
-        <location line="+195"/>
-        <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
-        <translation>Dictionary name cannot be empty or contain dots, slashes, or backslashes!</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+27"/>
+        <source>无法创建 %1 文件</source>
+        <translation type="unfinished">Cannot create %1 file</translation>
+    </message>
+    <message>
+        <location line="+7"/>
         <source>新建成功</source>
-        <translation>Created successfully</translation>
-    </message>
-    <message>
-        <location line="-156"/>
-        <source>是</source>
-        <translation>Yes</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>思考人生</source>
-        <translation>Let me think</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>否</source>
-        <translation>No</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>将永久删除该字典文件，如有需要请先备份！</source>
-        <translation>This dictionary file will be permanently deleted; back it up first if needed!</translation>
-    </message>
-    <message>
-        <location line="+28"/>
-        <source>删除成功</source>
-        <translation>Deleted successfully</translation>
+        <translation type="unfinished">Created successfully</translation>
     </message>
 </context>
 <context>
     <name>CommonSettingsPage</name>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="+26"/>
+        <location filename="CommonSettingsPage.cpp" line="+27"/>
         <source>一般设置</source>
         <translation>Common settings</translation>
     </message>
@@ -1055,13 +1025,7 @@ sk-...</translation>
         <translation>Number per request to translate</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>根据模型从十几到一百多不等</source>
-        <oldsource>推荐值 &lt;= 16</oldsource>
-        <translation>Usually ranges from around a dozen to over one hundred depending on the model</translation>
-    </message>
-    <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>最大线程数</source>
         <translation>Max threads num</translation>
     </message>
@@ -1106,7 +1070,82 @@ sk-...</translation>
         <translation>Split num</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+40"/>
+        <source>会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+33"/>
+        <source>Agent 模式</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>当前仅 ForGalTsv、ForNovelTsv、GenDict 会实际启用</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>让模型可以调用一定的工具以获取更多上下文</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>单块最大轮数</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agent 处理一个文本块时允许的最大问答轮数</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>压缩上下文阈值</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agent 消息上下文超过该字节数后触发压缩</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>单位为字节</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>工具搜索结果上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agent 工具一次返回的搜索结果数量上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>工具上下文行数上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>search_text 附近行数上限，0 表示不返回附近行</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>ProjectNote 路径</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+30"/>
         <source>缓存保存间隔</source>
         <translation>Save interval</translation>
     </message>
@@ -1116,12 +1155,7 @@ sk-...</translation>
         <translation>Save cache after every n translation rounds</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>最大请求次数</source>
-        <translation>Max request count</translation>
-    </message>
-    <message>
-        <location line="+13"/>
+        <location line="+26"/>
         <source>携带上文数量</source>
         <translation>Num of context to attached</translation>
     </message>
@@ -1131,13 +1165,7 @@ sk-...</translation>
         <translation>Smart retry</translation>
     </message>
     <message>
-        <location line="+15"/>
-        <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
-        <oldsource>运行时动态检测key额度，自动从 Api 池中删除额度不足的 key</oldsource>
-        <translation>Check quota dynamically during running, removing expired key from Api pool automatically</translation>
-    </message>
-    <message>
-        <location line="-1"/>
+        <location line="+14"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1147,7 +1175,12 @@ sk-...</translation>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="-78"/>
+        <source>根据模型从十几到一百多不等</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+101"/>
         <source>Num时，表示n句拆分一次；Equal时，表示每个文件均分拆成n部分</source>
         <translation>n</translation>
     </message>
@@ -1168,12 +1201,27 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+196"/>
+        <location line="+168"/>
+        <source>最大请求次数</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>对现代模型而言意义不大了，推荐值 ≤ 10</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>解析结果失败时尝试折半重翻与清空上下文</source>
         <translation>If parsing the result fails, try re-translating by halving the content and clearing the context</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+14"/>
+        <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+45"/>
         <source>日志级别</source>
         <translation>Log level</translation>
     </message>
@@ -1213,90 +1261,7 @@ sk-...</translation>
         <translation>Create references only when n consecutive sentences have identical speakers and source text</translation>
     </message>
     <message>
-        <location line="-12"/>
-        <source>会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</source>
-        <oldsource>启用时建议将翻译顺序改为文件名排序</oldsource>
-        <translation>Delays onFileProcessed until translation ends. When enabled, filename order is recommended</translation>
-    </message>
-    <message>
-        <location line="+33"/>
-        <source>Agent 模式</source>
-        <translation>Agent mode</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>当前仅 ForGalTsv、ForNovelTsv、GenDict 会实际启用</source>
-        <translation>Currently only ForGalTsv, ForNovelTsv, and GenDict actually enable it</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>让模型可以调用一定的工具以获取更多上下文</source>
-        <translation>Allows the model to call tools for more context</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <source>单块最大轮数</source>
-        <translation>Max turns per block</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Agent 处理一个文本块时允许的最大问答轮数</source>
-        <translation>Maximum Q&amp;A turns allowed when Agent processes one text block</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>压缩上下文阈值</source>
-        <translation>Context compression threshold</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Agent 消息上下文超过该字节数后触发压缩</source>
-        <translation>Triggers compression when Agent message context exceeds this byte count</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>单位为字节</source>
-        <translation>Unit: bytes</translation>
-    </message>
-    <message>
-        <location line="+13"/>
-        <source>工具搜索结果上限</source>
-        <translation>Tool search result limit</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Agent 工具一次返回的搜索结果数量上限</source>
-        <translation>Maximum search results returned by one Agent tool call</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>工具上下文行数上限</source>
-        <translation>Tool context line limit</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>search_text 附近行数上限，0 表示不返回附近行</source>
-        <translation>Line limit around search_text results; 0 returns no nearby lines</translation>
-    </message>
-    <message>
-        <location line="+12"/>
-        <source>ProjectNote 路径</source>
-        <translation>ProjectNote path</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</source>
-        <oldsource>Agent 可选读取的项目说明文件</oldsource>
-        <translation>Optional project note file for Agent to read; add the `get_project_note()` tool prompt yourself</translation>
-    </message>
-    <message>
-        <location line="+58"/>
-        <source>对现代模型而言意义不大了，推荐值 ≤ 10</source>
-        <oldsource>推荐值 ≤ 10</oldsource>
-        <translation>Less useful for modern models; recommended value ≤ 10</translation>
-    </message>
-    <message>
-        <location line="+40"/>
+        <location line="+186"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retranslate all content when failing to analyze the batch</translation>
     </message>
@@ -1327,42 +1292,50 @@ sk-...</translation>
         <translation>Maximum rolling quantity of log files</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+13"/>
+        <source>单次日志翻译文本行数上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>限制日志里 inputBlock 和解析结果显示的行数</source>
-        <oldsource>只限制日志里 inputBlock 显示的原文行数</oldsource>
-        <translation>Limits displayed lines of inputBlock and parse result in logs</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>实际请求和解析仍使用完整内容</source>
-        <oldsource>实际请求仍发送完整文本</oldsource>
-        <translation>Actual request and parsing still use full content</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
+        <source>单次日志问题行数上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>只限制日志里 Problems 显示的行数</source>
-        <translation>Only limits displayed Problems lines in logs</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+14"/>
         <source>实际请求仍发送完整内容</source>
-        <translation>Actual request still sends full content</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-1"/>
+        <location line="-2"/>
+        <source>单次日志字典行数上限</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>只限制日志里 Dict/Glossary 显示的行数</source>
-        <translation>Only limits displayed Dict/Glossary lines in logs</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+18"/>
         <source>分词器设置</source>
         <translation>Tokenizer settings</translation>
-    </message>
-    <message>
-        <source>用于生成字典和查错的分词器后端及其设置(应选择适合原文的后端/模型/字典)</source>
-        <oldsource>用于生成字典和查错的分词器后端及其设置(针对原文)</oldsource>
-        <translation type="vanished">Tokenizer used to generate dict and analyze problems with its configs(should choose a backend/model/dict fit to source lang)</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -1377,17 +1350,18 @@ sk-...</translation>
     <message>
         <location line="+18"/>
         <source>MeCab词典目录</source>
-        <translation>MeCab dictionary directory</translation>
+        <translation>MeCab dict dir</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>MeCab词典目录，程序自带一个</source>
-        <translation>MeCab dictionary directory</translation>
+        <source>MeCab词典目录，程序自带一个日文词典</source>
+        <oldsource>MeCab词典目录，程序自带一个</oldsource>
+        <translation type="unfinished">Dir of MeCab&apos;s dictionary</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+15"/>
         <source>选择MeCab词典目录</source>
-        <translation>Choose MeCab dictionary directory</translation>
+        <translation>Choose MeCab dict dir</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1405,7 +1379,7 @@ sk-...</translation>
         <translation>sm model is not so satisfying, use trf model if conditions allowing</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+22"/>
         <source>Stanza语言ID</source>
         <translation>Stanza lang id</translation>
     </message>
@@ -1415,69 +1389,58 @@ sk-...</translation>
         <translation>Stanza lang id, you need reboot app after downloading a new model</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+35"/>
+        <source>项目统一使用的换行符，auto 表示自动检测</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+71"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-134"/>
-        <location line="+24"/>
-        <location line="+20"/>
+        <location line="-145"/>
+        <location line="+27"/>
+        <location line="+23"/>
         <source>浏览</source>
         <translation>browse</translation>
     </message>
     <message>
-        <location line="-130"/>
-        <source>单次日志翻译文本行数上限</source>
-        <translation>Max translated text lines per log entry</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>单次日志问题行数上限</source>
-        <translation>Max problem lines per log entry</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>单次日志字典行数上限</source>
-        <translation>Max dictionary lines per log entry</translation>
-    </message>
-    <message>
-        <location line="+21"/>
+        <location line="-90"/>
         <source>用于生成字典和查错的分词器后端及其设置 (应选择适合原文的后端/模型/字典)</source>
-        <translation>Tokenizer backend and settings for dictionary generation and problem checks; choose a backend/model/dictionary suitable for the source text</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+99"/>
+        <location line="+113"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+2"/>
         <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。&lt;br&gt;具体替换时机详见使用说明，auto为自动检测</source>
         <oldsource>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行，具体替换时机详见使用说明，auto为自动检测</oldsource>
-        <translation>All linebreak symbols will be replaced to &amp;lt;br&amp;gt; for programming use</translation>
+        <translation type="vanished">All linebreak symbols will be replaced to &amp;lt;br&amp;gt; for programming use</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+72"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
 </context>
 <context>
     <name>CustomFilePluginCfgPage</name>
     <message>
         <location filename="CustomFilePluginCfgPage.cpp" line="+19"/>
-        <location line="+60"/>
+        <location line="+63"/>
         <source>自定义文件处理插件配置</source>
         <translation>Custom file plugin settings</translation>
     </message>
     <message>
-        <location line="-49"/>
+        <location line="-52"/>
         <source>自定义文件处理插件路径</source>
         <translation>Custom file plugin path</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+9"/>
         <source>浏览</source>
         <translation>Browser</translation>
     </message>
@@ -1497,30 +1460,30 @@ sk-...</translation>
     <message>
         <location filename="DefaultPromptPage.cpp" line="+21"/>
         <source>默认提示词管理</source>
-        <translation>Default prompt manager</translation>
+        <translation>Default prompts</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>默认提示词配置文件不符合 toml 规范</source>
-        <translation>Default prompt config file is not valid TOML</translation>
+        <translation>Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+48"/>
         <source>agent用户</source>
-        <translation>Agent user</translation>
+        <translation>User-agent</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>agent系统</source>
-        <translation>Agent system</translation>
+        <translation>Sys-agent</translation>
     </message>
     <message>
-        <location line="+60"/>
+        <location line="+64"/>
         <location line="+25"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
@@ -1528,30 +1491,30 @@ sk-...</translation>
     <message>
         <location line="-25"/>
         <source>所有默认提示词配置已保存。</source>
-        <translation>All default prompt configs have been saved</translation>
+        <translation>All default prompts settings are saved.</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>默认 %1 提示词配置已保存。</source>
-        <translation>Default %1 prompt config has been saved</translation>
+        <translation>Default %1 prompt saved.</translation>
     </message>
     <message>
-        <location line="-100"/>
+        <location line="-110"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+24"/>
         <source>全部保存</source>
         <translation>Save all</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
@@ -1561,78 +1524,78 @@ sk-...</translation>
     <message>
         <location filename="DictExSettingsPage.cpp" line="+16"/>
         <source>项目字典设置</source>
-        <translation>Project dictionary settings</translation>
+        <translation>Project dict settings</translation>
     </message>
     <message>
         <location line="+71"/>
         <source>选择要启用的译前字典</source>
-        <translation>Pre-translation dictionaries to enable</translation>
+        <translation>PreDicts to enable</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>项目译前字典</source>
-        <translation>Project pre-translation dictionary</translation>
+        <translation>Project PreDict</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>选择要启用的GPT字典</source>
-        <translation>GPT dictionaries to enable</translation>
+        <translation>GptDicts to enable</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>项目GPT字典</source>
-        <translation>Project GPT dictionary</translation>
+        <translation>Project GptDict</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>选择要启用的译后字典</source>
-        <translation>Post-translation dictionaries to enable</translation>
+        <translation>PostDicts to enable</translation>
     </message>
     <message>
         <location line="-6"/>
         <source>项目译后字典</source>
-        <translation>Project post-translation dictionary</translation>
+        <translation>Project PostDict</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>将译前字典用在name字段</source>
-        <translation>Use pre-translation dictionaries on name fields</translation>
+        <translation>Use predicts in name section</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在name字段</source>
-        <translation>Use post-translation dictionaries on name fields</translation>
+        <translation>Use postdicts in name section</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译前字典用在msg字段</source>
-        <translation>Use pre-translation dictionaries on message fields</translation>
+        <translation>Use predicts in msg section</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在msg字段</source>
-        <translation>Use post-translation dictionaries on message fields</translation>
+        <translation>Use postdicts in msg section</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>启用GPT字典替换name字段</source>
-        <translation>Enable GPT dictionary replacement for name fields</translation>
+        <translation>Use gptdicts to replace name section</translation>
     </message>
 </context>
 <context>
     <name>DictSettingsPage</name>
     <message>
-        <location filename="DictSettingsPage.cpp" line="+25"/>
+        <location filename="DictSettingsPage.cpp" line="+29"/>
         <source>项目字典设置</source>
-        <translation>Project dictionary settings</translation>
+        <translation>Project dicts settings</translation>
     </message>
     <message>
-        <location line="+37"/>
-        <source>纯文本模式</source>
-        <translation>Plaintext mode</translation>
+        <location line="+39"/>
+        <source>纯文本</source>
+        <translation>Plain text</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+4"/>
         <source>表模式</source>
         <translation>Table mode</translation>
     </message>
@@ -1644,7 +1607,7 @@ sk-...</translation>
     <message>
         <location line="+4"/>
         <source>导入字典页</source>
-        <translation>Import dictionary page</translation>
+        <translation>Import dict page</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -1659,15 +1622,20 @@ sk-...</translation>
     <message>
         <location line="+4"/>
         <source>添加词条</source>
-        <translation>Add entry</translation>
+        <translation>Add new dict</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除词条</source>
-        <translation>Delete entry</translation>
+        <translation>Remove present dict</translation>
     </message>
     <message>
-        <location line="+64"/>
+        <location line="+4"/>
+        <source>编辑词条</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+67"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>
@@ -1679,12 +1647,12 @@ sk-...</translation>
     <message>
         <location line="+12"/>
         <source>生成字典删除失败</source>
-        <translation>Failed to delete generated dictionary</translation>
+        <translation>Failt to delete GenDict</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+73"/>
         <source>选择字典文件</source>
-        <translation>Choose dictionary file</translation>
+        <translation>Choose dict file</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -1694,7 +1662,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>字典文件中没有词条</source>
-        <translation>No entries in dictionary file</translation>
+        <translation>No dicts in the file</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1702,34 +1670,217 @@ sk-...</translation>
         <translation>Import successfully</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+30"/>
         <source>%1 已保存</source>
         <translation>%1 saved</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+119"/>
         <source>项目GPT字典</source>
-        <translation>Project GPT dictionary</translation>
+        <translation type="unfinished">Project GptDict</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>项目译前字典</source>
-        <translation>Project pre-translation dictionary</translation>
+        <translation type="unfinished">Project PreDict</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>项目译后字典</source>
-        <translation>Project post-translation dictionary</translation>
+        <translation type="unfinished">Project PostDict</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-176"/>
         <source>从文件 %1 中导入了 %2 个词条</source>
-        <translation>Imported %2 entries from file %1</translation>
+        <translation>Imported %2 entries from %1</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+28"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
+    </message>
+</context>
+<context>
+    <name>DictionaryEntryDeleteDialog</name>
+    <message>
+        <location filename="DictionaryEntryDialog.cpp" line="+644"/>
+        <source>否</source>
+        <translation type="unfinished">No</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>思考人生</source>
+        <translation type="unfinished">Reflect on life</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>是</source>
+        <translation type="unfinished">Yes</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>你确定要删除选中的词条吗？</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>已选中 %1 条词条，删除后可以使用撤回按钮恢复。</source>
+        <translation type="unfinished">%1 entries selected. You can restore them with Undo after deletion.</translation>
+    </message>
+</context>
+<context>
+    <name>DictionaryEntryDialog</name>
+    <message>
+        <location line="-570"/>
+        <source>拖动调整顺序</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+40"/>
+        <source>条件正则</source>
+        <translation type="unfinished">Condition regex</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>相对句</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>条件对象</source>
+        <translation type="unfinished">Condition target</translation>
+    </message>
+    <message>
+        <location line="+224"/>
+        <source>编辑 GPT 字典词条</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <location line="+64"/>
+        <source>原文（org）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-63"/>
+        <location line="+74"/>
+        <source>译文（rep）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-73"/>
+        <source>注释（note）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <location line="+186"/>
+        <source>取消</source>
+        <translation type="unfinished">Cancel</translation>
+    </message>
+    <message>
+        <location line="-181"/>
+        <location line="+186"/>
+        <source>保存</source>
+        <translation type="unfinished">Save</translation>
+    </message>
+    <message>
+        <location line="-179"/>
+        <location line="+187"/>
+        <location line="+12"/>
+        <location line="+9"/>
+        <source>保存失败</source>
+        <translation type="unfinished">Fail to save</translation>
+    </message>
+    <message>
+        <location line="-207"/>
+        <location line="+187"/>
+        <source>原文（org）不能为空</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-166"/>
+        <source>编辑 Normal 字典词条</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+41"/>
+        <source>匹配设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>启用正则（isReg）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>优先级（priority）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>条件（conditions）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>添加条件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>删除条件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+104"/>
+        <source>第 %1 条条件的条件正则不能为空</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>第 %1 条条件的条件对象不能为空</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>DictionaryReader</name>
+    <message>
+        <location filename="DictionaryReader.cpp" line="+45"/>
+        <location line="+9"/>
+        <location line="+17"/>
+        <location line="+29"/>
+        <location line="+107"/>
+        <location line="+9"/>
+        <location line="+21"/>
+        <location line="+6"/>
+        <source>解析失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-197"/>
+        <location line="+162"/>
+        <source>%1 不符合 toml 规范</source>
+        <translation type="unfinished">%1 is invalid TOML</translation>
+    </message>
+    <message>
+        <location line="-153"/>
+        <location line="+162"/>
+        <source>%1 不是预期的 json 格式</source>
+        <translation type="unfinished">%1 is not expected JSON</translation>
+    </message>
+    <message>
+        <location line="-145"/>
+        <location line="+166"/>
+        <source>%1 不符合 json 规范</source>
+        <translation type="unfinished">%1 is invalid JSON</translation>
+    </message>
+    <message>
+        <location line="-137"/>
+        <location line="+143"/>
+        <source>%1 不是支持的格式</source>
+        <translation type="unfinished">%1 is unsupported</translation>
     </message>
 </context>
 <context>
@@ -1753,38 +1904,53 @@ sk-...</translation>
 <context>
     <name>EpubCfgPage</name>
     <message>
-        <location filename="EpubCfgPage.cpp" line="+22"/>
-        <location line="+149"/>
+        <location filename="EpubCfgPage.cpp" line="+23"/>
+        <location line="+158"/>
         <source>Epub 输出配置</source>
         <translation>Epub output settings</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-147"/>
         <source>双语显示</source>
         <translation>Bilingual</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+1"/>
+        <source>在每句译文下以设置的颜色和比例显示原文</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>原文颜色</source>
         <translation>Color of original text</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+40"/>
         <source>缩小比例</source>
         <translation>Decreasing scale</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>预处理正则</source>
         <translation>PreProcess regex</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+1"/>
+        <source>提取正文后、送入翻译前应用的正则规则</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>后处理正则</source>
         <translation>PostProcess Regex</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+1"/>
+        <source>翻译完成后、写回 Epub 前应用的正则规则</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
         <source>说明</source>
         <translation>Description</translation>
     </message>
@@ -1792,17 +1958,25 @@ sk-...</translation>
         <location line="+25"/>
         <location line="+13"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
         <location line="-13"/>
-        <source>Epub预处理正则格式错误</source>
-        <translation>Epub PreProcRegex is nonconforming</translation>
+        <source>Epub 预处理正则不符合 toml 规范</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+13"/>
+        <source>Epub 后处理正则不符合 toml 规范</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Epub预处理正则格式错误</source>
+        <translation type="vanished">Epub PreProcRegex is nonconforming</translation>
+    </message>
+    <message>
         <source>Epub后处理正则格式错误</source>
-        <translation>Epub PostProcRegex is nonconforming</translation>
+        <translation type="vanished">Epub PostProcRegex is nonconforming</translation>
     </message>
 </context>
 <context>
@@ -1810,50 +1984,50 @@ sk-...</translation>
     <message>
         <location filename="main.cpp" line="+83"/>
         <source>Updater 更新错误</source>
-        <translation>Updater error</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+58"/>
         <source>无法创建共享内存段，程序即将退出。</source>
-        <translation>Cannot create shared memory. Exiting.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+62"/>
         <location line="+54"/>
         <source>错误</source>
-        <translation>Error</translation>
+        <translation type="unfinished">Error</translation>
     </message>
     <message>
         <location line="-55"/>
         <source>无法启动本地服务，程序即将退出。</source>
-        <translation>Cannot start local service. Exiting.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+24"/>
         <source>缓存删除错误</source>
-        <translation>Cache delete error</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+11"/>
         <source>TOML 错误</source>
-        <translation>TOML error</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+10"/>
         <source>标准错误</source>
-        <translation>Std error</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
         <source>遇到了未知的错误，程序即将退出。</source>
-        <translation>Unknown error. Exiting.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>GptDictModel</name>
     <message>
-        <location filename="GptDictModel.cpp" line="+8"/>
+        <location filename="GptDictModel.cpp" line="+7"/>
         <source>原文</source>
         <translation>original</translation>
     </message>
@@ -1866,6 +2040,11 @@ sk-...</translation>
         <location line="+0"/>
         <source>描述</source>
         <translation>note</translation>
+    </message>
+    <message>
+        <location line="+49"/>
+        <source>拖动调整顺序</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -1892,12 +2071,12 @@ sk-...</translation>
     <message>
         <location line="+6"/>
         <source>不是哥们</source>
-        <translation>Seriously?</translation>
+        <translation>What fuck</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>有病吧，你把我软件的配置文件删了！？</source>
-        <translation>Seriously? You deleted the app config file!?</translation>
+        <translation>Where is the app&apos;s config file!?</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2021,32 +2200,32 @@ sk-...</translation>
     <message>
         <location line="+2"/>
         <source>默认提示词管理</source>
-        <translation>Default prompt manager</translation>
+        <translation>Default prompts</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>通用字典管理</source>
-        <translation>Common dictionary manager</translation>
+        <translation>Common dicts</translation>
     </message>
     <message>
         <location line="+7"/>
         <source>通用译前字典</source>
-        <translation>Common pre-translation dictionary</translation>
+        <translation>Common preDicts</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>通用GPT字典</source>
-        <translation>Common GPT dictionary</translation>
+        <translation>Common gptDicts</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>通用译后字典</source>
-        <translation>Common post-translation dictionary</translation>
+        <translation>Common postDicts</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>项目管理</source>
-        <translation>Project manager</translation>
+        <translation>Projects</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2077,12 +2256,12 @@ sk-...</translation>
     <message>
         <location line="+39"/>
         <source>选择新项目的存放位置</source>
-        <translation>Choose where to store the new project</translation>
+        <translation>Choose new dir to store project</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>请输入项目名称</source>
-        <translation>Enter project name</translation>
+        <translation>Please type in project name</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -2103,12 +2282,12 @@ sk-...</translation>
     <message>
         <location line="-101"/>
         <source>项目名称不能为空，且不能包含斜杠或反斜杠！</source>
-        <translation>Project name cannot be empty or contain slashes or backslashes!</translation>
+        <translation>Project name can not be empty or contain slash/backslash!</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>目录下存在同名文件或文件夹！</source>
-        <translation>A file or folder with the same name already exists in this directory!</translation>
+        <translation>File/dir with the same name has already existed!</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2126,18 +2305,6 @@ sk-...</translation>
         <translation>Can not write into config file!</translation>
     </message>
     <message>
-        <source>项目GPT字典</source>
-        <translation type="vanished">Project GptDict</translation>
-    </message>
-    <message>
-        <source>项目译前字典</source>
-        <translation type="vanished">Project PreDict</translation>
-    </message>
-    <message>
-        <source>项目译后字典</source>
-        <translation type="vanished">Project PostDict</translation>
-    </message>
-    <message>
         <location line="+9"/>
         <source>创建成功</source>
         <translation>Created successfully</translation>
@@ -2145,12 +2312,12 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>请将待翻译的文件放入 gt_input 中！</source>
-        <translation>Put the files to translate into gt_input!</translation>
+        <translation>Please put files you want to translate into gt_input dir!</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>选择已有项目的文件夹路径</source>
-        <translation>Choose the folder path of an existing project</translation>
+        <translation>Choose a dir of an existed project</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -2159,12 +2326,7 @@ sk-...</translation>
         <translation>Fail to open</translation>
     </message>
     <message>
-        <location line="-11"/>
-        <source>目录下不存在 Config.toml 文件！</source>
-        <translation>No Config.toml file exists in this directory!</translation>
-    </message>
-    <message>
-        <location line="+20"/>
+        <location line="+9"/>
         <source>打开成功</source>
         <translation>Opened successfully</translation>
     </message>
@@ -2190,7 +2352,12 @@ sk-...</translation>
         <translation>Fail to remove</translation>
     </message>
     <message>
-        <location line="-4"/>
+        <location line="-36"/>
+        <source>目录下不存在 Config.toml 文件！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+32"/>
         <location line="+53"/>
         <location line="+60"/>
         <source>当前页面不是项目页面！</source>
@@ -2212,7 +2379,7 @@ sk-...</translation>
         <location line="-52"/>
         <location line="+53"/>
         <source>思考人生</source>
-        <translation>Let me think</translation>
+        <translation>Reflect on life</translation>
     </message>
     <message>
         <location line="-52"/>
@@ -2228,7 +2395,7 @@ sk-...</translation>
     <message>
         <location line="+5"/>
         <source>从项目管理中移除该项目，但不会删除其项目文件夹</source>
-        <translation>Remove this project from project manager without deleting its project folder</translation>
+        <translation>Remove from project management, but won&apos;t delete its project dir</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -2256,7 +2423,7 @@ sk-...</translation>
     <message>
         <location line="+5"/>
         <source>将删除该项目的项目文件夹，如果不备份，再次翻译将必须从头开始！</source>
-        <translation>This will delete the project folder. Without a backup, the next translation must start from scratch!</translation>
+        <translation>Delete project dir of this project, you will lost all translation cache!</translation>
     </message>
     <message>
         <location line="+26"/>
@@ -2309,27 +2476,27 @@ sk-...</translation>
 <context>
     <name>NameTableSettingsPage</name>
     <message>
-        <location filename="NameTableSettingsPage.cpp" line="+266"/>
+        <location filename="NameTableSettingsPage.cpp" line="+273"/>
         <source>人名替换表</source>
         <translation>NameTable</translation>
     </message>
     <message>
-        <location line="-205"/>
+        <location line="-211"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>NameTable.toml 不符合 toml 规范</source>
-        <translation>NameTable.toml is invalid TOML</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+27"/>
-        <source>纯文本模式</source>
-        <translation>Plaintext mode</translation>
+        <location line="+30"/>
+        <source>纯文本</source>
+        <translation>Plain text</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>表模式</source>
         <translation>Table mode</translation>
     </message>
@@ -2351,12 +2518,12 @@ sk-...</translation>
     <message>
         <location line="+4"/>
         <source>添加词条</source>
-        <translation>Add entry</translation>
+        <translation>Add new dict</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>删除词条</source>
-        <translation>Delete entry</translation>
+        <translation>Remove current dict</translation>
     </message>
     <message>
         <location line="+65"/>
@@ -2366,12 +2533,12 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>重新载入了 NameTable.toml</source>
-        <translation>Reloaded NameTable.toml</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+41"/>
         <source>已保存 NameTable.toml</source>
-        <translation>Saved NameTable.toml</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2382,7 +2549,7 @@ sk-...</translation>
 <context>
     <name>NormalDictModel</name>
     <message>
-        <location filename="NormalDictModel.cpp" line="+8"/>
+        <location filename="NormalDictModel.cpp" line="+28"/>
         <source>原文</source>
         <translation>Original</translation>
     </message>
@@ -2393,16 +2560,16 @@ sk-...</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>条件对象</source>
-        <translation>Condition target</translation>
+        <source>条件</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>条件正则</source>
-        <translation>Condition regex</translation>
+        <location line="+34"/>
+        <source>拖动调整顺序</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+0"/>
+        <location line="-34"/>
         <source>启用正则</source>
         <translation>Enable regex</translation>
     </message>
@@ -2425,12 +2592,22 @@ sk-...</translation>
         <translation>Project path</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>打开文件夹</source>
-        <translation>Open folder</translation>
+        <translation>Open project dir</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+13"/>
+        <source>问题概览输出格式</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>翻译完成后输出 ProblemOverview 的文件格式</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
         <source>移动项目</source>
         <translation>Move project</translation>
     </message>
@@ -2449,7 +2626,7 @@ sk-...</translation>
     <message>
         <location line="+4"/>
         <source>请选择要移动到的文件夹</source>
-        <translation>Choose the destination folder</translation>
+        <translation>Please choose the dir you want to move to</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -2463,7 +2640,7 @@ sk-...</translation>
         <translation>Project %1 moved to new folder</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>项目更名</source>
         <translation>Rename project</translation>
     </message>
@@ -2483,7 +2660,7 @@ sk-...</translation>
     <message>
         <location line="+5"/>
         <source>请输入新的项目名称</source>
-        <translation>Enter new project name</translation>
+        <translation>Please type in new project name</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -2496,10 +2673,10 @@ sk-...</translation>
         <translation>Project name cannot be empty or contain slashes</translation>
     </message>
     <message>
-        <location line="-34"/>
-        <location line="+40"/>
+        <location line="-36"/>
+        <location line="+42"/>
         <source>目录下已有同名文件或文件夹</source>
-        <translation>A file or folder with the same name already exists in this directory</translation>
+        <translation>File/dir with the same name has already existed</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2507,7 +2684,12 @@ sk-...</translation>
         <translation>Renamed successfully</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+12"/>
+        <source>使用 ProblemOverview.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>选择翻译问题概览文件</source>
         <translation>Choose issue summary file</translation>
     </message>
@@ -2517,7 +2699,7 @@ sk-...</translation>
         <translation>Save project settings</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
@@ -2532,7 +2714,7 @@ sk-...</translation>
         <translation>Refresh project configs</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>刷新</source>
         <translation>Refresh</translation>
     </message>
@@ -2552,7 +2734,7 @@ sk-...</translation>
         <translation>Delete translation cache</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>删除</source>
         <translation>Delete</translation>
     </message>
@@ -2568,28 +2750,18 @@ sk-...</translation>
         <translation>Project is still running</translation>
     </message>
     <message>
-        <location line="-38"/>
-        <location line="+44"/>
+        <location line="-40"/>
+        <location line="+46"/>
         <source>否</source>
         <translation>No</translation>
     </message>
     <message>
-        <location line="-315"/>
-        <source>问题概览输出格式</source>
-        <translation>Problem overview output format</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>翻译完成后输出 ProblemOverview 的文件格式</source>
-        <translation>File format used when outputting ProblemOverview after translation</translation>
-    </message>
-    <message>
-        <location line="+24"/>
+        <location line="-302"/>
         <source>项目移动/更名</source>
         <translation>Move/Rename project</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+80"/>
         <source>项目已更名为 %1</source>
         <translation>Project renamed to %1</translation>
     </message>
@@ -2599,13 +2771,7 @@ sk-...</translation>
         <translation>Import issue summary to trans_cache</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>使用 ProblemOverview.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence</source>
-        <oldsource>使用 翻译问题概览.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence</oldsource>
-        <translation>Replace Sentences in trans_cache with Sentences from ProblemOverview.json/.toml</translation>
-    </message>
-    <message>
-        <location line="+4"/>
+        <location line="+7"/>
         <source>导入</source>
         <translation>Import</translation>
     </message>
@@ -2668,20 +2834,20 @@ Cache: %4</translation>
     <message>
         <location line="+19"/>
         <source>开始翻译或关闭程序时会自动保存所有项目的配置，一般无需手动保存</source>
-        <translation>All project configs are also saved automatically when translation starts or the app exits, so manual saving is usually unnecessary</translation>
+        <translation>The app also automatically saves all project configs when beginning translating or exiting</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+11"/>
         <source>项目 %1 的配置信息已保存</source>
         <translation>Project %1 config saved</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>刷新现有配置和字典，谨慎使用</source>
-        <translation>Refresh current config and dictionaries; use with caution</translation>
+        <translation>Take care because all configs and dicts of this project will be refreshed</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>刷新失败</source>
         <translation>Fail to refresh</translation>
     </message>
@@ -2692,30 +2858,30 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+44"/>
+        <location line="+46"/>
         <source>思考人生</source>
-        <translation>Let me think</translation>
+        <translation>Reflect on life</translation>
     </message>
     <message>
-        <location line="-43"/>
-        <location line="+44"/>
+        <location line="-45"/>
+        <location line="+46"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-18"/>
         <source>删除项目的翻译缓存，下次翻译将会重新从头开始</source>
-        <translation>Delete this project&apos;s translation cache; the next translation will start from scratch</translation>
+        <translation>Translation all over again</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+23"/>
         <source>你确定要删除项目翻译缓存吗？</source>
         <translation>Are you sure to delete translation cache of this project?</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>再次翻译将会重新从头开始！</source>
-        <translation>The next translation will start from scratch!</translation>
+        <translation>You have to start all over again on next translation!</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -2731,12 +2897,12 @@ Cache: %4</translation>
 <context>
     <name>PASettingsPage</name>
     <message>
-        <location filename="PASettingsPage.cpp" line="+30"/>
+        <location filename="PASettingsPage.cpp" line="+29"/>
         <source>问题分析</source>
         <translation>Problem analyze</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+34"/>
         <source>词频过高</source>
         <translation>High word frequency</translation>
     </message>
@@ -2768,7 +2934,7 @@ Cache: %4</translation>
     <message>
         <location line="+1"/>
         <source>字典未使用</source>
-        <translation>Dictionary unused</translation>
+        <translation>Dict unused</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2806,20 +2972,7 @@ Cache: %4</translation>
         <translation>Problem List</translation>
     </message>
     <message>
-        <source>取消</source>
-        <translation type="obsolete">Cancel</translation>
-    </message>
-    <message>
-        <source>确定</source>
-        <translation type="obsolete">OK</translation>
-    </message>
-    <message>
-        <location line="+56"/>
-        <source>语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然</source>
-        <translation>Language confidence for wrong-language checks (0-1). Higher is more precise but may miss issues; lower is the opposite</translation>
-    </message>
-    <message>
-        <location line="-14"/>
+        <location line="+48"/>
         <source>标点查错</source>
         <translation>Punctuations to check</translation>
     </message>
@@ -2834,7 +2987,12 @@ Cache: %4</translation>
         <translation>Lang probability</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+1"/>
+        <source>语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然</source>
+        <translation>Probability in &quot;incorrect lang&quot;, higher means preciser, but may omit</translation>
+    </message>
+    <message>
+        <location line="+13"/>
         <source>字符集</source>
         <translation>Code page</translation>
     </message>
@@ -2844,33 +3002,38 @@ Cache: %4</translation>
         <translation>The code page to check in &quot;Invalid char&quot;</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+11"/>
+        <location line="+71"/>
+        <source>比较对象设置</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-42"/>
         <source>比较对象</source>
-        <translation>Comparison fields</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+2"/>
         <source>base 是比较基准字段，check 是被检查字段。</source>
-        <translation>base is the reference field; check is the field being checked</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+41"/>
         <source>设置每个问题分析规则使用的 base/check 字段</source>
-        <translation>Set the base/check fields used by each problem analysis rule</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>进入设置</source>
-        <translation>Open settings</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+27"/>
         <source>点击下方『语法示例』按钮以获取具体语法规则及作用</source>
         <oldsource>点击下方『语法示例』按钮以获取语法规则及作用</oldsource>
-        <translation>Push the button below to get detailed explanation of grammars and effects</translation>
+        <translation type="vanished">Push the button below to get detailed explanation of grammars and effects</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+57"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
     </message>
@@ -2880,28 +3043,27 @@ Cache: %4</translation>
         <translation>RetranslKeys setting</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>查看 重翻关键字/跳过问题关键字 设定的语法示例</source>
-        <translation>Look up example grammars of retranslKeys/skipProblems</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-10"/>
         <source>跳过问题关键字设定</source>
         <translation>Skip problems keys setting</translation>
     </message>
     <message>
-        <location line="-142"/>
-        <location line="+70"/>
-        <source>比较对象设置</source>
-        <translation>Comparison field settings</translation>
+        <location line="-40"/>
+        <source>正则表达式数组，具体规则见下方语法示例</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+77"/>
+        <location line="+48"/>
         <source>语法示例</source>
         <translation>Grammars examples</translation>
     </message>
     <message>
-        <location line="-17"/>
+        <location line="-20"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2922,12 +3084,12 @@ Cache: %4</translation>
     <message>
         <location line="+14"/>
         <source>BabelDOC 目标语言码</source>
-        <translation>BabelDOC target language code</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>影响 PDF 字体和排版，如 zh-CN/zh-TW/en/ja/ko</source>
-        <translation>Affects PDF fonts and layout, e.g. zh-CN/zh-TW/en/ja/ko</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2936,19 +3098,19 @@ Cache: %4</translation>
         <location filename="PluginItemWidget.cpp" line="+17"/>
         <source>滤过插件</source>
         <oldsource>滤过插件，默认开启为 run 阶段</oldsource>
-        <translation>Skip plugin</translation>
+        <translation>Filter plugin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>全角半角转换插件</source>
         <oldsource>全角半角转换插件，默认开启为 postRun 阶段</oldsource>
-        <translation>Full-width/half-width conversion plugin</translation>
+        <translation>Full-width and half-width converting plugin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>换行修复插件</source>
         <oldsource>换行修复插件，默认开启为 run 阶段</oldsource>
-        <translation>Linebreak fix plugin</translation>
+        <translation>Text linebreak fixing plugin</translation>
     </message>
 </context>
 <context>
@@ -2965,7 +3127,7 @@ Cache: %4</translation>
         <translation>Text plugin settings</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+78"/>
         <source>浏览</source>
         <translation>Browse</translation>
     </message>
@@ -3000,7 +3162,7 @@ Cache: %4</translation>
 <context>
     <name>ProjectCachePage</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+29"/>
+        <location filename="ProjectCachePage.cpp" line="+30"/>
         <source>缓存管理</source>
         <oldsource>缓存与问题</oldsource>
         <translation>Cache</translation>
@@ -3049,7 +3211,7 @@ Cache: %4</translation>
         <translation>Saved %1 cache files</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+55"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
@@ -3060,12 +3222,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+224"/>
+        <location line="+242"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location line="-223"/>
+        <location line="-241"/>
         <source>确定要删除选中的 %1 个缓存文件吗？</source>
         <oldsource>确定要删除选中的 </oldsource>
         <translation>Delete %1 selected cache files?</translation>
@@ -3077,7 +3239,12 @@ Cache: %4</translation>
         <translation>Deleted %1 cache files</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="+183"/>
+        <source>在当前文件中搜索 preproc/transraw/problems...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-234"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
@@ -3087,33 +3254,23 @@ Cache: %4</translation>
         <translation>Refresh</translation>
     </message>
     <message>
-        <location line="+178"/>
+        <location line="+181"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>
     <message>
         <location line="+10"/>
-        <location line="+37"/>
+        <location line="+40"/>
         <source>全部</source>
         <translation>All</translation>
     </message>
     <message>
-        <location line="-1"/>
-        <source>preproc</source>
-        <translation>preproc</translation>
-    </message>
-    <message>
-        <location line="-1"/>
-        <source>transraw</source>
-        <translation>transraw</translation>
-    </message>
-    <message>
-        <location filename="ProjectCachePageSearch.cpp" line="+231"/>
+        <location filename="ProjectCachePageSearch.cpp" line="+229"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="-10"/>
+        <location filename="ProjectCachePage.cpp" line="-12"/>
         <source>查找</source>
         <translation>Find</translation>
     </message>
@@ -3123,53 +3280,58 @@ Cache: %4</translation>
         <translation>Replace with</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+5"/>
+        <source>transraw</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>preproc</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>预览</source>
         <translation>Preview</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>替换</source>
         <translation>Replace</translation>
     </message>
     <message>
-        <location line="-132"/>
+        <location line="-144"/>
         <location filename="ProjectCachePageSearch.cpp" line="-99"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location line="+170"/>
+        <location line="+185"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location line="-169"/>
+        <location line="-184"/>
         <location filename="ProjectCachePageSearch.cpp" line="+58"/>
         <location line="+145"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location line="+200"/>
-        <location filename="ProjectCachePageEntries.cpp" line="+35"/>
+        <location line="+215"/>
+        <location filename="ProjectCachePageEntries.cpp" line="+32"/>
         <location line="+42"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
     </message>
     <message>
-        <location line="+17"/>
-        <source>在当前文件中搜索 preproc/transraw/problems...</source>
-        <translation>Search preproc / transraw / problems in current file...</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location line="+24"/>
         <source>只看问题句</source>
         <translation>Problems only</translation>
     </message>
     <message>
         <location filename="ProjectCachePageActions.cpp" line="+90"/>
-        <location filename="ProjectCachePage.cpp" line="+14"/>
+        <location filename="ProjectCachePage.cpp" line="+20"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
     </message>
@@ -3185,7 +3347,7 @@ Cache: %4</translation>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="+137"/>
+        <location filename="ProjectCachePageFiles.cpp" line="+134"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -3193,7 +3355,7 @@ Cache: %4</translation>
         <location filename="ProjectCachePageEntries.cpp" line="+105"/>
         <source>translated_view_text（只读）</source>
         <oldsource>translated_preview（只读）</oldsource>
-        <translation>translated_view_text (read-only)</translation>
+        <translation type="unfinished">translated_preview (read-only)</translation>
     </message>
     <message>
         <location filename="ProjectCachePageActions.cpp" line="-18"/>
@@ -3223,10 +3385,11 @@ Cache: %4</translation>
     <message>
         <location line="+1"/>
         <source>translated_raw_text（译文，可编辑）</source>
-        <translation>translated_raw_text (translation, editable)</translation>
+        <oldsource>pre_translated_text（译文，可编辑）</oldsource>
+        <translation type="unfinished">pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+57"/>
         <source>已删除 %1 个条目，保存后生效</source>
         <translation>Deleted %1 entries; save to apply</translation>
     </message>
@@ -3251,13 +3414,13 @@ Cache: %4</translation>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="+64"/>
-        <location filename="ProjectCachePage.cpp" line="-151"/>
+        <location filename="ProjectCachePageActions.cpp" line="+65"/>
+        <location filename="ProjectCachePage.cpp" line="-166"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+133"/>
+        <location filename="ProjectCachePage.cpp" line="+145"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
@@ -3273,7 +3436,7 @@ Cache: %4</translation>
         <translation>Cache is not a JSON array: %1</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="-161"/>
+        <location filename="ProjectCachePageEntries.cpp" line="-163"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
@@ -3288,7 +3451,7 @@ Cache: %4</translation>
         <translation>Save Changes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="-113"/>
+        <location filename="ProjectCachePageActions.cpp" line="-114"/>
         <source>完成</source>
         <translation>Done</translation>
     </message>
@@ -3298,7 +3461,7 @@ Cache: %4</translation>
         <translation>Failed</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+107"/>
         <source>收起批量替换</source>
         <translation>Collapse Batch Replace</translation>
     </message>
@@ -3315,17 +3478,12 @@ Cache: %4</translation>
     <message>
         <location line="+1"/>
         <source>思考人生</source>
-        <translation>Let me think</translation>
+        <translation>Reflect on life</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>是</source>
         <translation>Yes</translation>
-    </message>
-    <message>
-        <source>无法打开缓存文件: %1</source>
-        <oldsource>无法打开缓存文件: </oldsource>
-        <translation type="vanished">Cannot open cache: %1</translation>
     </message>
     <message>
         <location filename="ProjectCachePageFiles.cpp" line="+33"/>
@@ -3334,11 +3492,6 @@ Cache: %4</translation>
         <oldsource>解析缓存失败: </oldsource>
         <translation>Failed to parse cache: %1
 %2</translation>
-    </message>
-    <message>
-        <source>无法写入缓存文件: %1</source>
-        <oldsource>无法写入缓存文件: </oldsource>
-        <translation type="vanished">Cannot write cache: %1</translation>
     </message>
     <message>
         <location line="+15"/>
@@ -3383,7 +3536,8 @@ Cache: %4</translation>
         <location line="+6"/>
         <source>
 ...</source>
-        <translation>...</translation>
+        <translation>
+...</translation>
     </message>
     <message>
         <location line="+21"/>
@@ -3427,10 +3581,15 @@ Cache: %4</translation>
         <location line="+9"/>
         <location line="+238"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-186"/>
+        <location line="-210"/>
+        <source>Toml 格式化错误</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+24"/>
         <source>清理成功</source>
         <translation>Clear successfully</translation>
     </message>
@@ -3440,12 +3599,7 @@ Cache: %4</translation>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+28"/>
-        <source>Toml 格式化错误</source>
-        <translation>TOML formatting error</translation>
-    </message>
-    <message>
-        <location line="+24"/>
+        <location line="+52"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
@@ -3454,7 +3608,7 @@ Cache: %4</translation>
         <location line="+9"/>
         <location line="+51"/>
         <source>Api设置</source>
-        <translation>Api</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-50"/>
@@ -3483,13 +3637,13 @@ Cache: %4</translation>
         <location line="-51"/>
         <location line="+56"/>
         <source>项目字典</source>
-        <translation>Project dictionaries</translation>
+        <translation>ProjectDicts</translation>
     </message>
     <message>
         <location line="-55"/>
         <location line="+60"/>
         <source>字典设置</source>
-        <translation>Dictionary settings</translation>
+        <translation>DictSettings</translation>
     </message>
     <message>
         <location line="-59"/>
@@ -3565,7 +3719,7 @@ Cache: %4</translation>
         <location line="+10"/>
         <location line="+4"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
         <location line="-13"/>
@@ -3584,24 +3738,24 @@ Cache: %4</translation>
         <translation>Prompt file not found</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+31"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>agent用户</source>
-        <translation>Agent user</translation>
+        <translation>User-agent</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>agent系统</source>
-        <translation>Agent system</translation>
+        <translation>Sys-agent</translation>
     </message>
 </context>
 <context>
@@ -3629,7 +3783,7 @@ Cache: %4</translation>
         <translation>Match</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="+205"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="+206"/>
         <source>结果解析</source>
         <translation>Parse Result</translation>
     </message>
@@ -3652,7 +3806,7 @@ Cache: %4</translation>
     <message>
         <location line="-49"/>
         <source>请求 %1</source>
-        <translation>Request %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+50"/>
@@ -3675,64 +3829,20 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="+312"/>
+        <location filename="ApiSettingsPage.cpp" line="-175"/>
         <location line="+7"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="-6"/>
         <source>%1 必须是 JSON 对象</source>
-        <translation>%1 must be a JSON object</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+7"/>
         <source>%1 不是合法 JSON: %2</source>
-        <oldsource>%1 不是合法 JSON：%2</oldsource>
-        <translation>%1 is not valid JSON: %2</translation>
-    </message>
-</context>
-<context>
-    <name>ReadDicts</name>
-    <message>
-        <location filename="ReadDicts.cpp" line="+45"/>
-        <location line="+9"/>
-        <location line="+17"/>
-        <location line="+29"/>
-        <location line="+75"/>
-        <location line="+9"/>
-        <location line="+21"/>
-        <location line="+6"/>
-        <source>解析失败</source>
-        <translation>Parse failed</translation>
-    </message>
-    <message>
-        <location line="-165"/>
-        <location line="+130"/>
-        <source>%1 不符合 toml 规范</source>
-        <oldsource> 不符合 toml 规范</oldsource>
-        <translation>%1 is invalid TOML</translation>
-    </message>
-    <message>
-        <location line="-121"/>
-        <location line="+130"/>
-        <source>%1 不是预期的 json 格式</source>
-        <oldsource> 不是预期的 json 格式</oldsource>
-        <translation>%1 is not expected JSON</translation>
-    </message>
-    <message>
-        <location line="-113"/>
-        <location line="+134"/>
-        <source>%1 不符合 json 规范</source>
-        <oldsource> 不符合 json 规范</oldsource>
-        <translation>%1 is invalid JSON</translation>
-    </message>
-    <message>
-        <location line="-105"/>
-        <location line="+111"/>
-        <source>%1 不是支持的格式</source>
-        <oldsource> 不是支持的格式</oldsource>
-        <translation>%1 is unsupported</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3756,25 +3866,25 @@ Cache: %4</translation>
     <message>
         <location line="+6"/>
         <source>编辑</source>
-        <translation>Edit</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>编辑 H 关键词</source>
-        <translation>Edit H keywords</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>H 关键词</source>
-        <translation>H keywords</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+1"/>
         <source>每行一个关键字，保存时会自动写回 base64</source>
-        <translation>One keyword per line; saved back as base64 automatically</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
         <source>语法与 retranslKeys 完全相同</source>
         <translation>The grammars is completely same as retranslKeys&apos;</translation>
     </message>
@@ -3808,7 +3918,7 @@ Cache: %4</translation>
         <source>```
 问题概览:</source>
         <translation>```
-Problem overview:</translation>
+Issue summary:</translation>
     </message>
     <message>
         <location line="-56"/>
@@ -3822,7 +3932,7 @@ Problem overview:</translation>
         <location line="+1"/>
         <source>问题概览结束
 ```</source>
-        <translation>Problem overview end
+        <translation>Issue summary end
 ```</translation>
     </message>
     <message>
@@ -3844,13 +3954,7 @@ Problem overview:</translation>
         <translation>Resume (%1)</translation>
     </message>
     <message>
-        <location line="+18"/>
-        <source>文件处理器:</source>
-        <oldsource>文件格式:</oldsource>
-        <translation>File plugin:</translation>
-    </message>
-    <message>
-        <location line="+35"/>
+        <location line="+53"/>
         <source>文件处理器设置</source>
         <translation>File plugin settings</translation>
     </message>
@@ -3875,10 +3979,6 @@ Problem overview:</translation>
         <translation>Translation mode:</translation>
     </message>
     <message>
-        <source>实验性: Agent 模式</source>
-        <translation type="vanished">Exp: Agent mode</translation>
-    </message>
-    <message>
         <location line="+22"/>
         <source>开始翻译</source>
         <translation>Start translating</translation>
@@ -3899,14 +3999,19 @@ Problem overview:</translation>
         <translation>Translating</translation>
     </message>
     <message>
-        <location line="+500"/>
+        <location line="+333"/>
+        <source>文件处理器:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+167"/>
         <source>文件格式错误</source>
         <translation>File format error</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>自定义文件插件的格式必须是 .lua 或 .py 格式。</source>
-        <translation>Custom file plugin must be a .lua or .py file</translation>
+        <translation>Custom plugin must be *.lua or *.py format.</translation>
     </message>
     <message>
         <location line="+46"/>
@@ -3921,7 +4026,7 @@ Problem overview:</translation>
     <message>
         <location line="+14"/>
         <source>项目 %1 的翻译任务失败，请检查日志输出。</source>
-        <translation>Project %1 translation task failed; check the log output</translation>
+        <translation>Project %1 translation failed; check logs.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3933,12 +4038,12 @@ Problem overview:</translation>
     <message>
         <location line="+1"/>
         <source>项目 %1 连工厂函数都失败了，玩毛啊</source>
-        <translation>Project %1 failed even in the factory function; check the logs</translation>
+        <translation>Project %1 factory creation failed.</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>项目 %1 的生成任务已完成。</source>
-        <translation>Project %1 generation task completed</translation>
+        <translation>Project %1 generation done.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3947,7 +4052,7 @@ Problem overview:</translation>
         <location line="+2"/>
         <source>生成完成</source>
         <oldsource>项目 </oldsource>
-        <translation>Project</translation>
+        <translation>Project </translation>
     </message>
     <message>
         <location line="+27"/>
@@ -3957,12 +4062,12 @@ Problem overview:</translation>
     <message>
         <location line="-30"/>
         <source>请在 show_normal 文件夹中查收项目 %1 的预处理结果。</source>
-        <translation>Check the preprocessing result for project %1 in show_normal</translation>
+        <translation>Check project %1 preproc results in show_normal.</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>请在 gt_output 文件夹中查收项目 %1 的翻译结果。</source>
-        <translation>Check the translation result for project %1 in gt_output</translation>
+        <translation>Check project %1 translation in gt_output.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3973,7 +4078,7 @@ Problem overview:</translation>
     <message>
         <location line="+9"/>
         <source>项目 %1 的翻译任务停止成功。</source>
-        <translation>Project %1 translation task stopped successfully</translation>
+        <translation>Project %1 stopped.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -4017,7 +4122,7 @@ Problem overview:</translation>
     <message>
         <location line="+46"/>
         <source>解析失败</source>
-        <translation>Parse failed</translation>
+        <translation>Fail to analyze</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -4029,12 +4134,12 @@ Problem overview:</translation>
     <name>TLFCfgPage</name>
     <message>
         <location filename="TLFCfgPage.cpp" line="+24"/>
-        <location line="+213"/>
+        <location line="+222"/>
         <source>换行修复设置</source>
         <translation>Linebreak fix settings</translation>
     </message>
     <message>
-        <location line="-204"/>
+        <location line="-213"/>
         <source>优先标点</source>
         <translation>Prefer punctuations</translation>
     </message>
@@ -4052,11 +4157,6 @@ Problem overview:</translation>
         <location line="+0"/>
         <source>平均</source>
         <translation>Average</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>仅检查</source>
-        <translation>Check only</translation>
     </message>
     <message>
         <location line="+4"/>
@@ -4106,23 +4206,23 @@ Problem overview:</translation>
     <message>
         <location line="+1"/>
         <source>应选择适合目标语言的后端/模型/字典</source>
-        <translation>Choose a backend/model/dictionary suitable for the target language</translation>
+        <translation>Should choose backend/model/dict fit to target language</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>MeCab词典目录</source>
-        <translation>MeCab dictionary directory</translation>
+        <translation>MeCab dict dir</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>MeCab中文词典需手动下载</source>
         <oldsource>MeCab词典需手动下载</oldsource>
-        <translation>MeCab Chinese dictionary must be downloaded manually</translation>
+        <translation>Chinese dict of MeCab need to be manually downloaded</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+14"/>
         <source>选择MeCab词典目录</source>
-        <translation>Choose MeCab dictionary directory</translation>
+        <translation>Choose MeCab dict dir</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -4136,13 +4236,18 @@ Problem overview:</translation>
     </message>
     <message>
         <location line="-16"/>
-        <location line="+23"/>
-        <location line="+21"/>
+        <location line="+26"/>
+        <location line="+24"/>
         <source>浏览</source>
         <translation>Browse</translation>
     </message>
     <message>
-        <location line="-151"/>
+        <location line="-183"/>
+        <source>仅检查</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+23"/>
         <source>优先阈值</source>
         <translation>Prefer threshold</translation>
     </message>
@@ -4158,13 +4263,13 @@ Problem overview:</translation>
         <translation>May get better performance (installing pkuseg needs MS C++ Build Tools on your PC)</translation>
     </message>
     <message>
-        <location line="+66"/>
-        <location line="+21"/>
+        <location line="+72"/>
+        <location line="+24"/>
         <source>浏览模型目录</source>
         <translation>Browse model contents</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="-12"/>
         <source>Stanza语言ID</source>
         <translation>Stanza lang id</translation>
     </message>
@@ -4197,8 +4302,8 @@ Problem overview:</translation>
         <translation>Success Stream</translation>
     </message>
     <message>
-        <location line="+23"/>
-        <location line="+243"/>
+        <location line="+26"/>
+        <location line="+246"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
@@ -4217,7 +4322,7 @@ Problem overview:</translation>
         <location line="+1"/>
         <source> · 当前文件: %1</source>
         <oldsource> · 当前文件: </oldsource>
-        <translation>· Current file: %1</translation>
+        <translation> · Current file: %1</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -4344,7 +4449,7 @@ Problem overview:</translation>
     <message>
         <location line="+8"/>
         <source>版本号解析失败。</source>
-        <translation>Version parse failed</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+10"/>
@@ -4390,7 +4495,7 @@ Problem overview:</translation>
     <message>
         <location line="+19"/>
         <source>下载更新</source>
-        <translation>Download update</translation>
+        <translation>Downloading update</translation>
     </message>
     <message>
         <location line="-273"/>

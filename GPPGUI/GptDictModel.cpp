@@ -1,11 +1,11 @@
 #include "GptDictModel.h"
-#include <QFont>
 
+#include <utility>
 GptDictModel::GptDictModel(QObject* parent)
     : QAbstractTableModel(parent)
 {
-    // 初始化表头
-    m_headerLabels << tr("原文") << tr("译文") << tr("描述");
+    m_headerLabels << QString{} << tr("原文") << tr("译文") << tr("描述");
+    Q_ASSERT(m_headerLabels.count() == Column::ColumnCount);
 }
 
 // 返回数据行数
@@ -45,11 +45,15 @@ QVariant GptDictModel::data(const QModelIndex& index, int role) const
         const GptDictEntry& entry = m_entries.at(index.row());
         switch (index.column())
         {
-        case 0: return entry.original;
-        case 1: return entry.translation;
-        case 2: return entry.description;
+        case Column::Original: return entry.original;
+        case Column::Translation: return entry.translation;
+        case Column::Description: return entry.description;
         default: break;
         }
+    }
+
+    if (role == Qt::ToolTipRole && index.column() == Column::DragHandle) {
+        return tr("拖动调整顺序");
     }
 
     // 可以为特定单元格设置字体、颜色等
@@ -83,8 +87,12 @@ Qt::ItemFlags GptDictModel::flags(const QModelIndex& index) const
         return Qt::NoItemFlags;
     }
 
-    // 获取默认标志并添加 ItemIsEditable 使其可编辑
-    return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
+    Qt::ItemFlags itemFlags = QAbstractTableModel::flags(index);
+    if (index.column() == Column::DragHandle) {
+        return itemFlags | Qt::ItemIsDragEnabled;
+    }
+
+    return itemFlags;
 }
 
 // 2. 实现 setData，当用户完成编辑时，视图会调用此函数
@@ -104,15 +112,15 @@ bool GptDictModel::setData(const QModelIndex& index, const QVariant& value, int 
     // 根据列更新对应的数据
     switch (index.column())
     {
-    case 0:
+    case Column::Original:
         if (entry.original == textValue) return false;
         entry.original = textValue;
         break;
-    case 1:
+    case Column::Translation:
         if (entry.translation == textValue) return false;
         entry.translation = textValue;
         break;
-    case 2:
+    case Column::Description:
         if (entry.description == textValue) return false;
         entry.description = textValue;
         break;
@@ -124,6 +132,34 @@ bool GptDictModel::setData(const QModelIndex& index, const QVariant& value, int 
     // 通知所有连接到此模型的视图，指定单元格的数据已更改，需要重绘
     Q_EMIT dataChanged(index, index, { Qt::DisplayRole, Qt::EditRole });
 
+    return true;
+}
+
+bool GptDictModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
+    const QModelIndex& destinationParent, int destinationChild)
+{
+    if (sourceParent.isValid() || destinationParent.isValid() || count <= 0
+        || sourceRow < 0 || sourceRow + count > m_entries.size()
+        || destinationChild < 0 || destinationChild > m_entries.size()
+        || (destinationChild >= sourceRow && destinationChild <= sourceRow + count)) {
+        return false;
+    }
+
+    if (!beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, destinationChild)) {
+        return false;
+    }
+
+    QList<GptDictEntry> movedEntries;
+    movedEntries.reserve(count);
+    for (int i = 0; i < count; ++i) {
+        movedEntries.push_back(m_entries.takeAt(sourceRow));
+    }
+    const int insertRow = destinationChild > sourceRow ? destinationChild - count : destinationChild;
+    for (int i = 0; i < movedEntries.size(); ++i) {
+        m_entries.insert(insertRow + i, std::move(movedEntries[i]));
+    }
+
+    endMoveRows();
     return true;
 }
 
@@ -140,6 +176,9 @@ void GptDictModel::loadData(const QList<GptDictEntry>& entries)
 
 bool GptDictModel::insertRow(int row, const GptDictEntry& entry, const QModelIndex& parent)
 {
+    if (parent.isValid() || row < 0 || row > m_entries.count()) {
+        return false;
+    }
     // 在插入行之前，调用 beginInsertRows()
     beginInsertRows(parent, row, row);
 
@@ -152,7 +191,7 @@ bool GptDictModel::insertRow(int row, const GptDictEntry& entry, const QModelInd
 
 bool GptDictModel::removeRow(int row, const QModelIndex& parent)
 {
-    if (row < 0 || row >= m_entries.count()) {
+    if (parent.isValid() || row < 0 || row >= m_entries.count()) {
         return false;
     }
 
@@ -161,6 +200,20 @@ bool GptDictModel::removeRow(int row, const QModelIndex& parent)
     m_entries.removeAt(row);
     // 移除完成后，调用 endRemoveRows()
     endRemoveRows();
+    return true;
+}
+
+bool GptDictModel::setEntry(int row, const GptDictEntry& entry)
+{
+    if (row < 0 || row >= m_entries.count()
+        || (m_entries[row].original == entry.original
+            && m_entries[row].translation == entry.translation
+            && m_entries[row].description == entry.description)) {
+        return false;
+    }
+    m_entries[row] = entry;
+    Q_EMIT dataChanged(index(row, 0), index(row, Column::ColumnCount - 1),
+        { Qt::DisplayRole, Qt::EditRole });
     return true;
 }
 

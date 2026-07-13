@@ -38,16 +38,29 @@ export
 
         auto appendPatternFunc = [&](const auto& conditionTbl)
             {
+                if (!conditionTbl.contains("conditionTarget") || !conditionTbl.at("conditionTarget").is_string()
+                    || !conditionTbl.contains("conditionReg") || !conditionTbl.at("conditionReg").is_string()
+                    || (conditionTbl.contains("compileModifier") && !conditionTbl.at("compileModifier").is_string()))
+                {
+                    return;
+                }
+
                 GppConditionPattern pattern;
                 std::string conditionTargetStr = conditionTbl.at("conditionTarget").as_string();
-                while (conditionTargetStr.starts_with("prev_")) {
-                    --pattern.sentenceOffset;
-                    conditionTargetStr = conditionTargetStr.substr(5);
+                while (true) {
+	                if (conditionTargetStr.starts_with("prev_")) {
+                        --pattern.sentenceOffset;
+                        conditionTargetStr.erase(0, 5);
+	                }
+                    else if (conditionTargetStr.starts_with("next_")) {
+                        ++pattern.sentenceOffset;
+                        conditionTargetStr.erase(0, 5);
+                    }
+                    else {
+                        break;
+                    }
                 }
-                while (conditionTargetStr.starts_with("next_")) {
-                    ++pattern.sentenceOffset;
-                    conditionTargetStr = conditionTargetStr.substr(5);
-                }
+
                 pattern.conditionTarget = chooseCachePart(conditionTargetStr);
                 const std::string conditionRegStr = conditionTbl.at("conditionReg").as_string();
                 if (conditionRegStr.empty()) {
@@ -56,11 +69,7 @@ export
                 const std::string modifier = toml::find_or(conditionTbl, "compileModifier", defaultRegCompileModifier);
                 pattern.conditionReg.setPattern(conditionRegStr).setModifier(modifier).compile();
                 if (!pattern.conditionReg) {
-                    throw std::runtime_error(gppTr(
-                        "ConditionTool.createGppCondition",
-                        "正则表达式编译失败: [%1]")
-                        .arg(conditionRegStr)
-                        .toStdString());
+                    return;
                 }
                 patterns.push_back(std::move(pattern));
             };
@@ -73,13 +82,6 @@ export
         }
         else if (conditionPatterns.is_table()) {
             appendPatternFunc(conditionPatterns);
-            if (conditionPatterns.contains("additionalPatterns") && conditionPatterns.at("additionalPatterns").is_array()) {
-                for (const auto& condition : conditionPatterns.at("additionalPatterns").as_array()
-                    | std::views::filter([](const auto& condition) { return condition.is_table(); }))
-                {
-                    appendPatternFunc(condition);
-                }
-            }
         }
 
         return patterns;
@@ -87,12 +89,17 @@ export
 
     template<typename TC>
     ConditionType getConditionType(const toml::basic_value<TC>& tbl) {
-        if (tbl.contains("conditionTarget") && !tbl.at("conditionTarget").as_string().empty()
-            && tbl.contains("conditionReg") && !tbl.at("conditionReg").as_string().empty()) {
+        if (tbl.contains("conditionTarget") && tbl.at("conditionTarget").is_string()
+            && !tbl.at("conditionTarget").as_string().empty()
+            && tbl.contains("conditionReg") && tbl.at("conditionReg").is_string()
+            && !tbl.at("conditionReg").as_string().empty())
+        {
             return ConditionType::Gpp;
         }
-        if (tbl.contains("conditionScript") && !tbl.at("conditionScript").as_string().empty()
-            && tbl.contains("conditionFunc") && !tbl.at("conditionFunc").as_string().empty()) 
+        if (tbl.contains("conditionScript") && tbl.at("conditionScript").is_string()
+            && !tbl.at("conditionScript").as_string().empty()
+            && tbl.contains("conditionFunc") && tbl.at("conditionFunc").is_string()
+            && !tbl.at("conditionFunc").as_string().empty())
         {
             const std::string conditionScriptStr = str2Lower(tbl.at("conditionScript").as_string());
             if (conditionScriptStr.ends_with(".lua")) {
@@ -121,9 +128,12 @@ export
                 case ConditionType::Gpp:
                 {
                     GPPCondition gppCondition = createGppCondition(tbl);
-                    RetFuncType checkFunc = [condr = std::move(gppCondition)](const Sentence* se, Args...) -> bool
+                    if (gppCondition.empty()) {
+                        return;
+                    }
+                    RetFuncType checkFunc = [condR = std::move(gppCondition)](const Sentence* se, Args...) -> bool
                         {
-                            return checkGppCondition(condr, se);
+                            return checkGppCondition(condR, se);
                         };
                     funcs.push_back(std::move(checkFunc));
                 }
@@ -133,7 +143,7 @@ export
                 {
                     std::string conditionLuaStr = tbl.at("conditionScript").as_string();
                     replaceStrInplace(conditionLuaStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
-                    const std::string& conditionFuncStr = tbl.at("conditionFunc").as_string();
+                    const std::string conditionFuncStr = tbl.at("conditionFunc").as_string();
                     const std::optional<std::shared_ptr<LuaStateInstance>> luaStateOpt = luaManager->registerFunction(
                         conditionLuaStr, conditionFuncStr);
                     if (luaStateOpt) {
@@ -226,8 +236,7 @@ export
                 break;
 
                 default:
-                    throw std::runtime_error(gppTr("ConditionTool.getCheckSeCondFunc", "未知的条件类型")
-                        .toStdString());
+                    return;
                 }
             };
 

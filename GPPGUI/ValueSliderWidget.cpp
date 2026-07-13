@@ -43,7 +43,7 @@ void ValueSliderWidget::setValue(double value)
     m_slider->blockSignals(true);
     m_spinBox->blockSignals(true);
 
-    m_slider->setValue(static_cast<int>(value * 100));
+    m_slider->setValue((int)(value * 100));
     m_spinBox->setValue(value);
 
     // 恢复信号
@@ -84,7 +84,7 @@ void ValueSliderWidget::onSliderValueChanged(int intValue)
 void ValueSliderWidget::onSpinBoxValueChanged(double doubleValue)
 {
     // 将数字框的浮点数值  转换为整数值
-    int intValue = static_cast<int>(doubleValue * 100);
+    int intValue = (int)(doubleValue * 100);
 
     // 更新滑块的值，注意阻塞信号
     m_slider->blockSignals(true);

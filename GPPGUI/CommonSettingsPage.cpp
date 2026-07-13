@@ -15,9 +15,10 @@
 #include "ElaRadioButton.h"
 #include "ElaSpinBox.h"
 #include "ElaToggleSwitch.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaToolTip.h"
 #include "ElaDoubleText.h"
+#include "TreeSitterHighlighter.h"
 
 import Tool;
 
@@ -549,7 +550,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* mecabDictDirArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* mecabDictDirLayout = new QHBoxLayout(mecabDictDirArea);
 	ElaDoubleText* mecabDictDirText = new ElaDoubleText(tr("MeCab词典目录"), 16,
-		tr("MeCab词典目录，程序自带一个"), 10, "", mecabDictDirArea);
+		tr("MeCab词典目录，程序自带一个日文词典"), 10, "", mecabDictDirArea);
 	mecabDictDirLayout->addWidget(mecabDictDirText);
 	mecabDictDirLayout->addStretch();
 	ElaLineEdit* mecabDictDirLineEdit = new ElaLineEdit(mecabDictDirArea);
@@ -557,9 +558,12 @@ void CommonSettingsPage::setupUi()
 	mecabDictDirLineEdit->setText(QString::fromStdString(mecabDictDir));
 	mecabDictDirLayout->addWidget(mecabDictDirLineEdit);
 	tokenizerSettingsDrawerArea->addDrawer(mecabDictDirArea);
-	ElaPushButton* mecabDictDirButton = new ElaPushButton(tr("浏览"), mecabDictDirArea);
+	ElaToolButton* mecabDictDirButton = new ElaToolButton(mecabDictDirArea);
+	mecabDictDirButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	mecabDictDirButton->setElaIcon(ElaIconType::FolderOpen);
+	mecabDictDirButton->setText(tr("浏览"));
 	mecabDictDirLayout->addWidget(mecabDictDirButton);
-	connect(mecabDictDirButton, &QPushButton::clicked, this, [=]()
+	connect(mecabDictDirButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString dir = QFileDialog::getExistingDirectory(window(), tr("选择MeCab词典目录"), mecabDictDirLineEdit->text());
 			if (!dir.isEmpty()) {
@@ -581,9 +585,12 @@ void CommonSettingsPage::setupUi()
 	spaCyModelNameLineEdit->setText(QString::fromStdString(spaCyModelName));
 	spaCyModelNameLayout->addWidget(spaCyModelNameLineEdit);
 	tokenizerSettingsDrawerArea->addDrawer(spaCyModelNameArea);
-	ElaPushButton* spaCyModelNameButton = new ElaPushButton(tr("浏览"), spaCyModelNameArea);
+	ElaToolButton* spaCyModelNameButton = new ElaToolButton(spaCyModelNameArea);
+	spaCyModelNameButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	spaCyModelNameButton->setElaIcon(ElaIconType::FolderOpen);
+	spaCyModelNameButton->setText(tr("浏览"));
 	spaCyModelNameLayout->addWidget(spaCyModelNameButton);
-	connect(spaCyModelNameButton, &QPushButton::clicked, this, [=]()
+	connect(spaCyModelNameButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl("https://spacy.io/models"));
 		});
@@ -601,9 +608,12 @@ void CommonSettingsPage::setupUi()
 	stanzaLangLineEdit->setText(QString::fromStdString(stanzaLang));
 	stanzaLangLayout->addWidget(stanzaLangLineEdit);
 	tokenizerSettingsDrawerArea->addDrawer(stanzaLangArea);
-	ElaPushButton* stanzaLangButton = new ElaPushButton(tr("浏览"), stanzaLangArea);
+	ElaToolButton* stanzaLangButton = new ElaToolButton(stanzaLangArea);
+	stanzaLangButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	stanzaLangButton->setElaIcon(ElaIconType::FolderOpen);
+	stanzaLangButton->setText(tr("浏览"));
 	stanzaLangLayout->addWidget(stanzaLangButton);
-	connect(stanzaLangButton, &QPushButton::clicked, this, [=]()
+	connect(stanzaLangButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl("https://stanfordnlp.github.io/stanza/ner_models.html"));
 		});
@@ -619,14 +629,19 @@ void CommonSettingsPage::setupUi()
 	lbsVal.as_string_fmt().fmt = toml::string_format::basic;
 	QString linebreakSymbolStr = QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{"linebreakSymbol", lbsVal}} }));
 	mainLayout->addSpacing(15);
-	ElaText* linebreakText = new ElaText(tr("本项目所使用的换行符"), 18, mainWidget);
-	ElaToolTip* linebreakTip = new ElaToolTip(linebreakText);
-	linebreakTip->setToolTip(tr("将换行符统一规范为 &lt;br&gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。<br>具体替换时机详见使用说明，auto为自动检测"));
-	mainLayout->addWidget(linebreakText);
-	ElaPlainTextEdit* linebreakEdit = new ElaPlainTextEdit(mainWidget);
+	ElaScrollPageArea* linebreakArea = new ElaScrollPageArea(mainWidget);
+	linebreakArea->setFixedHeight(165);
+	QVBoxLayout* linebreakLayout = new QVBoxLayout(linebreakArea);
+	linebreakLayout->setContentsMargins(12, 6, 12, 8);
+	linebreakLayout->setSpacing(6);
+	linebreakLayout->addWidget(new ElaDoubleText(tr("本项目所使用的换行符"), 16,
+		tr("项目统一使用的换行符，auto 表示自动检测"), 10, "", linebreakArea));
+	ElaPlainTextEdit* linebreakEdit = new ElaPlainTextEdit(linebreakArea);
 	linebreakEdit->setPlainText(linebreakSymbolStr);
 	linebreakEdit->setFixedHeight(100);
-	mainLayout->addWidget(linebreakEdit);
+	installTreeSitterHighlighter(linebreakEdit->document(), SyntaxLanguage::Toml);
+	linebreakLayout->addWidget(linebreakEdit);
+	mainLayout->addWidget(linebreakArea);
 
 
 	m_applyFunc = [=]()

@@ -129,6 +129,9 @@
     <ClCompile Include="DefaultPromptPage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
+    <ClCompile Include="DictionaryEntryDialog.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
     <ClCompile Include="BasePage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
@@ -150,13 +153,13 @@
     <ClCompile Include="UpdateChecker.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="CommonNormalDictPage.cpp">
+    <ClCompile Include="CommonNormalDictsPage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
     <ClCompile Include="TF2HCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="CommonGptDictPage.cpp">
+    <ClCompile Include="CommonGptDictsPage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
     <ClCompile Include="DictExSettingsPage.cpp">
@@ -165,7 +168,10 @@
     <ClCompile Include="PDFCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="ReadDicts.cpp">
+    <ClCompile Include="DictionaryReader.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ReorderableTableView.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
     <ClCompile Include="SkipTransCfgPage.cpp">
@@ -175,6 +181,9 @@
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
     <ClCompile Include="ElaDoubleText.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="ElaAlignedCheckBox.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
     <ClCompile Include="TreeSitterHighlighter.cpp">
@@ -281,13 +290,13 @@
     <QtMoc Include="UpdateChecker.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="CommonNormalDictPage.h">
+    <QtMoc Include="CommonNormalDictsPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="TF2HCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="CommonGptDictPage.h">
+    <QtMoc Include="CommonGptDictsPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="DictExSettingsPage.h">
@@ -296,7 +305,7 @@
     <QtMoc Include="PDFCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="ReadDicts.h">
+    <QtMoc Include="DictionaryReader.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="SkipTransCfgPage.h">
@@ -306,6 +315,9 @@
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="ElaDoubleText.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="ElaAlignedCheckBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
   </ItemGroup>
@@ -332,7 +344,13 @@
     <ClInclude Include="ElaNoWheelComboBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
+    <QtMoc Include="DictionaryEntryDialog.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
     <ClInclude Include="TreeSitterHighlighter.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="ReorderableTableView.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
   </ItemGroup>

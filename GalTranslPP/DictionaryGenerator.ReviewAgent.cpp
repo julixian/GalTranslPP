@@ -765,7 +765,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
     }
 
     const fs::path currentFile = guessCurrentFileForTerm(group.sourceTerm);
-    const std::string reviewIndexLog = std::format("{}/{}", groupIndex + 1, m_groups.size());
+    const std::string reviewIndexLog = std::format("{}/{}", groupIndex, m_groups.size());
     m_logger->info(gppTr(
         "DictionaryGeneratorReviewAgent.reviewTermGroup",
         "[线程 %1] [术语 %2] 字典审校 Agent 开始处理 `%3`，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次")
@@ -956,11 +956,11 @@ void DictionaryGeneratorReviewAgent::runReviewWorkers() {
     ctpl::thread_pool pool(reviewThreads);
     std::vector<std::future<void>> results;
     results.reserve(m_groups.size());
-    for (int groupIndex = 0; groupIndex < (int)m_groups.size(); ++groupIndex) {
-        results.emplace_back(pool.push([this, groupIndex](int threadId)
+    for (const auto& [groupIndex, group] : m_groups | std::views::enumerate) {
+        results.emplace_back(pool.push([this, groupIndex, &group](int threadId)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
-                reviewTermGroup(groupIndex, m_groups[groupIndex], threadId);
+                reviewTermGroup(groupIndex + 1, group, threadId + 1);
                 m_controller->updateBar();
             }));
     }

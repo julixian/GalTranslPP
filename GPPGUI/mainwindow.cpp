@@ -27,8 +27,8 @@
 
 #include "HomePage.h"
 #include "DefaultPromptPage.h"
-#include "CommonGptDictPage.h"
-#include "CommonNormalDictPage.h"
+#include "CommonGptDictsPage.h"
+#include "CommonNormalDictsPage.h"
 #include "ProjectSettingsPage.h"
 #include "AppSettingsPage.h"
 
@@ -275,9 +275,9 @@ void MainWindow::initContent()
     m_homePage = new HomePage(m_globalConfig, this);
     m_defaultPromptPage = new DefaultPromptPage(this);
 
-    m_commonPreDictPage = new CommonNormalDictPage("pre", m_globalConfig, this);
-    m_commonGptDictPage = new CommonGptDictPage(m_globalConfig, this);
-    m_commonPostDictPage = new CommonNormalDictPage("post", m_globalConfig, this);
+    m_commonPreDictsPage = new CommonNormalDictsPage("pre", m_globalConfig, this);
+    m_commonGptDictsPage = new CommonGptDictsPage(m_globalConfig, this);
+    m_commonPostDictsPage = new CommonNormalDictsPage("post", m_globalConfig, this);
 
     m_appSettingsPage = new AppSettingsPage(m_globalConfig, this);
 
@@ -292,12 +292,12 @@ void MainWindow::initContent()
                 page->refreshCommonDicts();
             }
         };
-    addPageNode(tr("通用译前字典"), m_commonPreDictPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonPreDictPage, &CommonNormalDictPage::commonDictsChangedSignal, this, refreshCommonDicts);
-    addPageNode(tr("通用GPT字典"), m_commonGptDictPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonGptDictPage, &CommonGptDictPage::commonDictsChangedSignal, this, refreshCommonDicts);
-    addPageNode(tr("通用译后字典"), m_commonPostDictPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonPostDictPage, &CommonNormalDictPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    addPageNode(tr("通用译前字典"), m_commonPreDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(m_commonPreDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    addPageNode(tr("通用GPT字典"), m_commonGptDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(m_commonGptDictsPage, &CommonGptDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    addPageNode(tr("通用译后字典"), m_commonPostDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
+    connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
 
     addExpanderNode(tr("项目管理"), m_projectExpanderKey, ElaIconType::BriefcaseBlank);
     const auto projects = toml::find_or_default<toml::array>(m_globalConfig, "projects");
@@ -642,9 +642,9 @@ void MainWindow::onFinishTranslating(const QString& nodeKey)
 void MainWindow::onCloseWindowClicked(bool restart)
 {
     m_defaultPromptPage->apply2Config();
-    m_commonPreDictPage->apply2Config();
-    m_commonGptDictPage->apply2Config();
-    m_commonPostDictPage->apply2Config();
+    m_commonPreDictsPage->apply2Config();
+    m_commonGptDictsPage->apply2Config();
+    m_commonPostDictsPage->apply2Config();
 
     toml::array projects;
     for (auto& page : m_projectPages) {

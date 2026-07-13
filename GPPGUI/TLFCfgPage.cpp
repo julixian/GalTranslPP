@@ -11,7 +11,7 @@
 #include "ElaToggleSwitch.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaToolTip.h"
 #include "ValueSliderWidget.h"
 #include "ElaDoubleText.h"
@@ -160,9 +160,12 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mecabDictDirLineEdit->setFixedWidth(400);
 	mecabDictDirLineEdit->setText(mecabDictDir);
 	mecabDictDirLayout->addWidget(mecabDictDirLineEdit);
-	ElaPushButton* browseMecabDictDirButton = new ElaPushButton(tr("浏览"), mecabDictDirArea);
+	ElaToolButton* browseMecabDictDirButton = new ElaToolButton(mecabDictDirArea);
+	browseMecabDictDirButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	browseMecabDictDirButton->setElaIcon(ElaIconType::FolderOpen);
+	browseMecabDictDirButton->setText(tr("浏览"));
 	mecabDictDirLayout->addWidget(browseMecabDictDirButton);
-	connect(browseMecabDictDirButton, &ElaPushButton::clicked, this, [=]()
+	connect(browseMecabDictDirButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString dir = QFileDialog::getExistingDirectory(window(), tr("选择MeCab词典目录"), mecabDictDirLineEdit->text());
 			if (!dir.isEmpty()) {
@@ -183,10 +186,13 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	spaCyModelNameLineEdit->setFixedWidth(200);
 	spaCyModelNameLineEdit->setText(spaCyModelName);
 	spaCyModelNameLayout->addWidget(spaCyModelNameLineEdit);
-	ElaPushButton* browseSpaCyModelButton = new ElaPushButton(tr("浏览"), spaCyModelNameArea);
+	ElaToolButton* browseSpaCyModelButton = new ElaToolButton(spaCyModelNameArea);
+	browseSpaCyModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	browseSpaCyModelButton->setElaIcon(ElaIconType::FolderOpen);
+	browseSpaCyModelButton->setText(tr("浏览"));
 	browseSpaCyModelButton->setToolTip(tr("浏览模型目录"));
 	spaCyModelNameLayout->addWidget(browseSpaCyModelButton);
-	connect(browseSpaCyModelButton, &ElaPushButton::clicked, this, [=]()
+	connect(browseSpaCyModelButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl("https://spacy.io/models"));
 		});
@@ -204,10 +210,13 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	stanzaLineEdit->setFixedWidth(200);
 	stanzaLineEdit->setText(stanzaLang);
 	stanzaLayout->addWidget(stanzaLineEdit);
-	ElaPushButton* browseStanzaModelButton = new ElaPushButton(tr("浏览"), stanzaArea);
+	ElaToolButton* browseStanzaModelButton = new ElaToolButton(stanzaArea);
+	browseStanzaModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	browseStanzaModelButton->setElaIcon(ElaIconType::FolderOpen);
+	browseStanzaModelButton->setText(tr("浏览"));
 	browseStanzaModelButton->setToolTip(tr("浏览模型目录"));
 	stanzaLayout->addWidget(browseStanzaModelButton);
-	connect(browseStanzaModelButton, &ElaPushButton::clicked, this, [=]()
+	connect(browseStanzaModelButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl("https://stanfordnlp.github.io/stanza/ner_models.html"));
 		});

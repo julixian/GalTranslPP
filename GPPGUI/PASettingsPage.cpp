@@ -4,14 +4,13 @@
 #include <QHBoxLayout>
 #include <QDesktopServices>
 #include <QButtonGroup>
-#include <QFileDialog>
 
 #include "ElaText.h"
 #include "ElaLineEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
 #include "ElaMessageBar.h"
-#include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaToggleButton.h"
 #include "ElaNoWheelComboBox.h"
@@ -31,6 +30,11 @@ PASettingsPage::PASettingsPage(toml::ordered_value& projectConfig, QWidget* pare
 	setTitleVisible(false);
 
 	setupUi();
+}
+
+PASettingsPage::~PASettingsPage()
+{
+	delete m_compareConfigWidget;
 }
 
 void PASettingsPage::setupUi()
@@ -70,9 +74,9 @@ void PASettingsPage::setupUi()
 		{ "NotTargetLanguage", tr("语言不通"), false, "orig", "transview" },
 		{ "InvalidCharacter", tr("非法字符"), false, "orig", "transview" },
 	};
+	// GUI 仅暴露 chooseStringRef 可直接返回字符串引用的 CachePart。
 	const QStringList cachePartNames = {
-		"orig", "preproc", "transraw", "transview", "name", "names",
-		"nametrans", "namestrans", "problems", "otherinfo", "transby",
+		"orig", "preproc", "transraw", "transview", "name", "nametrans", "transby",
 	};
 	std::vector<ProblemRow> problemRows;
 	ElaText* problemListTitle = new ElaText(tr("要发现的问题清单"), mainWidget);
@@ -92,6 +96,12 @@ void PASettingsPage::setupUi()
 			enabled = toml::find_or(problemConfigValue, "enable", definition.defaultEnabled);
 			base = toml::find_or(problemConfigValue, "base", definition.defaultBase);
 			check = toml::find_or(problemConfigValue, "check", definition.defaultCheck);
+		}
+		if (!cachePartNames.contains(QString::fromStdString(base))) {
+			base = definition.defaultBase;
+		}
+		if (!cachePartNames.contains(QString::fromStdString(check))) {
+			check = definition.defaultCheck;
 		}
 
 		ElaToggleButton* enableButton = new ElaToggleButton(definition.label, mainWidget);
@@ -154,10 +164,12 @@ void PASettingsPage::setupUi()
 	codePageLayout->addWidget(codePageEdit);
 	mainLayout->addWidget(codePageArea);
 
-	ElaWidget* compareConfigWidget = new ElaWidget();
+	m_compareConfigWidget = new ElaWidget();
+	ElaWidget* compareConfigWidget = m_compareConfigWidget;
 	compareConfigWidget->setWindowTitle(tr("比较对象设置"));
 	compareConfigWidget->setWindowModality(Qt::ApplicationModal);
 	compareConfigWidget->setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
+	compareConfigWidget->resize(760, 760);
 	QVBoxLayout* compareConfigLayout = new QVBoxLayout(compareConfigWidget);
 	compareConfigLayout->setContentsMargins(10, 0, 10, 10);
 	compareConfigLayout->setSpacing(0);
@@ -176,7 +188,7 @@ void PASettingsPage::setupUi()
 	compareContent->setObjectName("ElaScrollPageContainer");
 	compareContent->setStyleSheet("#ElaScrollPageContainer{background-color:transparent;}");
 	QVBoxLayout* compareContentLayout = new QVBoxLayout(compareContent);
-	compareContentLayout->setContentsMargins(0, 0, 0, 0);
+	compareContentLayout->setContentsMargins(0, 0, 10, 0);
 	compareContentLayout->setSpacing(8);
 
 	QWidget* compareIntroWidget = new QWidget(compareContent);
@@ -229,14 +241,19 @@ void PASettingsPage::setupUi()
 		tr("设置每个问题分析规则使用的 base/check 字段"), 10, "", compareObjectArea);
 	compareObjectLayout->addWidget(compareObjectTitle);
 	compareObjectLayout->addStretch();
-	ElaPushButton* compareObjectButton = new ElaPushButton(tr("进入设置"), compareObjectArea);
+	ElaToolButton* compareObjectButton = new ElaToolButton(compareObjectArea);
+	compareObjectButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	compareObjectButton->setElaIcon(ElaIconType::CodeCompare);
+	compareObjectButton->setText(tr("进入设置"));
 	compareObjectButton->setFixedWidth(110);
 	compareObjectLayout->addWidget(compareObjectButton);
-	connect(compareObjectButton, &ElaPushButton::clicked, this, [=]()
+	connect(compareObjectButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QWidget* mainWindow = window();
-			compareConfigWidget->resize(760, mainWindow ? mainWindow->height() : 760);
-			compareConfigWidget->moveToCenter();
+			if (mainWindow) {
+				compareConfigWidget->move(mainWindow->frameGeometry().center()
+					- compareConfigWidget->rect().center());
+			}
 			compareConfigWidget->show();
 			compareConfigWidget->raise();
 			compareConfigWidget->activateWindow();
@@ -249,19 +266,16 @@ void PASettingsPage::setupUi()
 		[=](const std::string& configKey, const QString& title, std::optional<int> minHeight = std::nullopt)
 		-> std::function<void()>
 		{
-			toml::ordered_value PASettingsArr = toml::find_or_default<toml::ordered_value>(m_projectConfig, "problemAnalyze", configKey);
-			if (!PASettingsArr.is_array()) {
-				PASettingsArr = toml::array{};
-			}
-			PASettingsArr.comments().clear();
-			ElaText* PASettingsHelperText = new ElaText(title, mainWidget);
-			ElaToolTip* PASettingsHelperTip = new ElaToolTip(PASettingsHelperText);
-			PASettingsHelperTip->setToolTip(tr("点击下方『语法示例』按钮以获取具体语法规则及作用"));
-			PASettingsHelperText->setTextPixelSize(18);
-			PASettingsHelperText->setWordWrap(false);
-			mainLayout->addWidget(PASettingsHelperText);
-			ElaPlainTextEdit* PASettingsEdit = new ElaPlainTextEdit(mainWidget);
+			toml::ordered_array PASettingsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "problemAnalyze", configKey);
+			ElaScrollPageArea* PASettingsArea = new ElaScrollPageArea(mainWidget);
+			QVBoxLayout* PASettingsLayout = new QVBoxLayout(PASettingsArea);
+			PASettingsLayout->setContentsMargins(12, 6, 12, 8);
+			PASettingsLayout->setSpacing(6);
+			PASettingsLayout->addWidget(new ElaDoubleText(title, 16,
+				tr("正则表达式数组，具体规则见下方语法示例"), 10, "", PASettingsArea));
+			ElaPlainTextEdit* PASettingsEdit = new ElaPlainTextEdit(PASettingsArea);
 			if (minHeight) {
+				PASettingsArea->setFixedHeight(*minHeight + 65);
 				PASettingsEdit->setMinimumHeight(*minHeight);
 			}
 			QFont font = PASettingsEdit->font();
@@ -270,7 +284,8 @@ void PASettingsPage::setupUi()
 			PASettingsEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ configKey, PASettingsArr }} })));
 			PASettingsEdit->moveCursor(QTextCursor::Start);
 			installTreeSitterHighlighter(PASettingsEdit->document(), SyntaxLanguage::Toml);
-			mainLayout->addWidget(PASettingsEdit);
+			PASettingsLayout->addWidget(PASettingsEdit);
+			mainLayout->addWidget(PASettingsArea);
 
 			std::function<void()> saveFunc = [=]()
 				{
@@ -293,7 +308,7 @@ void PASettingsPage::setupUi()
 		};
 
 	// 正则表达式列表，重翻正则在缓存的 orig 或 某条 problem 中能 search 通过的句子。
-	auto retranslKeysSaveFunc = createPAPlainTextEditAreaFunc("retranslKeys", tr("重翻关键字设定"), 250);
+	auto retranslKeysSaveFunc = createPAPlainTextEditAreaFunc("retranslKeys", tr("重翻关键字设定"), 330);
 	mainLayout->addSpacing(20);
 
 	// 正则表达式列表，如果一条 problem 能被以下正则 search 通过，则不加入 problems 列表
@@ -302,11 +317,14 @@ void PASettingsPage::setupUi()
 	QWidget* illusButtonWidget = new QWidget(mainWidget);
 	QHBoxLayout* illusButtonLayout = new QHBoxLayout(illusButtonWidget);
 	illusButtonLayout->addStretch();
-	ElaPushButton* illusButton = new ElaPushButton(tr("语法示例"), illusButtonWidget);
+	ElaToolButton* illusButton = new ElaToolButton(illusButtonWidget);
+	illusButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	illusButton->setElaIcon(ElaIconType::BookOpen);
+	illusButton->setText(tr("语法示例"));
 	ElaToolTip* illusButtonTip = new ElaToolTip(illusButton);
 	illusButtonTip->setToolTip(tr("查看 重翻关键字/跳过问题关键字 设定的语法示例"));
 	illusButtonLayout->addWidget(illusButton);
-	connect(illusButton, &ElaPushButton::clicked, this, [=]()
+	connect(illusButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/pahelper.html"));
 		});

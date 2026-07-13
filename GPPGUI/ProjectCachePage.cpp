@@ -11,12 +11,13 @@
 #include <QStyledItemDelegate>
 #include <QUrl>
 
-#include "ElaCheckBox.h"
+#include "ElaAlignedCheckBox.h"
 #include "ElaNoWheelComboBox.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaText.h"
 
 #include "ProjectCachePage_p.h"
@@ -183,8 +184,11 @@ void ProjectCachePage::setupUi()
     filesLayout->setContentsMargins(0, 0, 0, 0);
     filesLayout->setSpacing(4);
 
-    m_deleteFilesButton = new ElaPushButton(tr("删除选中文件"), filesTab);
-    connect(m_deleteFilesButton, &ElaPushButton::clicked, this, [=]()
+    m_deleteFilesButton = new ElaToolButton(filesTab);
+    m_deleteFilesButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_deleteFilesButton->setElaIcon(ElaIconType::Trash);
+    m_deleteFilesButton->setText(tr("删除选中文件"));
+    connect(m_deleteFilesButton, &ElaToolButton::clicked, this, [=]()
         {
             if (!ensureWritableAction(tr("删除缓存文件"))) {
                 return;
@@ -267,9 +271,12 @@ void ProjectCachePage::setupUi()
     searchLayout->addWidget(m_globalSearchField);
 
     // 批量替换默认收起，日常浏览时优先把空间留给搜索结果列表。
-    m_replaceToggleButton = new ElaPushButton(tr("展开批量替换"), searchTab);
+    m_replaceToggleButton = new ElaToolButton(searchTab);
+    m_replaceToggleButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_replaceToggleButton->setElaIcon(ElaIconType::AngleDown);
+    m_replaceToggleButton->setText(tr("展开批量替换"));
     m_replaceToggleButton->setCheckable(true);
-    connect(m_replaceToggleButton, &ElaPushButton::toggled, this, [=](bool checked)
+    connect(m_replaceToggleButton, &ElaToolButton::toggled, this, [=](bool checked)
         {
             setReplacePanelVisible(checked);
         });
@@ -297,11 +304,17 @@ void ProjectCachePage::setupUi()
     replaceLayout->addWidget(m_replaceField);
 
     QHBoxLayout* replaceButtonLayout = new QHBoxLayout();
-    ElaPushButton* replacePreviewButton = new ElaPushButton(tr("预览"), searchTab);
-    connect(replacePreviewButton, &ElaPushButton::clicked, this, &ProjectCachePage::previewReplace);
+    ElaToolButton* replacePreviewButton = new ElaToolButton(searchTab);
+    replacePreviewButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    replacePreviewButton->setElaIcon(ElaIconType::Eye);
+    replacePreviewButton->setText(tr("预览"));
+    connect(replacePreviewButton, &ElaToolButton::clicked, this, &ProjectCachePage::previewReplace);
     replaceButtonLayout->addWidget(replacePreviewButton);
-    m_replaceExecuteButton = new ElaPushButton(tr("替换"), searchTab);
-    connect(m_replaceExecuteButton, &ElaPushButton::clicked, this, &ProjectCachePage::executeReplace);
+    m_replaceExecuteButton = new ElaToolButton(searchTab);
+    m_replaceExecuteButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_replaceExecuteButton->setElaIcon(ElaIconType::Repeat);
+    m_replaceExecuteButton->setText(tr("替换"));
+    connect(m_replaceExecuteButton, &ElaToolButton::clicked, this, &ProjectCachePage::executeReplace);
     replaceButtonLayout->addWidget(m_replaceExecuteButton);
     replaceLayout->addLayout(replaceButtonLayout);
 
@@ -338,8 +351,11 @@ void ProjectCachePage::setupUi()
     problemsLayout->setContentsMargins(0, 0, 0, 0);
     problemsLayout->setSpacing(4);
 
-    ElaPushButton* refreshProblemsButton = new ElaPushButton(tr("刷新问题"), problemsTab);
-    connect(refreshProblemsButton, &ElaPushButton::clicked, this, &ProjectCachePage::loadProblems);
+    ElaToolButton* refreshProblemsButton = new ElaToolButton(problemsTab);
+    refreshProblemsButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    refreshProblemsButton->setElaIcon(ElaIconType::Rotate);
+    refreshProblemsButton->setText(tr("刷新问题"));
+    connect(refreshProblemsButton, &ElaToolButton::clicked, this, &ProjectCachePage::loadProblems);
     problemsLayout->addWidget(refreshProblemsButton);
 
     m_problemModel = new QStandardItemModel(this);
@@ -393,22 +409,28 @@ void ProjectCachePage::setupUi()
             renderEntries();
         });
     filterLayout->addWidget(m_localSearchEdit, 1);
-    m_filterProblemsCheck = new ElaCheckBox(tr("只看问题句"), editorWidget);
+    m_filterProblemsCheck = new ElaAlignedCheckBox(tr("只看问题句"), editorWidget);
     connect(m_filterProblemsCheck, &ElaCheckBox::toggled, this, [=]()
         {
             renderEntries();
         });
     filterLayout->addWidget(m_filterProblemsCheck);
 
-    m_editEntryButton = new ElaPushButton(tr("编辑选中条目"), editorWidget);
-    connect(m_editEntryButton, &ElaPushButton::clicked, this, [=]()
+    m_editEntryButton = new ElaToolButton(editorWidget);
+    m_editEntryButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_editEntryButton->setElaIcon(ElaIconType::PenToSquare);
+    m_editEntryButton->setText(tr("编辑选中条目"));
+    connect(m_editEntryButton, &ElaToolButton::clicked, this, [=]()
         {
             openEntryEditor(currentJsonRow());
         });
     filterLayout->addWidget(m_editEntryButton);
 
-    m_deleteEntriesButton = new ElaPushButton(tr("删除选中条目"), editorWidget);
-    connect(m_deleteEntriesButton, &ElaPushButton::clicked, this, [=]()
+    m_deleteEntriesButton = new ElaToolButton(editorWidget);
+    m_deleteEntriesButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_deleteEntriesButton->setElaIcon(ElaIconType::Trash);
+    m_deleteEntriesButton->setText(tr("删除选中条目"));
+    connect(m_deleteEntriesButton, &ElaToolButton::clicked, this, [=]()
         {
             if (!ensureWritableAction(tr("删除缓存条目"))) {
                 return;

@@ -9,10 +9,11 @@
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
 #include "ElaPushButton.h"
+#include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaTabWidget.h"
 #include "ElaPlainTextEdit.h"
-#include "ReadDicts.h"
+#include "DictionaryReader.h"
 
 import Tool;
 
@@ -67,7 +68,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 
 QString NameTableSettingsPage::readNameTableStr()
 {
-	return ReadDicts::readDictsStr(m_projectDir / L"NameTable.toml");
+	return DictionaryReader::readDictStr(m_projectDir / L"NameTable.toml");
 }
 
 void NameTableSettingsPage::setupUi()
@@ -85,8 +86,14 @@ void NameTableSettingsPage::setupUi()
 	nameTableLayout->setContentsMargins(0, 0, 0, 0);
 
 	QHBoxLayout* buttonLayout = new QHBoxLayout(nameTableWidget);
-	ElaPushButton* plainTextModeButton = new ElaPushButton(tr("纯文本模式"), nameTableWidget);
-	ElaPushButton* TableModeButton = new ElaPushButton(tr("表模式"), nameTableWidget);
+	ElaToolButton* plainTextModeButton = new ElaToolButton(nameTableWidget);
+	plainTextModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	plainTextModeButton->setElaIcon(ElaIconType::Text);
+	plainTextModeButton->setText(tr("纯文本"));
+	ElaToolButton* tableModeButton = new ElaToolButton(nameTableWidget);
+	tableModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	tableModeButton->setElaIcon(ElaIconType::Table);
+	tableModeButton->setText(tr("表模式"));
 
 	ElaIconButton* saveDictButton = new ElaIconButton(ElaIconType::Check, nameTableWidget);
 	saveDictButton->setFixedWidth(30);
@@ -111,7 +118,7 @@ void NameTableSettingsPage::setupUi()
 	delNameButtonToolTip->setToolTip(tr("删除词条"));
 
 	buttonLayout->addWidget(plainTextModeButton);
-	buttonLayout->addWidget(TableModeButton);
+	buttonLayout->addWidget(tableModeButton);
 	buttonLayout->addStretch();
 	buttonLayout->addWidget(saveDictButton);
 	buttonLayout->addWidget(withdrawButton);
@@ -147,24 +154,24 @@ void NameTableSettingsPage::setupUi()
 	stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 1)));
 
 	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
-	TableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
+	tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
 	addNameButton->setEnabled(stackedWidget->currentIndex() == 1);
 	delNameButton->setEnabled(stackedWidget->currentIndex() == 1);
 
-	connect(plainTextModeButton, &ElaPushButton::clicked, this, [=]()
+	connect(plainTextModeButton, &ElaToolButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(0);
 			plainTextModeButton->setEnabled(false);
-			TableModeButton->setEnabled(true);
+			tableModeButton->setEnabled(true);
 			addNameButton->setEnabled(false);
 			delNameButton->setEnabled(false);
 			withdrawButton->setEnabled(false);
 		});
-	connect(TableModeButton, &ElaPushButton::clicked, this, [=]()
+	connect(tableModeButton, &ElaToolButton::clicked, this, [=]()
 		{
 			stackedWidget->setCurrentIndex(1);
 			plainTextModeButton->setEnabled(true);
-			TableModeButton->setEnabled(false);
+			tableModeButton->setEnabled(false);
 			addNameButton->setEnabled(true);
 			delNameButton->setEnabled(true);
 			withdrawButton->setEnabled(!m_withdrawList.isEmpty());

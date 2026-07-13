@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
     if (pid == 0 || sourceZip.isEmpty() || targetDir.isEmpty()) {
 #ifdef Q_OS_WIN
         MessageBoxW(nullptr, gppTr("Updater.main", "非法参数").toStdWString().c_str(),
-            gppTr("Updater.main", "GalTransl++ Updater 内部错误").toStdWString().c_str(),
+            gppTr("Updater.main", "GalTransl++ Updater").toStdWString().c_str(),
             MB_ICONERROR | MB_TOPMOST);
 #endif
         return -1;
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
 #ifdef Q_OS_WIN
         MessageBoxW(nullptr, gppTr("Updater.main", "提取 Updater_new.exe 失败。\n错误: %1")
             .arg(e.what()).toStdWString().c_str(),
-            gppTr("Updater.main", "GalTransl++ Updater 内部错误").toStdWString().c_str(),
+            gppTr("Updater.main", "GalTransl++ Updater").toStdWString().c_str(),
             MB_ICONERROR | MB_TOPMOST);
 #endif
         return -1;

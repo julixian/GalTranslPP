@@ -224,7 +224,7 @@
 <li><strong>译前字典</strong> 会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
 <li><strong>译后字典</strong> 会搜索并替换 <code>translated_raw_text</code> 以供 <code>translated_view_text</code> 最终输出。</li>
 </ul>
-<p>替换型字典的每个词条使用 <code>[[normalDict]]</code> 表示。无条件词条可以省略 <code>conditions</code>；有条件词条只使用 <code>conditions</code> 表数组，每项通过 <code>conditionReg</code> 和 <code>conditionTarget</code> 指定一个条件：</p>
+<p>替换型字典的每个词条使用 <code>[[normalDict]]</code> 表示。无条件词条可以省略 <code>conditions</code>；有条件词条使用 <code>conditions</code> 表数组，每项通过 <code>conditionReg</code> 和 <code>conditionTarget</code> 指定一个条件：</p>
 <pre><code class="language-toml">[[normalDict]]
 org = '(老婆|夫人)'
 rep = '妻子'
@@ -238,7 +238,7 @@ conditions = [
 ]
 </code></pre>
 <p>同一 <code>conditions</code> 中的所有条件为隐式 AND，必须全部命中才执行词条。需要 OR 时请拆成多个词条；需要 NOT 时请直接在 <code>conditionReg</code> 中使用否定正则。</p>
-<p><code>conditionTarget</code> 可使用 <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。它们是当前全部 CachePart 指代名，不包含 <code>linebreak</code>。目标前可重复添加 <code>prev_</code> 或 <code>next_</code> 以检查相邻句，例如 <code>prev_orig</code> 和 <code>prev_prev_preproc</code>。</p>
+<p><code>conditionTarget</code> 可使用 <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。目标前可重复添加 <code>prev_</code> 或 <code>next_</code> 以检查相邻句，例如 <code>prev_orig</code> 和 <code>prev_prev_preproc</code>。</p>
 <p>当 <code>isReg = true</code> 时，<code>org</code> 和 <code>rep</code> 将作为正则搜索与替换表达式；词条级 <code>compileModifier</code> 控制 <code>org</code> 的编译修饰符，<code>replaceModifier</code> 控制替换修饰符。条件项也可通过 <code>compileModifier</code> 单独设置 <code>conditionReg</code> 的编译修饰符。优先级越高的词条越先执行。</p>
 <h2>⚙️ 处理与翻译顺序</h2>
 <p>1、  执行 dprerun 阶段的插件。<br />
@@ -374,10 +374,8 @@ rep = ''
 <summary>
 <h3>Python 模块使用及 GPU 加速</h3>
 </summary>
-由于许多有关深度学习的库(如分词器、PDF提取器等)只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
-<p>当遇到需要使用Python库的情况时(如<strong>翻译PDF</strong>或<strong>使用依赖Python的分词器</strong>)，程序会自动为嵌入式环境下载对应的库。</p>
-<p>spaCy / Stanza / pkuseg 等分词器会在独立子进程中加载模型，主程序侧只保留调用代理；模型下载完成后会在新的进程中重新导入，以尽量避免分词模型常驻在主解释器里释放不掉。</p>
-<p>PDF 翻译使用 BabelDOC，输出语言码可在 PDF 文件插件配置中设置，例如 <code>zh-CN</code>、<code>zh-TW</code>、<code>en</code>、<code>ja</code>、<code>ko</code>。单语输出文件使用原文件名，双语输出文件使用 <code>原文件名.dual.pdf</code>。</p>
+由于许多有关深度学习的库 (如分词器、PDF提取器等) 只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
+<p>当遇到需要使用Python库的情况时 (如<strong>翻译PDF</strong>或<strong>使用依赖Python的分词器</strong>)，程序会自动为嵌入式环境下载对应的库。</p>
 <p>然而在不启用 GPU加速 的情况下使用如 <code>spaCy最好的trf模型</code> 或 <code>Stanza</code> 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。</p>
 <p><strong>请确保自己有一定的动手和思考能力 &amp;&amp; 一块还不错的显卡！</strong></p>
 <h4>为 <code>Stanza</code> 启用 GPU加速</h4>
@@ -397,7 +395,7 @@ rep = ''
 <p>以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。</p>
 <ul>
 <li>3、 为嵌入式环境安装 PyTorch，注意启动的必须是 <strong>嵌入式环境中的 Python(之后的操作默认均在此环境中进行)</strong>。
-默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的<strong>绝对路径</strong>以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip...)。</li>
+默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的<strong>绝对路径</strong>以避免与你可能安装过的 python 混淆 (pip同理，必须 env/python.exe -m pip...)。</li>
 <li>4、 比如官网给我的命令是 <code>pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 <code>python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>。
 注意: 如果你已经安装了torch，最好先卸载它：<code>python -m pip uninstall torch</code></li>
 <li>5、 重装 Stanza，<code>python -m pip uninstall stanza</code>  <code>python -m pip install stanza</code></li>
@@ -407,7 +405,7 @@ rep = ''
 <h4>为 <code>spaCy</code> 启用 GPU加速</h4>
 <ul>
 <li>1、 同 Stanza 第一条 至 第四条。</li>
-<li>2、 在 <strong>嵌入式 Python环境(详见 Stanza第三条)中</strong> 重新安装 spacy。<code>python -m pip uninstall spacy</code>，并确保此环境中没有安装 <code>cupy</code>。</li>
+<li>2、 在 <strong>嵌入式 Python环境 (详见 Stanza 第三条) 中</strong> 重新安装 spacy。<code>python -m pip uninstall spacy</code>，并确保此环境中没有安装 <code>cupy</code>。</li>
 <li>3、 根据自己的 CUDA 版本(查看 Stanza 第二条以查看如何获取 CUDA 版本)，安装 <code>cupy</code> 的特定版本，如 <code>cupy-cuda13x</code>: <code>python -m pip install cupy-cuda13x</code>，然后再把 spacy 装回来 <code>python -m pip install spacy</code>。</li>
 <li>4、 尝试运行 <code>BaseConfig\PythonScripts\check_spacy_gpu.py</code>，如果提示成功，则代表所有配置均已就绪。</li>
 <li>5、 此时打开 <code>BaseConfig\PythonScripts\tokenizer_spacy.py</code> 文件，将 <code>USE_GPU = False</code> 改为 <code>USE_GPU = True</code>，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。</li>
@@ -419,12 +417,12 @@ rep = ''
 </summary>
 这两种语言在程序内均为热更新(只要没有被其它任务占用)，更改后重新运行即可看到新的结果。
 <p>可以非常方便的编写自定义的 <strong>文件解析/文本处理/任务结束后处理</strong> 等脚本。</p>
-<p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。插件侧的 <code>Sentence</code> 字段使用全小写短名，缓存 JSON 输出仍使用下划线键名；以示例插件和 <code>gpp_plugin_api.pyi</code> 为准。</p>
+<p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。</p>
 </details>
 <h2>其它程序说明</h2>
 <details>
 <summary>
-<h3>自定义主页Popular卡片</h3>
+<h3>自定义主页 Popular 卡片</h3>
 </summary>
 具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。
 <p>卡片数组至少六个，不足六个的将使用程序默认的卡片补齐，最高不限数量。</p>

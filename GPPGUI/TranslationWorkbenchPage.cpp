@@ -405,6 +405,7 @@ void TranslationWorkbenchPage::setupUi()
     m_filesTabButton->setCheckable(true);
     m_sideTabGroup->addButton(m_errorsTabButton, 0);
     m_sideTabGroup->addButton(m_filesTabButton, 1);
+    tabLayout->addStretch();
     tabLayout->addWidget(m_errorsTabButton);
     tabLayout->addWidget(m_filesTabButton);
     sideLayout->addLayout(tabLayout);

@@ -32,7 +32,7 @@
 <context>
     <name>ApiSettingsPage</name>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="+39"/>
+        <location filename="ApiSettingsPage.cpp" line="+38"/>
         <location line="+38"/>
         <source>Api 设置</source>
         <translation type="unfinished"></translation>
@@ -93,7 +93,7 @@
         <translation type="unfinished">Enable</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+7"/>
         <source>详细配置</source>
         <translation type="unfinished"></translation>
     </message>
@@ -119,12 +119,12 @@ sk-...</source>
         <translation type="unfinished">Model</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+5"/>
         <source>获取模型</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>测试模型</source>
         <translation type="unfinished"></translation>
     </message>
@@ -195,11 +195,12 @@ sk-...</source>
     </message>
     <message>
         <location line="+23"/>
-        <source>JSON 对象，用于追加或覆盖请求 body 字段</source>
+        <source>JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为 off</source>
+        <oldsource>JSON 对象，用于追加或覆盖请求 body 字段</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+15"/>
         <source>高级设置</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1180,7 +1181,12 @@ sk-...</source>
         <translation>Check quota</translation>
     </message>
     <message>
-        <location line="-247"/>
+        <location line="+273"/>
+        <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。具体替换时机详见使用说明，auto 为自动检测</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-520"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1231,17 +1237,16 @@ sk-...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+45"/>
+        <location line="+47"/>
         <source>日志级别</source>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-14"/>
         <source>保存项目日志</source>
-        <translation>Save project logs</translation>
+        <translation type="vanished">Save project logs</translation>
     </message>
     <message>
-        <location line="-343"/>
+        <location line="-359"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1291,7 +1296,12 @@ sk-...</source>
         <translation>Project logging settings</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+4"/>
+        <source>保存项目日志文件</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+42"/>
         <source>单个 log 文件大小限制</source>
         <oldsource>log 文件大小限制</oldsource>
         <translation>Single log file size limit</translation>
@@ -1354,8 +1364,9 @@ sk-...</source>
     </message>
     <message>
         <location line="+1"/>
-        <source>除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的</source>
-        <translation>spaCy and Stanza depend on Python</translation>
+        <source>除了MeCab，剩下的都依赖Python，速度会比较慢</source>
+        <oldsource>除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的</oldsource>
+        <translation type="unfinished">spaCy and Stanza depend on Python</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1379,9 +1390,8 @@ sk-...</source>
         <translation>spaCy model name</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>spaCy模型名称，新模型下载后需重启程序</source>
-        <translation>spaCy model name, you need reboot app after downloading a new model</translation>
+        <translation type="vanished">spaCy model name, you need reboot app after downloading a new model</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1389,39 +1399,44 @@ sk-...</source>
         <translation>sm model is not so satisfying, use trf model if conditions allowing</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+13"/>
+        <location line="+24"/>
+        <source>打开模型列表网页</source>
+        <translation type="unfinished">Browse model contents</translation>
+    </message>
+    <message>
+        <location line="-13"/>
         <source>Stanza语言ID</source>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>Stanza语言ID，新模型下载后需重启程序</source>
-        <translation>Stanza lang id, you need reboot app after downloading a new model</translation>
+        <translation type="vanished">Stanza lang id, you need reboot app after downloading a new model</translation>
     </message>
     <message>
-        <location line="+35"/>
-        <source>项目统一使用的换行符，auto 表示自动检测</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location line="+71"/>
+        <location line="+110"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-145"/>
+        <location line="-149"/>
         <location line="+27"/>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>浏览</source>
         <translation>browse</translation>
     </message>
     <message>
-        <location line="-90"/>
+        <location line="-91"/>
         <source>用于生成字典和查错的分词器后端及其设置 (应选择适合原文的后端/模型/字典)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+113"/>
+        <location line="+80"/>
+        <source>感觉不如 spaCy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+35"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
     </message>
@@ -1431,7 +1446,7 @@ sk-...</source>
         <translation type="vanished">All linebreak symbols will be replaced to &amp;lt;br&amp;gt; for programming use</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+74"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -1468,65 +1483,116 @@ sk-...</source>
 <context>
     <name>DefaultPromptPage</name>
     <message>
-        <location filename="DefaultPromptPage.cpp" line="+21"/>
         <source>默认提示词管理</source>
-        <translation>Default prompts</translation>
+        <translation type="vanished">Default prompts</translation>
+    </message>
+    <message>
+        <source>解析失败</source>
+        <translation type="vanished">Fail to analyze</translation>
+    </message>
+    <message>
+        <source>默认提示词配置文件不符合 toml 规范</source>
+        <translation type="vanished">Default prompts config file is nonconforming</translation>
+    </message>
+    <message>
+        <source>agent用户</source>
+        <translation type="vanished">User-agent</translation>
+    </message>
+    <message>
+        <source>agent系统</source>
+        <translation type="vanished">Sys-agent</translation>
+    </message>
+    <message>
+        <source>保存成功</source>
+        <translation type="vanished">Saved successfully</translation>
+    </message>
+    <message>
+        <source>所有默认提示词配置已保存。</source>
+        <translation type="vanished">All default prompts settings are saved.</translation>
+    </message>
+    <message>
+        <source>默认 %1 提示词配置已保存。</source>
+        <translation type="vanished">Default %1 prompt saved.</translation>
+    </message>
+    <message>
+        <source>用户提示词</source>
+        <translation type="vanished">User prompt</translation>
+    </message>
+    <message>
+        <source>系统提示词</source>
+        <translation type="vanished">System prompt</translation>
+    </message>
+    <message>
+        <source>全部保存</source>
+        <translation type="vanished">Save all</translation>
+    </message>
+    <message>
+        <source>保存</source>
+        <translation type="vanished">Save</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultPromptsPage</name>
+    <message>
+        <location filename="DefaultPromptsPage.cpp" line="+21"/>
+        <source>默认提示词管理</source>
+        <translation type="unfinished">Default prompts</translation>
     </message>
     <message>
         <location line="+8"/>
         <source>解析失败</source>
-        <translation>Fail to analyze</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+0"/>
         <source>默认提示词配置文件不符合 toml 规范</source>
-        <translation>Default prompts config file is nonconforming</translation>
+        <translation type="unfinished">Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+48"/>
-        <source>agent用户</source>
-        <translation>User-agent</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>agent系统</source>
-        <translation>Sys-agent</translation>
-    </message>
-    <message>
-        <location line="+64"/>
-        <location line="+25"/>
-        <source>保存成功</source>
-        <translation>Saved successfully</translation>
-    </message>
-    <message>
-        <location line="-25"/>
-        <source>所有默认提示词配置已保存。</source>
-        <translation>All default prompts settings are saved.</translation>
-    </message>
-    <message>
-        <location line="+26"/>
-        <source>默认 %1 提示词配置已保存。</source>
-        <translation>Default %1 prompt saved.</translation>
-    </message>
-    <message>
-        <location line="-110"/>
+        <location line="+31"/>
         <source>用户提示词</source>
-        <translation>User prompt</translation>
+        <translation type="unfinished">User prompt</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>系统提示词</source>
-        <translation>System prompt</translation>
+        <translation type="unfinished">System prompt</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+10"/>
+        <source>agent用户</source>
+        <translation type="unfinished">User-agent</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>agent系统</source>
+        <translation type="unfinished">Sys-agent</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>全部保存</source>
-        <translation>Save all</translation>
+        <translation type="unfinished">Save all</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>保存</source>
-        <translation>Save</translation>
+        <translation type="unfinished">Save</translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <location line="+25"/>
+        <source>保存成功</source>
+        <translation type="unfinished">Saved successfully</translation>
+    </message>
+    <message>
+        <location line="-25"/>
+        <source>所有默认提示词配置已保存。</source>
+        <translation type="unfinished">All default prompts settings are saved.</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>默认 %1 提示词配置已保存。</source>
+        <translation type="unfinished">Default %1 prompt saved.</translation>
     </message>
 </context>
 <context>
@@ -1906,7 +1972,7 @@ sk-...</source>
 <context>
     <name>DictionarySearchBar</name>
     <message>
-        <location filename="DictionarySearchBar.cpp" line="+23"/>
+        <location filename="DictionarySearchBar.cpp" line="+25"/>
         <source>搜索字典...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1956,7 +2022,7 @@ sk-...</source>
     <message>
         <location line="-147"/>
         <source>双语显示</source>
-        <translation>Bilingual</translation>
+        <translation>Bilingual display</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -3123,7 +3189,7 @@ Cache: %4</translation>
     <message>
         <location line="-31"/>
         <source>输出双语翻译文件</source>
-        <translation>output  bilingual file</translation>
+        <translation>Output bilingual file</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -3206,7 +3272,7 @@ Cache: %4</translation>
 <context>
     <name>ProjectCachePage</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+30"/>
+        <location filename="ProjectCachePage.cpp" line="+31"/>
         <source>缓存管理</source>
         <oldsource>缓存与问题</oldsource>
         <translation>Cache</translation>
@@ -3266,12 +3332,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+242"/>
+        <location line="+259"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location line="-241"/>
+        <location line="-258"/>
         <source>确定要删除选中的 %1 个缓存文件吗？</source>
         <oldsource>确定要删除选中的 </oldsource>
         <translation>Delete %1 selected cache files?</translation>
@@ -3283,12 +3349,12 @@ Cache: %4</translation>
         <translation>Deleted %1 cache files</translation>
     </message>
     <message>
-        <location line="+183"/>
+        <location line="+193"/>
         <source>在当前文件中搜索 preproc/transraw/problems...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="-234"/>
+        <location line="-244"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
@@ -3303,7 +3369,7 @@ Cache: %4</translation>
         <translation>Search...</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+18"/>
         <location line="+40"/>
         <source>全部</source>
         <translation>All</translation>
@@ -3344,32 +3410,32 @@ Cache: %4</translation>
         <translation>Replace</translation>
     </message>
     <message>
-        <location line="-144"/>
+        <location line="-152"/>
         <location filename="ProjectCachePageSearch.cpp" line="-99"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+193"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location line="-184"/>
+        <location line="-192"/>
         <location filename="ProjectCachePageSearch.cpp" line="+58"/>
         <location line="+145"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location line="+215"/>
+        <location line="+225"/>
         <location filename="ProjectCachePageEntries.cpp" line="+32"/>
         <location line="+42"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+31"/>
         <source>只看问题句</source>
         <translation>Problems only</translation>
     </message>
@@ -3459,12 +3525,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location filename="ProjectCachePageActions.cpp" line="+65"/>
-        <location filename="ProjectCachePage.cpp" line="-166"/>
+        <location filename="ProjectCachePage.cpp" line="-175"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+145"/>
+        <location filename="ProjectCachePage.cpp" line="+154"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
@@ -4000,7 +4066,7 @@ Issue summary:</translation>
     <message>
         <location line="+53"/>
         <source>文件处理器设置</source>
-        <translation>File plugin settings</translation>
+        <translation>File plugin config</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -4045,7 +4111,7 @@ Issue summary:</translation>
     <message>
         <location line="+333"/>
         <source>文件处理器:</source>
-        <translation type="unfinished"></translation>
+        <translation>File plugin:</translation>
     </message>
     <message>
         <location line="+167"/>
@@ -4309,8 +4375,9 @@ Issue summary:</translation>
     <message>
         <location line="+72"/>
         <location line="+24"/>
-        <source>浏览模型目录</source>
-        <translation>Browse model contents</translation>
+        <source>打开模型列表网页</source>
+        <oldsource>浏览模型目录</oldsource>
+        <translation type="unfinished">Browse model contents</translation>
     </message>
     <message>
         <location line="-12"/>
@@ -4347,13 +4414,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+26"/>
-        <location line="+246"/>
+        <location line="+247"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
-        <location line="-241"/>
-        <location line="+246"/>
+        <location line="-242"/>
+        <location line="+247"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>

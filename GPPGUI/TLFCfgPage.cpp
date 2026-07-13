@@ -188,9 +188,9 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	spaCyModelNameLayout->addWidget(spaCyModelNameLineEdit);
 	ElaToolButton* browseSpaCyModelButton = new ElaToolButton(spaCyModelNameArea);
 	browseSpaCyModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	browseSpaCyModelButton->setElaIcon(ElaIconType::FolderOpen);
+	browseSpaCyModelButton->setElaIcon(ElaIconType::ArrowUpRightFromSquare);
 	browseSpaCyModelButton->setText(tr("浏览"));
-	browseSpaCyModelButton->setToolTip(tr("浏览模型目录"));
+	browseSpaCyModelButton->setToolTip(tr("打开模型列表网页"));
 	spaCyModelNameLayout->addWidget(browseSpaCyModelButton);
 	connect(browseSpaCyModelButton, &ElaToolButton::clicked, this, [=]()
 		{
@@ -212,9 +212,9 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	stanzaLayout->addWidget(stanzaLineEdit);
 	ElaToolButton* browseStanzaModelButton = new ElaToolButton(stanzaArea);
 	browseStanzaModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	browseStanzaModelButton->setElaIcon(ElaIconType::FolderOpen);
+	browseStanzaModelButton->setElaIcon(ElaIconType::ArrowUpRightFromSquare);
 	browseStanzaModelButton->setText(tr("浏览"));
-	browseStanzaModelButton->setToolTip(tr("浏览模型目录"));
+	browseStanzaModelButton->setToolTip(tr("打开模型列表网页"));
 	stanzaLayout->addWidget(browseStanzaModelButton);
 	connect(browseStanzaModelButton, &ElaToolButton::clicked, this, [=]()
 		{

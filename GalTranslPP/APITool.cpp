@@ -238,9 +238,10 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
             };
         }
         else if (api.protocol == ApiProtocol::Gemini) {
-            const int budgetTokens = thinkingLevel == "high" ? 1024 : thinkingLevel == "medium" ? 768 : 384;
+            const std::string geminiThinkingLevel = thinkingLevel == "high" ? "HIGH"
+                : thinkingLevel == "medium" ? "MEDIUM" : "LOW";
             payload["generationConfig"]["thinkingConfig"] = {
-                {"thinkingBudget", budgetTokens},
+                {"thinkingLevel", geminiThinkingLevel},
                 {"includeThoughts", true}
             };
         }

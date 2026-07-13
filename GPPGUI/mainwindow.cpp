@@ -26,7 +26,7 @@
 #include "UpdateChecker.h"
 
 #include "HomePage.h"
-#include "DefaultPromptPage.h"
+#include "DefaultPromptsPage.h"
 #include "CommonGptDictsPage.h"
 #include "CommonNormalDictsPage.h"
 #include "ProjectSettingsPage.h"
@@ -273,7 +273,7 @@ void MainWindow::initEdgeLayout()
 void MainWindow::initContent()
 {
     m_homePage = new HomePage(m_globalConfig, this);
-    m_defaultPromptPage = new DefaultPromptPage(this);
+    m_defaultPromptPage = new DefaultPromptsPage(this);
 
     m_commonPreDictsPage = new CommonNormalDictsPage("pre", m_globalConfig, this);
     m_commonGptDictsPage = new CommonGptDictsPage(m_globalConfig, this);

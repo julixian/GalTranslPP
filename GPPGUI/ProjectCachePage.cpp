@@ -9,6 +9,7 @@
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
+#include <QTimer>
 #include <QUrl>
 
 #include "ElaAlignedCheckBox.h"
@@ -252,10 +253,18 @@ void ProjectCachePage::setupUi()
     m_globalSearchEdit = new ElaLineEdit(searchTab);
     m_globalSearchEdit->setPlaceholderText(tr("搜索内容..."));
     m_globalSearchEdit->setIsClearButtonEnable(true);
-    connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, &ProjectCachePage::runGlobalSearch);
+    QTimer* globalSearchTimer = new QTimer(searchTab);
+    globalSearchTimer->setSingleShot(true);
+    globalSearchTimer->setInterval(200);
+    connect(globalSearchTimer, &QTimer::timeout, this, &ProjectCachePage::runGlobalSearch);
+    connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, [=]()
+        {
+            globalSearchTimer->stop();
+            runGlobalSearch();
+        });
     connect(m_globalSearchEdit, &ElaLineEdit::textChanged, this, [=]()
         {
-            runGlobalSearch();
+            globalSearchTimer->start();
         });
     searchLayout->addWidget(m_globalSearchEdit);
 
@@ -266,7 +275,7 @@ void ProjectCachePage::setupUi()
     m_globalSearchField->addItem("problems", "problems");
     connect(m_globalSearchField, &ElaNoWheelComboBox::currentIndexChanged, this, [=](int)
         {
-            runGlobalSearch();
+            globalSearchTimer->start();
         });
     searchLayout->addWidget(m_globalSearchField);
 
@@ -357,6 +366,8 @@ void ProjectCachePage::setupUi()
     refreshProblemsButton->setText(tr("刷新问题"));
     connect(refreshProblemsButton, &ElaToolButton::clicked, this, &ProjectCachePage::loadProblems);
     problemsLayout->addWidget(refreshProblemsButton);
+    // 问题会随缓存文件刷新自动聚合，暂时保留手动刷新实现但不在界面显示。
+    refreshProblemsButton->hide();
 
     m_problemModel = new QStandardItemModel(this);
     m_problemList = new ElaListView(problemsTab);
@@ -404,9 +415,16 @@ void ProjectCachePage::setupUi()
     m_localSearchEdit = new ElaLineEdit(editorWidget);
     m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/transraw/problems..."));
     m_localSearchEdit->setIsClearButtonEnable(true);
-    connect(m_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
+    QTimer* localSearchTimer = new QTimer(editorWidget);
+    localSearchTimer->setSingleShot(true);
+    localSearchTimer->setInterval(200);
+    connect(localSearchTimer, &QTimer::timeout, this, [=]()
         {
             renderEntries();
+        });
+    connect(m_localSearchEdit, &ElaLineEdit::textChanged, this, [=]()
+        {
+            localSearchTimer->start();
         });
     filterLayout->addWidget(m_localSearchEdit, 1);
     m_filterProblemsCheck = new ElaAlignedCheckBox(tr("只看问题句"), editorWidget);

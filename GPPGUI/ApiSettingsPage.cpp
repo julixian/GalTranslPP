@@ -10,7 +10,6 @@
 #include "ElaLineEdit.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaScrollPageArea.h"
-#include "ElaPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaRadioButton.h"
 #include "ElaIconButton.h"
@@ -295,18 +294,14 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     rightLayout->addWidget(deleteButton);
     connect(deleteButton, &ElaIconButton::clicked, this, &ApiSettingsPage::onDeleteApiRow);
 
-    ElaText* enableLabel = new ElaText(tr("启用"), 13, rightWidget);
-    enableLabel->setWordWrap(false);
-    ElaAlignedCheckBox* enableCheckBox = new ElaAlignedCheckBox(rightWidget);
+    ElaAlignedCheckBox* enableCheckBox = new ElaAlignedCheckBox(tr("启用"), rightWidget);
     enableCheckBox->setChecked(enable);
-    QHBoxLayout* enableLayout = new QHBoxLayout();
-    enableLayout->setContentsMargins(0, 0, 0, 0);
-    enableLayout->setSpacing(6);
-    enableLayout->addWidget(enableLabel);
-    enableLayout->addWidget(enableCheckBox);
-    rightLayout->addLayout(enableLayout);
+    rightLayout->addWidget(enableCheckBox, 0, Qt::AlignHCenter);
 
-    ElaPushButton* configButton = new ElaPushButton(tr("详细配置"), rightWidget);
+    ElaToolButton* configButton = new ElaToolButton(rightWidget);
+    configButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    configButton->setElaIcon(ElaIconType::Sliders);
+    configButton->setText(tr("详细配置"));
     rightLayout->addWidget(configButton);
     rightLayout->addStretch();
 
@@ -391,8 +386,14 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     auto [modelActionArea, modelActionLayout] = createFormRow(basicPage);
     modelActionLayout->addWidget(new ElaText(tr("模型"), 16, modelActionArea));
     modelActionLayout->addStretch();
-    ElaPushButton* fetchModelButton = new ElaPushButton(tr("获取模型"), modelActionArea);
-    ElaPushButton* testModelButton = new ElaPushButton(tr("测试模型"), modelActionArea);
+    ElaToolButton* fetchModelButton = new ElaToolButton(modelActionArea);
+    fetchModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    fetchModelButton->setElaIcon(ElaIconType::CloudArrowDown);
+    fetchModelButton->setText(tr("获取模型"));
+    ElaToolButton* testModelButton = new ElaToolButton(modelActionArea);
+    testModelButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    testModelButton->setElaIcon(ElaIconType::Vial);
+    testModelButton->setText(tr("测试模型"));
     modelActionLayout->addWidget(fetchModelButton);
     modelActionLayout->addWidget(testModelButton);
     basicLayout->addWidget(modelActionArea);
@@ -527,7 +528,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     extraBodyTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraBodyTitleLayout->setSpacing(8);
     extraBodyTitleLayout->addWidget(new ElaDoubleText("extraBody", 16,
-        tr("JSON 对象，用于追加或覆盖请求 body 字段"), 10, "", extraBodyArea));
+        tr("JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为 off"),
+        10, "", extraBodyArea));
     extraBodyTitleLayout->addStretch();
     ElaAlignedCheckBox* extraBodyCheckBox = new ElaAlignedCheckBox(extraBodyArea);
     extraBodyCheckBox->setChecked(extraBodyEnable);
@@ -535,7 +537,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     extraBodyLayout->addLayout(extraBodyTitleLayout);
     ElaPlainTextEdit* extraBodyEdit = new ElaPlainTextEdit(extraBodyArea);
     extraBodyEdit->setFixedHeight(115);
-    extraBodyEdit->setPlaceholderText("{\n  \"response_format\": { \"type\": \"json_object\" },\n  \"seed\": 1\n}");
+    extraBodyEdit->setPlaceholderText("{\n  \"enable_thinking\": true\n}");
     installTreeSitterHighlighter(extraBodyEdit->document(), SyntaxLanguage::Json);
     extraBodyEdit->setPlainText(formatJsonObjectText("extraBody"));
     extraBodyLayout->addWidget(extraBodyEdit);
@@ -733,8 +735,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
             QPointer<ApiSettingsPage> page(this);
             QPointer<ElaLineEdit> modelEditPtr(modelEdit);
-            QPointer<ElaPushButton> fetchButtonPtr(fetchModelButton);
-            QPointer<ElaPushButton> testButtonPtr(testModelButton);
+            QPointer<ElaToolButton> fetchButtonPtr(fetchModelButton);
+            QPointer<ElaToolButton> testButtonPtr(testModelButton);
             const int timeoutMs = apiRequestTimeoutMs();
 
             std::thread([=, api = std::move(api_)]() mutable
@@ -803,17 +805,17 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                 }).detach();
         };
 
-    connect(fetchModelButton, &ElaPushButton::clicked, this, [=]()
+    connect(fetchModelButton, &ElaToolButton::clicked, this, [=]()
         {
             runModelRequest(true);
         });
-    connect(testModelButton, &ElaPushButton::clicked, this, [=]()
+    connect(testModelButton, &ElaToolButton::clicked, this, [=]()
         {
             runModelRequest(false);
         });
 
     configWidget->hide();
-    connect(configButton, &ElaPushButton::clicked, this, [=]()
+    connect(configButton, &ElaToolButton::clicked, this, [=]()
         {
             QWidget* mainWindow = window();
             if (mainWindow) {

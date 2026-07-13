@@ -11,7 +11,7 @@
 
 class HomePage;
 class AboutDialog;
-class DefaultPromptPage;
+class DefaultPromptsPage;
 class CommonGptDictsPage;
 class CommonNormalDictsPage;
 class AppSettingsPage;
@@ -56,7 +56,7 @@ private:
 
     HomePage* m_homePage = nullptr;
     AboutDialog* m_aboutDialog = nullptr;
-    DefaultPromptPage* m_defaultPromptPage = nullptr;
+    DefaultPromptsPage* m_defaultPromptPage = nullptr;
     CommonNormalDictsPage* m_commonPreDictsPage = nullptr;
     CommonGptDictsPage* m_commonGptDictsPage = nullptr;
     CommonNormalDictsPage* m_commonPostDictsPage = nullptr;

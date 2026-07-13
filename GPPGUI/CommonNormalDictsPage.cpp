@@ -198,7 +198,7 @@ void CommonNormalDictsPage::setupUi()
 			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "4", 60));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("条件"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
-			pageMainLayout->addWidget(searchBar);
+			pageButtonLayout->insertWidget(3, searchBar);
 			pageMainLayout->addWidget(stackedWidget, 1);
 
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);

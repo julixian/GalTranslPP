@@ -22,6 +22,10 @@ def _python_exe() -> Path:
     return python_path
 
 
+def _model_dir() -> Path:
+    return _python_exe().parent / "stanza_resources"
+
+
 if HIDE_MULTIPROCESS_CONSOLE and sys.platform == "win32":
     pythonw_path = Path(sys.prefix) / "pythonw.exe"
     if not pythonw_path.exists():
@@ -68,6 +72,7 @@ def _model_probe_worker(model_name: str, result_queue) -> None:
         stanza.Pipeline(
             lang=model_name,
             processors="tokenize,pos,ner",
+            dir=str(_model_dir()),
             download_method=None,
             verbose=False,
         )
@@ -81,7 +86,10 @@ def ensure_model(model_name: str) -> bool:
         return True
 
     subprocess.run([str(_python_exe()), "-m", "pip", "cache", "purge"])
-    script = f"import stanza; stanza.download({model_name!r})"
+    script = (
+        "import stanza; "
+        f"stanza.download({model_name!r}, model_dir={str(_model_dir())!r})"
+    )
     completed = subprocess.run([str(_python_exe()), "-c", script])
     if completed.returncode != 0:
         return False
@@ -95,6 +103,7 @@ def _worker_loop(model_name: str, request_queue, response_queue) -> None:
         nlp = stanza.Pipeline(
             lang=model_name,
             processors="tokenize,pos,ner",
+            dir=str(_model_dir()),
             use_gpu=USE_GPU,
             verbose=False,
         )

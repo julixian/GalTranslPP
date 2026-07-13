@@ -158,7 +158,7 @@ void DictSettingsPage::setupUi()
 		DictionarySearchBar* searchBar = new DictionarySearchBar(dictTableView,
 			std::is_same_v<EntryType, GptDictEntry> ? tr("备注") : tr("条件"), dictWidget);
 		searchBar->setVisible(stackedWidget->currentIndex() == 1);
-		dictLayout->addWidget(searchBar);
+		buttonLayout->insertWidget(2, searchBar);
 		plainTextModeButtom->setEnabled(stackedWidget->currentIndex() != 0);
 		tableModeButtom->setEnabled(stackedWidget->currentIndex() != 1);
 		addDictButton->setEnabled(stackedWidget->currentIndex() == 1);

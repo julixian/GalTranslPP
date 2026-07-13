@@ -126,7 +126,7 @@
     <ClCompile Include="OtherSettingsPage.cpp">
       <Filter>Source Files\ProjectSettingImpl</Filter>
     </ClCompile>
-    <ClCompile Include="DefaultPromptPage.cpp">
+    <ClCompile Include="DefaultPromptsPage.cpp">
       <Filter>Source Files\PageImpl</Filter>
     </ClCompile>
     <ClCompile Include="DictionaryEntryDialog.cpp">
@@ -269,7 +269,7 @@
     <QtMoc Include="OtherSettingsPage.h">
       <Filter>Header Files\ProjectSettingH</Filter>
     </QtMoc>
-    <QtMoc Include="DefaultPromptPage.h">
+    <QtMoc Include="DefaultPromptsPage.h">
       <Filter>Header Files\PageHeaders</Filter>
     </QtMoc>
     <QtMoc Include="BasePage.h">

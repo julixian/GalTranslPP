@@ -175,7 +175,7 @@ void CommonGptDictsPage::setupUi()
 			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 425));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("备注"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
-			pageMainLayout->addWidget(searchBar);
+			pageButtonLayout->insertWidget(3, searchBar);
 			pageMainLayout->addWidget(stackedWidget);
 
 			plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);

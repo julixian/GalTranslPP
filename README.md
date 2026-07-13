@@ -139,7 +139,7 @@ GalTransl++的缓存中可能包含如下键:
 * **译前字典** 会搜索并替换 `original_text` 以输出 `pre_processed_text` 提供给AI。
 * **译后字典** 会搜索并替换 `translated_raw_text` 以供 `translated_view_text` 最终输出。
 
-替换型字典的每个词条使用 `[[normalDict]]` 表示。无条件词条可以省略 `conditions`；有条件词条只使用 `conditions` 表数组，每项通过 `conditionReg` 和 `conditionTarget` 指定一个条件：
+替换型字典的每个词条使用 `[[normalDict]]` 表示。无条件词条可以省略 `conditions`；有条件词条使用 `conditions` 表数组，每项通过 `conditionReg` 和 `conditionTarget` 指定一个条件：
 
 ```toml
 [[normalDict]]
@@ -157,7 +157,7 @@ conditions = [
 
 同一 `conditions` 中的所有条件为隐式 AND，必须全部命中才执行词条。需要 OR 时请拆成多个词条；需要 NOT 时请直接在 `conditionReg` 中使用否定正则。
 
-`conditionTarget` 可使用 `name`, `names`, `nametrans`, `namestrans`, `orig`, `preproc`, `problems`, `otherinfo`, `transby`, `transraw`, `transview`。它们是当前全部 CachePart 指代名，不包含 `linebreak`。目标前可重复添加 `prev_` 或 `next_` 以检查相邻句，例如 `prev_orig` 和 `prev_prev_preproc`。
+`conditionTarget` 可使用 `name`, `names`, `nametrans`, `namestrans`, `orig`, `preproc`, `problems`, `otherinfo`, `transby`, `transraw`, `transview`。目标前可重复添加 `prev_` 或 `next_` 以检查相邻句，例如 `prev_orig` 和 `prev_prev_preproc`。
 
 当 `isReg = true` 时，`org` 和 `rep` 将作为正则搜索与替换表达式；词条级 `compileModifier` 控制 `org` 的编译修饰符，`replaceModifier` 控制替换修饰符。条件项也可通过 `compileModifier` 单独设置 `conditionReg` 的编译修饰符。优先级越高的词条越先执行。
 
@@ -345,13 +345,9 @@ rep = ''
 ### Python 模块使用及 GPU 加速
 
 </summary>
-由于许多有关深度学习的库(如分词器、PDF提取器等)只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
+由于许多有关深度学习的库 (如分词器、PDF提取器等) 只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
 
-当遇到需要使用Python库的情况时(如**翻译PDF**或**使用依赖Python的分词器**)，程序会自动为嵌入式环境下载对应的库。
-
-spaCy / Stanza / pkuseg 等分词器会在独立子进程中加载模型，主程序侧只保留调用代理；模型下载完成后会在新的进程中重新导入，以尽量避免分词模型常驻在主解释器里释放不掉。
-
-PDF 翻译使用 BabelDOC，输出语言码可在 PDF 文件插件配置中设置，例如 `zh-CN`、`zh-TW`、`en`、`ja`、`ko`。单语输出文件使用原文件名，双语输出文件使用 `原文件名.dual.pdf`。
+当遇到需要使用Python库的情况时 (如**翻译PDF**或**使用依赖Python的分词器**)，程序会自动为嵌入式环境下载对应的库。
 
 然而在不启用 GPU加速 的情况下使用如 `spaCy最好的trf模型` 或 `Stanza` 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。
 
@@ -372,7 +368,7 @@ nvcc --version
 ```
 以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。
 - 3、 为嵌入式环境安装 PyTorch，注意启动的必须是 **嵌入式环境中的 Python(之后的操作默认均在此环境中进行)**。
-默认目录在 `BaseConfig\Python-3.12.10-embed-amd64`，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的**绝对路径**以避免与你可能安装过的 python 混淆(pip同理，必须 env/python.exe -m pip...)。
+默认目录在 `BaseConfig\Python-3.12.10-embed-amd64`，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的**绝对路径**以避免与你可能安装过的 python 混淆 (pip同理，必须 env/python.exe -m pip...)。
 - 4、 比如官网给我的命令是 `pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129`，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 `python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129`。
 注意: 如果你已经安装了torch，最好先卸载它：`python -m pip uninstall torch`
 - 5、 重装 Stanza，`python -m pip uninstall stanza`  `python -m pip install stanza`
@@ -382,7 +378,7 @@ nvcc --version
 #### 为 `spaCy` 启用 GPU加速
 
 - 1、 同 Stanza 第一条 至 第四条。
-- 2、 在 **嵌入式 Python环境(详见 Stanza第三条)中** 重新安装 spacy。`python -m pip uninstall spacy`，并确保此环境中没有安装 `cupy`。
+- 2、 在 **嵌入式 Python环境 (详见 Stanza 第三条) 中** 重新安装 spacy。`python -m pip uninstall spacy`，并确保此环境中没有安装 `cupy`。
 - 3、 根据自己的 CUDA 版本(查看 Stanza 第二条以查看如何获取 CUDA 版本)，安装 `cupy` 的特定版本，如 `cupy-cuda13x`: `python -m pip install cupy-cuda13x`，然后再把 spacy 装回来 `python -m pip install spacy`。
 - 4、 尝试运行 `BaseConfig\PythonScripts\check_spacy_gpu.py`，如果提示成功，则代表所有配置均已就绪。
 - 5、 此时打开 `BaseConfig\PythonScripts\tokenizer_spacy.py` 文件，将 `USE_GPU = False` 改为 `USE_GPU = True`，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。
@@ -400,7 +396,7 @@ nvcc --version
 
 可以非常方便的编写自定义的 **文件解析/文本处理/任务结束后处理** 等脚本。
 
-具体的代码示例详见 `Example/LuaSample` 及 `Example/PythonSample`。插件侧的 `Sentence` 字段使用全小写短名，缓存 JSON 输出仍使用下划线键名；以示例插件和 `gpp_plugin_api.pyi` 为准。
+具体的代码示例详见 `Example/LuaSample` 及 `Example/PythonSample`。
 
 </details>
 
@@ -410,7 +406,7 @@ nvcc --version
 
 <summary>
 
-### 自定义主页Popular卡片
+### 自定义主页 Popular 卡片
 
 </summary>
 具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。

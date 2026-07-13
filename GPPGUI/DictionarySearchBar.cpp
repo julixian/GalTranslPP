@@ -15,6 +15,8 @@ DictionarySearchBar::DictionarySearchBar(QTableView* tableView, const QString& d
     QWidget* parent)
     : QWidget(parent), m_tableView(tableView)
 {
+    setFixedWidth(360);
+
     QHBoxLayout* layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(6);
@@ -28,12 +30,12 @@ DictionarySearchBar::DictionarySearchBar(QTableView* tableView, const QString& d
     m_fieldButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_fieldButton->setElaIcon(ElaIconType::BarsFilter);
     m_fieldButton->setText(tr("全部"));
-    m_fieldButton->setFixedWidth(100);
+    m_fieldButton->setFixedWidth(88);
     m_fieldButton->setPopupMode(QToolButton::InstantPopup);
     layout->addWidget(m_fieldButton);
 
     ElaMenu* fieldMenu = new ElaMenu(m_fieldButton);
-    fieldMenu->setFixedWidth(100);
+    fieldMenu->setFixedWidth(88);
     QActionGroup* fieldGroup = new QActionGroup(fieldMenu);
     fieldGroup->setExclusive(true);
     const QStringList labels = { tr("全部"), tr("原文"), tr("译文"), detailLabel };

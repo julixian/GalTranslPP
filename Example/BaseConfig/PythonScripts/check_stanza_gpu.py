@@ -1,5 +1,10 @@
+import sys
+from pathlib import Path
+
 import torch
 import stanza
+
+model_dir = Path(sys.executable).resolve().parent / "stanza_resources"
 
 if torch.cuda.is_available():
     print(f"PyTorch GPU support is available!")
@@ -9,7 +14,13 @@ if torch.cuda.is_available():
     print("\nAttempting to create a Stanza pipeline on GPU...")
     try:
         # 尝试加载一个小模型到GPU上
-        nlp = stanza.Pipeline(lang='ja', processors='tokenize', use_gpu=True, verbose=False)
+        nlp = stanza.Pipeline(
+            lang='ja',
+            processors='tokenize',
+            dir=str(model_dir),
+            use_gpu=True,
+            verbose=False,
+        )
         print("Stanza pipeline successfully created on GPU!")
     except Exception as e:
         print(f"Stanza failed to use GPU: {e}")

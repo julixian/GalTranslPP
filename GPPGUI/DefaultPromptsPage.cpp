@@ -1,4 +1,4 @@
-#include "DefaultPromptPage.h"
+#include "DefaultPromptsPage.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -15,7 +15,7 @@
 import Tool;
 namespace fs = std::filesystem;
 
-DefaultPromptPage::DefaultPromptPage(QWidget* parent)
+DefaultPromptsPage::DefaultPromptsPage(QWidget* parent)
     : BasePage(parent)
 {
     setWindowTitle(tr("默认提示词管理"));
@@ -33,9 +33,7 @@ DefaultPromptPage::DefaultPromptPage(QWidget* parent)
     setupUi();
 }
 
-DefaultPromptPage::~DefaultPromptPage() = default;
-
-void DefaultPromptPage::setupUi()
+void DefaultPromptsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);

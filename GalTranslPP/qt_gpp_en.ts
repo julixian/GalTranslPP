@@ -28,7 +28,7 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="289"/>
+        <location filename="ApiTool.cpp" line="290"/>
         <source>正在使用系统代理: [%1]</source>
         <translation type="unfinished"></translation>
     </message>
@@ -36,12 +36,12 @@
 <context>
     <name>ApiTool.queryApiModels</name>
     <message>
-        <location filename="ApiTool.cpp" line="503"/>
+        <location filename="ApiTool.cpp" line="504"/>
         <source>模型列表响应 JSON 解析失败: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="ApiTool.cpp" line="514"/>
+        <location filename="ApiTool.cpp" line="515"/>
         <source>模型列表响应模型字段解析失败: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2412,7 +2412,7 @@
 <context>
     <name>testApiConnection</name>
     <message>
-        <location filename="ApiTool.cpp" line="551"/>
+        <location filename="ApiTool.cpp" line="552"/>
         <source>Api 响应 JSON 解析失败，%1</source>
         <translation type="unfinished"></translation>
     </message>

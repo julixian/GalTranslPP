@@ -1,9 +1,9 @@
 #include "AboutDialog.h"
 
-#include <QDesktopServices>
-#include <QFont>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QDesktopServices>
+#include <QFont>
 #include <QIcon>
 #include <QImage>
 #include <QUrl>
@@ -77,7 +77,7 @@ void AboutDialog::setupUi()
 
     QWidget* authorTextWidget = new QWidget(textWidget);
     QHBoxLayout* authorTextLayout = new QHBoxLayout(authorTextWidget);
-    authorTextLayout->setContentsMargins(0, 0, 50, 0);
+    authorTextLayout->setContentsMargins(0, 0, 70, 0);
     authorTextLayout->addStretch();
     ElaText* authorText = new ElaText("julixian", 14, textWidget);
     authorText->setWordWrap(false);

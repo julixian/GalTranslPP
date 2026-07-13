@@ -165,7 +165,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="CommonNormalDictsPage.cpp" />
     <ClCompile Include="CommonSettingsPage.cpp" />
     <ClCompile Include="CustomFilePluginCfgPage.cpp" />
-    <ClCompile Include="DefaultPromptPage.cpp" />
+    <ClCompile Include="DefaultPromptsPage.cpp" />
     <ClCompile Include="DictionaryEntryDialog.cpp" />
     <ClCompile Include="DictionarySearchBar.cpp" />
     <ClCompile Include="DictExSettingsPage.cpp" />
@@ -291,7 +291,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="OtherSettingsPage.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="DefaultPromptPage.h" />
+    <QtMoc Include="DefaultPromptsPage.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="BasePage.h" />

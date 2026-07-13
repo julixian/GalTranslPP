@@ -396,9 +396,11 @@ void CommonSettingsPage::setupUi()
 	logSettingsDrawerArea->setDrawerHeader(logSettingsArea);
 	QHBoxLayout* logSettingsLayout = new QHBoxLayout(logSettingsArea);
 	ElaText* logSettingsText = new ElaText(tr("项目日志设置"), 16, logSettingsArea);
+	logSettingsText->setWordWrap(false);
 	logSettingsLayout->addWidget(logSettingsText);
 	logSettingsLayout->addStretch();
-	ElaText* saveLogText = new ElaText(tr("保存项目日志"), 16, logSettingsArea);
+	ElaText* saveLogText = new ElaText(tr("保存项目日志文件"), 16, logSettingsArea);
+	saveLogText->setWordWrap(false);
 	ElaToggleSwitch* saveLogToggle = new ElaToggleSwitch(logSettingsArea);
 	saveLogToggle->setIsToggled(shouldSaveLog);
 	logSettingsLayout->addWidget(saveLogText);
@@ -531,7 +533,7 @@ void CommonSettingsPage::setupUi()
 	tokenizerSettingsDrawerArea->setDrawerHeader(tokenizerBackendArea);
 	QHBoxLayout* tokenizerBackendLayout = new QHBoxLayout(tokenizerBackendArea);
 	ElaDoubleText* tokenizerBackendTextWidget = new ElaDoubleText(tr("分词器后端"), 16,
-		tr("除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的"), 10, "", tokenizerBackendArea);
+		tr("除了MeCab，剩下的都依赖Python，速度会比较慢"), 10, "", tokenizerBackendArea);
 	tokenizerBackendLayout->addWidget(tokenizerBackendTextWidget);
 	tokenizerBackendLayout->addStretch();
 	ElaNoWheelComboBox* tokenizerBackendComboBox = new ElaNoWheelComboBox(tokenizerBackendArea);
@@ -576,8 +578,8 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* spaCyModelNameArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* spaCyModelNameLayout = new QHBoxLayout(spaCyModelNameArea);
 	ElaDoubleText* spaCyModelNameText = new ElaDoubleText(tr("spaCy模型名称"), 16,
-		tr("spaCy模型名称，新模型下载后需重启程序"), 10,
-		tr("sm模型的效果有点一言难尽，有条件的建议上trf模型"), spaCyModelNameArea);
+		tr("sm模型的效果有点一言难尽，有条件的建议上trf模型"), 10,
+		"", spaCyModelNameArea);
 	spaCyModelNameLayout->addWidget(spaCyModelNameText);
 	spaCyModelNameLayout->addStretch();
 	ElaLineEdit* spaCyModelNameLineEdit = new ElaLineEdit(spaCyModelNameArea);
@@ -587,8 +589,9 @@ void CommonSettingsPage::setupUi()
 	tokenizerSettingsDrawerArea->addDrawer(spaCyModelNameArea);
 	ElaToolButton* spaCyModelNameButton = new ElaToolButton(spaCyModelNameArea);
 	spaCyModelNameButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	spaCyModelNameButton->setElaIcon(ElaIconType::FolderOpen);
+	spaCyModelNameButton->setElaIcon(ElaIconType::ArrowUpRightFromSquare);
 	spaCyModelNameButton->setText(tr("浏览"));
+	spaCyModelNameButton->setToolTip(tr("打开模型列表网页"));
 	spaCyModelNameLayout->addWidget(spaCyModelNameButton);
 	connect(spaCyModelNameButton, &ElaToolButton::clicked, this, [=]()
 		{
@@ -600,7 +603,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* stanzaLangArea = new ElaScrollPageArea(tokenizerSettingsDrawerArea);
 	QHBoxLayout* stanzaLangLayout = new QHBoxLayout(stanzaLangArea);
 	ElaDoubleText* stanzaLangTextWidget = new ElaDoubleText(tr("Stanza语言ID"), 16,
-		tr("Stanza语言ID，新模型下载后需重启程序"), 10, "", stanzaLangArea);
+		tr("感觉不如 spaCy"), 10, "", stanzaLangArea);
 	stanzaLangLayout->addWidget(stanzaLangTextWidget);
 	stanzaLangLayout->addStretch();
 	ElaLineEdit* stanzaLangLineEdit = new ElaLineEdit(stanzaLangArea);
@@ -610,8 +613,9 @@ void CommonSettingsPage::setupUi()
 	tokenizerSettingsDrawerArea->addDrawer(stanzaLangArea);
 	ElaToolButton* stanzaLangButton = new ElaToolButton(stanzaLangArea);
 	stanzaLangButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-	stanzaLangButton->setElaIcon(ElaIconType::FolderOpen);
+	stanzaLangButton->setElaIcon(ElaIconType::ArrowUpRightFromSquare);
 	stanzaLangButton->setText(tr("浏览"));
+	stanzaLangButton->setToolTip(tr("打开模型列表网页"));
 	stanzaLangLayout->addWidget(stanzaLangButton);
 	connect(stanzaLangButton, &ElaToolButton::clicked, this, [=]()
 		{
@@ -635,13 +639,15 @@ void CommonSettingsPage::setupUi()
 	linebreakLayout->setContentsMargins(12, 6, 12, 8);
 	linebreakLayout->setSpacing(6);
 	linebreakLayout->addWidget(new ElaDoubleText(tr("本项目所使用的换行符"), 16,
-		tr("项目统一使用的换行符，auto 表示自动检测"), 10, "", linebreakArea));
+		tr("将换行符统一规范为 &lt;br&gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。具体替换时机详见使用说明，auto 为自动检测"),
+		8, "", linebreakArea));
 	ElaPlainTextEdit* linebreakEdit = new ElaPlainTextEdit(linebreakArea);
 	linebreakEdit->setPlainText(linebreakSymbolStr);
 	linebreakEdit->setFixedHeight(100);
 	installTreeSitterHighlighter(linebreakEdit->document(), SyntaxLanguage::Toml);
 	linebreakLayout->addWidget(linebreakEdit);
 	mainLayout->addWidget(linebreakArea);
+	mainLayout->addSpacing(8);
 
 
 	m_applyFunc = [=]()
@@ -650,14 +656,14 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.numPerRequestNameTranslate", requestNameNumSpinBox->value());
 			insertToml(m_projectConfig, "common.threadsNum", maxThreadSpinBox->value());
 			int orderValue = transOrderGroup->id(transOrderGroup->checkedButton());
-			QString orderValueStr;
+			QString orderValueQStr;
 			if (orderValue == 0) {
-				orderValueStr = "name";
+				orderValueQStr = "name";
 			}
 			else if (orderValue == 1) {
-				orderValueStr = "size";
+				orderValueQStr = "size";
 			}
-			insertToml(m_projectConfig, "common.sortMethod", orderValueStr.toStdString());
+			insertToml(m_projectConfig, "common.sortMethod", orderValueQStr.toStdString());
 			insertToml(m_projectConfig, "common.targetLang", targetLangLineEdit->text().toStdString());
 			insertToml(m_projectConfig, "common.split.method", splitSettingsGroup->checkedButton()->text().toStdString());
 			insertToml(m_projectConfig, "common.split.num", splitNumSpinBox->value());

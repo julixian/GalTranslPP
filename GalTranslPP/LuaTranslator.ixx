@@ -1,6 +1,5 @@
 module;
 
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 
 export module LuaTranslator;
@@ -19,7 +18,7 @@ export
 	class LuaTranslator : public BaseTranslator {
 	private:
 		std::shared_ptr<LuaStateInstance> m_luaState;
-		sol::function* m_luaRunFunc = nullptr;
+		LuaFunction* m_luaRunFunc = nullptr;
 		std::string m_scriptPath;
 		std::string m_translatorName;
 
@@ -29,13 +28,9 @@ export
 			m_luaState->submitTask([&]()
 				{
 					try {
-						const sol::protected_function_result result = (*m_luaRunFunc)();
-						if (!result.valid()) {
-							const sol::error error = result;
-							throw error;
-						}
+						m_luaRunFunc->call();
 					}
-					catch (const sol::error& e) {
+					catch (const std::exception& e) {
 						throw std::runtime_error(gppTr("LuaTranslator.run",
 							"调用 LuaTranslator [%1] run 函数时出现异常: %2")
 							.arg(m_translatorName)
@@ -70,18 +65,16 @@ export
 			m_luaRunFunc = m_luaState->m_functions["run"].get();
 			this->m_luaManager->registerFunction(m_scriptPath, "unload");
 
-			sol::function* initFunc = m_luaState->m_functions["init"].get();
+			LuaFunction* initFunc = m_luaState->m_functions["init"].get();
 			m_luaState->submitTask([this, initFunc]()
 				{
 					try {
-						(*(m_luaState->m_lua))["luaTranslator"] = (BaseTranslator*)this;
-						const sol::protected_function_result result = (*initFunc)();
-						if (!result.valid()) {
-							const sol::error error = result;
-							throw error;
+						if (!luabridge::setGlobal(m_luaState->m_lua.get(), (BaseTranslator*)this, "luaTranslator")) {
+							throw std::runtime_error("设置 luaTranslator 全局变量失败");
 						}
+						initFunc->call();
 					}
-					catch (const sol::error& e) {
+					catch (const std::exception& e) {
 						throw std::runtime_error(gppTr("LuaTranslator.LuaTranslator",
 							"调用 LuaTranslator [%1] init 函数时出现异常: %2")
 							.arg(m_translatorName)
@@ -104,13 +97,9 @@ export
 					m_luaState->submitTask([&]
 						{
 							try {
-								const sol::protected_function_result result = (*unloadFunc)();
-								if (!result.valid()) {
-									const sol::error error = result;
-									throw error;
-								}
+								unloadFunc->call();
 							}
-							catch (const sol::error& e) {
+							catch (const std::exception& e) {
 								this->m_logger->error(gppTr(
 									"LuaTranslator.~LuaTranslator",
 									"调用 LuaTranslator unload 函数时出现异常: %1")

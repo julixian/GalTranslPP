@@ -101,7 +101,7 @@ export
         const RepeatedBlockReferenceMap& references
     );
 
-    std::string generateCacheKey(const Sentence* s);
+    std::string generateCacheKey(Sentence* s);
     std::string generateCacheKey(const json& jsonArr, size_t i);
 
     std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);

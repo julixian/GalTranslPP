@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
@@ -30,7 +29,7 @@ export
     using GPPCondition = std::vector<GppConditionPattern>;
 
     bool checkString(const jpc::Regex& conditionReg, const std::string& str);
-    bool checkGppCondition(const GPPCondition& gppCondition, const Sentence* se);
+    bool checkGppCondition(const GPPCondition& gppCondition, Sentence* se);
 
     template<typename TC>
     GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) {
@@ -131,7 +130,7 @@ export
                     if (gppCondition.empty()) {
                         return;
                     }
-                    RetFuncType checkFunc = [condR = std::move(gppCondition)](const Sentence* se, Args...) -> bool
+                    RetFuncType checkFunc = [condR = std::move(gppCondition)](Sentence* se, Args...) -> bool
                         {
                             return checkGppCondition(condR, se);
                         };
@@ -148,8 +147,8 @@ export
                         conditionLuaStr, conditionFuncStr);
                     if (luaStateOpt) {
                         std::shared_ptr<LuaStateInstance> luaState = *luaStateOpt;
-                        sol::function* pConditionFunc = luaState->m_functions[conditionFuncStr].get();
-                        RetFuncType checkFunc = [luaState, pConditionFunc, conditionFuncStr](const Sentence* se, Args... args) -> bool
+                        LuaFunction* pConditionFunc = luaState->m_functions[conditionFuncStr].get();
+                        RetFuncType checkFunc = [luaState, pConditionFunc, conditionFuncStr](Sentence* se, Args... args) -> bool
                             {
                                 bool result = false;
                                 try {
@@ -197,7 +196,7 @@ export
                     if (pythonInterpreterOpt) {
                         std::shared_ptr<PythonInterpreterInstance> pythonInterpreter = *pythonInterpreterOpt;
                         py::object* pConditionFunc = pythonInterpreter->functions[conditionFuncStr].get();
-                        RetFuncType checkFunc = [pythonInterpreter, pConditionFunc, conditionFuncStr](const Sentence* se, Args... args) -> bool
+                        RetFuncType checkFunc = [pythonInterpreter, pConditionFunc, conditionFuncStr](Sentence* se, Args... args) -> bool
                             {
                                 bool result;
                                 pythonInterpreter->submitTask([&]()
@@ -253,13 +252,13 @@ export
 
         RetFuncType resultFunc;
         if (funcs.empty()) {
-            resultFunc = [](const Sentence*, Args...) -> bool
+            resultFunc = [](Sentence*, Args...) -> bool
                 {
                     return true;
                 };
         }
         else {
-            resultFunc = [funcsR = std::move(funcs)](const Sentence* se, Args... args) -> bool
+            resultFunc = [funcsR = std::move(funcs)](Sentence* se, Args... args) -> bool
                 {
                     return std::ranges::all_of(funcsR, [&](const RetFuncType& func)
                         {
@@ -280,10 +279,10 @@ bool checkString(const jpc::Regex& conditionReg, const std::string& str) {
     return rm.setSubject(&str).match() > 0;
 }
 
-bool checkGppCondition(const GPPCondition& gppCondition, const Sentence* se) {
+bool checkGppCondition(const GPPCondition& gppCondition, Sentence* se) {
     return std::ranges::all_of(gppCondition, [&](const GppConditionPattern& pattern)
         {
-            const Sentence* sentenceToCheck = se;
+            Sentence* sentenceToCheck = se;
             if (pattern.sentenceOffset > 0) {
                 for (int i = 0; i < pattern.sentenceOffset; i++) {
                     sentenceToCheck = sentenceToCheck->next;

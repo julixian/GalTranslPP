@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <cpp-base64/base64.h>
 #include <toml.hpp>
@@ -63,7 +62,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                         .toStdString());
                 }
                 GPPCondition gppCondition{ std::move(pattern) };
-                CheckSeCondNormalFunc checkFunc = [condr = std::move(gppCondition)](const Sentence* se) -> bool
+                CheckSeCondNormalFunc checkFunc = [condr = std::move(gppCondition)](Sentence* se) -> bool
                     {
                         return checkGppCondition(condr, se);
                     };

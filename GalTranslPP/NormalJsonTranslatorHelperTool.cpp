@@ -313,16 +313,16 @@ int getSplittedFileIndex(const std::wstring& path) {
 /**
 * @brief 根据句子的上下文生成唯一的缓存键，复刻 GalTransl 逻辑
 */
-std::string generateCacheKey(const Sentence* s) {
-    const std::string currentText = getNameString(s) + s->orig + s->preproc;
+std::string generateCacheKey(Sentence* s) {
+    const std::string currentText = getNameString(*s) + s->orig + s->preproc;
 
     std::string prevText = "None";
     std::string nextText = "None";
     if (s->prev) {
-        prevText = getNameString(s->prev) + s->prev->orig + s->prev->preproc;
+        prevText = getNameString(*s->prev) + s->prev->orig + s->prev->preproc;
     }
     if (s->next) {
-        nextText = getNameString(s->next) + s->next->orig + s->next->preproc;
+        nextText = getNameString(*s->next) + s->next->orig + s->next->preproc;
     }
     return prevText + currentText + nextText;
 }
@@ -356,11 +356,11 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     case TransEngine::ForGalTsv:
     {
         std::vector<std::string> contextLines;
-        const Sentence* current = batch[0]->prev;
+        Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
-                const std::string name = current->nameType == NameType::None ? "null" : getNameString(current);
+                const std::string name = current->nameType == NameType::None ? "null" : getNameString(*current);
                 contextLines.push_back(std::format("{}\t{}\t{}", name, current->transraw, current->index));
             }
             current = current->prev;
@@ -373,7 +373,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     case TransEngine::ForNovelTsv:
     {
         std::vector<std::string> contextLines;
-        const Sentence* current = batch[0]->prev;
+        Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
@@ -389,14 +389,14 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     case TransEngine::ForGalJson:
     {
         json historyJson = json::array();
-        const Sentence* current = batch[0]->prev;
+        Sentence* current = batch[0]->prev;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)historyJson.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
                 json item;
                 item["id"] = current->index;
                 if (current->nameType != NameType::None) {
-                    item["name"] = getNameString(current);
+                    item["name"] = getNameString(*current);
                 }
                 item["dst"] = current->transraw;
                 historyJson.push_back(std::move(item));
@@ -413,13 +413,13 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
 
     case TransEngine::Sakura:
     {
-        const Sentence* current = batch[0]->prev;
+        Sentence* current = batch[0]->prev;
         std::vector<std::string> contextLines;
         const int limit = contextHistorySize * 2;
         for (int i = 0; current && (int)contextLines.size() < contextHistorySize && i < limit; ++i) {
             if (current->transCompleted) {
                 if (current->nameType != NameType::None) {
-                    contextLines.push_back(std::format("{}:::::{}", getNameString(current), current->transraw)); // :::::
+                    contextLines.push_back(std::format("{}:::::{}", getNameString(*current), current->transraw)); // :::::
                 }
                 else {
                     contextLines.push_back(current->transraw);
@@ -450,7 +450,7 @@ void fillBlockAndMap(
     case TransEngine::ForGalTsv:
     {
         for (Sentence* se : batchToTransThisRound) {
-            const std::string name = se->nameType == NameType::None ? "null" : getNameString(se);
+            const std::string name = se->nameType == NameType::None ? "null" : getNameString(*se);
             inputBlock += std::format("{}\t{}\t{}\n", name, se->preproc, se->index);
             if (id2SentenceMap != nullptr) {
                 (*id2SentenceMap)[se->index] = se;
@@ -476,7 +476,7 @@ void fillBlockAndMap(
             json item;
             item["id"] = se->index;
             if (se->nameType != NameType::None) {
-                item["name"] = getNameString(se);
+                item["name"] = getNameString(*se);
             }
             item["src"] = se->preproc;
             inputBlock += item.dump() + "\n";
@@ -491,7 +491,7 @@ void fillBlockAndMap(
     {
         for (Sentence* se : batchToTransThisRound) {
             if (se->nameType != NameType::None) {
-                inputBlock += std::format("{}:::::{}\n", getNameString(se), se->preproc);
+                inputBlock += std::format("{}:::::{}\n", getNameString(*se), se->preproc);
             }
             else {
                 inputBlock += se->preproc + "\n";

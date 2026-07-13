@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
@@ -241,7 +240,7 @@ std::vector<NormalJsonTranslatorTransAgent::LoadedDictionaryEntry> NormalJsonTra
 // 收集当前批次里还没有完成翻译的句子。
 std::vector<Sentence*> NormalJsonTranslatorTransAgent::collectPendingSentences(std::span<Sentence*> batch) const {
     return batch
-        | std::views::filter([](const Sentence* se) { return !se->transCompleted; })
+        | std::views::filter([](Sentence* se) { return !se->transCompleted; })
         | std::ranges::to<std::vector>();
 }
 
@@ -293,7 +292,7 @@ std::string NormalJsonTranslatorTransAgent::buildTermLedgerExcerpt(
 // 汇总当前待翻译句子已有的问题文本。
 std::string NormalJsonTranslatorTransAgent::buildProblemSummary(std::span<Sentence*> pending) const {
     return std::ranges::fold_left(pending
-            | std::views::transform([](const Sentence* se) { return se->problems; })
+            | std::views::transform([](Sentence* se) { return se->problems; })
             | std::views::join,
         std::string{},
         [](const std::string& acc, const std::string& value)
@@ -342,7 +341,7 @@ std::vector<int> NormalJsonTranslatorTransAgent::inferOccurrenceIdsFromChunk(
     std::span<Sentence*> pending
 ) const {
     std::vector<int> matchedIds;
-    for (const Sentence* se : pending) {
+    for (Sentence* se : pending) {
         if (se == nullptr || sourceTerm.empty()) {
             continue;
         }
@@ -905,7 +904,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
     }
 
     const absl::flat_hash_set<int> currentChunkIds = pending
-        | std::views::transform([](const Sentence* se) { return se->index; })
+        | std::views::transform([](Sentence* se) { return se->index; })
         | std::ranges::to<absl::flat_hash_set<int>>();
     auto addSuggestionFunc = [&](const fs::path& file, int id, const std::string& problem)
         {
@@ -1239,7 +1238,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     }
 
     size_t failedCount = 0;
-    for (Sentence* se : batch | std::views::filter([](const Sentence* s) { return !s->transCompleted; })) {
+    for (Sentence* se : batch | std::views::filter([](Sentence* s) { return !s->transCompleted; })) {
         ++failedCount;
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;

@@ -1,6 +1,5 @@
 module;
 
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 
 module LuaTextPlugin;
@@ -20,7 +19,7 @@ LuaTextPlugin::LuaTextPlugin(const fs::path& projectDir, const std::string& scri
 	}
 	m_luaState = luaStateOpt.value();
 
-	auto registerFunctionFunc = [&](const std::string& funcName, sol::function*& pFunc)
+	auto registerFunctionFunc = [&](const std::string& funcName, LuaFunction*& pFunc)
 		{
 			luaStateOpt = luaManager->registerFunction(m_scriptPath, funcName);
 			if (luaStateOpt.has_value()) {
@@ -41,13 +40,9 @@ LuaTextPlugin::LuaTextPlugin(const fs::path& projectDir, const std::string& scri
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaState->m_functions["init"])(projectDir);
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaState->m_functions["init"]->call(projectDir);
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				throw std::runtime_error(gppTr(
 					"LuaTextPlugin.LuaTextPlugin",
 					"调用 LuaTextPlugin [%1] init 函数时出现异常: %2")
@@ -69,13 +64,9 @@ LuaTextPlugin::~LuaTextPlugin() {
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaUnloadFunc)();
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaUnloadFunc->call();
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				m_logger->error(gppTr("LuaTextPlugin.~LuaTextPlugin",
 					"调用 LuaTextPlugin [%1] unload 函数时出现异常: %2")
 					.arg(m_scriptPath)
@@ -92,13 +83,9 @@ void LuaTextPlugin::dPreRun(Sentence* se) {
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaDPreRunFunc)(se);
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaDPreRunFunc->call(se);
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				throw std::runtime_error(gppTr("LuaTextPlugin.dPreRun",
 					"调用 LuaTextPlugin [%1] dPreRun 函数时出现异常: %2")
 					.arg(m_scriptPath)
@@ -115,13 +102,9 @@ void LuaTextPlugin::preRun(Sentence* se) {
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaPreRunFunc)(se);
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaPreRunFunc->call(se);
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				throw std::runtime_error(gppTr("LuaTextPlugin.preRun",
 					"调用 LuaTextPlugin [%1] preRun 函数时出现异常: %2")
 					.arg(m_scriptPath)
@@ -138,13 +121,9 @@ void LuaTextPlugin::postRun(Sentence* se) {
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaPostRunFunc)(se);
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaPostRunFunc->call(se);
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				throw std::runtime_error(gppTr("LuaTextPlugin.postRun",
 					"调用 LuaTextPlugin [%1] postRun 函数时出现异常: %2")
 					.arg(m_scriptPath)
@@ -161,13 +140,9 @@ void LuaTextPlugin::dPostRun(Sentence* se) {
 	m_luaState->submitTask([&]()
 		{
 			try {
-				const sol::protected_function_result result = (*m_luaDPostRunFunc)(se);
-				if (!result.valid()) {
-					const sol::error error = result;
-					throw error;
-				}
+				m_luaDPostRunFunc->call(se);
 			}
-			catch (const sol::error& e) {
+			catch (const std::exception& e) {
 				throw std::runtime_error(gppTr("LuaTextPlugin.dPostRun",
 					"调用 LuaTextPlugin [%1] dPostRun 函数时出现异常: %2")
 					.arg(m_scriptPath)

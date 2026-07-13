@@ -49,7 +49,7 @@ export
 
         std::string generatePrompt(std::span<Sentence*> batch, TransEngine transEngine) const;
 
-        std::string doReplace(const Sentence* se, CachePart targetToModify) const;
+        std::string doReplace(Sentence* se, CachePart targetToModify) const;
 
         void checkDictUse(Sentence* sentence, CachePart base, CachePart check);
     };
@@ -88,6 +88,6 @@ export
 
         void sort();
 
-        std::string doReplace(const Sentence* sentence, CachePart targetToModify);
+        std::string doReplace(Sentence* sentence, CachePart targetToModify);
     };
 }

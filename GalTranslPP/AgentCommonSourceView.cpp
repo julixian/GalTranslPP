@@ -10,7 +10,7 @@ AgentCommonSourceFileView buildAgentCommonSourceFileViewFromSentences(const std:
     AgentCommonSourceFileView fileView;
     fileView.lines.reserve(sentences.size());
     for (const Sentence& se : sentences) {
-        const std::string speaker = getNameString(&se);
+        const std::string speaker = getNameString(se);
         const std::string sourceTextLower = str2Lower(se.preproc);
         fileView.lines.push_back({
             .id = se.index,

@@ -712,12 +712,12 @@ std::string names2String(const json& j) {
     return result;
 }
 
-std::string getNameString(const Sentence* se) {
-    if (se->nameType == NameType::Single) {
-        return se->name;
+std::string getNameString(const Sentence& se) {
+    if (se.nameType == NameType::Single) {
+        return se.name;
     }
-    if (se->nameType == NameType::Multiple) {
-        return names2String(se->names);
+    if (se.nameType == NameType::Multiple) {
+        return names2String(se.names);
     }
     return {};
 }
@@ -732,7 +732,7 @@ std::string getNameString(const json& j) {
     return {};
 }
 
-const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
+const std::string& chooseStringRef(Sentence* sentence, CachePart target) {
     switch (target) {
     case CachePart::Name:
         return sentence->name;
@@ -765,7 +765,7 @@ const std::string& chooseStringRef(const Sentence* sentence, CachePart target) {
     return {};
 }
 
-std::string chooseString(const Sentence* sentence, CachePart target) {
+std::string chooseString(Sentence* sentence, CachePart target) {
     return chooseStringRef(sentence, target);
 }
 

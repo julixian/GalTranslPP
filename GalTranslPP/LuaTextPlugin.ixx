@@ -1,6 +1,5 @@
 ﻿module;
 
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 
 export module LuaTextPlugin;
@@ -15,11 +14,11 @@ export
 	class LuaTextPlugin {
 	private:
 		std::shared_ptr<LuaStateInstance> m_luaState;
-		sol::function* m_luaDPreRunFunc = nullptr;
-		sol::function* m_luaPreRunFunc = nullptr;
-		sol::function* m_luaPostRunFunc = nullptr;
-		sol::function* m_luaDPostRunFunc = nullptr;
-		sol::function* m_luaUnloadFunc = nullptr;
+		LuaFunction* m_luaDPreRunFunc = nullptr;
+		LuaFunction* m_luaPreRunFunc = nullptr;
+		LuaFunction* m_luaPostRunFunc = nullptr;
+		LuaFunction* m_luaDPostRunFunc = nullptr;
+		LuaFunction* m_luaUnloadFunc = nullptr;
 
 		std::shared_ptr<spdlog::logger> m_logger;
 		std::string m_scriptPath;

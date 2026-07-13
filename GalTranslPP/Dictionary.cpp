@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 
@@ -168,7 +167,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
         .toStdString());
 }
 
-std::string GptDictionary::doReplace(const Sentence* se, CachePart targetToModify) const {
+std::string GptDictionary::doReplace(Sentence* se, CachePart targetToModify) const {
     std::string textToModify = chooseString(se, targetToModify);
     for (const auto& entry : m_entries) {
         if (textToModify.contains(entry.org)) {
@@ -334,7 +333,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                 GPPCondition gppCondition = createGppCondition(conditions);
                 if (!gppCondition.empty()) {
                     entry.dictCondition = std::make_unique<CheckSeCondNormalFunc>(
-                        [condition = std::move(gppCondition)](const Sentence* se) {
+                        [condition = std::move(gppCondition)](Sentence* se) {
                             return checkGppCondition(condition, se);
                         });
                 }
@@ -372,7 +371,7 @@ void NormalDictionary::sort() {
         });
 }
 
-std::string NormalDictionary::doReplace(const Sentence* sentence, CachePart targetToModify) {
+std::string NormalDictionary::doReplace(Sentence* sentence, CachePart targetToModify) {
     std::string textToModify = chooseString(sentence, targetToModify);
 
     for (const NormalDictEntry& entry : m_entries

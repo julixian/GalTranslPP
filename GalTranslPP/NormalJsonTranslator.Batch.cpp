@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <ctpl_stl.h>
 #include <proxy/proxy.h>
@@ -37,7 +36,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         }
 
         std::vector<Sentence*> batchToTransThisRound = batch
-            | std::views::filter([](const Sentence* se) { return !se->transCompleted; })
+            | std::views::filter([](Sentence* se) { return !se->transCompleted; })
             | std::ranges::to<std::vector>();
 
         if (batchToTransThisRound.empty()) {
@@ -84,7 +83,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
 
         const std::string inputProblems = std::ranges::fold_left(
             batchToTransThisRound
-                | std::views::transform([](const Sentence* se) { return se->problems; })
+                | std::views::transform([](Sentence* se) { return se->problems; })
                 | std::views::join,
             std::string{},
             [](const auto& acc, const auto& value)
@@ -237,7 +236,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     }
 
     size_t failedCount = 0;
-    for (Sentence* se : batch | std::views::filter([](const Sentence* s) { return !s->transCompleted; })) {
+    for (Sentence* se : batch | std::views::filter([](Sentence* s) { return !s->transCompleted; })) {
         ++failedCount;
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;

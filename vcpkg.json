@@ -20,7 +20,6 @@
     "opencc",
     "pcre2",
     "proxy",
-    "sol2",
     "spdlog",
     "toml11",
     "tree-sitter",

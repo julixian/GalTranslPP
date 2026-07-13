@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #ifdef _WIN32
 #include <Shlwapi.h>
@@ -356,7 +355,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 return std::string{};
             }();
 
-        const Sentence* pLastSentence = nullptr;
+        Sentence* pLastSentence = nullptr;
         for (auto [batchIndex, batchView] : toTranslate
             | std::views::chunk(m_batchSize) | std::views::enumerate)
         {

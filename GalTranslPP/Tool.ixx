@@ -160,11 +160,11 @@ export
     std::function<std::string(const std::string&)> getTraditionalChineseExtractor();
 
 
-    std::string getNameString(const Sentence* se);
+    std::string getNameString(const Sentence& se);
     std::string getNameString(const json& j);
 
-    const std::string& chooseStringRef(const Sentence* sentence, CachePart target);
-    std::string chooseString(const Sentence* sentence, CachePart target);
+    const std::string& chooseStringRef(Sentence* sentence, CachePart target);
+    std::string chooseString(Sentence* sentence, CachePart target);
     CachePart chooseCachePart(std::string_view partName);
 
     class ActiveWorkerGuard {

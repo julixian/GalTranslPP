@@ -125,7 +125,7 @@ export
     using NLPResult = std::tuple<WordPosVec, EntityVec>;
 
     template<typename ...Args>
-    using CheckSeCondBaseFunc = std::function<bool(const Sentence* se, Args...)>;
+    using CheckSeCondBaseFunc = std::function<bool(Sentence* se, Args...)>;
     using CheckSeCondNormalFunc = CheckSeCondBaseFunc<>;
     using CheckSkipProblemCondFunc = CheckSeCondBaseFunc<const std::string&>;
     // first: 要忽略的问题正则表达式，second: 对应的忽略条件

@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define SOL2_HEADERS
 #include "GPPMacros.hpp"
 #include <ctpl_stl.h>
 #include <proxy/proxy.h>
@@ -804,7 +803,7 @@ void NormalJsonTranslator::normalJsonInit()
                                 .toStdString());
                         }
                         GPPCondition cond{ std::move(pattern) };
-                        CheckSeCondNormalFunc checkFunc = [condr = std::move(cond)](const Sentence* se) -> bool
+                        CheckSeCondNormalFunc checkFunc = [condr = std::move(cond)](Sentence* se) -> bool
                         {
                             return checkGppCondition(condr, se);
                         };

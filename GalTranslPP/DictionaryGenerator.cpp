@@ -96,7 +96,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
                 }
             }
 
-            std::string currentText = getNameString(&se);
+            std::string currentText = getNameString(se);
             if (!currentText.empty()) {
                 currentText += ": ";
             }

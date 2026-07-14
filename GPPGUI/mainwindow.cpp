@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "Mainwindow.h"
 
 #include <QHBoxLayout>
 #include <QMouseEvent>

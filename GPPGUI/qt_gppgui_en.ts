@@ -4048,13 +4048,13 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+366"/>
+        <location filename="StartSettingsPage.cpp" line="+365"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
     </message>
     <message>
-        <location line="-376"/>
+        <location line="-375"/>
         <source>启动设置</source>
         <translation>Start settings</translation>
     </message>
@@ -4075,7 +4075,6 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+57"/>
-        <location line="+1"/>
         <source>问题概览结束
 ```</source>
         <translation>Issue summary end
@@ -4140,12 +4139,12 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-473"/>
+        <location line="-472"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+332"/>
         <source>文件处理器:</source>
         <translation>File plugin:</translation>
     </message>

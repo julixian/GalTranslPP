@@ -274,15 +274,14 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 
 		static const QString problemOverviewQStr1 = tr("```\n问题概览:");
 		static const QString problemOverviewQStr2 = tr("问题概览结束\n```");
-		static const QString problemOverviewQStr3 = tr("问题概览结束\n```");
 		if (log.contains(problemOverviewQStr1)) {
 			QString logCopy = log;
-			int index = log.indexOf(problemOverviewQStr2);
+			int index = log.indexOf(problemOverviewQStr1);
 			QString pre = logCopy.left(index);
 			logCopy = logCopy.mid(index);
-			index = logCopy.indexOf(problemOverviewQStr3);
-			QString overview = logCopy.left(index + problemOverviewQStr3.length());
-			logCopy = logCopy.mid(index + problemOverviewQStr3.length());
+			index = logCopy.indexOf(problemOverviewQStr2);
+			QString overview = logCopy.left(index + problemOverviewQStr2.length());
+			logCopy = logCopy.mid(index + problemOverviewQStr2.length());
 			QString post = std::move(logCopy);
 			processLogFunc(pre);
 			QTextCharFormat format;

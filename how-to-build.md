@@ -66,7 +66,7 @@ cd GalTranslPP
 
 ## 5. 编译 GalTranslPP (主项目)
 
-- 1、  使用 Visual Studio 打开根目录下的 `GalTranslPP.sln` 解决方案文件。
+- 1、  使用 Visual Studio 打开根目录下的 `GalTranslPP.slnx` 解决方案文件。
 
 - 2、  将 配置从默认的 Debug 切换至 Release。
 

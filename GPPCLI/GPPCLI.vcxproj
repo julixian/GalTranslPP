@@ -196,7 +196,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPCLI_PRIVATE\transl
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="GPPCLI.cpp" />
     <ClCompile Include="ProgressBar.ixx" />
     <ClCompile Include="TerminalController.ixx" />
   </ItemGroup>

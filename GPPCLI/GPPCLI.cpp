@@ -36,7 +36,6 @@ int main(int argc, char* argv[])
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("GalTransl++ CLI");
     QDir::setCurrent(QCoreApplication::applicationDirPath());
-    ascii2Wide("222");
     std::unique_ptr<py::gil_scoped_release> release;
 
     try {
@@ -62,30 +61,30 @@ int main(int argc, char* argv[])
         try {
             const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
             if (!startUpPythonEnv(pythonEnvPath, release)) {
-                spdlog::warn(gppTr("GPPCLI.main", "未设置 Python 环境，将无法使用需要 Python 环境的模块")
+                spdlog::warn(gppTr("GPPCLI.GPPCLI", "未设置 Python 环境，将无法使用需要 Python 环境的模块")
                     .toStdString());
             }
         }
         catch(...) {
-            spdlog::error(gppTr("GPPCLI.main", "Python 环境配置失败").toStdString());
+            spdlog::error(gppTr("GPPCLI.GPPCLI", "Python 环境配置失败").toStdString());
         }
     }
     catch (...) {
-        spdlog::critical(gppTr("GPPCLI.main", "无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在")
+        spdlog::critical(gppTr("GPPCLI.GPPCLI", "无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在")
             .toStdString());
         return 1;
     }
 
     try {
         if (fs::exists(L"cache")) {
-            spdlog::warn(gppTr("GPPCLI.main", "检测到异常退出，请注意备份相关翻译缓存").toStdString());
+            spdlog::warn(gppTr("GPPCLI.GPPCLI", "检测到异常退出，请注意备份相关翻译缓存").toStdString());
         }
         else {
             fs::create_directories(L"cache");
         }
     }
     catch (const fs::filesystem_error& e) {
-        spdlog::error(gppTr("GPPCLI.main", "缓存检测或创建错误: %1")
+        spdlog::error(gppTr("GPPCLI.GPPCLI", "缓存检测或创建错误: %1")
             .arg(e.what())
             .toStdString());
     }
@@ -99,9 +98,9 @@ int main(int argc, char* argv[])
         std::cout << "Press Ctrl+Z to exit.\n";
         std::cout << "======================================================\n";
 
-        std::cout << gppTr("GPPCLI.main", "请输入项目文件夹或 Config.toml 的路径。").toStdString();
+        std::cout << gppTr("GPPCLI.GPPCLI", "请输入项目文件夹或 Config.toml 的路径。").toStdString();
         if (!currentProjectPath.empty()) {
-            std::cout << gppTr("GPPCLI.main", " (直接按 Enter 可再次处理: %1)")
+            std::cout << gppTr("GPPCLI.GPPCLI", " (直接按 Enter 可再次处理: %1)")
                 .arg(wide2Ascii(currentProjectPath.wstring()))
                 .toStdString();
         }
@@ -129,12 +128,12 @@ int main(int argc, char* argv[])
             // 用户直接按了回车
             if (currentProjectPath.empty()) {
                 // 如果之前没有处理过任何项目，提示用户必须输入
-                spdlog::warn(gppTr("GPPCLI.main", "首次运行，请输入一个有效的项目路径")
+                spdlog::warn(gppTr("GPPCLI.GPPCLI", "首次运行，请输入一个有效的项目路径")
                     .toStdString());
                 continue; // 回到循环开头，再次提示
             }
             // 如果之前有项目，就使用上一次的路径
-            spdlog::info(gppTr("GPPCLI.main", "再次处理项目: %1")
+            spdlog::info(gppTr("GPPCLI.GPPCLI", "再次处理项目: %1")
                 .arg(wide2Ascii(currentProjectPath.wstring()))
                 .toStdString());
         }
@@ -152,7 +151,7 @@ int main(int argc, char* argv[])
 
         // 检查路径是否存在且为目录
         if (!fs::exists(currentProjectPath) || !fs::is_directory(currentProjectPath)) {
-            spdlog::error(gppTr("GPPCLI.main", "路径 '%1' 不存在或不是一个有效的文件夹，请重新输入")
+            spdlog::error(gppTr("GPPCLI.GPPCLI", "路径 '%1' 不存在或不是一个有效的文件夹，请重新输入")
                 .arg(wide2Ascii(currentProjectPath.wstring()))
                 .toStdString());
             currentProjectPath.clear(); // 清空无效路径，以便下次循环提示用户重新输入
@@ -160,14 +159,14 @@ int main(int argc, char* argv[])
         }
 
         try {
-            spdlog::info(gppTr("GPPCLI.main", "开始处理项目: %1")
+            spdlog::info(gppTr("GPPCLI.GPPCLI", "开始处理项目: %1")
                 .arg(wide2Ascii(currentProjectPath.wstring()))
                 .toStdString());
 
             {
                 std::unique_ptr<ITranslator> translator = createTranslator(currentProjectPath, std::make_shared<TerminalController>());
                 if (!translator) {
-                    spdlog::error(gppTr("GPPCLI.main", "创建翻译器实例失败，请检查项目配置")
+                    spdlog::error(gppTr("GPPCLI.GPPCLI", "创建翻译器实例失败，请检查项目配置")
                         .toStdString());
                     continue;
                 }
@@ -176,28 +175,28 @@ int main(int argc, char* argv[])
             }
 
             std::cout << std::endl;
-            spdlog::info(gppTr("GPPCLI.main", "项目 '%1' 处理完成！")
+            spdlog::info(gppTr("GPPCLI.GPPCLI", "项目 '%1' 处理完成！")
                 .arg(wide2Ascii(currentProjectPath.wstring()))
                 .toStdString());
 
         }
         catch (const std::invalid_argument& e) {
-            spdlog::critical(gppTr("GPPCLI.main", "[参数错误] %1")
+            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[参数错误] %1")
                 .arg(e.what())
                 .toStdString());
         }
         catch (const std::runtime_error& e) {
-            spdlog::critical(gppTr("GPPCLI.main", "[运行时错误] %1")
+            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[运行时错误] %1")
                 .arg(e.what())
                 .toStdString());
         }
         catch (const std::exception& e) {
-            spdlog::critical(gppTr("GPPCLI.main", "[标准库错误] %1")
+            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[标准库错误] %1")
                 .arg(e.what())
                 .toStdString());
         }
         catch (...) {
-            spdlog::critical(gppTr("GPPCLI.main", "发生未知错误").toStdString());
+            spdlog::critical(gppTr("GPPCLI.GPPCLI", "发生未知错误").toStdString());
         }
     }
 
@@ -207,11 +206,11 @@ int main(int argc, char* argv[])
         fs::remove(L"cache");
     }
     catch (const fs::filesystem_error& e) {
-        spdlog::warn(gppTr("GPPCLI.main", "缓存删除错误: %1")
+        spdlog::warn(gppTr("GPPCLI.GPPCLI", "缓存删除错误: %1")
             .arg(e.what())
             .toStdString());
     }
 
-    spdlog::info(gppTr("GPPCLI.main", "程序退出").toStdString());
+    spdlog::info(gppTr("GPPCLI.GPPCLI", "程序退出").toStdString());
     return 0;
 }

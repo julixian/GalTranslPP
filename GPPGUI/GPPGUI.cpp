@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
             MessageBoxW(
                 nullptr,
                 ascii2Wide(std::string_view(e.what())).c_str(),
-                gppTr("GPPGUI.main", "Updater 更新错误").toStdWString().c_str(),
+                gppTr("GPPGUI.GPPGUI", "Updater 更新错误").toStdWString().c_str(),
                 MB_ICONERROR);
 #endif
         }
@@ -138,8 +138,8 @@ int main(int argc, char* argv[])
 #ifdef Q_OS_WIN
                     MessageBoxW(
                         nullptr,
-                        gppTr("GPPGUI.main", "无法创建共享内存段，程序即将退出。").toStdWString().c_str(),
-                        gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "无法创建共享内存段，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
                         MB_ICONERROR);
 #endif
                     return 1; // 创建失败，退出
@@ -200,8 +200,8 @@ int main(int argc, char* argv[])
 #ifdef Q_OS_WIN
                     MessageBoxW(
                         nullptr,
-                        gppTr("GPPGUI.main", "无法启动本地服务，程序即将退出。").toStdWString().c_str(),
-                        gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "无法启动本地服务，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
                         MB_ICONERROR);
 #endif
                     return 1;
@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
             MessageBoxW(
                 nullptr,
                 ascii2Wide(std::string_view(e.what())).c_str(),
-                gppTr("GPPGUI.main", "缓存删除错误").toStdWString().c_str(),
+                gppTr("GPPGUI.GPPGUI", "缓存删除错误").toStdWString().c_str(),
                 MB_ICONERROR);
 #endif
         }
@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
         MessageBoxW(
             nullptr,
             ascii2Wide(std::string_view(e.what())).c_str(),
-            gppTr("GPPGUI.main", "TOML 错误").toStdWString().c_str(),
+            gppTr("GPPGUI.GPPGUI", "TOML 错误").toStdWString().c_str(),
             MB_ICONERROR);
 #endif
         return 1;
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
         MessageBoxW(
             nullptr,
             ascii2Wide(std::string_view(e.what())).c_str(),
-            gppTr("GPPGUI.main", "标准错误").toStdWString().c_str(),
+            gppTr("GPPGUI.GPPGUI", "标准错误").toStdWString().c_str(),
             MB_ICONERROR);
 #endif
         return 1;
@@ -254,8 +254,8 @@ int main(int argc, char* argv[])
 #ifdef Q_OS_WIN
         MessageBoxW(
             nullptr,
-            gppTr("GPPGUI.main", "遇到了未知的错误，程序即将退出。").toStdWString().c_str(),
-            gppTr("GPPGUI.main", "错误").toStdWString().c_str(),
+            gppTr("GPPGUI.GPPGUI", "遇到了未知的错误，程序即将退出。").toStdWString().c_str(),
+            gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
             MB_ICONERROR);
 #endif
         return 1;

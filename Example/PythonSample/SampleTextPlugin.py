@@ -53,7 +53,7 @@ def dPostRun(se: gpp.Sentence) -> None:
     if se.orig != "\n  「――――きて」\n ":
         return
 
-    wordPosVec, _ = targetLangTokenizeFunc("测试目标语言分词器")
+    wordPosVec, entityVec = targetLangTokenizeFunc("测试目标语言分词器")
     tokens = gpp.utils.splitIntoTokens(wordPosVec, "测试目标语言分词器")
     se.otherinfo |= {"tokensPython": "|".join(tokens)}
 

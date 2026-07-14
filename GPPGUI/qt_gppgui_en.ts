@@ -2091,9 +2091,9 @@ sk-...</translation>
     </message>
 </context>
 <context>
-    <name>GPPGUI.main</name>
+    <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="main.cpp" line="+83"/>
+        <location filename="GPPGUI.cpp" line="+83"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -2133,6 +2133,41 @@ sk-...</translation>
         <location line="+9"/>
         <source>遇到了未知的错误，程序即将退出。</source>
         <translation>Unknown error. Exiting.</translation>
+    </message>
+</context>
+<context>
+    <name>GPPGUI.main</name>
+    <message>
+        <source>Updater 更新错误</source>
+        <translation type="vanished">Updater error</translation>
+    </message>
+    <message>
+        <source>无法创建共享内存段，程序即将退出。</source>
+        <translation type="vanished">Cannot create shared memory. Exiting.</translation>
+    </message>
+    <message>
+        <source>错误</source>
+        <translation type="vanished">Error</translation>
+    </message>
+    <message>
+        <source>无法启动本地服务，程序即将退出。</source>
+        <translation type="vanished">Cannot start local service. Exiting.</translation>
+    </message>
+    <message>
+        <source>缓存删除错误</source>
+        <translation type="vanished">Cache delete error</translation>
+    </message>
+    <message>
+        <source>TOML 错误</source>
+        <translation type="vanished">TOML error</translation>
+    </message>
+    <message>
+        <source>标准错误</source>
+        <translation type="vanished">Std error</translation>
+    </message>
+    <message>
+        <source>遇到了未知的错误，程序即将退出。</source>
+        <translation type="vanished">Unknown error. Exiting.</translation>
     </message>
 </context>
 <context>

@@ -273,8 +273,8 @@ int main(int argc, char* argv[])
 
     if (pid == 0 || sourceZip.isEmpty() || targetDir.isEmpty()) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, gppTr("Updater.main", "非法参数").toStdWString().c_str(),
-            gppTr("Updater.main", "GalTransl++ Updater").toStdWString().c_str(),
+        MessageBoxW(nullptr, gppTr("Updater.Updater", "非法参数").toStdWString().c_str(),
+            gppTr("Updater.Updater", "GalTransl++ Updater").toStdWString().c_str(),
             MB_ICONERROR | MB_TOPMOST);
 #endif
         return -1;
@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
             if (promptVersionCompare > 0) {
                 if (promptVersionCompare == 2) {
 #ifdef Q_OS_WIN
-                    MessageBoxW(nullptr, gppTr("Updater.main",
+                    MessageBoxW(nullptr, gppTr("Updater.Updater",
                         "由于提示词解析方式发生不兼容变更，本次更新将强制覆盖原默认提示词。\n"
                         "你可以先行备份，然后点击确定以继续更新。").toStdWString().c_str(),
                         L"GalTransl++ Updater", MB_OK | MB_TOPMOST);
@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
                 }
                 else {
 #ifdef Q_OS_WIN
-                    const int ret = MessageBoxW(nullptr, gppTr("Updater.main",
+                    const int ret = MessageBoxW(nullptr, gppTr("Updater.Updater",
                         "检测到新版本的 Prompt，是否更新 Prompt (会覆盖当前的默认提示词)？").toStdWString().c_str(),
                         L"GalTransl++ Updater", MB_YESNO | MB_ICONQUESTION | MB_TOPMOST);
                     if (ret == IDYES) {
@@ -326,7 +326,7 @@ int main(int argc, char* argv[])
             }
             if (compareVersion(DICTVERSION, orgDictVersion) > 0) {
 #ifdef Q_OS_WIN
-                const int ret = MessageBoxW(nullptr, gppTr("Updater.main",
+                const int ret = MessageBoxW(nullptr, gppTr("Updater.Updater",
                     "检测到新版本的 GPT 字典，是否更新字典（会覆盖当前的默认字典）？").toStdWString().c_str(),
                     L"GalTransl++ Updater", MB_YESNO | MB_ICONQUESTION | MB_TOPMOST);
                 if (ret == IDYES) {
@@ -353,7 +353,7 @@ int main(int argc, char* argv[])
             extractZipExclude(sourceZip.toStdWString(), targetDir.toStdWString(), excludePreFixes);
 
 #ifdef Q_OS_WIN
-            MessageBoxW(nullptr, gppTr("Updater.main",
+            MessageBoxW(nullptr, gppTr("Updater.Updater",
                 "GalTransl++ 更新成功").toStdWString().c_str(),
                 L"GalTransl++ Updater", MB_OK | MB_TOPMOST);
 #endif
@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
         }
         catch (const std::exception& e) {
 #ifdef Q_OS_WIN
-            MessageBoxW(nullptr, gppTr("Updater.main",
+            MessageBoxW(nullptr, gppTr("Updater.Updater",
                 "GalTransl++ 更新包解压失败。\n错误: %1").arg(e.what()).toStdWString().c_str(),
                 L"GalTransl++ Updater", MB_ICONERROR | MB_TOPMOST);
 #endif
@@ -397,9 +397,9 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e) {
 #ifdef Q_OS_WIN
-        MessageBoxW(nullptr, gppTr("Updater.main", "提取 Updater_new.exe 失败。\n错误: %1")
+        MessageBoxW(nullptr, gppTr("Updater.Updater", "提取 Updater_new.exe 失败。\n错误: %1")
             .arg(e.what()).toStdWString().c_str(),
-            gppTr("Updater.main", "GalTransl++ Updater").toStdWString().c_str(),
+            gppTr("Updater.Updater", "GalTransl++ Updater").toStdWString().c_str(),
             MB_ICONERROR | MB_TOPMOST);
 #endif
         return -1;

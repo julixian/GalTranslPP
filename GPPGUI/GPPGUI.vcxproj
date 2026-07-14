@@ -213,7 +213,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlParser.c" />
     <ClCompile Include="TreeSitterGrammars\toml\TreeSitterTomlScanner.c" />
     <QtRcc Include="GPPGUI.qrc" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="GPPGUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Mainwindow.h" />

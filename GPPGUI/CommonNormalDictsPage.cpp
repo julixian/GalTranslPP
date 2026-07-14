@@ -191,9 +191,9 @@ void CommonNormalDictsPage::setupUi()
 			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "openMode", 1));
 			tableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "0", 285));
 			tableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "1", 195));
-			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "2", 360));
-			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "3", 75));
-			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "4", 60));
+			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "2", 350));
+			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "3", 82));
+			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "4", 65));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("条件"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
 			pageButtonLayout->insertWidget(3, searchBar);
@@ -204,7 +204,8 @@ void CommonNormalDictsPage::setupUi()
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
 				&& tableView->selectionModel()->hasSelection());
-			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && tableView->currentIndex().isValid());
+			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+				&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "defaultOn", true));
 			insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
@@ -227,7 +228,8 @@ void CommonNormalDictsPage::setupUi()
 					tableModeButton->setEnabled(false);
 					addDictButton->setEnabled(true);
 					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
-					editEntryButton->setEnabled(tableView->currentIndex().isValid());
+					editEntryButton->setEnabled(tableView->selectionModel()->hasSelection()
+						&& tableView->currentIndex().isValid());
 					withdrawButton->setEnabled(!normalTabEntry.withdrawList->empty());
 					searchBar->show();
 				});
@@ -384,13 +386,16 @@ void CommonNormalDictsPage::setupUi()
 			connect(tableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
 				[=](const QModelIndex& current)
 				{
-					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && current.isValid());
+					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+						&& tableView->selectionModel()->hasSelection() && current.isValid());
 				});
 			connect(tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
 				[=]()
 				{
 					removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
 						&& tableView->selectionModel()->hasSelection());
+					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
 			connect(removeDictButton, &ElaPushButton::clicked, this, [=]()
 				{

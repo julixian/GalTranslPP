@@ -1,828 +1,828 @@
 [[normalDict]]
-org = 'あなひゃ'
-rep = 'あなた'
+org = "あなひゃ"
+rep = "あなた"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'わたひ'
-rep = '私'
+org = "わたひ"
+rep = "私"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'わらひ'
-rep = '私'
+org = "わらひ"
+rep = "私"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'わらし'
-rep = '私'
+org = "わらし"
+rep = "私"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ひょ'
-rep = 'と'
+org = "ひょ"
+rep = "と"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'りゅ'
-rep = 'る'
+org = "りゅ"
+rep = "る"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しへぇ'
-rep = 'して'
+org = "しへぇ"
+rep = "して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しへっ'
-rep = 'して'
+org = "しへっ"
+rep = "して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しひな'
-rep = 'しいな'
+org = "しひな"
+rep = "しいな"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しひゃ'
-rep = 'しちゃ'
+org = "しひゃ"
+rep = "しちゃ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゃま'
-rep = '様'
+org = "しゃま"
+rep = "様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゃみゃ'
-rep = '様'
+org = "しゃみゃ"
+rep = "様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゃん'
-rep = 'さん'
+org = "しゃん"
+rep = "さん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅぎ'
-rep = 'すぎ'
+org = "しゅぎ"
+rep = "すぎ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅごひ	すごい'
-rep = ''
+org = "しゅごひ\tすごい"
+rep = ""
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅごイ'
-rep = 'すごい'
+org = "しゅごイ"
+rep = "すごい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅゴい'
-rep = 'すごい'
+org = "しゅゴい"
+rep = "すごい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅご'
-rep = 'すご'
+org = "しゅご"
+rep = "すご"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅきぃ	しゅき'
-rep = ''
+org = "しゅきぃ\tしゅき"
+rep = ""
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅき'
-rep = '好き'
+org = "しゅき"
+rep = "好き"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しなひ'
-rep = 'しない'
+org = "しなひ"
+rep = "しない"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しぇいえき'
-rep = '精液'
+org = "しぇいえき"
+rep = "精液"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゅけべ'
-rep = 'スケベ'
+org = "しゅけべ"
+rep = "スケベ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しきゅ'
-rep = '子宮'
+org = "しきゅ"
+rep = "子宮"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゃれれ'
-rep = 'されて'
+org = "しゃれれ"
+rep = "されて"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しゃれて'
-rep = 'されて'
+org = "しゃれて"
+rep = "されて"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'しょこ'
-rep = 'そこ'
+org = "しょこ"
+rep = "そこ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らい好き'
-rep = '大好き'
+org = "らい好き"
+rep = "大好き"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'かみ様'
-rep = '神様'
+org = "かみ様"
+rep = "神様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ひんぽ'
-rep = 'ちんぽ'
+org = "ひんぽ"
+rep = "ちんぽ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ひんこ'
-rep = 'ちんぽ'
+org = "ひんこ"
+rep = "ちんぽ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ひんひん'
-rep = 'ちんぽ'
+org = "ひんひん"
+rep = "ちんぽ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ヒンポ'
-rep = 'ちんぽ'
+org = "ヒンポ"
+rep = "ちんぽ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'きもち'
-rep = '気持ち'
+org = "きもち"
+rep = "気持ち"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'きもひ'
-rep = '気持ち'
+org = "きもひ"
+rep = "気持ち"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ぎもひ'
-rep = '気持ち'
+org = "ぎもひ"
+rep = "気持ち"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ぎもぢい'
-rep = '気持ち'
+org = "ぎもぢい"
+rep = "気持ち"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'きひゃ'
-rep = 'きた'
+org = "きひゃ"
+rep = "きた"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'うれひい'
-rep = '嬉しい'
+org = "うれひい"
+rep = "嬉しい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'せーえき'
-rep = '精液'
+org = "せーえき"
+rep = "精液"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'せ～えき'
-rep = '精液'
+org = "せ～えき"
+rep = "精液"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'じゃーめん'
-rep = '精液'
+org = "じゃーめん"
+rep = "精液"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'せーし'
-rep = '精子'
+org = "せーし"
+rep = "精子"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らかりゃ'
-rep = 'だがら'
+org = "らかりゃ"
+rep = "だがら"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らけれ'
-rep = 'だけで'
+org = "らけれ"
+rep = "だけで"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'れふかりゃ'
-rep = 'ですから'
+org = "れふかりゃ"
+rep = "ですから"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'かりゃ'
-rep = 'から'
+org = "かりゃ"
+rep = "から"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめだがら'
-rep = 'ダメだがら'
+org = "らめだがら"
+rep = "ダメだがら"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らしへっ'
-rep = '出して'
+org = "らしへっ"
+rep = "出して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らひへ'
-rep = '出して'
+org = "らひへ"
+rep = "出して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らひて'
-rep = '出して'
+org = "らひて"
+rep = "出して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '、らして'
-rep = '、出して'
+org = "、らして"
+rep = "、出して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'にらして'
-rep = 'に出して'
+org = "にらして"
+rep = "に出して"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らしゃれ'
-rep = '出され'
+org = "らしゃれ"
+rep = "出され"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめらめ'
-rep = 'ダメダメ'
+org = "らめらめ"
+rep = "ダメダメ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめっ'
-rep = 'ダメ'
+org = "らめっ"
+rep = "ダメ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめ、'
-rep = 'ダメ、'
+org = "らめ、"
+rep = "ダメ、"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめ…'
-rep = 'ダメ…'
+org = "らめ…"
+rep = "ダメ…"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめぇ'
-rep = 'ダメ'
+org = "らめぇ"
+rep = "ダメ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめ！'
-rep = 'ダメ！'
+org = "らめ！"
+rep = "ダメ！"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめです'
-rep = 'ダメです'
+org = "らめです"
+rep = "ダメです"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめなの'
-rep = 'ダメなの'
+org = "らめなの"
+rep = "ダメなの"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'らめらの'
-rep = 'ダメなの'
+org = "らめらの"
+rep = "ダメなの"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'なからし'
-rep = '中出し'
+org = "なからし"
+rep = "中出し"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ながりゃ'
-rep = 'ながら'
+org = "ながりゃ"
+rep = "ながら"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'なきゃに'
-rep = '中に'
+org = "なきゃに"
+rep = "中に"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'あちゅい'
-rep = '暑い'
+org = "あちゅい"
+rep = "暑い"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'あちゅイ'
-rep = '暑い'
+org = "あちゅイ"
+rep = "暑い"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'あちゅく'
-rep = '暑く'
+org = "あちゅく"
+rep = "暑く"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'あちゅあちゅ'
-rep = 'あつあつ'
+org = "あちゅあちゅ"
+rep = "あつあつ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'あちゅし'
-rep = '暑し'
+org = "あちゅし"
+rep = "暑し"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'おぐに'
-rep = '奥に'
+org = "おぐに"
+rep = "奥に"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'おいひい'
-rep = '美味しい'
+org = "おいひい"
+rep = "美味しい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'おかひ'
-rep = 'おかし'
+org = "おかひ"
+rep = "おかし"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'おしおき'
-rep = 'お仕置き'
+org = "おしおき"
+rep = "お仕置き"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'もっろ'
-rep = 'もっと'
+org = "もっろ"
+rep = "もっと"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'れひゅ'
-rep = 'です'
+org = "れひゅ"
+rep = "です"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'れしゅ'
-rep = 'です'
+org = "れしゅ"
+rep = "です"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'まひゅ'
-rep = 'ます'
+org = "まひゅ"
+rep = "ます"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'えっひな'
-rep = 'エッチな'
+org = "えっひな"
+rep = "エッチな"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '可愛がっれ'
-rep = '可愛がって'
+org = "可愛がっれ"
+rep = "可愛がって"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '赤ひゃん'
-rep = '赤ちゃん'
+org = "赤ひゃん"
+rep = "赤ちゃん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '主ひゃん'
-rep = '主ちゃん'
+org = "主ひゃん"
+rep = "主ちゃん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'でちゅ'
-rep = 'です'
+org = "でちゅ"
+rep = "です"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'けろ'
-rep = 'けど'
+org = "けろ"
+rep = "けど"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '恥じゅ'
-rep = '恥ず'
+org = "恥じゅ"
+rep = "恥ず"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '恥ずかひ'
-rep = '恥ずかし'
+org = "恥ずかひ"
+rep = "恥ずかし"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'かひい'
-rep = 'かしい'
+org = "かひい"
+rep = "かしい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '止まらなひ'
-rep = '止まらない'
+org = "止まらなひ"
+rep = "止まらない"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'トロけひゃ'
-rep = '蕩けちゃ'
+org = "トロけひゃ"
+rep = "蕩けちゃ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'トロけ'
-rep = '蕩け'
+org = "トロけ"
+rep = "蕩け"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'みるく'
-rep = 'ミルク'
+org = "みるく"
+rep = "ミルク"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'まひゃ'
-rep = 'また'
+org = "まひゃ"
+rep = "また"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イきゅ'
-rep = 'イく'
+org = "イきゅ"
+rep = "イく"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イっく'
-rep = 'イく'
+org = "イっく"
+rep = "イく"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イクぅ'
-rep = 'イクぅ'
+org = "イクぅ"
+rep = "イクぅ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イぐ'
-rep = 'イく'
+org = "イぐ"
+rep = "イく"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'れふっ'
-rep = 'です'
+org = "れふっ"
+rep = "です"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'はげひ'
-rep = '激しい'
+org = "はげひ"
+rep = "激しい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'されへ'
-rep = 'されて'
+org = "されへ"
+rep = "されて"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イカしぇ'
-rep = 'イカせ'
+org = "イカしぇ"
+rep = "イカせ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'イカしゃ'
-rep = 'イカせ'
+org = "イカしゃ"
+rep = "イカせ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'たくひゃん'
-rep = 'たくさん'
+org = "たくひゃん"
+rep = "たくさん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'いひょに'
-rep = '一緒に'
+org = "いひょに"
+rep = "一緒に"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'いっふぁい'
-rep = 'いっぱい'
+org = "いっふぁい"
+rep = "いっぱい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'みたひに'
-rep = 'みたいに'
+org = "みたひに"
+rep = "みたいに"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'かっひゃ'
-rep = 'かった'
+org = "かっひゃ"
+rep = "かった"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ちょうらい'
-rep = 'ちょうだい'
+org = "ちょうらい"
+rep = "ちょうだい"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごしゅじんひゃま'
-rep = 'ご主人様'
+org = "ごしゅじんひゃま"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごしゅじん'
-rep = 'ご主人'
+org = "ごしゅじん"
+rep = "ご主人"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅいんふん'
-rep = 'ご主人くん'
+org = "ごひゅいんふん"
+rep = "ご主人くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごしゅいん'
-rep = 'ご主人'
+org = "ごしゅいん"
+rep = "ご主人"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごしゅりん'
-rep = 'ご主人'
+org = "ごしゅりん"
+rep = "ご主人"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごしゅりんきゅん'
-rep = 'ご主人くん'
+org = "ごしゅりんきゅん"
+rep = "ご主人くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅりんはま'
-rep = 'ご主人様'
+org = "ごひゅりんはま"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅりんひゃは'
-rep = 'ご主人様'
+org = "ごひゅりんひゃは"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅりんひゃま'
-rep = 'ご主人様'
+org = "ごひゅりんひゃま"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅりん'
-rep = 'ご主人'
+org = "ごひゅりん"
+rep = "ご主人"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅじんひゃみゃ'
-rep = 'ご主人様'
+org = "ごひゅじんひゃみゃ"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅじんきゅん'
-rep = 'ご主人くん'
+org = "ごひゅじんきゅん"
+rep = "ご主人くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ごひゅじん'
-rep = 'ご主人'
+org = "ごひゅじん"
+rep = "ご主人"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ご主人きゅん'
-rep = 'ご主人くん'
+org = "ご主人きゅん"
+rep = "ご主人くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '主きゅん'
-rep = '主くん'
+org = "主きゅん"
+rep = "主くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '主クン'
-rep = '主くん'
+org = "主クン"
+rep = "主くん"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ご主人ひゃま'
-rep = 'ご主人様'
+org = "ご主人ひゃま"
+rep = "ご主人様"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ありゅじ'
-rep = '主'
+org = "ありゅじ"
+rep = "主"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'こにょまま'
-rep = 'このまま'
+org = "こにょまま"
+rep = "このまま"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'くれへっ'
-rep = 'くれてっ'
+org = "くれへっ"
+rep = "くれてっ"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'くらひゃイ'
-rep = 'ください'
+org = "くらひゃイ"
+rep = "ください"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'くらさイ'
-rep = 'ください'
+org = "くらさイ"
+rep = "ください"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'くらさい'
-rep = 'ください'
+org = "くらさい"
+rep = "ください"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'くらさぁい'
-rep = 'ください'
+org = "くらさぁい"
+rep = "ください"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'まらまら'
-rep = 'またまた'
+org = "まらまら"
+rep = "またまた"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '、まら'
-rep = '、また'
+org = "、まら"
+rep = "、また"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '…まら'
-rep = '…また'
+org = "…まら"
+rep = "…また"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'にまら'
-rep = 'にまた'
+org = "にまら"
+rep = "にまた"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'もまら'
-rep = 'もまた'
+org = "もまら"
+rep = "もまた"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'れふ'
-rep = 'です'
+org = "れふ"
+rep = "です"
 isReg = false
 priority = 0
 

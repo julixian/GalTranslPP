@@ -1,78 +1,78 @@
 [[normalDict]]
-org = '(雄)?チ[ン○●〇◯]チ[ン○●〇◯]'
-rep = '${1:+オ}チンチン'
+org = "(雄)?チ[ン○●〇◯]チ[ン○●〇◯]"
+rep = "${1:+オ}チンチン"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = '(雄)?チ[ン○●〇◯]([ポコ])'
-rep = '${1:+オ}チン$2'
+org = "(雄)?チ[ン○●〇◯]([ポコ])"
+rep = "${1:+オ}チン$2"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = '(雄)?[ぢち][ん○●〇◯][ぢち][ん○●〇◯]'
-rep = '${1:+お}ちんちん'
+org = "(雄)?[ぢち][ん○●〇◯][ぢち][ん○●〇◯]"
+rep = "${1:+お}ちんちん"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = '(雄)?[ぢち][○●〇◯]([ぽこ])'
-rep = '${1:+お}ちん$2'
+org = "(雄)?[ぢち][○●〇◯]([ぽこ])"
+rep = "${1:+お}ちん$2"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = '(オ)?チンチン'
-rep = '${1:+お}ちんちん'
+org = "(オ)?チンチン"
+rep = "${1:+お}ちんちん"
 isReg = true
 priority = 0
 
 [[normalDict]]
-org = '(オ)?チンポ'
-rep = '${1:+お}ちんぽ'
+org = "(オ)?チンポ"
+rep = "${1:+お}ちんぽ"
 isReg = true
 priority = 0
 
 [[normalDict]]
-org = '(オ)?チンコ'
-rep = '${1:+お}ちんこ'
+org = "(オ)?チンコ"
+rep = "${1:+お}ちんこ"
 isReg = true
 priority = 0
 
 [[normalDict]]
-org = 'マ[○●〇◯]コ'
-rep = 'マンコ'
+org = "マ[○●〇◯]コ"
+rep = "マンコ"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = 'ま[○●〇◯]こ'
-rep = 'まんこ'
+org = "ま[○●〇◯]こ"
+rep = "まんこ"
 isReg = true
 priority = 1
 
 [[normalDict]]
-org = '(オ)?マンコ'
-rep = '${1:+お}まんこ'
+org = "(オ)?マンコ"
+rep = "${1:+お}まんこ"
 isReg = true
 priority = 0
 
 [[normalDict]]
-org = 'アヌス'
-rep = '肛門'
+org = "アヌス"
+rep = "肛門"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'アナル'
-rep = '肛門'
+org = "アナル"
+rep = "肛門"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = 'ザーメン'
-rep = '精液'
+org = "ザーメン"
+rep = "精液"
 isReg = false
 priority = 0
 

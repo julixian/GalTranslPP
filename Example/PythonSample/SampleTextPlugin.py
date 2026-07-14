@@ -21,6 +21,7 @@ targetLangTokenizerBackend = "spaCy"
 targetLangSpaCyModelName = "zh_core_web_trf"
 targetLangTokenizeFunc = cast(tokenizeFuncType, None)
 
+sampleOrig = "\n  「――――きて」\n "
 
 def init(projectDir: Path) -> None:
     logger.info(f"SampleTextPlugin 初始化，projectDir: {projectDir}")
@@ -28,7 +29,7 @@ def init(projectDir: Path) -> None:
 
 def checkConditionForRetranslKeysFunc(se: gpp.Sentence) -> bool:
     # retranslKey 条件函数只负责判断是否重翻，返回 True 表示命中。
-    if se.index == 2 and se.orig == "\n  「――――きて」\n ":
+    if se.index == 2 and se.orig == sampleOrig:
         logger.info("Python retranslKey 示例命中检查")
     return False
 
@@ -36,21 +37,21 @@ def checkConditionForRetranslKeysFunc(se: gpp.Sentence) -> bool:
 def checkConditionForSkipProblemsFunc(se: gpp.Sentence, problem: str) -> bool:
     # skipProblems 条件函数拿到的是即将输出的 Sentence 和当前命中的问题文本。
     # 返回 True 表示跳过这个 problem，返回 False 表示保留。
-    if se.index != 2 or se.orig != "\n  「――――きて」\n ":
+    if se.index != 2 or se.orig != sampleOrig:
         return False
 
     se.otherinfo |= {"pythonSkippedProblem": problem}
     logger.info("Python skipProblems 示例命中检查: " + problem)
     if problem == "测试问题1":
-        return False
-    return True
+        return True
+    return False
 
 
 def dPostRun(se: gpp.Sentence) -> None:
     # dPostRun 在后处理后执行。这里演示调用 tokenizer 并把结果写入 otherinfo。
     if targetLangTokenizeFunc is None:
         return
-    if se.orig != "\n  「――――きて」\n ":
+    if se.orig != sampleOrig:
         return
 
     wordPosVec, entityVec = targetLangTokenizeFunc("测试目标语言分词器")
@@ -59,6 +60,7 @@ def dPostRun(se: gpp.Sentence) -> None:
 
     se.problems += ["测试问题1"]
     se.problems += ["测试问题2"]
+    se.transview = se.transview + "❤️🧡❤️"
 
 
 def unload() -> None:

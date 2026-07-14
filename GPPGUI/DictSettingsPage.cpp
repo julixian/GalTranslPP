@@ -140,16 +140,16 @@ void DictSettingsPage::setupUi()
 		dictTableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 		if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
-			dictTableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 360));
-			dictTableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 215));
-			dictTableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 425));
+			dictTableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 346));
+			dictTableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 199));
+			dictTableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 559));
 		}
 		else {
 			dictTableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "0", 285));
 			dictTableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "1", 195));
-			dictTableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 360));
-			dictTableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 75));
-			dictTableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 60));
+			dictTableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 350));
+			dictTableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 82));
+			dictTableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 65));
 		}
 
 		stackedWidget->addWidget(dictTableView);
@@ -164,7 +164,8 @@ void DictSettingsPage::setupUi()
 		addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 		delDictButton->setEnabled(stackedWidget->currentIndex() == 1
 			&& dictTableView->selectionModel()->hasSelection());
-		editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && dictTableView->currentIndex().isValid());
+		editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+			&& dictTableView->selectionModel()->hasSelection() && dictTableView->currentIndex().isValid());
 
 		dictLayout->addWidget(stackedWidget);
 		auto refreshDictFunc = [=]()
@@ -298,7 +299,8 @@ void DictSettingsPage::setupUi()
 				stackedWidget->setCurrentIndex(1);
 				addDictButton->setEnabled(true);
 				delDictButton->setEnabled(dictTableView->selectionModel()->hasSelection());
-				editEntryButton->setEnabled(dictTableView->currentIndex().isValid());
+				editEntryButton->setEnabled(dictTableView->selectionModel()->hasSelection()
+					&& dictTableView->currentIndex().isValid());
 				plainTextModeButtom->setEnabled(true);
 				tableModeButtom->setEnabled(false);
 				withdrawDictButton->setEnabled(!withdrawList.empty());
@@ -361,13 +363,16 @@ void DictSettingsPage::setupUi()
 		connect(dictTableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
 			[=](const QModelIndex& current)
 			{
-				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && current.isValid());
+				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+					&& dictTableView->selectionModel()->hasSelection() && current.isValid());
 			});
 		connect(dictTableView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
 			[=]()
 			{
 				delDictButton->setEnabled(stackedWidget->currentIndex() == 1
 					&& dictTableView->selectionModel()->hasSelection());
+				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+					&& dictTableView->selectionModel()->hasSelection() && dictTableView->currentIndex().isValid());
 			});
 		connect(delDictButton, &ElaPushButton::clicked, this, [=, &withdrawList]()
 			{

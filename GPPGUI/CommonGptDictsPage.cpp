@@ -168,9 +168,9 @@ void CommonGptDictsPage::setupUi()
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
 			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "openMode", 1));
-			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 360));
-			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 215));
-			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 425));
+			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 346));
+			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 199));
+			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 559));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("备注"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
 			pageButtonLayout->insertWidget(3, searchBar);
@@ -181,7 +181,8 @@ void CommonGptDictsPage::setupUi()
 			addDictButton->setEnabled(stackedWidget->currentIndex() == 1);
 			removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
 				&& tableView->selectionModel()->hasSelection());
-			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && tableView->currentIndex().isValid());
+			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+				&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "defaultOn", true));
 			insertToml(m_globalConfig, "commonGptDicts.spec." + dictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
@@ -204,7 +205,8 @@ void CommonGptDictsPage::setupUi()
 					tableModeButton->setEnabled(false);
 					addDictButton->setEnabled(true);
 					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
-					editEntryButton->setEnabled(tableView->currentIndex().isValid());
+					editEntryButton->setEnabled(tableView->selectionModel()->hasSelection()
+						&& tableView->currentIndex().isValid());
 					withdrawButton->setEnabled(!gptTabEntry.withdrawList->empty());
 					searchBar->show();
 				});
@@ -349,13 +351,16 @@ void CommonGptDictsPage::setupUi()
 			connect(tableView->selectionModel(), &QItemSelectionModel::currentRowChanged, this,
 				[=](const QModelIndex& current)
 				{
-					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1 && current.isValid());
+					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+						&& tableView->selectionModel()->hasSelection() && current.isValid());
 				});
 			connect(tableView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
 				[=]()
 				{
 					removeDictButton->setEnabled(stackedWidget->currentIndex() == 1
 						&& tableView->selectionModel()->hasSelection());
+					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
+						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
 
 			connect(removeDictButton, &ElaPushButton::clicked, this, [=]()

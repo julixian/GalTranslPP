@@ -1,63 +1,90 @@
 [[normalDict]]
-org = '\A“([\S\s]*)”\z'
-rep = '『$1』'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A『[\S\s]*』\z' }]
+org = "\\A“([\\S\\s]*)”\\z"
+rep = "『$1』"
 isReg = true
 priority = 99
 
+[[normalDict.conditions]]
+conditionReg = "\\A『[\\S\\s]*』\\z"
+conditionTarget = "preproc"
+
 [[normalDict]]
-org = '\A“([\S\s]*)”\z'
-rep = '「$1」'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A「[\S\s]*」\z' }]
+org = "\\A“([\\S\\s]*)”\\z"
+rep = "「$1」"
 isReg = true
 priority = 99
 
+[[normalDict.conditions]]
+conditionReg = "\\A「[\\S\\s]*」\\z"
+conditionTarget = "preproc"
+
 [[normalDict]]
-org = '\A"([\S\s]*)"\z'
-rep = '『$1』'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A『[\S\s]*』\z' }]
+org = "\\A\"([\\S\\s]*)\"\\z"
+rep = "『$1』"
 isReg = true
 priority = 99
 
+[[normalDict.conditions]]
+conditionReg = "\\A『[\\S\\s]*』\\z"
+conditionTarget = "preproc"
+
 [[normalDict]]
-org = '\A"([\S\s]*)"\z'
-rep = '「$1」'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A「[\S\s]*」\z' }]
+org = "\\A\"([\\S\\s]*)\"\\z"
+rep = "「$1」"
 isReg = true
 priority = 99
 
+[[normalDict.conditions]]
+conditionReg = "\\A「[\\S\\s]*」\\z"
+conditionTarget = "preproc"
+
 [[normalDict]]
-org = '...'
-rep = '…'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A(?![\S\s]*...)' }]
+org = "..."
+rep = "…"
+isReg = false
+priority = 1
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*...)"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "(?<!…)…(?!…)"
+rep = "……"
+isReg = true
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?:[^…]|……)*\\z"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "\"([^\"]*?)\""
+rep = "『$1』"
+isReg = true
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*?\"[\\S\\s]*?\")"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "“([^“”]*?)”"
+rep = "『$1』"
+isReg = true
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*?“[\\S\\s]*?”)"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "。）"
+rep = "）"
 isReg = false
 priority = 0
 
-[[normalDict]]
-org = '…'
-rep = '……'
-conditions = [{ conditionTarget = 'transraw', conditionReg = '\A(?![\S\s]*……)' }]
-isReg = false
-priority = 0
-
-[[normalDict]]
-org = '"([^"]*?)"'
-rep = '『$1』'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A(?![\S\s]*?"[\S\s]*?")' }]
-isReg = true
-priority = 0
-
-[[normalDict]]
-org = '“([^“”]*?)”'
-rep = '『$1』'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A(?![\S\s]*?“[\S\s]*?”)' }]
-isReg = true
-priority = 0
-
-[[normalDict]]
-org = '。）'
-rep = '）'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '\A(?![\S\s]*。）)' }]
-isReg = false
-priority = 0
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*。）)"
+conditionTarget = "preproc"
 

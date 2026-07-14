@@ -585,7 +585,7 @@ sk-...</translation>
         <translation>Note</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+76"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -596,17 +596,17 @@ sk-...</translation>
     </message>
     <message>
         <location line="+53"/>
-        <location line="+287"/>
+        <location line="+290"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-286"/>
+        <location line="-289"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+112"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>
@@ -854,7 +854,7 @@ sk-...</translation>
         <translation>Rules</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+87"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -865,17 +865,17 @@ sk-...</translation>
     </message>
     <message>
         <location line="+55"/>
-        <location line="+287"/>
+        <location line="+290"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-286"/>
+        <location line="-289"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
     <message>
-        <location line="+107"/>
+        <location line="+110"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>
@@ -1722,7 +1722,7 @@ sk-...</translation>
         <translation>Rules</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+16"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>
@@ -1757,12 +1757,12 @@ sk-...</translation>
         <translation>Import successfully</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <source>%1 已保存</source>
         <translation>%1 saved</translation>
     </message>
     <message>
-        <location line="+119"/>
+        <location line="+122"/>
         <source>项目GPT字典</source>
         <translation>Project GptDict</translation>
     </message>
@@ -1777,12 +1777,12 @@ sk-...</translation>
         <translation>Project PostDict</translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-182"/>
         <source>从文件 %1 中导入了 %2 个词条</source>
         <translation>Imported %2 entries from %1</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+31"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>

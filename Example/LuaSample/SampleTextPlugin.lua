@@ -46,7 +46,7 @@ function checkConditionForSkipProblemsFunc(sentence, problem)
 
     setOtherinfo(sentence, "luaSkippedProblem", problem)
     utils.logger:info("Lua skipProblems 示例命中检查: " .. problem)
-    return problem ~= "测试问题1"
+    return problem == "测试问题1"
 end
 
 function dPostRun(sentence)
@@ -64,6 +64,7 @@ function dPostRun(sentence)
 
     appendProblem(sentence, "测试问题1")
     appendProblem(sentence, "测试问题2")
+    sentence.transview = sentence.transview .. "❤️🧡❤️"
 end
 
 function unload()

@@ -1,20 +1,26 @@
 [[normalDict]]
-org = 'somehow'
-rep = '不知怎的'
+org = "somehow"
+rep = "不知怎的"
 isReg = false
 priority = 0
 
 [[normalDict]]
-org = '娘家'
-rep = '本家'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '実家' }]
+org = "娘家"
+rep = "本家"
 isReg = false
 priority = 0
 
+[[normalDict.conditions]]
+conditionReg = "実家"
+conditionTarget = "preproc"
+
 [[normalDict]]
-org = '有夫之妇'
-rep = '人妻'
-conditions = [{ conditionTarget = 'preproc', conditionReg = '人妻|ひとづま' }]
+org = "有夫之妇"
+rep = "人妻"
 isReg = false
 priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "人妻|ひとづま"
+conditionTarget = "preproc"
 

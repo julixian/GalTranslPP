@@ -16,7 +16,7 @@ windowDisplayMode = 1
 windowHeight = 676
 windowPosX = 84
 windowPosY = 53
-windowWidth = 1441
+windowWidth = 1366
 
 [commonGptDicts]
 dictNames = ["CommonGpt", "CommonGpt_H"]

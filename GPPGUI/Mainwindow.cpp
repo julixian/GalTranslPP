@@ -344,7 +344,12 @@ void MainWindow::initContent()
         });
 
     const std::string clearShortcut = toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L");
-    m_clearLogShortcut = new QShortcut(QKeySequence(QString::fromStdString(clearShortcut)), this);
+    m_clearLogShortcut = new QShortcut(
+        QKeySequence::fromString(QString::fromStdString(clearShortcut), QKeySequence::PortableText), this);
+    connect(m_appSettingsPage, &AppSettingsPage::clearLogShortcutChanged, this, [=](const QString& shortcut)
+        {
+            m_clearLogShortcut->setKey(QKeySequence::fromString(shortcut, QKeySequence::PortableText));
+        });
     connect(m_clearLogShortcut, &QShortcut::activated, this, [=]()
 	    {
             onClearLog(false);
@@ -654,7 +659,8 @@ void MainWindow::onCloseWindowClicked(bool restart)
     insertToml(m_globalConfig, "projects", projects);
 
     m_appSettingsPage->apply2Config();
-    insertToml(m_globalConfig, "clearLogShortcut", m_clearLogShortcut->key().toString().toStdString());
+    insertToml(m_globalConfig, "clearLogShortcut",
+        m_clearLogShortcut->key().toString(QKeySequence::PortableText).toStdString());
 
     atomicOutputFile(L"BaseConfig/GlobalConfig.toml", toml::format(m_globalConfig));
 

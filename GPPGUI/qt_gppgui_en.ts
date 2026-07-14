@@ -357,7 +357,7 @@ sk-...</translation>
 <context>
     <name>AppSettingsPage</name>
     <message>
-        <location filename="AppSettingsPage.cpp" line="+26"/>
+        <location filename="AppSettingsPage.cpp" line="+27"/>
         <location line="+10"/>
         <source>应用设置</source>
         <translation>App Settings</translation>
@@ -410,6 +410,11 @@ sk-...</translation>
     </message>
     <message>
         <location line="+17"/>
+        <source>清空日志快捷键</source>
+        <translation>Clear Log Shortcut</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>新项目人名表默认打开模式</source>
         <translation>Default name table view mode for new projects</translation>
     </message>
@@ -451,7 +456,7 @@ sk-...</translation>
         <translation>not suggested</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+11"/>
         <source>自动检查更新</source>
         <translation>Automatically check for updates</translation>
     </message>
@@ -2282,12 +2287,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+69"/>
-        <location line="+167"/>
+        <location line="+172"/>
         <source>新建项目</source>
         <translation>New</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-171"/>
         <source>打开项目</source>
         <translation>Open</translation>
     </message>
@@ -2400,7 +2405,7 @@ sk-...</translation>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+44"/>
         <source>选择新项目的存放位置</source>
         <translation>Choose new dir to store project</translation>
     </message>

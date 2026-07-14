@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QButtonGroup>
+#include <QKeySequenceEdit>
 
 #include "ElaApplication.h"
 #include "ElaMessageBar.h"
@@ -220,6 +221,31 @@ void AppSettingsPage::setupUi()
     autoRefreshLayout->addWidget(autoRefreshSwitch);
     centerLayout->addWidget(autoRefreshArea);
 
+    // 清空日志快捷键
+    ElaScrollPageArea* clearLogShortcutArea = new ElaScrollPageArea(centralWidget);
+    QHBoxLayout* clearLogShortcutLayout = new QHBoxLayout(clearLogShortcutArea);
+    ElaText* clearLogShortcutText = new ElaText(tr("清空日志快捷键"), clearLogShortcutArea);
+    clearLogShortcutText->setWordWrap(false);
+    clearLogShortcutText->setTextPixelSize(16);
+    clearLogShortcutLayout->addWidget(clearLogShortcutText);
+    clearLogShortcutLayout->addStretch();
+    QKeySequenceEdit* clearLogShortcutEdit = new QKeySequenceEdit(
+        QKeySequence::fromString(
+            QString::fromStdString(toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L")),
+            QKeySequence::PortableText),
+        clearLogShortcutArea);
+    clearLogShortcutEdit->setMaximumSequenceLength(1);
+    clearLogShortcutEdit->setClearButtonEnabled(true);
+    clearLogShortcutEdit->setFixedWidth(200);
+    clearLogShortcutLayout->addWidget(clearLogShortcutEdit);
+    connect(clearLogShortcutEdit, &QKeySequenceEdit::keySequenceChanged, this,
+        [=](const QKeySequence& shortcut)
+        {
+            const QString shortcutText = shortcut.toString(QKeySequence::PortableText);
+            Q_EMIT clearLogShortcutChanged(shortcutText);
+        });
+    centerLayout->addWidget(clearLogShortcutArea);
+
     // 默认以纯文本/表模式打开人名表
     ElaScrollPageArea* nameTableOpenModeArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* nameTableOpenModeLayout = new QHBoxLayout(nameTableOpenModeArea);
@@ -304,10 +330,6 @@ void AppSettingsPage::setupUi()
     ElaToggleSwitch* allowMultiInstanceSwitch = new ElaToggleSwitch(allowMultiInstanceArea);
     allowMultiInstanceSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowMultiInstance", false));
     allowMultiInstanceLayout->addWidget(allowMultiInstanceSwitch);
-    connect(allowMultiInstanceSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
-        {
-            insertToml(m_globalConfig, "allowMultiInstance", isChecked);
-        });
     centerLayout->addWidget(allowMultiInstanceArea);
 
     // 自动检查更新
@@ -409,6 +431,8 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "stackSwitchMode", stackSwitchGroup->id(stackSwitchGroup->checkedButton()));
 
             insertToml(m_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
+            insertToml(m_globalConfig, "clearLogShortcut",
+                clearLogShortcutEdit->keySequence().toString(QKeySequence::PortableText).toStdString());
             insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());

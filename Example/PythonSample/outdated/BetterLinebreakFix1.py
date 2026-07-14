@@ -10,20 +10,13 @@ from typing import Callable, cast
 # python 中的 logger 和 toknizeFunc 不在 utils 中而是在当前模块的全局变量中
 logger = cast(gpp.spdlogLogger, None)
 
-# sourceLangUseTokenizer = True
 targetLangTokenizerBackend = "spaCy"
-# sourceLangMecabDictDir = "..."
-# sourceLangSpaCyModelName = "ja_core_news_sm"
 targetLangSpaCyModelName = "zh_core_web_trf"
-# targetLangStanzaLang = "..."
-# sourceLangTokenizeFunc = None
-# ...
 
 targetLangUseTokenizer = True
-# 如果使用提供的分词器则必须先定义 targetLangTokenizeFunc
 targetLangTokenizeFunc = cast(Callable[[str], tuple[list[tuple[str, str]], list[tuple[str, str]]]], None)
 
-tokenizeCachePath = Path(__file__).resolve().parent / r"other_cache\tokenizeCache_linelink.json"
+tokenizeCachePath = Path(__file__).resolve().parent / r"other_cache\tokenizeCache_betterLinebreakFix.json"
 tokenizeCache = {}
 if tokenizeCachePath.exists():
     with open(tokenizeCachePath, 'r', encoding='utf-8') as f:

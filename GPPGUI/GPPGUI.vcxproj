@@ -176,7 +176,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="ElaInputDialog.cpp" />
     <ClCompile Include="EpubCfgPage.cpp" />
     <ClCompile Include="HomePage.cpp" />
-    <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="Mainwindow.cpp" />
     <ClCompile Include="NameTableModel.cpp" />
     <ClCompile Include="NameTableSettingsPage.cpp" />
     <ClCompile Include="NJCfgPage.cpp" />
@@ -216,7 +216,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="mainwindow.h" />
+    <QtMoc Include="Mainwindow.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ProjectSettingsPage.h" />
@@ -335,8 +335,8 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
-    <ClInclude Include="ReorderableTableView.h" />
-    <ClInclude Include="TreeSitterHighlighter.h" />
+    <QtMoc Include="ReorderableTableView.h" />
+    <QtMoc Include="TreeSitterHighlighter.h" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gppgui_en.ts" />

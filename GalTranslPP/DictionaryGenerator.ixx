@@ -22,7 +22,7 @@ export
         const std::function<void(Sentence*)> m_preProcessFunc; // 临时对象，不能设置引用
         const std::function<std::string(std::string)>& m_onPerformApi;  // 由于 NormalJsonTranslator 生命周期包含了 DictionaryGenrator
         const std::function<DictList(DictList)>& m_onDictProcessed;  	// 所以从前者类成员中传递过来的 function 可设置为引用
-        const std::function<NLPResult(const std::string&)>& m_tokenizeSourceLangFunc; // 避免 python 闭包复制时死锁
+        const NLPTokenizeFunc& m_tokenizeSourceLangFunc; // 避免 python 闭包复制时死锁
 
         std::string m_systemPrompt;
         std::string m_userPrompt;
@@ -32,17 +32,18 @@ export
         int m_maxRequestCount;
         int m_apiTimeOutMs;
         bool m_checkQuota;
+        // 由 Dictionary Generator 重新用 input files 计算
         int m_totalSentences = 0;
-        bool m_agentEnabled = false;
+        bool m_agentEnabled;
         fs::path m_projectDir;
         fs::path m_inputDir;
         std::vector<fs::path> m_relJsonPaths;
         std::optional<fs::path> m_agentProjectNotePath;
         std::string m_genDictReviewSystemPrompt;
         std::string m_genDictReviewUserPrompt;
-        int m_agentMaxTurnsPerChunk = 20;
-        int m_agentSearchResultLimit = 80;
-        int m_agentContextLinesLimit = 20;
+        int m_agentMaxTurnsPerChunk;
+        int m_agentSearchResultLimit;
+        int m_agentContextLinesLimit;
 
         // 阶段一和二的结果
         fs::path m_tokenizeCachePath;
@@ -64,7 +65,7 @@ export
 
     public:
         DictionaryGenerator(const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, const std::unique_ptr<ApiPool>& apiPool,
-            const std::function<NLPResult(const std::string&)>& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
+            const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
             const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
             int threadsNum, int maxRequestCount, int apiTimeOutMs, bool checkQuota,

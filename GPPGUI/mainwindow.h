@@ -28,14 +28,14 @@ class MainWindow : public ElaWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
 public Q_SLOTS:
     void checkUpdate();
 
 protected:
-    virtual void mouseReleaseEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
 
 private Q_SLOTS:
     void onNewProjectTriggered();
@@ -78,4 +78,5 @@ private:
 
     toml::ordered_value m_globalConfig;
 };
-#endif // MAINWINDOW_H
+
+#endif

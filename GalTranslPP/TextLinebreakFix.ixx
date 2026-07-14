@@ -19,7 +19,7 @@ export
 			None, Average, FixCharCount, KeepPositions, PreferPunctuations, CheckOnly
 		};
 
-		std::function<NLPResult(const std::string&)> m_tokenizeTargetLangFunc;
+		NLPTokenizeFunc m_tokenizeTargetLangFunc;
 		fs::path m_tokenizeCachePath;
 		std::shared_mutex m_tokenizeCacheMapMutex;
 		absl::flat_hash_map<std::string, WordPosVec> m_tokenizeCacheMap;

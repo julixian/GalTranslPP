@@ -17,7 +17,7 @@ DictionaryGenerator::~DictionaryGenerator() {
 }
 
 DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, const std::unique_ptr<ApiPool>& apiPool,
-    const std::function<NLPResult(const std::string&)>& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
+    const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
     int threadsNum, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
@@ -63,13 +63,13 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             ++m_totalSentences;
             Sentence se;
             se.index = (int)index;
-            if (item.contains("name")) {
+            if (auto it = item.find("name"); it != item.end()) {
                 se.nameType = NameType::Single;
-                se.name = item.value("name", "");
+                it->get_to(se.name);
             }
-            else if (item.contains("names")) {
+            else if (it = item.find("names"); it != item.end()) {
                 se.nameType = NameType::Multiple;
-                se.names = item["names"].get<std::vector<std::string>>();
+                it->get_to(se.names);
             }
             else {
                 se.nameType = NameType::None;

@@ -14,6 +14,8 @@ class QPaintEvent;
 
 class ReorderableTableView : public ElaTableView
 {
+    Q_OBJECT
+
 public:
     static constexpr int HandleColumn = 0;
     static constexpr int HandleColumnWidth = 34;
@@ -48,4 +50,4 @@ private:
     bool m_dragArmed = false;
 };
 
-#endif // REORDERABLETABLEVIEW_H
+#endif

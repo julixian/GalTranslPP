@@ -56,15 +56,6 @@ operator+(std::basic_string_view<CharT, Traits> lhs,
     r.reserve(lhs.size() + rhs.size());
     return r.append(lhs).append(rhs);
 }
-
-template<class CharT, class Traits>
-[[nodiscard]] std::basic_string<CharT, Traits>
-operator+(std::basic_string_view<CharT, Traits> lhs,
-    std::basic_string_view<CharT, Traits> rhs) {
-    std::basic_string<CharT, Traits> r;
-    r.reserve(lhs.size() + rhs.size());
-    return r.append(lhs).append(rhs);
-}
 #endif
 
 std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);

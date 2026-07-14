@@ -20,7 +20,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
         bool reversePriority = false;
         const fs::path pluginConfigPath = [&]()
 	        {
-		        fs::path ret = textPluginConfigPath / std::format(L"TextFull2Half-{}.toml", ascii2Wide(pluginRunTimeNames[m_runTime]));
+		        fs::path ret = textPluginConfigPath / std::format(L"TextFull2Half-{}.toml", ascii2Wide(pluginRunTime2Names[m_runTime]));
                 if (!fs::exists(ret)) {
 	                ret = textPluginConfigPath / L"TextFull2Half.toml";
                 }
@@ -60,12 +60,12 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
             m_notConvertRegs.push_back(std::move(reg));
         }
 
-        m_notConvertedCharsKey = std::format("TF2H-{}-notConvertedChars", pluginRunTimeNames[m_runTime]);
+        m_notConvertedCharsKey = std::format("TF2H-{}-notConvertedChars", pluginRunTime2Names[m_runTime]);
 
         m_logger->info(gppTr(
             "TextFull2Half.TextFull2Half",
             "TextFull2Half-%1 已加载 - 替换标点: %2, 反向替换: %3")
-            .arg(pluginRunTimeNames[m_runTime])
+            .arg(pluginRunTime2Names[m_runTime])
             .arg(m_replacePunctuation ? "true" : "false")
             .arg(m_reverseConversion ? "true" : "false")
             .toStdString());
@@ -74,7 +74,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
         throw std::runtime_error(gppTr(
             "TextFull2Half.TextFull2Half",
             "TextFull2Half-%1 配置文件解析错误: %2")
-            .arg(pluginRunTimeNames[m_runTime])
+            .arg(pluginRunTime2Names[m_runTime])
             .arg(e.what())
             .toStdString());
     }

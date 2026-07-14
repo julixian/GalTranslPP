@@ -23,8 +23,6 @@ public:
 
 	static QString readGptDictsStr(const std::vector<fs::path>& dictPaths);
 	static QString readDictStr(const fs::path& dictPath);
-
-
 };
 
 #endif

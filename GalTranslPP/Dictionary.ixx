@@ -25,7 +25,7 @@ export
     class GptDictionary {
     private:
         absl::flat_hash_map<std::string, WordPosVec> m_tokenizeCacheMap;
-        const std::function<NLPResult(const std::string&)>& m_tokenizeSourceLangFunc;
+        const NLPTokenizeFunc& m_tokenizeSourceLangFunc;
         fs::path m_projectDir;
         fs::path m_tokenizeCachePath;
         std::vector<GptDictEntry> m_entries;
@@ -36,7 +36,7 @@ export
 
     public:
         explicit GptDictionary(const fs::path& projectDir, const fs::path& otherCacheDir,
-            const std::function<NLPResult(const std::string&)>& tokenizeSourceLangFunc,
+            const NLPTokenizeFunc& tokenizeSourceLangFunc,
             const std::unique_ptr<LuaManager>&, const std::unique_ptr<PythonManager>& pythonManager,
             const std::shared_ptr<spdlog::logger>& logger);
 
@@ -81,7 +81,7 @@ export
             const std::unique_ptr<LuaManager>& luaManager, const std::unique_ptr<PythonManager>& pythonManager,
             const std::shared_ptr<spdlog::logger>& logger)
             : m_projectDir(projectDir), m_luaManager(luaManager), m_pythonManager(pythonManager), m_logger(logger)
-    	{ }
+    	    { }
 
         NormalDictionary(const NormalDictionary&) = delete;
         NormalDictionary& operator=(const NormalDictionary&) = delete;

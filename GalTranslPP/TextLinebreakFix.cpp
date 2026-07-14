@@ -24,7 +24,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 	try {
 		if (m_runTime != PluginRunTime::DPost) {
 			m_logger->error(gppTr("TextLinebreakFix.TextLinebreakFix", "TextLinebreakFix 不支持 %1 阶段运行")
-			    .arg(pluginRunTimeNames[m_runTime])
+			    .arg(pluginRunTime2Names[m_runTime])
 			    .toStdString());
 			return;
 		}
@@ -32,7 +32,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 		bool reversePriority = false;
 		const fs::path pluginConfigPath = [&]()
 			{
-				fs::path ret = textPluginConfigPath / std::format(L"TextLinebreakFix-{}.toml", ascii2Wide(pluginRunTimeNames[m_runTime]));
+				fs::path ret = textPluginConfigPath / std::format(L"TextLinebreakFix-{}.toml", ascii2Wide(pluginRunTime2Names[m_runTime]));
 				if (!fs::exists(ret)) {
 					ret = textPluginConfigPath / L"TextLinebreakFix.toml";
 				}
@@ -64,7 +64,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			throw std::invalid_argument(gppTr(
 			    "TextLinebreakFix.TextLinebreakFix",
 			    "TextLinebreakFix-%1 无效的换行模式: %2")
-			    .arg(pluginRunTimeNames[m_runTime])
+			    .arg(pluginRunTime2Names[m_runTime])
 			    .arg(linebreakMode)
 			    .toStdString());
 		}
@@ -85,7 +85,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
 				    "TextLinebreakFix-%1 已配置 MeCab 分词器，首次使用时加载")
-				    .arg(pluginRunTimeNames[m_runTime])
+				    .arg(pluginRunTime2Names[m_runTime])
 				    .toStdString());
 				m_tokenizeTargetLangFunc = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 			}
@@ -95,7 +95,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
 				    "TextLinebreakFix-%1 已配置 spaCy 分词器，首次使用时加载")
-				    .arg(pluginRunTimeNames[m_runTime])
+				    .arg(pluginRunTime2Names[m_runTime])
 				    .toStdString());
 				m_tokenizeTargetLangFunc = getPythonNLPTokenizeFunc({ "click", "spacy" }, "tokenizer_spacy",
 					spaCyModelName, m_logger);
@@ -106,7 +106,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
 				    "TextLinebreakFix-%1 已配置 Stanza 分词器，首次使用时加载")
-				    .arg(pluginRunTimeNames[m_runTime])
+				    .arg(pluginRunTime2Names[m_runTime])
 				    .toStdString());
 				m_tokenizeTargetLangFunc = getPythonNLPTokenizeFunc({ "stanza" }, "tokenizer_stanza",
 					stanzaLang, m_logger);
@@ -115,7 +115,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
 				    "TextLinebreakFix-%1 已配置 pkuseg 分词器，首次使用时加载")
-				    .arg(pluginRunTimeNames[m_runTime])
+				    .arg(pluginRunTime2Names[m_runTime])
 				    .toStdString());
 				m_tokenizeTargetLangFunc = getPythonNLPTokenizeFunc({ "setuptools", "nes-py", "cython", "pkuseg" },
 					"tokenizer_pkuseg", "default", m_logger);
@@ -124,7 +124,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				throw std::invalid_argument(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
 				    "TextLinebreakFix-%1 无效的 tokenizerBackend: %2")
-				    .arg(pluginRunTimeNames[m_runTime])
+				    .arg(pluginRunTime2Names[m_runTime])
 				    .arg(tokenizerBackend)
 				    .toStdString());
 			}
@@ -134,21 +134,21 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			throw std::runtime_error(gppTr(
 			    "TextLinebreakFix.TextLinebreakFix",
 			    "TextLinebreakFix-%1 分段字数阈值必须大于0")
-			    .arg(pluginRunTimeNames[m_runTime])
+			    .arg(pluginRunTime2Names[m_runTime])
 			    .toStdString());
 		}
 		if (m_errorThreshold <= 0) {
 			throw std::runtime_error(gppTr(
 			    "TextLinebreakFix.TextLinebreakFix",
 			    "TextLinebreakFix-%1 报错阈值必须大于0")
-			    .arg(pluginRunTimeNames[m_runTime])
+			    .arg(pluginRunTime2Names[m_runTime])
 			    .toStdString());
 		}
 
 		m_logger->info(gppTr(
 		    "TextLinebreakFix.TextLinebreakFix",
 		    "已加载插件 TextLinebreakFix-%1, 换行模式: %2, 优先阈值 %3, 分段字数阈值: %4, 强制修复: %5, 报错阈值: %6")
-		    .arg(pluginRunTimeNames[m_runTime])
+		    .arg(pluginRunTime2Names[m_runTime])
 		    .arg(linebreakMode)
 		    .arg(m_priorityThreshold, 0, 'f', 3)
 		    .arg(m_segmentThreshold)
@@ -157,7 +157,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 		    .toStdString());
 		if (m_useTokenizer) {
 			m_logger->info(gppTr("TextLinebreakFix.TextLinebreakFix", "插件 TextLinebreakFix-%1 分词器已启用")
-			    .arg(pluginRunTimeNames[m_runTime])
+			    .arg(pluginRunTime2Names[m_runTime])
 			    .toStdString());
 		}
     }
@@ -165,7 +165,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
         throw std::runtime_error(gppTr(
             "TextLinebreakFix.TextLinebreakFix",
             "TextLinebreakFix-%1 插件配置文件解析错误: %2")
-            .arg(pluginRunTimeNames[m_runTime])
+            .arg(pluginRunTime2Names[m_runTime])
             .arg(e.what())
             .toStdString());
     }
@@ -180,7 +180,7 @@ std::vector<std::string_view> TextLinebreakFix::splitIntoTokenViews(std::string_
 		}
 	}
 
-	NLPResult result = m_tokenizeTargetLangFunc(std::string(str));
+	NLPResult result = m_tokenizeTargetLangFunc(str);
 	WordPosVec& wordPosVec = std::get<0>(result);
 
 	std::vector<std::string_view> ret = ::splitIntoTokenViews(wordPosVec, str);

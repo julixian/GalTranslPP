@@ -14,7 +14,6 @@
 #include "ElaToolTip.h"
 
 import GPPVersion;
-import Tool;
 
 AboutDialog::AboutDialog(QWidget* parent)
     : ElaDialog(parent)

@@ -10,7 +10,6 @@ class AppSettingsPage : public BasePage
 
 public:
 	explicit AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~AppSettingsPage() override;
 
 private:
     void setupUi();

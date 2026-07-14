@@ -16,7 +16,7 @@ windowDisplayMode = 1
 windowHeight = 676
 windowPosX = 84
 windowPosY = 53
-windowWidth = 1308
+windowWidth = 1302
 
 [commonGptDicts]
 dictNames = ["CommonGpt", "CommonGpt_H"]
@@ -26,8 +26,8 @@ defaultOn = true
 openMode = 1
 
 [commonGptDicts.spec.CommonGpt.columnWidth]
-0 = 360
-1 = 215
+0 = 346
+1 = 199
 2 = 425
 
 [commonGptDicts.spec.CommonGpt_H]
@@ -105,9 +105,9 @@ openMode = 1
 [commonPreDicts.spec.PreHUnify.columnWidth]
 0 = 285
 1 = 195
-2 = 135
-3 = 250
-4 = 75
+2 = 348
+3 = 81
+4 = 70
 5 = 60
 
 [commonPreDicts.spec.PreStutterCorrect]
@@ -184,3 +184,4 @@ interactiveTips = 'Dir-A'
 pathOrUrl = 'https://github.com/ZQF-ReVN'
 subTitle = '拜见祖师爷'
 title = 'ReVN'
+

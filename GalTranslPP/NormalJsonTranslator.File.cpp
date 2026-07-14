@@ -79,7 +79,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     catch (const std::exception& e) {
         throw std::runtime_error(gppTr(
             "NormalJsonTranslator.processFile",
-            "[线程 %1] [文件 %2] 解析失败: %3")
+            "[线程 %1] [文件 %2] 输入文件解析失败: %3")
             .arg(threadId)
             .arg(wide2Ascii(relInputPath))
             .arg(e.what())
@@ -286,7 +286,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 recordSentenceDoneHelper(relInputPath, se);
                 continue;
             }
-            const std::string key = generateCacheKey(&se);
+            const std::string key = generateCacheKey(se);
             const auto it = cacheMap.find(key);
             if (it == cacheMap.end()) {
                 toTranslate.push_back(&se);
@@ -343,7 +343,6 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
     // 进入批处理调度。普通模式每个 batch 一次问答；Agent 模式则在内部跑多轮循环。
     if (m_transEngine != TransEngine::Rebuild && !toTranslate.empty()) {
-        int batchCount = 0;
         const std::string filePathWithHash = std::format("{}{:08X}", wide2Ascii(relInputPath), calculateFileCRC64(inputPath));
         std::string rollingContext = [&]()
             {
@@ -395,7 +394,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 recordSentenceDoneHelper(relInputPath, *se, true);
             }
 
-            if (++batchCount % m_saveCacheInterval == 0) {
+            if (batchIndex % m_saveCacheInterval == 0) {
                 m_logger->debug(gppTr(
                     "NormalJsonTranslator.processFile",
                     "[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...")
@@ -438,10 +437,14 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     }
 
     // 组装最终输出文件。
+    bool hasRefPending = false;
     for (auto [se, item] : std::views::zip(sentences, jSentences)) {
         if (m_reuseRepeatedBlocks) {
             item.erase("_gpp_ref_by");
-            item.erase("_gpp_ref_pending");
+            const size_t erasedCount = item.erase("_gpp_ref_pending");
+            if (!hasRefPending && erasedCount > 0) {
+                hasRefPending = true;
+            }
         }
         if (se.nameType == NameType::Single) {
             item["name"] = se.nametrans;
@@ -455,7 +458,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         }
     }
 
-    atomicOutputFile(outputPath, jSentences.dump(2));
+    if (!hasRefPending) {
+        atomicOutputFile(outputPath, jSentences.dump(2));
+    }
 
     m_logger->info(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 处理完成")
         .arg(threadId)

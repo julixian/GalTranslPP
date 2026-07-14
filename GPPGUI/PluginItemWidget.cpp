@@ -1,10 +1,10 @@
 #include "PluginItemWidget.h"
 
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QMap>
 #include "ElaText.h"
 #include "ElaToggleSwitch.h"
-#include "ElaToolTip.h"
 #include "ElaIconButton.h"
 #include "ElaDoubleText.h"
 #include "ElaNoWheelComboBox.h"

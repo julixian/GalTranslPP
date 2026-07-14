@@ -64,6 +64,7 @@ export
 								const char* error = lua_tostring(state, -1);
 								throw std::runtime_error(error ? error : "未知 Lua 错误");
 							}
+							return;
 						}
 						else {
 							auto result = reference.call<R>(std::forward<Args>(args)...);
@@ -129,6 +130,7 @@ export
 					const char* error = lua_tostring(lua, -1);
 					throw std::runtime_error(error ? error : "未知 Lua 错误");
 				}
+				return;
 			}
 			else {
 				auto result = m_function.call<Result>(std::forward<Args>(args)...);

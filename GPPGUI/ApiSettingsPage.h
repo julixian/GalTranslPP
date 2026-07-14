@@ -19,13 +19,11 @@ public:
     explicit ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
 	~ApiSettingsPage() override;
 	void apply2Config() override;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private Q_SLOTS:
     void addApiInputRow();
     void onDeleteApiRow();
-
-protected:
-    bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     static QSize s_configWidgetSize;

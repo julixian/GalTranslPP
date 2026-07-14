@@ -31,7 +31,8 @@ ApiProtocol parseApiProtocol(std::string_view protocol)
 
 std::string apiProtocolToString(ApiProtocol protocol)
 {
-    switch (protocol) {
+    switch (protocol)
+	{
     case ApiProtocol::Claude:
         return "claude";
     case ApiProtocol::Gemini:

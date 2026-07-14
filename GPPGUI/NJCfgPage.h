@@ -16,4 +16,4 @@ private:
     toml::ordered_value& m_projectConfig;
 };
 
-#endif // NJCFGPAGE_H
+#endif

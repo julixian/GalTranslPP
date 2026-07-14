@@ -29,8 +29,6 @@ AppSettingsPage::AppSettingsPage(toml::ordered_value& globalConfig, QWidget* par
     setupUi();
 }
 
-AppSettingsPage::~AppSettingsPage() = default;
-
 void AppSettingsPage::setupUi()
 {
     ElaWindow* elaWindow = qobject_cast<ElaWindow*>(this->window());

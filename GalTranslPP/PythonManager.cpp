@@ -418,7 +418,7 @@ void PythonManager::registerCustomTypes(const std::string& moduleName) {
         };
     setupTokenizer("sourceLang");
     setupTokenizer("targetLang");
-    pythonModule.attr("logger") = m_logger.get();
+    pythonModule.attr("logger") = m_logger;
 }
 
 
@@ -652,9 +652,17 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
     utilsSubmodule
         .def("splitIntoTokens", &splitIntoTokens)
         .def("splitIntoGraphemes", &splitIntoGraphemes)
+        .def("countGraphemes", &countGraphemes)
         .def("getMostCommonChar", &getMostCommonChar)
+        .def("hasPunctuation", &hasPunctuation)
+        .def("hasWhitespace", &hasWhitespace)
         .def("removePunctuation", &removePunctuation)
         .def("removeWhitespace", &removeWhitespace)
+        .def("hasKatakana", &hasKatakana)
+        .def("hasKana", &hasKana)
+        .def("hasLatin", &hasLatin)
+        .def("hasHangul", &hasHangul)
+        .def("hasCJK", &hasCJK)
         .def("extractKatakana", &extractKatakana)
         .def("extractKana", &extractKana)
         .def("extractLatin", &extractLatin)
@@ -662,7 +670,14 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("extractCJK", &extractCJK)
         .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor)
         .def("isApiTranslationEngine", &isApiTranslationEngine)
-        .def("getConsoleWidth", &getConsoleWidth);
+        .def("getConsoleWidth", &getConsoleWidth)
+        .def("loadTokenizeCache", [](const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger)
+	        {
+                absl::flat_hash_map<std::string, WordPosVec> result;
+                loadTokenizeCache(result, cachePath, logger);
+                return result;
+	        })
+        .def("saveTokenizeCache", &saveTokenizeCache);
 
     py::class_<RuntimeTransSuccessEvent>(m, "RuntimeTransSuccessEvent")
         .def(py::init<>())

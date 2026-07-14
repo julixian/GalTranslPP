@@ -33,7 +33,6 @@ class CommonGptDictsPage : public BasePage
 
 public:
     explicit CommonGptDictsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~CommonGptDictsPage() override;
 
 Q_SIGNALS:
     void commonDictsChangedSignal();

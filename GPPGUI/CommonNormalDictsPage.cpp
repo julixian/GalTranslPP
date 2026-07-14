@@ -51,8 +51,6 @@ CommonNormalDictsPage::CommonNormalDictsPage(const std::string& mode, toml::orde
 	setupUi();
 }
 
-CommonNormalDictsPage::~CommonNormalDictsPage() = default;
-
 void CommonNormalDictsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);

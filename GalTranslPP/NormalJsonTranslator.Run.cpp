@@ -18,43 +18,12 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-std::optional<ordered_json> buildProblemOverviewItemFromCache(
-    const fs::path& relFilePath,
-    const json& item
-) {
-    const auto problemsIt = item.find("problems");
-    if (problemsIt == item.end() || !problemsIt->is_array() || problemsIt->empty()) {
-        return std::nullopt;
-    }
-
-    ordered_json tbl = ordered_json::object();
-    tbl["filename"] = wide2Ascii(relFilePath);
-    tbl["index"] = item.value("index", -1);
-    if (item.contains("name")) {
-        tbl["name"] = item["name"].get<std::string>();
-        tbl["name_translated"] = item.value("name_translated", "");
-    }
-    else if (item.contains("names")) {
-        tbl["names"] = item["names"].get<std::vector<std::string>>();
-        tbl["names_translated"] = item.value("names_translated", std::vector<std::string>{});
-    }
-    tbl["original_text"] = item.value("original_text", "");
-    if (item.contains("other_info")) {
-        tbl["other_info"] = item["other_info"];
-    }
-    tbl["pre_processed_text"] = item.value("pre_processed_text", "");
-    tbl["translated_raw_text"] = item.value("translated_raw_text", "");
-    tbl["problems"] = problemsIt->get<std::vector<std::string>>();
-    tbl["translated_by"] = item.value("translated_by", "");
-    tbl["translated_view_text"] = item.value("translated_view_text", "");
-    return tbl;
-}
-
 ordered_json buildProblemOverviewFromCache(
     const fs::path& transCacheDir,
     const std::vector<fs::path>& relFilePaths,
     const std::shared_ptr<spdlog::logger>& logger
-) {
+)
+{
     ordered_json overview = ordered_json::array();
     std::ifstream ifs;
     for (const fs::path& relFilePath : relFilePaths) {
@@ -63,11 +32,15 @@ ordered_json buildProblemOverviewFromCache(
             continue;
         }
         try {
-            const json cacheJson = parseJson(cachePath, ifs);
-            for (const json& item : cacheJson) {
-                if (auto tbl = buildProblemOverviewItemFromCache(relFilePath, item); tbl.has_value()) {
-                    overview.push_back(std::move(tbl.value()));
+            const ordered_json cacheJson = parseOrderedJson(cachePath, ifs);
+            for (const ordered_json& item : cacheJson) {
+                const auto problemsIt = item.find("problems");
+                if (problemsIt == item.end() || !problemsIt->is_array() || problemsIt->empty()) {
+                    continue;
                 }
+                ordered_json newItem = item;
+                newItem.insert(newItem.begin(), { "filename", wide2Ascii(relFilePath) });
+                overview.push_back(std::move(newItem));
             }
         }
         catch (const std::exception& e) {
@@ -522,7 +495,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
                 if (fileCount == 3) {
                     break;
                 }
-                fileStr += file + std::string_view(", ");
+                fileStr.append(file).append(", ");
                 ++fileCount;
             }
             if (fileCount == files.size()) {
@@ -713,12 +686,12 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
             continue;
         }
 
-        const bool hasPendingReference = std::ranges::any_of(bundle.cache, [](const json& cacheItem)
+        const bool hasRefPending = std::ranges::any_of(bundle.cache, [](const json& cacheItem)
             {
                 return isRefPendingFromItem(cacheItem);
             });
 
-        if (hasPendingReference) {
+        if (hasRefPending) {
             m_logger->debug(gppTr(
                 "NormalJsonTranslator.resolveRepeatedBlockReferences",
                 "文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出")

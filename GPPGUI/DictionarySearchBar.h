@@ -28,4 +28,4 @@ private:
     int m_field = 0;
 };
 
-#endif // DICTIONARYSEARCHBAR_H
+#endif

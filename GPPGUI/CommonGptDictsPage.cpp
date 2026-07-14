@@ -37,8 +37,6 @@ CommonGptDictsPage::CommonGptDictsPage(toml::ordered_value& globalConfig, QWidge
 	setupUi();
 }
 
-CommonGptDictsPage::~CommonGptDictsPage() = default;
-
 void CommonGptDictsPage::setupUi()
 {
 	QWidget* mainWidget = new QWidget(this);

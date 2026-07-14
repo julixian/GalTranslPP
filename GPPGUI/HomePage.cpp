@@ -284,8 +284,6 @@ HomePage::HomePage(toml::ordered_value& globalConfig, QWidget* parent)
     setupUi();
 }
 
-HomePage::~HomePage() = default;
-
 void HomePage::setupUi()
 {
     QWidget* centralWidget = new QWidget(this);

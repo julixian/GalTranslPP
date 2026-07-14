@@ -167,7 +167,7 @@ namespace lua_binding
 
 	template<typename Registration>
 	void addMembers(Registration&)
-	{}
+	{ }
 
 	template<typename Registration, typename Value, typename... Rest>
 	void addMembers(Registration& registration, const char* name, Value value, Rest&&... rest);
@@ -290,7 +290,7 @@ namespace lua_binding
 	private:
 		template<typename Registration>
 		void addEnumValues(Registration&)
-		{}
+		{ }
 
 		template<typename Registration, typename Value, typename... Rest>
 		void addEnumValues(Registration& registration, const char* name, Value value, Rest&&... rest)
@@ -554,7 +554,7 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 			state->submitTask([this, state, stdScriptPath, scriptPath]()
 				{
 					std::ifstream ifs(stdScriptPath, std::ios::binary);
-					std::string script((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+					const std::string script((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 					const std::string chunkName = "@" + wide2Ascii(stdScriptPath);
 					lua_State* lua = state->m_lua.get();
 					if (luaL_loadbuffer(lua, script.data(), script.size(), chunkName.c_str()) != LUA_OK
@@ -691,17 +691,17 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 
 	auto pathRegistration = luabridge::getGlobalNamespace(luaState).beginClass<fs::path>("Path");
 	pathRegistration.addConstructor(
-		[](void* memory, const std::string& str) { return new (memory) fs::path(ascii2Wide(str)); },
+		[](void* memory, std::string_view str) { return new (memory) fs::path(ascii2Wide(str)); },
 		[](void* memory) { return new (memory) fs::path(); },
 		[](void* memory, const fs::path& path) { return new (memory) fs::path(path); });
 	pathRegistration
 		.addProperty("value",
 			[](const fs::path& self) { return wide2Ascii(self); },
-			[](fs::path& self, const std::string& str) { self = ascii2Wide(str); })
+			[](fs::path& self, std::string_view str) { self = ascii2Wide(str); })
 		.addFunction("__tostring", [](const fs::path& self) { return wide2Ascii(self); })
 		.addFunction("__div",
 			[](const fs::path& self, const fs::path& other) { return self / other; },
-			[](const fs::path& self, const std::string& other) { return self / ascii2Wide(other); })
+			[](const fs::path& self, std::string_view other) { return self / ascii2Wide(other); })
 		.addFunction("__eq", [](const fs::path& self, const fs::path& other) { return self == other; })
 		.addProperty("filename", [](const fs::path& self) { return self.filename(); })
 		.addProperty("stem", [](const fs::path& self) { return self.stem(); })
@@ -732,12 +732,12 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"set_level", &spdlog::logger::set_level,
 		"set_pattern", [](spdlog::logger& logger, const std::string& pattern) { logger.set_pattern(pattern); },
 		"flush", &spdlog::logger::flush,
-		"trace", [](spdlog::logger& logger, const std::string& msg) { logger.trace(msg); },
-		"debug", [](spdlog::logger& logger, const std::string& msg) { logger.debug(msg); },
-		"info", [](spdlog::logger& logger, const std::string& msg) { logger.info(msg); },
-		"warn", [](spdlog::logger& logger, const std::string& msg) { logger.warn(msg); },
-		"error", [](spdlog::logger& logger, const std::string& msg) { logger.error(msg); },
-		"critical", [](spdlog::logger& logger, const std::string& msg) { logger.critical(msg); }
+		"trace", [](spdlog::logger& logger, std::string_view msg) { logger.trace(msg); },
+		"debug", [](spdlog::logger& logger, std::string_view msg) { logger.debug(msg); },
+		"info", [](spdlog::logger& logger, std::string_view msg) { logger.info(msg); },
+		"warn", [](spdlog::logger& logger, std::string_view msg) { logger.warn(msg); },
+		"error", [](spdlog::logger& logger, std::string_view msg) { logger.error(msg); },
+		"critical", [](spdlog::logger& logger, std::string_view msg) { logger.critical(msg); }
 	);
 
 	lua_binding::Table luaTomlTable = lua.createNamedTable("toml");
@@ -1103,20 +1103,32 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	);
 
 	lua_binding::Table utilsTable = lua.createNamedTable("utils");
-	utilsTable["splitString"] = [](const std::string& str, const std::string& delimiter) { return splitString(str, delimiter); };
+	utilsTable["splitString"] = [](std::string_view str, std::string_view delimiter) { return splitString(str, delimiter); };
 	utilsTable["splitIntoTokens"] = &::splitIntoTokens;
 	utilsTable["splitIntoGraphemes"] = &splitIntoGraphemes;
 	utilsTable["countGraphemes"] = &countGraphemes;
 	utilsTable["countSubstring"] = &countSubstring;
 	utilsTable["getSubstringPositions"] = &getSubstringPositions;
 	utilsTable["getMostCommonChar"] = &getMostCommonChar;
-	utilsTable["replaceStr"] = [](const std::string& str, const std::string& org, const std::string& rep)
-		{
-			std::string result = str;
-			return replaceStrInplace(result, org, rep);
-		};
+	utilsTable["replaceStr"] = &replaceStr;
+	utilsTable["hasPunctuation"] = &hasPunctuation;
+	utilsTable["hasWhitespace"] = &hasWhitespace;
 	utilsTable["removePunctuation"] = &removePunctuation;
 	utilsTable["removeWhitespace"] = &removeWhitespace;
+	utilsTable["truncateUtf8Prefix"] = [](std::string_view str, size_t maxCodepoints, const std::optional<std::string_view>& ellipsis)
+		{
+			truncateUtf8Prefix(str, maxCodepoints, ellipsis.value_or("..."));
+		};
+	utilsTable["truncateUtf8Suffix"] = [](std::string_view str, size_t maxCodepoints, const std::optional<std::string_view>& ellipsis)
+		{
+			truncateUtf8Suffix(str, maxCodepoints, ellipsis.value_or("..."));
+		};
+	utilsTable["maskApiKey"] = &maskApiKey;
+	utilsTable["hasKatakana"] = &hasKatakana;
+	utilsTable["hasKana"] = &hasKana;
+	utilsTable["hasLatin"] = &hasLatin;
+	utilsTable["hasHangul"] = &hasHangul;
+	utilsTable["hasCJK"] = &hasCJK;
 	utilsTable["extractKatakana"] = &extractKatakana;
 	utilsTable["extractKana"] = &extractKana;
 	utilsTable["extractLatin"] = &extractLatin;
@@ -1124,31 +1136,29 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	utilsTable["extractCJK"] = &extractCJK;
 	utilsTable["getTraditionalChineseExtractor"] = &getTraditionalChineseExtractor;
 	utilsTable["isApiTranslationEngine"] = &isApiTranslationEngine;
-	utilsTable["executeCommand"] = [](const std::string& program, const std::string& args, std::optional<bool> showWindow, std::optional<int> timeDelayAfterCommand)
+	utilsTable["executeCommand"] = [](std::string_view program, std::string_view args, std::optional<bool> showWindow, std::optional<int> timeDelayAfterCommand)
 		{
 			return executeCommand(ascii2Wide(program), ascii2Wide(args), showWindow.value_or(true), timeDelayAfterCommand.value_or(5));
 		};
 	utilsTable["getConsoleWidth"] = &getConsoleWidth;
-	utilsTable["createParent"] = [](const fs::path& path) { return createParent(path); };
-	utilsTable["isSameExtension"] = [](const fs::path& path, const std::string& ext) { return isSameExtension(path, ascii2Wide(ext)); };
-	utilsTable["extractZip"] = [](const fs::path& zipPath, const fs::path& outputDir) { extractZip(zipPath, outputDir); };
-	utilsTable["extractFileFromZip"] = [](const fs::path& zipPath, const fs::path& outputDir, const std::string& fileName)
+	utilsTable["createParent"] = &createParent;
+	utilsTable["isSameExtension"] = [](const fs::path& path, std::string_view ext) { return isSameExtension(path, ascii2Wide(ext)); };
+	utilsTable["extractZip"] = &extractZip;
+	utilsTable["extractFileFromZip"] = &extractFileFromZip;
+	utilsTable["extractFilesFromZip"] = &extractFilesFromZip;
+	utilsTable["extractZipInclude"] = &extractZipInclude;
+	utilsTable["extractZipExclude"] = &extractZipExclude;
+	utilsTable["loadTokenizeCache"] = [logger = m_logger](const fs::path& cachePath)
 		{
-			extractFileFromZip(zipPath, outputDir, fileName);
+			absl::flat_hash_map<std::string, WordPosVec> result;
+			loadTokenizeCache(result, cachePath, logger);
+			return result;
 		};
-	utilsTable["extractFilesFromZip"] = [](const fs::path& zipPath, const fs::path& outputDir, std::vector<std::string> fileNames)
+	utilsTable["saveTokenizeCache"] = [logger = m_logger](const absl::flat_hash_map<std::string, WordPosVec>& cache, const fs::path& cachePath)
 		{
-			extractFilesFromZip(zipPath, outputDir, std::set<std::string>(fileNames.begin(), fileNames.end()));
+			saveTokenizeCache(cache, cachePath, logger);
 		};
-	utilsTable["extractZipInclude"] = [](const fs::path& zipPath, const fs::path& outputDir, std::vector<std::string> includePrefixes)
-		{
-			extractZipInclude(zipPath, outputDir, std::set<std::string>(includePrefixes.begin(), includePrefixes.end()));
-		};
-	utilsTable["extractZipExclude"] = [](const fs::path& zipPath, const fs::path& outputDir, std::vector<std::string> excludePrefixes)
-		{
-			extractZipExclude(zipPath, outputDir, std::set<std::string>(excludePrefixes.begin(), excludePrefixes.end()));
-		};
-	utilsTable["pcre2RegexSearch1"] = [](const std::string& str, const std::string& pattern, std::optional<std::string> modifier) -> std::vector<std::vector<std::string>>
+	utilsTable["pcre2RegexSearch1"] = [](const std::string& str, const std::string& pattern, const std::optional<std::string>& modifier) -> std::vector<std::vector<std::string>>
 		{
 			jpc::Regex re(pattern, modifier.value_or(defaultRegCompileModifier));
 			jpc::RegexMatch rm(&re);
@@ -1156,7 +1166,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			rm.setModifier("g").setSubject(&str).setNumberedSubstringVector(&vecNum).match();
 			return vecNum;
 		};
-	utilsTable["pcre2RegexSearch2"] = [](const std::string& str, const std::string& pattern, std::optional<std::string> modifier) -> std::vector<std::map<std::string, std::string>>
+	utilsTable["pcre2RegexSearch2"] = [](const std::string& str, const std::string& pattern, const std::optional<std::string>& modifier) -> std::vector<std::map<std::string, std::string>>
 		{
 			jpc::Regex re(pattern, modifier.value_or(defaultRegCompileModifier));
 			jpc::RegexMatch rm(&re);
@@ -1165,7 +1175,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			return vecNas;
 		};
 	utilsTable["pcre2RegexReplace"] = [](const std::string& str, const std::string& pattern, const std::string& rep,
-		std::optional<std::string> compileModifier, std::optional<std::string> replaceModifier)
+		const std::optional<std::string>& compileModifier, const std::optional<std::string>& replaceModifier)
 		{
 			jpc::Regex re(pattern, compileModifier.value_or(defaultRegCompileModifier));
 			jpc::RegexReplace rr(&re);
@@ -1191,7 +1201,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			}
 			const std::string& tokenizerBackend = **tokenizerBackendResult;
 
-			std::function<NLPResult(const std::string&)> tokenizeFunc;
+			NLPTokenizeFunc tokenizeFunc;
 			if (tokenizerBackend == "MeCab") {
 				const std::string mecabDictDirName = langMode + "MecabDictDir";
 				const auto mecabDictDirResult = lua.getGlobal(mecabDictDirName).cast<std::optional<std::string>>();

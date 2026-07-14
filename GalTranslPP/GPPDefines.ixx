@@ -62,7 +62,7 @@ export
         std::string transraw;
         std::string transview;
         std::string linebreak;
-        std::map<std::string, std::string> otherinfo;
+        absl::btree_map<std::string, std::string> otherinfo;
 
         std::optional<SentencePosition> ref;
         std::vector<SentencePosition> refBy;
@@ -81,7 +81,7 @@ export
             return problems[index];
         }
 
-        bool setProblemByIndex(int index, const std::string& problem) {
+        bool setProblemByIndex(int index, std::string_view problem) {
             if (index < 0 || index >= problems.size()) {
                 return false;
             }
@@ -95,9 +95,37 @@ export
         None, ForGalTsv, ForNovelTsv, ForGalJson, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
     };
 
+    absl::btree_map<std::string_view, TransEngine> names2TransEngine =
+    {
+	    { "ForGalTsv", TransEngine::ForGalTsv },
+        { "ForNovelTsv", TransEngine::ForNovelTsv },
+        { "ForGalJson", TransEngine::ForGalJson },
+        { "Sakura", TransEngine::Sakura },
+        { "DumpName", TransEngine::DumpName },
+        { "NameTrans", TransEngine::NameTrans },
+        { "GenDict", TransEngine::GenDict },
+        { "Rebuild", TransEngine::Rebuild },
+        { "ShowNormal", TransEngine::ShowNormal },
+    };
+
     enum class CachePart
     { 
         None, Name, Names, NameTrans, NamesTrans, Orig, Preproc, Problems, OtherInfo, TransBy, TransRaw, Transview
+    };
+
+    absl::btree_map<std::string_view, CachePart> names2CachePart =
+    {
+	    { "name", CachePart::Name },
+        { "names", CachePart::Names },
+        { "nametrans", CachePart::NameTrans },
+        { "namestrans", CachePart::NamesTrans },
+        { "orig", CachePart::Orig },
+        { "preproc", CachePart::Preproc },
+        { "problems", CachePart::Problems },
+        { "otherinfo", CachePart::OtherInfo },
+        { "transby", CachePart::TransBy },
+        { "transraw", CachePart::TransRaw },
+        { "transview", CachePart::Transview },
     };
 
     enum class ConditionType
@@ -110,24 +138,24 @@ export
         None, DPre, Pre, Post, DPost
     };
 
-    std::map<PluginRunTime, std::string> pluginRunTimeNames =
+    absl::btree_map<PluginRunTime, std::string_view> pluginRunTime2Names =
     {
-        { PluginRunTime::None, "none" },
         { PluginRunTime::DPre, "dprerun" },
         { PluginRunTime::Pre, "prerun" },
         { PluginRunTime::Post, "postrun" },
-        { PluginRunTime::DPost, "dpostrun" }
+        { PluginRunTime::DPost, "dpostrun" },
     };
 
     using NLPPair = std::array<std::string, 2>;
     using WordPosVec = std::vector<NLPPair>;
     using EntityVec = std::vector<NLPPair>;
     using NLPResult = std::tuple<WordPosVec, EntityVec>;
+    using NLPTokenizeFunc = std::function<NLPResult(std::string_view)>;
 
     template<typename ...Args>
     using CheckSeCondBaseFunc = std::function<bool(Sentence* se, Args...)>;
     using CheckSeCondNormalFunc = CheckSeCondBaseFunc<>;
-    using CheckSkipProblemCondFunc = CheckSeCondBaseFunc<const std::string&>;
+    using CheckSkipProblemCondFunc = CheckSeCondBaseFunc<std::string_view>;
     // first: 要忽略的问题正则表达式，second: 对应的忽略条件
     using SkipProblemCondition = std::pair<jpc::Regex, std::optional<CheckSkipProblemCondFunc>>;
 

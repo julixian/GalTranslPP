@@ -33,7 +33,7 @@ namespace
     }
 
     template <typename JsonT>
-    JsonT referenceTargetToJson(const SentencePosition& target) {
+    JsonT sentencePositionToJson(const SentencePosition& target) {
         return JsonT{
             {"file", target.file},
             {"index", target.index}
@@ -183,7 +183,8 @@ namespace
 RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
     const std::vector<std::pair<fs::path, ordered_json>>& filesWithData,
     int minBlockSize
-) {
+)
+{
     RepeatedBlockReferenceMap references;
 
     std::vector<int> tokens;
@@ -288,16 +289,17 @@ void addReferenceInfoToInputJson(
     const fs::path& relFilePath,
     ordered_json& data,
     const RepeatedBlockReferenceMap& references
-) {
+)
+{
     for (auto [index, item] : data | std::views::enumerate) {
-        const SentencePosition target{ wide2Ascii(relFilePath), (int)index };
-        if (const auto it = references.targetToSourceMap.find(target); it != references.targetToSourceMap.end()) {
-            item["_gpp_ref_to"] = referenceTargetToJson<ordered_json>(it->second);
+        const SentencePosition position{ wide2Ascii(relFilePath), (int)index };
+        if (const auto it = references.targetToSourceMap.find(position); it != references.targetToSourceMap.end()) {
+            item["_gpp_ref_to"] = sentencePositionToJson<ordered_json>(it->second);
         }
-        if (const auto it = references.sourceToTargetsMap.find(target); it != references.sourceToTargetsMap.end()) {
+        if (const auto it = references.sourceToTargetsMap.find(position); it != references.sourceToTargetsMap.end()) {
             ordered_json refs = ordered_json::array();
             for (const SentencePosition& refBy : it->second) {
-                refs.push_back(referenceTargetToJson<ordered_json>(refBy));
+                refs.push_back(sentencePositionToJson<ordered_json>(refBy));
             }
             item["_gpp_ref_by"] = std::move(refs);
         }
@@ -313,16 +315,16 @@ int getSplittedFileIndex(const std::wstring& path) {
 /**
 * @brief 根据句子的上下文生成唯一的缓存键，复刻 GalTransl 逻辑
 */
-std::string generateCacheKey(Sentence* s) {
-    const std::string currentText = getNameString(*s) + s->orig + s->preproc;
+std::string generateCacheKey(const Sentence& se) {
+    const std::string currentText = getNameString(se) + se.orig + se.preproc;
 
     std::string prevText = "None";
     std::string nextText = "None";
-    if (s->prev) {
-        prevText = getNameString(*s->prev) + s->prev->orig + s->prev->preproc;
+    if (se.prev) {
+        prevText = getNameString(*se.prev) + se.prev->orig + se.prev->preproc;
     }
-    if (s->next) {
-        nextText = getNameString(*s->next) + s->next->orig + s->next->preproc;
+    if (se.next) {
+        nextText = getNameString(*se.next) + se.next->orig + se.next->preproc;
     }
     return prevText + currentText + nextText;
 }
@@ -433,7 +435,7 @@ std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEng
     break;
 
     default:
-        throw std::runtime_error(gppTr("buildContextHistory", "未知的 PromptType").toStdString());
+        throw std::runtime_error(gppTr("buildContextHistory", "内部错误: 未知的 PromptType").toStdString());
     }
 
     return truncateUtf8Suffix(history, maxChars);
@@ -444,7 +446,8 @@ void fillBlockAndMap(
     std::string& inputBlock,
     TransEngine transEngine,
     absl::flat_hash_map<int, Sentence*>* id2SentenceMap
-) {
+)
+{
     switch (transEngine)
     {
     case TransEngine::ForGalTsv:
@@ -720,7 +723,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
 }
 
 void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
-    const fs::path& outputCacheDir, const fs::path& outputDir, std::shared_ptr<spdlog::logger>& logger) {
+    const fs::path& outputCacheDir, const fs::path& outputDir, const std::shared_ptr<spdlog::logger>& logger) {
 
     ordered_json combinedJson = ordered_json::array();
 
@@ -742,7 +745,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
             combinedJson.insert(combinedJson.end(), partData.begin(), partData.end());
         }
         else {
-            throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 %1 时出错，缺少文件 %2")
+            throw std::runtime_error(gppTr("combineOutputFiles", "试图合并 [%1] 时出错，缺少文件 [%2]")
                 .arg(wide2Ascii(originalRelFilePath))
                 .arg(wide2Ascii(partPath))
                 .toStdString());
@@ -751,7 +754,7 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
 
     const fs::path finalOutputPath = outputDir / originalRelFilePath;
     atomicOutputFile(finalOutputPath, combinedJson.dump(2));
-    logger->info(gppTr("combineOutputFiles", "文件 %1 合并完成，已保存到 %2")
+    logger->info(gppTr("combineOutputFiles", "文件 [%1] 合并完成，已保存到 [%2]")
         .arg(wide2Ascii(originalRelFilePath))
         .arg(wide2Ascii(finalOutputPath))
         .toStdString());
@@ -774,11 +777,11 @@ bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, cons
             jit->get_to(probeSentence.namestrans);
         }
     }
-    if (const auto jit = item.find("problems"); jit != item.end()) {
-        jit->get_to(probeSentence.problems);
-    }
     if (const auto jit = item.find("other_info"); jit != item.end()) {
         jit->get_to(probeSentence.otherinfo);
+    }
+    if (const auto jit = item.find("problems"); jit != item.end()) {
+        jit->get_to(probeSentence.problems);
     }
     if (const auto jit = item.find("translated_by"); jit != item.end()) {
         jit->get_to(probeSentence.transby);

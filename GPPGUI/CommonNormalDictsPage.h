@@ -3,7 +3,6 @@
 
 #include "BasePage.h"
 #include "NormalTabEntry.h"
-#include <string>
 #include <toml.hpp>
 
 namespace fs = std::filesystem;
@@ -14,7 +13,6 @@ class CommonNormalDictsPage : public BasePage
 
 public:
     explicit CommonNormalDictsPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~CommonNormalDictsPage() override;
 
 Q_SIGNALS:
     void commonDictsChangedSignal();

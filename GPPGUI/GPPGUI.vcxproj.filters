@@ -45,7 +45,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="mainwindow.cpp">
+    <ClCompile Include="Mainwindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ApiSettingsPage.cpp">
@@ -203,7 +203,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="mainwindow.h">
+    <QtMoc Include="Mainwindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="PluginSettingsPage.h">
@@ -323,6 +323,12 @@
     <QtMoc Include="ElaAlignedCheckBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
+    <QtMoc Include="ReorderableTableView.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
+    <QtMoc Include="TreeSitterHighlighter.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GPPGUI.rc">
@@ -350,12 +356,6 @@
     <QtMoc Include="DictionaryEntryDialog.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <ClInclude Include="TreeSitterHighlighter.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
-    </ClInclude>
-    <ClInclude Include="ReorderableTableView.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
-    </ClInclude>
     <QtMoc Include="DictionarySearchBar.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>

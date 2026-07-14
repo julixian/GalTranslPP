@@ -34,20 +34,11 @@ export
         r.reserve(lhs.size() + rhs.size());
         return r.append(lhs).append(rhs);
     }
-
-    template<class CharT, class Traits>
-    [[nodiscard]] std::basic_string<CharT, Traits>
-        operator+(std::basic_string_view<CharT, Traits> lhs,
-            std::basic_string_view<CharT, Traits> rhs) {
-        std::basic_string<CharT, Traits> r;
-        r.reserve(lhs.size() + rhs.size());
-        return r.append(lhs).append(rhs);
-    }
 #endif
 
     std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
     template<typename T>
-    requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
+        requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
     std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
 #ifdef _WIN32
         return wide2Ascii(path.native(), codePage, usedDefaultChar);
@@ -157,7 +148,7 @@ export
     std::string extractCJK(std::string_view str);
     // 不保证线程安全，但对插件来说不影响
     // 因为 m_lua/py 的 text 插件应当是同步执行的
-    std::function<std::string(const std::string&)> getTraditionalChineseExtractor();
+    std::function<std::string(std::string_view)> getTraditionalChineseExtractor();
 
 
     std::string getNameString(const Sentence& se);

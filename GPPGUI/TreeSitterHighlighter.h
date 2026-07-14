@@ -22,6 +22,8 @@ struct HighlightSpan {
 
 class TreeSitterHighlighter : public QSyntaxHighlighter
 {
+    Q_OBJECT
+
 public:
     explicit TreeSitterHighlighter(QTextDocument* document);
     ~TreeSitterHighlighter() override;

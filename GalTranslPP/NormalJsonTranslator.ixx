@@ -134,7 +134,7 @@ export
         std::unique_ptr<NameTranslator> m_nameTranslator;
         std::unique_ptr<DictionaryGenerator> m_dictionaryGenerator;
         std::unique_ptr<NormalJsonTranslatorTransAgent> m_transAgent;
-        std::function<NLPResult(const std::string&)> m_tokenizeSourceLangFunc;
+        NLPTokenizeFunc m_tokenizeSourceLangFunc;
         std::vector<pro::proxy<PPlugin>> m_textPlugins;
 
 

@@ -21,7 +21,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
     try {
         if (m_runTime != PluginRunTime::DPre && m_runTime != PluginRunTime::Pre) {
             m_logger->error(gppTr("SkipTrans.SkipTrans", "SkipTrans 不支持 %1 阶段运行")
-                .arg(pluginRunTimeNames[m_runTime])
+                .arg(pluginRunTime2Names[m_runTime])
                 .toStdString());
             return;
         }
@@ -29,7 +29,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
         bool reversePriority = false;
         const fs::path pluginConfigPath = [&]()
 	        {
-                fs::path ret = textPluginConfigPath / std::format(L"SkipTrans-{}.toml", ascii2Wide(pluginRunTimeNames[m_runTime]));
+                fs::path ret = textPluginConfigPath / std::format(L"SkipTrans-{}.toml", ascii2Wide(pluginRunTime2Names[m_runTime]));
                 if (!fs::exists(ret)) {
                     ret = textPluginConfigPath / L"SkipTrans.toml";
                 }
@@ -79,13 +79,13 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
             }
         }
         m_logger->info(gppTr("SkipTrans.SkipTrans", "插件 SkipTrans-%1 已加载, skipH: %2")
-            .arg(pluginRunTimeNames[m_runTime])
+            .arg(pluginRunTime2Names[m_runTime])
             .arg(m_skipH ? "true" : "false")
             .toStdString());
     }
     catch (const toml::exception& e) {
         throw std::runtime_error(gppTr("SkipTrans.SkipTrans", "SkipTrans-%1 配置文件解析错误: %2")
-            .arg(pluginRunTimeNames[m_runTime])
+            .arg(pluginRunTime2Names[m_runTime])
             .arg(e.what())
             .toStdString());
     }

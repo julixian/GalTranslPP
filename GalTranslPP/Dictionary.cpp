@@ -13,7 +13,7 @@ import ConditionTool;
 namespace fs = std::filesystem;
 
 // GPT
-GptDictionary::GptDictionary(const fs::path& projectDir, const fs::path& otherCacheDir, const std::function<NLPResult(const std::string&)>& tokenizeSourceLangFunc,
+GptDictionary::GptDictionary(const fs::path& projectDir, const fs::path& otherCacheDir, const NLPTokenizeFunc& tokenizeSourceLangFunc,
     const std::unique_ptr<LuaManager>& luaManager, const std::unique_ptr<PythonManager>& pythonManager, const std::shared_ptr<spdlog::logger>& logger)
     : m_projectDir(projectDir), m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_gptdict.json"),
     m_tokenizeSourceLangFunc(tokenizeSourceLangFunc),

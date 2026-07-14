@@ -16,11 +16,11 @@ namespace
 {
     struct LazyTokenizeState {
         std::once_flag initOnce;
-        std::function<NLPResult(const std::string&)> tokenizeFunc;
+        NLPTokenizeFunc tokenizeFunc;
     };
 
     template <typename InitFunc>
-    NLPResult runLazyTokenizer(const std::shared_ptr<LazyTokenizeState>& state, const std::string& text, InitFunc&& initFunc)
+    NLPResult runLazyTokenizer(const std::shared_ptr<LazyTokenizeState>& state, std::string_view text, InitFunc&& initFunc)
     {
         std::call_once(state->initOnce, [&]()
             {
@@ -29,7 +29,7 @@ namespace
                 }
                 catch (...) {
                     std::exception_ptr exception = std::current_exception();
-                    state->tokenizeFunc = [=](const std::string&) -> NLPResult
+                    state->tokenizeFunc = [=](std::string_view) -> NLPResult
                         {
                             std::rethrow_exception(exception);
                         };
@@ -39,12 +39,12 @@ namespace
     }
 }
 
-std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::string& mecabDictDir, const std::shared_ptr<spdlog::logger>& logger)
+NLPTokenizeFunc getMeCabTokenizeFunc(const std::string& mecabDictDir, const std::shared_ptr<spdlog::logger>& logger)
 {
 	auto state = std::make_shared<LazyTokenizeState>();
-    return [stateR = std::move(state), mecabDictDir, logger](const std::string& str) -> NLPResult
+    return [stateR = std::move(state), mecabDictDir, logger](std::string_view str) -> NLPResult
         {
-            return runLazyTokenizer(stateR, str, [&]() -> std::function<NLPResult(const std::string&)>
+            return runLazyTokenizer(stateR, str, [&]() -> NLPTokenizeFunc
                 {
                     logger->info(gppTr("NLPTool.getMeCabTokenizeFunc", "正在检查 MeCab 环境...")
                         .toStdString());
@@ -79,12 +79,12 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
                         .toStdString());
 
                     return [mecabModelR = std::move(mecabModel), mecabTaggerR = std::move(mecabTagger)]
-            		        (const std::string& inputText) -> NLPResult
+            		            (std::string_view str_) -> NLPResult
                         {
                             WordPosVec wordPosList;
                             EntityVec entityList;
                             const std::unique_ptr<MeCab::Lattice> lattice(mecabModelR->createLattice());
-                            lattice->set_sentence(inputText.c_str(), inputText.size());
+                            lattice->set_sentence(str_.data(), str_.size());
                             if (!mecabTaggerR->parse(lattice.get())) {
                                 throw std::runtime_error(gppTr(
                                     "NLPTool.getMeCabTokenizeFunc",
@@ -96,12 +96,12 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
                                 if (node->stat == MECAB_BOS_NODE || node->stat == MECAB_EOS_NODE) {
                                     continue;
                                 }
-                                std::string surface(node->surface, node->length);
-                                std::string feature = node->feature;
+                                const std::string_view surface(node->surface, node->length);
+                                const std::string_view feature = node->feature;
                                 if (feature.contains("固有名詞") || hasKatakana(surface)) {
-                                    entityList.push_back({ surface, feature });
+                                    entityList.emplace_back(std::array{ std::string(surface), std::string(feature) });
                                 }
-                                wordPosList.push_back({ std::move(surface), std::move(feature) });
+                                wordPosList.emplace_back(std::array{ std::string(surface), std::string(feature) });
                             }
                             return NLPResult{ std::move(wordPosList), std::move(entityList) };
                         };
@@ -109,26 +109,26 @@ std::function<NLPResult(const std::string&)> getMeCabTokenizeFunc(const std::str
         };
 }
 
-std::function<NLPResult(const std::string&)> getPythonNLPTokenizeFunc(const std::vector<std::string>& dependencies, const std::string& moduleName,
+NLPTokenizeFunc getPythonNLPTokenizeFunc(const std::vector<std::string>& dependencies, const std::string& moduleName,
     const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger)
 {
     const auto state = std::make_shared<LazyTokenizeState>();
-    return [state, dependencies, moduleName, modelName, logger](const std::string& text) -> NLPResult
+    return [state, dependencies, moduleName, modelName, logger](std::string_view str) -> NLPResult
         {
-            return runLazyTokenizer(state, text, [&]() -> std::function<NLPResult(const std::string&)>
+            return runLazyTokenizer(state, str, [&]() -> NLPTokenizeFunc
                 {
                     checkPythonDependencies(dependencies, logger);
 
                     std::shared_ptr<PythonNLPFunction> pythonNLPFunc = PythonMainInterpreterManager::getInstance()
                         .registerNLPFunction(moduleName, modelName, logger);
 
-                    return [pythonNLPFuncR = std::move(pythonNLPFunc), moduleName, modelName](const std::string& inputText) -> NLPResult
+                    return [pythonNLPFuncR = std::move(pythonNLPFunc), moduleName, modelName](std::string_view str_) -> NLPResult
                         {
                             NLPResult result;
                             auto nlpTaskFunc = [&]()
                                 {
                                     try {
-                                        result = pythonNLPFuncR->proc(inputText).cast<NLPResult>();
+                                        result = pythonNLPFuncR->proc(str_).cast<NLPResult>();
                                     }
                                     catch (const py::error_already_set& e) {
                                         throw std::runtime_error(gppTr(

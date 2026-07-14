@@ -10,7 +10,6 @@ class HomePage : public BasePage
 
 public:
 	explicit HomePage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
-    ~HomePage() override;
 
 private:
     void setupUi();

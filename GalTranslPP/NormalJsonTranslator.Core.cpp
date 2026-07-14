@@ -288,33 +288,9 @@ void NormalJsonTranslator::normalJsonInit()
     try {
         const auto configData = toml::uparse(configPath);
 
-        const std::string transEngineStr = toml::find_or(configData, "plugins", "transEngine", "ForGalTsv");
-        if (transEngineStr == "ForGalJson") {
-            m_transEngine = TransEngine::ForGalJson;
-        }
-        else if (transEngineStr == "ForGalTsv") {
-            m_transEngine = TransEngine::ForGalTsv;
-        }
-        else if (transEngineStr == "ForNovelTsv") {
-            m_transEngine = TransEngine::ForNovelTsv;
-        }
-        else if (transEngineStr == "Sakura") {
-            m_transEngine = TransEngine::Sakura;
-        }
-        else if (transEngineStr == "DumpName") {
-            m_transEngine = TransEngine::DumpName;
-        }
-        else if (transEngineStr == "NameTrans") {
-            m_transEngine = TransEngine::NameTrans;
-        }
-        else if (transEngineStr == "GenDict") {
-            m_transEngine = TransEngine::GenDict;
-        }
-        else if (transEngineStr == "Rebuild") {
-            m_transEngine = TransEngine::Rebuild;
-        }
-        else if (transEngineStr == "ShowNormal") {
-            m_transEngine = TransEngine::ShowNormal;
+        const std::string& transEngineStr = configData.at("plugins").at("transEngine").as_string();
+        if (const auto it = names2TransEngine.find(transEngineStr); it != names2TransEngine.end()) {
+            m_transEngine = it->second;
         }
         else {
             throw std::runtime_error(gppTr(
@@ -842,7 +818,7 @@ void NormalJsonTranslator::normalJsonInit()
                             m_skipProblems.push_back({ std::move(pattern), std::nullopt });
                         }
                         else {
-                            CheckSkipProblemCondFunc checkSkipFunc = getCheckSeCondFunc<const std::string&>
+                            CheckSkipProblemCondFunc checkSkipFunc = getCheckSeCondFunc<std::string_view>
                                 (elem, m_projectDir, m_pythonManager, m_luaManager, m_logger);
                             m_skipProblems.push_back({ std::move(pattern), std::move(checkSkipFunc) });
                         }

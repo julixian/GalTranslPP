@@ -40,8 +40,8 @@ import ITranslator;
 namespace fs = std::filesystem;
 
 
-#ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
+#ifdef _WIN32
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         nullptr, 0, nullptr, usedDefaultChar);
     if (len == 0) return {};
@@ -49,9 +49,11 @@ std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefault
     WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         ascii.data(), len, nullptr, nullptr);
     return ascii;
+#endif
 }
 
 std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
+#ifdef _WIN32
     int len = MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         nullptr, 0);
     if (len == 0) return {};
@@ -59,8 +61,8 @@ std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
     MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         wide.data(), len);
     return wide;
-}
 #endif
+}
 
 
 
@@ -532,7 +534,7 @@ std::string truncateUtf8Prefix(std::string_view str, size_t maxCodepoints, std::
     if (prefix.size() == str.size()) {
         return std::string(str);
     }
-    return prefix + ellipsis;
+    return std::string(prefix).append(ellipsis);
 }
 
 std::string_view truncateUtf8SuffixView(std::string_view str, size_t maxCodepoints) {
@@ -560,7 +562,7 @@ std::string truncateUtf8Suffix(std::string_view str, size_t maxCodepoints, std::
     if (suffix.size() == str.size()) {
         return std::string(str);
     }
-    return ellipsis + suffix;
+    return std::string(ellipsis).append(suffix);
 }
 
 std::string maskApiKey(std::string_view apiKey) {
@@ -662,19 +664,21 @@ std::string extractCJK(std::string_view sourceString) {
     return extractCharactersByScripts(sourceString, targetScripts);
 }
 
-std::function<std::string(const std::string&)> getTraditionalChineseExtractor()
+std::function<std::string(std::string_view)> getTraditionalChineseExtractor()
 {
     static const absl::btree_set<std::string_view> excludeList = {
         "乾", "阪", "篠", "塚"
     };
     auto converter = std::make_shared<opencc::SimpleConverter>("BaseConfig/opencc/t2s.json");
-    std::function<std::string(const std::string&)> result = [converterR = std::move(converter)](const std::string& sourceString)
+    std::function<std::string(std::string_view)> result = [converterR = std::move(converter)](std::string_view str)
         {
-            if (const std::string simplified = converterR->Convert(sourceString); simplified == sourceString) {
+            if (const std::string simplified = converterR->Convert(str.data(), str.size());
+                simplified == str)
+            {
                 return std::string{};
             }
             std::string resultStr;
-            for (const auto& grapheme : splitIntoGraphemeViews(sourceString)
+            for (const auto& grapheme : splitIntoGraphemeViews(str)
                 | std::views::filter([&](const auto& g) { return !excludeList.contains(g); }))
             {
                 if (const std::string simplified = converterR->Convert(grapheme.data(), grapheme.size());
@@ -691,78 +695,59 @@ std::function<std::string(const std::string&)> getTraditionalChineseExtractor()
 
 
 std::string names2String(const std::vector<std::string>& names) {
-    std::string result;
-    for (const auto& name : names) {
-        result += name + "|";
-    }
-    if (!result.empty()) {
-        result.pop_back();
-    }
-    return result;
+    return names | std::views::join_with('|')
+        | std::ranges::to<std::string>();
 }
 
 std::string names2String(const json& j) {
-    std::string result;
-    for (const auto& name : j) {
-        result += name.get<std::string>() + "|";
-    }
-    if (!result.empty()) {
-        result.pop_back();
-    }
-    return result;
+    return j | std::views::transform([](const json& item) { return item.get<std::string>(); })
+        | std::views::join_with('|')
+        | std::ranges::to<std::string>();
 }
 
 std::string getNameString(const Sentence& se) {
     if (se.nameType == NameType::Single) {
         return se.name;
     }
-    if (se.nameType == NameType::Multiple) {
+    else if (se.nameType == NameType::Multiple) {
         return names2String(se.names);
     }
     return {};
 }
 
 std::string getNameString(const json& j) {
-    if (j.contains("name")) {
-        return j["name"].get<std::string>();
+    if (auto it = j.find("name"); it != j.end()) {
+        return it->get<std::string>();
     }
-    if (j.contains("names")) {
-        return names2String(j["names"]);
+    else if (it = j.find("names"); it != j.end()) {
+        return names2String(*it);
     }
     return {};
 }
 
 const std::string& chooseStringRef(Sentence* sentence, CachePart target) {
-    switch (target) {
+    switch (target)
+	{
     case CachePart::Name:
         return sentence->name;
-        break;
     case CachePart::NameTrans:
         return sentence->nametrans;
-        break;
     case CachePart::Orig:
         return sentence->orig;
-        break;
     case CachePart::Preproc:
         return sentence->preproc;
-        break;
     case CachePart::TransBy:
         return sentence->transby;
-        break;
     case CachePart::TransRaw:
         return sentence->transraw;
-        break;
     case CachePart::Transview:
         return sentence->transview;
-        break;
     case CachePart::None:
-        throw std::runtime_error(gppTr("chooseStringRef", "无效的条件目标 None").toStdString());
     default:
         throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标 %1")
-            .arg((int)target)
+            .arg(std::to_underlying(target))
             .toStdString());
     }
-    return {};
 }
 
 std::string chooseString(Sentence* sentence, CachePart target) {
@@ -770,46 +755,12 @@ std::string chooseString(Sentence* sentence, CachePart target) {
 }
 
 CachePart chooseCachePart(std::string_view partName) {
-    CachePart part;
-    if (partName == "name") {
-        part = CachePart::Name;
+    if (const auto it = names2CachePart.find(partName); it != names2CachePart.end()) {
+        return it->second;
     }
-    else if (partName == "names") {
-        part = CachePart::Names;
-    }
-    else if (partName == "nametrans") {
-        part = CachePart::NameTrans;
-    }
-    else if (partName == "namestrans") {
-        part = CachePart::NamesTrans;
-    }
-    else if (partName == "orig") {
-        part = CachePart::Orig;
-    }
-    else if (partName == "preproc") {
-        part = CachePart::Preproc;
-    }
-    else if (partName == "problems") {
-        part = CachePart::Problems;
-    }
-    else if (partName == "otherinfo") {
-        part = CachePart::OtherInfo;
-    }
-    else if (partName == "transby") {
-        part = CachePart::TransBy;
-    }
-    else if (partName == "transraw") {
-        part = CachePart::TransRaw;
-    }
-    else if (partName == "transview") {
-        part = CachePart::Transview;
-    }
-    else {
-        throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart %1")
-            .arg(std::string(partName))
-            .toStdString());
-    }
-    return part;
+    throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart 名称: %1")
+        .arg(std::string(partName))
+        .toStdString());
 }
 
 
@@ -880,9 +831,8 @@ void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& res
 
 
 
-#ifdef _WIN32
 bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow, int timeDelayAfterCommand) {
-
+#ifdef _WIN32
     std::wstring commandLineStr;
 
     if (showWindow) {
@@ -935,9 +885,11 @@ bool executeCommand(const std::wstring& program, const std::wstring& args, bool 
     CloseHandle(pi.hThread);
 
     return true;
+#endif
 }
 
 int getConsoleWidth() {
+#ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     if (h == INVALID_HANDLE_VALUE) {
@@ -949,8 +901,8 @@ int getConsoleWidth() {
         return csbi.srWindow.Right - csbi.srWindow.Left + 1;
     }
     return 80; // 获取失败，返回默认值
-}
 #endif
+}
 
 
 

@@ -4,7 +4,7 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="AboutDialog.cpp" line="+22"/>
+        <location filename="AboutDialog.cpp" line="+21"/>
         <source>关于</source>
         <translation>About</translation>
     </message>
@@ -358,7 +358,7 @@ sk-...</translation>
     <name>AppSettingsPage</name>
     <message>
         <location filename="AppSettingsPage.cpp" line="+26"/>
-        <location line="+12"/>
+        <location line="+10"/>
         <source>应用设置</source>
         <translation>App Settings</translation>
     </message>
@@ -505,7 +505,7 @@ sk-...</translation>
         <translation>Default gptDict settings</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+13"/>
         <source>通用GPT字典</source>
         <translation>Common gptDicts</translation>
     </message>
@@ -769,7 +769,7 @@ sk-...</translation>
         <translation>Unkown common dict mode</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+18"/>
         <source>通用译前字典</source>
         <translation>Common preDicts</translation>
     </message>
@@ -2162,7 +2162,7 @@ sk-...</translation>
     <name>HomePage</name>
     <message>
         <location filename="HomePage.cpp" line="+280"/>
-        <location line="+12"/>
+        <location line="+10"/>
         <source>主页</source>
         <translation>Home Page</translation>
     </message>
@@ -2170,7 +2170,7 @@ sk-...</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="mainwindow.cpp" line="+48"/>
+        <location filename="Mainwindow.cpp" line="+48"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -3925,7 +3925,7 @@ Cache: %4</translation>
         <translation>Model</translation>
     </message>
     <message>
-        <location filename="HomePage.cpp" line="-146"/>
+        <location filename="HomePage.cpp" line="-144"/>
         <source>AI 自动化翻译解决方案</source>
         <translation>AI-powered translation solution</translation>
     </message>

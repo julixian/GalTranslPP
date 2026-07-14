@@ -72,8 +72,8 @@ void PluginSettingsPage::setupUi()
             continue;
         }
         PluginRunTime runTime = choosePluginRunTime(logicalPluginName.toLower().toStdString(), pluginNamesMap[pluginName]);
-        QString runTimeStr = QString::fromStdString(pluginRunTimeNames[runTime]);
-        PluginItemWidget* item = new PluginItemWidget(pluginName, runTimeStr, this);
+        QString runTimeQStr = QString::fromUtf8(pluginRunTime2Names[runTime]);
+        PluginItemWidget* item = new PluginItemWidget(pluginName, runTimeQStr, this);
         item->setIsToggled(isEnabled);
         m_pluginItems.append(item);
         m_pluginListLayout->addWidget(item);
@@ -87,8 +87,8 @@ void PluginSettingsPage::setupUi()
     // 遍历剩下的名称列表，创建并添加 PluginItemWidget
     for (const QString& name : pluginNamesMap.keys())
     {
-        QString runTimeStr = QString::fromStdString(pluginRunTimeNames[pluginNamesMap[name]]);
-        PluginItemWidget* item = new PluginItemWidget(name, runTimeStr, this);
+        QString runTimeQStr = QString::fromUtf8(pluginRunTime2Names[pluginNamesMap[name]]);
+        PluginItemWidget* item = new PluginItemWidget(name, runTimeQStr, this);
         m_pluginItems.append(item); // 添加到列表中
         m_pluginListLayout->addWidget(item); // 添加到布局中
         // 连接信号

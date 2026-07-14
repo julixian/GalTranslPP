@@ -100,7 +100,7 @@ export
         const RepeatedBlockReferenceMap& references
     );
 
-    std::string generateCacheKey(Sentence* s);
+    std::string generateCacheKey(const Sentence& s);
     std::string generateCacheKey(const json& jsonArr, size_t i);
 
     std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);
@@ -116,7 +116,7 @@ export
         std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail);
 
     void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
-        const fs::path& outputCacheDir, const fs::path& outputDir, std::shared_ptr<spdlog::logger>& logger);
+        const fs::path& outputCacheDir, const fs::path& outputDir, const std::shared_ptr<spdlog::logger>& logger);
 
     bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSe);
 

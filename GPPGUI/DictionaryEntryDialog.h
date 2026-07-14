@@ -37,4 +37,4 @@ public:
     explicit DictionaryEntryDeleteDialog(int selectedCount, QWidget* parent = nullptr);
 };
 
-#endif // DICTIONARYENTRYDIALOG_H
+#endif

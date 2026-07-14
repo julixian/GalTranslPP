@@ -43,6 +43,7 @@ Q_DECLARE_METATYPE(GuiRuntimeFileProgress)
 class TranslatorWorker : public QObject
 {
     Q_OBJECT
+
 public:
     explicit TranslatorWorker(const fs::path& projectDir, QObject* parent = nullptr);
 

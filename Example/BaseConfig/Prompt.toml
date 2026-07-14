@@ -221,6 +221,7 @@ From the input light novel excerpt, construct a glossary for sourceLang-to-[Targ
 Your output should include the original sourceLang term, its corresponding [TargetLang] translation, and a note.
 The "sourceLang" column is for the original term from the source text.
 The "[TargetLang]" column is for your translation of that term.
+If one source term has multiple valid [TargetLang] translations, join them in the same Target field with `||` (for example, `aa||bb`).
 The "Note" column should specify the type of proper noun. If it is a person's name, you must also infer their gender.
 The translation must preserve the original symbols and maintain the half-width/full-width usage(IMPORTANT!).
 However, do not retain any sourceLang-specific characters or words that are incongruous in a [TargetLang] context, such as Japanese characters(if sourceLang is jp) 々, さん, etc. You must determine the most suitable [TargetLang] translation based on the context. If a judgment is difficult, choose the most likely translation among the most common options.
@@ -561,12 +562,13 @@ Protocol JSON schema:
 <review_requirements>
 1. Work on the current term group first. Use `term_updates` to upsert any additional high-confidence glossary entries or to refine existing ledger entries when evidence justifies it.
 2. Prefer one stable translation consistent with previous reviewed terms.
-3. Fix shallow or wrong notes using global evidence from `search_text`.
-4. Delete obvious false positives with `deprecated`.
-5. Use `merged` only when `merge_into` names another source term entry, not a target translation.
-6. If the term is ambiguous but should stay, use `conflict` and explain the ambiguity in `final_note`.
-7. If the term is given name, look for and note the character's gender as possible.
-8. `accepted` requires `final_target`; `merged` requires `merge_into`; `term_updates` items require `source_term`, `status`, and the fields needed by that status (`target_term` for `accepted|conflict`, `merge_into` for `merged`, optional `note`).
+3. If one source term should retain multiple valid target translations, join them with `||` in `final_target` or `term_updates.target_term` (for example, `aa||bb`).
+4. Fix shallow or wrong notes using global evidence from `search_text`.
+5. Delete obvious false positives with `deprecated`.
+6. Use `merged` only when `merge_into` names another source term entry, not a target translation.
+7. If the term is ambiguous but should stay, use `conflict` and explain the ambiguity in `final_note`.
+8. If the term is given name, look for and note the character's gender as possible.
+9. `accepted` requires `final_target`; `merged` requires `merge_into`; `term_updates` items require `source_term`, `status`, and the fields needed by that status (`target_term` for `accepted|conflict`, `merge_into` for `merged`, optional `note`).
 </review_requirements>
 
 <decision_flow>
@@ -604,4 +606,3 @@ example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries":
 [ReviewCurrentTerm]
 </current_term_group>
 """
-

@@ -71,6 +71,60 @@ namespace luabridge
 			return Stack<std::unordered_set<K>>::isInstance(lua, index);
 		}
 	};
+
+	template <typename K, typename V, typename Compare, typename Allocator>
+	struct Stack<absl::btree_map<K, V, Compare, Allocator>>
+	{
+		using Type = absl::btree_map<K, V, Compare, Allocator>;
+		using ConvertedType = std::map<K, V, Compare>;
+
+		static Result push(lua_State* lua, const Type& value)
+		{
+			const ConvertedType converted(value.begin(), value.end());
+			return Stack<ConvertedType>::push(lua, converted);
+		}
+
+		static TypeResult<Type> get(lua_State* lua, int index)
+		{
+			auto converted = Stack<ConvertedType>::get(lua, index);
+			if (!converted) {
+				return converted.error();
+			}
+			return Type(converted->begin(), converted->end());
+		}
+
+		static bool isInstance(lua_State* lua, int index)
+		{
+			return Stack<ConvertedType>::isInstance(lua, index);
+		}
+	};
+
+	template <typename K, typename Compare, typename Allocator>
+	struct Stack<absl::btree_set<K, Compare, Allocator>>
+	{
+		using Type = absl::btree_set<K, Compare, Allocator>;
+		using ConvertedType = std::set<K, Compare>;
+
+		static Result push(lua_State* lua, const Type& value)
+		{
+			const ConvertedType converted(value.begin(), value.end());
+			return Stack<ConvertedType>::push(lua, converted);
+		}
+
+		static TypeResult<Type> get(lua_State* lua, int index)
+		{
+			auto converted = Stack<ConvertedType>::get(lua, index);
+			if (!converted) {
+				return converted.error();
+			}
+			return Type(converted->begin(), converted->end());
+		}
+
+		static bool isInstance(lua_State* lua, int index)
+		{
+			return Stack<ConvertedType>::isInstance(lua, index);
+		}
+	};
 }
 
 namespace lua_binding

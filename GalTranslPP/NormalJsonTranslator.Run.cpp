@@ -38,8 +38,11 @@ ordered_json buildProblemOverviewFromCache(
                 if (problemsIt == item.end() || !problemsIt->is_array() || problemsIt->empty()) {
                     continue;
                 }
-                ordered_json newItem = item;
-                newItem.insert(newItem.begin(), { "filename", wide2Ascii(relFilePath) });
+                ordered_json newItem = ordered_json::object();
+                newItem["filename"] = wide2Ascii(relFilePath);
+                for (const auto& kv : item.items()) {
+                    newItem[kv.key()] = kv.value();
+                }
                 overview.push_back(std::move(newItem));
             }
         }

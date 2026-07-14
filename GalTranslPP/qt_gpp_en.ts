@@ -575,7 +575,7 @@
 <context>
     <name>LuaJson.luaRef2JsonValue</name>
     <message>
-        <location filename="LuaManager.cpp" line="403"/>
+        <location filename="LuaManager.cpp" line="457"/>
         <source>LuaJson: key 必须是字符串</source>
         <translation>LuaJson: key must be string</translation>
     </message>
@@ -583,35 +583,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1197"/>
-        <location filename="LuaManager.cpp" line="1209"/>
-        <location filename="LuaManager.cpp" line="1223"/>
-        <location filename="LuaManager.cpp" line="1238"/>
+        <location filename="LuaManager.cpp" line="1251"/>
+        <location filename="LuaManager.cpp" line="1263"/>
+        <location filename="LuaManager.cpp" line="1277"/>
+        <location filename="LuaManager.cpp" line="1292"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1214"/>
+        <location filename="LuaManager.cpp" line="1268"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1228"/>
+        <location filename="LuaManager.cpp" line="1282"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1243"/>
+        <location filename="LuaManager.cpp" line="1297"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1250"/>
+        <location filename="LuaManager.cpp" line="1304"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1257"/>
+        <location filename="LuaManager.cpp" line="1311"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -619,17 +619,17 @@
 <context>
     <name>LuaManager.registerFunction</name>
     <message>
-        <location filename="LuaManager.cpp" line="545"/>
+        <location filename="LuaManager.cpp" line="599"/>
         <source>脚本不存在: %1</source>
         <translation>Script not found: %1</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="573"/>
+        <location filename="LuaManager.cpp" line="627"/>
         <source>加载脚本 [%1] 失败: %2</source>
         <translation>Failed to load script [%1]: %2</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="600"/>
+        <location filename="LuaManager.cpp" line="654"/>
         <source>在脚本 [%1] 中未找到函数 %2</source>
         <translation>Function %2 not found in script [%1]</translation>
     </message>
@@ -700,7 +700,7 @@
 <context>
     <name>LuaToml.luaRef2TomlValue</name>
     <message>
-        <location filename="LuaManager.cpp" line="498"/>
+        <location filename="LuaManager.cpp" line="552"/>
         <source>LuaToml: key 必须是字符串</source>
         <translation>LuaToml: key must be string</translation>
     </message>
@@ -918,7 +918,7 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.normalJsonAfterRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="456"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="459"/>
         <source>
 
 ```
@@ -933,12 +933,12 @@ No problem overview
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="468"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="471"/>
         <source>已生成 [ProblemOverview.%1] 文件</source>
         <translation>Generated [ProblemOverview.%1] file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="486"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="489"/>
         <source>
 
 ```
@@ -951,7 +951,7 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="511"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="514"/>
         <source>问题概览结束
 ```
 </source>
@@ -960,17 +960,17 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="522"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="525"/>
         <source>rolling context 缓存已保存至 [%1]</source>
         <translation>rolling context cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="527"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="530"/>
         <source>rolling context 缓存 [%1] 保存失败</source>
         <translation>Failed to save rolling context cache [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="541"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="544"/>
         <source>重建过程中有句子未命中缓存 (%1 / %2 lines)，请检查日志以定位问题</source>
         <translation>Cache misses during rebuild (%1/%2 lines); see logs</translation>
     </message>
@@ -978,77 +978,77 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonBeforeRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="68"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="71"/>
         <source>复制缓存文件夹时出现异常: %1</source>
         <translation>Exception copying cache folder: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="76"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="79"/>
         <source>已创建目录: [%1]</source>
         <translation>Created directory: [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="114"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="117"/>
         <source>第 %1 个对象缺少 message 字段。</source>
         <translation>Object %1 is missing the message field</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="143"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="146"/>
         <source>读取文件 [%1] 时出错: %2</source>
         <translation>Error while reading file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="153"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="156"/>
         <source>未找到有效的 Sentence</source>
         <translation>No valid Sentence found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="170"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="173"/>
         <source>解析原人名表失败</source>
         <translation>Failed to parse source name table</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="196"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="199"/>
         <source>已更新 NameTable.toml 文件</source>
         <translation>Updated NameTable.toml</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="253"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="256"/>
         <source>解析 NameTable.toml 时出错: %1</source>
         <translation>Error parsing NameTable.toml: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="266"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="269"/>
         <source>检测到文件分割模式 (%1)，开始预处理输入文件...</source>
         <translation>File split mode detected (%1); preprocessing input files...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="287"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="290"/>
         <source>文件 [%1] 已被分割成 %2 份，存入输入缓存</source>
         <translation>File [%1] was split into %2 parts and saved to input cache</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="295"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="298"/>
         <source>分割文件 [%1] 时出错: %2</source>
         <translation>Error while splitting file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="314"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="317"/>
         <source>未知的文件分割模式: %1, 请使用 &apos;No&apos;, &apos;Equal&apos;, &apos;Num&apos;</source>
         <translation>Unknown file split mode: %1; use &apos;No&apos;, &apos;Equal&apos;, or &apos;Num&apos;</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="344"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="347"/>
         <source>未知的排序模式: %1</source>
         <translation>Unknown sort mode: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="368"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="371"/>
         <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句</source>
         <translation>Repeat-block refs done: threshold %1, %2 lines linked</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="378"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="381"/>
         <source>连续重复块引用分析完成，未发现长度不小于 %1 的重复块</source>
         <translation>Repeat-block refs: none at length &gt;= %1</translation>
     </message>
@@ -1170,7 +1170,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonProcessFiles</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="573"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="576"/>
         <source>已将 %1 个文件任务分配到线程池，等待处理完成...</source>
         <translation>Assigned %1 file tasks to thread pool; waiting...</translation>
     </message>
@@ -1272,17 +1272,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="695"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="698"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
         <translation>File [%1] has pending repeat-block refs; final output skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="735"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="738"/>
         <source>连续重复块引用回填完成，共复制 (%1 / %2) 句</source>
         <translation>Repeat-block fill done: copied %1/%2 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="749"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="752"/>
         <source>文件 [%1] 尚未翻译完毕或分割输出尚未全部回填完成，跳过本轮合并</source>
         <translation>File [%1] incomplete or split output pending; merge skipped</translation>
     </message>
@@ -1707,12 +1707,12 @@ Problem overview:
 <context>
     <name>PythonInterpreterInstance.daemonThreadFunc</name>
     <message>
-        <location filename="PythonManager.cpp" line="229"/>
+        <location filename="PythonManager.cpp" line="237"/>
         <source>PythonInterpreterInstance 导入 gpp_plugin_api 时出现异常: %1</source>
         <translation>Exception importing gpp_plugin_api: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="248"/>
+        <location filename="PythonManager.cpp" line="256"/>
         <source>PythonInterpreterInstance 异常: %1</source>
         <translation>PythonInterpreterInstance exception: %1</translation>
     </message>
@@ -1720,7 +1720,7 @@ Problem overview:
 <context>
     <name>PythonMainInterpreterManager.PythonMainInterpreterManager</name>
     <message>
-        <location filename="PythonManager.cpp" line="40"/>
+        <location filename="PythonManager.cpp" line="48"/>
         <source>Python 环境未初始化</source>
         <translation>Python environment is not initialized</translation>
     </message>
@@ -1728,12 +1728,12 @@ Problem overview:
 <context>
     <name>PythonMainInterpreterManager.daemonThreadFunc</name>
     <message>
-        <location filename="PythonManager.cpp" line="134"/>
+        <location filename="PythonManager.cpp" line="142"/>
         <source>PythonMainInterpreterManager 导入 gpp_plugin_api 时出现异常: %1</source>
         <translation>Exception importing gpp_plugin_api: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="155"/>
+        <location filename="PythonManager.cpp" line="163"/>
         <source>PythonMainInterpreterManager 异常: %1</source>
         <translation>PythonMainInterpreterManager exception: %1</translation>
     </message>
@@ -1741,22 +1741,22 @@ Problem overview:
 <context>
     <name>PythonMainInterpreterManager.registerNLPFunction</name>
     <message>
-        <location filename="PythonManager.cpp" line="78"/>
+        <location filename="PythonManager.cpp" line="86"/>
         <source>正在加载模块 [%1] 的模型 %2</source>
         <translation>Loading module [%1] model %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="88"/>
+        <location filename="PythonManager.cpp" line="96"/>
         <source>模块 [%1] 的模型 %2 不可用</source>
         <translation>Module [%1] model %2 is unavailable</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="104"/>
+        <location filename="PythonManager.cpp" line="112"/>
         <source>加载模块 [%1] 的模型 %2 时出现异常: %3</source>
         <translation>Exception while loading module [%1] model %2: %3</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="114"/>
+        <location filename="PythonManager.cpp" line="122"/>
         <source>模块 [%1] 的模型 %2 已加载</source>
         <translation>Module [%1] model %2 loaded</translation>
     </message>
@@ -1764,27 +1764,27 @@ Problem overview:
 <context>
     <name>PythonManager.registerCustomTypes</name>
     <message>
-        <location filename="PythonManager.cpp" line="373"/>
+        <location filename="PythonManager.cpp" line="381"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="382"/>
+        <location filename="PythonManager.cpp" line="390"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="392"/>
+        <location filename="PythonManager.cpp" line="400"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="401"/>
+        <location filename="PythonManager.cpp" line="409"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="410"/>
+        <location filename="PythonManager.cpp" line="418"/>
         <source>[%1] 中注册了无效的 TokenizerBackend: %2</source>
         <translation>[%1] registered invalid TokenizerBackend: %2</translation>
     </message>
@@ -1792,33 +1792,33 @@ Problem overview:
 <context>
     <name>PythonManager.registerFunction</name>
     <message>
-        <location filename="PythonManager.cpp" line="271"/>
+        <location filename="PythonManager.cpp" line="279"/>
         <source>脚本不存在: %1</source>
         <translation>Script not found: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="283"/>
+        <location filename="PythonManager.cpp" line="291"/>
         <source>加载模块 %1 时出现异常，子解释器无法开启</source>
         <translation>Exception loading module %1; subinterpreter cannot start</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="302"/>
+        <location filename="PythonManager.cpp" line="310"/>
         <source>为模块 %1 加载自定义类型时出现异常: %2</source>
         <translation>Exception loading custom types for module %1: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="315"/>
+        <location filename="PythonManager.cpp" line="323"/>
         <source>模块 [%1] 插入失败</source>
         <translation>Failed to insert module %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="329"/>
         <location filename="PythonManager.cpp" line="337"/>
+        <location filename="PythonManager.cpp" line="345"/>
         <source>从脚本 [%1] 加载函数 %2 失败</source>
         <translation>Failed to load function %2 from script %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="347"/>
+        <location filename="PythonManager.cpp" line="355"/>
         <source>加载模块 [%1] 的函数 %2 时出现异常: %3</source>
         <translation>Exception loading function %2 from module %1: %3</translation>
     </message>
@@ -2110,7 +2110,7 @@ Problem overview:
 <context>
     <name>buildProblemOverviewFromCache</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="47"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="50"/>
         <source>构建问题概览时读取缓存文件 [%1] 失败: %2</source>
         <translation>Problem overview: failed reading cache [%1]: %2</translation>
     </message>
@@ -2118,57 +2118,57 @@ Problem overview:
 <context>
     <name>checkPythonDependencies</name>
     <message>
-        <location filename="PythonManager.cpp" line="430"/>
+        <location filename="PythonManager.cpp" line="438"/>
         <source>正在检查依赖 %1</source>
         <translation>Checking dependency %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="435"/>
+        <location filename="PythonManager.cpp" line="443"/>
         <source>依赖 %1 已安装</source>
         <translation>Dependency %1 installed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="442"/>
+        <location filename="PythonManager.cpp" line="450"/>
         <source>检查依赖 %1 时出现异常: %2</source>
         <translation>Exception checking dependency %1: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="450"/>
+        <location filename="PythonManager.cpp" line="458"/>
         <source>依赖 %1 未安装，正在尝试安装</source>
         <translation>Dependency %1 not installed; trying install</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="454"/>
+        <location filename="PythonManager.cpp" line="462"/>
         <source>将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！</source>
         <translation>Dependency install starts in 3s; do not close the next window!</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="457"/>
+        <location filename="PythonManager.cpp" line="465"/>
         <source>正在执行安装命令: %1</source>
         <translation>Running install command: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="463"/>
+        <location filename="PythonManager.cpp" line="471"/>
         <source>安装依赖 %1 的命令失败</source>
         <translation>Install command for dependency %1 failed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="470"/>
+        <location filename="PythonManager.cpp" line="478"/>
         <source>依赖 %1 安装成功</source>
         <translation>Dependency %1 installed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="475"/>
+        <location filename="PythonManager.cpp" line="483"/>
         <source>依赖 %1 安装验证失败: %2</source>
         <translation>Dependency %1 validation failed: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="485"/>
+        <location filename="PythonManager.cpp" line="493"/>
         <source>依赖 %1 检查完毕</source>
         <translation>Dependency %1 check complete</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="487"/>
+        <location filename="PythonManager.cpp" line="495"/>
         <source>所有依赖均已安装</source>
         <translation>All dependencies installed</translation>
     </message>

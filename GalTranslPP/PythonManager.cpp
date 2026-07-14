@@ -27,6 +27,14 @@ namespace pybind11::detail
     template <typename Key, typename Hash, typename Equal, typename Alloc>
     struct type_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>>
         : set_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>, Key> {};
+
+    template <typename Key, typename Value, typename Compare, typename Alloc>
+    struct type_caster<absl::btree_map<Key, Value, Compare, Alloc>>
+        : map_caster<absl::btree_map<Key, Value, Compare, Alloc>, Key, Value> {};
+
+    template <typename Key, typename Compare, typename Alloc>
+    struct type_caster<absl::btree_set<Key, Compare, Alloc>>
+        : set_caster<absl::btree_set<Key, Compare, Alloc>, Key> {};
 }
 
 static fs::path s_pythonExePath;
@@ -613,7 +621,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("transraw", &Sentence::transraw)
         .def_readwrite("transview", &Sentence::transview)
         .def_readwrite("linebreak", &Sentence::linebreak)
-        .def_readwrite("otherinfo", &Sentence::otherinfo) // std::map<string, string> <=> dict[str, str]
+        .def_readwrite("otherinfo", &Sentence::otherinfo) // absl::btree_map<string, string> <=> dict[str, str]
         .def_readwrite("ref", &Sentence::ref)
         .def_readwrite("refBy", &Sentence::refBy)
         .def_readwrite("nameType", &Sentence::nameType)

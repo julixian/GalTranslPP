@@ -26,14 +26,15 @@ NameTranslator::NameTranslator(
     int threadsNum,
     int batchSize,
     int inputBlockMaxLines,
+    int glossaryMaxLines,
     int maxRequestCount,
     int apiTimeoutMs,
     bool checkQuota
 )
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool), m_gptDictionary(gptDictionary),
     m_onPerformApi(onPerformApi), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
-    m_apiStrategy(apiStrategy), m_targetLang(targetLang), m_threadsNum(std::max(1, threadsNum)),
-    m_batchSize(std::max(1, batchSize)), m_inputBlockMaxLines(inputBlockMaxLines),
+    m_apiStrategy(apiStrategy), m_targetLang(targetLang), m_threadsNum(threadsNum),
+    m_batchSize(batchSize), m_inputBlockMaxLines(inputBlockMaxLines), m_glossaryMaxLines(glossaryMaxLines),
     m_maxRequestCount(maxRequestCount), m_apiTimeoutMs(apiTimeoutMs),
     m_checkQuota(checkQuota)
 {
@@ -102,7 +103,7 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
 
         std::string logBlock;
         if (!glossary.empty()) {
-            logBlock += "\nDict:\n" + glossary;
+            logBlock += "\nDict:\n" + limitLogLines(glossary, m_glossaryMaxLines);
         }
         logBlock += "\ninputBlock:\n" + limitLogLines(inputBlock, m_inputBlockMaxLines);
         m_logger->info(gppTr(
@@ -252,7 +253,7 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     absl::flat_hash_map<std::string, std::string> translationResults;
     const size_t batchCount = (namesToTranslate.size() + (size_t)m_batchSize - 1) / (size_t)m_batchSize;
     const int workerCount = std::max(1, std::min(m_threadsNum, (int)batchCount));
-    m_logger->info(gppTr("NameTranslator.run", "NameTrans: 启动 %1 个线程，每批处理 %2 个名字")
+    m_logger->info(gppTr("NameTranslator.run", "NameTrans: 启动 %1 个线程，每批处理最多 %2 个名字")
         .arg(workerCount)
         .arg(m_batchSize)
         .toStdString());
@@ -264,11 +265,12 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     for (size_t batchIndex = 0; batchIndex < batchCount; ++batchIndex) {
         const size_t start = batchIndex * (size_t)m_batchSize;
         const size_t count = std::min((size_t)m_batchSize, namesToTranslate.size() - start);
-        results.emplace_back(pool.push([&](const int threadId)
+        results.emplace_back(pool.push([&namesToTranslate, &translationResults, &translationResultsMutex, batchIndex, start, count, this]
+                (const int threadId)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
                 if (!m_controller->shouldStop()) {
-                    translateBatch(std::span<const std::string>(namesToTranslate.data() + start, count), threadId,
+                    translateBatch(std::span<const std::string>(namesToTranslate.data() + start, count), threadId + 1,
                         batchIndex + 1, translationResults, translationResultsMutex);
                     m_controller->updateBar((int)count);
                 }

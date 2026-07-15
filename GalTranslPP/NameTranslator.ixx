@@ -30,6 +30,7 @@ export
         int m_threadsNum;
         int m_batchSize;
         int m_inputBlockMaxLines;
+        int m_glossaryMaxLines;
         int m_maxRequestCount;
         int m_apiTimeoutMs;
         bool m_checkQuota;
@@ -52,6 +53,7 @@ export
             int threadsNum,
             int batchSize,
             int inputBlockMaxLines,
+            int glossaryMaxLines,
             int maxRequestCount,
             int apiTimeoutMs,
             bool checkQuota

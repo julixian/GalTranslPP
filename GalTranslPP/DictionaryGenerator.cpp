@@ -8,6 +8,7 @@ module DictionaryGenerator;
 
 import :ReviewAgent;
 import AgentCommonSourceView;
+import NormalJsonTranslatorHelperTool;
 import Tool;
 
 namespace fs = std::filesystem;
@@ -20,7 +21,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-    int threadsNum, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
+    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
     bool agentEnabled, const fs::path& projectDir, const fs::path& inputDir,
     const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,
     const std::string& genDictReviewSystemPrompt, const std::string& genDictReviewUserPrompt,
@@ -29,7 +30,8 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_preProcessFunc(preProcessFunc), m_onPerformApi(onPerformApi), m_onDictProcessed(onDictProcessed),
     m_tokenizeSourceLangFunc(tokenizeSourceLangFunc),
     m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_apiStrategy(apiStrategy), m_targetLang(targetLang),
-    m_threadsNum(threadsNum), m_maxRequestCount(maxRequestCount), m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota),
+    m_threadsNum(threadsNum), m_inputBlockMaxLines(inputBlockMaxLines), m_maxRequestCount(maxRequestCount),
+    m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota),
     m_agentEnabled(agentEnabled),
     m_projectDir(projectDir),
     m_inputDir(inputDir),
@@ -213,7 +215,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
         if (!hint.empty()) {
             logBlock += "\nHint:\n" + hint + "\n";
         }
-        logBlock += "\ninputBlock:\n" + text;
+        logBlock += "\ninputBlock:\n" + limitLogLines(text, m_inputBlockMaxLines);
         m_logger->info(gppTr("DictionaryGenerator.callLLMToGenerate",
             "[线程 %1] [批次 %2] [请求 %3] 开始生成术语表:\n%4")
             .arg(threadId)
@@ -246,7 +248,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
             .arg(threadId)
             .arg(batchIndex)
             .arg(requestCount + 1)
-            .arg(response.content)
+            .arg(limitLogLines(response.content, m_inputBlockMaxLines))
             .toStdString());
         const auto lines = splitStringView(response.content, '\n');
         for (const auto& line : lines) {

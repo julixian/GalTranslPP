@@ -140,7 +140,7 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
                 .arg(threadId)
                 .arg(batchIndex)
                 .arg(requestCount + 1)
-                .arg(response.content)
+                .arg(limitLogLines(response.content, m_inputBlockMaxLines))
                 .toStdString());
         }
 

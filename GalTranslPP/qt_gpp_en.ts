@@ -108,36 +108,36 @@
 <context>
     <name>DictionaryGenerator.callLLMToGenerate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="203"/>
+        <location filename="DictionaryGenerator.cpp" line="205"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="217"/>
+        <location filename="DictionaryGenerator.cpp" line="219"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 开始生成术语表:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] Start generating glossary:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="228"/>
+        <location filename="DictionaryGenerator.cpp" line="230"/>
         <source>[线程 %1] [批次 %2] [请求 %3]</source>
         <translation>[Thread %1] [Batch %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="244"/>
+        <location filename="DictionaryGenerator.cpp" line="246"/>
         <source>[线程 %1] [批次 %2] [请求 %3] AI 字典生成成功:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] AI dictionary generation succeeded:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="260"/>
+        <location filename="DictionaryGenerator.cpp" line="262"/>
         <source>发现重复术语: %1	%2	%3</source>
         <translation>Duplicate term found: %1	%2	%3</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="273"/>
+        <location filename="DictionaryGenerator.cpp" line="275"/>
         <source>[线程 %1] [批次 %2] 在 %3 次请求后彻底失败，没有生成字典</source>
         <translation>[T%1][Batch %2] Failed after %3 requests; no dictionary</translation>
     </message>
@@ -145,73 +145,73 @@
 <context>
     <name>DictionaryGenerator.generate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="286"/>
+        <location filename="DictionaryGenerator.cpp" line="288"/>
         <source>没有输入文件，无法生成字典。</source>
         <translation>No input files; cannot generate dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="297"/>
-        <location filename="DictionaryGenerator.cpp" line="366"/>
+        <location filename="DictionaryGenerator.cpp" line="299"/>
+        <location filename="DictionaryGenerator.cpp" line="368"/>
         <source>任务终止，将不会生成字典文件</source>
         <translation>Task stopped; no dictionary file will be generated</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="301"/>
+        <location filename="DictionaryGenerator.cpp" line="303"/>
         <source>阶段二: 搜索并选择信息量最大的文本块(单线程)...</source>
         <translation>Stage 2: pick key text blocks (single-threaded)...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="370"/>
+        <location filename="DictionaryGenerator.cpp" line="372"/>
         <source>阶段三: 启动 %1 个线程，向 AI 发送 %2 个任务...</source>
         <translation>Stage 3: starting %1 threads and sending %2 tasks to AI...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="390"/>
+        <location filename="DictionaryGenerator.cpp" line="392"/>
         <source>任务终止，将保存已经生成的字典结果</source>
         <translation>Task stopped; saving generated dictionary results</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="392"/>
+        <location filename="DictionaryGenerator.cpp" line="394"/>
         <source>阶段四: 整理并保存结果...</source>
         <translation>Stage 4: organize and save results...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="433"/>
+        <location filename="DictionaryGenerator.cpp" line="435"/>
         <source>任务终止，已保留完成审校的词条</source>
         <translation>Task stopped; completed review entries have been kept</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="439"/>
+        <location filename="DictionaryGenerator.cpp" line="441"/>
         <source>阶段四: 字典审校 Agent 完成，使用审校后的字典结果</source>
         <translation>Stage 4: Review Agent done; using reviewed dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="453"/>
+        <location filename="DictionaryGenerator.cpp" line="455"/>
         <source>人名</source>
         <translation>Person name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="454"/>
+        <location filename="DictionaryGenerator.cpp" line="456"/>
         <source>地名</source>
         <translation>Place name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="470"/>
+        <location filename="DictionaryGenerator.cpp" line="472"/>
         <source>男性</source>
         <translation>Male</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="471"/>
+        <location filename="DictionaryGenerator.cpp" line="473"/>
         <source>女性</source>
         <translation>Female</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="475"/>
+        <location filename="DictionaryGenerator.cpp" line="477"/>
         <source>，与其它字典存在性别争议</source>
         <translation>, gender differs from other dicts</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="495"/>
+        <location filename="DictionaryGenerator.cpp" line="497"/>
         <source>字典生成完成，共 %1 个词语，已保存到 [%2]</source>
         <translation>Dictionary generation completed: %1 terms saved to [%2]</translation>
     </message>
@@ -219,12 +219,12 @@
 <context>
     <name>DictionaryGenerator.preprocessAndTokenize</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="49"/>
+        <location filename="DictionaryGenerator.cpp" line="51"/>
         <source>阶段一: 预处理和分词...</source>
         <translation>Stage 1: preprocess and tokenize...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="123"/>
+        <location filename="DictionaryGenerator.cpp" line="125"/>
         <source>共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...</source>
         <translation>Split into %1 blocks; tokenizing (Python tokenizers without GPU may be slow)...</translation>
     </message>

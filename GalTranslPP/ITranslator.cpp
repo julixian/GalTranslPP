@@ -192,13 +192,13 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
     const auto logger = std::make_shared<spdlog::logger>(wide2Ascii(projectDir) + "-" + transEngineStr + "-Logger",
         sinks.begin(), sinks.end());
     logger->set_level(logLevel);
-    if (logLevel == spdlog::level::trace) {
-        logger->flush_on(spdlog::level::trace);
-    }
-    else if (logLevel == spdlog::level::debug) {
+    if (logger->should_log(spdlog::level::debug)) {
+        logger->set_pattern("[%H:%M:%S.%e %^%l%$] %v");
         logger->flush_on(spdlog::level::debug);
     }
-    logger->set_pattern("[%H:%M:%S.%e %^%l%$] %v");
+    else {
+        logger->set_pattern("[%H:%M:%S %^%l%$] %v");
+    }
     logger->info(gppTr("createTranslator", "日志记录器初始化完成").toStdString());
     // 日志配置结束
 

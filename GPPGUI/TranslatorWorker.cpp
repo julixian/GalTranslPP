@@ -14,7 +14,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         //m_log += log;
-        const std::string_view clipped = truncateUtf8PrefixView(log, 2048);
+        const std::string_view clipped = truncateUtf8PrefixView(log, 8192);
         m_log += clipped;
         if (clipped.size() < log.size()) {
             m_log += "(...GUI Content Truncated)\n";

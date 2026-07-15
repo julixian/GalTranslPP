@@ -304,6 +304,10 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 continue;
             }
 
+            // 重翻带 problems 时会用到
+            if (const auto jit = item.find("problems"); jit != item.end()) {
+                jit->get_to(se.problems);
+            }
             toTranslate.push_back(&se);
         }
 

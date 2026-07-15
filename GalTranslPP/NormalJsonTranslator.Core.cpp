@@ -943,6 +943,7 @@ void NormalJsonTranslator::postProcess(Sentence* se)
 {
     se->nametrans = se->name;
     se->namestrans = se->names;
+    se->problems.clear();
     se->transview = se->transraw;
 
     if (se->transview.starts_with("(Failed to translate)")) {

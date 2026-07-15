@@ -221,7 +221,7 @@ From the input light novel excerpt, construct a glossary for sourceLang-to-[Targ
 Your output should include the original sourceLang term, its corresponding [TargetLang] translation, and a note.
 The "sourceLang" column is for the original term from the source text.
 The "[TargetLang]" column is for your translation of that term.
-If one source term has multiple valid [TargetLang] translations, join them in the same Target field with `||` (for example, `aa||bb`).
+Use `||` only to join distinct meanings in the same Target field; for synonyms, aliases, nicknames, or wording variants, choose one target translation.
 The "Note" column should specify the type of proper noun. If it is a person's name, you must also infer their gender.
 The translation must preserve the original symbols and maintain the half-width/full-width usage(IMPORTANT!).
 However, do not retain any sourceLang-specific characters or words that are incongruous in a [TargetLang] context, such as Japanese characters(if sourceLang is jp) 々, さん, etc. You must determine the most suitable [TargetLang] translation based on the context. If a judgment is difficult, choose the most likely translation among the most common options.
@@ -330,7 +330,7 @@ Protocol JSON schema:
 <commit_output_format>
 1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id` and `dst`.
 2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
-3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. When one source term has different meanings, generally separate target meanings with `||`.
+3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Use `||` only to join distinct meanings in the same Target field; for synonyms, aliases, nicknames, or wording variants, choose one target translation.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "aa||bb", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.
 5. `file_note_patch` is for durable file-level notes, not noisy per-turn chatter. Prefer translation-relevant clues such as long-lived scene state, unresolved clues, identity hints, relationship shifts, callbacks, and literary echoes.
 6. Prefer `file_note_patch` to be a compact object. Typical keys may include `summary`, `scene_state`, `unresolved_clues`, `relationship_updates`, `term_hints`, or other clearly named fields when truly useful.
@@ -462,7 +462,7 @@ Protocol JSON schema:
 <commit_output_format>
 1. `commit` must cover EVERY current chunk id exactly once. Each translation item MUST contain `id` and `dst`.
 2. `dst` must contain translated text ONLY. Do not include the line id inside `dst`.
-3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. When one source term has different meanings, generally separate target meanings with `||`.
+3. Use `term_updates` for new terms, corrected terms, tentative terms, or note/status refinements. If a term is still uncertain, mark it `tentative` instead of pretending certainty. Use `||` only to join distinct meanings in the same Target field; for synonyms, aliases, nicknames, or wording variants, choose one target translation.
 4. Prefer `term_updates` as `{ "source_term": "...", "target_term": "aa||bb", "category": "...", "note": "...", "status": "tentative|final", "line_ids": [...] }`.
 5. `file_note_patch` is for durable file-level notes, not noisy per-turn chatter. Prefer translation-relevant clues such as long-lived scene state, unresolved clues, identity hints, relationship shifts, callbacks, and literary echoes.
 6. Prefer `file_note_patch` to be a compact object. Typical keys may include `summary`, `scene_state`, `unresolved_clues`, `relationship_updates`, `term_hints`, or other clearly named fields when truly useful.
@@ -562,7 +562,7 @@ Protocol JSON schema:
 <review_requirements>
 1. Work on the current term group first. Use `term_updates` to upsert any additional high-confidence glossary entries or to refine existing ledger entries when evidence justifies it.
 2. Prefer one stable translation consistent with previous reviewed terms.
-3. If one source term should retain multiple valid target translations, join them with `||` in `final_target` or `term_updates.target_term` (for example, `aa||bb`).
+3. Use `||` only to join distinct meanings in the same Target field; for synonyms, aliases, nicknames, or wording variants, choose one target translation.
 4. Fix shallow or wrong notes using global evidence from `search_text`.
 5. Delete obvious false positives with `deprecated`.
 6. Use `merged` only when `merge_into` names another source term entry, not a target translation.
@@ -606,3 +606,4 @@ example: { "id": "dict2", "name": "search_dictionary", "arguments": { "queries":
 [ReviewCurrentTerm]
 </current_term_group>
 """
+

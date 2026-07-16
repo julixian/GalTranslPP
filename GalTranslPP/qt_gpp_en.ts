@@ -1180,12 +1180,12 @@ Problem overview:
     <name>NormalJsonTranslator.postProcess</name>
     <message>
         <location filename="NormalJsonTranslator.Core.cpp" line="850"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="949"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="950"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="959"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="960"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -1215,57 +1215,57 @@ Problem overview:
         <translation>[Thread %1] cache file [%2] parse failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="311"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="315"/>
         <source>[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句</source>
         <translation>[Thread %1] [File %2] %3 sentences, %4 cache/skip hits, %5 to translate</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="328"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="332"/>
         <source>[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4</source>
         <translation>[Thread %1] [File %2] %3 sentences missed cache: %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="374"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="378"/>
         <source>[线程 %1] [文件 %2] 已停止翻译</source>
         <translation>[Thread %1] [File %2] translation stopped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="398"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="402"/>
         <source>[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...</source>
         <translation>[Thread %1] [File %2] save interval reached; updating cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="417"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="421"/>
         <source>[线程 %1] [文件 %2] 重建完成，正在进行最终保存...</source>
         <translation>[Thread %1] [File %2] rebuild completed, doing final save...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="427"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="431"/>
         <source>[线程 %1] [文件 %2] 翻译完成，正在进行最终保存...</source>
         <translation>[Thread %1] [File %2] translation done; final save...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="465"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="469"/>
         <source>[线程 %1] [文件 %2] 处理完成</source>
         <translation>[Thread %1] [File %2] processing completed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="471"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="475"/>
         <source>[线程 %1] [文件 %2] 连续重复块引用模式启用，延后最终输出回填与文件回调</source>
         <translation>[T%1][File %2] Repeat-block refs on; delaying output fill/callback</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="490"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="494"/>
         <source>文件 %1 尚未全部处理完成，跳过合并</source>
         <translation>File %1 is not fully processed; skipping merge</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="496"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="500"/>
         <source>开始合并 %1 的缓存文件...</source>
         <translation>Merging cache files for %1...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="503"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="507"/>
         <source>[线程 %1] [文件 %2] 合并处理完成</source>
         <translation>[Thread %1] [File %2] merge processing completed</translation>
     </message>

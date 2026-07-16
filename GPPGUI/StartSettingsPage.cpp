@@ -725,13 +725,7 @@ void StartSettingsPage::workFinished(int exitCode)
 	default:
 		break;
 	}
-	std::thread([this]()
-		{
-			std::this_thread::sleep_for(std::chrono::seconds(5));
-			if (m_trayIcon) {
-				m_trayIcon->hide();
-			}
-		}).detach();
+	QTimer::singleShot(5000, m_trayIcon, &QSystemTrayIcon::hide);
 
 	Q_EMIT finishTranslatingSignal(m_workerTransEngine, exitCode);
 	m_startTranslateButton->setEnabled(true);

@@ -14,6 +14,9 @@
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
+#include <DbgHelp.h>
+#include <Strsafe.h>
+#pragma comment(lib, "Dbghelp.lib")
 #endif
 
 #include <toml.hpp>
@@ -26,6 +29,71 @@ import Tool;
 import PythonManager;
 namespace fs = std::filesystem;
 namespace py = pybind11;
+
+#ifdef Q_OS_WIN
+LONG WINAPI writeMiniDump(EXCEPTION_POINTERS* exceptionPointers) noexcept
+{
+    wchar_t dumpDir[MAX_PATH]{};
+    DWORD pathLength = GetModuleFileNameW(nullptr, dumpDir, MAX_PATH);
+    if (pathLength == 0 || pathLength >= MAX_PATH) {
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+    while (pathLength > 0 && dumpDir[pathLength - 1] != L'\\' && dumpDir[pathLength - 1] != L'/') {
+        --pathLength;
+    }
+    if (pathLength == 0) {
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+    dumpDir[pathLength - 1] = L'\0';
+
+    SYSTEMTIME now{};
+    GetLocalTime(&now);
+    wchar_t dumpPath[MAX_PATH]{};
+    if (FAILED(StringCchPrintfW(
+        dumpPath,
+        MAX_PATH,
+        L"%s\\GalTranslPP_GUI_%04u%02u%02u_%02u%02u%02u_%lu.dmp",
+        dumpDir,
+        now.wYear,
+        now.wMonth,
+        now.wDay,
+        now.wHour,
+        now.wMinute,
+        now.wSecond,
+        GetCurrentProcessId())))
+    {
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
+    const HANDLE dumpFile = CreateFileW(
+        dumpPath,
+        GENERIC_WRITE,
+        0,
+        nullptr,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL,
+        nullptr);
+    if (dumpFile == INVALID_HANDLE_VALUE) {
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
+    MINIDUMP_EXCEPTION_INFORMATION exceptionInfo{
+        .ThreadId = GetCurrentThreadId(),
+        .ExceptionPointers = exceptionPointers,
+        .ClientPointers = FALSE
+    };
+    MiniDumpWriteDump(
+        GetCurrentProcess(),
+        GetCurrentProcessId(),
+        dumpFile,
+        MiniDumpNormal,
+        exceptionPointers ? &exceptionInfo : nullptr,
+        nullptr,
+        nullptr);
+    CloseHandle(dumpFile);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+#endif
 
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
@@ -43,6 +111,7 @@ int main(int argc, char* argv[])
 {
     // 公共初始化
 #ifdef Q_OS_WIN
+    SetUnhandledExceptionFilter(writeMiniDump);
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
     std::setlocale(LC_ALL, ".UTF-8");

@@ -6,6 +6,7 @@
 
 class ElaNoWheelComboBox : public ElaComboBox
 {
+	Q_OBJECT
 public:
 	explicit ElaNoWheelComboBox(QWidget* parent = nullptr) : ElaComboBox(parent) { }
 

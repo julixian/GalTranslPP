@@ -329,6 +329,9 @@
     <QtMoc Include="TranslationWorkbenchPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
+    <QtMoc Include="ElaNoWheelComboBox.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GPPGUI.rc">
@@ -349,9 +352,6 @@
     </ClInclude>
     <ClInclude Include="ProjectCachePage_p.h">
       <Filter>Header Files\ProjectSettingH</Filter>
-    </ClInclude>
-    <ClInclude Include="ElaNoWheelComboBox.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <QtMoc Include="DictionaryEntryDialog.h">
       <Filter>Header Files\ToolWidgetsH</Filter>

@@ -324,7 +324,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="CustomFilePluginCfgPage.h" />
     <QtMoc Include="ElaDoubleText.h" />
     <ClInclude Include="EtaEstimator.hpp" />
-    <ClInclude Include="ElaNoWheelComboBox.h" />
+    <QtMoc Include="ElaNoWheelComboBox.h" />
     <QtMoc Include="DictionarySearchBar.h" />
     <QtMoc Include="ElaAlignedCheckBox.h" />
     <QtMoc Include="DictionaryEntryDialog.h" />

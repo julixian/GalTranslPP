@@ -201,12 +201,12 @@
     <ClCompile Include="..\3rdParty\spdlog.ixx" />
     <ClCompile Include="ApiPool.cpp" />
     <ClCompile Include="ApiPool.ixx" />
-    <ClCompile Include="ApiTool.cpp" />
-    <ClCompile Include="ApiTool.ixx" />
     <ClCompile Include="AgentToolCommon.cpp" />
     <ClCompile Include="AgentToolCommon.ixx" />
     <ClCompile Include="AgentCommonSourceView.cpp" />
     <ClCompile Include="AgentCommonSourceView.ixx" />
+    <ClCompile Include="ApiTool.cpp" />
+    <ClCompile Include="ApiTool.ixx" />
     <ClCompile Include="CodePageChecker.cpp" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />

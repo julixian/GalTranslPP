@@ -175,12 +175,6 @@
     <ClCompile Include="DictionaryReviewIndex.ixx">
       <Filter>Tools\DictionaryGenerator</Filter>
     </ClCompile>
-    <ClCompile Include="ApiTool.cpp">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="ApiTool.ixx">
-      <Filter>Tools\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="NormalJsonTranslatorHelperTool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
@@ -215,6 +209,12 @@
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="SafeQueue.ixx">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiTool.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
   </ItemGroup>

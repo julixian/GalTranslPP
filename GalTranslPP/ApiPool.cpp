@@ -5,6 +5,7 @@ module;
 module ApiPool;
 
 import Tool;
+import NormalJsonTranslatorHelperTool;
 
 namespace fs = std::filesystem;
 
@@ -128,7 +129,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
                 .toStdString(),
             .filename = filename,
             .requestCount = requestCount + 1,
-            .model = currentApi.modelName,
+            .model = makeTransby(currentApi.apikey, currentApi.modelName),
             .sleepSeconds = 2.0
         });
         ++requestCount;
@@ -169,7 +170,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
                 .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
             .filename = filename,
-            .model = currentApi.modelName
+            .model = makeTransby(currentApi.apikey, currentApi.modelName)
         });
         apiPool->reportProblem(currentApi);
         // 不需要增加 requestCount
@@ -193,7 +194,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
                 .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
             .filename = filename,
-            .model = currentApi.modelName
+            .model = makeTransby(currentApi.apikey, currentApi.modelName)
         });
         apiPool->reportProblem(currentApi);
         return false;
@@ -222,7 +223,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
                 .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
                 .toStdString(),
             .filename = filename,
-            .model = currentApi.modelName,
+            .model = makeTransby(currentApi.apikey, currentApi.modelName),
             .sleepSeconds = (double)sleepSeconds
         });
         if (sleepSeconds > 0 && !controller->shouldStop()) {
@@ -246,7 +247,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
                 .toStdString(),
         .filename = filename,
         .requestCount = requestCount + 1,
-        .model = currentApi.modelName,
+        .model = makeTransby(currentApi.apikey, currentApi.modelName),
         .sleepSeconds = 2.0
     });
     ++requestCount;

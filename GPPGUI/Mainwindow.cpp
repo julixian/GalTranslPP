@@ -343,10 +343,14 @@ void MainWindow::initContent()
             }
         });
 
-    const std::string clearShortcut = toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L");
-    m_clearLogShortcut = new QShortcut(
-        QKeySequence::fromString(QString::fromStdString(clearShortcut), QKeySequence::PortableText), this);
-    connect(m_appSettingsPage, &AppSettingsPage::clearLogShortcutChanged, this, [=](const QString& shortcut)
+    m_clearLogShortcut = new QShortcut(this);
+    const std::string clearLogShortcut = toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L");
+    if (const QKeySequence keySequence = QKeySequence::fromString(QString::fromStdString(clearLogShortcut), QKeySequence::PortableText);
+        !keySequence.isEmpty())
+    {
+        m_clearLogShortcut->setKey(keySequence);
+    }
+    connect(m_appSettingsPage, &AppSettingsPage::clearLogShortcutChangedSignal, this, [=](const QString& shortcut)
         {
             m_clearLogShortcut->setKey(QKeySequence::fromString(shortcut, QKeySequence::PortableText));
         });

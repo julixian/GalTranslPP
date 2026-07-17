@@ -846,7 +846,7 @@ void NormalJsonTranslator::recordSentenceDoneHelper(const fs::path& relInputPath
     m_controller->updateBar();
     if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
         m_controller->recordFileSentenceDone(wide2Ascii(relInputPath), !se.problems.empty());
-        if (addToRuntimeTransSuccessStream && 
+        if (addToRuntimeTransSuccessStream &&
             !std::ranges::contains(se.problems, gppTr(
             "NormalJsonTranslator.postProcess",
             "翻译失败").toStdString()))
@@ -854,12 +854,13 @@ void NormalJsonTranslator::recordSentenceDoneHelper(const fs::path& relInputPath
             RuntimeTransSuccessEvent event;
             event.filename = wide2Ascii(relInputPath);
             event.index = se.index;
-            if (se.nameType == NameType::Single && !se.nametrans.empty()) {
+            if (se.nameType == NameType::Single) {
                 event.speakers.push_back(se.nametrans);
             }
             else if (se.nameType == NameType::Multiple) {
                 event.speakers = se.namestrans;
             }
+            event.problems = se.problems;
             event.sourcePreview = se.preproc;
             event.translationPreview = se.transraw;
             event.transby = se.transby;
@@ -947,7 +948,7 @@ void NormalJsonTranslator::postProcess(Sentence* se)
     se->transview = se->transraw;
 
     if (se->transview.starts_with("(Failed to translate)")) {
-            se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "翻译失败").toStdString());
+    	se->problems.push_back(gppTr("NormalJsonTranslator.postProcess", "翻译失败").toStdString());
         se->problemAnalyzeDisabled = true;
     }
     if (se->transview.starts_with("(GPPCProblem:")) {

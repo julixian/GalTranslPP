@@ -3934,7 +3934,7 @@ Cache: %4</translation>
         <translation>Match</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="+206"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="+225"/>
         <source>结果解析</source>
         <translation>Parse Result</translation>
     </message>
@@ -4443,7 +4443,7 @@ Issue summary:</translation>
         <translation>Waiting for translation task</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+7"/>
         <source>清除筛选</source>
         <translation>Clear Filter</translation>
     </message>
@@ -4454,13 +4454,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+26"/>
-        <location line="+247"/>
+        <location line="+250"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
-        <location line="-242"/>
-        <location line="+247"/>
+        <location line="-245"/>
+        <location line="+250"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>
@@ -4500,7 +4500,7 @@ Issue summary:</translation>
 <context>
     <name>TranslatorWorker</name>
     <message>
-        <location filename="TranslatorWorker.cpp" line="+219"/>
+        <location filename="TranslatorWorker.cpp" line="+224"/>
         <source>[GalTransl++ 系统错误] %1</source>
         <oldsource>[系统错误] %1</oldsource>
         <translation>[GalTransl++ System] %1</translation>

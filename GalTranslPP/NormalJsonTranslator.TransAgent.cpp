@@ -1178,7 +1178,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                 rollingContext,
                 messages,
                 response.content,
-                currentApi.modelName,
+                makeTransby(currentApi.apikey, currentApi.modelName),
                 batchIndexLog,
                 turn,
                 requestCount,
@@ -1239,7 +1239,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     }
 
     size_t failedCount = 0;
-    for (Sentence* se : batch | std::views::filter([](Sentence* s) { return !s->transCompleted; })) {
+    for (Sentence* se : batch | std::views::filter([](Sentence* se_) { return !se_->transCompleted; })) {
         ++failedCount;
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;

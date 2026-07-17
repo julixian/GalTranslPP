@@ -10,7 +10,7 @@
 
 
 class ElaListView;
-class ElaPushButton;
+class ElaIconButton;
 class ElaToolButton;
 class ElaText;
 class QButtonGroup;
@@ -58,7 +58,7 @@ private:
     ElaListView* m_fileList = nullptr;
     ElaText* m_summaryText = nullptr;
     ElaText* m_filterText = nullptr;
-    ElaPushButton* m_clearFilterButton = nullptr;
+    ElaIconButton* m_clearFilterButton = nullptr;
     ElaToolButton* m_errorsTabButton = nullptr;
     ElaToolButton* m_filesTabButton = nullptr;
     QButtonGroup* m_sideTabGroup = nullptr;

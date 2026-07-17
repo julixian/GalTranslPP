@@ -530,8 +530,12 @@ std::string limitLogLines(std::string_view text, int maxLines, std::string_view 
     return std::string(text);
 }
 
+std::string makeTransby(std::string_view apikey, std::string_view modelName) {
+    return std::format("{} ({})", modelName, maskApikey(apikey));
+}
+
 int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound,
-    const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
+    const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& transby,
     std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail)
 {
     int parsedCount = 0;
@@ -598,7 +602,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
                     it->second->transraw = parts[1];
-                    it->second->transby = modelName;
+                    it->second->transby = transby;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -633,7 +637,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
                     it->second->transraw = parts[0];
-                    it->second->transby = modelName;
+                    it->second->transby = transby;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -674,7 +678,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
                     it->second->transraw = dst;
-                    it->second->transby = modelName;
+                    it->second->transby = transby;
                     it->second->transCompleted = true;
                     ++parsedCount;
                 }
@@ -701,7 +705,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
             }
 
             currentSentence->transraw = translatedLine;
-            currentSentence->transby = modelName;
+            currentSentence->transby = transby;
             currentSentence->transCompleted = true;
             ++parsedCount;
         }
@@ -801,10 +805,7 @@ bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, cons
 
 void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cachePath) {
     json cacheJson = json::array();
-    for (const auto& se : allSentences) {
-        if (!se.transCompleted) {
-            continue;
-        }
+    for (const auto& se : allSentences | std::views::filter([](const auto& se_) {return se_.transCompleted; })) {
         json cacheObj;
         cacheObj["index"] = se.index;
         if (se.nameType == NameType::Single) {
@@ -829,7 +830,9 @@ void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cacheP
         sentenceReferenceInfoToItem(cacheObj, se, true);
         cacheJson.push_back(std::move(cacheObj));
     }
-    atomicOutputFile(cachePath, cacheJson.dump(2));
+    if (!cacheJson.empty()) {
+        atomicOutputFile(cachePath, cacheJson.dump(2));
+    }
 }
 
 

@@ -583,35 +583,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1251"/>
-        <location filename="LuaManager.cpp" line="1263"/>
-        <location filename="LuaManager.cpp" line="1277"/>
-        <location filename="LuaManager.cpp" line="1292"/>
+        <location filename="LuaManager.cpp" line="1252"/>
+        <location filename="LuaManager.cpp" line="1264"/>
+        <location filename="LuaManager.cpp" line="1278"/>
+        <location filename="LuaManager.cpp" line="1293"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1268"/>
+        <location filename="LuaManager.cpp" line="1269"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1282"/>
+        <location filename="LuaManager.cpp" line="1283"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1297"/>
+        <location filename="LuaManager.cpp" line="1298"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1304"/>
+        <location filename="LuaManager.cpp" line="1305"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1311"/>
+        <location filename="LuaManager.cpp" line="1312"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -1180,12 +1180,12 @@ Problem overview:
     <name>NormalJsonTranslator.postProcess</name>
     <message>
         <location filename="NormalJsonTranslator.Core.cpp" line="850"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="950"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="951"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="960"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="961"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -1230,42 +1230,42 @@ Problem overview:
         <translation>[Thread %1] [File %2] translation stopped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="402"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="403"/>
         <source>[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...</source>
         <translation>[Thread %1] [File %2] save interval reached; updating cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="421"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="422"/>
         <source>[线程 %1] [文件 %2] 重建完成，正在进行最终保存...</source>
         <translation>[Thread %1] [File %2] rebuild completed, doing final save...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="431"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="432"/>
         <source>[线程 %1] [文件 %2] 翻译完成，正在进行最终保存...</source>
         <translation>[Thread %1] [File %2] translation done; final save...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="469"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="470"/>
         <source>[线程 %1] [文件 %2] 处理完成</source>
         <translation>[Thread %1] [File %2] processing completed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="475"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="476"/>
         <source>[线程 %1] [文件 %2] 连续重复块引用模式启用，延后最终输出回填与文件回调</source>
         <translation>[T%1][File %2] Repeat-block refs on; delaying output fill/callback</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="494"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="495"/>
         <source>文件 %1 尚未全部处理完成，跳过合并</source>
         <translation>File %1 is not fully processed; skipping merge</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="500"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="501"/>
         <source>开始合并 %1 的缓存文件...</source>
         <translation>Merging cache files for %1...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="507"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="508"/>
         <source>[线程 %1] [文件 %2] 合并处理完成</source>
         <translation>[Thread %1] [File %2] merge processing completed</translation>
     </message>
@@ -2299,17 +2299,17 @@ Problem overview:
 <context>
     <name>combineOutputFiles</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="731"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="735"/>
         <source>开始合并文件: %1</source>
         <translation>Merging file: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="748"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="752"/>
         <source>试图合并 [%1] 时出错，缺少文件 [%2]</source>
         <translation>Error merging [%1]: missing file [%2]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="757"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="761"/>
         <source>文件 [%1] 合并完成，已保存到 [%2]</source>
         <translation>File [%1] merged, saved to [%2]</translation>
     </message>
@@ -2404,7 +2404,7 @@ Problem overview:
 <context>
     <name>parseContent</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="712"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="716"/>
         <source>内部错误: 不支持的 TransEngine 用于解析输出</source>
         <translation>Internal error: unsupported TransEngine for parsing output</translation>
     </message>

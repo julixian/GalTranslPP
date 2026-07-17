@@ -126,11 +126,16 @@ protected:
         for (const std::string& speaker : event.speakers) {
             speakers.push_back(QString::fromStdString(speaker));
         }
+        QStringList problems;
+        for (const std::string& problem : event.problems) {
+            problems.push_back(QString::fromStdString(problem));
+        }
         m_pendingRuntimeSuccesses.push_back({
             QString::fromStdString(event.timestamp),
             QString::fromStdString(event.filename),
             event.index,
             speakers,
+            problems,
             QString::fromStdString(event.sourcePreview),
             QString::fromStdString(event.translationPreview),
             QString::fromStdString(event.transby)

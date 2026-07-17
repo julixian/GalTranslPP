@@ -565,14 +565,14 @@ std::string truncateUtf8Suffix(std::string_view str, size_t maxCodepoints, std::
     return std::string(ellipsis).append(suffix);
 }
 
-std::string maskApiKey(std::string_view apiKey) {
-    constexpr size_t prefixLength = 8;
-    constexpr size_t suffixLength = 6;
-    if (apiKey.size() <= prefixLength + suffixLength + 3) {
-        apiKey.remove_suffix(1);
-        return std::string(apiKey) + '*';
+std::string maskApikey(std::string_view apikey) {
+    constexpr size_t prefixLength = 6;
+    constexpr size_t suffixLength = 3;
+    if (apikey.size() <= prefixLength + suffixLength + 2) {
+        apikey.remove_suffix(1);
+        return std::string(apikey) + '*';
     }
-    return std::string(apiKey.substr(0, prefixLength)) + "..." + std::string(apiKey.substr(apiKey.size() - suffixLength));
+    return std::format("{}**{}", apikey.substr(0, prefixLength), apikey.substr(apikey.size() - suffixLength));
 }
 
 

@@ -393,7 +393,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 translateBatch(relInputPath, batchView, rollingContext,
                     threadId, batchIndex + 1, recursionIndex, recursionConut);
             }
-            for (Sentence* se : batchView) {
+            // 这里和 saveCache 判断 transCompleted 是跳过处理还没翻译以及翻译中途暂停后未实际经过翻译的句子
+            for (Sentence* se : batchView | std::views::filter([](Sentence* se_) { return se_->transCompleted; })) {
                 postProcess(se);
                 recordSentenceDoneHelper(relInputPath, *se, true);
             }

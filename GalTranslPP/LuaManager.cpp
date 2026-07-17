@@ -852,6 +852,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"filename", &RuntimeTransSuccessEvent::filename,
 		"index", &RuntimeTransSuccessEvent::index,
 		"speakers", &RuntimeTransSuccessEvent::speakers,
+		"problems", &RuntimeTransSuccessEvent::problems,
 		"sourcePreview", &RuntimeTransSuccessEvent::sourcePreview,
 		"translationPreview", &RuntimeTransSuccessEvent::translationPreview,
 		"transby", &RuntimeTransSuccessEvent::transby
@@ -1177,7 +1178,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		{
 			truncateUtf8Suffix(str, maxCodepoints, ellipsis.value_or("..."));
 		};
-	utilsTable["maskApiKey"] = &maskApiKey;
+	utilsTable["maskApikey"] = &maskApikey;
 	utilsTable["hasKatakana"] = &hasKatakana;
 	utilsTable["hasKana"] = &hasKana;
 	utilsTable["hasLatin"] = &hasLatin;

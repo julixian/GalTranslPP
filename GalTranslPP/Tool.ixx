@@ -134,7 +134,7 @@ export
     std::string truncateUtf8Prefix(std::string_view str, size_t maxCodepoints, std::string_view ellipsis = "...");
     std::string_view truncateUtf8SuffixView(std::string_view str, size_t maxCodepoints);
     std::string truncateUtf8Suffix(std::string_view str, size_t maxCodepoints, std::string_view ellipsis = "...");
-    std::string maskApiKey(std::string_view apiKey);
+    std::string maskApikey(std::string_view apikey);
 
     bool hasKatakana(std::string_view str);
     bool hasKana(std::string_view str);

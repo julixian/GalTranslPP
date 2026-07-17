@@ -1,18 +1,18 @@
 #include "TranslationWorkbenchPage.h"
 
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QButtonGroup>
 #include <QDateTime>
-#include <QHBoxLayout>
 #include <QPainter>
 #include <QScrollBar>
 #include <QStackedWidget>
 #include <QStyledItemDelegate>
-#include <QVBoxLayout>
-#include <algorithm>
 
+#include "ElaIconButton.h"
 #include "ElaListView.h"
-#include "ElaPushButton.h"
 #include "ElaToolButton.h"
+#include "ElaToolTip.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
 
@@ -24,6 +24,7 @@ namespace
     constexpr int MaxSuccessEvents = 500;
     constexpr int MaxRenderedSuccessEvents = 100;
     constexpr int MaxErrorEvents = 80;
+    constexpr int SuccessItemHeight = 138;
 
     QString compactPreview(QString text, int maxChars = 180)
     {
@@ -111,10 +112,28 @@ namespace
 
             const int fileX = content.left() + indexWidth + 8;
             const int timeWidth = 54;
-            QRect fileRect(fileX, content.top(), content.right() - fileX - timeWidth - 8, 22);
+            const int titleWidth = content.right() - fileX - timeWidth - 8;
+            const QString problems = event.problems.join(" | ");
+            int fileWidth = titleWidth;
+            int problemWidth = 0;
+            if (!problems.isEmpty() && titleWidth > 80) {
+                const int maxProblemWidth = qMin(220, titleWidth / 2);
+                problemWidth = qMin(tagMetrics.horizontalAdvance(problems) + 18, maxProblemWidth);
+                fileWidth = qMin(tagMetrics.horizontalAdvance(event.filename),
+                    titleWidth - problemWidth - 8);
+            }
+            QRect fileRect(fileX, content.top(), qMax(0, fileWidth), 22);
             painter->setPen(primary);
             painter->drawText(fileRect, Qt::AlignVCenter | Qt::AlignLeft,
                 tagMetrics.elidedText(event.filename, Qt::ElideMiddle, fileRect.width()));
+
+            if (problemWidth > 0) {
+                const QRectF problemRect(fileRect.right() + 8, content.top(), problemWidth, 22);
+                drawPill(painter, problemRect,
+                    tagMetrics.elidedText(problems, Qt::ElideRight, problemWidth - 16),
+                    dark ? QColor(86, 66, 28) : QColor(247, 232, 181),
+                    dark ? QColor(248, 219, 139) : QColor(105, 75, 15));
+            }
 
             painter->setPen(detailColor);
             painter->drawText(QRect(content.right() - timeWidth, content.top(), timeWidth, 22),
@@ -352,8 +371,10 @@ void TranslationWorkbenchPage::setupUi()
     m_filterText = new ElaText("", 12, mainWidget);
     m_filterText->setStyleSheet(QString("color:%1;").arg(themeColor(ElaThemeType::BasicDetailsText).name(QColor::HexArgb)));
     headerLayout->addWidget(m_filterText);
-    m_clearFilterButton = new ElaPushButton(tr("清除筛选"), mainWidget);
-    connect(m_clearFilterButton, &ElaPushButton::clicked, this, [=]()
+    m_clearFilterButton = new ElaIconButton(ElaIconType::FilterCircleXmark, 16, 32, 32, mainWidget);
+    ElaToolTip* clearFilterToolTip = new ElaToolTip(m_clearFilterButton);
+    clearFilterToolTip->setToolTip(tr("清除筛选"));
+    connect(m_clearFilterButton, &ElaIconButton::clicked, this, [=]()
         {
             // 清除文件筛选后重新渲染句流；底层事件仍保留在 m_successes 中。
             m_successFileFilters.clear();
@@ -380,7 +401,7 @@ void TranslationWorkbenchPage::setupUi()
     m_successList->setModel(m_successModel);
     m_successList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_successList->setUniformItemSizes(true);
-    m_successList->setItemHeight(126);
+    m_successList->setItemHeight(SuccessItemHeight);
     m_successList->setItemDelegate(new SuccessDelegate(m_successList));
     successLayout->addWidget(m_successList, 1);
     bodyLayout->addWidget(successPane, 5);
@@ -568,6 +589,9 @@ void TranslationWorkbenchPage::renderSuccesses()
     for (const auto& event : visible) {
         QStandardItem* item = new QStandardItem(event.filename);
         item->setData(QVariant::fromValue(event), SuccessRole);
+        if (!event.problems.isEmpty()) {
+            item->setToolTip(event.problems.join("\n"));
+        }
         item->setEditable(false);
         m_successModel->appendRow(item);
     }

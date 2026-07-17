@@ -178,6 +178,7 @@ class RuntimeTransSuccessEvent:
     filename: str
     index: int
     speakers: list[str]
+    problems: list[str]
     sourcePreview: str
     translationPreview: str
     transby: str

@@ -184,7 +184,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             response.content,
             batchToTransThisRound,
             id2SentenceMap,
-            currentApi.modelName,
+            makeTransby(currentApi.apikey, currentApi.modelName),
             rollingContext,
             m_transEngine,
             m_logger->should_log(spdlog::level::debug),
@@ -237,7 +237,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     }
 
     size_t failedCount = 0;
-    for (Sentence* se : batch | std::views::filter([](Sentence* s) { return !s->transCompleted; })) {
+    for (Sentence* se : batch | std::views::filter([](Sentence* se_) { return !se_->transCompleted; })) {
         ++failedCount;
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;

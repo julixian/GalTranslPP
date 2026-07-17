@@ -13,6 +13,7 @@ struct GuiRuntimeTransSuccessEvent {
     QString filename;
     int index{};
     QStringList speakers;
+    QStringList problems;
     QString sourcePreview;
     QString translationPreview;
     QString transby;

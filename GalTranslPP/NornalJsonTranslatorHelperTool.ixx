@@ -112,8 +112,9 @@ export
         absl::flat_hash_map<int, Sentence*>* id2SentenceMap = nullptr
     );
 
-    int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap, const std::string& modelName,
-        std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail);
+    std::string makeTransby(std::string_view apikey, std::string_view modelName);
+    int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRound, const absl::flat_hash_map<int, Sentence*>& id2SentenceMap,
+        const std::string& transby, std::string& rollingContext, TransEngine transEngine, bool showRollingContext, bool retransAllWhenFail);
 
     void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
         const fs::path& outputCacheDir, const fs::path& outputDir, const std::shared_ptr<spdlog::logger>& logger);

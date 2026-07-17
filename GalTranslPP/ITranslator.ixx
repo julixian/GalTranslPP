@@ -11,6 +11,7 @@ export
         std::string filename;
         int index{0};
         std::vector<std::string> speakers;
+        std::vector<std::string> problems;
         std::string sourcePreview;
         std::string translationPreview;
         std::string transby;

@@ -75,7 +75,7 @@ void ApiPool::reportProblem(const TranslationApi& badApi) {
     it->lastReportTime = std::chrono::steady_clock::now();
     if (it->reportCount >= 30) {
         m_logger->warn(gppTr("ApiPool.reportProblem", "Api key [%1] 已被标记为不可用")
-            .arg(maskApiKey(it->apikey))
+            .arg(maskApikey(it->apikey))
             .toStdString());
         m_apis.erase(it);
     }
@@ -157,7 +157,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     {
         logger->error(gppTr("checkResponse", "%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
-            .arg(maskApiKey(currentApi.apikey))
+            .arg(maskApikey(currentApi.apikey))
             .arg(response.content.empty()
                 ? gppTr("checkResponse", "空").toStdString()
                 : response.content)
@@ -180,7 +180,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     if (errorMessageLower.contains("no available")) {
         logger->error(gppTr("checkResponse", "%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
-            .arg(maskApiKey(currentApi.apikey))
+            .arg(maskApikey(currentApi.apikey))
             .arg(response.content.empty()
                 ? gppTr("checkResponse", "空").toStdString()
                 : response.content)

@@ -693,6 +693,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("filename", &RuntimeTransSuccessEvent::filename)
         .def_readwrite("index", &RuntimeTransSuccessEvent::index)
         .def_readwrite("speakers", &RuntimeTransSuccessEvent::speakers)
+        .def_readwrite("problems", &RuntimeTransSuccessEvent::problems)
         .def_readwrite("sourcePreview", &RuntimeTransSuccessEvent::sourcePreview)
         .def_readwrite("translationPreview", &RuntimeTransSuccessEvent::translationPreview)
         .def_readwrite("transby", &RuntimeTransSuccessEvent::transby);

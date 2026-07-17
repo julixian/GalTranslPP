@@ -12,7 +12,7 @@ public:
 	explicit AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
 
 Q_SIGNALS:
-    void clearLogShortcutChanged(const QString& shortcut);
+    void clearLogShortcutChangedSignal(const QString& shortcut);
 
 private:
     void setupUi();

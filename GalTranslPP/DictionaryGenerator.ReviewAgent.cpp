@@ -905,7 +905,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                         .toStdString(),
                     .indexRange = group.sourceTerm,
                     .requestCount = requestCount + 1,
-                    .model = currentApi.modelName,
+                    .model = makeTransby(currentApi.apikey, currentApi.modelName),
                     .sleepSeconds = -1.0
                 });
                 ++requestCount;

@@ -1221,7 +1221,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .filename = wide2Ascii(relInputPath),
                     .indexRange = std::format("{}-{}", pending.front()->index, pending.back()->index),
                     .requestCount = requestCount + 1,
-                    .model = currentApi.modelName,
+                    .model = makeTransby(currentApi.apikey, currentApi.modelName),
                     .sleepSeconds = -1.0
                 });
                 ++requestCount;

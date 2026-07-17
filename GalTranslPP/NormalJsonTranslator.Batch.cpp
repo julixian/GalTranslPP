@@ -227,7 +227,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                     .filename = wide2Ascii(relInputPath),
                     .indexRange = std::format("{}-{}", batchToTransThisRound.front()->index, batchToTransThisRound.back()->index),
                     .requestCount = requestCount + 1,
-                    .model = currentApi.modelName,
+                    .model = makeTransby(currentApi.apikey, currentApi.modelName),
                     .sleepSeconds = -1.0
                 });
             }

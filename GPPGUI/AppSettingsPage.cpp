@@ -4,7 +4,7 @@
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QButtonGroup>
-#include <QKeySequenceEdit>
+#include <QKeySequence>
 
 #include "ElaApplication.h"
 #include "ElaMessageBar.h"
@@ -229,21 +229,37 @@ void AppSettingsPage::setupUi()
     clearLogShortcutText->setTextPixelSize(16);
     clearLogShortcutLayout->addWidget(clearLogShortcutText);
     clearLogShortcutLayout->addStretch();
-    QKeySequenceEdit* clearLogShortcutEdit = new QKeySequenceEdit(
-        QKeySequence::fromString(
-            QString::fromStdString(toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L")),
-            QKeySequence::PortableText),
-        clearLogShortcutArea);
-    clearLogShortcutEdit->setMaximumSequenceLength(1);
-    clearLogShortcutEdit->setClearButtonEnabled(true);
+    ElaLineEdit* clearLogShortcutEdit = new ElaLineEdit(clearLogShortcutArea);
+    clearLogShortcutEdit->setPlaceholderText("Ctrl+L");
+    clearLogShortcutEdit->setText(
+        QString::fromStdString(toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L")));
+    clearLogShortcutEdit->setIsClearButtonEnable(true);
     clearLogShortcutEdit->setFixedWidth(200);
     clearLogShortcutLayout->addWidget(clearLogShortcutEdit);
-    connect(clearLogShortcutEdit, &QKeySequenceEdit::keySequenceChanged, this,
-        [=](const QKeySequence& shortcut)
+
+    ElaToolButton* confirmClearLogShortcutButton = new ElaToolButton(clearLogShortcutArea);
+    confirmClearLogShortcutButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    confirmClearLogShortcutButton->setElaIcon(ElaIconType::Check);
+    confirmClearLogShortcutButton->setText(tr("确认更改"));
+    clearLogShortcutLayout->addWidget(confirmClearLogShortcutButton);
+    connect(confirmClearLogShortcutButton, &ElaToolButton::clicked, this,
+        [=]()
         {
-            const QString shortcutText = shortcut.toString(QKeySequence::PortableText);
-            Q_EMIT clearLogShortcutChanged(shortcutText);
+            const QString shortcut = clearLogShortcutEdit->text().trimmed();
+            const QKeySequence keySequence = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
+            if (keySequence.isEmpty()) {
+                ElaMessageBar::error(ElaMessageBarType::TopRight, tr("更改失败"),
+                    tr("请输入有效的快捷键，例如 Ctrl+L"), 3000);
+                return;
+            }
+
+            insertToml(m_globalConfig, "clearLogShortcut", shortcut.toStdString());
+            Q_EMIT clearLogShortcutChangedSignal(shortcut);
+            ElaMessageBar::success(ElaMessageBarType::TopRight, tr("更改成功"),
+                tr("清空日志快捷键已设置为 %1").arg(shortcut), 3000);
         });
+    connect(clearLogShortcutEdit, &ElaLineEdit::returnPressed,
+        confirmClearLogShortcutButton, &ElaToolButton::click);
     centerLayout->addWidget(clearLogShortcutArea);
 
     // 默认以纯文本/表模式打开人名表
@@ -431,8 +447,6 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "stackSwitchMode", stackSwitchGroup->id(stackSwitchGroup->checkedButton()));
 
             insertToml(m_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
-            insertToml(m_globalConfig, "clearLogShortcut",
-                clearLogShortcutEdit->keySequence().toString(QKeySequence::PortableText).toStdString());
             insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());

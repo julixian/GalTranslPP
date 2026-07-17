@@ -4,7 +4,7 @@
 <context>
     <name>ApiPool.loadApis</name>
     <message>
-        <location filename="ApiPool.cpp" line="20"/>
+        <location filename="ApiPool.cpp" line="21"/>
         <source>令牌池新加载 %1 个 Api keys， 现共有 %2 个Api keys</source>
         <translation>Token pool loaded %1 Api keys; total %2.</translation>
     </message>
@@ -12,7 +12,7 @@
 <context>
     <name>ApiPool.reportProblem</name>
     <message>
-        <location filename="ApiPool.cpp" line="77"/>
+        <location filename="ApiPool.cpp" line="78"/>
         <source>Api key [%1] 已被标记为不可用</source>
         <translation>Api key [%1] has been marked unavailable</translation>
     </message>
@@ -2177,94 +2177,94 @@ Problem overview:
 <context>
     <name>checkResponse</name>
     <message>
-        <location filename="ApiPool.cpp" line="100"/>
+        <location filename="ApiPool.cpp" line="101"/>
         <source>%1 [HTTP %2]</source>
         <translation>%1 [HTTP %2]</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="116"/>
+        <location filename="ApiPool.cpp" line="117"/>
         <source>%1 Api 响应 JSON 解析失败。错误: %2，原始响应:
 %3</source>
         <translation>%1 Api response JSON parse failed. Error: %2, raw response:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="120"/>
-        <location filename="ApiPool.cpp" line="162"/>
-        <location filename="ApiPool.cpp" line="185"/>
-        <location filename="ApiPool.cpp" line="215"/>
-        <location filename="ApiPool.cpp" line="238"/>
+        <location filename="ApiPool.cpp" line="121"/>
+        <location filename="ApiPool.cpp" line="163"/>
+        <location filename="ApiPool.cpp" line="186"/>
+        <location filename="ApiPool.cpp" line="216"/>
+        <location filename="ApiPool.cpp" line="239"/>
         <source>空</source>
         <translation>Empty</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="126"/>
+        <location filename="ApiPool.cpp" line="127"/>
         <source>Api 响应 JSON 解析失败: %1</source>
         <translation>Api response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="138"/>
+        <location filename="ApiPool.cpp" line="139"/>
         <source>%1 切换到下一个 Api key</source>
         <translation>%1 switching to the next Api key</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="158"/>
+        <location filename="ApiPool.cpp" line="159"/>
         <source>%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:
 %3</source>
         <translation>%1 key [%2] may lack quota; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="168"/>
+        <location filename="ApiPool.cpp" line="169"/>
         <source>Api key 疑似额度用尽: %1</source>
         <translation>Api key may be exhausted: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="169"/>
-        <location filename="ApiPool.cpp" line="193"/>
-        <location filename="ApiPool.cpp" line="222"/>
-        <location filename="ApiPool.cpp" line="245"/>
+        <location filename="ApiPool.cpp" line="170"/>
+        <location filename="ApiPool.cpp" line="194"/>
+        <location filename="ApiPool.cpp" line="223"/>
+        <location filename="ApiPool.cpp" line="246"/>
         <source>响应为空</source>
         <translation>Empty response</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="181"/>
+        <location filename="ApiPool.cpp" line="182"/>
         <source>%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:
 %3</source>
         <translation>%1 key [%2] has no models; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="191"/>
+        <location filename="ApiPool.cpp" line="192"/>
         <source>Api key 没有模型 %1: %2</source>
         <translation>Api key has no model %1: %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="211"/>
+        <location filename="ApiPool.cpp" line="212"/>
         <source>%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:
 %3</source>
         <translation>%1 hit a rate limit or retryable error; retrying after %2 seconds. Raw response:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="221"/>
+        <location filename="ApiPool.cpp" line="222"/>
         <source>遇到频率限制或可再次请求错误: %1</source>
         <translation>Rate limit or retryable error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="235"/>
+        <location filename="ApiPool.cpp" line="236"/>
         <source>%1 遇到未知 Api 错误，原始响应:
 %2</source>
         <translation>%1 encountered an unknown Api error. Raw response:
 %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="244"/>
+        <location filename="ApiPool.cpp" line="245"/>
         <source>遇到未知 Api 错误: %1</source>
         <translation>Unknown Api error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="256"/>
+        <location filename="ApiPool.cpp" line="257"/>
         <source>%1 将切换到下一个 Api key</source>
         <translation>%1 will switch to the next Api key</translation>
     </message>

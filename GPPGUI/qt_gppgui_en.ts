@@ -414,7 +414,33 @@ sk-...</translation>
         <translation>Clear Log Shortcut</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+16"/>
+        <source>确认更改</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>更改失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>请输入有效的快捷键，例如 Ctrl+L</source>
+        <oldsource>请输入有效的单组快捷键，例如 Ctrl+L</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>更改成功</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>清空日志快捷键已设置为 %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>新项目人名表默认打开模式</source>
         <translation>Default name table view mode for new projects</translation>
     </message>
@@ -2287,12 +2313,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+69"/>
-        <location line="+172"/>
+        <location line="+176"/>
         <source>新建项目</source>
         <translation>New</translation>
     </message>
     <message>
-        <location line="-171"/>
+        <location line="-175"/>
         <source>打开项目</source>
         <translation>Open</translation>
     </message>
@@ -2405,7 +2431,7 @@ sk-...</translation>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+48"/>
         <source>选择新项目的存放位置</source>
         <translation>Choose new dir to store project</translation>
     </message>

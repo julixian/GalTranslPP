@@ -476,6 +476,34 @@ bool hasWhitespace(std::string_view str) {
     return false;
 }
 
+bool isAllPunctuation(std::string_view str) {
+    const uint8_t* s = (const uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (!u_ispunct(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool isAllWhitespace(std::string_view str) {
+    const uint8_t* s = (const uint8_t*)str.data();
+    const int32_t length = (int32_t)str.length();
+    int32_t i = 0;
+    UChar32 c;
+    while (i < length) {
+        U8_NEXT(s, i, length, c);
+        if (!u_isspace(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::string removePunctuation(std::string_view str) {
     std::string resultString;
     const uint8_t* s = (uint8_t*)str.data();

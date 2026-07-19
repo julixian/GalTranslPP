@@ -10,7 +10,7 @@ import Tool;
 
 namespace fs = std::filesystem;
 
-static absl::btree_set<std::string_view> excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖" };;
+static absl::btree_set<std::string_view> excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" };;
 
 TextLinebreakFix::~TextLinebreakFix() {
 	if (m_useTokenizer) {

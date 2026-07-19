@@ -664,6 +664,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("getMostCommonChar", &getMostCommonChar)
         .def("hasPunctuation", &hasPunctuation)
         .def("hasWhitespace", &hasWhitespace)
+        .def("isAllPunctuation", &isAllPunctuation)
+        .def("isAllWhitespace", &isAllWhitespace)
         .def("removePunctuation", &removePunctuation)
         .def("removeWhitespace", &removeWhitespace)
         .def("hasKatakana", &hasKatakana)

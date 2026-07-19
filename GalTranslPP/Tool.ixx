@@ -127,6 +127,8 @@ export
 
     bool hasPunctuation(std::string_view str);
     bool hasWhitespace(std::string_view str);
+    bool isAllPunctuation(std::string_view str);
+    bool isAllWhitespace(std::string_view str);
     std::string removePunctuation(std::string_view str);
     std::string removeWhitespace(std::string_view str);
 

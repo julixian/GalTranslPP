@@ -1166,6 +1166,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	utilsTable["getSubstringPositions"] = &getSubstringPositions;
 	utilsTable["getMostCommonChar"] = &getMostCommonChar;
 	utilsTable["replaceStr"] = &replaceStr;
+	utilsTable["isAllPunctuation"] = &isAllPunctuation;
+	utilsTable["isAllWhitespace"] = &isAllWhitespace;
 	utilsTable["hasPunctuation"] = &hasPunctuation;
 	utilsTable["hasWhitespace"] = &hasWhitespace;
 	utilsTable["removePunctuation"] = &removePunctuation;

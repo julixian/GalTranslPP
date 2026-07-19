@@ -590,35 +590,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1252"/>
-        <location filename="LuaManager.cpp" line="1264"/>
-        <location filename="LuaManager.cpp" line="1278"/>
-        <location filename="LuaManager.cpp" line="1293"/>
+        <location filename="LuaManager.cpp" line="1254"/>
+        <location filename="LuaManager.cpp" line="1266"/>
+        <location filename="LuaManager.cpp" line="1280"/>
+        <location filename="LuaManager.cpp" line="1295"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1269"/>
+        <location filename="LuaManager.cpp" line="1271"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1283"/>
+        <location filename="LuaManager.cpp" line="1285"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1298"/>
+        <location filename="LuaManager.cpp" line="1300"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1305"/>
+        <location filename="LuaManager.cpp" line="1307"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1312"/>
+        <location filename="LuaManager.cpp" line="1314"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -2284,7 +2284,7 @@ Problem overview:
         <translation type="vanished">Invalid CachePart %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="761"/>
+        <location filename="Tool.cpp" line="789"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2297,7 +2297,7 @@ Problem overview:
         <translation type="vanished">Invalid target: None</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="747"/>
+        <location filename="Tool.cpp" line="775"/>
         <source>无法获取字符串的无效条件目标 %1</source>
         <oldsource>内部错误: 无法获取字符串的无效条件目标 %1</oldsource>
         <translation>Invalid string target %1</translation>
@@ -2382,7 +2382,7 @@ Problem overview:
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="394"/>
+        <location filename="Tool.ixx" line="396"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2390,12 +2390,12 @@ Problem overview:
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1057"/>
+        <location filename="Tool.cpp" line="1085"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1063"/>
+        <location filename="Tool.cpp" line="1091"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2419,12 +2419,12 @@ Problem overview:
 <context>
     <name>parseToml</name>
     <message>
-        <location filename="Tool.ixx" line="268"/>
+        <location filename="Tool.ixx" line="270"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="286"/>
+        <location filename="Tool.ixx" line="288"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2432,12 +2432,12 @@ Problem overview:
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1075"/>
+        <location filename="Tool.cpp" line="1103"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1080"/>
+        <location filename="Tool.cpp" line="1108"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2487,7 +2487,7 @@ Problem overview:
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="354"/>
+        <location filename="Tool.ixx" line="356"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>

@@ -176,42 +176,42 @@
         <translation>Stage 4: organize and save results...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="435"/>
+        <location filename="DictionaryGenerator.cpp" line="436"/>
         <source>任务终止，已保留完成审校的词条</source>
         <translation>Task stopped; completed review entries have been kept</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="441"/>
+        <location filename="DictionaryGenerator.cpp" line="442"/>
         <source>阶段四: 字典审校 Agent 完成，使用审校后的字典结果</source>
         <translation>Stage 4: Review Agent done; using reviewed dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="455"/>
+        <location filename="DictionaryGenerator.cpp" line="456"/>
         <source>人名</source>
         <translation>Person name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="456"/>
+        <location filename="DictionaryGenerator.cpp" line="457"/>
         <source>地名</source>
         <translation>Place name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="472"/>
+        <location filename="DictionaryGenerator.cpp" line="473"/>
         <source>男性</source>
         <translation>Male</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="473"/>
+        <location filename="DictionaryGenerator.cpp" line="474"/>
         <source>女性</source>
         <translation>Female</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="477"/>
+        <location filename="DictionaryGenerator.cpp" line="478"/>
         <source>，与其它字典存在性别争议</source>
         <translation>, gender differs from other dicts</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="497"/>
+        <location filename="DictionaryGenerator.cpp" line="498"/>
         <source>字典生成完成，共 %1 个词语，已保存到 [%2]</source>
         <translation>Dictionary generation completed: %1 terms saved to [%2]</translation>
     </message>
@@ -232,32 +232,32 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.applyCommitResult</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="119"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="121"/>
         <source>提交结果 source_term=%1 与当前术语 %2 不匹配</source>
         <translation>Commit source_term=%1 does not match current term %2</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="128"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="130"/>
         <source>无效状态: %1</source>
         <translation>Invalid status: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="135"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="137"/>
         <source>status=%1 时必须提供 final_target</source>
         <translation>final_target is required when status=%1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="142"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="144"/>
         <source>status=conflict 时必须提供 final_note</source>
         <translation>final_note is required when status=conflict</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="148"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="150"/>
         <source>status=merged 时必须提供 merge_into</source>
         <translation>merge_into is required when status=merged</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="192"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="194"/>
         <source>merge_into 指向未知术语: %1</source>
         <translation>merge_into points to unknown term: %1</translation>
     </message>
@@ -265,12 +265,12 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.executeToolCalls</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="650"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="652"/>
         <source>未知工具: %1</source>
         <translation>Unknown tool: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="657"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="659"/>
         <source>工具返回结果:
 %1</source>
         <translation>Tool result:
@@ -280,26 +280,26 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.parseAndApplyTurnResponse</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="698"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="700"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 工具调用明细:
 %5</source>
         <translation>[Thread %1] [Term %2] [Turn %3] [Request %4] Dictionary Review Agent tool call details:
 %5</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="715"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="717"/>
         <source>执行工具调用 %1 个，进入下一轮。调用参数:
 %2</source>
         <translation>Executed %1 tool calls; entering the next turn. Call arguments:
 %2</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="727"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="729"/>
         <source>选择跳过，该术语不会输出到最终字典</source>
         <translation>Skipped; term omitted from final dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="745"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="747"/>
         <source>提交审校结果:
 %1</source>
         <translation>Review result committed:
@@ -309,27 +309,27 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.parseProtocolResponse</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="222"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="224"/>
         <source>字典审校 Agent 响应不是合法 JSON 对象</source>
         <translation>Dictionary Review Agent response is not a valid JSON object</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="230"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="232"/>
         <source>无效的字典审校 Agent schema: %1</source>
         <translation>Invalid Dictionary Review Agent schema: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="239"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="241"/>
         <source>字典审校 Agent 响应缺少动作字段</source>
         <translation>Review response lacks action</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="244"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="246"/>
         <source>字典审校 Agent 返回了空工具调用</source>
         <translation>Dictionary Review Agent returned empty tool_calls</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="249"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="251"/>
         <source>字典审校 Agent 返回未知动作: %1</source>
         <translation>Dictionary Review Agent returned unknown action: %1</translation>
     </message>
@@ -337,17 +337,21 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.review</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1036"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1058"/>
         <source>字典审校源文件路径数量(%1)与源文件视图数量(%2)不一致</source>
         <translation>Review source paths (%1) != views (%2)</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1063"/>
-        <source>字典审校 Agent 已停止，已保留完成审校的词条。最终保留术语数: %1</source>
-        <translation>Review Agent stopped; reviewed entries kept. Terms kept: %1</translation>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1085"/>
+        <source>字典审校 Agent 已停止。最终保留术语数: %1</source>
+        <translation>Dictionary Review Agent stopped. Final retained terms: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1069"/>
+        <source>字典审校 Agent 已停止，已保留完成审校的词条。最终保留术语数: %1</source>
+        <translation type="vanished">Review Agent stopped; reviewed entries kept. Terms kept: %1</translation>
+    </message>
+    <message>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1091"/>
         <source>字典审校 Agent 完成。最终保留术语数: %1</source>
         <translation>Dictionary Review Agent completed. Final retained terms: %1</translation>
     </message>
@@ -355,66 +359,68 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.reviewTermGroup</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="769"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="788"/>
         <source>[线程 %1] [术语 %2] 字典审校 Agent 开始处理 `%3`，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次</source>
         <translation>[T%1][Term %2] Review `%3`: max %4 turns, %5 names, %6 notes, %7 rough hits</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="818"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="838"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="826"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="846"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 开始请求，上下文 %5 字节</source>
         <translation>[Thread %1] [Term %2] [Turn %3] [Request %4] Dictionary Review Agent starts request, context %5 bytes</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="837"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="857"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4]</source>
         <translation>[Thread %1] [Term %2] [Turn %3] [Request %4]</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="853"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="873"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 成功响应，响应内容:
 %5</source>
         <translation>[T%1][Term %2][Turn %3][Req %4] Review Agent OK:
 %5</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="875"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="895"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 响应处理成功，处理结果:
 %5</source>
         <translation>[T%1][Term %2][Turn %3][Req %4] Review response OK:
 %5</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="890"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="910"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 响应处理失败，错误: %5，响应内容:
 %6</source>
         <translation>[T%1][Term %2][Turn %3][Req %4] Review response failed: %5; content:
 %6</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="903"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="923"/>
         <source>字典审校 Agent 响应处理失败: %1</source>
         <translation>Dictionary Review Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="926"/>
-        <source>[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，该术语不会输出到最终字典</source>
-        <translation>[T%1][Term %2] Review Agent exceeded %3 turns; term omitted</translation>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="946"/>
+        <source>[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，将输出原始字典结果</source>
+        <oldsource>[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，该术语不会输出到最终字典</oldsource>
+        <translation>[T%1][Term %2] Review Agent exceeded %3 turns; term kept original</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="935"/>
-        <source>[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，该术语不会输出到最终字典</source>
-        <translation>[T%1][Term %2][Turn %3] Review Agent failed after %4 requests; term omitted</translation>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="955"/>
+        <source>[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，将输出原始字典结果</source>
+        <oldsource>[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，该术语不会输出到最终字典</oldsource>
+        <translation>[T%1][Term %2][Turn %3] Review Agent failed after %4 requests; term kept original</translation>
     </message>
 </context>
 <context>
     <name>DictionaryGeneratorReviewAgent.runReviewWorkers</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="950"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="972"/>
         <source>字典审校 Agent 启动 %1 个审校线程处理 %2 个术语</source>
         <translation>Dictionary Review Agent starts %1 review threads for %2 terms</translation>
     </message>

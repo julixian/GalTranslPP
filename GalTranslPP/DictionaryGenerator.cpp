@@ -413,6 +413,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
             m_genDictReviewUserPrompt,
             m_apiStrategy,
             m_targetLang,
+            m_inputBlockMaxLines,
             m_maxRequestCount,
             m_threadsNum,
             m_agentMaxTurnsPerChunk,

@@ -26,6 +26,7 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     const std::string& genDictReviewUserPrompt,
     const std::string& apiStrategy,
     const std::string& targetLang,
+    int inputBlockMaxLines,
     int maxRequestCount,
     int threadsNum,
     int agentMaxTurnsPerChunk,
@@ -44,6 +45,7 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     m_genDictReviewUserPrompt(genDictReviewUserPrompt),
     m_apiStrategy(apiStrategy),
     m_targetLang(targetLang),
+    m_inputBlockMaxLines(inputBlockMaxLines),
     m_maxRequestCount(maxRequestCount),
     m_threadsNum(threadsNum),
     m_agentMaxTurnsPerChunk(agentMaxTurnsPerChunk),
@@ -113,7 +115,7 @@ void DictionaryGeneratorReviewAgent::applyTermUpdateLocked(const json& update) {
 
 // 校验当前术语组的提交结果，并把结果写入账本。
 void DictionaryGeneratorReviewAgent::applyCommitResultLocked(const DictionaryReviewTermGroup& group,
-    DictionaryReviewAgentCommitResult decision)
+    const DictionaryReviewAgentCommitResult& decision)
 {
     if (decision.sourceTerm != group.sourceTerm) {
         throw std::runtime_error(gppTr(
@@ -760,7 +762,24 @@ DictionaryGeneratorReviewAgent::parseAndApplyTurnResponse(
 
 // 审校一个术语组，直到提交、跳过、请求耗尽或达到轮数上限。
 void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const DictionaryReviewTermGroup& group, int threadId) {
+    const auto preserveCandidateAsAccepted = [&]()
+        {
+            std::lock_guard<std::mutex> lock(m_ledgerMutex);
+            if (m_ledgerMap.contains(group.sourceTerm)) {
+                return;
+            }
+            m_ledgerMap.emplace(group.sourceTerm, json{
+                {"target_term", candidateTargetForGroup(group)},
+                {"note", candidateNoteForGroup(group)},
+                {"status", "accepted"},
+                {"merge_into", ""},
+                {"origin", "review_fallback"},
+                {"updated_at", currentTimestampString()}
+            });
+            rememberLedgerTermOrderLocked(group.sourceTerm);
+        };
     if (m_controller->shouldStop()) {
+        preserveCandidateAsAccepted();
         return;
     }
 
@@ -810,6 +829,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
         const size_t messageBytes = approximateAgentCommonMessagesBytes(messages);
         while (requestCount < m_maxRequestCount) {
             if (m_controller->shouldStop()) {
+                preserveCandidateAsAccepted();
                 return;
             }
 
@@ -895,7 +915,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
-                    .arg(limitLogLines(response.content, 10))
+                    .arg(limitLogLines(response.content, m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",
@@ -925,7 +945,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
     if (!retryExhausted) {
         m_logger->warn(gppTr(
             "DictionaryGeneratorReviewAgent.reviewTermGroup",
-            "[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，该术语不会输出到最终字典")
+            "[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，将输出原始字典结果")
             .arg(threadId)
             .arg(reviewIndexLog)
             .arg(m_agentMaxTurnsPerChunk)
@@ -934,13 +954,15 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
     else {
         m_logger->warn(gppTr(
             "DictionaryGeneratorReviewAgent.reviewTermGroup",
-            "[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，该术语不会输出到最终字典")
+            "[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，将输出原始字典结果")
             .arg(threadId)
             .arg(reviewIndexLog)
             .arg(turn + 1)
             .arg(m_maxRequestCount)
             .toStdString());
     }
+
+    preserveCandidateAsAccepted();
 }
 
 // 启动审校 worker 处理当前所有术语组。
@@ -1061,7 +1083,7 @@ DictList DictionaryGeneratorReviewAgent::review(
     DictList finalList = buildFinalDictionary();
     if (reviewStopped) {
         m_logger->info(gppTr("DictionaryGeneratorReviewAgent.review",
-            "字典审校 Agent 已停止，已保留完成审校的词条。最终保留术语数: %1")
+            "字典审校 Agent 已停止。最终保留术语数: %1")
             .arg(finalList.size())
             .toStdString());
     }

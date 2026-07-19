@@ -58,6 +58,7 @@ export
             const std::string& genDictReviewUserPrompt,
             const std::string& apiStrategy,
             const std::string& targetLang,
+            int inputBlockMaxLines,
             int maxRequestCount,
             int threadsNum,
             int agentMaxTurnsPerChunk,
@@ -105,13 +106,14 @@ export
         std::string m_genDictReviewUserPrompt;
         std::string m_apiStrategy;
         std::string m_targetLang;
-        int m_maxRequestCount = 5;
-        int m_threadsNum = 1;
-        int m_agentMaxTurnsPerChunk = 6;
-        int m_agentSearchResultLimit = 80;
-        int m_agentContextLinesLimit = 20;
-        int m_apiTimeOutMs = 120000;
-        bool m_checkQuota = true;
+        int m_inputBlockMaxLines;
+        int m_maxRequestCount;
+        int m_threadsNum;
+        int m_agentMaxTurnsPerChunk;
+        int m_agentSearchResultLimit;
+        int m_agentContextLinesLimit;
+        int m_apiTimeOutMs;
+        bool m_checkQuota;
         std::vector<DictionaryReviewTermGroup> m_groups;
         const std::vector<AgentCommonSourceFileView>* m_sourceFiles = nullptr;
         absl::flat_hash_map<fs::path, const AgentCommonSourceFileView*> m_sourceFileLookup;
@@ -129,7 +131,7 @@ export
         void applyTermUpdateLocked(const json& update);
 
         // 在持有 m_ledgerMutex 时校验并应用一个提交结果。
-        void applyCommitResultLocked(const DictionaryReviewTermGroup& group, DictionaryReviewAgentCommitResult decision);
+        void applyCommitResultLocked(const DictionaryReviewTermGroup& group, const DictionaryReviewAgentCommitResult& decision);
 
         // 解析并校验审校 Agent 文本协议，得到动作、工具调用和结果字段。
         DictionaryReviewAgentProtocolResponse parseProtocolResponse(const std::string& content) const;

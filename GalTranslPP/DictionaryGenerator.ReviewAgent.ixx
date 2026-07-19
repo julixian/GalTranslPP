@@ -201,7 +201,7 @@ export
         );
 
         // 审校一个粗候选术语组，直到提交、跳过、请求耗尽或达到轮数上限。
-        void reviewTermGroup(int groupIndex, const DictionaryReviewTermGroup& group, int threadId);
+        void reviewTermGroup(const DictionaryReviewTermGroup& group, int threadId);
 
         // 启动术语审校 worker，并等待所有术语审校结束。
         void runReviewWorkers();

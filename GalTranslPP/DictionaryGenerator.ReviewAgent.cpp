@@ -761,7 +761,7 @@ DictionaryGeneratorReviewAgent::parseAndApplyTurnResponse(
 }
 
 // 审校一个术语组，直到提交、跳过、请求耗尽或达到轮数上限。
-void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const DictionaryReviewTermGroup& group, int threadId) {
+void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermGroup& group, int threadId) {
     const auto preserveCandidateAsAccepted = [&]()
         {
             std::lock_guard<std::mutex> lock(m_ledgerMutex);
@@ -784,12 +784,12 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
     }
 
     const fs::path currentFile = guessCurrentFileForTerm(group.sourceTerm);
-    const std::string reviewIndexLog = std::format("{}/{}", groupIndex, m_groups.size());
+    const std::string sourceTermLog = std::format("`{}`", group.sourceTerm);
     m_logger->info(gppTr(
         "DictionaryGeneratorReviewAgent.reviewTermGroup",
-        "[线程 %1] [术语 %2] 字典审校 Agent 开始处理 `%3`，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次")
+        "[线程 %1] [术语 %2] 字典审校 Agent 开始处理，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次")
         .arg(threadId)
-        .arg(reviewIndexLog)
+        .arg(sourceTermLog)
         .arg(group.sourceTerm)
         .arg(m_agentMaxTurnsPerChunk)
         .arg(group.candidateTargets.size())
@@ -847,7 +847,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                 "DictionaryGeneratorReviewAgent.reviewTermGroup",
                 "[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 开始请求，上下文 %5 字节")
                 .arg(threadId)
-                .arg(reviewIndexLog)
+                .arg(sourceTermLog)
                 .arg(turn + 1)
                 .arg(requestCount + 1)
                 .arg(messageBytes)
@@ -858,7 +858,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                 "DictionaryGeneratorReviewAgent.reviewTermGroup",
                 "[线程 %1] [术语 %2] [轮次 %3] [请求 %4]")
                 .arg(threadId)
-                .arg(reviewIndexLog)
+                .arg(sourceTermLog)
                 .arg(turn + 1)
                 .arg(requestCount + 1)
                 .toStdString();
@@ -874,7 +874,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                     "DictionaryGeneratorReviewAgent.reviewTermGroup",
                     "[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 成功响应，响应内容:\n%5")
                     .arg(threadId)
-                    .arg(reviewIndexLog)
+                    .arg(sourceTermLog)
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(response.content)
@@ -886,7 +886,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                 group,
                 messages,
                 response.content,
-                reviewIndexLog,
+                sourceTermLog,
                 turn,
                 requestCount,
                 threadId
@@ -896,7 +896,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                     "DictionaryGeneratorReviewAgent.reviewTermGroup",
                     "[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 响应处理成功，处理结果:\n%5")
                     .arg(threadId)
-                    .arg(reviewIndexLog)
+                    .arg(sourceTermLog)
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult->summary)
@@ -911,7 +911,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
                     "DictionaryGeneratorReviewAgent.reviewTermGroup",
                     "[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 响应处理失败，错误: %5，响应内容:\n%6")
                     .arg(threadId)
-                    .arg(reviewIndexLog)
+                    .arg(sourceTermLog)
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
@@ -947,7 +947,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
             "DictionaryGeneratorReviewAgent.reviewTermGroup",
             "[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，将输出原始字典结果")
             .arg(threadId)
-            .arg(reviewIndexLog)
+            .arg(sourceTermLog)
             .arg(m_agentMaxTurnsPerChunk)
             .toStdString());
     }
@@ -956,7 +956,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(int groupIndex, const Dicti
             "DictionaryGeneratorReviewAgent.reviewTermGroup",
             "[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，将输出原始字典结果")
             .arg(threadId)
-            .arg(reviewIndexLog)
+            .arg(sourceTermLog)
             .arg(turn + 1)
             .arg(m_maxRequestCount)
             .toStdString());
@@ -978,11 +978,11 @@ void DictionaryGeneratorReviewAgent::runReviewWorkers() {
     ctpl::thread_pool pool(reviewThreads);
     std::vector<std::future<void>> results;
     results.reserve(m_groups.size());
-    for (const auto& [groupIndex, group] : m_groups | std::views::enumerate) {
-        results.emplace_back(pool.push([this, groupIndex, &group](int threadId)
+    for (const auto& group : m_groups) {
+        results.emplace_back(pool.push([this, &group](int threadId)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
-                reviewTermGroup(groupIndex + 1, group, threadId + 1);
+                reviewTermGroup(group, threadId + 1);
                 m_controller->updateBar();
             }));
     }

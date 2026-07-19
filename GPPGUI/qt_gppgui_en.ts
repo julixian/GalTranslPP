@@ -1113,12 +1113,12 @@ sk-...</translation>
         <translation>Split num</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+36"/>
         <source>会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</source>
         <translation>Delays onFileProcessed until translation ends. When enabled, filename order is recommended</translation>
     </message>
     <message>
-        <location line="+33"/>
+        <location line="+30"/>
         <source>Agent 模式</source>
         <translation>Agent mode</translation>
     </message>
@@ -1188,7 +1188,7 @@ sk-...</translation>
         <translation>Optional project note file for Agent to read; add the `get_project_note()` tool prompt yourself</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+20"/>
         <source>缓存保存间隔</source>
         <translation>Save interval</translation>
     </message>
@@ -1213,12 +1213,12 @@ sk-...</translation>
         <translation>Check quota</translation>
     </message>
     <message>
-        <location line="+273"/>
+        <location line="+268"/>
         <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。具体替换时机详见使用说明，auto 为自动检测</source>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-520"/>
+        <location line="-498"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1249,7 +1249,7 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+168"/>
+        <location line="+151"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
     </message>
@@ -1269,7 +1269,7 @@ sk-...</translation>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+46"/>
         <source>日志级别</source>
         <translation>Log level</translation>
     </message>
@@ -1278,7 +1278,7 @@ sk-...</translation>
         <translation type="vanished">Save project logs</translation>
     </message>
     <message>
-        <location line="-359"/>
+        <location line="-341"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1288,7 +1288,7 @@ sk-...</translation>
         <translation>Names per request per NameTrans thread</translation>
     </message>
     <message>
-        <location line="+123"/>
+        <location line="+119"/>
         <source>连续重复块引用复用</source>
         <translation>Repeated block reference reuse</translation>
     </message>
@@ -1308,7 +1308,7 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+186"/>
+        <location line="+173"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1333,7 +1333,7 @@ sk-...</translation>
         <translation>Save project logs</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+41"/>
         <source>单个 log 文件大小限制</source>
         <oldsource>log 文件大小限制</oldsource>
         <translation>Single log file size limit</translation>
@@ -1385,7 +1385,7 @@ sk-...</translation>
         <translation>Only limits displayed Dict/Glossary lines in logs</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+15"/>
         <source>分词器设置</source>
         <translation>Tokenizer settings</translation>
     </message>
@@ -1446,12 +1446,12 @@ sk-...</translation>
         <translation type="vanished">Stanza lang id, you need reboot app after downloading a new model</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+109"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-148"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1468,7 +1468,7 @@ sk-...</translation>
         <translation>Less accurate than spaCy</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+34"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
     </message>
@@ -4310,12 +4310,12 @@ Issue summary:</translation>
     <name>TLFCfgPage</name>
     <message>
         <location filename="TLFCfgPage.cpp" line="+24"/>
-        <location line="+222"/>
+        <location line="+220"/>
         <source>换行修复设置</source>
         <translation>Linebreak fix settings</translation>
     </message>
     <message>
-        <location line="-213"/>
+        <location line="-211"/>
         <source>优先标点</source>
         <translation>Prefer punctuations</translation>
     </message>

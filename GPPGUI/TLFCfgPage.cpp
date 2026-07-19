@@ -224,9 +224,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	if (toml::find_or(m_projectConfig, "GUIConfig", "textLinebreakFixTokenizerSettingsExpanded", false)) {
 		tokenizerSettingsDrawerArea->expand();
 	}
-	else {
-		tokenizerSettingsDrawerArea->collapse();
-	}
+
 	m_applyFunc = [=]()
 		{
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.linebreakMode", fixModes[fixModeComboBox->currentIndex()].toStdString());

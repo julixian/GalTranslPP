@@ -1,28 +1,32 @@
 import gpp_plugin_api as gpp
 from pathlib import Path
-import re
 import json
+import re
 from typing import Callable, cast
 
-# Sentence 的声明详见 Example/LuaSample/SampleTextPlugin.lua
+tokenizeResult = tuple[list[tuple[str, str]], list[tuple[str, str]]]
+tokenizeFuncType = Callable[[str], tokenizeResult]
 
-# 全局变量，由 C++ 注入
-# python 中的 logger 和 toknizeFunc 不在 utils 中而是在当前模块的全局变量中
+# C++ 会把 logger 注入到当前模块。
 logger = cast(gpp.spdlogLogger, None)
 
+# Text 插件可以选择让 C++ 注入分词器函数。可配置 sourceLang / targetLang 两套。
+# 可选后端: "MeCab" / "spaCy" / "Stanza" / "pkuseg"。
+# MeCab: 需要 sourceLangMecabDictDir 或 targetLangMecabDictDir。
+# spaCy: 需要 sourceLangSpaCyModelName 或 targetLangSpaCyModelName，例如 "ja_core_news_trf" / "zh_core_web_trf"。
+# Stanza: 需要 sourceLangStanzaLang 或 targetLangStanzaLang，例如 "ja" / "zh"。
+# pkuseg: 不需要额外模型名。
+targetLangUseTokenizer = True
 targetLangTokenizerBackend = "spaCy"
 targetLangSpaCyModelName = "zh_core_web_trf"
+targetLangTokenizeFunc = cast(tokenizeFuncType, None)
 
-targetLangUseTokenizer = True
-targetLangTokenizeFunc = cast(Callable[[str], tuple[list[tuple[str, str]], list[tuple[str, str]]]], None)
-
-tokenizeCachePath = Path(__file__).resolve().parent / r"other_cache\tokenizeCache_betterLinebreakFix.json"
+tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
-if tokenizeCachePath.exists():
-    with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
-        tokenizeCache = json.load(f)
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
+maxLineLength = 28
+linebreakSymbol = "@L"
 
 def splitIntoTokens(sentence: str) -> list[str]:
     tokens = []
@@ -75,10 +79,14 @@ def init(projectDir: Path):
     """
     插件初始化函数，由 C++ 调用一次。
     """
-    logger.info(f"LineLink 初始化成功，projectDir: {projectDir}")
+    logger.info(f"BetterLinebreakFix 初始化成功")
+    global tokenizeCachePath, tokenizeCache
+    tokenizeCachePath = projectDir / "other_cache" / tokenizeCachePath
+    if tokenizeCachePath.exists():
+        with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
+            tokenizeCache = json.load(f)
 
-maxLineLength = 32
-linebreakSymbol = "\\n"
+
 def hasLongPart(transView: str):
     maxLen = maxLineLength
     segments = transView.split(linebreakSymbol)
@@ -100,8 +108,6 @@ def hasLongPart(transView: str):
 
 def processSentence(se: gpp.Sentence):
     transView: str = se.transview
-    # if "[" in transView:
-    #     return
     if not hasLongPart(transView):
         return
     segments = transView.split(linebreakSymbol)
@@ -109,6 +115,8 @@ def processSentence(se: gpp.Sentence):
     transView = "".join(segments)
     maxLen = maxLineLength
     tokens = splitIntoTokens(transView)
+    if not tokens:
+        return
     
     dialogue = isDialogue(transView)
     newLines = []
@@ -128,17 +136,19 @@ def processSentence(se: gpp.Sentence):
                 nextToken = residualTokens[index + 1]
                 if len(currentLine) + len(currentToken) + len(nextToken) > maxLen:
                     if currentToken in excludePuncts:
+                        # c
                         #『\n...
                         newLines.append(currentLine)
                         currentLine = currentToken
                         continue
-                    removed = gpp.utils.removePunctuation(nextToken)
-                    if not removed and nextToken not in excludePuncts:
+                    if gpp.utils.isAllPunctuation(nextToken) and nextToken not in excludePuncts:
                         if any(currentLine.endswith(excludePunct) for excludePunct in excludePuncts):
+                            #  cccc  nnn
                             #『word\n。』
                             newLines.append(currentLine[:-1])
                             currentLine = currentLine[-1] + currentToken
                         else:
+                            # cccc  n
                             # word\n，
                             newLines.append(currentLine)
                             currentLine = currentToken
@@ -147,8 +157,9 @@ def processSentence(se: gpp.Sentence):
         else:
             newLines.append(currentLine)
             currentLine = currentToken
-    if len(newLines) >= 1 and len(currentLine) <= 2 and not gpp.utils.removePunctuation(currentLine):
-        # word\n。」
+    if len(newLines) >= 1 and len(currentLine) <= 2 and gpp.utils.isAllPunctuation(currentLine):
+        #       ccc
+        # word\n。」\z
         newLines[-1] = newLines[-1] + currentLine
     else:
         newLines.append(currentLine)
@@ -175,41 +186,32 @@ def linkLine(se: gpp.Sentence):
                 maxLen = maxLineLength - 1
         else:
             maxLen = maxLineLength
-        # 判断：如果 (当前行 + 下一段) 的长度 <= maxLen
         if len(currentLine) + len(currentSegment) <= maxLen:
-            # 可以合并（直接拼接）
             currentLine += currentSegment
         else:
-            # 不能合并了，把当前行存入结果列表
             newLines.append(currentLine)
-            # 开启新的一行
             currentLine = currentSegment
 
-    # 3. 循环结束后，别忘了把最后一行加进去
     newLines.append(currentLine)
-    # 4. 将新分好的段落连接起来返回
     se.transview = (linebreakSymbol + "　").join(newLines) if dialogue else linebreakSymbol.join(newLines)
     if se.orig.startswith("　") and not se.transview.startswith("　"):
         se.transview = "　" + se.transview
 
 
 def dPostRun(se: gpp.Sentence):
-    """
-    处理每个句子的主函数。
-    se 是一个 C++ Sentence 对象的代理。
-    """
     try:
-        if not gpp.utils.extractCJK(se.transview) or se.orig.startswith("　　"):
+        if not gpp.utils.hasCJK(se.transview) or se.orig.startswith("　　"):
+            return
+        if re.search("@[^L]", se.transview):
             return
         processSentence(se)
-        #linkLine(se)
-        #se.transview = se.transview.replace(linebreakSymbol, "\n")
+        linkLine(se)
     except Exception as e:
-        logger.error(f"Error during LineLink run(): {e}")
+        logger.error(f"Error during BetterLinebreakFix dPostRun(): {e}")
 
 
 def unload():
     with open(tokenizeCachePath, 'w', encoding='utf-8') as f:
         json.dump(tokenizeCache, f, ensure_ascii=False, indent=2)
-    logger.info(f"LineLink tokenizeCache 已保存至 {tokenizeCachePath}")
+    logger.info(f"BetterLinebreakFix 卸载成功，tokenizeCache 已保存至 {tokenizeCachePath}")
     

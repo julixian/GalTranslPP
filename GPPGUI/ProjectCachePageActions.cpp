@@ -123,9 +123,6 @@ void ProjectCachePage::refreshThemeStyles()
     if (m_cacheDirLabel) {
         m_cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
     }
-    if (m_replacePreviewLabel) {
-        m_replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
-    }
     if (m_searchStatusLabel) {
         m_searchStatusLabel->setStyleSheet(auxiliaryTextStyle());
     }

@@ -63,9 +63,20 @@ private:
         QString problemPreview;
     };
 
+    struct ReplacePreviewEntry {
+        QString filename;
+        int row = -1;
+        int sentenceIndex = -1;
+        QString field;
+        QString before;
+        QString after;
+    };
+
     struct ReplaceDetail {
         QString filename;
         int matches{};
+        int previewEntries{};
+        QList<ReplacePreviewEntry> previews;
     };
 
     void setupUi();
@@ -106,7 +117,8 @@ private:
 
     // ProjectCachePageSearch.cpp：全局搜索、问题聚合和批量替换；
     // 搜索优先读取内存中的未保存编辑，再回退到磁盘文件。
-    QList<ReplaceDetail> collectReplaceDetails(const QString& query, const QString& field,
+    QList<ReplaceDetail> collectReplaceDetails(const QString& query, const QString& replacement,
+        const QString& field,
         const QRegularExpression* regex = nullptr, int* totalMatches = nullptr) const;
     int applyReplaceToEntries(json& entries, const QString& query, const QString& replacement,
         const QString& field, const QRegularExpression* regex = nullptr) const;
@@ -185,7 +197,6 @@ private:
     ElaText* m_currentFileLabel = nullptr;
     ElaText* m_currentSummaryLabel = nullptr;
     ElaText* m_searchStatusLabel = nullptr;
-    ElaText* m_replacePreviewLabel = nullptr;
     QSplitter* m_mainSplitter = nullptr;
     QWidget* m_replacePanel = nullptr;
 

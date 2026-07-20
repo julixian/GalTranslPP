@@ -410,16 +410,11 @@ void ProjectCachePage::setupUi()
     connect(m_replaceExecuteButton, &ElaToolButton::clicked, this, &ProjectCachePage::executeReplace);
     replaceButtonLayout->addWidget(m_replaceExecuteButton);
     replaceLayout->addLayout(replaceButtonLayout);
-
-    m_replacePreviewLabel = new ElaText("", BodyFontPx, searchTab);
-    m_replacePreviewLabel->setWordWrap(true);
-    m_replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
-    replaceLayout->addWidget(m_replacePreviewLabel);
     connect(m_replaceRegexButton, &ElaToolButton::toggled, this, [=](bool)
         {
             setRegexError(m_replaceQueryEdit, m_replaceRegexErrorAction, {});
-            m_replacePreviewLabel->clear();
         });
+
     searchLayout->addWidget(m_replacePanel);
 
     m_searchStatusLabel = new ElaText("", BodyFontPx, searchTab);

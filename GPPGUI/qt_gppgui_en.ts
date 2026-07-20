@@ -3409,12 +3409,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+373"/>
+        <location line="+368"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location line="-372"/>
+        <location line="-367"/>
         <source>确定要删除选中的 %1 个缓存文件吗？</source>
         <oldsource>确定要删除选中的 </oldsource>
         <translation>Delete %1 selected cache files?</translation>
@@ -3426,12 +3426,12 @@ Cache: %4</translation>
         <translation>Deleted %1 cache files</translation>
     </message>
     <message>
-        <location line="+286"/>
+        <location line="+281"/>
         <source>在当前文件中搜索 preproc/transraw/problems...</source>
         <translation>Search preproc/transraw/problems in current file...</translation>
     </message>
     <message>
-        <location line="-337"/>
+        <location line="-332"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
@@ -3454,24 +3454,56 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="-66"/>
-        <location line="+227"/>
+        <location line="+222"/>
         <source>正则搜索</source>
         <translation>Regex</translation>
     </message>
     <message>
-        <location line="-140"/>
+        <location line="-135"/>
         <source>正则替换</source>
         <translation>Regex</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="+167"/>
+        <location filename="ProjectCachePageSearch.cpp" line="+201"/>
         <source>正则表达式无效: %1（位置 %2）</source>
         <translation>Invalid regex: %1 (at %2)</translation>
     </message>
     <message>
-        <location line="+141"/>
+        <location line="+239"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
+    </message>
+    <message>
+        <location line="-96"/>
+        <source>%1；显示前 %2 条</source>
+        <translation>%1; showing first %2</translation>
+    </message>
+    <message>
+        <location line="+70"/>
+        <source>批量替换预览</source>
+        <translation>Batch Replace Preview</translation>
+    </message>
+    <message>
+        <location line="-12"/>
+        <source>复制列表</source>
+        <translation>Copy List</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>执行替换</source>
+        <translation>Apply Replacements</translation>
+    </message>
+    <message>
+        <location line="-13"/>
+        <location line="+5"/>
+        <source>替换前</source>
+        <translation>Before</translation>
+    </message>
+    <message>
+        <location line="-5"/>
+        <location line="+5"/>
+        <source>替换后</source>
+        <translation>After</translation>
     </message>
     <message>
         <location filename="ProjectCachePage.cpp" line="-50"/>
@@ -3506,25 +3538,25 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="-233"/>
-        <location filename="ProjectCachePageSearch.cpp" line="-120"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-173"/>
         <location line="+7"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location line="+279"/>
+        <location line="+274"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location line="-278"/>
+        <location line="-273"/>
         <location filename="ProjectCachePageSearch.cpp" line="+64"/>
-        <location line="+162"/>
+        <location line="+259"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location line="+318"/>
+        <location line="+313"/>
         <location filename="ProjectCachePageEntries.cpp" line="+44"/>
         <location line="+44"/>
         <source>未选择缓存文件</source>
@@ -3620,13 +3652,13 @@ Cache: %4</translation>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="+61"/>
-        <location filename="ProjectCachePage.cpp" line="-246"/>
+        <location filename="ProjectCachePageActions.cpp" line="+58"/>
+        <location filename="ProjectCachePage.cpp" line="-241"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+225"/>
+        <location filename="ProjectCachePage.cpp" line="+220"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
@@ -3648,6 +3680,7 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-151"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
@@ -3657,7 +3690,7 @@ Cache: %4</translation>
         <translation>Save Changes</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="-110"/>
+        <location filename="ProjectCachePageActions.cpp" line="-107"/>
         <source>完成</source>
         <translation>Done</translation>
     </message>
@@ -3667,7 +3700,7 @@ Cache: %4</translation>
         <translation>Failed</translation>
     </message>
     <message>
-        <location line="+103"/>
+        <location line="+100"/>
         <source>收起批量替换</source>
         <translation>Collapse Batch Replace</translation>
     </message>
@@ -3708,17 +3741,19 @@ Cache: %4</translation>
 %2</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="-164"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-110"/>
+        <location line="+89"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-88"/>
+        <location line="+88"/>
         <source>译文</source>
         <translation>Translation</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="-74"/>
         <source>%1 条结果</source>
         <translation>%1 result(s)</translation>
     </message>
@@ -3729,24 +3764,24 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+15"/>
-        <location line="+33"/>
+        <location line="+130"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location line="-27"/>
+        <location line="-111"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
-        <location line="+6"/>
         <source>
 ...</source>
-        <translation>
+        <translation type="vanished">
 ...</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-10"/>
+        <location line="+129"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>
@@ -3766,12 +3801,11 @@ Cache: %4</translation>
         <translation>Replaced %1 in %2 files; save to write.</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>批量替换完成，记得保存修改</source>
-        <translation>Batch replace done; save changes.</translation>
+        <translation type="vanished">Batch replace done; save changes.</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+50"/>
         <source>点击搜索此问题</source>
         <translation>Click to search this problem</translation>
     </message>

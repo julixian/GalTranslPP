@@ -2,11 +2,17 @@
 #include "ProjectCachePage_p.h"
 
 #include <QAction>
+#include <QClipboard>
+#include <QFont>
+#include <QGuiApplication>
 #include <QItemSelectionModel>
 #include <QRegularExpression>
 #include <QSignalBlocker>
 #include <QStandardItem>
+#include <QTextBrowser>
+#include <QVBoxLayout>
 
+#include "ElaContentDialog.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
@@ -66,12 +72,14 @@ int ProjectCachePage::replaceInString(QString& text, const QString& query,
 }
 
 QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
-    const QString& query, const QString& field, const QRegularExpression* regex,
+    const QString& query, const QString& replacement, const QString& field,
+    const QRegularExpression* regex,
     int* totalMatches) const
 {
     // 替换预览和实际替换共用同一套收集逻辑，避免“预览命中”和“实际修改”
     // 因字段范围不同步而产生偏差。
     int total = 0;
+    int previewCount = 0;
     QList<ReplaceDetail> details;
     for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
@@ -82,22 +90,48 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
         else if (!readCacheFile(file.relativeName, entries, nullptr)) {
             continue;
         }
+        ReplaceDetail detail;
+        detail.filename = file.relativeName;
         int fileMatches = 0;
-        for (const auto& item : entries) {
+        constexpr int previewLimit = 500;
+        for (int row = 0; row < (int)entries.size(); ++row) {
+            const auto& item = entries[row];
             if (!item.is_object()) {
                 continue;
             }
             // 替换字段和翻译缓存实际字段保持一致：
             // src -> pre_processed_text，dst -> translated_raw_text。
+            const auto collectField = [&](const QString& fieldName, const QString& before)
+                {
+                    QString after = before;
+                    const int matches = replaceInString(after, query, replacement, regex);
+                    fileMatches += matches;
+                    if (matches <= 0) {
+                        return;
+                    }
+                    ++detail.previewEntries;
+                    if (previewCount < previewLimit) {
+                        detail.previews.push_back({
+                            file.relativeName,
+                            row,
+                            sentenceIndexOf(item, row),
+                            fieldName,
+                            before,
+                            after,
+                        });
+                        ++previewCount;
+                    }
+                };
             if (field == "src" || field == "all") {
-                fileMatches += countOccurrences(entrySource(item), query, regex);
+                collectField("src", entrySource(item));
             }
             if (field == "dst" || field == "all") {
-                fileMatches += countOccurrences(entryDst(item), query, regex);
+                collectField("dst", entryDst(item));
             }
         }
         if (fileMatches > 0) {
-            details.push_back({ file.relativeName, fileMatches });
+            detail.matches = fileMatches;
+            details.push_back(detail);
             total += fileMatches;
         }
     }
@@ -278,29 +312,127 @@ void ProjectCachePage::runGlobalSearch()
 void ProjectCachePage::previewReplace()
 {
     const QString query = m_replaceQueryEdit->text();
+    const QString replacement = m_replaceWithEdit->text();
     const bool regexEnabled = m_replaceRegexButton && m_replaceRegexButton->isChecked();
     QRegularExpression regex;
     if (!prepareRegex(query, regexEnabled, false, regex,
         m_replaceQueryEdit, m_replaceRegexErrorAction)) {
-        m_replacePreviewLabel->clear();
         return;
     }
     if (query.isEmpty()) {
-        m_replacePreviewLabel->setText(tr("请输入查找内容"));
+        setInfo(tr("请输入查找内容"));
         return;
     }
+
     int total = 0;
     const QList<ReplaceDetail> details = collectReplaceDetails(
-        query, m_replaceFieldKey, regexEnabled ? &regex : nullptr, &total);
-    QString text = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
-    const int limit = std::min((int)details.size(), 8);
-    for (int i = 0; i < limit; ++i) {
-        text += QString("\n%1: %2").arg(details[i].filename).arg(details[i].matches);
+        query, replacement, m_replaceFieldKey,
+        regexEnabled ? &regex : nullptr, &total);
+    if (total <= 0) {
+        setInfo(tr("无匹配内容"));
+        return;
     }
-    if (details.size() > limit) {
-        text += tr("\n...");
+
+    int previewCount = 0;
+    int previewEntryTotal = 0;
+    for (const ReplaceDetail& detail : details) {
+        previewCount += detail.previews.size();
+        previewEntryTotal += detail.previewEntries;
     }
-    m_replacePreviewLabel->setText(text);
+    const QString summary = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
+    const QString displayedSummary = previewCount < previewEntryTotal
+        ? tr("%1；显示前 %2 条").arg(summary).arg(previewCount)
+        : summary;
+
+    const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
+    const QString textColor = dark ? "#f0f0f0" : "#202020";
+    const QString detailColor = dark ? "#b4b4b4" : "#666666";
+    const QString borderColor = dark ? "#505050" : "#d8d8d8";
+    const QString cardColor = dark ? "#292929" : "#fafafa";
+    const QString beforeColor = dark ? "#ffb4b4" : "#9f2727";
+    const QString beforeFill = dark ? "#442b2d" : "#fff0f0";
+    const QString afterColor = dark ? "#a9e8bd" : "#256d3e";
+    const QString afterFill = dark ? "#263c2d" : "#edf8f0";
+
+    const auto htmlText = [](QString text)
+        {
+            return text.toHtmlEscaped().replace("\r\n", "<br>").replace('\n', "<br>").replace('\r', "<br>");
+        };
+
+    QString html = QString(
+        "<html><head><style>"
+        "body{margin:0;color:%1;font-size:13px;}"
+        ".card{margin:0 0 8px 0;padding:10px 12px;border:1px solid %2;"
+        "border-radius:6px;background:%3;}"
+        ".head{margin-bottom:8px;font-weight:600;}"
+        ".meta{color:%4;font-weight:400;}"
+        ".line{margin-top:5px;padding:7px 9px;border-radius:5px;}"
+        ".before{color:%5;background:%6;}"
+        ".after{color:%7;background:%8;}"
+        ".label{font-weight:600;margin-right:8px;}"
+        "</style></head><body>")
+        .arg(textColor, borderColor, cardColor, detailColor,
+            beforeColor, beforeFill, afterColor, afterFill);
+
+    QString clipboardText = displayedSummary + "\n";
+    for (const ReplaceDetail& detail : details) {
+        for (const ReplacePreviewEntry& preview : detail.previews) {
+            const QString fieldLabel = preview.field == "src" ? tr("原文") : tr("译文");
+            html += QString(
+                "<div class='card'>"
+                "<div class='head'>%1 <span class='meta'>#%2 | %3</span></div>"
+                "<div class='line before'><span class='label'>%4</span>%5</div>"
+                "<div class='line after'><span class='label'>%6</span>%7</div>"
+                "</div>")
+                .arg(htmlText(preview.filename))
+                .arg(preview.sentenceIndex)
+                .arg(fieldLabel)
+                .arg(tr("替换前"), htmlText(preview.before), tr("替换后"), htmlText(preview.after));
+            clipboardText += QString("\n%1  #%2  |  %3\n%4: %5\n%6: %7\n")
+                .arg(preview.filename)
+                .arg(preview.sentenceIndex)
+                .arg(fieldLabel)
+                .arg(tr("替换前"), preview.before, tr("替换后"), preview.after);
+        }
+    }
+    html += "</body></html>";
+
+    ElaContentDialog dialog(window());
+    dialog.setLeftButtonText(tr("关闭"));
+    dialog.setMiddleButtonText(tr("复制列表"));
+    dialog.setRightButtonText(tr("执行替换"));
+    dialog.setMinimumSize(640, 480);
+    const QSize parentSize = window()->size();
+    dialog.resize(qBound(640, parentSize.width() - 80, 920),
+        qBound(480, parentSize.height() - 80, 680));
+
+    QWidget* content = new QWidget(&dialog);
+    QVBoxLayout* layout = new QVBoxLayout(content);
+    layout->setContentsMargins(18, 18, 18, 12);
+    layout->setSpacing(8);
+
+    ElaText* title = new ElaText(tr("批量替换预览"), content);
+    title->setTextStyle(ElaTextType::Title);
+    layout->addWidget(title);
+    ElaText* summaryText = new ElaText(displayedSummary, BodyFontPx, content);
+    summaryText->setStyleSheet(auxiliaryTextStyle());
+    layout->addWidget(summaryText);
+
+    QTextBrowser* previewBrowser = new QTextBrowser(content);
+    previewBrowser->setOpenLinks(false);
+    previewBrowser->setHtml(html);
+    previewBrowser->setStyleSheet("QTextBrowser{background:transparent;border:none;}");
+    QFont previewFont = previewBrowser->font();
+    previewFont.setPixelSize(BodyFontPx);
+    previewBrowser->setFont(previewFont);
+    layout->addWidget(previewBrowser, 1);
+
+    connect(&dialog, &ElaContentDialog::middleButtonClicked, this,
+        [clipboardText]() { QGuiApplication::clipboard()->setText(clipboardText); });
+    dialog.setCentralWidget(content);
+    if (dialog.exec() == QDialog::Accepted) {
+        executeReplace();
+    }
 }
 
 void ProjectCachePage::executeReplace()
@@ -315,19 +447,18 @@ void ProjectCachePage::executeReplace()
     QRegularExpression regex;
     if (!prepareRegex(query, regexEnabled, false, regex,
         m_replaceQueryEdit, m_replaceRegexErrorAction)) {
-        m_replacePreviewLabel->clear();
         return;
     }
     if (query.isEmpty()) {
-        m_replacePreviewLabel->setText(tr("请输入查找内容"));
+        setInfo(tr("请输入查找内容"));
         return;
     }
 
     int total = 0;
     const QList<ReplaceDetail> details = collectReplaceDetails(
-        query, field, regexEnabled ? &regex : nullptr, &total);
+        query, replacement, field, regexEnabled ? &regex : nullptr, &total);
     if (total <= 0) {
-        m_replacePreviewLabel->setText(tr("无匹配内容"));
+        setInfo(tr("无匹配内容"));
         return;
     }
     if (!confirmAction(tr("确认替换"), tr("确定要替换 %1 处内容吗？").arg(total))) {
@@ -362,8 +493,8 @@ void ProjectCachePage::executeReplace()
     renderFileList();
     renderEntries();
     runGlobalSearch();
-    m_replacePreviewLabel->setText(tr("已替换 %1 处，涉及 %2 个文件；保存后落盘。").arg(changedMatches).arg(changedFiles));
-    setInfo(tr("批量替换完成，记得保存修改"));
+    setInfo(tr("已替换 %1 处，涉及 %2 个文件；保存后落盘。")
+        .arg(changedMatches).arg(changedFiles));
     updateActionStates();
 }
 

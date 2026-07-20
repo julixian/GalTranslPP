@@ -3428,7 +3428,7 @@ Cache: %4</translation>
     <message>
         <location line="+193"/>
         <source>在当前文件中搜索 preproc/transraw/problems...</source>
-        <translation>Search preproc / transraw / problems in current file...</translation>
+        <translation>Search preproc/transraw/problems in current file...</translation>
     </message>
     <message>
         <location line="-244"/>

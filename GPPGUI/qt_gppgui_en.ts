@@ -2004,12 +2004,12 @@ sk-...</translation>
 <context>
     <name>DictionarySearchBar</name>
     <message>
-        <location filename="DictionarySearchBar.cpp" line="+25"/>
+        <location filename="DictionarySearchBar.cpp" line="+29"/>
         <source>搜索字典...</source>
         <translation>Search dictionaries...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+19"/>
         <location line="+9"/>
         <source>全部</source>
         <translation>All</translation>
@@ -2023,6 +2023,16 @@ sk-...</translation>
         <location line="+0"/>
         <source>译文</source>
         <translation>translation</translation>
+    </message>
+    <message>
+        <location line="-15"/>
+        <source>正则搜索</source>
+        <translation>Regex</translation>
+    </message>
+    <message>
+        <location line="+72"/>
+        <source>正则表达式无效: %1（位置 %2）</source>
+        <translation>Invalid regex: %1 (at %2)</translation>
     </message>
 </context>
 <context>

@@ -350,7 +350,7 @@ void ProjectCachePage::previewReplace()
     const QString afterColor = dark ? "#a9e8bd" : "#256d3e";
     const QString afterFill = dark ? "#263c2d" : "#edf8f0";
 
-    const auto htmlText = [](const QString& text)
+	auto htmlText = [](const QString& text)
         {
             return text.toHtmlEscaped().replace("\r\n", "<br>").replace('\n', "<br>").replace('\r', "<br>");
         };
@@ -361,7 +361,7 @@ void ProjectCachePage::previewReplace()
         "</style></head><body>")
         .arg(textColor);
 
-    const auto cardHtml = [&](const ReplacePreviewEntry& preview)
+	auto cardHtml = [&](const ReplacePreviewEntry& preview)
         {
             const QString fieldLabel = preview.field == "src" ? tr("原文") : tr("译文");
             return QString(
@@ -435,7 +435,7 @@ void ProjectCachePage::previewReplace()
     previewBrowser->setFont(previewFont);
     layout->addWidget(previewBrowser, 1);
 
-    const auto renderPage = [=](int page)
+	auto renderPage = [=](int page)
         {
             const int first = (page - 1) * pageSize;
             const int last = (int)qMin(first + pageSize, previewEntries.size());

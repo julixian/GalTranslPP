@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
+#include <QFontDatabase>
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QNetworkProxyFactory>
@@ -224,6 +225,20 @@ int main(int argc, char* argv[])
         
 
         eApp->init();
+        const int fontId = QFontDatabase::addApplicationFont(":/GPPGUI/Resource/fonts/MonaspaceNeon-Regular.otf");
+        QFont uiFont = app.font();
+        if (fontId >= 0) {
+            const QStringList families = QFontDatabase::applicationFontFamilies(fontId);
+            if (!families.empty()) {
+                uiFont.setFamilies({
+                    families.front(),
+                    "Microsoft YaHei UI",
+                    "Microsoft YaHei",
+                    "Segoe UI"
+                    });
+            }
+        }
+        app.setFont(uiFont);
         MainWindow w;
         w.show();
         if (checkUpdate) {

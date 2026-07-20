@@ -14,5 +14,6 @@
         <file>Resource/images/vnt.png</file>
         <file>Resource/images/webIcon.jpeg</file>
         <file>Resource/SampleProject.zip</file>
+        <file>Resource/fonts/MonaspaceNeon-Regular.otf</file>
     </qresource>
 </RCC>

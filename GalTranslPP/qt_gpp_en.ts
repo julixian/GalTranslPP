@@ -362,7 +362,7 @@
         <location filename="DictionaryGenerator.ReviewAgent.cpp" line="788"/>
         <source>[线程 %1] [术语 %2] 字典审校 Agent 开始处理，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次</source>
         <oldsource>[线程 %1] [术语 %2] 字典审校 Agent 开始处理 `%3`，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次</oldsource>
-        <translation type="unfinished">[T%1][Term %2] Review `%3`: max %4 turns, %5 names, %6 notes, %7 rough hits</translation>
+        <translation>[T%1][Term %2] Reviewing : max %4 turns, %5 names, %6 notes, %7 rough hits</translation>
     </message>
     <message>
         <location filename="DictionaryGenerator.ReviewAgent.cpp" line="838"/>

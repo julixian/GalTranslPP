@@ -247,14 +247,16 @@ namespace
         return homeCard;
     }
 
-    ElaFlowLayout* createPopularCardsLayout(toml::ordered_value& globalConfig, QWidget* parent, const QObject* receiver)
+    ElaFlowLayout* createPopularCardsLayout(toml::ordered_value& globalConfig, QWidget* parent, QWidget* cardFloatArea, const QObject* receiver)
     {
         ElaFlowLayout* flowLayout = new ElaFlowLayout(0, 5, 5);
         flowLayout->setContentsMargins(18, 0, 0, 0);
         flowLayout->setIsAnimation(true);
 
         for (size_t i = 0; i < DefaultPopularCards.size(); ++i) {
-            flowLayout->addWidget(createPopularCard(i, globalConfig, parent, receiver));
+            ElaPopularCard* popularCard = createPopularCard(i, globalConfig, parent, receiver);
+            popularCard->setCardFloatArea(cardFloatArea);
+            flowLayout->addWidget(popularCard);
         }
 
         if (!hasPopularCardsArray(globalConfig)) {
@@ -266,6 +268,7 @@ namespace
             if (auto cardOpt = getPopularCardConfig(globalConfig, i)) {
                 ElaPopularCard* popularCard = new ElaPopularCard(parent);
                 applyPopularCardConfig(popularCard, *cardOpt, receiver);
+                popularCard->setCardFloatArea(cardFloatArea);
                 flowLayout->addWidget(popularCard);
             }
         }
@@ -303,7 +306,7 @@ void HomePage::setupUi()
     centerLayout->addSpacing(20);
     centerLayout->addLayout(flowTextLayout);
     centerLayout->addSpacing(10);
-    centerLayout->addLayout(createPopularCardsLayout(m_globalConfig, centralWidget, this));
+    centerLayout->addLayout(createPopularCardsLayout(m_globalConfig, centralWidget,this, this));
     centerLayout->addStretch();
 
     addCentralWidget(centralWidget);

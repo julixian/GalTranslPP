@@ -113,7 +113,7 @@ void AppSettingsPage::setupUi()
         });
     connect(eApp, &ElaApplication::pWindowDisplayModeChanged, this, [=]()
         {
-            const auto button = windowModeButtonGroup->button(eApp->getWindowDisplayMode());
+            QAbstractButton* button = windowModeButtonGroup->button(eApp->getWindowDisplayMode());
             if (ElaRadioButton* elaRadioButton = qobject_cast<ElaRadioButton*>(button)) {
                 elaRadioButton->setChecked(true);
             }

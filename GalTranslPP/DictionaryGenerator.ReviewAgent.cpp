@@ -787,10 +787,9 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
     const std::string sourceTermLog = std::format("`{}`", group.sourceTerm);
     m_logger->info(gppTr(
         "DictionaryGeneratorReviewAgent.reviewTermGroup",
-        "[线程 %1] [术语 %2] 字典审校 Agent 开始处理，最多 %4 轮，候选译名 %5 个，候选备注 %6 个，粗候选累计出现 %7 次")
+        "[线程 %1] [术语 %2] 字典审校 Agent 开始处理，最多 %3 轮，候选译名 %4 个，候选备注 %5 个，粗候选累计出现 %6 次")
         .arg(threadId)
         .arg(sourceTermLog)
-        .arg(group.sourceTerm)
         .arg(m_agentMaxTurnsPerChunk)
         .arg(group.candidateTargets.size())
         .arg(group.candidateNotes.size())

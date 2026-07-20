@@ -1,10 +1,13 @@
 #include "ProjectCachePage.h"
 
+#include <QAction>
+#include <QActionGroup>
 #include <QButtonGroup>
 #include <QDesktopServices>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QItemSelectionModel>
+#include <QLineEdit>
 #include <QSizePolicy>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -12,11 +15,11 @@
 #include <QTimer>
 #include <QUrl>
 
-#include "ElaAlignedCheckBox.h"
-#include "ElaNoWheelComboBox.h"
+#include "ElaIcon.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
+#include "ElaMenu.h"
 #include "ElaPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaText.h"
@@ -250,12 +253,63 @@ void ProjectCachePage::setupUi()
     searchLayout->setContentsMargins(0, 0, 0, 0);
     searchLayout->setSpacing(4);
 
-    m_globalSearchEdit = new ElaLineEdit(searchTab);
-    m_globalSearchEdit->setPlaceholderText(tr("搜索内容..."));
-    m_globalSearchEdit->setIsClearButtonEnable(true);
+    QHBoxLayout* globalSearchOptionsLayout = new QHBoxLayout();
+    globalSearchOptionsLayout->setContentsMargins(0, 0, 0, 0);
+    globalSearchOptionsLayout->setSpacing(4);
     QTimer* globalSearchTimer = new QTimer(searchTab);
     globalSearchTimer->setSingleShot(true);
     globalSearchTimer->setInterval(200);
+
+    m_globalSearchEdit = new ElaLineEdit(searchTab);
+    m_globalSearchEdit->setPlaceholderText(tr("搜索内容..."));
+    m_globalSearchEdit->setIsClearButtonEnable(true);
+    m_globalRegexErrorAction = m_globalSearchEdit->addAction(
+        ElaIcon::getInstance()->getElaIcon(ElaIconType::TriangleExclamation),
+        QLineEdit::TrailingPosition);
+    m_globalRegexErrorAction->setVisible(false);
+    searchLayout->addWidget(m_globalSearchEdit);
+
+    m_globalSearchField = new ElaToolButton(searchTab);
+    m_globalSearchField->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_globalSearchField->setElaIcon(ElaIconType::BarsFilter);
+    m_globalSearchField->setText(tr("全部"));
+    m_globalSearchField->setMinimumWidth(135);
+    m_globalSearchField->setPopupMode(QToolButton::InstantPopup);
+    ElaMenu* globalSearchMenu = new ElaMenu(m_globalSearchField);
+    globalSearchMenu->setFixedWidth(135);
+    QActionGroup* globalSearchGroup = new QActionGroup(globalSearchMenu);
+    globalSearchGroup->setExclusive(true);
+    const QList<QPair<QString, QString>> globalSearchFields = {
+        { tr("全部"), "all" },
+        { "preproc", "src" },
+        { "transraw", "dst" },
+        { "problems", "problems" },
+    };
+    for (int i = 0; i < globalSearchFields.size(); ++i) {
+        QAction* action = globalSearchMenu->addAction(globalSearchFields.at(i).first);
+        action->setCheckable(true);
+        action->setChecked(i == 0);
+        action->setData(globalSearchFields.at(i).second);
+        globalSearchGroup->addAction(action);
+    }
+    m_globalSearchField->setMenu(globalSearchMenu);
+    connect(globalSearchGroup, &QActionGroup::triggered, this, [=](QAction* action)
+        {
+            m_globalSearchFieldKey = action->data().toString();
+            m_globalSearchField->setText(action->text());
+            globalSearchTimer->start();
+        });
+
+    m_globalRegexButton = new ElaToolButton(searchTab);
+    m_globalRegexButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    m_globalRegexButton->setText(".*");
+    m_globalRegexButton->setCheckable(true);
+    m_globalRegexButton->setFixedWidth(25);
+    m_globalRegexButton->setToolTip(tr("正则搜索"));
+    globalSearchOptionsLayout->addWidget(m_globalSearchField, 1);
+    globalSearchOptionsLayout->addWidget(m_globalRegexButton);
+    searchLayout->addLayout(globalSearchOptionsLayout);
+
     connect(globalSearchTimer, &QTimer::timeout, this, &ProjectCachePage::runGlobalSearch);
     connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, [=]()
         {
@@ -266,28 +320,19 @@ void ProjectCachePage::setupUi()
         {
             globalSearchTimer->start();
         });
-    searchLayout->addWidget(m_globalSearchEdit);
-
-    m_globalSearchField = new ElaNoWheelComboBox(searchTab);
-    m_globalSearchField->addItem(tr("全部"), "all");
-    m_globalSearchField->addItem("preproc", "src");
-    m_globalSearchField->addItem("transraw", "dst");
-    m_globalSearchField->addItem("problems", "problems");
-    connect(m_globalSearchField, &ElaNoWheelComboBox::currentIndexChanged, this, [=](int)
+    connect(m_globalRegexButton, &ElaToolButton::toggled, this, [=](bool)
         {
             globalSearchTimer->start();
         });
-    searchLayout->addWidget(m_globalSearchField);
 
     // 批量替换默认收起，日常浏览时优先把空间留给搜索结果列表。
     m_replaceToggleButton = new ElaToolButton(searchTab);
     m_replaceToggleButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_replaceToggleButton->setElaIcon(ElaIconType::AngleDown);
     m_replaceToggleButton->setText(tr("展开批量替换"));
-    m_replaceToggleButton->setCheckable(true);
-    connect(m_replaceToggleButton, &ElaToolButton::toggled, this, [=](bool checked)
+    connect(m_replaceToggleButton, &ElaToolButton::clicked, this, [=]()
         {
-            setReplacePanelVisible(checked);
+            setReplacePanelVisible(!m_replacePanel->isVisible());
         });
     searchLayout->addWidget(m_replaceToggleButton);
 
@@ -299,6 +344,10 @@ void ProjectCachePage::setupUi()
     m_replaceQueryEdit = new ElaLineEdit(searchTab);
     m_replaceQueryEdit->setPlaceholderText(tr("查找"));
     m_replaceQueryEdit->setIsClearButtonEnable(true);
+    m_replaceRegexErrorAction = m_replaceQueryEdit->addAction(
+        ElaIcon::getInstance()->getElaIcon(ElaIconType::TriangleExclamation),
+        QLineEdit::TrailingPosition);
+    m_replaceRegexErrorAction->setVisible(false);
     replaceLayout->addWidget(m_replaceQueryEdit);
 
     m_replaceWithEdit = new ElaLineEdit(searchTab);
@@ -306,11 +355,46 @@ void ProjectCachePage::setupUi()
     m_replaceWithEdit->setIsClearButtonEnable(true);
     replaceLayout->addWidget(m_replaceWithEdit);
 
-    m_replaceField = new ElaNoWheelComboBox(searchTab);
-    m_replaceField->addItem(tr("transraw"), "dst");
-    m_replaceField->addItem(tr("preproc"), "src");
-    m_replaceField->addItem(tr("全部"), "all");
-    replaceLayout->addWidget(m_replaceField);
+    QHBoxLayout* replaceFieldLayout = new QHBoxLayout();
+    replaceFieldLayout->setContentsMargins(0, 0, 0, 0);
+    replaceFieldLayout->setSpacing(4);
+    m_replaceField = new ElaToolButton(searchTab);
+    m_replaceField->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_replaceField->setElaIcon(ElaIconType::BarsFilter);
+    m_replaceField->setText(tr("transraw"));
+    m_replaceField->setMinimumWidth(135);
+    m_replaceField->setPopupMode(QToolButton::InstantPopup);
+    ElaMenu* replaceMenu = new ElaMenu(m_replaceField);
+    replaceMenu->setFixedWidth(135);
+    QActionGroup* replaceGroup = new QActionGroup(replaceMenu);
+    replaceGroup->setExclusive(true);
+    const QList<QPair<QString, QString>> replaceFields = {
+        { tr("transraw"), "dst" },
+        { tr("preproc"), "src" },
+        { tr("全部"), "all" },
+    };
+    for (int i = 0; i < replaceFields.size(); ++i) {
+        QAction* action = replaceMenu->addAction(replaceFields.at(i).first);
+        action->setCheckable(true);
+        action->setChecked(i == 0);
+        action->setData(replaceFields.at(i).second);
+        replaceGroup->addAction(action);
+    }
+    m_replaceField->setMenu(replaceMenu);
+    connect(replaceGroup, &QActionGroup::triggered, this, [=](QAction* action)
+        {
+            m_replaceFieldKey = action->data().toString();
+            m_replaceField->setText(action->text());
+        });
+    replaceFieldLayout->addWidget(m_replaceField, 1);
+    m_replaceRegexButton = new ElaToolButton(searchTab);
+    m_replaceRegexButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    m_replaceRegexButton->setText(".*");
+    m_replaceRegexButton->setCheckable(true);
+    m_replaceRegexButton->setFixedWidth(25);
+    m_replaceRegexButton->setToolTip(tr("正则替换"));
+    replaceFieldLayout->addWidget(m_replaceRegexButton);
+    replaceLayout->addLayout(replaceFieldLayout);
 
     QHBoxLayout* replaceButtonLayout = new QHBoxLayout();
     ElaToolButton* replacePreviewButton = new ElaToolButton(searchTab);
@@ -331,6 +415,11 @@ void ProjectCachePage::setupUi()
     m_replacePreviewLabel->setWordWrap(true);
     m_replacePreviewLabel->setStyleSheet(auxiliaryTextStyle());
     replaceLayout->addWidget(m_replacePreviewLabel);
+    connect(m_replaceRegexButton, &ElaToolButton::toggled, this, [=](bool)
+        {
+            setRegexError(m_replaceQueryEdit, m_replaceRegexErrorAction, {});
+            m_replacePreviewLabel->clear();
+        });
     searchLayout->addWidget(m_replacePanel);
 
     m_searchStatusLabel = new ElaText("", BodyFontPx, searchTab);
@@ -380,7 +469,14 @@ void ProjectCachePage::setupUi()
                 return;
             }
             setSidebarPage(1);
-            m_globalSearchField->setCurrentIndex(m_globalSearchField->findData("problems"));
+            m_globalSearchFieldKey = "problems";
+            for (QAction* action : globalSearchGroup->actions()) {
+                if (action->data().toString() == m_globalSearchFieldKey) {
+                    action->setChecked(true);
+                    m_globalSearchField->setText(action->text());
+                    break;
+                }
+            }
             m_globalSearchEdit->setText(index.data(ProblemTextRole).toString());
             runGlobalSearch();
         });
@@ -415,6 +511,10 @@ void ProjectCachePage::setupUi()
     m_localSearchEdit = new ElaLineEdit(editorWidget);
     m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/transraw/problems..."));
     m_localSearchEdit->setIsClearButtonEnable(true);
+    m_localRegexErrorAction = m_localSearchEdit->addAction(
+        ElaIcon::getInstance()->getElaIcon(ElaIconType::TriangleExclamation),
+        QLineEdit::TrailingPosition);
+    m_localRegexErrorAction->setVisible(false);
     QTimer* localSearchTimer = new QTimer(editorWidget);
     localSearchTimer->setSingleShot(true);
     localSearchTimer->setInterval(200);
@@ -427,8 +527,25 @@ void ProjectCachePage::setupUi()
             localSearchTimer->start();
         });
     filterLayout->addWidget(m_localSearchEdit, 1);
-    m_filterProblemsCheck = new ElaAlignedCheckBox(tr("只看问题句"), editorWidget);
-    connect(m_filterProblemsCheck, &ElaCheckBox::toggled, this, [=]()
+    m_localRegexButton = new ElaToolButton(editorWidget);
+    m_localRegexButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    m_localRegexButton->setText(".*");
+    m_localRegexButton->setCheckable(true);
+    m_localRegexButton->setFixedWidth(25);
+    m_localRegexButton->setToolTip(tr("正则搜索"));
+    connect(m_localRegexButton, &ElaToolButton::toggled, this, [=](bool)
+        {
+            localSearchTimer->start();
+        });
+    filterLayout->addWidget(m_localRegexButton);
+
+    m_filterProblemsCheck = new ElaToolButton(editorWidget);
+    m_filterProblemsCheck->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    m_filterProblemsCheck->setElaIcon(ElaIconType::CircleExclamation);
+    m_filterProblemsCheck->setFixedWidth(36);
+    m_filterProblemsCheck->setCheckable(true);
+    m_filterProblemsCheck->setToolTip(tr("只看问题句"));
+    connect(m_filterProblemsCheck, &ElaToolButton::toggled, this, [=]()
         {
             renderEntries();
         });

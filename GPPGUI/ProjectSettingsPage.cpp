@@ -125,7 +125,7 @@ void ProjectSettingsPage::setupUi()
 
     ElaMenu* transMenu = new ElaMenu(centralWidget);
     if (const std::string language = toml::find_or(m_globalConfig, "language", "zh_CN"); language == "en") {
-        transMenu->setFixedWidth(135);
+        transMenu->setFixedWidth(145);
     }
     QAction* nameTableSettingAction = transMenu->addElaIconAction(ElaIconType::User, tr("人名表"));
     QAction* dictSettingAction = transMenu->addElaIconAction(ElaIconType::Book, tr("项目字典"));

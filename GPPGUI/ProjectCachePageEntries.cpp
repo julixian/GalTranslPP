@@ -3,17 +3,18 @@
 
 #include <QHBoxLayout>
 #include <QItemSelectionModel>
+#include <QRegularExpression>
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 #include <QStandardItem>
 
-#include "ElaCheckBox.h"
 #include "ElaDialog.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
+#include "ElaToolButton.h"
 
 using namespace ProjectCachePagePrivate;
 
@@ -28,6 +29,17 @@ void ProjectCachePage::renderEntries()
     m_entryModel->clear();
     m_selectedEntryRows.clear();
 
+    const QString query = m_localSearchEdit ? m_localSearchEdit->text() : QString();
+    const bool regexEnabled = m_localRegexButton && m_localRegexButton->isChecked();
+    QRegularExpression regex;
+    if (!prepareRegex(query, regexEnabled, true, regex,
+        m_localSearchEdit, m_localRegexErrorAction)) {
+        m_renderingEntries = false;
+        updateCurrentSummary();
+        updateActionStates();
+        return;
+    }
+
     if (m_currentFile.isEmpty()) {
         m_currentFileLabel->setText(tr("未选择缓存文件"));
         m_renderingEntries = false;
@@ -36,8 +48,13 @@ void ProjectCachePage::renderEntries()
         return;
     }
 
-    const QString query = m_localSearchEdit ? m_localSearchEdit->text() : QString();
     const bool onlyProblems = m_filterProblemsCheck && m_filterProblemsCheck->isChecked();
+    const auto matches = [&](const QString& text)
+        {
+            return regexEnabled
+                ? regex.match(text).hasMatch()
+                : text.contains(query, Qt::CaseInsensitive);
+        };
 
     for (int i = 0; i < (int)m_entries.size(); ++i) {
         const auto& item = m_entries[i];
@@ -50,10 +67,7 @@ void ProjectCachePage::renderEntries()
         if (onlyProblems && problems.isEmpty()) {
             continue;
         }
-        if (!query.isEmpty()
-            && !source.contains(query, Qt::CaseInsensitive)
-            && !dst.contains(query, Qt::CaseInsensitive)
-            && !problems.contains(query, Qt::CaseInsensitive)) {
+        if (!query.isEmpty() && !matches(source) && !matches(dst) && !matches(problems)) {
             continue;
         }
         QStandardItem* itemRow = new QStandardItem(entryListText(item, i));

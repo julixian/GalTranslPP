@@ -4,7 +4,6 @@
 #include <QAbstractButton>
 #include <QButtonGroup>
 #include <QDialog>
-#include <QSignalBlocker>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -147,10 +146,6 @@ void ProjectCachePage::setReplacePanelVisible(bool visible)
         m_replacePanel->setVisible(visible);
     }
     if (m_replaceToggleButton) {
-        if (m_replaceToggleButton->isChecked() != visible) {
-            QSignalBlocker blocker(m_replaceToggleButton);
-            m_replaceToggleButton->setChecked(visible);
-        }
         m_replaceToggleButton->setElaIcon(visible ? ElaIconType::AngleUp : ElaIconType::AngleDown);
         m_replaceToggleButton->setText(visible ? tr("收起批量替换") : tr("展开批量替换"));
     }

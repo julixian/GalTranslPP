@@ -19,8 +19,8 @@ class ElaToolButton;
 class ElaText;
 class ElaListView;
 class ElaLineEdit;
-class ElaNoWheelComboBox;
-class ElaCheckBox;
+class QAction;
+class QRegularExpression;
 class QButtonGroup;
 class QSplitter;
 class QStackedWidget;
@@ -99,13 +99,20 @@ private:
     static QString truncateForList(const QString& text, int maxChars = 120);
     QString entryListText(const json& object, int row) const;
     static QStringList problemsFromEditorText(const QString& text);
-    static int countOccurrences(const QString& text, const QString& query);
-    static int replaceInString(QString& text, const QString& query, const QString& replacement);
+    static int countOccurrences(const QString& text, const QString& query,
+        const QRegularExpression* regex = nullptr);
+    static int replaceInString(QString& text, const QString& query, const QString& replacement,
+        const QRegularExpression* regex = nullptr);
 
     // ProjectCachePageSearch.cpp：全局搜索、问题聚合和批量替换；
     // 搜索优先读取内存中的未保存编辑，再回退到磁盘文件。
-    QList<ReplaceDetail> collectReplaceDetails(const QString& query, const QString& field, int* totalMatches = nullptr) const;
-    int applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const;
+    QList<ReplaceDetail> collectReplaceDetails(const QString& query, const QString& field,
+        const QRegularExpression* regex = nullptr, int* totalMatches = nullptr) const;
+    int applyReplaceToEntries(json& entries, const QString& query, const QString& replacement,
+        const QString& field, const QRegularExpression* regex = nullptr) const;
+    bool prepareRegex(const QString& query, bool enabled, bool caseInsensitive,
+        QRegularExpression& regex, ElaLineEdit* edit, QAction* errorAction) const;
+    void setRegexError(ElaLineEdit* edit, QAction* errorAction, const QString& message) const;
     void runGlobalSearch();
     void previewReplace();
     void executeReplace();
@@ -159,12 +166,20 @@ private:
     QStandardItemModel* m_entryModel = nullptr;
 
     ElaLineEdit* m_localSearchEdit = nullptr;
-    ElaCheckBox* m_filterProblemsCheck = nullptr;
+    ElaToolButton* m_filterProblemsCheck = nullptr;
+    QAction* m_localRegexErrorAction = nullptr;
+    ElaToolButton* m_localRegexButton = nullptr;
     ElaLineEdit* m_globalSearchEdit = nullptr;
-    ElaNoWheelComboBox* m_globalSearchField = nullptr;
+    ElaToolButton* m_globalSearchField = nullptr;
+    QAction* m_globalRegexErrorAction = nullptr;
+    ElaToolButton* m_globalRegexButton = nullptr;
+    QString m_globalSearchFieldKey = "all";
     ElaLineEdit* m_replaceQueryEdit = nullptr;
     ElaLineEdit* m_replaceWithEdit = nullptr;
-    ElaNoWheelComboBox* m_replaceField = nullptr;
+    ElaToolButton* m_replaceField = nullptr;
+    QAction* m_replaceRegexErrorAction = nullptr;
+    ElaToolButton* m_replaceRegexButton = nullptr;
+    QString m_replaceFieldKey = "dst";
 
     ElaText* m_cacheDirLabel = nullptr;
     ElaText* m_currentFileLabel = nullptr;

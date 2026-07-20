@@ -1,16 +1,17 @@
 #include "ProjectCachePage.h"
 #include "ProjectCachePage_p.h"
 
+#include <QAction>
 #include <QItemSelectionModel>
+#include <QRegularExpression>
 #include <QSignalBlocker>
 #include <QStandardItem>
 
-#include "ElaCheckBox.h"
-#include "ElaNoWheelComboBox.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
 #include "ElaText.h"
+#include "ElaToolButton.h"
 
 using namespace ProjectCachePagePrivate;
 
@@ -25,8 +26,18 @@ QStringList ProjectCachePage::problemsFromEditorText(const QString& text)
     return result;
 }
 
-int ProjectCachePage::countOccurrences(const QString& text, const QString& query)
+int ProjectCachePage::countOccurrences(const QString& text, const QString& query,
+    const QRegularExpression* regex)
 {
+    if (regex) {
+        int count = 0;
+        QRegularExpressionMatchIterator matches = regex->globalMatch(text);
+        while (matches.hasNext()) {
+            matches.next();
+            ++count;
+        }
+        return count;
+    }
     if (query.isEmpty()) {
         return 0;
     }
@@ -39,16 +50,24 @@ int ProjectCachePage::countOccurrences(const QString& text, const QString& query
     return count;
 }
 
-int ProjectCachePage::replaceInString(QString& text, const QString& query, const QString& replacement)
+int ProjectCachePage::replaceInString(QString& text, const QString& query,
+    const QString& replacement, const QRegularExpression* regex)
 {
-    const int count = countOccurrences(text, query);
+    const int count = countOccurrences(text, query, regex);
     if (count > 0) {
-        text.replace(query, replacement, Qt::CaseSensitive);
+        if (regex) {
+            text.replace(*regex, replacement);
+        }
+        else {
+            text.replace(query, replacement, Qt::CaseSensitive);
+        }
     }
     return count;
 }
 
-QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(const QString& query, const QString& field, int* totalMatches) const
+QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
+    const QString& query, const QString& field, const QRegularExpression* regex,
+    int* totalMatches) const
 {
     // 替换预览和实际替换共用同一套收集逻辑，避免“预览命中”和“实际修改”
     // 因字段范围不同步而产生偏差。
@@ -71,10 +90,10 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(c
             // 替换字段和翻译缓存实际字段保持一致：
             // src -> pre_processed_text，dst -> translated_raw_text。
             if (field == "src" || field == "all") {
-                fileMatches += countOccurrences(entrySource(item), query);
+                fileMatches += countOccurrences(entrySource(item), query, regex);
             }
             if (field == "dst" || field == "all") {
-                fileMatches += countOccurrences(entryDst(item), query);
+                fileMatches += countOccurrences(entryDst(item), query, regex);
             }
         }
         if (fileMatches > 0) {
@@ -88,7 +107,8 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(c
     return details;
 }
 
-int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query, const QString& replacement, const QString& field) const
+int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query,
+    const QString& replacement, const QString& field, const QRegularExpression* regex) const
 {
     int total = 0;
     for (auto& item : entries) {
@@ -97,7 +117,7 @@ int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query,
         }
         if (field == "src" || field == "all") {
             QString source = entrySource(item);
-            const int matches = replaceInString(source, query, replacement);
+            const int matches = replaceInString(source, query, replacement, regex);
             if (matches > 0) {
                 item["pre_processed_text"] = source.toStdString();
                 total += matches;
@@ -105,7 +125,7 @@ int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query,
         }
         if (field == "dst" || field == "all") {
             QString dst = entryDst(item);
-            const int matches = replaceInString(dst, query, replacement);
+            const int matches = replaceInString(dst, query, replacement, regex);
             if (matches > 0) {
                 item["translated_raw_text"] = dst.toStdString();
                 total += matches;
@@ -115,15 +135,60 @@ int ProjectCachePage::applyReplaceToEntries(json& entries, const QString& query,
     return total;
 }
 
+void ProjectCachePage::setRegexError(ElaLineEdit* edit, QAction* errorAction,
+    const QString& message) const
+{
+    if (!edit || !errorAction) {
+        return;
+    }
+    errorAction->setToolTip(message);
+    errorAction->setVisible(!message.isEmpty());
+    edit->setToolTip(message);
+}
+
+bool ProjectCachePage::prepareRegex(const QString& query, bool enabled, bool caseInsensitive,
+    QRegularExpression& regex, ElaLineEdit* edit, QAction* errorAction) const
+{
+    if (!enabled || query.isEmpty()) {
+        setRegexError(edit, errorAction, {});
+        return true;
+    }
+
+    QRegularExpression::PatternOptions options = QRegularExpression::UseUnicodePropertiesOption;
+    if (caseInsensitive) {
+        options |= QRegularExpression::CaseInsensitiveOption;
+    }
+    regex = QRegularExpression(query, options);
+    if (regex.isValid()) {
+        setRegexError(edit, errorAction, {});
+        return true;
+    }
+
+    setRegexError(edit, errorAction, tr("正则表达式无效: %1（位置 %2）")
+        .arg(regex.errorString())
+        .arg(regex.patternErrorOffset()));
+    return false;
+}
+
 void ProjectCachePage::runGlobalSearch()
 {
     if (!m_globalSearchEdit || !m_searchResultList) {
         return;
     }
     const QString query = m_globalSearchEdit->text();
-    const QString field = m_globalSearchField->currentData().toString();
+    const QString field = m_globalSearchFieldKey;
     m_searchHits.clear();
     m_searchModel->clear();
+    const bool regexEnabled = m_globalRegexButton && m_globalRegexButton->isChecked();
+    QRegularExpression regex;
+    if (!prepareRegex(query, regexEnabled, true, regex,
+        m_globalSearchEdit, m_globalRegexErrorAction)) {
+        m_searchStatusLabel->clear();
+        if (m_searchNavButton) {
+            m_searchNavButton->setText(tr("搜索"));
+        }
+        return;
+    }
     if (query.isEmpty()) {
         m_searchStatusLabel->clear();
         if (m_searchNavButton) {
@@ -134,6 +199,12 @@ void ProjectCachePage::runGlobalSearch()
 
     // 搜索框 textChanged 会频繁触发，这里限制结果数，避免大缓存目录里边输入边卡死。
     constexpr int maxResults = 2000;
+    const auto matches = [&](const QString& text)
+        {
+            return regexEnabled
+                ? regex.match(text).hasMatch()
+                : text.contains(query, Qt::CaseInsensitive);
+        };
     for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
         const auto loaded = m_dirtyFiles.contains(file.relativeName) ? m_loadedEntriesByFile.find(file.relativeName) : m_loadedEntriesByFile.end();
@@ -151,9 +222,9 @@ void ProjectCachePage::runGlobalSearch()
             const QString src = entrySource(item);
             const QString dst = entryDst(item);
             const QString problem = problemString(item, " | ");
-            const bool matchSrc = src.contains(query, Qt::CaseInsensitive);
-            const bool matchDst = dst.contains(query, Qt::CaseInsensitive);
-            const bool matchProblem = problem.contains(query, Qt::CaseInsensitive);
+            const bool matchSrc = matches(src);
+            const bool matchDst = matches(dst);
+            const bool matchProblem = matches(problem);
             if ((field == "src" && !matchSrc)
                 || (field == "dst" && !matchDst)
                 || (field == "problems" && !matchProblem)
@@ -207,12 +278,20 @@ void ProjectCachePage::runGlobalSearch()
 void ProjectCachePage::previewReplace()
 {
     const QString query = m_replaceQueryEdit->text();
+    const bool regexEnabled = m_replaceRegexButton && m_replaceRegexButton->isChecked();
+    QRegularExpression regex;
+    if (!prepareRegex(query, regexEnabled, false, regex,
+        m_replaceQueryEdit, m_replaceRegexErrorAction)) {
+        m_replacePreviewLabel->clear();
+        return;
+    }
     if (query.isEmpty()) {
         m_replacePreviewLabel->setText(tr("请输入查找内容"));
         return;
     }
     int total = 0;
-    const QList<ReplaceDetail> details = collectReplaceDetails(query, m_replaceField->currentData().toString(), &total);
+    const QList<ReplaceDetail> details = collectReplaceDetails(
+        query, m_replaceFieldKey, regexEnabled ? &regex : nullptr, &total);
     QString text = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
     const int limit = std::min((int)details.size(), 8);
     for (int i = 0; i < limit; ++i) {
@@ -231,14 +310,22 @@ void ProjectCachePage::executeReplace()
     }
     const QString query = m_replaceQueryEdit->text();
     const QString replacement = m_replaceWithEdit->text();
-    const QString field = m_replaceField->currentData().toString();
+    const QString field = m_replaceFieldKey;
+    const bool regexEnabled = m_replaceRegexButton && m_replaceRegexButton->isChecked();
+    QRegularExpression regex;
+    if (!prepareRegex(query, regexEnabled, false, regex,
+        m_replaceQueryEdit, m_replaceRegexErrorAction)) {
+        m_replacePreviewLabel->clear();
+        return;
+    }
     if (query.isEmpty()) {
         m_replacePreviewLabel->setText(tr("请输入查找内容"));
         return;
     }
 
     int total = 0;
-    const QList<ReplaceDetail> details = collectReplaceDetails(query, field, &total);
+    const QList<ReplaceDetail> details = collectReplaceDetails(
+        query, field, regexEnabled ? &regex : nullptr, &total);
     if (total <= 0) {
         m_replacePreviewLabel->setText(tr("无匹配内容"));
         return;
@@ -258,7 +345,8 @@ void ProjectCachePage::executeReplace()
         else if (!readCacheFile(detail.filename, entries, nullptr)) {
             continue;
         }
-        const int matches = applyReplaceToEntries(entries, query, replacement, field);
+        const int matches = applyReplaceToEntries(
+            entries, query, replacement, field, regexEnabled ? &regex : nullptr);
         if (matches > 0) {
             m_loadedEntriesByFile[detail.filename] = entries;
             m_dirtyFiles.insert(detail.filename);

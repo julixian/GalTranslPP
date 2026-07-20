@@ -3464,22 +3464,21 @@ Cache: %4</translation>
         <translation>Regex</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="+201"/>
+        <location filename="ProjectCachePageSearch.cpp" line="+197"/>
         <source>正则表达式无效: %1（位置 %2）</source>
         <translation>Invalid regex: %1 (at %2)</translation>
     </message>
     <message>
-        <location line="+239"/>
+        <location line="+268"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
     <message>
-        <location line="-96"/>
         <source>%1；显示前 %2 条</source>
-        <translation>%1; showing first %2</translation>
+        <translation type="vanished">%1; showing first %2</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="-59"/>
         <source>批量替换预览</source>
         <translation>Batch Replace Preview</translation>
     </message>
@@ -3494,14 +3493,25 @@ Cache: %4</translation>
         <translation>Apply Replacements</translation>
     </message>
     <message>
-        <location line="-13"/>
-        <location line="+5"/>
+        <location line="+27"/>
+        <source>跳转页码</source>
+        <translation>Go to page</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <location line="+25"/>
+        <source>第 %1 / %2 页</source>
+        <translation>Page %1 / %2</translation>
+    </message>
+    <message>
+        <location line="-72"/>
+        <location line="+12"/>
         <source>替换前</source>
         <translation>Before</translation>
     </message>
     <message>
-        <location line="-5"/>
-        <location line="+5"/>
+        <location line="-12"/>
+        <location line="+12"/>
         <source>替换后</source>
         <translation>After</translation>
     </message>
@@ -3538,7 +3548,7 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="-233"/>
-        <location filename="ProjectCachePageSearch.cpp" line="-173"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-171"/>
         <location line="+7"/>
         <source>搜索</source>
         <translation>Search</translation>
@@ -3551,7 +3561,7 @@ Cache: %4</translation>
     <message>
         <location line="-273"/>
         <location filename="ProjectCachePageSearch.cpp" line="+64"/>
-        <location line="+259"/>
+        <location line="+288"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
@@ -3680,7 +3690,7 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location filename="ProjectCachePageSearch.cpp" line="-151"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-184"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
@@ -3741,19 +3751,21 @@ Cache: %4</translation>
 %2</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="-110"/>
-        <location line="+89"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-106"/>
+        <location line="+79"/>
+        <location line="+18"/>
         <source>原文</source>
         <translation>Source</translation>
     </message>
     <message>
-        <location line="-88"/>
-        <location line="+88"/>
+        <location line="-96"/>
+        <location line="+78"/>
+        <location line="+18"/>
         <source>译文</source>
         <translation>Translation</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-82"/>
         <source>%1 条结果</source>
         <translation>%1 result(s)</translation>
     </message>
@@ -3764,12 +3776,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+15"/>
-        <location line="+130"/>
+        <location line="+159"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location line="-111"/>
+        <location line="-138"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
@@ -3780,8 +3792,8 @@ Cache: %4</translation>
 ...</translation>
     </message>
     <message>
-        <location line="-10"/>
-        <location line="+129"/>
+        <location line="-12"/>
+        <location line="+158"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>

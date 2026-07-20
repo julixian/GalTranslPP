@@ -9,6 +9,7 @@
 #include <QRegularExpression>
 #include <QSignalBlocker>
 #include <QStandardItem>
+#include <QScrollBar>
 #include <QTextBrowser>
 #include <QVBoxLayout>
 
@@ -16,6 +17,7 @@
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPushButton.h"
+#include "ElaSpinBox.h"
 #include "ElaText.h"
 #include "ElaToolButton.h"
 
@@ -79,7 +81,6 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
     // 替换预览和实际替换共用同一套收集逻辑，避免“预览命中”和“实际修改”
     // 因字段范围不同步而产生偏差。
     int total = 0;
-    int previewCount = 0;
     QList<ReplaceDetail> details;
     for (const CacheFileInfo& file : m_cacheFiles) {
         json entries;
@@ -93,7 +94,6 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
         ReplaceDetail detail;
         detail.filename = file.relativeName;
         int fileMatches = 0;
-        constexpr int previewLimit = 500;
         for (int row = 0; row < (int)entries.size(); ++row) {
             const auto& item = entries[row];
             if (!item.is_object()) {
@@ -109,18 +109,14 @@ QList<ProjectCachePage::ReplaceDetail> ProjectCachePage::collectReplaceDetails(
                     if (matches <= 0) {
                         return;
                     }
-                    ++detail.previewEntries;
-                    if (previewCount < previewLimit) {
-                        detail.previews.push_back({
-                            file.relativeName,
-                            row,
-                            sentenceIndexOf(item, row),
-                            fieldName,
-                            before,
-                            after,
-                        });
-                        ++previewCount;
-                    }
+                    detail.previews.push_back({
+                        file.relativeName,
+                        row,
+                        sentenceIndexOf(item, row),
+                        fieldName,
+                        before,
+                        after,
+                    });
                 };
             if (field == "src" || field == "all") {
                 collectField("src", entrySource(item));
@@ -333,69 +329,65 @@ void ProjectCachePage::previewReplace()
         return;
     }
 
-    int previewCount = 0;
-    int previewEntryTotal = 0;
+    QList<const ReplacePreviewEntry*> previewEntries;
+    previewEntries.reserve(total);
+    QString clipboardText;
     for (const ReplaceDetail& detail : details) {
-        previewCount += detail.previews.size();
-        previewEntryTotal += detail.previewEntries;
+        for (const ReplacePreviewEntry& preview : detail.previews) {
+            previewEntries.push_back(&preview);
+        }
     }
     const QString summary = tr("共 %1 处匹配，涉及 %2 个文件").arg(total).arg(details.size());
-    const QString displayedSummary = previewCount < previewEntryTotal
-        ? tr("%1；显示前 %2 条").arg(summary).arg(previewCount)
-        : summary;
 
     const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
     const QString textColor = dark ? "#f0f0f0" : "#202020";
-    const QString detailColor = dark ? "#b4b4b4" : "#666666";
     const QString borderColor = dark ? "#505050" : "#d8d8d8";
     const QString cardColor = dark ? "#292929" : "#fafafa";
+    const QString headerColor = dark ? "#32465f" : "#e5effa";
+    const QString headerTextColor = dark ? "#e8f2ff" : "#204f80";
     const QString beforeColor = dark ? "#ffb4b4" : "#9f2727";
     const QString beforeFill = dark ? "#442b2d" : "#fff0f0";
     const QString afterColor = dark ? "#a9e8bd" : "#256d3e";
     const QString afterFill = dark ? "#263c2d" : "#edf8f0";
 
-    const auto htmlText = [](QString text)
+    const auto htmlText = [](const QString& text)
         {
             return text.toHtmlEscaped().replace("\r\n", "<br>").replace('\n', "<br>").replace('\r', "<br>");
         };
 
-    QString html = QString(
+    const QString htmlPrefix = QString(
         "<html><head><style>"
         "body{margin:0;color:%1;font-size:13px;}"
-        ".card{margin:0 0 8px 0;padding:10px 12px;border:1px solid %2;"
-        "border-radius:6px;background:%3;}"
-        ".head{margin-bottom:8px;font-weight:600;}"
-        ".meta{color:%4;font-weight:400;}"
-        ".line{margin-top:5px;padding:7px 9px;border-radius:5px;}"
-        ".before{color:%5;background:%6;}"
-        ".after{color:%7;background:%8;}"
-        ".label{font-weight:600;margin-right:8px;}"
         "</style></head><body>")
-        .arg(textColor, borderColor, cardColor, detailColor,
-            beforeColor, beforeFill, afterColor, afterFill);
+        .arg(textColor);
 
-    QString clipboardText = displayedSummary + "\n";
-    for (const ReplaceDetail& detail : details) {
-        for (const ReplacePreviewEntry& preview : detail.previews) {
+    const auto cardHtml = [&](const ReplacePreviewEntry& preview)
+        {
             const QString fieldLabel = preview.field == "src" ? tr("原文") : tr("译文");
-            html += QString(
-                "<div class='card'>"
-                "<div class='head'>%1 <span class='meta'>#%2 | %3</span></div>"
-                "<div class='line before'><span class='label'>%4</span>%5</div>"
-                "<div class='line after'><span class='label'>%6</span>%7</div>"
-                "</div>")
+            return QString(
+                "<table width='100%' border='1' cellspacing='0' cellpadding='8' "
+                "bgcolor='%8' style='border-color:%9;'>"
+                "<tr><td bgcolor='%10'><font color='%11'><b>%1</b>&nbsp;&nbsp;#%2 | %3</font></td></tr>"
+                "<tr><td bgcolor='%12'><font color='%13'><b>%4</b>&nbsp;%5</font></td></tr>"
+                "<tr><td bgcolor='%14'><font color='%15'><b>%6</b>&nbsp;%7</font></td></tr>"
+                "</table><br>")
                 .arg(htmlText(preview.filename))
                 .arg(preview.sentenceIndex)
                 .arg(fieldLabel)
-                .arg(tr("替换前"), htmlText(preview.before), tr("替换后"), htmlText(preview.after));
-            clipboardText += QString("\n%1  #%2  |  %3\n%4: %5\n%6: %7\n")
-                .arg(preview.filename)
-                .arg(preview.sentenceIndex)
-                .arg(fieldLabel)
-                .arg(tr("替换前"), preview.before, tr("替换后"), preview.after);
-        }
+                .arg(tr("替换前"), htmlText(preview.before), tr("替换后"), htmlText(preview.after))
+                .arg(cardColor, borderColor, headerColor, headerTextColor,
+                    beforeFill, beforeColor, afterFill, afterColor);
+        };
+
+    clipboardText = summary + "\n";
+    for (const ReplacePreviewEntry* preview : previewEntries) {
+        const QString fieldLabel = preview->field == "src" ? tr("原文") : tr("译文");
+        clipboardText += QString("\n%1  #%2  |  %3\n%4: %5\n%6: %7\n")
+            .arg(preview->filename)
+            .arg(preview->sentenceIndex)
+            .arg(fieldLabel)
+            .arg(tr("替换前"), preview->before, tr("替换后"), preview->after);
     }
-    html += "</body></html>";
 
     ElaContentDialog dialog(window());
     dialog.setLeftButtonText(tr("关闭"));
@@ -414,18 +406,51 @@ void ProjectCachePage::previewReplace()
     ElaText* title = new ElaText(tr("批量替换预览"), content);
     title->setTextStyle(ElaTextType::Title);
     layout->addWidget(title);
-    ElaText* summaryText = new ElaText(displayedSummary, BodyFontPx, content);
+    ElaText* summaryText = new ElaText(summary, BodyFontPx, content);
     summaryText->setStyleSheet(auxiliaryTextStyle());
     layout->addWidget(summaryText);
 
+    constexpr int pageSize = 500;
+    const int pageCount = (int)qMax(1, (previewEntries.size() + pageSize - 1) / pageSize);
+    QHBoxLayout* paginationLayout = new QHBoxLayout();
+    paginationLayout->setContentsMargins(0, 0, 0, 0);
+    paginationLayout->setSpacing(6);
+    ElaSpinBox* pageSpinBox = new ElaSpinBox(content);
+    pageSpinBox->setRange(1, pageCount);
+    pageSpinBox->setFixedWidth(120);
+    pageSpinBox->setValue(1);
+    pageSpinBox->setToolTip(tr("跳转页码"));
+    paginationLayout->addWidget(pageSpinBox);
+    ElaText* pageLabel = new ElaText(tr("第 %1 / %2 页").arg(1).arg(pageCount), BodyFontPx, content);
+    pageLabel->setStyleSheet(auxiliaryTextStyle());
+    paginationLayout->addWidget(pageLabel);
+    paginationLayout->addStretch();
+    layout->addLayout(paginationLayout);
+
     QTextBrowser* previewBrowser = new QTextBrowser(content);
     previewBrowser->setOpenLinks(false);
-    previewBrowser->setHtml(html);
     previewBrowser->setStyleSheet("QTextBrowser{background:transparent;border:none;}");
     QFont previewFont = previewBrowser->font();
     previewFont.setPixelSize(BodyFontPx);
     previewBrowser->setFont(previewFont);
     layout->addWidget(previewBrowser, 1);
+
+    const auto renderPage = [=](int page)
+        {
+            const int first = (page - 1) * pageSize;
+            const int last = (int)qMin(first + pageSize, previewEntries.size());
+            QString pageHtml = htmlPrefix;
+            for (int i = first; i < last; ++i) {
+                pageHtml += cardHtml(*previewEntries.at(i));
+            }
+            pageHtml += "</body></html>";
+            previewBrowser->setHtml(pageHtml);
+            previewBrowser->verticalScrollBar()->setValue(0);
+            pageLabel->setText(tr("第 %1 / %2 页").arg(page).arg(pageCount));
+        };
+    connect(pageSpinBox, QOverload<int>::of(&ElaSpinBox::valueChanged), this,
+        renderPage);
+    renderPage(1);
 
     connect(&dialog, &ElaContentDialog::middleButtonClicked, this,
         [clipboardText]() { QGuiApplication::clipboard()->setText(clipboardText); });

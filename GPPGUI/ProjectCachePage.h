@@ -75,7 +75,6 @@ private:
     struct ReplaceDetail {
         QString filename;
         int matches{};
-        int previewEntries{};
         QList<ReplacePreviewEntry> previews;
     };
 

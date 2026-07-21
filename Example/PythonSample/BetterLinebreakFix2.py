@@ -25,8 +25,8 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
-maxLineLength = 28
-linebreakSymbol = "@L"
+maxLineLength = 30
+linebreakSymbol = "\\n:"
 
 def splitIntoTokens(sentence: str) -> list[str]:
     tokens = []
@@ -76,12 +76,11 @@ def isDialogue(text: str) -> bool:
 
 
 def init(projectDir: Path):
-    """
-    插件初始化函数，由 C++ 调用一次。
-    """
     logger.info(f"BetterLinebreakFix 初始化成功")
     global tokenizeCachePath, tokenizeCache
     tokenizeCachePath = projectDir / "other_cache" / tokenizeCachePath
+    if not tokenizeCachePath.parent.exists():
+        tokenizeCachePath.parent.mkdir(parents=True, exist_ok=True)
     if tokenizeCachePath.exists():
         with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
             tokenizeCache = json.load(f)
@@ -107,7 +106,7 @@ def hasLongPart(transView: str):
     return False
 
 def processSentence(se: gpp.Sentence):
-    transView: str = se.transview
+    transView = se.transview
     if not hasLongPart(transView):
         return
     segments = transView.split(linebreakSymbol)
@@ -120,7 +119,7 @@ def processSentence(se: gpp.Sentence):
     
     dialogue = isDialogue(transView)
     newLines = []
-    currentLine: str = tokens[0]
+    currentLine = tokens[0]
     residualTokens = tokens[1:]
 
     for index, currentToken in enumerate(residualTokens):
@@ -166,8 +165,8 @@ def processSentence(se: gpp.Sentence):
     se.transview = (linebreakSymbol + "　").join(newLines) if dialogue else linebreakSymbol.join(newLines)
 
 def linkLine(se: gpp.Sentence):
-    transView: str = se.transview
-    dialogue = transView.startswith("「")
+    transView = se.transview
+    dialogue = isDialogue(transView)
     maxLen = maxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
@@ -202,10 +201,13 @@ def dPostRun(se: gpp.Sentence):
     try:
         if not gpp.utils.hasCJK(se.transview) or se.orig.startswith("　　"):
             return
-        if re.search("@[^L]", se.transview):
+        transView = se.transview.replace("\\x;heart:", "❤️")
+        if re.search(r"\\[^n]", transView):
             return
+        se.transview = transView
         processSentence(se)
         linkLine(se)
+        se.transview = transView.replace("❤️", "\\x;heart:")
     except Exception as e:
         logger.error(f"Error during BetterLinebreakFix dPostRun(): {e}")
 

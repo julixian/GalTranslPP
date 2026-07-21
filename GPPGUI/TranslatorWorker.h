@@ -49,6 +49,7 @@ public:
     explicit TranslatorWorker(const fs::path& projectDir, QObject* parent = nullptr);
 
     bool getShouldStop() const { return m_shouldStop; }
+    void setShouldStop(bool shouldStop) { m_shouldStop = shouldStop; }
     void doTranslation();
     void stopTranslation();
 

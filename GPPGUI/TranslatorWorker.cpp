@@ -26,6 +26,10 @@ public:
         return m_worker->getShouldStop();
     }
 
+    void setShouldStop(bool shouldStop) override {
+        m_worker->setShouldStop(shouldStop);
+	}
+
 	void flush() override
     {
         std::lock_guard<std::mutex> lock(m_mutex);

@@ -985,7 +985,7 @@ void DictionaryGeneratorReviewAgent::runReviewWorkers() {
                 m_controller->updateBar();
             }));
     }
-    waitForThreads(pool, results);
+    waitForThreads(m_controller, pool, results);
 }
 
 // 将审校账本转换为最终保留的字典列表；未审校的术语不补默认候选。

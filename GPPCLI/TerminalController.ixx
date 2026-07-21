@@ -9,17 +9,19 @@ export
     class TerminalController : public IController {
     public:
         
-        virtual void writeLog(const std::string& log) override {
+    	    void writeLog(const std::string& log) override {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_log += log;
         }
 
-        virtual bool shouldStop() override
+    	    bool shouldStop() override
         {
             return false;
         }
 
-        virtual void flush() override
+        void setShouldStop(bool shouldStop) override { }
+
+        void flush() override
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_log.empty()) {
@@ -39,14 +41,14 @@ export
         }
 
     protected:
-        virtual void onMakeBar(int totalSentences, int totalThreads) override
+        void onMakeBar(int totalSentences, int totalThreads) override
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_bar = std::make_unique<ProgressBar>(totalSentences, totalThreads);
             m_bar->update(0, false);
         }
 
-        virtual void onAddThreadNum(int) override
+        void onAddThreadNum(int) override
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_bar) {
@@ -56,7 +58,7 @@ export
             m_bar->add_thread_num();
         }
 
-        virtual void onReduceThreadNum(int) override
+        void onReduceThreadNum(int) override
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             if (!m_bar) {
@@ -66,7 +68,7 @@ export
             m_bar->reduce_thread_num();
         }
 
-        virtual void onUpdateBar(int ticks, int, int) override
+        void onUpdateBar(int ticks, int, int) override
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_progress += ticks;
@@ -85,7 +87,7 @@ export
                 });
         }
 
-        virtual ~TerminalController() override
+        ~TerminalController() override
         {
             m_controlling = false;
             if (m_flushThread.joinable()) {

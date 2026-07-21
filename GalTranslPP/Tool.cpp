@@ -839,7 +839,7 @@ PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTim
     return defaultTime;
 }
 
-void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& results) {
+void waitForThreads(const std::shared_ptr<IController>& controller, ctpl::thread_pool& pool, std::vector<std::future<void>>& results) {
     std::exception_ptr firstException = nullptr;
     for (auto& result : results) {
         try {
@@ -847,6 +847,7 @@ void waitForThreads(ctpl::thread_pool& pool, std::vector<std::future<void>>& res
         }
         catch (...) {
             if (!firstException) {
+                controller->setShouldStop(true);
                 pool.stop();
                 firstException = std::current_exception();
             }

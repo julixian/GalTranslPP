@@ -276,7 +276,7 @@ void NameTranslator::run(const fs::path& nameTablePath) {
                 }
             }));
     }
-    waitForThreads(pool, results);
+    waitForThreads(m_controller, pool, results);
 
     // 4. 回写结果
     int updatedCount = 0;

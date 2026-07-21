@@ -579,7 +579,7 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
         "已将 %1 个文件任务分配到线程池，等待处理完成...")
         .arg(results.size())
         .toStdString());
-    waitForThreads(m_threadPool, results);
+    waitForThreads(m_controller, m_threadPool, results);
 }
 
 void NormalJsonTranslator::normalJsonProcess()

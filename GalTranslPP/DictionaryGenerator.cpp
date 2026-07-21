@@ -386,7 +386,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
                 m_controller->updateBar();
             }));
     }
-    waitForThreads(pool, results);
+    waitForThreads(m_controller, pool, results);
 
     if (m_controller->shouldStop()) {
         m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将保存已经生成的字典结果").toStdString());

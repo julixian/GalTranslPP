@@ -16,6 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+		"1. 修复翻译时某个线程抛出异常未通知其它线程导致结束缓慢的 bug",
+		"v3.0.0 更新",
         "1. 配置、缓存、条件全面升级（不兼容旧版）",
         "2. 重构 API 池：支持多协议、多 Key、模型测试及自定义请求",
         "3. Agent 翻译与字典审校从实验性功能合并到正式功能",

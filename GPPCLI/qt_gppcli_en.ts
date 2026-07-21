@@ -244,7 +244,7 @@
 <context>
     <name>TerminalController.onAddThreadNum</name>
     <message>
-        <location filename="TerminalController.ixx" line="53"/>
+        <location filename="TerminalController.ixx" line="55"/>
         <source>进度条尚未创建</source>
         <translation>ProgressBar not created</translation>
     </message>
@@ -252,7 +252,7 @@
 <context>
     <name>TerminalController.onReduceThreadNum</name>
     <message>
-        <location filename="TerminalController.ixx" line="63"/>
+        <location filename="TerminalController.ixx" line="65"/>
         <source>进度条尚未创建</source>
         <translation>ProgressBar not created</translation>
     </message>

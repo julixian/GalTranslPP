@@ -67,6 +67,8 @@ export
 
 		virtual bool shouldStop() = 0;
 
+		virtual void setShouldStop(bool shouldStop) = 0;
+
 		virtual void flush() = 0;
 
 		IController();

@@ -4601,7 +4601,7 @@ Issue summary:</translation>
 <context>
     <name>TranslatorWorker</name>
     <message>
-        <location filename="TranslatorWorker.cpp" line="+224"/>
+        <location filename="TranslatorWorker.cpp" line="+228"/>
         <source>[GalTransl++ 系统错误] %1</source>
         <oldsource>[系统错误] %1</oldsource>
         <translation>[GalTransl++ System] %1</translation>

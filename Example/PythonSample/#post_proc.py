@@ -17,35 +17,42 @@ def wait_for_exit(sec):
     input_thread.join(timeout=sec)
 
 try:
-    projectPath = Path(r"D:\VSProj\JLXHP\x64\Release\LibidoAventure")
-    projectBaseName = str(projectPath.name)
-    packPyScript = projectPath / "pack.py"
-    basePath = projectPath / (projectBaseName + "_cn_base")
-    newCharMapPath = basePath / "base"
-    newScriptPath = projectPath / (projectBaseName + "_cn_script")
+    projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\clacra")
+    projectName = str(projectPackPath.name)
+    packScriptPath = projectPackPath / "pack.py"
+    basePackagePath = projectPackPath / (projectName + "_cn_base")
+    scriptPackagePath = projectPackPath / (projectName + "_cn_script")
+    baseDir = basePackagePath / "base"
 
     subprocess.run(
-                [sys.executable, r"AdvHD_ws2_Toolkit\src\ws2_json_handler.py",
-                 "import", "--output-encrypt", "encrypted",
-                 "Rio1__bak", "Rio1__cn", (newScriptPath / "Rio1")]
-            )
+        ["text_tool.exe", "inject",
+         "clacra_rep.asm.txt", "rep/clacra_rep.json",
+         "-o", "clacra_rep.injected.asm.txt"],
+        cwd="work"
+    )
 
     subprocess.run(
-                ["MergeJsonTransMap.exe",
-                 "Rio1__cn", "Rio1__jp", newCharMapPath / "transMap.json"]
-            )
-
-    shutil.copy2(projectBaseName + "_mjp.ttf",
-                 basePath / (projectBaseName + "_cn") / "Font")
-    shutil.copy2("charMap.json", newCharMapPath)
-    shutil.copy2("charsNotMap.json", newCharMapPath)
+        ["script_tool.exe", "assemble",
+         "clacra_rep.injected.asm.txt", "-o", "clacra_rep.injected.rebuild"],
+        cwd="work"
+    )
 
     subprocess.run(
-                [sys.executable, packPyScript],
-                cwd=packPyScript.parent,
-                text=True,               # 将输入输出作为字符串处理，而不是字节
-                input="\n"
-            )
+        ["MergeJsonTransMap.exe", "work/rep", "work/org", baseDir]
+    )
+
+    shutil.copy2("work/clacra_rep.injected.rebuild", scriptPackagePath / "clacra.hcb")
+    shutil.copy2(projectName + "_mjp.ttf",
+                 basePackagePath / (projectName + "_cn") / "Font")
+    shutil.copy2("charMap.json", baseDir)
+    shutil.copy2("charsNotMap.json", baseDir)
+
+    subprocess.run(
+        [sys.executable, packScriptPath],
+        cwd=packScriptPath.parent,
+        text=True,               # 将输入输出作为字符串处理，而不是字节
+        input="\n"
+    )
 
     wait_for_exit(3)
 

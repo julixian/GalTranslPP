@@ -21,12 +21,14 @@
 #include "ElaMessageBar.h"
 #include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
+#include "ElaContentDialog.h"
 
 #include "NJCfgPage.h"
 #include "EpubCfgPage.h"
 #include "PDFCfgPage.h"
 #include "CustomFilePluginCfgPage.h"
 #include "TranslationWorkbenchPage.h"
+#include "ProblemOverviewTracker.h"
 
 import Tool;
 
@@ -537,19 +539,6 @@ void StartSettingsPage::setupUi()
 	m_startTranslateButton = new ElaPushButton(buttonArea);
 	m_startTranslateButton->setText(tr("开始翻译"));
 	connect(m_startTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::onStartTranslatingClicked);
-	connect(m_startTranslateButton, &ElaPushButton::clicked, this, [=]()
-		{
-			const bool scrollAtBottom = isLogScrollAtBottom();
-			if (!m_logOutput->toPlainText().isEmpty()) {
-				QTextCursor tempCursor(m_logOutput->document());
-				tempCursor.movePosition(QTextCursor::End);
-				tempCursor.insertText("\n\n\n\n\n");
-			}
-			if (scrollAtBottom) {
-				QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
-				scrollBar->setValue(scrollBar->maximum());
-			}
-		});
 	buttonLayout->addWidget(m_startTranslateButton);
 
 	// 停止翻译
@@ -624,9 +613,48 @@ void StartSettingsPage::setupUi()
 // 底下的可以不用看
 void StartSettingsPage::onStartTranslatingClicked()
 {
+	if (ProblemOverviewTracker::hasUnimportedChanges(m_projectDir, m_projectConfig)) {
+		ElaContentDialog dialog(window());
+		dialog.setLeftButtonText(tr("否"));
+		dialog.setMiddleButtonText(tr("思考人生"));
+		dialog.setRightButtonText(tr("是"));
+
+		QWidget* widget = new QWidget(&dialog);
+		QVBoxLayout* layout = new QVBoxLayout(widget);
+		layout->setContentsMargins(15, 25, 15, 10);
+		ElaText* titleText = new ElaText(tr("问题概览尚未导入"), widget);
+		titleText->setTextStyle(ElaTextType::Title);
+		titleText->setWordWrap(false);
+		layout->addWidget(titleText);
+		layout->addSpacing(2);
+		ElaText* messageText = new ElaText(
+			tr("检测到 %1 在上次记录后被修改，但尚未导入 trans_cache。是否确定继续翻译？")
+			.arg(QString::fromStdWString(ProblemOverviewTracker::overviewPath(m_projectDir, m_projectConfig).filename().wstring())),
+			16, widget);
+		messageText->setTextStyle(ElaTextType::Body);
+		messageText->setWordWrap(true);
+		layout->addWidget(messageText);
+		layout->addStretch();
+		dialog.setCentralWidget(widget);
+
+		if (dialog.exec() != QDialog::Accepted) {
+			return;
+		}
+	}
+
 	resetLogBufferState(true);
 	if (m_translationWorkbenchPage) {
 		m_translationWorkbenchPage->clearRuntime();
+	}
+	const bool scrollAtBottom = isLogScrollAtBottom();
+	if (!m_logOutput->toPlainText().isEmpty()) {
+		QTextCursor tempCursor(m_logOutput->document());
+		tempCursor.movePosition(QTextCursor::End);
+		tempCursor.insertText("\n\n\n\n\n");
+	}
+	if (scrollAtBottom) {
+		QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
+		scrollBar->setValue(scrollBar->maximum());
 	}
 	Q_EMIT startTranslatingSignal();
 	m_workerTransEngine = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "transEngine", ""));

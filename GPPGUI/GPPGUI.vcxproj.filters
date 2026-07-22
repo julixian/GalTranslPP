@@ -359,6 +359,9 @@
     <QtMoc Include="DictionarySearchBar.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
+    <ClInclude Include="ProblemOverviewTracker.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gppgui_en.ts">

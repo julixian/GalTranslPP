@@ -335,6 +335,7 @@ copy "$(TargetDir)translations\qt_gpp*.qm" "$(TargetDir)..\GPPGUI_PRIVATE\transl
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
+    <ClInclude Include="ProblemOverviewTracker.h" />
     <QtMoc Include="ReorderableTableView.h" />
     <QtMoc Include="TreeSitterHighlighter.h" />
   </ItemGroup>

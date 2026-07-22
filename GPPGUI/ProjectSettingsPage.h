@@ -63,6 +63,7 @@ private:
 
     void setupUi();
     void createPages();
+    void saveProjectConfig();
 
 private Q_SLOTS:
     void onStartTranslating();

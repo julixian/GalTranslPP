@@ -168,11 +168,8 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     hKeysWidget->hide();
     connect(editHKeysButton, &ElaPushButton::clicked, this, [=]()
         {
-            QWidget* mainWindow = window();
-            if (mainWindow) {
-                hKeysWidget->move(mainWindow->frameGeometry().center()
-                    - hKeysWidget->rect().center());
-            }
+            hKeysWidget->move(window()->frameGeometry().center()
+                - hKeysWidget->rect().center());
             hKeysWidget->show();
             hKeysWidget->raise();
             hKeysWidget->activateWindow();

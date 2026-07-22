@@ -206,7 +206,7 @@ sk-...</translation>
         <translation>Advanced settings</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+30"/>
         <source>请求类型: 获取模型列表</source>
         <translation>Request type: fetch model list</translation>
     </message>
@@ -2769,7 +2769,7 @@ sk-...</translation>
 <context>
     <name>OtherSettingsPage</name>
     <message>
-        <location filename="OtherSettingsPage.cpp" line="+24"/>
+        <location filename="OtherSettingsPage.cpp" line="+25"/>
         <source>其它设置</source>
         <translation>Other settings</translation>
     </message>
@@ -2794,7 +2794,7 @@ sk-...</translation>
         <translation>ProblemOverview output format</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+43"/>
         <source>移动项目</source>
         <translation>Move project</translation>
     </message>
@@ -2881,7 +2881,7 @@ sk-...</translation>
         <translation>Choose issue summary file</translation>
     </message>
     <message>
-        <location line="+115"/>
+        <location line="+124"/>
         <source>保存项目配置</source>
         <translation>Save project settings</translation>
     </message>
@@ -2943,7 +2943,7 @@ sk-...</translation>
         <translation>No</translation>
     </message>
     <message>
-        <location line="-302"/>
+        <location line="-311"/>
         <source>项目移动/更名</source>
         <translation>Move/Rename project</translation>
     </message>
@@ -2964,12 +2964,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+107"/>
+        <location line="+116"/>
         <source>导入失败</source>
         <translation>Fail to import</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-116"/>
         <source>项目仍在运行中，无法导入</source>
         <translation>Project is still running</translation>
     </message>
@@ -3019,7 +3019,7 @@ Cache: %4</translation>
         <translation>Problems during importing saved to import_problems.log</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+28"/>
         <source>开始翻译或关闭程序时会自动保存所有项目的配置，一般无需手动保存</source>
         <translation>All project settings auto-save on translation start or exit</translation>
     </message>
@@ -3220,7 +3220,7 @@ Cache: %4</translation>
         <translation type="vanished">Push the button below to get detailed explanation of grammars and effects</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+54"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
     </message>
@@ -3637,7 +3637,7 @@ Cache: %4</translation>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+55"/>
         <source>已删除 %1 个条目，保存后生效</source>
         <translation>Deleted %1 entries; save to apply</translation>
     </message>
@@ -3684,7 +3684,7 @@ Cache: %4</translation>
         <translation>Cache is not a JSON array: %1</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="-163"/>
+        <location filename="ProjectCachePageEntries.cpp" line="-161"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
@@ -3825,13 +3825,13 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+34"/>
+        <location filename="ProjectSettingsPage.cpp" line="+35"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+238"/>
+        <location line="+243"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -3846,12 +3846,12 @@ Cache: %4</translation>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-52"/>
+        <location line="-57"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+57"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
@@ -4101,12 +4101,12 @@ Cache: %4</translation>
     <name>SkipTransCfgPage</name>
     <message>
         <location filename="SkipTransCfgPage.cpp" line="+122"/>
-        <location line="+102"/>
+        <location line="+99"/>
         <source>跳过翻译设置</source>
         <translation>SkipTrans settings</translation>
     </message>
     <message>
-        <location line="-91"/>
+        <location line="-88"/>
         <source>跳过 H 关键字</source>
         <translation>Skip H keys</translation>
     </message>
@@ -4136,7 +4136,7 @@ Cache: %4</translation>
         <translation>One keyword per line; saved back as base64 automatically</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+25"/>
         <source>语法与 retranslKeys 完全相同</source>
         <translation>The grammars is completely same as retranslKeys&apos;</translation>
     </message>
@@ -4154,7 +4154,7 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+365"/>
+        <location filename="StartSettingsPage.cpp" line="+367"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
@@ -4235,7 +4235,32 @@ Issue summary:</translation>
         <translation>Start translating</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+78"/>
+        <source>否</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>思考人生</source>
+        <translation>Reflect on life</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>是</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>问题概览尚未导入</source>
+        <translation>Problem overview not imported</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>检测到 %1 在上次记录后被修改，但尚未导入 trans_cache。是否确定继续翻译？</source>
+        <translation>%1 was modified after it was last recorded but has not been imported into trans_cache. Continue translating?</translation>
+    </message>
+    <message>
+        <location line="-85"/>
         <source>停止翻译</source>
         <translation>Stop translation</translation>
     </message>
@@ -4245,7 +4270,7 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-472"/>
+        <location line="-459"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
@@ -4255,7 +4280,7 @@ Issue summary:</translation>
         <translation>File plugin:</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <location line="+154"/>
         <source>文件格式错误</source>
         <translation>File format error</translation>
     </message>
@@ -4265,7 +4290,7 @@ Issue summary:</translation>
         <translation>Custom plugin must be *.lua or *.py format.</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+85"/>
         <source>停止中</source>
         <translation>Stopping</translation>
     </message>

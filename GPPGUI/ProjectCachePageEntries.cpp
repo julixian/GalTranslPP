@@ -210,9 +210,7 @@ void ProjectCachePage::openEntryEditor(int row)
     buttonLayout->addWidget(saveButton);
     mainLayout->addLayout(buttonLayout);
 
-    if (QWidget* mainWindow = window()) {
-        dialog.move(mainWindow->frameGeometry().center() - dialog.rect().center());
-    }
+    dialog.move(window()->frameGeometry().center() - dialog.rect().center());
     dialog.exec();
 }
 

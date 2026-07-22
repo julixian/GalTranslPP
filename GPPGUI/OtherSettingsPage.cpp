@@ -15,6 +15,7 @@
 #include "ElaInputDialog.h"
 #include "ElaDoubleText.h"
 #include "ElaRadioButton.h"
+#include "ProblemOverviewTracker.h"
 
 import Tool;
 
@@ -73,6 +74,18 @@ void OtherSettingsPage::setupUi()
 	overviewFormatGroup->addButton(overviewJsonRadio);
 	overviewTomlRadio->setChecked(problemOverviewFormat != "json");
 	overviewJsonRadio->setChecked(problemOverviewFormat == "json");
+	connect(overviewTomlRadio, &ElaRadioButton::toggled, this, [=](bool checked)
+		{
+			if (checked) {
+				insertToml(m_projectConfig, "common.problemOverviewFormat", std::string("toml"));
+			}
+		});
+	connect(overviewJsonRadio, &ElaRadioButton::toggled, this, [=](bool checked)
+		{
+			if (checked) {
+				insertToml(m_projectConfig, "common.problemOverviewFormat", std::string("json"));
+			}
+		});
 	overviewFormatLayout->addWidget(overviewTomlRadio);
 	overviewFormatLayout->addWidget(overviewJsonRadio);
 	m_applyFunc = [=]()
@@ -292,6 +305,15 @@ void OtherSettingsPage::setupUi()
 				}
 				else {
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("导入完毕"), completeQStr, 3000);
+				}
+
+				const fs::path importedPath(importOverviewPathQStr.toStdWString());
+				if (ProblemOverviewTracker::isCurrentOverviewFile(importedPath, m_projectDir, m_projectConfig)) {
+					const auto writeTime = ProblemOverviewTracker::lastWriteTime(importedPath);
+					if (writeTime) {
+						insertToml(m_projectConfig, ProblemOverviewTracker::configKey(m_projectConfig), *writeTime);
+						Q_EMIT saveConfigSignal();
+					}
 				}
 			}
 			catch (const std::exception& e) {

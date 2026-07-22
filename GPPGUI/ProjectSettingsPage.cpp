@@ -25,6 +25,7 @@
 #include "OtherSettingsPage.h"
 #include "PromptSettingsPage.h"
 #include "ProjectCachePage.h"
+#include "ProblemOverviewTracker.h"
 
 import Tool;
 
@@ -62,6 +63,11 @@ void ProjectSettingsPage::apply2Config()
     m_otherSettingsPage->apply2Config();
     m_promptSettingsPage->apply2Config();
 
+    saveProjectConfig();
+}
+
+void ProjectSettingsPage::saveProjectConfig()
+{
     try {
         atomicOutputFile(m_projectDir / L"Config.toml", toml::format(m_projectConfig));
     }
@@ -312,8 +318,16 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
             m_dictSettingsPage->refreshDicts();
         }
     }
-    Q_EMIT finishTranslatingSignal(this->property("ElaPageKey").toString());
     insertToml(m_projectConfig, "GUIConfig.isRunning", false);
+    if (exitCode == 0) {
+        const auto writeTime = ProblemOverviewTracker::lastWriteTime(
+            ProblemOverviewTracker::overviewPath(m_projectDir, m_projectConfig));
+        if (writeTime) {
+            insertToml(m_projectConfig, ProblemOverviewTracker::configKey(m_projectConfig), *writeTime);
+        }
+    }
+    saveProjectConfig();
+    Q_EMIT finishTranslatingSignal(this->property("ElaPageKey").toString());
 }
 
 bool ProjectSettingsPage::getIsRunning()

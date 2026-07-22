@@ -249,11 +249,8 @@ void PASettingsPage::setupUi()
 	compareObjectLayout->addWidget(compareObjectButton);
 	connect(compareObjectButton, &ElaToolButton::clicked, this, [=]()
 		{
-			QWidget* mainWindow = window();
-			if (mainWindow) {
-				compareConfigWidget->move(mainWindow->frameGeometry().center()
-					- compareConfigWidget->rect().center());
-			}
+			compareConfigWidget->move(window()->frameGeometry().center()
+				- compareConfigWidget->rect().center());
 			compareConfigWidget->show();
 			compareConfigWidget->raise();
 			compareConfigWidget->activateWindow();

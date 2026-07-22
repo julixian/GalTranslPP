@@ -17,12 +17,16 @@ def wait_for_exit(sec):
     input_thread.join(timeout=sec)
 
 try:
+    patchPackPath = Path("#g31pp补丁")
     projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\clacra")
     projectName = projectPackPath.name
     packScriptPath = projectPackPath / "pack.py"
     basePackagePath = projectPackPath / (projectName + "_cn_base")
     scriptPackagePath = projectPackPath / (projectName + "_cn_script")
     baseDir = basePackagePath / "base"
+
+    patchPackPath.mkdir(parents=True, exist_ok=True)
+
 
     subprocess.run(
         ["work/text_tool.exe", "inject",
@@ -46,6 +50,8 @@ try:
                  basePackagePath / (projectName + "_cn") / "Font")
     shutil.copy2("charMap.json", baseDir)
     shutil.copy2("charsNotMap.json", baseDir)
+    shutil.copy2("charMap.json", patchPackPath)
+    shutil.copy2("charsNotMap.json", patchPackPath)
 
     subprocess.run(
         [sys.executable, packScriptPath],

@@ -4252,12 +4252,14 @@ Issue summary:</translation>
     <message>
         <location line="+5"/>
         <source>问题概览尚未导入</source>
+        <oldsource>检测到问题概览被修改但未导入</oldsource>
         <translation>Problem overview not imported</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>检测到 %1 在上次记录后被修改，但尚未导入 trans_cache。是否确定继续翻译？</source>
-        <translation>%1 was modified after it was last recorded but has not been imported into trans_cache. Continue translating?</translation>
+        <source>检测到 %1 被修改但未导入。是否继续翻译？</source>
+        <oldsource>检测到 %1 被修改但未导入。是否确定继续翻译？</oldsource>
+        <translation>%1 was modified but has not been imported. Continue translating?</translation>
     </message>
     <message>
         <location line="-85"/>

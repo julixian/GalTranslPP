@@ -628,11 +628,11 @@ void StartSettingsPage::onStartTranslatingClicked()
 		layout->addWidget(titleText);
 		layout->addSpacing(2);
 		ElaText* messageText = new ElaText(
-			tr("检测到 %1 在上次记录后被修改，但尚未导入 trans_cache。是否确定继续翻译？")
+			tr("检测到 %1 被修改但未导入。是否继续翻译？")
 			.arg(QString::fromStdWString(ProblemOverviewTracker::overviewPath(m_projectDir, m_projectConfig).filename().wstring())),
 			16, widget);
+		messageText->setWordWrap(false);
 		messageText->setTextStyle(ElaTextType::Body);
-		messageText->setWordWrap(true);
 		layout->addWidget(messageText);
 		layout->addStretch();
 		dialog.setCentralWidget(widget);

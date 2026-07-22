@@ -1,8 +1,9 @@
 import gpp_plugin_api as gpp
 from pathlib import Path
+from dataclasses import dataclass
 import json
 import re
-from typing import Callable, cast
+from typing import Callable, Optional, cast
 
 tokenizeResult = tuple[list[tuple[str, str]], list[tuple[str, str]]]
 tokenizeFuncType = Callable[[str], tokenizeResult]
@@ -25,19 +26,77 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
-maxLineLength = 30
-linebreakSymbol = "\\n:"
+maxLineLength = 22
+linebreakSymbol = "<br>"
 
-def splitIntoTokens(sentence: str) -> list[str]:
+@dataclass(frozen=True)
+class InlineTokenRule:
+    pattern: re.Pattern[str]
+    displayWidth: Callable[[re.Match[str]], int]
+
+# 行内特殊格式都在这里配置：匹配到的整段原文不会被分词或拆开。
+# 格式变更时，只需修改/增加规则及其显示宽度算法。规则重叠时前者优先。
+inlineTokenRules = (
+    InlineTokenRule(
+        re.compile(r"\[([^\[\]\|]+?)\|([^\[\]\|]+?)\]"),
+        lambda match: len(match.group(2)),
+    ),
+    InlineTokenRule(
+        re.compile(r"<(.+?)>"),
+        lambda match: 1,
+    ),
+)
+
+
+def findNextInlineToken(
+    text: str, start: int = 0
+) -> Optional[tuple[InlineTokenRule, re.Match[str]]]:
+    result = None
+    for rule in inlineTokenRules:
+        match = rule.pattern.search(text, start)
+        if match is None:
+            continue
+        if match.start() == match.end():
+            raise ValueError(f"Inline token rule must not match empty text: {rule.pattern.pattern}")
+        if result is None or match.start() < result[1].start():
+            result = (rule, match)
+    return result
+
+def splitPlainTextIntoTokens(text: str) -> list[str]:
     tokens = []
-    if sentence in tokenizeCache:
-        wordPosVec = tokenizeCache[sentence]
-        tokens = gpp.utils.splitIntoTokens(wordPosVec, sentence)
+    if text in tokenizeCache:
+        wordPosVec = tokenizeCache[text]
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, text)
     else:
-        wordPosVec, _ = targetLangTokenizeFunc(sentence)
-        tokens = gpp.utils.splitIntoTokens(wordPosVec, sentence)
-        tokenizeCache[sentence] = wordPosVec
+        wordPosVec, _ = targetLangTokenizeFunc(text)
+        tokens = gpp.utils.splitIntoTokens(wordPosVec, text)
+        tokenizeCache[text] = wordPosVec
     return tokens
+
+def splitIntoTokens(text: str) -> list[str]:
+    """仅对普通文本分词，行内特殊格式作为不可拆分的 token 保留原文。"""
+    tokens = []
+    cursor = 0
+    while token := findNextInlineToken(text, cursor):
+        _, match = token
+        if match.start() > cursor:
+            tokens.extend(splitPlainTextIntoTokens(text[cursor:match.start()]))
+        tokens.append(match.group(0))
+        cursor = match.end()
+    if cursor < len(text):
+        tokens.extend(splitPlainTextIntoTokens(text[cursor:]))
+    return tokens
+
+def displayLength(text: str) -> int:
+    """计算引擎实际显示的字符数，而不是原始字符串长度。"""
+    width = 0
+    cursor = 0
+    while token := findNextInlineToken(text, cursor):
+        rule, match = token
+        width += match.start() - cursor
+        width += rule.displayWidth(match)
+        cursor = match.end()
+    return width + len(text) - cursor
 
 def isDialogue(text: str) -> bool:
     text = text.strip()
@@ -74,18 +133,6 @@ def isDialogue(text: str) -> bool:
 
     return depth == 0
 
-
-def init(projectDir: Path):
-    logger.info(f"BetterLinebreakFix 初始化成功")
-    global tokenizeCachePath, tokenizeCache
-    tokenizeCachePath = projectDir / "other_cache" / tokenizeCachePath
-    if not tokenizeCachePath.parent.exists():
-        tokenizeCachePath.parent.mkdir(parents=True, exist_ok=True)
-    if tokenizeCachePath.exists():
-        with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
-            tokenizeCache = json.load(f)
-
-
 def hasLongPart(transView: str):
     maxLen = maxLineLength
     segments = transView.split(linebreakSymbol)
@@ -101,9 +148,10 @@ def hasLongPart(transView: str):
                 maxLen = maxLineLength - 1
         else:
             maxLen = maxLineLength
-        if len(segment) > maxLen:
+        if displayLength(segment) > maxLen:
             return True
     return False
+
 
 def processSentence(se: gpp.Sentence):
     transView = se.transview
@@ -130,10 +178,10 @@ def processSentence(se: gpp.Sentence):
                 maxLen = maxLineLength - 1
         else:
             maxLen = maxLineLength
-        if len(currentLine) + len(currentToken) <= maxLen:
+        if displayLength(currentLine) + displayLength(currentToken) <= maxLen:
             if index + 1 < len(residualTokens):
                 nextToken = residualTokens[index + 1]
-                if len(currentLine) + len(currentToken) + len(nextToken) > maxLen:
+                if displayLength(currentLine) + displayLength(currentToken) + displayLength(nextToken) > maxLen:
                     if currentToken in excludePuncts:
                         # c
                         #『\n...
@@ -156,8 +204,8 @@ def processSentence(se: gpp.Sentence):
         else:
             newLines.append(currentLine)
             currentLine = currentToken
-    if len(newLines) >= 1 and len(currentLine) <= 2 and gpp.utils.isAllPunctuation(currentLine):
-        #       ccc
+    if len(newLines) >= 1 and displayLength(currentLine) <= 2 and gpp.utils.isAllPunctuation(currentLine):
+        #       ccl
         # word\n。」\z
         newLines[-1] = newLines[-1] + currentLine
     else:
@@ -185,7 +233,7 @@ def linkLine(se: gpp.Sentence):
                 maxLen = maxLineLength - 1
         else:
             maxLen = maxLineLength
-        if len(currentLine) + len(currentSegment) <= maxLen:
+        if displayLength(currentLine) + displayLength(currentSegment) <= maxLen:
             currentLine += currentSegment
         else:
             newLines.append(currentLine)
@@ -197,17 +245,23 @@ def linkLine(se: gpp.Sentence):
         se.transview = "　" + se.transview
 
 
+
+def init(projectDir: Path):
+    logger.info(f"BetterLinebreakFix 初始化成功")
+    global tokenizeCachePath, tokenizeCache
+    tokenizeCachePath = projectDir / "other_cache" / tokenizeCachePath
+    if not tokenizeCachePath.parent.exists():
+        tokenizeCachePath.parent.mkdir(parents=True, exist_ok=True)
+    if tokenizeCachePath.exists():
+        with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
+            tokenizeCache = json.load(f)
+
 def dPostRun(se: gpp.Sentence):
     try:
         if not gpp.utils.hasCJK(se.transview) or se.orig.startswith("　　"):
             return
-        transView = se.transview.replace("\\x;heart:", "❤️")
-        if re.search(r"\\[^n]", transView):
-            return
-        se.transview = transView
         processSentence(se)
         linkLine(se)
-        se.transview = transView.replace("❤️", "\\x;heart:")
     except Exception as e:
         logger.error(f"Error during BetterLinebreakFix dPostRun(): {e}")
 

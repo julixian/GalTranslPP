@@ -18,7 +18,7 @@ def wait_for_exit(sec):
 
 try:
     projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\clacra")
-    projectName = str(projectPackPath.name)
+    projectName = projectPackPath.name
     packScriptPath = projectPackPath / "pack.py"
     basePackagePath = projectPackPath / (projectName + "_cn_base")
     scriptPackagePath = projectPackPath / (projectName + "_cn_script")

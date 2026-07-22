@@ -613,7 +613,7 @@ void StartSettingsPage::setupUi()
 // 底下的可以不用看
 void StartSettingsPage::onStartTranslatingClicked()
 {
-	if (ProblemOverviewTracker::hasUnimportedChanges(m_projectDir, m_projectConfig)) {
+	if (ProblemOverviewTracker::hasUnimportedChanges(m_projectDir, transCacheDirName, m_projectConfig)) {
 		ElaContentDialog dialog(window());
 		dialog.setLeftButtonText(tr("否"));
 		dialog.setMiddleButtonText(tr("思考人生"));

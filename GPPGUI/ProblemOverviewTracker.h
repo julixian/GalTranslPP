@@ -54,9 +54,10 @@ namespace ProblemOverviewTracker
         return recordedTime;
     }
 
-    inline bool hasUnimportedChanges(const fs::path& projectDir, const toml::ordered_value& projectConfig)
+    inline bool hasUnimportedChanges(const fs::path& projectDir, const fs::path& cacheDirName,
+        const toml::ordered_value& projectConfig)
     {
-        const QFileInfo cacheDirInfo(QString::fromStdWString((projectDir / L"trans_cache").wstring()));
+        const QFileInfo cacheDirInfo(QString::fromStdWString((projectDir / cacheDirName).wstring()));
         if (!cacheDirInfo.isDir()) {
             return false;
         }

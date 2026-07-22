@@ -319,7 +319,7 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
         }
     }
     insertToml(m_projectConfig, "GUIConfig.isRunning", false);
-    if (exitCode == 0) {
+    if (exitCode >= 0) {
         const auto writeTime = ProblemOverviewTracker::lastWriteTime(
             ProblemOverviewTracker::overviewPath(m_projectDir, m_projectConfig));
         if (writeTime) {

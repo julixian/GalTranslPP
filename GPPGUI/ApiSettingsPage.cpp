@@ -561,8 +561,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             resultEdit->setPlainText(content);
             resultLayout->addWidget(resultEdit);
 
-            QWidget* mainWindow = window();
-            const int resultHeight = mainWindow ? std::clamp(mainWindow->height() - 160, 420, 620) : 520;
+            const int resultHeight = std::clamp(window()->height() - 160, 420, 620);
             resultDialog->resize(820, resultHeight);
             const QPoint center = configWidget->geometry().center();
             resultDialog->move(center.x() - resultDialog->width() / 2, center.y() - resultDialog->height() / 2);
@@ -817,11 +816,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     configWidget->hide();
     connect(configButton, &ElaToolButton::clicked, this, [=]()
         {
-            QWidget* mainWindow = window();
-            if (mainWindow) {
-                configWidget->move(mainWindow->frameGeometry().center()
-                    - configWidget->rect().center());
-            }
+            configWidget->move(window()->frameGeometry().center()
+                - configWidget->rect().center());
             configWidget->show();
             configWidget->raise();
             configWidget->activateWindow();

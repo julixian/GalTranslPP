@@ -25,20 +25,20 @@ try:
     baseDir = basePackagePath / "base"
 
     subprocess.run(
-        ["text_tool.exe", "inject",
+        ["work/text_tool.exe", "inject",
          "clacra_rep.asm.txt", "rep/clacra_rep.json",
          "-o", "clacra_rep.injected.asm.txt"],
         cwd="work"
     )
 
     subprocess.run(
-        ["script_tool.exe", "assemble",
+        ["work/script_tool.exe", "assemble",
          "clacra_rep.injected.asm.txt", "-o", "clacra_rep.injected.rebuild"],
         cwd="work"
     )
 
     subprocess.run(
-        ["MergeJsonTransMap.exe", "work/rep", "work/org", baseDir]
+        ["MergeJsonTransMap.exe", "work/rep", "work/bak", baseDir / "transMap.json"]
     )
 
     shutil.copy2("work/clacra_rep.injected.rebuild", scriptPackagePath / "clacra.hcb")

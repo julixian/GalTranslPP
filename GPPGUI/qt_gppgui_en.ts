@@ -63,7 +63,7 @@
         <translation>Add new Api</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+85"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -145,7 +145,12 @@ sk-...</translation>
         <translation>Stream output</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
+        <source>使用系统代理</source>
+        <translation>Use system proxy</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>基础设置</source>
         <translation>Basic settings</translation>
     </message>
@@ -298,7 +303,7 @@ sk-...</translation>
         <translation>Model name cannot be empty</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+70"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
@@ -4097,7 +4102,7 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="-175"/>
+        <location filename="ApiSettingsPage.cpp" line="-176"/>
         <location line="+7"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>

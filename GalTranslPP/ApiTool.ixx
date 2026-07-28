@@ -30,6 +30,7 @@ export
         std::chrono::steady_clock::time_point lastReportTime = std::chrono::steady_clock::now();
         int reportCount = 0;
         bool stream = false;
+        bool useSystemProxy = true;
     };
 
     struct ApiResponse {

@@ -10,6 +10,7 @@ apiTimeout = 300 # 请求超时时间，单位秒
   protocol = "openai"
   thinkingLevel = "off"   # off/low/medium/high
   stream = false          # 流式输出
+  useSystemProxy = true   # 使用系统代理
   # temperature = 1.0
   # topP = 1.0
   # frequencyPenalty = 0.0

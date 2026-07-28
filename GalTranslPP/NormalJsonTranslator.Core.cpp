@@ -509,6 +509,7 @@ void NormalJsonTranslator::normalJsonInit()
                     continue;
                 }
                 api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
+                api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
                 api.thinkingLevel = "off";
                 if (apiTbl.contains("thinkingLevel")) {
                     api.thinkingLevel = apiTbl.at("thinkingLevel").as_string();

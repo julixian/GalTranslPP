@@ -184,6 +184,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     const std::string protocol = toml::find_or(api, "protocol", "openai");
     const std::string thinkingLevel = toml::find_or(api, "thinkingLevel", "off");
     const bool stream = toml::find_or(api, "stream", false);
+    const bool useSystemProxy = toml::find_or(api, "useSystemProxy", true);
     const bool enable = toml::find_or(api, "enable", true);
     const bool extraHeadersEnable = toml::find_or(api, "extraHeadersEnable", false);
     const bool extraBodyEnable = toml::find_or(api, "extraBodyEnable", false);
@@ -418,6 +419,15 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     streamConfigSwitch->setIsToggled(stream);
     streamConfigLayout->addWidget(streamConfigSwitch);
     basicLayout->addWidget(streamConfigArea);
+
+    auto [systemProxyArea, systemProxyLayout] = createFormRow(basicPage);
+    systemProxyLayout->addWidget(new ElaText(tr("使用系统代理"), 16, systemProxyArea));
+    systemProxyLayout->addStretch();
+    ElaToggleSwitch* systemProxySwitch = new ElaToggleSwitch(systemProxyArea);
+    systemProxySwitch->setIsToggled(useSystemProxy);
+    systemProxyLayout->addWidget(systemProxySwitch);
+    basicLayout->addWidget(systemProxyArea);
+
     basicLayout->addStretch();
     tabWidget->addTab(basicTabPage.page, tr("基础设置"));
 
@@ -676,6 +686,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             api_.modelName = modelName.toStdString();
             api_.thinkingLevel = thinkingComboBox->currentText().toStdString();
             api_.stream = streamConfigSwitch->getIsToggled();
+            api_.useSystemProxy = systemProxySwitch->getIsToggled();
             if (temperatureCheckBox->isChecked()) {
                 api_.temperature = temperatureSlider->value();
             }
@@ -854,6 +865,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             apiTable.insert({ "apiurl", urlEdit->text().toStdString() });
             apiTable.insert({ "modelName", modelEdit->text().toStdString() });
             apiTable.insert({ "stream", streamConfigSwitch->getIsToggled() });
+            apiTable.insert({ "useSystemProxy", systemProxySwitch->getIsToggled() });
             apiTable.insert({ "enable", enableCheckBox->isChecked() });
             apiTable.insert({ "thinkingLevel", thinkingComboBox->currentText().toStdString() });
             if (temperatureCheckBox->isChecked()) {

@@ -418,7 +418,7 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
     applyApiPayloadOptions(payload, api); // 模型、温度、思考，extraBody
     const std::string payloadStr = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
 
-    cpr::Proxies proxies = makeSystemProxies(logger);
+    const cpr::Proxies proxies = api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{};
 
     if (api.stream) {
         std::string concatenatedContent;
@@ -486,7 +486,7 @@ ApiModelListResponse queryApiModels(const TranslationApi& api, int apiTimeOutMs)
         cpr::Url{ requestUrl },
         makeApiHeaders(api),
         cpr::Timeout{ apiTimeOutMs },
-        makeSystemProxies()
+        api.useSystemProxy ? makeSystemProxies() : cpr::Proxies{}
     );
     result.statusCode = response.status_code;
     result.content = response.text.empty() ? response.error.message : response.text;
@@ -533,7 +533,7 @@ ApiTestResponse testApiConnection(const TranslationApi& api, int apiTimeOutMs)
         cpr::Body{ payload.dump() },
         makeApiHeaders(api),
         cpr::Timeout{ apiTimeOutMs },
-        makeSystemProxies()
+        api.useSystemProxy ? makeSystemProxies() : cpr::Proxies{}
     );
 
     result.statusCode = response.status_code;

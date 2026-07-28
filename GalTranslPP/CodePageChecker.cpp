@@ -26,7 +26,7 @@ namespace
         auto* unmappableCharsSet = (absl::btree_set<UChar32>*)context;
         unmappableCharsSet->insert(codePoint);
 
-        // UCNV_UNASSIGNED 在这里是预期结果：写入替代字符后继续扫描后续输入。
+        // UCNV_UNASSIGNED 在这里是预期结果，写入替代字符后继续扫描后续输入。
         *pErrorCode = U_ZERO_ERROR;
         ucnv_cbFromUWriteSub(fromUArgs, 0, pErrorCode);
     }

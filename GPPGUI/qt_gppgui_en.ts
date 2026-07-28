@@ -2212,6 +2212,16 @@ sk-...</translation>
     </message>
 </context>
 <context>
+    <name>GUIController.writeLog</name>
+    <message>
+        <location filename="TranslatorWorker.cpp" line="+16"/>
+        <source>```
+问题概览:</source>
+        <translation>```
+Issue summary:</translation>
+    </message>
+</context>
+<context>
     <name>GptDictModel</name>
     <message>
         <location filename="GptDictModel.cpp" line="+7"/>
@@ -4628,7 +4638,7 @@ Issue summary:</translation>
 <context>
     <name>TranslatorWorker</name>
     <message>
-        <location filename="TranslatorWorker.cpp" line="+228"/>
+        <location filename="TranslatorWorker.cpp" line="+218"/>
         <source>[GalTransl++ 系统错误] %1</source>
         <oldsource>[系统错误] %1</oldsource>
         <translation>[GalTransl++ System] %1</translation>

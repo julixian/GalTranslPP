@@ -16,6 +16,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+        "1. [GUI] 含问题概览的 log 不会再被 GUI 显示截断了",
+		"2. NormalJson 新增设置『输出带引用信息』",
+        "v3.0.2 更新",
 		"1. [GUI] 新增特性: 更新 ProblemOverview.json/toml 后未导入并直接开始翻译会先收到提示",
 		"v3.0.1 更新",
 		"1. 修复翻译时某个线程抛出异常未通知其它线程导致结束缓慢的 bug",

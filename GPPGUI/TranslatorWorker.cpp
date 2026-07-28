@@ -13,11 +13,17 @@ public:
 	void writeLog(const std::string& log) override
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        //m_log += log;
-        const std::string_view clipped = truncateUtf8PrefixView(log, 8192);
-        m_log += clipped;
-        if (clipped.size() < log.size()) {
-            m_log += "(...GUI Content Truncated)\n";
+        static const std::string problemOverviewStr = gppTr("GUIController.writeLog", "```\n问题概览:").toStdString();
+        if (log.contains(problemOverviewStr)) {
+            m_log += log;
+        }
+        else {
+            //m_log += log;
+            const std::string_view clipped = truncateUtf8PrefixView(log, 8192);
+            m_log += clipped;
+            if (clipped.size() < log.size()) {
+                m_log += "(...GUI Content Truncated)\n";
+            }
         }
     }
 

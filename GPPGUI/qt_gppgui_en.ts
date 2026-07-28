@@ -2643,14 +2643,19 @@ Issue summary:</translation>
     <name>NJCfgPage</name>
     <message>
         <location filename="NJCfgPage.cpp" line="+14"/>
-        <location line="+27"/>
+        <location line="+42"/>
         <source>NormalJson 输出配置</source>
         <translation>NormalJson output settings</translation>
     </message>
     <message>
-        <location line="-16"/>
+        <location line="-31"/>
         <source>输出带原文</source>
         <translation>Output with src text</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>输出带引用信息</source>
+        <translation>Output with reference info</translation>
     </message>
 </context>
 <context>

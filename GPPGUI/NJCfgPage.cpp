@@ -32,9 +32,24 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	outputLayout->addWidget(outputSwitch);
 	mainLayout->addWidget(outputArea);
 
+	// 输出带引用信息
+	const bool outputWithRefInfo = toml::find_or(m_projectConfig, "plugins", "NormalJson", "outputWithRefInfo", false);
+	ElaScrollPageArea* refInfoArea = new ElaScrollPageArea(centerWidget);
+	QHBoxLayout* refInfoLayout = new QHBoxLayout(refInfoArea);
+	ElaText* refInfoText = new ElaText(tr("输出带引用信息"), refInfoArea);
+	refInfoText->setWordWrap(false);
+	refInfoText->setTextPixelSize(16);
+	refInfoLayout->addWidget(refInfoText);
+	refInfoLayout->addStretch();
+	ElaToggleSwitch* refInfoSwitch = new ElaToggleSwitch(refInfoArea);
+	refInfoSwitch->setIsToggled(outputWithRefInfo);
+	refInfoLayout->addWidget(refInfoSwitch);
+	mainLayout->addWidget(refInfoArea);
+
 	m_applyFunc = [=]()
 		{
 			insertToml(m_projectConfig, "plugins.NormalJson.outputWithSrc", outputSwitch->getIsToggled());
+			insertToml(m_projectConfig, "plugins.NormalJson.outputWithRefInfo", refInfoSwitch->getIsToggled());
 		};
 
 	mainLayout->addStretch();

@@ -360,8 +360,7 @@ std::string extractStreamApiResponseContent(const std::string& jsonDataStr, ApiP
             return chunk.at("choices").at(0).at("delta").at("content").get<std::string>();
         }
     }
-    catch (const std::exception&) {
-    }
+    catch (const std::exception&) { }
     return {};
 }
 

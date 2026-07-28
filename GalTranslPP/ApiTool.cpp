@@ -408,7 +408,7 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
 
 
 
-ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string)>& onPerformApi,
+ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(const std::string&)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int threadId, int apiTimeOutMs)
 {
     ApiResponse apiResponse;

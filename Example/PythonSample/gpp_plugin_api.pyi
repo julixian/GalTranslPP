@@ -104,7 +104,7 @@ class SentencePosition:
 
 class Sentence:
     index: int
-    fileName: str
+    filename: str
     name: str
     names: list[str]
     nametrans: str

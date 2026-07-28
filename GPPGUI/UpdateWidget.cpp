@@ -19,7 +19,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "1. [GUI] 含问题概览的 log 不会再被 GUI 显示截断了",
         "2. [GUI] 修复特定情况下的关闭窗口(如获取模型结果窗口)导致闪退的 bug",
 		"3. NormalJson 新增设置『输出带引用信息』",
-		"4. api 新增设置『使用系统代理』",
+		"4. api 新增设置『使用系统代理』，之前都是开启，现在可以为特定 api 开启/关闭",
         "v3.0.2 更新",
 		"1. [GUI] 新增特性: 更新 ProblemOverview.json/toml 后未导入并直接开始翻译会先收到提示",
 		"v3.0.1 更新",

@@ -1121,7 +1121,7 @@ sk-...</translation>
         <location line="+36"/>
         <source>会把 onFileProcessed 和 分割文件合并 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</source>
         <oldsource>会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</oldsource>
-        <translation type="unfinished">Delays onFileProcessed until translation ends. When enabled, filename order is recommended</translation>
+        <translation>Defer onFileProcessed/split merge until done; use filename order</translation>
     </message>
     <message>
         <location line="+30"/>

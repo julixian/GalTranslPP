@@ -465,13 +465,13 @@
         <location filename="EpubTranslator.cpp" line="366"/>
         <source>正在打包 [%1]</source>
         <oldsource>正在打包 %1</oldsource>
-        <translation type="unfinished">Packing %1</translation>
+        <translation>Packing [%1]</translation>
     </message>
     <message>
         <location filename="EpubTranslator.cpp" line="373"/>
         <source>无法创建 EPUB (zip) 文件，错误码: %1</source>
         <oldsource>无法创建 EPUB (zip) 文件: [%1]</oldsource>
-        <translation type="unfinished">Failed to create EPUB (zip) file: [%1]</translation>
+        <translation>Can&apos;t create EPUB (zip), code: %1</translation>
     </message>
     <message>
         <location filename="EpubTranslator.cpp" line="385"/>
@@ -487,7 +487,7 @@
         <location filename="EpubTranslator.cpp" line="404"/>
         <source>无法将 mimetype 设置为不压缩模式</source>
         <oldsource>无法将 mimetype 设置为不压缩模式。</oldsource>
-        <translation type="unfinished">Failed to store mimetype uncompressed.</translation>
+        <translation>Can&apos;t store mimetype uncompressed</translation>
     </message>
     <message>
         <location filename="EpubTranslator.cpp" line="411"/>
@@ -1267,12 +1267,12 @@ Problem overview:
     <message>
         <location filename="NormalJsonTranslator.File.cpp" line="491"/>
         <source>文件 [%1] 尚未全部处理完成，跳过合并</source>
-        <translation type="unfinished"></translation>
+        <translation>[%1] incomplete; skipping merge</translation>
     </message>
     <message>
         <location filename="NormalJsonTranslator.File.cpp" line="497"/>
         <source>开始合并 [%1] 的缓存文件...</source>
-        <translation type="unfinished"></translation>
+        <translation>Merging cache files for [%1]...</translation>
     </message>
     <message>
         <source>文件 %1 尚未全部处理完成，跳过合并</source>
@@ -1589,19 +1589,19 @@ Problem overview:
         <location filename="PDFTranslator.cpp" line="90"/>
         <source>正在提取 PDF 文件元数据: [%1]</source>
         <oldsource>正在提取文件: [%1]</oldsource>
-        <translation type="unfinished">Extracting file: [%1]</translation>
+        <translation>Reading PDF metadata: [%1]</translation>
     </message>
     <message>
         <location filename="PDFTranslator.cpp" line="97"/>
         <source>成功提取 PDF 文件元数据: %1</source>
         <oldsource>成功提取元数据: %1</oldsource>
-        <translation type="unfinished">Metadata extracted: %1</translation>
+        <translation>PDF metadata extracted: %1</translation>
     </message>
     <message>
         <location filename="PDFTranslator.cpp" line="102"/>
         <source>提取 PDF 文件元数据失败: %1</source>
         <oldsource>提取元数据失败: %1</oldsource>
-        <translation type="unfinished">Metadata extraction failed: %1</translation>
+        <translation>PDF metadata failed: %1</translation>
     </message>
     <message>
         <location filename="PDFTranslator.cpp" line="113"/>
@@ -1612,19 +1612,19 @@ Problem overview:
         <location filename="PDFTranslator.cpp" line="125"/>
         <source>正在回注 PDF 文件: [%1]</source>
         <oldsource>正在回注文件: %1</oldsource>
-        <translation type="unfinished">Injecting file: %1</translation>
+        <translation>Injecting PDF: [%1]</translation>
     </message>
     <message>
         <location filename="PDFTranslator.cpp" line="133"/>
         <source>成功回注 PDF 文件: %1</source>
         <oldsource>成功翻译文件: %1</oldsource>
-        <translation type="unfinished">Translated file successfully: %1</translation>
+        <translation>PDF injected: %1</translation>
     </message>
     <message>
         <location filename="PDFTranslator.cpp" line="138"/>
         <source>回注 PDF 文件失败: %1</source>
         <oldsource>翻译文件失败: %1</oldsource>
-        <translation type="unfinished">File translation failed: %1</translation>
+        <translation>PDF injection failed: %1</translation>
     </message>
 </context>
 <context>

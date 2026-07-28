@@ -17,7 +17,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. [GUI] 含问题概览的 log 不会再被 GUI 显示截断了",
-        "2. [GUI] 修复特定情况下的关闭窗口导致闪退的 bug",
+        "2. [GUI] 修复特定情况下的关闭窗口(如获取模型结果窗口)导致闪退的 bug",
 		"3. NormalJson 新增设置『输出带引用信息』",
 		"4. api 新增设置『使用系统代理』",
         "v3.0.2 更新",

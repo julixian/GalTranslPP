@@ -20,8 +20,8 @@ export
         const std::unique_ptr<ApiPool>& m_apiPool;
 
         const std::function<void(Sentence*)> m_preProcessFunc; // 临时对象，不能设置引用
-        const std::function<std::string(std::string)>& m_onPerformApi;  // 由于 NormalJsonTranslator 生命周期包含了 DictionaryGenrator
-        const std::function<DictList(DictList)>& m_onDictProcessed;  	// 所以从前者类成员中传递过来的 function 可设置为引用
+        const std::function<std::string(const std::string&)>& m_onPerformApi;  // 由于 NormalJsonTranslator 生命周期包含了 DictionaryGenrator
+        const std::function<DictList(const DictList&)>& m_onDictProcessed;  	// 所以从前者类成员中传递过来的 function 可设置为引用
         const NLPTokenizeFunc& m_tokenizeSourceLangFunc; // 避免 python 闭包复制时死锁
 
         std::string m_systemPrompt;
@@ -67,7 +67,7 @@ export
     public:
         DictionaryGenerator(const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, const std::unique_ptr<ApiPool>& apiPool,
             const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
-            const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string)>& onPerformApi, const std::function<DictList(DictList)>& onDictProcessed,
+            const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(const std::string&)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
             int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
             bool agentEnabled, const fs::path& projectDir, const fs::path& inputDir,

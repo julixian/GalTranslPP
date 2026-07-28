@@ -19,7 +19,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     const std::shared_ptr<spdlog::logger>& logger,
     const std::unique_ptr<ApiPool>& apiPool,
     const std::unique_ptr<GptDictionary>& gptDictionary,
-    const std::function<std::string(std::string)>& onPerformApi,
+    const std::function<std::string(const std::string&)>& onPerformApi,
     const fs::path& projectDir,
     const fs::path& sourceRootDir,
     const fs::path& transCacheDir,

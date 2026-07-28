@@ -4,10 +4,10 @@ module;
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <zip.h>
-#pragma  warning( push ) 
-#pragma  warning( disable: 4005 ) 
+#pragma  warning(push) 
+#pragma  warning(disable: 4005) 
 #include <gumbo.h>
-#pragma  warning( pop ) 
+#pragma  warning(pop) 
 #include <toml.hpp>
 
 module EpubTranslator;
@@ -21,14 +21,14 @@ namespace
     // 递归遍历 Gumbo 树以提取文本节点
     void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
         if (node->type == GUMBO_NODE_TEXT) {
-            std::string text = node->v.text.text;
-            if (text.empty() || text.find_first_not_of(" \t\n\r") == std::string::npos) {
+            const std::string_view textView = node->v.text.text;
+            if (textView.empty() || textView.find_first_not_of(" \t\n\r") == std::string_view::npos) {
                 return;
             }
             EpubTextNodeInfo info;
             info.offset = node->v.text.start_pos.offset;
-            info.length = text.length();
-            sentences.push_back({ std::move(text), info });
+            info.length = textView.length();
+            sentences.push_back({ std::string(textView), info });
             return;
         }
 
@@ -277,7 +277,7 @@ void EpubTranslator::epubBeforeRun()
         }
     }
 
-    m_onFileProcessed = [this, regexReplace](fs::path relProcessedFile)
+    m_onFileProcessed = [this, regexReplace](const fs::path& relProcessedFile)
         {
             std::unique_lock<std::mutex> lock(m_onFileProcessedMutex);
             const auto it = m_jsonToInfoMap.find(relProcessedFile);
@@ -363,7 +363,7 @@ void EpubTranslator::epubBeforeRun()
 
             const fs::path outputEpubPath = m_epubOutputDir / relEpubPath;
             createParent(outputEpubPath);
-            m_logger->debug(gppTr("EpubTranslator.epubBeforeRun", "正在打包 %1")
+            m_logger->debug(gppTr("EpubTranslator.epubBeforeRun", "正在打包 [%1]")
                 .arg(wide2Ascii(outputEpubPath))
                 .toStdString());
 
@@ -372,7 +372,7 @@ void EpubTranslator::epubBeforeRun()
             if (!za) {
                 throw std::runtime_error(gppTr(
                     "EpubTranslator.epubBeforeRun",
-                    "无法创建 EPUB (zip) 文件: [%1]")
+                    "无法创建 EPUB (zip) 文件，错误码: %1")
                     .arg(error)
                     .toStdString());
             }
@@ -403,7 +403,7 @@ void EpubTranslator::epubBeforeRun()
                     zip_close(za);
                     throw std::runtime_error(gppTr(
                         "EpubTranslator.epubBeforeRun",
-                        "无法将 mimetype 设置为不压缩模式。")
+                        "无法将 mimetype 设置为不压缩模式")
                         .toStdString());
                 }
             }

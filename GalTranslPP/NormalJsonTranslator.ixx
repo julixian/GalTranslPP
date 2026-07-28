@@ -62,10 +62,6 @@ export
         std::string m_genDictReviewUserPrompt;
         std::string m_targetLang;
 
-
-        bool m_pythonTranslator = false;
-
-
         int m_threadsNum{};
         int m_nameTransBatchSize{};
         int m_batchSize{};
@@ -85,6 +81,7 @@ export
         bool m_usePostDictInMsg{};
         bool m_useGptDictToReplaceName{};
         bool m_outputWithSrc{};
+        bool m_outputWithRefInfo{};
         bool m_agentEnabled{};
         bool m_reuseRepeatedBlocks{};
 
@@ -121,9 +118,9 @@ export
         std::optional<std::vector<fs::path>> m_currentRunRelFilePaths;
         absl::flat_hash_set<fs::path> m_repeatedBlockCompletedRelFilePaths;
         ordered_json m_problemOverview = ordered_json::array();
-        std::function<void(fs::path)> m_onFileProcessed;
-        std::function<std::string(std::string)> m_onPerformApi;
-        std::function<DictList(DictList)> m_onDictProcessed;
+        std::function<void(const fs::path&)> m_onFileProcessed;
+        std::function<std::string(const std::string&)> m_onPerformApi;
+        std::function<DictList(const DictList&)> m_onDictProcessed;
 
         ctpl::thread_pool m_threadPool{1};
         std::unique_ptr<ApiPool> m_apiPool;

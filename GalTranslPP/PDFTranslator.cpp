@@ -87,25 +87,25 @@ void PDFTranslator::pdfBeforeRun()
         const fs::path inputJsonFile = m_inputDir / relJsonPath;
         createParent(inputJsonFile);
 
-        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取文件: [%1]")
+        m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在提取 PDF 文件元数据: [%1]")
             .arg(wide2Ascii(relPDFPath))
             .toStdString());
 
         const auto& [success, message] = extractPDF(pdfFilePath, inputJsonFile, m_babeldocLangOut);
 
         if (success) {
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功提取元数据: %1")
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功提取 PDF 文件元数据: %1")
                 .arg(message)
                 .toStdString());
         }
         else {
-            throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "提取元数据失败: %1")
+            throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "提取 PDF 文件元数据失败: %1")
                 .arg(message)
                 .toStdString());
         }
     }
 
-    m_onFileProcessed = [this](fs::path relProcessedFile)
+    m_onFileProcessed = [this](const fs::path& relProcessedFile)
         {
             std::unique_lock<std::mutex> lock(m_onFileProcessedMutex);
             const auto it = m_jsonToPDFPathMap.find(relProcessedFile);
@@ -122,7 +122,7 @@ void PDFTranslator::pdfBeforeRun()
             const fs::path outputPDFFile = m_pdfOutputDir / relPDFPath;
             createParent(outputPDFFile);
 
-            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在回注文件: %1")
+            m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "正在回注 PDF 文件: [%1]")
                 .arg(wide2Ascii(relPDFPath))
                 .toStdString());
 
@@ -130,12 +130,12 @@ void PDFTranslator::pdfBeforeRun()
                 outputPDFFile.parent_path(), m_babeldocLangOut, m_bilingualOutput);
 
             if (success) {
-                m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功翻译文件: %1")
+                m_logger->info(gppTr("PDFTranslator.pdfBeforeRun", "成功回注 PDF 文件: %1")
                     .arg(message)
                     .toStdString());
             }
             else {
-                throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "翻译文件失败: %1")
+                throw std::runtime_error(gppTr("PDFTranslator.pdfBeforeRun", "回注 PDF 文件失败: %1")
                     .arg(message)
                     .toStdString());
             }

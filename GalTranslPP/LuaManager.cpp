@@ -1017,7 +1017,6 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_genDictReviewSystemPrompt", &NormalJsonTranslator::m_genDictReviewSystemPrompt,
 		"m_genDictReviewUserPrompt", &NormalJsonTranslator::m_genDictReviewUserPrompt,
 		"m_targetLang", &NormalJsonTranslator::m_targetLang,
-		"m_pythonTranslator", &NormalJsonTranslator::m_pythonTranslator,
 		"m_threadsNum", &NormalJsonTranslator::m_threadsNum,
 		"m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize,
 		"m_batchSize", &NormalJsonTranslator::m_batchSize,

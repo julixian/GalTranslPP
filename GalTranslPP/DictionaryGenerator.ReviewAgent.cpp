@@ -18,7 +18,7 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     const std::shared_ptr<IController>& controller,
     const std::shared_ptr<spdlog::logger>& logger,
     const std::unique_ptr<ApiPool>& apiPool,
-    const std::function<std::string(std::string)>& onPerformApi,
+    const std::function<std::string(const std::string&)>& onPerformApi,
     const fs::path& projectDir,
     const std::vector<fs::path>& relJsonPaths,
     const std::optional<fs::path>& agentProjectNotePath,

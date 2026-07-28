@@ -65,7 +65,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 jit->get_to(se.names);
             }
             item["message"].get_to(se.orig);
-            itemReferenceInfoToSentence(item, se);
+            itemReferenceInfoToSentence(item, se, false);
             sentences.push_back(std::move(se));
         }
         for (auto [se1, se2] : std::views::adjacent<2>(sentences)) {
@@ -115,7 +115,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         {
             const std::string relInputPathStr = wide2Ascii(relInputPath);
             for (const auto& se : sentences) {
-                if (se.problems.empty() || !se.transCompleted) {
+                if (!se.transCompleted || se.problems.empty()) {
                     continue;
                 }
                 ordered_json tbl = ordered_json::object();
@@ -191,7 +191,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     }
                     if (
 #ifdef _WIN32
-                        PathMatchSpecW(entry.path().filename().wstring().c_str(), cacheSpec.c_str())
+                        PathMatchSpecW(entry.path().filename().native().c_str(), cacheSpec.c_str())
 #endif
                         )
                     {
@@ -225,9 +225,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                         if (const auto it = m_splitFilePartsToJson.find(relInputPath);
                             it != m_splitFilePartsToJson.end())
                         {
-                        	fs::path origFilePath = m_transCacheDir / it->second;
+                         	fs::path origFilePath = m_transCacheDir / it->second;
                             if (fs::exists(origFilePath)) {
-                                return origFilePath;
+                                return std::move(origFilePath);
                             }
                         }
                         return std::nullopt;
@@ -442,14 +442,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     }
 
     // 组装最终输出文件。
-    bool hasRefPending = false;
     for (auto [se, item] : std::views::zip(sentences, jSentences)) {
-        if (m_reuseRepeatedBlocks) {
-            item.erase("_gpp_ref_by");
-            const size_t erasedCount = item.erase("_gpp_ref_pending");
-            if (!hasRefPending && erasedCount > 0) {
-                hasRefPending = true;
-            }
+        if (m_reuseRepeatedBlocks && !m_outputWithRefInfo) {
+            eraseItemReferenceInfo(item, false);
         }
         if (se.nameType == NameType::Single) {
             item["name"] = se.nametrans;
@@ -463,6 +458,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         }
     }
 
+    const bool hasRefPending = m_transEngine != TransEngine::Rebuild && std::ranges::any_of(sentences, [](const Sentence& se) { return se.isRefPending; });
     if (!hasRefPending) {
         atomicOutputFile(outputPath, jSentences.dump(2));
     }
@@ -492,13 +488,13 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             std::lock_guard<std::mutex> lock(m_outputMutex);
             splitFileParts[relInputPath] = true;
             if (std::ranges::any_of(splitFileParts, [](const auto& p) { return !p.second; })) {
-                m_logger->debug(gppTr("NormalJsonTranslator.processFile", "文件 %1 尚未全部处理完成，跳过合并")
+                m_logger->debug(gppTr("NormalJsonTranslator.processFile", "文件 [%1] 尚未全部处理完成，跳过合并")
                     .arg(wide2Ascii(originalRelFilePath))
                     .toStdString());
                 return;
             }
         }
-        m_logger->debug(gppTr("NormalJsonTranslator.processFile", "开始合并 %1 的缓存文件...")
+        m_logger->debug(gppTr("NormalJsonTranslator.processFile", "开始合并 [%1] 的缓存文件...")
             .arg(wide2Ascii(originalRelFilePath))
             .toStdString());
         combineOutputFiles(originalRelFilePath, splitFileParts, m_outputCacheDir, m_outputDir, m_logger);

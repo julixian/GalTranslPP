@@ -43,7 +43,7 @@ export
             const std::shared_ptr<spdlog::logger>& logger,
             const std::unique_ptr<ApiPool>& apiPool,
             const std::unique_ptr<GptDictionary>& gptDictionary,
-            const std::function<std::string(std::string)>& onPerformApi,
+            const std::function<std::string(const std::string&)>& onPerformApi,
             const fs::path& projectDir,
             const fs::path& sourceRootDir,
             const fs::path& transCacheDir,
@@ -106,7 +106,7 @@ export
         std::shared_ptr<spdlog::logger> m_logger;
         const std::unique_ptr<ApiPool>& m_apiPool;
         const std::unique_ptr<GptDictionary>& m_gptDictionary;
-        const std::function<std::string(std::string)>& m_onPerformApi;
+        const std::function<std::string(const std::string&)>& m_onPerformApi;
         fs::path m_projectDir;
         fs::path m_transCacheDir;
         fs::path m_agentTermLedgerPath;

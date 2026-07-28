@@ -47,7 +47,6 @@ export
 		explicit PythonTranslator(const std::string& modulePath, Args&&... args) :
 			BaseTranslator(std::forward<Args>(args)...), m_modulePath(modulePath)
 		{
-			this->m_pythonTranslator = true;
 			m_translatorName = wide2Ascii(fs::path(ascii2Wide(m_modulePath)).stem());
 			std::optional<std::shared_ptr<PythonInterpreterInstance>> pythonInterpreterOpt =
 				this->m_pythonManager->registerFunction(m_modulePath, "init");

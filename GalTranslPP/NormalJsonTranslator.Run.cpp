@@ -362,7 +362,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 filesWithData.emplace_back(relFilePath, std::move(data));
             }
 
-            RepeatedBlockReferenceMap repeatedBlockReferences = buildRepeatedBlockReferenceMap(filesWithData, m_repeatedBlockMinSize);
+            const RepeatedBlockReferenceMap repeatedBlockReferences = buildRepeatedBlockReferenceMap(filesWithData, m_repeatedBlockMinSize);
             if (!repeatedBlockReferences.targetToSourceMap.empty()) {
                 for (auto& [relFilePath, data] : filesWithData) {
                     addReferenceInfoToInputJson(relFilePath, data, repeatedBlockReferences);
@@ -477,11 +477,11 @@ void NormalJsonTranslator::normalJsonAfterRun()
 
         absl::btree_map<std::string_view, absl::btree_set<std::string_view>> problemMap;
         for (const ordered_json& item : m_problemOverview) {
-            const std::string& filename = item.at("filename").get_ref<const std::string&>();
             for (const ordered_json& problemItem : item.at("problems")) {
                 const std::string& problem = problemItem.get_ref<const std::string&>();
                 auto& fileNames = problemMap[problem];
                 if (fileNames.size() <= 3) {
+                    const std::string& filename = item.at("filename").get_ref<const std::string&>();
                     fileNames.insert(filename);
                 }
             }
@@ -714,7 +714,9 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
         }
 
         for (auto [index, item] : bundle.input | std::views::enumerate) {
-            eraseItemReferenceInfo(item);
+            if (!m_outputWithRefInfo) {
+                eraseItemReferenceInfo(item, false);
+            }
             const auto cacheIt = cacheByIndex.find((int)index);
             if (cacheIt == cacheByIndex.end()) {
                 continue;

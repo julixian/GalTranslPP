@@ -59,6 +59,7 @@ textPlugins = [
 
 [plugins.NormalJson]
 outputWithSrc = false
+outputWithRefInfo = false
 
 [plugins.Epub]
 bilingualOutput = true

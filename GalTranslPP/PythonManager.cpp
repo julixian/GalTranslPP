@@ -822,7 +822,6 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_genDictReviewSystemPrompt", &NormalJsonTranslator::m_genDictReviewSystemPrompt)
         .def_readwrite("m_genDictReviewUserPrompt", &NormalJsonTranslator::m_genDictReviewUserPrompt)
         .def_readwrite("m_targetLang", &NormalJsonTranslator::m_targetLang)
-        .def_readwrite("m_pythonTranslator", &NormalJsonTranslator::m_pythonTranslator)
         .def_readwrite("m_threadsNum", &NormalJsonTranslator::m_threadsNum)
         .def_readwrite("m_nameTransBatchSize", &NormalJsonTranslator::m_nameTransBatchSize)
         .def_readwrite("m_batchSize", &NormalJsonTranslator::m_batchSize)

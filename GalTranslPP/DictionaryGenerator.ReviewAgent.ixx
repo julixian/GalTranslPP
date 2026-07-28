@@ -50,7 +50,7 @@ export
             const std::shared_ptr<IController>& controller,
             const std::shared_ptr<spdlog::logger>& logger,
             const std::unique_ptr<ApiPool>& apiPool,
-            const std::function<std::string(std::string)>& onPerformApi,
+            const std::function<std::string(const std::string&)>& onPerformApi,
             const fs::path& projectDir,
             const std::vector<fs::path>& relJsonPaths,
             const std::optional<fs::path>& agentProjectNotePath,
@@ -98,7 +98,7 @@ export
         std::shared_ptr<IController> m_controller;
         std::shared_ptr<spdlog::logger> m_logger;
         const std::unique_ptr<ApiPool>& m_apiPool;
-        const std::function<std::string(std::string)>& m_onPerformApi;
+        const std::function<std::string(const std::string&)>& m_onPerformApi;
         fs::path m_projectDir;
         std::vector<fs::path> m_relJsonPaths;
         std::optional<fs::path> m_agentProjectNotePath;

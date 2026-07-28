@@ -56,10 +56,12 @@ export
     }
 
     template <typename JsonT>
-    void itemReferenceInfoToSentence(const JsonT& item, Sentence& se) {
+    void itemReferenceInfoToSentence(const JsonT& item, Sentence& se, bool includePending) {
         se.ref = getRefToFromItem(item);
         se.refBy = getRefByFromItem(item);
-        se.isRefPending = isRefPendingFromItem(item);
+        if (includePending) {
+            se.isRefPending = isRefPendingFromItem(item);
+        }
     }
 
     template <typename JsonT>
@@ -83,10 +85,12 @@ export
     }
 
     template <typename JsonT>
-    void eraseItemReferenceInfo(JsonT& item) {
+    void eraseItemReferenceInfo(JsonT& item, bool includePending) {
         item.erase("_gpp_ref_to");
         item.erase("_gpp_ref_by");
-        item.erase("_gpp_ref_pending");
+        if (includePending) {
+            item.erase("_gpp_ref_pending");
+        }
     }
 
     RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(

@@ -20,17 +20,6 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "2. [GUI] 修复特定情况下的关闭窗口(如获取模型结果窗口)导致闪退的 bug",
 		"3. NormalJson 新增设置『输出带引用信息』",
 		"4. api 新增设置『使用系统代理』，之前都是开启，现在可以为特定 api 开启/关闭",
-        "v3.0.2 更新",
-		"1. [GUI] 新增特性: 更新 ProblemOverview.json/toml 后未导入并直接开始翻译会先收到提示",
-		"v3.0.1 更新",
-		"1. 修复翻译时某个线程抛出异常未通知其它线程导致结束缓慢的 bug",
-		"v3.0.0 更新",
-        "1. 配置、缓存、条件全面升级（不兼容旧版）",
-        "2. 重构 API 池：支持多协议、多 Key、模型测试及自定义请求",
-        "3. Agent 翻译与字典审校从实验性功能合并到正式功能",
-        "4. 字典支持多条件、弹窗编辑、搜索、多选和拖拽排序",
-        "5. GUI 增加 TOML/JSON 高亮并重做多处设置页",
-        "6. Lua 迁移至 LuaBridge3，更新 Python/NLP 与插件示例",
     };
 
     mainLayout->addWidget(updateTitle);

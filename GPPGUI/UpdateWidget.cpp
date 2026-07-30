@@ -18,8 +18,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     QStringList updateList = {
         "1. 修复输出带引用信息设置的输出逻辑，Rebuild 也不再刷掉 transl_cache 中已经输出的引用信息",
         "2. 优化默认译后字典符号替换",
-        "2. [GUI] 修复深色模式下 log 窗口文字仍显示黑色的 bug",
-		"3. [GUI] 提高程序启动时自动更新检测的稳定性",
+        "3. [GUI] 修复深色模式下 log 窗口文字仍显示黑色的 bug",
+		"4. [GUI] 提高程序启动时自动更新检测的稳定性",
+        "5. [GUI] 清空日志快捷键现在仅会在开始翻译界面生效",
     };
 
     mainLayout->addWidget(updateTitle);

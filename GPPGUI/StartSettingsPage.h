@@ -36,6 +36,7 @@ public:
 	void apply2Config() override;
 
     void clearLog();
+    bool isMainPageVisible() const;
 
 
 Q_SIGNALS:

@@ -73,6 +73,11 @@ void StartSettingsPage::clearLog() {
 	resetLogBufferState(false);
 }
 
+bool StartSettingsPage::isMainPageVisible() const
+{
+	return m_logOutput && m_logOutput->isVisibleTo(this);
+}
+
 bool StartSettingsPage::isLogScrollAtBottom() const
 {
 	const QScrollBar* scrollBar = m_logOutput->verticalScrollBar();

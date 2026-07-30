@@ -95,7 +95,8 @@ fs::path ProjectSettingsPage::getProjectDir()
 }
 
 void ProjectSettingsPage::clearLog(bool forceClear) {
-    if (forceClear || m_stackedWidget->currentWidget() == m_startSettingsPage) {
+    if (forceClear ||
+        (m_stackedWidget->currentWidget() == m_startSettingsPage && m_startSettingsPage->isMainPageVisible())) {
         m_startSettingsPage->clearLog();
         ElaMessageBar::success(ElaMessageBarType::Bottom,
             tr("清理成功"), tr("已清空项目 %1 的日志输出窗口").arg(getProjectName()), 3000);

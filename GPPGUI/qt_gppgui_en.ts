@@ -3852,27 +3852,27 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+243"/>
+        <location line="+244"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-210"/>
+        <location line="-211"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+25"/>
         <source>清理成功</source>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-58"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
@@ -4175,18 +4175,18 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+368"/>
+        <location filename="StartSettingsPage.cpp" line="+373"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
     </message>
     <message>
-        <location line="-376"/>
+        <location line="-381"/>
         <source>启动设置</source>
         <translation>Start settings</translation>
     </message>
     <message>
-        <location line="+167"/>
+        <location line="+172"/>
         <location line="+73"/>
         <source>```
 问题概览:</source>

@@ -5,7 +5,7 @@ isReg = true
 priority = 99
 
 [[normalDict.conditions]]
-conditionReg = "\\A『[\\S\\s]*』\\z"
+conditionReg = "\\A(?<quote>『(?:[^『』]++|(?&quote))*』)\\z"
 conditionTarget = "preproc"
 
 [[normalDict]]
@@ -15,7 +15,7 @@ isReg = true
 priority = 99
 
 [[normalDict.conditions]]
-conditionReg = "\\A「[\\S\\s]*」\\z"
+conditionReg = "\\A(?<quote>「(?:[^「」]++|(?&quote))*」)\\z"
 conditionTarget = "preproc"
 
 [[normalDict]]
@@ -25,7 +25,7 @@ isReg = true
 priority = 99
 
 [[normalDict.conditions]]
-conditionReg = "\\A『[\\S\\s]*』\\z"
+conditionReg = "\\A(?<quote>『(?:[^『』]++|(?&quote))*』)\\z"
 conditionTarget = "preproc"
 
 [[normalDict]]
@@ -35,7 +35,7 @@ isReg = true
 priority = 99
 
 [[normalDict.conditions]]
-conditionReg = "\\A「[\\S\\s]*」\\z"
+conditionReg = "\\A(?<quote>「(?:[^「」]++|(?&quote))*」)\\z"
 conditionTarget = "preproc"
 
 [[normalDict]]
@@ -96,5 +96,25 @@ priority = 0
 
 [[normalDict.conditions]]
 conditionReg = "\\A(?![\\S\\s]*。）)"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "。』"
+rep = "』"
+isReg = false
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*。』)"
+conditionTarget = "preproc"
+
+[[normalDict]]
+org = "。」"
+rep = "」"
+isReg = false
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?![\\S\\s]*。」)"
 conditionTarget = "preproc"
 

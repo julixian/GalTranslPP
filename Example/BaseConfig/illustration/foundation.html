@@ -354,8 +354,17 @@ callback = [ { group = 2, org = '&lt;[^&gt;]*&gt;', rep = '' } ]
 &lt;p class=&quot;class_s2C-0&quot;&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてしまう。&lt;/p&gt;
 </code></pre>
 <p>注: 如果你是超级正则高手，想达到这个目的其实也不是不能简化为一条正则</p>
-<pre><code class="language-toml">[[plugins.Epub.postprocRegex]]
-org = '((?i)(?:&lt;p\b[^&gt;]*&gt;|\G(?!\A))[^&lt;]*\K&lt;(?!/p&gt;)[^&gt;]*&gt;)'
+<pre><code class="language-toml">[[plugins.Epub.preprocRegex]]
+org = '''(?ix)
+(
+    (?:
+        &lt;p \b [^&gt;]*&gt;     # 从 p 起始标签开始
+      | \G (?! \A)       # 或从上次匹配结尾继续
+    )
+    [^&lt;]* \K             # 跳过正文并重置匹配起点
+    &lt; (?! /p&gt; ) [^&gt;]* &gt;  # 匹配除 p 结束标签外的标签
+)
+'''
 rep = ''
 </code></pre>
 <h5>回调正则处理流程</h5>

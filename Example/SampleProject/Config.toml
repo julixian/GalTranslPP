@@ -66,13 +66,43 @@ outputWithRefInfo = false
 bilingualOutput = true
 
 [[plugins.Epub.preprocRegex]]
-# org = '\s*<ruby>\s*([^<]+?)\s*<rp>\s*[\(《（]\s*</rp>\s*<rt>\s*([^<]+?)\s*</rt>\s*<rp>\s*[\)》）]\s*</rp>\s*</ruby>\s*'
-# rep = '[$2/$1]'
+# org = '''(?x)
+# \s* <ruby> \s*
+# (?<baseText> [^<]+? )
+# \s* <rp> \s*
+# (?:
+#     (?<asciiParen> \()  # 半角圆括号
+#   | (?<cornerBracket> 《) # 书名号
+#   | （                    # 全角圆括号
+# )
+# \s* </rp> \s*
+# <rt> \s*
+# (?<furigana> [^<]+? )
+# \s* </rt> \s*
+# <rp> \s*
+# (?(asciiParen)
+#     \)
+#   |
+#     (?(cornerBracket) 》 | ）)
+# )
+# \s* </rp> \s*
+# </ruby> \s*
+# '''
+# rep = '[${furigana}/${baseText}]'
 org = '<ruby><rb>(.+?)</rb><rt>(.+?)</rt></ruby>'
 rep = '[$2/$1]'
 
-[[plugins.Epub.preprocRegex]] 
-# org = '((?i)(?:<p\b[^>]*>|\G(?!\A))[^<]*\K<(?!/p>)[^>]*>)'
+[[plugins.Epub.preprocRegex]]
+# org = '''(?ix)
+# (
+#     (?:
+#         <p \b [^>]*>     # 从 p 起始标签开始
+#       | \G (?! \A)       # 或从上次匹配结尾继续
+#     )
+#     [^<]* \K             # 跳过正文并重置匹配起点
+#     < (?! /p> ) [^>]* >  # 匹配除 p 结束标签外的标签
+# )
+# '''
 # rep = ''
 org = '(<p[^>/]*>)(.*?)(</p>)'
 callback = [

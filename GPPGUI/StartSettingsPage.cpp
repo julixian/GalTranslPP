@@ -42,7 +42,7 @@ StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::ordered_value& 
 	m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.ico"));
 	connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
 		{
-			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
+			const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
 		});
 
@@ -263,9 +263,10 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 					else if (line.contains(" trace]")) {
 						fmt.setForeground(QColor(Qt::darkGreen));
 					}
-					else {
+					// 会导致深色模式文字显示不清楚
+					/*else {
 						fmt.setForeground(QColor(Qt::black));
-					}
+					}*/
 					tempCursor.setCharFormat(fmt);
 					tempCursor.insertText(line);
 					if (i < lines.size() - 1) {
@@ -293,7 +294,7 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 			processLogFunc(post);
 		}
 		else {
-			if (log.length() > 4096 || log.count('\n') > 30) {
+			if (log.length() > 25600 || log.count('\n') > 100) {
 				tempCursor.insertText(log);
 			}
 			else {
@@ -301,7 +302,7 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 			}
 		}
 
-		int currentLineCount = m_logOutput->document()->lineCount();
+		const int currentLineCount = m_logOutput->document()->lineCount();
 		if (currentLineCount > MaxLogLineCount) {
 			const int toRemoveLineCount = currentLineCount - MaxLogLineCount;
 			QTextCursor deleteCursor(m_logOutput->document());
@@ -528,7 +529,7 @@ void StartSettingsPage::setupUi()
 	transEngineComboBox->addItem("Rebuild");
 	transEngineComboBox->addItem("ShowNormal");
 	if (!transEngineStr.isEmpty()) {
-		int index = transEngineComboBox->findText(transEngineStr);
+		const int index = transEngineComboBox->findText(transEngineStr);
 		if (index >= 0) {
 			transEngineComboBox->setCurrentIndex(index);
 		}

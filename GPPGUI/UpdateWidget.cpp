@@ -16,10 +16,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 含问题概览的 log 不会再被 GUI 显示截断了",
-        "2. [GUI] 修复特定情况下的关闭窗口(如获取模型结果窗口)导致闪退的 bug",
-		"3. NormalJson 新增设置『输出带引用信息』",
-		"4. api 新增设置『使用系统代理』，之前都是开启，现在可以为特定 api 开启/关闭",
+        "1. 修复输出带引用信息设置的输出逻辑，Rebuild 也不再刷掉 transl_cache 中已经输出的引用信息",
+        "2. [GUI] 修复深色模式下 log 窗口文字仍显示黑色的 bug",
+		"3. [GUI] 提高程序启动时自动更新检测的稳定性",
     };
 
     mainLayout->addWidget(updateTitle);

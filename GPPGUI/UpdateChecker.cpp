@@ -52,6 +52,8 @@ UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusT
 
 UpdateChecker::~UpdateChecker()
 {
+    disconnect(m_checkManager, nullptr, this, nullptr);
+    disconnect(m_downloadManager, nullptr, this, nullptr);
     if (m_checkReply) {
         m_checkReply->abort();
     }

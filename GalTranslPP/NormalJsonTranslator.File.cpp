@@ -298,12 +298,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             {
                 se.transby = item.value("translated_by", "");
                 se.transraw = item.value("translated_raw_text", "");
+                itemReferenceInfoToSentence(item, se, false);
                 se.transCompleted = true;
                 postProcess(&se);
                 recordSentenceDoneHelper(relInputPath, se);
                 continue;
             }
-
             // 重翻带 problems 时会用到
             if (const auto jit = item.find("problems"); jit != item.end()) {
                 jit->get_to(se.problems);
@@ -312,36 +312,37 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         }
 
         if (!toTranslate.empty()) {
-            m_logger->info(gppTr(
-                "NormalJsonTranslator.processFile",
-            "[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句")
-                .arg(threadId)
-                .arg(wide2Ascii(relInputPath))
-                .arg(sentences.size())
-                .arg(sentences.size() - toTranslate.size())
-                .arg(toTranslate.size())
-                .toStdString()
-            );
-        }
-
-        if (m_transEngine == TransEngine::Rebuild && !toTranslate.empty()) {
-            const std::string notFoundSentences = toTranslate
-                | std::views::transform([](const auto& se) { return se->preproc; })
-                | std::views::join_with('\n')
-                | std::ranges::to<std::string>();
-            m_logger->critical(gppTr(
-                "NormalJsonTranslator.processFile",
-                "[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4")
-                .arg(threadId)
-                .arg(wide2Ascii(relInputPath))
-                .arg(toTranslate.size())
-                .arg(notFoundSentences)
-                .toStdString()
-            );
-            saveCache(sentences, cachePath);
-            std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
-            saveRebuildProblemOverviewFunc();
-            return;
+            if (m_transEngine != TransEngine::Rebuild) {
+                m_logger->info(gppTr(
+                    "NormalJsonTranslator.processFile",
+                    "[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(sentences.size())
+                    .arg(sentences.size() - toTranslate.size())
+                    .arg(toTranslate.size())
+                    .toStdString()
+                );
+            }
+            else {
+                const std::string notFoundSentences = toTranslate
+                    | std::views::transform([](const auto& se) { return se->preproc; })
+                    | std::views::join_with('\n')
+                    | std::ranges::to<std::string>();
+                m_logger->critical(gppTr(
+                    "NormalJsonTranslator.processFile",
+                    "[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(toTranslate.size())
+                    .arg(notFoundSentences)
+                    .toStdString()
+                );
+                saveCache(sentences, cachePath);
+                std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
+                saveRebuildProblemOverviewFunc();
+                return;
+            }
         }
     }
 
@@ -393,7 +394,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 translateBatch(relInputPath, batchView, rollingContext,
                     threadId, batchIndex + 1, recursionIndex, recursionConut);
             }
-            // 这里和 saveCache 判断 transCompleted 是跳过处理还没翻译以及翻译中途暂停后未实际经过翻译的句子
+            // 这里和 saveCache() 中判断 transCompleted 是因为需要跳过还没翻译以及翻译中途暂停后未实际经过翻译的句子
             for (Sentence* se : batchView | std::views::filter([](Sentence* se_) { return se_->transCompleted; })) {
                 postProcess(se);
                 recordSentenceDoneHelper(relInputPath, *se, true);

@@ -8,6 +8,7 @@
 #include <QLocalSocket>
 #include <QNetworkProxyFactory>
 #include <QSharedMemory>
+#include <QTimer>
 #include <QTranslator>
 
 #include "ElaApplication.h"
@@ -242,7 +243,7 @@ int main(int argc, char* argv[])
         MainWindow w;
         w.show();
         if (checkUpdate) {
-            w.checkUpdate();
+            QTimer::singleShot(2000, &w, &MainWindow::checkUpdate);
         }
 
 
@@ -258,12 +259,12 @@ int main(int argc, char* argv[])
                     // 当接收到数据时
                     QObject::connect(clientConnection, &QLocalSocket::readyRead, [&]()
                         {
-                            QByteArray data = clientConnection->readAll();
+                            const QByteArray data = clientConnection->readAll();
                             if (data == "activate") {
                                 if (w.isMinimized()) {
                                     w.setWindowState(w.windowState() & ~Qt::WindowMinimized);
                                 }
-                                Qt::WindowFlags flags = w.windowFlags();
+                                const Qt::WindowFlags flags = w.windowFlags();
                                 w.setWindowFlags(flags | Qt::WindowStaysOnTopHint);
                                 w.show();
                                 w.activateWindow();

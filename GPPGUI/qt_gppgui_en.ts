@@ -2140,7 +2140,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+153"/>
+        <location filename="GPPGUI.cpp" line="+154"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -4175,33 +4175,33 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+367"/>
+        <location filename="StartSettingsPage.cpp" line="+368"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
     </message>
     <message>
-        <location line="-375"/>
+        <location line="-376"/>
         <source>启动设置</source>
         <translation>Start settings</translation>
     </message>
     <message>
         <location line="+167"/>
-        <location line="+72"/>
+        <location line="+73"/>
         <source>```
 问题概览:</source>
         <translation>```
 Issue summary:</translation>
     </message>
     <message>
-        <location line="-56"/>
+        <location line="-57"/>
         <source>[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。
 </source>
         <oldsource>[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。</oldsource>
         <translation>[GUI] Log cache exceeded 5MB; old entries dropped. Full logs: logs/*.log.</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+58"/>
         <source>问题概览结束
 ```</source>
         <translation>Issue summary end
@@ -4293,12 +4293,12 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-459"/>
+        <location line="-460"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
     <message>
-        <location line="+332"/>
+        <location line="+333"/>
         <source>文件处理器:</source>
         <translation>File plugin:</translation>
     </message>
@@ -4698,7 +4698,7 @@ Issue summary:</translation>
 <context>
     <name>UpdateChecker</name>
     <message>
-        <location filename="UpdateChecker.cpp" line="+437"/>
+        <location filename="UpdateChecker.cpp" line="+439"/>
         <location line="+2"/>
         <source>更新检测失败</source>
         <translation>Failed to check update</translation>

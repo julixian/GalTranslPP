@@ -26,8 +26,9 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
-maxLineLength = 22
-linebreakSymbol = "<br>"
+maxLineLength = 24
+linebreakSymbol = "\\n"
+dialogueNewLinePrefix = "\u2002"
 
 @dataclass(frozen=True)
 class InlineTokenRule:
@@ -38,12 +39,16 @@ class InlineTokenRule:
 # 格式变更时，只需修改/增加规则及其显示宽度算法。规则重叠时前者优先。
 inlineTokenRules = (
     InlineTokenRule(
-        re.compile(r"\[([^\[\]\|]+?)\|([^\[\]\|]+?)\]"),
-        lambda match: len(match.group(2)),
+        re.compile(r"\{([^\{\}:]+?):([^\{\}:]+?)\}"),
+        lambda match: len(match.group(1)),
     ),
     InlineTokenRule(
-        re.compile(r"<(.+?)>"),
+        re.compile(r"\{\{text_area_layer\}\}"),
         lambda match: 1,
+    ),
+    InlineTokenRule(
+        re.compile(r"\{\{(.+?)\}\}"),
+        lambda match: 2,
     ),
 )
 
@@ -210,7 +215,7 @@ def processSentence(se: gpp.Sentence):
         newLines[-1] = newLines[-1] + currentLine
     else:
         newLines.append(currentLine)
-    se.transview = (linebreakSymbol + "　").join(newLines) if dialogue else linebreakSymbol.join(newLines)
+    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
 
 def linkLine(se: gpp.Sentence):
     transView = se.transview
@@ -240,7 +245,7 @@ def linkLine(se: gpp.Sentence):
             currentLine = currentSegment
 
     newLines.append(currentLine)
-    se.transview = (linebreakSymbol + "　").join(newLines) if dialogue else linebreakSymbol.join(newLines)
+    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
     if se.orig.startswith("　") and not se.transview.startswith("　"):
         se.transview = "　" + se.transview
 
@@ -258,6 +263,8 @@ def init(projectDir: Path):
 
 def dPostRun(se: gpp.Sentence):
     try:
+        if (se.filename == "cheat.sal.txt.json" or se.filename == "himekuri.sal.txt.json"):
+            return
         if not gpp.utils.hasCJK(se.transview) or se.orig.startswith("　　"):
             return
         processSentence(se)

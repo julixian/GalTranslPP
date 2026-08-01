@@ -16,11 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 修复输出带引用信息设置的输出逻辑，Rebuild 也不再刷掉 transl_cache 中已经输出的引用信息",
-        "2. 优化默认译后字典符号替换",
-        "3. [GUI] 修复深色模式下开始翻译 log 窗口文字仍显示黑色的 bug",
-		"4. [GUI] 提高程序启动时自动更新检测的稳定性",
-        "5. [GUI] 清空日志快捷键现在仅会在开始翻译界面生效",
+        "1. [GUI] 补上人名替换表纯文本的高亮",
     };
 
     mainLayout->addWidget(updateTitle);

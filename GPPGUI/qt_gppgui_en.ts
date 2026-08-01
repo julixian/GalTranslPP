@@ -2684,12 +2684,12 @@ Issue summary:</translation>
 <context>
     <name>NameTableSettingsPage</name>
     <message>
-        <location filename="NameTableSettingsPage.cpp" line="+273"/>
+        <location filename="NameTableSettingsPage.cpp" line="+275"/>
         <source>人名替换表</source>
         <translation>NameTable</translation>
     </message>
     <message>
-        <location line="-211"/>
+        <location line="-212"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2734,7 +2734,7 @@ Issue summary:</translation>
         <translation>Remove current dict</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+66"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>

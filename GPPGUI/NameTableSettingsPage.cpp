@@ -14,6 +14,7 @@
 #include "ElaTabWidget.h"
 #include "ElaPlainTextEdit.h"
 #include "DictionaryReader.h"
+#include "TreeSitterHighlighter.h"
 
 import Tool;
 
@@ -132,6 +133,7 @@ void NameTableSettingsPage::setupUi()
 	QFont plainTextFont = plainTextEdit->font();
 	plainTextFont.setPixelSize(15);
 	plainTextEdit->setFont(plainTextFont);
+	installTreeSitterHighlighter(plainTextEdit->document(), SyntaxLanguage::Toml);
 	plainTextEdit->setPlainText(readNameTableStr());
 	stackedWidget->addWidget(plainTextEdit);
 

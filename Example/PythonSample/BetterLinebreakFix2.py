@@ -209,12 +209,8 @@ def processSentence(se: gpp.Sentence):
         else:
             newLines.append(currentLine)
             currentLine = currentToken
-    if len(newLines) >= 1 and displayLength(currentLine) <= 2 and gpp.utils.isAllPunctuation(currentLine):
-        #       ccl
-        # word\n。」\z
-        newLines[-1] = newLines[-1] + currentLine
-    else:
-        newLines.append(currentLine)
+    newLines.append(currentLine)
+    
     se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
 
 def linkLine(se: gpp.Sentence):

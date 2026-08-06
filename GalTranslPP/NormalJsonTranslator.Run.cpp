@@ -450,18 +450,16 @@ void NormalJsonTranslator::normalJsonAfterRun()
     if (m_transEngine != TransEngine::Rebuild) {
         m_problemOverview = buildProblemOverviewFromCache(m_transCacheDir, m_currentRunRelFilePaths.value(), m_logger);
     }
-    else {
-        auto& overviewArray = m_problemOverview.get_ref<ordered_json::array_t&>();
-        std::ranges::sort(overviewArray, [](const ordered_json& a, const ordered_json& b)
-            {
-                const int result = StrCmpLogicalW(ascii2Wide(a.at("filename").get<std::string>()).c_str(),
-                    ascii2Wide(b.at("filename").get<std::string>()).c_str());
-                if (result == 0) {
-                    return a.at("index").get<int>() < b.at("index").get<int>();
-                }
-                return result < 0;
-            });
-    }
+    auto& overviewArray = m_problemOverview.get_ref<ordered_json::array_t&>();
+    std::ranges::sort(overviewArray, [](const ordered_json& a, const ordered_json& b)
+        {
+            const int result = StrCmpLogicalW(ascii2Wide(a.at("filename").get<std::string>()).c_str(),
+                ascii2Wide(b.at("filename").get<std::string>()).c_str());
+            if (result == 0) {
+                return a.at("index").get<int>() < b.at("index").get<int>();
+            }
+            return result < 0;
+        });
     // 汇总所有问题概览。
     if (m_problemOverview.empty()) {
         m_logger->info(gppTr("NormalJsonTranslator.normalJsonAfterRun", "\n\n```\n无问题概览\n```\n")

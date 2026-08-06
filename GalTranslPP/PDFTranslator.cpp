@@ -26,13 +26,13 @@ PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<I
 {
     m_logger->info(gppTr("PDFTranslator.PDFTranslator", "GalTransl++ PDFTranslator 启动...")
         .toStdString());
+
+    m_pdfInputDir = m_projectDir / L"gt_input";
+    m_pdfOutputDir = m_projectDir / L"gt_output";
 }
 
 void PDFTranslator::pdfInit()
 {
-    m_pdfInputDir = m_projectDir / L"gt_input";
-    m_pdfOutputDir = m_projectDir / L"gt_output";
-
     try {
         const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
         const auto pluginConfig = toml::uparse(filePluginConfigPath / L"PDF.toml");
@@ -62,8 +62,9 @@ void PDFTranslator::pdfBeforeRun()
     }
 
     for (const auto& dir : { m_inputDir, m_outputDir }) {
-        fs::remove_all(dir);
-        fs::create_directories(dir);
+        if (fs::exists(dir)) {
+            fs::remove_all(dir);
+        }
     }
 
     std::vector<fs::path> pdfFilePaths;

@@ -254,6 +254,7 @@ NormalJsonTranslator::NormalJsonTranslator(
         "NormalJsonTranslator.NormalJsonTranslator",
         "GalTransl++ NormalJsonTranslator 启动...")
         .toStdString());
+
     m_inputDir = inputDir.value_or(m_projectDir / L"gt_input");
     m_inputCacheDir = inputCacheDir.value_or(L"cache" / m_projectDir.filename() / L"gt_input_cache");
     m_outputDir = outputDir.value_or(m_projectDir / L"gt_output");

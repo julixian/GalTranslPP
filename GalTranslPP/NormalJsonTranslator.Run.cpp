@@ -73,12 +73,19 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 .toStdString());
         }
     }
+
     for (const auto& dir : { m_inputDir, m_outputDir, m_transCacheDir }) {
         if (!fs::exists(dir)) {
             fs::create_directories(dir);
             m_logger->debug(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "已创建目录: [%1]")
                 .arg(wide2Ascii(dir))
                 .toStdString());
+        }
+    }
+
+    for (const auto& dir : { m_inputCacheDir, m_outputCacheDir }) {
+        if (fs::exists(dir)) {
+            fs::remove_all(dir);
         }
     }
 
@@ -401,7 +408,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_gptDictionary,
             m_onPerformApi,
             m_projectDir,
-            m_splitFileEnabled ? m_inputCacheDir : m_inputDir,
+            (m_splitFileEnabled || m_reuseRepeatedBlocks) ? m_inputCacheDir : m_inputDir,
             m_transCacheDir,
             m_agentTermLedgerPath,
             m_agentFileNotesDir,
@@ -439,6 +446,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
     if (!m_currentRunRelFilePaths.has_value() || m_transEngine == TransEngine::ShowNormal) {
         return;
     }
+
     if (m_transEngine != TransEngine::Rebuild) {
         m_problemOverview = buildProblemOverviewFromCache(m_transCacheDir, m_currentRunRelFilePaths.value(), m_logger);
     }
@@ -454,7 +462,6 @@ void NormalJsonTranslator::normalJsonAfterRun()
                 return result < 0;
             });
     }
-
     // 汇总所有问题概览。
     if (m_problemOverview.empty()) {
         m_logger->info(gppTr("NormalJsonTranslator.normalJsonAfterRun", "\n\n```\n无问题概览\n```\n")
@@ -534,11 +541,6 @@ void NormalJsonTranslator::normalJsonAfterRun()
         }
     }
 
-    for (const auto& cacheDir : { m_inputCacheDir, m_outputCacheDir }) {
-	    if (fs::exists(cacheDir)) {
-            fs::remove_all(cacheDir);
-	    }
-    }
     if (!m_controller->shouldStop() && m_transEngine == TransEngine::Rebuild &&
         m_controller->m_completedSentences != m_controller->m_totalSentences)
     {

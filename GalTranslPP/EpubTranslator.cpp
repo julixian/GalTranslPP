@@ -58,15 +58,15 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
 {
     m_logger->info(gppTr("EpubTranslator.EpubTranslator", "GalTransl++ EpubTranslator 启动...")
         .toStdString());
-}
 
-void EpubTranslator::epubInit()
-{
     m_epubInputDir = m_projectDir / L"gt_input";
     m_epubOutputDir = m_projectDir / L"gt_output";
     m_tempUnpackDir = L"cache" / m_projectDir.filename() / L"epub_unpacked";
     m_tempRebuildDir = L"cache" / m_projectDir.filename() / L"epub_rebuild";
+}
 
+void EpubTranslator::epubInit()
+{
     try {
         const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
         const auto pluginConfig = toml::uparse(filePluginConfigPath / L"Epub.toml");
@@ -160,8 +160,9 @@ void EpubTranslator::epubBeforeRun()
     }
 
     for (const auto& dir : { m_tempUnpackDir, m_tempRebuildDir, m_inputDir, m_outputDir }) {
-        fs::remove_all(dir);
-        fs::create_directories(dir);
+        if (fs::exists(dir)) {
+            fs::remove_all(dir);
+        }
     }
 
     std::vector<fs::path> epubFiles;

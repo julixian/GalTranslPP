@@ -16,7 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 补上人名替换表纯文本的高亮",
+        "1. 修复 重复块引用 在 Agent 模式下失效的 bug",
+        "2. [GUI] 补上人名替换表纯文本的高亮",
     };
 
     mainLayout->addWidget(updateTitle);

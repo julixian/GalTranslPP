@@ -123,7 +123,7 @@ openMode = 1
 5 = 60
 
 [showDockWidget]
-306 = true
+307 = true
 
 [[popularCards]]
 cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'

@@ -460,26 +460,24 @@ void NormalJsonTranslator::normalJsonAfterRun()
             }
             return result < 0;
         });
+    if (m_problemOverviewFormat == "json") {
+        atomicOutputFile(m_projectDir / "ProblemOverview.json", m_problemOverview.dump(2));
+    }
+    else {
+        atomicOutputFile(m_projectDir / "ProblemOverview.toml",
+            toml::format("problemOverview", json2Toml(m_problemOverview)));
+    }
+    m_logger->debug(gppTr(
+        "NormalJsonTranslator.normalJsonAfterRun",
+        "已生成 [ProblemOverview.%1] 文件")
+        .arg(m_problemOverviewFormat)
+        .toStdString());
     // 汇总所有问题概览。
     if (m_problemOverview.empty()) {
         m_logger->info(gppTr("NormalJsonTranslator.normalJsonAfterRun", "\n\n```\n无问题概览\n```\n")
             .toStdString());
     }
     else {
-        std::ofstream ofs;
-        if (m_problemOverviewFormat == "json") {
-            atomicOutputFile(ofs, m_projectDir / "ProblemOverview.json", m_problemOverview.dump(2));
-        }
-        else {
-            atomicOutputFile(ofs, m_projectDir / "ProblemOverview.toml",
-                toml::format("problemOverview", json2Toml(m_problemOverview)));
-        }
-        m_logger->debug(gppTr(
-            "NormalJsonTranslator.normalJsonAfterRun",
-            "已生成 [ProblemOverview.%1] 文件")
-            .arg(m_problemOverviewFormat)
-            .toStdString());
-
         absl::btree_map<std::string_view, absl::btree_set<std::string_view>> problemMap;
         for (const ordered_json& item : m_problemOverview) {
             for (const ordered_json& problemItem : item.at("problems")) {

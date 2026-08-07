@@ -149,14 +149,14 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     // response.statusCode != 200 就是有错误
     const std::string errorMessageLower = str2Lower(response.content);
 
-    // 额度用尽
+    // 无效或额度用尽
     if (
         checkQuota &&
         (errorMessageLower.contains("quota") ||
-            errorMessageLower.contains("invalid tokens"))
+            errorMessageLower.contains("invalid token"))
         )
     {
-        logger->error(gppTr("checkResponse", "%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
+        logger->error(gppTr("checkResponse", "%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
             .arg(maskApikey(currentApi.apikey))
             .arg(response.content.empty()

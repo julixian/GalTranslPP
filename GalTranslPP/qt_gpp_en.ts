@@ -2234,9 +2234,11 @@ Problem overview:
     </message>
     <message>
         <location filename="ApiPool.cpp" line="159"/>
-        <source>%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:
+        <source>%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:
 %3</source>
-        <translation>%1 key [%2] may lack quota; repeat reports remove it temporarily. Raw:
+        <oldsource>%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:
+%3</oldsource>
+        <translation>%1 key [%2] may be invalid or lack quota; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>

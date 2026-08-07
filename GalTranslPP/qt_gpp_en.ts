@@ -5,7 +5,8 @@
     <name>ApiPool.loadApis</name>
     <message>
         <location filename="ApiPool.cpp" line="21"/>
-        <source>令牌池新加载 %1 个 Api keys， 现共有 %2 个Api keys</source>
+        <source>令牌池新加载 %1 个 Api keys， 现共有 %2 个 Api keys</source>
+        <oldsource>令牌池新加载 %1 个 Api keys， 现共有 %2 个Api keys</oldsource>
         <translation>Token pool loaded %1 Api keys; total %2.</translation>
     </message>
 </context>

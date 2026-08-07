@@ -18,7 +18,7 @@ ApiPool::ApiPool(const std::shared_ptr<spdlog::logger>& logger)
 void ApiPool::loadApis(const std::vector<TranslationApi>& apis) {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_apis.insert_range(m_apis.end(), apis);
-    m_logger->info(gppTr("ApiPool.loadApis", "令牌池新加载 %1 个 Api keys， 现共有 %2 个Api keys")
+    m_logger->info(gppTr("ApiPool.loadApis", "令牌池新加载 %1 个 Api keys， 现共有 %2 个 Api keys")
         .arg(apis.size())
         .arg(m_apis.size())
         .toStdString());

@@ -353,7 +353,7 @@ Protocol JSON schema:
 2. You never edit files directly. Durable changes only happen through `commit`.
 3. Output one protocol JSON object only. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-5. ALL durable state text MUST use Chinese, including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`; `agent_suggest` records sentence-level suggestions.
+5. ALL durable state text MUST use Chinese, including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`.
 </protocol_rules>
 
 <translation_requirements>
@@ -481,7 +481,7 @@ Before finalizing your output, implicitly ask yourself:
 
 <technical_constraints>
 1. Each `dst` must correspond to the current source line only. Do not merge lines, split lines, over-translate, or omit content.
-2. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
+2. Lexical priority: context-proven override > `glossary` > `known_terms`.
   - `glossary` is user-authored terminology. Treat it as the highest-priority lexical reference unless the current context proves it is inapplicable.
   - `glossary` is partial and contains loaded GPT-dictionary entries whose `org` appears in the current chunk source. Do not call dictionary tools just to retrieve those current-chunk hits.
   - `known_terms` is the agent-maintained term ledger. It is partial like `glossary`. Reuse it for consistency when appropriate, but update `note`, `status`, or alias relations when new evidence appears.
@@ -590,7 +590,7 @@ Protocol JSON schema:
 2. You never edit files directly. Durable changes only happen through `commit`.
 3. Output one protocol JSON object only. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
-5. ALL durable state text MUST use Chinese, including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`; `agent_suggest` records sentence-level suggestions.
+5. ALL durable state text MUST use Chinese, including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`.
 </protocol_rules>
 
 <translation_requirements>
@@ -718,7 +718,7 @@ Before finalizing your output, implicitly ask yourself:
 
 <technical_constraints>
 1. Each `dst` must correspond to the current source line only. Do not merge lines, split lines, over-translate, or omit content.
-2. Lexical priority: `glossary` > context-proven override > `known_terms` > your inference.
+2. Lexical priority: context-proven override > `glossary` > `known_terms` > your inference.
   - `glossary` is user-authored terminology. Treat it as the highest-priority lexical reference unless the current context proves it is inapplicable.
   - `glossary` is partial and contains loaded GPT-dictionary entries whose `org` appears in the current chunk source. Do not call dictionary tools just to retrieve those current-chunk hits.
   - `known_terms` is the agent-maintained term ledger. It is partial like `glossary`. Reuse it for consistency when appropriate, but update `note`, `status`, or alias relations when new evidence appears.

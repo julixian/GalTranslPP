@@ -16,12 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 修复空问题概览不会刷新概览文件的 bug",
-        "v3.0.6 更新",
-		"1. 修复问题概览在 翻译模式 和 Rebuild 中顺序不一样的 bug",
-        "v3.0.5 更新",
-        "1. 修复 重复块引用 在 Agent 模式下失效的 bug",
-        "2. [GUI] 补上人名替换表纯文本的高亮",
+        "1. Api 报错检测优化",
+		"2. Agent 提示词优化",
     };
 
     mainLayout->addWidget(updateTitle);

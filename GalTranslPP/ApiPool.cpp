@@ -149,7 +149,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     // response.statusCode != 200 就是有错误
     const std::string errorMessageLower = str2Lower(response.content);
 
-    // 额度用尽 (Quota)
+    // 额度用尽
     if (
         checkQuota &&
         (errorMessageLower.contains("quota") ||
@@ -200,7 +200,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
         return false;
     }
 
-    // 频率限制 (429) 或其他可再次请求错误
+    // 频率限制或其他可再次请求错误
     // 状态码 429 是最明确的信号
     if (response.statusCode == 429 || errorMessageLower.contains("rate limit") ||
         errorMessageLower.contains("try again") || errorMessageLower.contains("饱和"))

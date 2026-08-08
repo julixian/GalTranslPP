@@ -770,16 +770,20 @@
     </message>
     <message>
         <location filename="NLPTool.cpp" line="62"/>
-        <source>无法初始化 MeCab Model。请确保 BaseConfig/mecab/mecabrc 和 %1 存在
+        <source>无法初始化 MeCab Model。请确保 [BaseConfig/mecab/mecabrc] 和 [%1] 存在
 错误信息: %2</source>
-        <translation>Failed to initialize MeCab Model. Make sure BaseConfig/mecab/mecabrc and %1 exist
+        <oldsource>无法初始化 MeCab Model。请确保 BaseConfig/mecab/mecabrc 和 %1 存在
+错误信息: %2</oldsource>
+        <translation>Failed to initialize MeCab Model. Make sure [BaseConfig/mecab/mecabrc] and [%1] exist
 Error: %2</translation>
     </message>
     <message>
         <location filename="NLPTool.cpp" line="71"/>
-        <source>无法初始化 MeCab Tagger。请确保 BaseConfig/mecab/mecabrc 和 %1 存在
+        <source>无法初始化 MeCab Tagger。请确保 [BaseConfig/mecab/mecabrc] 和 [%1] 存在
 错误信息: %2</source>
-        <translation>Failed to initialize MeCab Tagger. Make sure BaseConfig/mecab/mecabrc and %1 exist
+        <oldsource>无法初始化 MeCab Tagger。请确保 BaseConfig/mecab/mecabrc 和 %1 存在
+错误信息: %2</oldsource>
+        <translation>Failed to initialize MeCab Tagger. Make sure [BaseConfig/mecab/mecabrc] and [%1] exist
 Error: %2</translation>
     </message>
     <message>
@@ -1819,18 +1823,21 @@ Problem overview:
     <name>PythonManager.registerFunction</name>
     <message>
         <location filename="PythonManager.cpp" line="279"/>
-        <source>脚本不存在: %1</source>
-        <translation>Script not found: %1</translation>
+        <source>脚本 [%1] 不存在</source>
+        <oldsource>脚本不存在: %1</oldsource>
+        <translation>Script [%1] not found</translation>
     </message>
     <message>
         <location filename="PythonManager.cpp" line="291"/>
-        <source>加载模块 %1 时出现异常，子解释器无法开启</source>
-        <translation>Exception loading module %1; subinterpreter cannot start</translation>
+        <source>加载模块 [%1] 时出现异常，子解释器无法开启</source>
+        <oldsource>加载模块 %1 时出现异常，子解释器无法开启</oldsource>
+        <translation>Exception loading module [%1]; subinterpreter cannot start</translation>
     </message>
     <message>
         <location filename="PythonManager.cpp" line="310"/>
-        <source>为模块 %1 加载自定义类型时出现异常: %2</source>
-        <translation>Exception loading custom types for module %1: %2</translation>
+        <source>为模块 [%1] 加载自定义类型时出现异常: %2</source>
+        <oldsource>为模块 %1 加载自定义类型时出现异常: %2</oldsource>
+        <translation>Exception loading custom types for module [%1]: %2</translation>
     </message>
     <message>
         <location filename="PythonManager.cpp" line="323"/>

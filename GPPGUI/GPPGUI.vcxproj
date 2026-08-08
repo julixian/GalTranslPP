@@ -87,7 +87,7 @@
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>tree-sitter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;..\3rdParty\ElaWidgetTools\Install\ElaWidgetTools\lib;..\vcpkg_installed\gpp-x64-windows-release\gpp-x64-windows-release\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>

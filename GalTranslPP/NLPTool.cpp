@@ -61,7 +61,7 @@ NLPTokenizeFunc getMeCabTokenizeFunc(const std::string& mecabDictDir, const std:
                     if (!mecabModel) {
                         throw std::runtime_error(gppTr(
                             "NLPTool.getMeCabTokenizeFunc",
-                            "无法初始化 MeCab Model。请确保 BaseConfig/mecab/mecabrc 和 %1 存在\n错误信息: %2")
+                            "无法初始化 MeCab Model。请确保 [BaseConfig/mecab/mecabrc] 和 [%1] 存在\n错误信息: %2")
                             .arg(mecabDictDir)
                             .arg(MeCab::getLastError())
                             .toStdString());
@@ -70,7 +70,7 @@ NLPTokenizeFunc getMeCabTokenizeFunc(const std::string& mecabDictDir, const std:
                     if (!mecabTagger) {
                         throw std::runtime_error(gppTr(
                             "NLPTool.getMeCabTokenizeFunc",
-                            "无法初始化 MeCab Tagger。请确保 BaseConfig/mecab/mecabrc 和 %1 存在\n错误信息: %2")
+                            "无法初始化 MeCab Tagger。请确保 [BaseConfig/mecab/mecabrc] 和 [%1] 存在\n错误信息: %2")
                             .arg(mecabDictDir)
                             .arg(MeCab::getLastError())
                             .toStdString());

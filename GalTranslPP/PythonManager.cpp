@@ -276,7 +276,7 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
 
     const fs::path stdModulePath = fs::weakly_canonical(ascii2Wide(modulePath));
     if (!fs::exists(stdModulePath)) {
-        m_logger->error(gppTr("PythonManager.registerFunction", "脚本不存在: %1")
+        m_logger->error(gppTr("PythonManager.registerFunction", "脚本 [%1] 不存在")
             .arg(modulePath)
             .toStdString());
         return std::nullopt;
@@ -290,7 +290,7 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
         if (!pythonInterpreter->isEffective()) {
             throw std::runtime_error(gppTr(
                 "PythonManager.registerFunction",
-                "加载模块 %1 时出现异常，子解释器无法开启")
+                "加载模块 [%1] 时出现异常，子解释器无法开启")
                 .arg(moduleName)
                 .toStdString());
         }
@@ -309,7 +309,7 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
                 catch (const py::error_already_set& e) {
                     throw std::runtime_error(gppTr(
                         "PythonManager.registerFunction",
-                        "为模块 %1 加载自定义类型时出现异常: %2")
+                        "为模块 [%1] 加载自定义类型时出现异常: %2")
                         .arg(moduleName)
                         .arg(e.what())
                         .toStdString());

@@ -178,7 +178,7 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     }
 
     // key 没有这个模型
-    if (errorMessageLower.contains("no available")) {
+    if (errorMessageLower.contains("no available") || errorMessageLower.contains("no access")) {
         logger->error(gppTr("checkResponse", "%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
             .arg(maskApikey(currentApi.apikey))

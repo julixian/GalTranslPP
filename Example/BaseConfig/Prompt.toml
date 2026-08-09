@@ -178,7 +178,7 @@ Your rolling_context output should be in a label pair (<rolling_context>
 
 </rolling_context>)
 
-Your output starts with "```jsonline", write the whole result jsonlines in the code block.
+Your translation output starts with "```jsonline", write the whole result jsonlines in the code block.
 In each line:
 1. Copy the value of `id` directly from input to the output jsonline.
 2. Follow the "translation_requirements" and "glossary", translate the value of `name` and `src` to [TargetLang]. Result should correspond to the current source line's text. Do not merge lines, split lines, over-translate, or omit content.

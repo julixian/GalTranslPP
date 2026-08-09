@@ -215,7 +215,9 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                     .arg(requestCount + 1)
                     .arg(parsedCount)
                     .arg(batchToTransThisRound.size())
-                    .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+                    .arg(response.content.empty()
+                        ? gppTr("NormalJsonTranslator.translateBatch", "内容为空").toStdString()
+                        : limitLogLines(response.content, m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "parse",

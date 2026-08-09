@@ -1210,7 +1210,9 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
-                    .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+                    .arg(response.content.empty()
+                        ? gppTr("NormalJsonTranslatorTransAgent.translateBatch", "内容为空").toStdString()
+                        : limitLogLines(response.content, m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",

@@ -60,7 +60,7 @@ void ApiPool::reportProblem(const TranslationApi& badApi) {
     std::lock_guard<std::mutex> lock(m_mutex);
     const auto it = std::ranges::find_if(m_apis, [&](const TranslationApi& api)
         {
-            return api.apikey == badApi.apikey;
+            return api.apikey == badApi.apikey && api.apiurl == badApi.apiurl && api.modelName == badApi.modelName;
         });
     if (it == m_apis.end()) {
         return;

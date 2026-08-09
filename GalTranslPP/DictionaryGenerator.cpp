@@ -248,7 +248,9 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
             .arg(threadId)
             .arg(batchIndex)
             .arg(requestCount + 1)
-            .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+            .arg(response.content.empty()
+                ? gppTr("DictionaryGenerator.callLLMToGenerate", "内容为空").toStdString()
+                : limitLogLines(response.content, m_inputBlockMaxLines))
             .toStdString());
         const auto lines = splitStringView(response.content, '\n');
         for (const auto& line : lines) {

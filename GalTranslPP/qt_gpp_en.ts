@@ -133,12 +133,17 @@
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="262"/>
+        <location filename="DictionaryGenerator.cpp" line="252"/>
+        <source>内容为空</source>
+        <translation>Empty content</translation>
+    </message>
+    <message>
+        <location filename="DictionaryGenerator.cpp" line="264"/>
         <source>发现重复术语: %1	%2	%3</source>
         <translation>Duplicate term found: %1	%2	%3</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="275"/>
+        <location filename="DictionaryGenerator.cpp" line="277"/>
         <source>[线程 %1] [批次 %2] 在 %3 次请求后彻底失败，没有生成字典</source>
         <translation>[T%1][Batch %2] Failed after %3 requests; no dictionary</translation>
     </message>
@@ -146,73 +151,73 @@
 <context>
     <name>DictionaryGenerator.generate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="288"/>
+        <location filename="DictionaryGenerator.cpp" line="290"/>
         <source>没有输入文件，无法生成字典。</source>
         <translation>No input files; cannot generate dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="299"/>
-        <location filename="DictionaryGenerator.cpp" line="368"/>
+        <location filename="DictionaryGenerator.cpp" line="301"/>
+        <location filename="DictionaryGenerator.cpp" line="370"/>
         <source>任务终止，将不会生成字典文件</source>
         <translation>Task stopped; no dictionary file will be generated</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="303"/>
+        <location filename="DictionaryGenerator.cpp" line="305"/>
         <source>阶段二: 搜索并选择信息量最大的文本块(单线程)...</source>
         <translation>Stage 2: pick key text blocks (single-threaded)...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="372"/>
+        <location filename="DictionaryGenerator.cpp" line="374"/>
         <source>阶段三: 启动 %1 个线程，向 AI 发送 %2 个任务...</source>
         <translation>Stage 3: starting %1 threads and sending %2 tasks to AI...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="392"/>
+        <location filename="DictionaryGenerator.cpp" line="394"/>
         <source>任务终止，将保存已经生成的字典结果</source>
         <translation>Task stopped; saving generated dictionary results</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="394"/>
+        <location filename="DictionaryGenerator.cpp" line="396"/>
         <source>阶段四: 整理并保存结果...</source>
         <translation>Stage 4: organize and save results...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="436"/>
+        <location filename="DictionaryGenerator.cpp" line="438"/>
         <source>任务终止，已保留完成审校的词条</source>
         <translation>Task stopped; completed review entries have been kept</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="442"/>
+        <location filename="DictionaryGenerator.cpp" line="444"/>
         <source>阶段四: 字典审校 Agent 完成，使用审校后的字典结果</source>
         <translation>Stage 4: Review Agent done; using reviewed dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="456"/>
+        <location filename="DictionaryGenerator.cpp" line="458"/>
         <source>人名</source>
         <translation>Person name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="457"/>
+        <location filename="DictionaryGenerator.cpp" line="459"/>
         <source>地名</source>
         <translation>Place name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="473"/>
+        <location filename="DictionaryGenerator.cpp" line="475"/>
         <source>男性</source>
         <translation>Male</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="474"/>
+        <location filename="DictionaryGenerator.cpp" line="476"/>
         <source>女性</source>
         <translation>Female</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="478"/>
+        <location filename="DictionaryGenerator.cpp" line="480"/>
         <source>，与其它字典存在性别争议</source>
         <translation>, gender differs from other dicts</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="498"/>
+        <location filename="DictionaryGenerator.cpp" line="500"/>
         <source>字典生成完成，共 %1 个词语，已保存到 [%2]</source>
         <translation>Dictionary generation completed: %1 terms saved to [%2]</translation>
     </message>
@@ -338,12 +343,12 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.review</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1057"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1059"/>
         <source>字典审校源文件路径数量(%1)与源文件视图数量(%2)不一致</source>
         <translation>Review source paths (%1) != views (%2)</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1084"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1086"/>
         <source>字典审校 Agent 已停止。最终保留术语数: %1</source>
         <translation>Dictionary Review Agent stopped. Final retained terms: %1</translation>
     </message>
@@ -352,7 +357,7 @@
         <translation type="vanished">Review Agent stopped; reviewed entries kept. Terms kept: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1090"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1092"/>
         <source>字典审校 Agent 完成。最终保留术语数: %1</source>
         <translation>Dictionary Review Agent completed. Final retained terms: %1</translation>
     </message>
@@ -402,18 +407,23 @@
 %6</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="922"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="918"/>
+        <source>内容为空</source>
+        <translation>Empty content</translation>
+    </message>
+    <message>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="924"/>
         <source>字典审校 Agent 响应处理失败: %1</source>
         <translation>Dictionary Review Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="945"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="947"/>
         <source>[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，将输出原始字典结果</source>
         <oldsource>[线程 %1] [术语 %2] 字典审校 Agent 因超过最大轮数 (%3 轮) 而失败，该术语不会输出到最终字典</oldsource>
         <translation>[T%1][Term %2] Review Agent exceeded %3 turns; term kept original</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="954"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="956"/>
         <source>[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，将输出原始字典结果</source>
         <oldsource>[线程 %1] [术语 %2] [轮次 %3] 字典审校 Agent 在 %4 次请求后彻底失败，该术语不会输出到最终字典</oldsource>
         <translation>[T%1][Term %2][Turn %3] Review Agent failed after %4 requests; term kept original</translation>
@@ -422,7 +432,7 @@
 <context>
     <name>DictionaryGeneratorReviewAgent.runReviewWorkers</name>
     <message>
-        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="971"/>
+        <location filename="DictionaryGenerator.ReviewAgent.cpp" line="973"/>
         <source>字典审校 Agent 启动 %1 个审校线程处理 %2 个术语</source>
         <translation>Dictionary Review Agent starts %1 review threads for %2 terms</translation>
     </message>
@@ -1362,12 +1372,17 @@ Problem overview:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="223"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="219"/>
+        <source>内容为空</source>
+        <translation>Empty content</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="225"/>
         <source>解析失败或不完整 (%1 / %2)</source>
         <translation>Parse failed or incomplete (%1 / %2)</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="245"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="247"/>
         <source>[线程 %1] [文件 %2] [批次 %3] 在 %4 次请求后彻底失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Failed after %4 requests; translated %5/%6 lines</translation>
     </message>
@@ -1383,17 +1398,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1286"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1288"/>
         <source>Agent 建议目标 [%1] 没有缓存文件，已跳过</source>
         <translation>Agent suggestion target [%1] has no cache file; skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1299"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1301"/>
         <source>Agent 建议目标缓存 [%1] 读取失败: %2</source>
         <translation>Failed to read Agent suggestion target cache [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1333"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1335"/>
         <source>Agent 已将 %1 条建议写入缓存问题</source>
         <translation>Agent wrote %1 suggestions into cache problems</translation>
     </message>
@@ -1555,17 +1570,22 @@ Problem overview:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1218"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1214"/>
+        <source>内容为空</source>
+        <translation>Empty content</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1220"/>
         <source>Agent 响应处理失败: %1</source>
         <translation>Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1248"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1250"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 因超过最大轮数 (%4 轮) 而失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Agent exceeded %4 turns; translated %5/%6 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1260"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1262"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 在 %5 次请求后彻底失败，共翻译 (%6 / %7) 句</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Failed after %5 requests; translated %6/%7 lines</translation>
     </message>

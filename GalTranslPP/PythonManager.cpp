@@ -582,6 +582,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
 
     py::enum_<CachePart>(m, "CachePart")
         .value("None", CachePart::None)
+        .value("Index", CachePart::Index)
+        .value("FileName", CachePart::FileName)
         .value("Name", CachePart::Name)
         .value("NameTrans", CachePart::NameTrans)
         .value("Names", CachePart::Names)
@@ -679,7 +681,6 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("extractHangul", &extractHangul)
         .def("extractCJK", &extractCJK)
         .def("getTraditionalChineseExtractor", &getTraditionalChineseExtractor)
-        .def("isApiTranslationEngine", &isApiTranslationEngine)
         .def("getConsoleWidth", &getConsoleWidth)
         .def("loadTokenizeCache", [](const fs::path& cachePath, const std::shared_ptr<spdlog::logger>& logger)
 	        {
@@ -790,10 +791,10 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def("analyze", [](ProblemAnalyzer& self, Sentence& sentence) { self.analyze(&sentence); });
 
     py::class_<NameTranslator>(m, "NameTranslator")
-        .def("run", &NameTranslator::run);
+        .def("run", &NameTranslator::run, py::call_guard<py::gil_scoped_release>());
 
     py::class_<DictionaryGenerator>(m, "DictionaryGenerator")
-        .def("generate", &DictionaryGenerator::generate);
+        .def("generate", &DictionaryGenerator::generate, py::call_guard<py::gil_scoped_release>());
 
     py::class_<NormalJsonTranslatorTransAgent>(m, "NormalJsonTranslatorTransAgent")
         .def("applyAgentSuggestions", &NormalJsonTranslatorTransAgent::applyAgentSuggestions);
@@ -862,7 +863,9 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_agentProjectNotePath", &NormalJsonTranslator::m_agentProjectNotePath)
         .def_readwrite("m_nameMap", &NormalJsonTranslator::m_nameMap)
         .def_readwrite("m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths)
+        .def_readwrite("m_savedTranslCacheRelFilePaths", &NormalJsonTranslator::m_savedTranslCacheRelFilePaths)
         .def_readwrite("m_repeatedBlockCompletedRelFilePaths", &NormalJsonTranslator::m_repeatedBlockCompletedRelFilePaths)
+        .def_readwrite("m_repeatedBlockReferenceCount", &NormalJsonTranslator::m_repeatedBlockReferenceCount)
         .def_readwrite("m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed)
         .def_readwrite("m_onPerformApi", &NormalJsonTranslator::m_onPerformApi)
         .def_readwrite("m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed)

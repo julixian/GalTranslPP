@@ -27,12 +27,12 @@ export
         if (it == item.end() || !it->is_object()) {
             return std::nullopt;
         }
-        const std::string file = it->value("file", "");
+        std::string file = it->value("file", "");
         const int index = it->value("index", -1);
         if (file.empty() || index < 0) {
             return std::nullopt;
         }
-        return SentencePosition{ file, index };
+        return SentencePosition{ std::move(file), index };
     }
 
     template <typename JsonT>
@@ -46,10 +46,10 @@ export
             if (!refItem.is_object()) {
                 continue;
             }
-            const std::string file = refItem.value("file", "");
+            std::string file = refItem.value("file", "");
             const int index = refItem.value("index", -1);
             if (!file.empty() && index >= 0) {
-                refs.push_back({ file, index });
+                refs.push_back({ std::move(file), index });
             }
         }
         return refs;
@@ -123,9 +123,14 @@ export
     void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_hash_map<fs::path, bool>& splitFileParts,
         const fs::path& outputCacheDir, const fs::path& outputDir, const std::shared_ptr<spdlog::logger>& logger);
 
-    bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSe);
+    bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSentence);
 
-    void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cachePath);
+    void saveTranslCache(
+        const std::vector<Sentence>& sentences,
+        const fs::path& cachePath,
+        const fs::path& relInputPath,
+        absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+        std::shared_mutex& transCacheMutex);
 
     std::vector<ordered_json> splitJsonArrayNum(const ordered_json& originalData, int chunkSize);
     std::vector<ordered_json> splitJsonArrayEqual(const ordered_json& originalData, int numParts);

@@ -115,7 +115,7 @@ export
     template<typename ...Args, typename TC>
     CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& condElem, const fs::path& projectDir,
         const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
-        const std::shared_ptr<spdlog::logger>& logger) 
+        const std::shared_ptr<spdlog::logger>& logger)
     {
         using RetFuncType = CheckSeCondBaseFunc<Args...>;
         std::vector<RetFuncType> funcs;
@@ -314,6 +314,8 @@ bool checkGppCondition(const GPPCondition& gppCondition, Sentence* se) {
             };
             switch (pattern.conditionTarget) 
     		    {
+            case CachePart::Index:
+                return checkString(pattern.conditionReg, std::to_string(sentenceToCheck->index));
             case CachePart::Names:
                 return checkAnyOf(sentenceToCheck->names);
             case CachePart::NamesTrans:

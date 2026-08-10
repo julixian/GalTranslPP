@@ -113,6 +113,9 @@
             <p>
                 <code>conditionTarget</code> 加前缀 <code>prev_</code> 或 <code>next_</code> 可表示前/后句，如 <code>prev_prev_orig</code> 表示上上句原文，如果不存在则条件失败。
             </p>
+            <p>
+                <code>conditionTarget</code> 可使用 <code>index</code>, <code>filename</code>, <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。
+            </p>
             <pre><code class="language-toml"><span class="code-key">retranslKeys</span> = [
   <span class="code-comment">#[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},</span>
   <span class="code-comment">#{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],</span>
@@ -146,6 +149,9 @@
 <span class="code-key">HighFrequency</span> = { <span class="code-key">enable</span> = <span class="code-bool">false</span> }
 <span class="code-key">PunctuationMismatch</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"orig"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }
 <span class="code-key">LatinIntroduced</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"preproc"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }</code></pre>
+            <p>
+                <code>base</code> 和 <code>check</code> 可使用 <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code>。
+            </p>
         </section>
 
     </div>

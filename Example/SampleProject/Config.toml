@@ -207,29 +207,29 @@ InvalidCharacter = { enable = false }
 
 # 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
-# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回bool)
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回 bool)
 # %PROJECT_DIR% 为代表当前项目路径字符串的宏
 # conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果不存在则条件失败
 retranslKeys = [
-  #[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},
-  #{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],
+  #[{conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua', conditionFunc='funcName'},
+  # {conditionScript='%PROJECT_DIR%/SampleTextPlugin.py', conditionFunc='funcName'},],
   #"本有",
   #"本无",
   "引入繁体字",
   "残留日文",
-  "翻译失败", # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
+  "翻译失败", # 等效于 [{conditionTarget='problems', conditionReg ='翻译失败'},],
 ]
 
 # 正则表达式列表，如果一条 problem 能被以下任一正则 search 通过，则不加入 problems 列表
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
 # 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本
-# (conditionFunc 接收 Sentence 和 problem，返回bool)
+# (conditionFunc 接收 Sentence 和 problem，返回 bool)
 skipProblems = [
   #"^引入拉丁字母: Live$"  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
-  # [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
-  #   { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  #['引入拉丁字母', {conditionTarget='preproc', conditionReg ='モチモチ'},
+  # {conditionTarget='transview', conditionReg ='Q弹'},],
   "^$",
 ]
 

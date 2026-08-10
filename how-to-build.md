@@ -7,9 +7,11 @@
 - **操作系统**: Windows 10 或 Windows 11
 - **IDE**: [Visual Studio 2026](https://visualstudio.microsoft.com/zh-hans/downloads/)
   - **必需工作负载**: `使用 C++ 的桌面开发`
-  - **必需工具集**: `MSVC v14.50`(v14.51/v14.52预览 目前有 bug 会构建失败，需要自行在单个组件中勾选 v14.50 版本的工具集)
+  - **必需工具集**: `MSVC v14.50` (v14.51/v14.52 目前有 bug 会构建失败，需要自行在单个组件中勾选 v14.50 版本的工具集)
 - **辅助构建工具**: [CMake](https://cmake.org/download/)
 - **版本控制工具**: [git](https://git-scm.com/)
+
+![MSVC_1450](images/MSVC_1450.png?raw=true)
 
 ## 2. 安装核心依赖
 
@@ -25,14 +27,14 @@ cd vcpkg
 # 2. 执行引导脚本进行安装
 .\bootstrap-vcpkg.bat
 
-# 3. (重要) 将 vcpkg 的根目录路径添加到用户环境变量"Path"中或运行 vcpkg integreate install 来将 vcpkg 绑定到 Visual Studio
+# 3. 运行 vcpkg integreate install 来将 vcpkg 绑定到 Visual Studio
 ```
 
 ### 2.2 Qt 框架
 
-- 1、  访问 [Qt 官方网站](https://www.qt.io/download-qt-installer-oss)下载并运行Qt社区开源版本(LGPL协议)的在线安装器 (需要注册 Qt 账户)。
+- 1、  访问 [Qt 官方网站](https://www.qt.io/download-qt-installer-oss) 下载并运行 Qt 社区开源版本的在线安装器 (需要注册 Qt 账户)。
 - 2、  在安装器的组件选择页面，确保勾选以下组件:
-  - `Qt` → `Qt 6.11.1(或更高，但不保证兼容性)` → `MSVC 2022 64-bit`
+  - `Qt` → `Qt 6.11.1 (或更高，但不保证兼容性)` → `MSVC 2022 64-bit`
 
 ## 3. 获取项目源码
 
@@ -70,7 +72,7 @@ cd GalTranslPP
 
 - 2、  将 配置从默认的 Debug 切换至 Release。
 
-- 3、  在解决方案资源管理器中右键你想编译的项目，如 `GPPGUI`，点击生成，VS会自动编译其它依赖并生成最终二进制文件。
+- 3、  在解决方案资源管理器中右键你想编译的项目，如 `GPPGUI`，点击生成，VS 会自动编译其它依赖并生成最终二进制文件。
 
 ## 6. 完成与运行
 
@@ -78,7 +80,7 @@ cd GalTranslPP
 
 还需将一些文件复制到文件夹内程序才可正常运行。  
 
-- 0、 先将项目根目录的`Example\BaseConfig`文件夹内的`Python-3.12.10-embed-amd64.zip`文件解压到当前文件夹
+- 0、 先将项目根目录的 `Example\BaseConfig` 文件夹内的 `Python-3.12.10-embed-amd64.zip` 文件解压到同一文件夹下
 
 ### 6.1 GPPCLI
 
@@ -87,29 +89,10 @@ cd GalTranslPP
 ### 6.2 GPPGUI
 
 - 1、 运行项目根目录下的 `Release.bat`
-- 2、  打开 Qt专属控制台，如 Qt 6.11.1(MSVC 2022 64-bit)，输入命令 
+- 2、  打开 Qt 专属控制台，如 Qt 6.11.1 (MSVC 2022 64-bit)，输入命令 
 
 ```cmd
 windeployqt path/to/GalTranslPP_GUI.exe
 ```
-
-### 6.3 私人部署（非必需）
-
-若你想将GPPCLI和GPPGUI移动到其它位置运行如`D:\GALGAME\GALGAMETOOLS\AIGC\GPPCLI`  
-和`D:\GALGAME\GALGAMETOOLS\AIGC\GPPGUI`则请在GalTranslPP\Release执行以下cmd命令创建软链接
-
-#### GPPCLI
-
-```cmd
-mklink .\GPPCLI_PRIVATE "D:\GALGAME\GALGAMETOOLS\AIGC\GPPCLI"
-```
-
-#### GPPGUI
-
-```cmd
-mklink .\GPPGUI_PRIVATE "D:\GALGAME\GALGAMETOOLS\AIGC\GPPGUI"
-```
-
-这样每次编译都会将最核心的文件`GalTranslPP_CLI.exe`、`GalTranslPP_GUI.exe`、`Updater_new.exe`和`*.dll`复制到相应目录。  
 
 至此所有步骤均已完成。

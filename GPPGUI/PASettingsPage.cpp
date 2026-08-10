@@ -74,9 +74,8 @@ void PASettingsPage::setupUi()
 		{ "NotTargetLanguage", tr("语言不通"), false, "orig", "transview" },
 		{ "InvalidCharacter", tr("非法字符"), false, "orig", "transview" },
 	};
-	// GUI 仅暴露 chooseStringRef 可直接返回字符串引用的 CachePart。
 	const QStringList cachePartNames = {
-		"orig", "preproc", "transraw", "transview", "name", "nametrans", "transby",
+		"orig", "preproc", "transraw", "transview",
 	};
 	std::vector<ProblemRow> problemRows;
 	ElaText* problemListTitle = new ElaText(tr("要发现的问题清单"), mainWidget);

@@ -187,7 +187,9 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
                 .arg(requestCount + 1)
                 .arg(parsedCount)
                 .arg(pendingNameCount)
-                .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+                .arg(response.content.empty()
+                    ? gppTr("NameTranslator.translateBatch", "内容为空").toStdString()
+                    : limitLogLines(response.content, m_inputBlockMaxLines))
                 .toStdString());
             ++requestCount;
             continue;

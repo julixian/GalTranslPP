@@ -1119,9 +1119,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+36"/>
-        <source>会把 onFileProcessed 和 分割文件合并 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</source>
-        <oldsource>会把 onFileProcessed 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</oldsource>
-        <translation>Defer onFileProcessed/split merge until done; use filename order</translation>
+        <source>启用时建议将翻译顺序改为文件名排序</source>
+        <oldsource>会把 onFileProcessed 和 分割文件合并 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</oldsource>
+        <translation>Filename order recommended</translation>
     </message>
     <message>
         <location line="+30"/>
@@ -1300,8 +1300,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>重复脚本块只翻译首次出现的片段，后续句子引用复制结果</source>
-        <translation>Translate first repeated block only; later lines reuse it</translation>
+        <source>重复脚本块只翻译首次出现的片段，后续句子引用复制结果，会把 onFileProcessed/分割文件合并/文件输出 延迟到翻译结束再执行</source>
+        <oldsource>重复脚本块只翻译首次出现的片段，后续句子引用复制结果</oldsource>
+        <translation>Translate repeated blocks once; defer callbacks, merging, and output</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1827,7 +1828,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDeleteDialog</name>
     <message>
-        <location filename="DictionaryEntryDialog.cpp" line="+644"/>
+        <location filename="DictionaryEntryDialog.cpp" line="+646"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -1975,7 +1976,7 @@ sk-...</translation>
         <location line="+9"/>
         <location line="+17"/>
         <location line="+29"/>
-        <location line="+107"/>
+        <location line="+108"/>
         <location line="+9"/>
         <location line="+21"/>
         <location line="+6"/>
@@ -1983,26 +1984,26 @@ sk-...</translation>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-197"/>
-        <location line="+162"/>
+        <location line="-198"/>
+        <location line="+163"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
     </message>
     <message>
-        <location line="-153"/>
-        <location line="+162"/>
+        <location line="-154"/>
+        <location line="+163"/>
         <source>%1 不是预期的 json 格式</source>
         <translation>%1 is not expected JSON</translation>
     </message>
     <message>
-        <location line="-145"/>
-        <location line="+166"/>
+        <location line="-146"/>
+        <location line="+167"/>
         <source>%1 不符合 json 规范</source>
         <translation>%1 is invalid JSON</translation>
     </message>
     <message>
-        <location line="-137"/>
-        <location line="+143"/>
+        <location line="-138"/>
+        <location line="+144"/>
         <source>%1 不是支持的格式</source>
         <translation>%1 is unsupported</translation>
     </message>
@@ -3175,7 +3176,7 @@ Cache: %4</translation>
         <translation>Invalid char</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>要发现的问题清单</source>
         <translation>Problem List</translation>
     </message>
@@ -4056,7 +4057,7 @@ Cache: %4</translation>
         <translation>Match</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="+225"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="+226"/>
         <source>结果解析</source>
         <translation>Parse Result</translation>
     </message>
@@ -4603,13 +4604,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+26"/>
-        <location line="+250"/>
+        <location line="+252"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
-        <location line="-245"/>
-        <location line="+250"/>
+        <location line="-247"/>
+        <location line="+252"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>

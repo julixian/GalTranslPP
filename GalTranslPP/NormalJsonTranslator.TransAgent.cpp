@@ -41,6 +41,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     bool smartRetry,
     bool checkQuota,
     std::shared_mutex& transCacheMutex,
+    const absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
     const std::vector<fs::path>& knownRelFiles,
     const std::vector<fs::path>& gptDictionaryPaths,
     const std::optional<fs::path>& agentProjectNotePath,
@@ -71,6 +72,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     m_smartRetry(smartRetry),
     m_checkQuota(checkQuota),
     m_transCacheMutex(transCacheMutex),
+    m_savedTranslCacheRelFilePaths(savedTransCacheRelFilePaths),
     m_knownRelFiles(knownRelFiles),
     m_gptDictionaryPaths(gptDictionaryPaths),
     m_agentProjectNotePath(agentProjectNotePath)
@@ -1283,6 +1285,9 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
     int markedCount = 0;
     std::ifstream ifs;
     for (const auto& [relFilePath, suggestionsByIndex] : m_agentSuggestions) {
+        if (!m_savedTranslCacheRelFilePaths.contains(relFilePath)) {
+            continue;
+        }
         const fs::path cachePath = m_transCacheDir / relFilePath;
         if (!fs::exists(cachePath)) {
             m_logger->warn(gppTr(
@@ -1307,7 +1312,7 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
             continue;
         }
 
-        bool changed = false;
+        bool cacheChanged = false;
         for (json& item : cacheJson) {
             const int index = item.value("index", -1);
             const auto suggestionIt = suggestionsByIndex.find(index);
@@ -1320,11 +1325,11 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
             for (const std::string& problem : suggestionIt->second) {
                 item["problems"].push_back(problem);
                 ++markedCount;
-                changed = true;
+                cacheChanged = true;
             }
         }
 
-        if (!changed) {
+        if (!cacheChanged) {
             continue;
         }
 

@@ -116,8 +116,9 @@ export
 
         absl::flat_hash_map<std::string, std::string> m_nameMap;
         std::optional<std::vector<fs::path>> m_currentRunRelFilePaths;
+        absl::flat_hash_set<fs::path> m_savedTranslCacheRelFilePaths;
+        size_t m_repeatedBlockReferenceCount{};
         absl::flat_hash_set<fs::path> m_repeatedBlockCompletedRelFilePaths;
-        ordered_json m_problemOverview = ordered_json::array();
         std::function<void(const fs::path&)> m_onFileProcessed;
         std::function<std::string(const std::string&)> m_onPerformApi;
         std::function<DictList(const DictList&)> m_onDictProcessed;
@@ -142,7 +143,7 @@ export
         void postProcess(Sentence* se);
 
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
-            int threadId, int batchIndex, int& recursionIndex, int& recursionCount);
+            int& recursionIndex, int& recursionCount, int threadId, int batchIndex);
 
         void processFile(const fs::path& relInputPath, int threadId);
         void normalJsonProcessFiles(const std::vector<fs::path>& relFilePaths);

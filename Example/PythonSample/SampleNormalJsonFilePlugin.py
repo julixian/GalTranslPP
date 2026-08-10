@@ -21,8 +21,7 @@ def run() -> None:
     pythonTranslator.normalJsonInit()
     pythonTranslator.normalJsonBeforeRun()
     try:
-        if not processCurrentFilesWithPythonThreads():
-            pythonTranslator.normalJsonProcess()
+        processCurrentFilesWithPythonThreads()
     finally:
         pythonTranslator.normalJsonAfterRun()
 
@@ -35,14 +34,32 @@ def runStandardLifecycle() -> None:
     pythonTranslator.normalJsonAfterRun()
 
 
-def processCurrentFilesWithPythonThreads() -> bool:
+def processCurrentFilesWithPythonThreads() -> None:
+    controller = pythonTranslator.m_controller
+
+    if pythonTranslator.m_transEngine == gpp.TransEngine.DumpName:
+        controller.updateBar(controller.m_totalSentences)
+        return
+
+    if pythonTranslator.m_transEngine == gpp.TransEngine.NameTrans:
+        nameTranslator = pythonTranslator.m_nameTranslator
+        if nameTranslator is None:
+            raise RuntimeError("NameTranslator 未创建")
+        nameTranslator.run(pythonTranslator.m_nameTablePath)
+        return
+
+    if pythonTranslator.m_transEngine == gpp.TransEngine.GenDict:
+        dictionaryGenerator = pythonTranslator.m_dictionaryGenerator
+        if dictionaryGenerator is None:
+            raise RuntimeError("DictionaryGenerator 未创建")
+        dictionaryGenerator.generate(pythonTranslator.m_projectDir / "ProjGptDict-Gen.toml")
+        return
+
     relFilePaths = pythonTranslator.m_currentRunRelFilePaths
     if relFilePaths is None:
-        logger.info("当前翻译模式不需要逐文件处理")
-        return False
+        return
 
-    controller = pythonTranslator.m_controller
-    maxWorkers = max(1, min(pythonTranslator.m_threadsNum, len(relFilePaths)))
+    maxWorkers = min(pythonTranslator.m_threadsNum, len(relFilePaths))
 
     # ThreadPoolExecutor 会收不回来锁不知道为什么，必须手工管理线程
     nextFileIndex = 0
@@ -80,11 +97,11 @@ def processCurrentFilesWithPythonThreads() -> bool:
     if errors:
         raise errors[0]
 
-    if pythonTranslator.m_reuseRepeatedBlocks:
+    if (pythonTranslator.m_reuseRepeatedBlocks
+            and pythonTranslator.m_transEngine != gpp.TransEngine.ShowNormal):
         pythonTranslator.resolveRepeatedBlockReferences()
     if pythonTranslator.m_agentEnabled and pythonTranslator.m_transAgent is not None:
         pythonTranslator.m_transAgent.applyAgentSuggestions()
-    return True
 
 
 def processOneFile(relFilePath: Path, threadId: int) -> None:

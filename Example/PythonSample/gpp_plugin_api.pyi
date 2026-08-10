@@ -42,17 +42,19 @@ class TransEngine(Enum):
 
 class CachePart(Enum):
     # The C++ enum also exposes a member named "None"; see NameType above.
-    Name = 1
-    Names = 2
-    NameTrans = 3
-    NamesTrans = 4
-    Orig = 5
-    Preproc = 6
-    Problems = 7
-    OtherInfo = 8
-    TransBy = 9
-    TransRaw = 10
-    Transview = 11
+    Index = 1
+    FileName = 2
+    Name = 3
+    Names = 4
+    NameTrans = 5
+    NamesTrans = 6
+    Orig = 7
+    Preproc = 8
+    Problems = 9
+    OtherInfo = 10
+    TransBy = 11
+    TransRaw = 12
+    Transview = 13
 
 
 class ApiProtocol(Enum):
@@ -166,7 +168,6 @@ class _UtilsModule:
     def extractHangul(self, sourceString: str) -> str: ...
     def extractCJK(self, sourceString: str) -> str: ...
     def getTraditionalChineseExtractor(self) -> Callable[[str], str]: ...
-    def isApiTranslationEngine(self, transEngine: TransEngine) -> bool: ...
     def getConsoleWidth(self) -> int: ...
     def loadTokenizeCache(self, cachePath: PathLike, logger: spdlogLogger) -> TokenizeCache: ...
     def saveTokenizeCache(self, cache: TokenizeCache, cachePath: PathLike, logger: spdlogLogger) -> None: ...
@@ -364,7 +365,9 @@ class NormalJsonTranslator(ITranslator):
     m_agentProjectNotePath: Path | None
     m_nameMap: StringStringMap
     m_currentRunRelFilePaths: list[Path] | None
+    m_savedTranslCacheRelFilePaths: set[Path]
     m_repeatedBlockCompletedRelFilePaths: set[Path]
+    m_repeatedBlockReferenceCount: int
     m_onFileProcessed: Callable[[Path], None] | None
     m_onPerformApi: Callable[[str], str] | None
     m_onDictProcessed: Callable[[DictList], DictList] | None

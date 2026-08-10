@@ -176,8 +176,8 @@ void CommonSettingsPage::setupUi()
 	repeatedBlockDrawerArea->setDrawerHeader(reuseRepeatedBlocksArea);
 	QHBoxLayout* reuseRepeatedBlocksLayout = new QHBoxLayout(reuseRepeatedBlocksArea);
 	ElaDoubleText* reuseRepeatedBlocksText = new ElaDoubleText(tr("连续重复块引用复用"), 16,
-		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果"), 10,
-		tr("会把 onFileProcessed 和 分割文件合并 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序"), reuseRepeatedBlocksArea);
+		tr("重复脚本块只翻译首次出现的片段，后续句子引用复制结果，会把 onFileProcessed/分割文件合并/文件输出 延迟到翻译结束再执行"), 10,
+		tr("启用时建议将翻译顺序改为文件名排序"), reuseRepeatedBlocksArea);
 	reuseRepeatedBlocksLayout->addWidget(reuseRepeatedBlocksText);
 	reuseRepeatedBlocksLayout->addStretch();
 	ElaToggleSwitch* reuseRepeatedBlocksToggle = new ElaToggleSwitch(reuseRepeatedBlocksArea);

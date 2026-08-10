@@ -331,17 +331,24 @@ std::string generateCacheKey(const Sentence& se) {
 
 std::string generateCacheKey(const json& jsonArr, size_t i) {
     const auto& item = jsonArr[i];
+    const int itemIndex = item.value("index", -1);
     const std::string currentText = getNameString(item) + item.value("original_text", "") + item.value("pre_processed_text", "");
 
     std::string prevText = "None";
     std::string nextText = "None";
     if (i > 0) {
-        const auto& lastItem = jsonArr[i - 1];
-        prevText = getNameString(lastItem) + lastItem.value("original_text", "") + lastItem.value("pre_processed_text", "");
+        const auto& prevItem = jsonArr[i - 1];
+        const int prevItemIndex = prevItem.value("index", -1);
+        if (prevItemIndex == itemIndex - 1) {
+            prevText = getNameString(prevItem) + prevItem.value("original_text", "") + prevItem.value("pre_processed_text", "");
+        }
     }
     if (i + 1 < jsonArr.size()) {
         const auto& nextItem = jsonArr[i + 1];
-        nextText = getNameString(nextItem) + nextItem.value("original_text", "") + nextItem.value("pre_processed_text", "");
+        const int nextItemIndex = nextItem.value("index", -1);
+        if (nextItemIndex == itemIndex + 1) {
+            nextText = getNameString(nextItem) + nextItem.value("original_text", "") + nextItem.value("pre_processed_text", "");
+        }
     }
     return prevText + currentText + nextText;
 }
@@ -765,12 +772,12 @@ void combineOutputFiles(const fs::path& originalRelFilePath, const absl::flat_ha
 }
 
 
-bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSe) {
+bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, const json& item, const Sentence& currentSentence) {
     if (retranslKeys.empty()) {
         return false;
     }
 
-    Sentence probeSentence = currentSe;
+    Sentence probeSentence = currentSentence;
     if (probeSentence.nameType == NameType::Single) {
         if (const auto jit = item.find("name_translated"); jit != item.end()) {
             jit->get_to(probeSentence.nametrans);
@@ -797,42 +804,48 @@ bool hasRetranslKey(const std::vector<CheckSeCondNormalFunc>& retranslKeys, cons
         jit->get_to(probeSentence.transview);
     }
 
-    return std::ranges::any_of(retranslKeys, [&](const CheckSeCondNormalFunc& key)
+    return std::ranges::any_of(retranslKeys, [&](const CheckSeCondNormalFunc& checkKeyFunc)
         {
-            return key(&probeSentence);
+            return checkKeyFunc(&probeSentence);
         });
 }
 
-void saveCache(const std::vector<Sentence>& allSentences, const fs::path& cachePath) {
+void saveTranslCache(
+    const std::vector<Sentence>& sentences,
+    const fs::path& cachePath,
+    const fs::path& relInputPath,
+    absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+    std::shared_mutex& transCacheMutex)
+{
     json cacheJson = json::array();
-    for (const auto& se : allSentences | std::views::filter([](const auto& se_) {return se_.transCompleted; })) {
-        json cacheObj;
-        cacheObj["index"] = se.index;
+    for (const auto& se : sentences | std::views::filter([](const auto& se_) {return se_.transCompleted; })) {
+        json cacheItem;
+        cacheItem["index"] = se.index;
         if (se.nameType == NameType::Single) {
-            cacheObj["name"] = se.name;
-            cacheObj["name_translated"] = se.nametrans;
+            cacheItem["name"] = se.name;
+            cacheItem["name_translated"] = se.nametrans;
         }
         else if (se.nameType == NameType::Multiple) {
-            cacheObj["names"] = se.names;
-            cacheObj["names_translated"] = se.namestrans;
+            cacheItem["names"] = se.names;
+            cacheItem["names_translated"] = se.namestrans;
         }
-        cacheObj["original_text"] = se.orig;
+        cacheItem["original_text"] = se.orig;
         if (!se.otherinfo.empty()) {
-            cacheObj["other_info"] = se.otherinfo;
+            cacheItem["other_info"] = se.otherinfo;
         }
-        cacheObj["pre_processed_text"] = se.preproc;
+        cacheItem["pre_processed_text"] = se.preproc;
         if (!se.problems.empty()) {
-            cacheObj["problems"] = se.problems;
+            cacheItem["problems"] = se.problems;
         }
-        cacheObj["translated_by"] = se.transby;
-        cacheObj["translated_raw_text"] = se.transraw;
-        cacheObj["translated_view_text"] = se.transview;
-        sentenceReferenceInfoToItem(cacheObj, se, true);
-        cacheJson.push_back(std::move(cacheObj));
+        cacheItem["translated_by"] = se.transby;
+        cacheItem["translated_raw_text"] = se.transraw;
+        cacheItem["translated_view_text"] = se.transview;
+        sentenceReferenceInfoToItem(cacheItem, se, true);
+        cacheJson.push_back(std::move(cacheItem));
     }
-    if (!cacheJson.empty()) {
-        atomicOutputFile(cachePath, cacheJson.dump(2));
-    }
+    std::lock_guard<std::shared_mutex> lock(transCacheMutex);
+    atomicOutputFile(cachePath, cacheJson.dump(2));
+    savedTransCacheRelFilePaths.insert(relInputPath);
 }
 
 

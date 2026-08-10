@@ -727,8 +727,8 @@ std::string names2String(const std::vector<std::string>& names) {
         | std::ranges::to<std::string>();
 }
 
-std::string names2String(const json& j) {
-    return j | std::views::transform([](const json& item) { return item.get<std::string>(); })
+std::string names2String(const json& namesItem) {
+    return namesItem | std::views::transform([](const json& elem) { return elem.get<std::string>(); })
         | std::views::join_with('|')
         | std::ranges::to<std::string>();
 }
@@ -743,11 +743,11 @@ std::string getNameString(const Sentence& se) {
     return {};
 }
 
-std::string getNameString(const json& j) {
-    if (auto it = j.find("name"); it != j.end()) {
+std::string getNameString(const json& item) {
+    if (auto it = item.find("name"); it != item.end()) {
         return it->get<std::string>();
     }
-    else if (it = j.find("names"); it != j.end()) {
+    else if (it = item.find("names"); it != item.end()) {
         return names2String(*it);
     }
     return {};
@@ -756,6 +756,8 @@ std::string getNameString(const json& j) {
 const std::string& chooseStringRef(Sentence* sentence, CachePart target) {
     switch (target)
 	{
+    case CachePart::FileName:
+        return sentence->filename;
     case CachePart::Name:
         return sentence->name;
     case CachePart::NameTrans:
@@ -772,13 +774,16 @@ const std::string& chooseStringRef(Sentence* sentence, CachePart target) {
         return sentence->transview;
     case CachePart::None:
     default:
-        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的无效条件目标 %1")
+        throw std::runtime_error(gppTr("chooseStringRef", "无法获取字符串的条件目标 %1")
             .arg(std::to_underlying(target))
             .toStdString());
     }
 }
 
 std::string chooseString(Sentence* sentence, CachePart target) {
+    if (target == CachePart::Index) {
+        return std::to_string(sentence->index);
+    }
     return chooseStringRef(sentence, target);
 }
 
@@ -787,7 +792,7 @@ CachePart chooseCachePart(std::string_view partName) {
         return it->second;
     }
     throw std::invalid_argument(gppTr("chooseCachePart", "无效的 CachePart 名称: %1")
-        .arg(std::string(partName))
+        .arg(partName)
         .toStdString());
 }
 
@@ -809,19 +814,6 @@ ActiveWorkerGuard::~ActiveWorkerGuard()
 }
 
 
-
-bool isApiTranslationEngine(TransEngine transEngine) {
-    switch (transEngine)
-    {
-    case TransEngine::ForGalJson:
-    case TransEngine::ForGalTsv:
-    case TransEngine::ForNovelTsv:
-    case TransEngine::Sakura:
-        return true;
-    default:
-        return false;
-    }
-}
 
 PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTime defaultTime) {
     if (pluginNameLower.contains("dprerun:")) {

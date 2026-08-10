@@ -112,14 +112,14 @@
 <p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI" />
 <img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En" /></p>
 <p><strong>GalTransl++</strong> 是继承了 <a href="https://github.com/GalTransl/GalTransl">GalTransl</a>  <code>以项目为本</code>的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。</p>
-<p><strong>GalTransl++ GUI</strong> 是包装了 GalTransl++ 核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI风格的交互界面，也是本项目的重点开发对象。</p>
+<p><strong>GalTransl++ GUI</strong> 是包装了 GalTransl++ 核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI 风格的交互界面，也是本项目的重点开发对象。</p>
 <h2>✨ 特性</h2>
-<p>本项目在继承了GalTransl基本功能的基础上，包括但不限于对以下模块进行了优化：</p>
+<p>本项目在继承了 GalTransl 基本功能的基础上，包括但不限于对以下模块进行了优化：</p>
 <ul>
 <li>更好的单文件分割缓存命中</li>
 <li>连续重复块引用复用，减少重复文本反复请求</li>
 <li>可选正则形式的，高度自定义的译前译后字典和明确的优先级</li>
-<li>高度自定义的Epub提取</li>
+<li>高度自定义的 Epub 提取</li>
 <li>基于 BabelDOC 的 PDF 提取和回注</li>
 <li>OpenAI / Claude / Gemini 风格接口协议在同一 API 池中管理</li>
 <li>多 API key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置</li>
@@ -140,43 +140,43 @@
 <p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/notification.png?raw=true" alt="notification" /></p>
 <h2>📖 流程说明</h2>
 <h3>GalTransl++ 翻译流程与替换型字典介绍</h3>
-<p>对于熟悉 GalTransl 的人来说，过渡到 GalTransl++ CLI 版本可谓易如反掌，所以接下来主要讲GUI。</p>
-<p>这里还是再稍微谈一下翻译流程吧 (默认你已经读过 GalTransl 的使用说明，翻译接口什么的就略过了)。</p>
-<p>GalTransl++ 无论处理哪种文件格式，最后都是统一化为 json 来读取。</p>
+<p>对于熟悉 GalTransl 的人来说，过渡到 GalTransl++ CLI 版本可谓易如反掌，所以接下来主要讲 GUI。</p>
+<p>这里还是再稍微谈一下翻译流程吧 (默认你已经读过 GalTransl 的使用说明，翻译接口什么的基础概念就略过了)。</p>
+<p>GalTransl++ 目前无论处理哪种文件格式，最后都是统一化为 json 来读取。</p>
 <p>每个 json 文件是一个对象列表，每个对象代表一个『句子』，这是喂给AI进行翻译的基本单位。</p>
-<p>读取 json 时主要关注两个键，分别为 <code>name</code> 和 <code>message</code>，不同的翻译模式 (<code>transEngine</code>) 就是对这两个键进行各种不同的处理：</p>
+<p>读取 json 时主要关注两个键，分别为 <code>name</code> (有时是 <code>names</code>) 和 <code>message</code>，不同的翻译模式 (<code>transEngine</code>) 就是对这两个键进行各种不同的处理：</p>
 <h4>翻译模式 (transEngine)</h4>
 <ul>
-<li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向 AI 输入 TSV 格式的句子(包含 <code>name</code> 和<code>message</code>)并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。</li>
-<li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向AI输入和解析的时候都不带 <code>name</code> 键。</li>
-<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子(包含 <code>name</code> 和 <code>message</code> )并要求 AI 以 json 格式回复，程序将解析返回的 JSON。容易出现傻瓜引号解析错误的问题，建议优先使用 ForGalTsv。</li>
-<li><strong><code># Sakura</code></strong>: 实际翻译模式，向AI输入自然语言形式的句子(包含 <code>name</code> 和 <code>message</code> )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
-<li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名(已有则仅更新)。</li>
+<li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向 AI 输入 TSV 格式的句子 (包含 <code>name</code> 和 <code>message</code>) 并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。</li>
+<li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向 AI 输入和解析的时候都不带 <code>name</code> 键。</li>
+<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子 (包含 <code>name</code> 和 <code>message</code> ) 并要求 AI 以 json 格式回复，程序将解析返回的 JSON。容易出现傻瓜引号解析错误的问题，建议优先使用 ForGalTsv。</li>
+<li><strong><code># Sakura</code></strong>: 实际翻译模式，向 AI 输入自然语言形式的句子 (包含 <code>name</code> 和 <code>message</code> )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
+<li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名 (已有则仅更新)。</li>
 <li><strong><code># NameTrans</code></strong>: 翻译人名表 (如果没有则先 Dump)。</li>
-<li><strong><code># GenDict</code></strong>: 借助 AI 自动生成术语表，保存在项目文件夹下的 <code>ProjGptDict-Gen.toml</code> 中。</li>
+<li><strong><code># GenDict</code></strong>: 借助 AI 自动生成术语表，保存在项目文件夹下的 <code>ProjGptDict-Gen.toml</code> 中。由于规范要求以及我个人精力有限，翻译器中自带的字典生成很多时候并不完善，我个人习惯在字典生成后用 <code>Prompt_bak.txt</code> 中的提示词交给 codex 再处理一遍，或者你也可以用更加专业的字典生成软件。</li>
 <li><strong><code># Rebuild</code></strong>: 即使 <code>retranslKeys</code> 命中也不会重翻，只根据缓存重建结果。</li>
-<li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。</li>
+<li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如 Epub 格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。</li>
 </ul>
 <h3>缓存机制</h3>
-<p>在 <code>Rebuild</code> 中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code>文件夹中的json文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
+<p>在 <code>Rebuild</code> 中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code> 文件夹中的 json 文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
 <blockquote>
-<p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者分割数/分割方式时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++ 会尽可能在这种情况下保证原有缓存的命中(你也可以调整<code>分割缓存查找距离</code>来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
+<p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者 分割数/分割方式 时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++ 会尽可能在这种情况下保证原有缓存的命中 (你也可以调整 <code>分割缓存查找距离</code> 来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
 </blockquote>
 <p><code>retranslKeys</code> 指的是重翻关键字列表。</p>
-<p>GalTransl++会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。</p>
+<p>GalTransl++ 会在翻译时自动分析翻译时常见问题，并将问题输出到缓存中。</p>
 <p>一般情况下，如果 <code>problems</code> 中包含设定的 <code>retranslKeys</code> (当然也可以是别的什么条件)，则即使在实际翻译模式下命中缓存，这个句子依然会被重翻。所以如果只想重建缓存，要么得清空 <code>retranslKeys</code>，要么使用 <code>Rebuild</code> 模式忽略翻译。</p>
 <h3>字典系统</h3>
-<p>GalTransl++的字典分为 <strong>译前字典</strong>，<strong>GPT字典</strong>，<strong>译后字典</strong> 三大类。每类字典都有 <strong>通用</strong> 和 <strong>项目</strong> 两种。</p>
+<p>GalTransl++ 的字典分为 <strong>译前字典</strong>，<strong>GPT字典</strong>，<strong>译后字典</strong> 三大类。每类字典都有 <strong>通用</strong> 和 <strong>项目</strong> 两种。</p>
 <p>顾名思义，通用字典可以被所有项目所见，项目字典只能被当前项目所见。</p>
 <p>具体一个项目要用哪些字典，可以在项目的 <code>翻译设置-&gt;字典设置</code> 中找到对应的选项进行选择。</p>
-<p>这三类字典中，译前和译后字典为 <strong>替换型字典</strong>，GPT字典为 <strong>提示型字典</strong>。</p>
-<p>即译前和译后字典执行的是搜索替换，而 GPT字典的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。</p>
+<p>这三类字典中，译前/译后字典 为 <strong>替换型字典</strong>，GPT字典 为 <strong>提示型字典</strong>。</p>
+<p>即译前和译后字典执行的是搜索替换，而 GPT字典 的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。</p>
 <h4>GUI中的字典处理</h4>
 <ul>
 <li><p><strong>文件对应关系</strong></p>
 <ul>
 <li>通用字典可以有多个，而项目字典和人名表每个项目各只有一个。</li>
-<li>GUI会读取项目文件夹下 <code>NameTable.toml</code> 来作为 <strong>人名表</strong> 中的数据。</li>
+<li>GUI 会读取项目文件夹下 <code>NameTable.toml</code> 来作为 <strong>人名表</strong> 中的数据。</li>
 <li>读取 <code>ProjPreDict.toml</code> 来作为 <strong>项目译前字典</strong> 中的数据。</li>
 <li>读取 <code>ProjGptDict.toml</code> 和 <code>ProjGptDict-Gen.toml</code> 并合并其中的数据来作为 <strong>项目GPT字典</strong> 中的数据。</li>
 <li>读取 <code>ProjPostDict.toml</code> 来作为 <strong>项目译后字典</strong> 中的数据。</li>
@@ -200,69 +200,72 @@
 6、  如果文件支持提取 name，则可 <code>DumpName</code> 并编辑人名表，也可 <code>NameTrans</code> 翻译人名表。<br />
 7、  选用合适的实际翻译模式进行翻译。<br />
 8、  查看问题。<br />
-9、  根据问题 编辑<code>retranslKeys</code>/<code>skipProblems</code>/重建/重翻/修改缓存/...。<br />
-10、 在<code>gt_output</code>中查收结果。</p>
+9、  根据问题 编辑 <code>retranslKeys</code>/<code>skipProblems</code>/重建/重翻/修改缓存/...。<br />
+10、 在 <code>gt_output</code> 中查收结果。</p>
 <h3>缓存文件结构</h3>
 <p>GalTransl++的缓存中可能包含如下键:</p>
 <ul>
-<li><code>index</code>: 索引顺序。</li>
-<li><code>name</code>: 人名，展示的是预处理后的人名 (相当于 pre_processed_name)，如果没有则为空。 条件对象指代名 <code>name</code></li>
-<li><code>names</code>: 复数人名，仅见于部分 VNT 提出的文本中。 条件对象指代名 <code>names</code></li>
+<li><code>index</code>: 索引顺序。 条件对象指代名 <code>index</code></li>
+<li><code>name</code>: 人名，展示的是预处理后的人名 (相当于 <code>pre_processed_name</code>)。 条件对象指代名 <code>name</code></li>
+<li><code>names</code>: 复数人名，多见于部分 VNT 提出的文本中。 条件对象指代名 <code>names</code></li>
 <li><code>name_translated</code>: 将输出的译后人名。 条件对象指代名 <code>nametrans</code></li>
 <li><code>names_translated</code>: 同上。 条件对象指代名 <code>namestrans</code></li>
 <li><code>original_text</code>: 原文对照，与原文没有任何区别。 条件对象指代名 <code>orig</code></li>
-<li><code>pre_processed_text</code>: 经过一系列预处理后，即将执行AI翻译前时句子的样子。 条件对象指代名 <code>preproc</code></li>
+<li><code>pre_processed_text</code>: 经过一系列预处理后，即将执行 AI 翻译前时句子的样子。 条件对象指代名 <code>preproc</code></li>
 <li><code>other_info</code>: 其它附加信息。 条件对象指代名 <code>otherinfo</code></li>
 <li><code>problems</code>: 在自动化找错中找出的问题。 条件对象指代名 <code>problems</code></li>
-<li><code>translated_by</code>: 翻译此句子所用的 apikey 的设定模型。 条件对象指代名 <code>transby</code></li>
-<li><code>translated_raw_text</code>: AI 返回的，未经过任何后处理的句子的样子。 条件对象指代名 <code>transraw</code></li>
+<li><code>translated_by</code>: 翻译此句子所用的模型及 apikey。 条件对象指代名 <code>transby</code></li>
+<li><code>translated_raw_text</code>: AI 返回的，未经过任何后处理时句子的样子。 条件对象指代名 <code>transraw</code></li>
 <li><code>translated_view_text</code>: 经过所有后处理之后，将输出的 message。 条件对象指代名 <code>transview</code></li>
+<li><code>_gpp_ref_to</code>: 开启连续重复块引用复用时的引用信息，指明程序不会翻译该句而是会复用此键所指向句子的翻译</li>
+<li><code>_gpp_ref_by</code>: 引用信息，指明该句被哪些句子引用</li>
+<li><code>_gpp_ref_pending</code>: 引用信息，指明此句是否仍在等待 <code>_gpp_ref_to</code> 所指向句子的翻译</li>
 </ul>
-<p>开启连续重复块引用复用时，缓存或中间输出中还可能出现 <code>_gpp_ref_to</code>、<code>_gpp_ref_by</code>、<code>_gpp_ref_pending</code> 等调试/引用信息。正式输出文件不会写入这些键。</p>
+<p>条件对象还可使用 <code>filename</code>，其值为当前句子所属输入文件相对于输入目录的路径。</p>
 <h3>替换型字典语法</h3>
 <ul>
-<li><strong>译前字典</strong> 会搜索并替换 <code>original_text</code> 以输出 <code>pre_processed_text</code> 提供给AI。</li>
-<li><strong>译后字典</strong> 会搜索并替换 <code>translated_raw_text</code> 以供 <code>translated_view_text</code> 最终输出。</li>
+<li><strong>译前字典</strong> 搜索并替换 <code>pre_processed_text</code>，时机详见 <a href="#处理与翻译顺序">处理与翻译顺序</a>。</li>
+<li><strong>译后字典</strong> 搜索并替换 <code>translated_view_text</code>，时机详见 <a href="#处理与翻译顺序">处理与翻译顺序</a>。</li>
 </ul>
-<p>替换型字典的每个词条使用 <code>[[normalDict]]</code> 表示。无条件词条可以省略 <code>conditions</code>；有条件词条使用 <code>conditions</code> 表数组，每项通过 <code>conditionReg</code> 和 <code>conditionTarget</code> 指定一个条件：</p>
+<p>替换型字典的每个词条使用 <code>[[normalDict]]</code> 表示。无条件词条可以省略 <code>conditions</code>；有条件词条使用 <code>conditions</code> 表数组，每项通过 <code>conditionTarget</code> 和 <code>conditionReg</code> 指定一个条件：</p>
 <pre><code class="language-toml">[[normalDict]]
 org = '(老婆|夫人)'
 rep = '妻子'
 isReg = true
-compileModifier = 'mnS'
-replaceModifier = 'gxE'
 priority = 50
 conditions = [
-  { conditionReg = '人妻|ひとづま', conditionTarget = 'orig' },
-  { conditionReg = '母親', conditionTarget = 'prev_preproc', compileModifier = 'mnS' },
+  {conditionReg='人妻|ひとづま', conditionTarget='orig'},
+  {conditionReg='母親', conditionTarget='prev_preproc'},
 ]
 </code></pre>
 <p>同一 <code>conditions</code> 中的所有条件为隐式 AND，必须全部命中才执行词条。需要 OR 时请拆成多个词条；需要 NOT 时请直接在 <code>conditionReg</code> 中使用否定正则。</p>
-<p><code>conditionTarget</code> 可使用 <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。目标前可重复添加 <code>prev_</code> 或 <code>next_</code> 以检查相邻句，例如 <code>prev_orig</code> 和 <code>prev_prev_preproc</code>。</p>
-<p>当 <code>isReg = true</code> 时，<code>org</code> 和 <code>rep</code> 将作为正则搜索与替换表达式；词条级 <code>compileModifier</code> 控制 <code>org</code> 的编译修饰符，<code>replaceModifier</code> 控制替换修饰符。条件项也可通过 <code>compileModifier</code> 单独设置 <code>conditionReg</code> 的编译修饰符。优先级越高的词条越先执行。</p>
-<h2>⚙️ 处理与翻译顺序</h2>
-<p>1、  执行 dprerun 阶段的插件。<br />
-2、  可选: 对 <code>name</code> 执行译前字典替换 (人名表收集的也是这一步后的 <code>name</code>)。<br />
+<p><code>conditionTarget</code> 可使用 <code>index</code>, <code>filename</code>, <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。目标前可重复添加 <code>prev_</code> 或 <code>next_</code> 以检查相邻句，例如 <code>prev_orig</code> 和 <code>prev_prev_preproc</code>。</p>
+<p>出于常用性和 GUI 支持等方面的考量，条件字典不像 <code>retranslKeys</code>/<code>skipProblems</code> 那样可以外接脚本，如果有复杂的替换条件建议直接写一个自定义文本插件。</p>
+<p>当 <code>isReg = true</code> 时，<code>org</code> 和 <code>rep</code> 将作为正则搜索与替换表达式。</p>
+<p>优先级越高的词条越先执行。</p>
+<h2 id="处理与翻译顺序">⚙️ 处理与翻译顺序</h2>
+<p>1、  可选: 执行 dprerun 阶段的插件。<br />
+2、  可选: 对 <code>name</code> 执行译前字典替换 (实际上在最开始收集人名表的时候也会执行一次以收集替换后的 <code>name</code>)，只不过使用的是临时的句子结构体，无缓存信息<br />
 3、  将 <code>message</code> 中的换行统一替换为 <code>&lt;br&gt;</code>。<br />
 4、  将 <code>message</code> 中的制表符统一替换为 <code>&lt;tab&gt;</code>。<br />
 5、  可选: 对 <code>message</code> 执行译前字典替换。<br />
-6、  执行 prerun 阶段的插件。<br />
+6、  可选: 执行 prerun 阶段的插件。<br />
 7、  <strong>AI翻译</strong>。<br />
-8、  解析 <strong>翻译失败(Failed to translate)</strong> 和 <strong>GPPCProblem</strong>，如果翻译失败则不分析其它问题。<br />
-9、  执行 postrun 阶段的插件。<br />
+8、  解析 <strong>翻译失败 (Failed to translate)</strong> 和 <strong>GPPCProblem</strong>，如果翻译失败则不分析其它问题。<br />
+9、  可选: 执行 postrun 阶段的插件。<br />
 10、  可选: 对 <code>message</code> 执行译后字典替换。<br />
 11、  将 <code>message</code> 中的 <code>&lt;tab&gt;</code> 统一替换回制表符。<br />
-12、 将 <code>message</code> 中的换行从 <code>&lt;br&gt;</code> 换回原符号。<br />
-13、 可选: 对 <code>name</code> 执行GPT字典替换 (此时GPT字典将被临时视为替换型字典)。<br />
-14、 对 <code>name</code> 执行人名表替换 (人名表译名为空则忽略)。<br />
-15、 可选: 对 <code>name</code> 执行译后字典替换。<br />
-16、 执行 dpostrun 阶段的插件。<br />
-17、 问题分析。</p>
+12、  将 <code>message</code> 中的换行从 <code>&lt;br&gt;</code> 换回原符号。<br />
+13、  可选: 对 <code>name</code> 执行GPT字典替换 (此时 GPT字典 将被临时视为 <strong>替换型字典</strong>)。<br />
+14、  可选: 对 <code>name</code> 执行人名表替换 (人名表译名为空则忽略)。<br />
+15、  可选: 对 <code>name</code> 执行译后字典替换。<br />
+16、  可选: 执行 dpostrun 阶段的插件。<br />
+17、  可选: 问题分析。</p>
 <p>GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前加上 <code>(GPPCProblem:xxx)</code> 格式的句子来让模型自己添加问题</p>
 <blockquote>
-<p><strong>正则引擎说明</strong></p>
-<p>虽然GalTransl++的核心为C++编写，但由于正则引擎采用pcre2且默认使用unicode参数编译正则，所以可自定义编辑的所有正则依然默认是以字符为单位的。比如即使emoji表情'😪' 在UTF-8中占用4个字节，在正则中依然是以一个<code>.</code>来匹配的。</p>
-<p>同时也支持pcre2所支持的所有扩展正则语法，如可以使用<code>\p{P}</code>来匹配任意标点符号，<code>\p{Hangul}</code>来匹配任意韩文字符等。</p>
+<p><strong>正则引擎补充</strong></p>
+<p>虽然 GalTransl++ 的核心为 C++ 编写，但由于正则引擎采用 pcre2 且默认使用 unicode 参数编译正则，所以可自定义编辑的所有正则依然默认是以字符为单位的。比如即使 emoji 表情'😪' 在 UTF-8 中占用 4 个字节，在正则中依然是以一个 <code>.</code> 来匹配的。</p>
+<p>同时也支持 pcre2 所支持的所有扩展正则语法，如可以使用 <code>\p{P}</code> 来匹配任意标点符号，<code>\p{Hangul}</code> 来匹配任意韩文字符等。</p>
 </blockquote>
 <h2>其它翻译说明</h2>
 <details>
@@ -272,17 +275,17 @@ conditions = [
 <p>retranslKeys 语法示例</p>
 <pre><code class="language-toml"># 正则表达式列表，如果句子缓存中的某条 problem 能被以下任一正则 search 通过，则进行重翻
 # 如果想对指定原文/译文进行重翻，请通过内联表(数组)指定 conditionTarget 和 conditionReg
-# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回bool)
+# 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本 (conditionFunc 接收 Sentence，返回 bool)
 # %PROJECT_DIR% 为代表当前项目路径字符串的宏
 # conditionTarget 加前缀 prev_ 或 next_ 可表示 前/后 句，如 prev_prev_orig 表示上上句原文，如果不存在则条件失败
 retranslKeys = [
-  #[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},
-  #{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],
+  #[{conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua', conditionFunc='funcName'},
+  # {conditionScript='%PROJECT_DIR%/SampleTextPlugin.py', conditionFunc='funcName'},],
   #&quot;本有&quot;,
   #&quot;本无&quot;,
   &quot;引入繁体字&quot;,
   &quot;残留日文&quot;,
-  &quot;翻译失败&quot;, # 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]
+  &quot;翻译失败&quot;, # 等效于 [{conditionTarget='problems', conditionReg ='翻译失败'},]
 ]
 </code></pre>
 <p>skipProblems 语法示例</p>
@@ -290,12 +293,12 @@ retranslKeys = [
 # 如果想忽略指定原文/译文的指定问题，请通过内联表(数组)指定 conditionTarget 和 conditionReg
 # 并在表数组第一项填入要忽略的 problem (同样也是正则表达式)
 # 也可以指定 conditionScript 和 conditionFunc 来外接 lua/py 脚本
-# (conditionFunc 接收 Sentence 和 problem，返回bool)
+# (conditionFunc 接收 Sentence 和 problem，返回 bool)
 skipProblems = [
   #&quot;^引入拉丁字母: Live$&quot;  # 不加任何条件
   # 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem
-  # [ '引入拉丁字母', { conditionTarget = 'preproc', conditionReg = 'モチモチ'},
-  #   { conditionTarget = 'transview', conditionReg = 'Q弹'}],
+  #['引入拉丁字母', {conditionTarget='preproc', conditionReg ='モチモチ'},
+  # {conditionTarget='transview', conditionReg ='Q弹'},],
   &quot;^$&quot;,
 ]
 </code></pre>
@@ -309,19 +312,20 @@ LinebreakLost = { enable = true, base = &quot;orig&quot;, check = &quot;transvie
 LinebreakAdded = { enable = true, base = &quot;orig&quot;, check = &quot;transview&quot; }
 # ... ... ...
 </code></pre>
+<p><code>base</code> 和 <code>check</code> 可使用 <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code>。</p>
 </details>
 <details>
 <summary>
 <h3>Epub 提取与正则自定义</h3>
 </summary>
-<p>鉴于 Epub 的多样性以及 GalTransl++ 以项目为本的理念，GalTransl++的 Epub 提取并不像其它翻译器一样有固定的解析/拼装模式。</p>
-<p>GalTransl++ 将仅使用GUMBO库遍历 Epub 中的 HTML/XHTML 文件
-(epub文件本身只是一个 zip 包，你可以使用任何解压软件打开它并浏览其中的文件)，</p>
+<p>鉴于 Epub 的多样性以及 GalTransl++ 以项目为本的理念，GalTransl++ 的 Epub 提取并不像其它翻译器一样有固定的解析/拼装模式。</p>
+<p>GalTransl++ 将仅使用 <a href="https://codeberg.org/gumbo-parser/gumbo-parser">GUMBO</a> 库遍历 Epub 中的 HTML/XHTML 文件
+(Epub 文件本身只是一个 zip 包，你可以使用任何解压软件打开它并浏览其中的文件)，</p>
 <p>每个文本标签提取出的字符串都将作为一个 message。</p>
 <p>但仅仅这样会有一些明显的问题，如下面这个句子:</p>
 <pre><code>&lt;p class=&quot;class_s2C-0&quot;&gt;「モテる男は&lt;ruby&gt;&lt;rb&gt;辛&lt;/rb&gt;&lt;rt&gt;つら&lt;/rt&gt;&lt;/ruby&gt;いね」&lt;/p&gt;
 </code></pre>
-<p>它会被拆解为 <code>「モテる男は</code> <code>辛</code> <code>つら</code> <code>いね」</code> 四个部分，作为4个 message 喂给AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。</p>
+<p>它会被拆解为 <code>「モテる男は</code> <code>辛</code> <code>つら</code> <code>いね」</code> 四个部分，作为 4 个 message 喂给AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。</p>
 <p>Epub 正则设置依然使用 toml 语法解析配置，并支持两种正则写法: <strong>一般正则</strong>和<strong>回调正则</strong>。</p>
 <h4>一般正则</h4>
 <p>一般正则执行简单的匹配替换，例如使用下面的预处理正则，</p>
@@ -337,13 +341,13 @@ rep = '[$2/$1]'
 org = '\[([^/\[\]]+?)/([^/\[\]]+?)\]'
 rep = '&lt;ruby&gt;&lt;rb&gt;$2&lt;/rb&gt;&lt;rt&gt;$1&lt;/rt&gt;&lt;/ruby&gt;'
 </code></pre>
-<p>则可在理想位置还原振假名效果(可以修改提示词告诉AI注音格式[振假名/基本文本]及保留要求来达到更好的保留效果)。当然如果只想在原文中保留振假名而在译文中删去，那也很简单，直接在译前字典中再写一个去注音字典即可。其它很多自定义需求也都可借此满足。</p>
+<p>则可在理想位置还原振假名效果 (可以修改提示词告诉 AI 注音格式 <code>[振假名/基本文本]</code> 及保留要求来达到更好的保留效果)。当然如果只想在原文中保留振假名而在译文中删去，那也很简单，直接在译前字典中再写一个去注音字典即可。其它很多自定义需求也都可借此满足。</p>
 <h4>回调正则</h4>
 <p>不过如上正则仍有一些缺陷，比如这两句话:</p>
 <pre><code class="language-html">&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ&lt;span class=&quot;class_s2R&quot;&gt;!?&lt;/span&gt;」&lt;/p&gt;
 &lt;p class=&quot;class_s2C-0&quot;&gt;　二人の女の子が火花を散らす。どちらからの好意も嬉しくて、ついつい甘んじてし&lt;span id=&quot;page_8&quot;/&gt;まう。&lt;/p&gt;
 </code></pre>
-<p>假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有<code>&lt;p&gt;&lt;/p&gt;</code>标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的正则/正则组来处理这个问题，那么此时就需要使用回调正则。</p>
+<p>假如我不想一个一个文件的看标签写正则，而是想要直接『删除所有<code>&lt;p&gt;&lt;/p&gt;</code>标签内的其余标签并保留非标签部分』来快速过滤的话，面对不擅长处理嵌套的简单正则，显然我们很难写出这样的 正则/正则组 来处理这个问题，那么此时就需要使用回调正则。</p>
 <p>我们可以编写如下回调正则，</p>
 <pre><code class="language-toml">[[plugins.Epub.preprocRegex]]
 org = '(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'
@@ -368,7 +372,7 @@ org = '''(?ix)
 rep = ''
 </code></pre>
 <h5>回调正则处理流程</h5>
-<p>回调正则的语法是，处理每个匹配项中的所有捕获组，对每个捕获组使用其对应<code>group</code>的回调正则/正则组进行替换，最后将所有捕获组按顺序合并作为这个匹配项的替换字符串。</p>
+<p>回调正则的语法是，处理每个匹配项中的所有捕获组，对每个捕获组使用其对应 <code>group</code> 的回调正则/正则组进行替换，最后将所有捕获组按顺序合并作为这个匹配项的替换字符串。</p>
 <p>采用第一句话作为例子，第一句话 <code>&lt;p class=&quot;class_s2C-0&quot;&gt;「うっ、レナ&lt;span class=&quot;class_s2R&quot;&gt;!?&lt;/span&gt;」&lt;/p&gt;</code> 整句被正则 <code>'(&lt;p[^&gt;/]*&gt;)(.*?)(&lt;/p&gt;)'</code> 匹配到，则这一整句作为一个匹配项。在这个匹配项中，根据捕获组又可以分为三组(没有被分组的部分则直接忽略)：</p>
 <ul>
 <li><strong>第一组:</strong> <code>&lt;p class=&quot;class_s2C-0&quot;&gt;</code></li>
@@ -383,30 +387,30 @@ rep = ''
 <summary>
 <h3>Python 模块使用及 GPU 加速</h3>
 </summary>
-由于许多有关深度学习的库 (如分词器、PDF提取器等) 只有python能方便的调用，本程序在发行时会默认附带小型的嵌入式Python环境，你无需手动下载。
+<p>由于许多有关深度学习的库 (如分词器、PDF提取器等) 只有 Python 能方便的调用，本程序在发行时会默认附带小型的嵌入式 Python 环境，你无需手动下载。</p>
 <p>当遇到需要使用Python库的情况时 (如<strong>翻译PDF</strong>或<strong>使用依赖Python的分词器</strong>)，程序会自动为嵌入式环境下载对应的库。</p>
 <p>然而在不启用 GPU加速 的情况下使用如 <code>spaCy最好的trf模型</code> 或 <code>Stanza</code> 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。</p>
 <p><strong>请确保自己有一定的动手和思考能力 &amp;&amp; 一块还不错的显卡！</strong></p>
 <h4>为 <code>Stanza</code> 启用 GPU加速</h4>
 <ul>
-<li>1、 首先确保你安装了适配你显卡的 <strong>最新的N卡驱动</strong>，然后去<a href="https://developer.nvidia.com/cuda-toolkit-archive">NVIDIA CUDA Toolkit官网</a> <strong>选择合适的 CUDA Toolkit 版本</strong>, 下载 CUDA Toolkit Installer 并安装。
+<li>1、 首先确保你安装了适配你显卡的 <strong>最新的N卡驱动</strong>，然后去 <a href="https://developer.nvidia.com/cuda-toolkit-archive">NVIDIA CUDA Toolkit 官网</a> <strong>选择合适的 CUDA Toolkit 版本</strong>, 下载 CUDA Toolkit Installer 并安装。
 不知道怎么选 CUDA 版本的可以在 cmd 里运行</li>
 </ul>
 <pre><code class="language-cmd">nvidia-smi
 </code></pre>
 <p>以获取当前驱动最高支持的 CUDA 版本 (之所以要先更新驱动是因为不同的驱动版本所能支持的 CUDA 版本可能也会有变化)。</p>
 <ul>
-<li>2、 访问<a href="https://pytorch.org/get-started/locally/">PyTorch官网</a>，选择合适的 CUDA 版本获取安装命令。
+<li>2、 访问 <a href="https://pytorch.org/get-started/locally/">PyTorch 官网</a>，选择合适的 CUDA 版本获取安装命令。
 忘了自己电脑上装的 CUDA 是什么版本的可以运行</li>
 </ul>
 <pre><code class="language-cmd">nvcc --version
 </code></pre>
 <p>以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。</p>
 <ul>
-<li>3、 为嵌入式环境安装 PyTorch，注意启动的必须是 <strong>嵌入式环境中的 Python(之后的操作默认均在此环境中进行)</strong>。
-默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 python.exe 的<strong>绝对路径</strong>以避免与你可能安装过的 python 混淆 (pip同理，必须 env/python.exe -m pip...)。</li>
+<li>3、 为嵌入式环境安装 PyTorch，注意启动的必须是 <strong>嵌入式环境中的 Python (之后的操作默认均在此环境中进行)</strong>。
+默认目录在 <code>BaseConfig\Python-3.12.10-embed-amd64</code>，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 <code>python.exe</code> 的<strong>绝对路径</strong>以避免与你可能安装过的 Python 混淆 (pip 同理，必须 <code>env/python.exe -m pip ...</code>)。</li>
 <li>4、 比如官网给我的命令是 <code>pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 <code>python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129</code>。
-注意: 如果你已经安装了torch，最好先卸载它：<code>python -m pip uninstall torch</code></li>
+注意: 如果你已经安装了 torch，最好先卸载它：<code>python -m pip uninstall torch</code></li>
 <li>5、 重装 Stanza，<code>python -m pip uninstall stanza</code>  <code>python -m pip install stanza</code></li>
 <li>6、 尝试运行 <code>BaseConfig\PythonScripts\check_stanza_gpu.py</code>，如果提示成功，则代表所有配置均已就绪。</li>
 <li>7、 此时打开 <code>BaseConfig\PythonScripts\tokenizer_stanza.py</code> 文件，将脚本中的 GPU 开关改为 <code>True</code>，即可为 Stanza 启用 GPU加速；GPU 不可用时会直接报错。</li>
@@ -424,7 +428,7 @@ rep = ''
 <summary>
 <h3>Lua/Python 内嵌</h3>
 </summary>
-这两种语言在程序内均为热更新(只要没有被其它任务占用)，更改后重新运行即可看到新的结果。
+<p>这两种语言在程序内均为热更新 (只要没有被其它任务占用)，更改后重新运行即可看到新的结果。</p>
 <p>可以非常方便的编写自定义的 <strong>文件解析/文本处理/任务结束后处理</strong> 等脚本。</p>
 <p>具体的代码示例详见 <code>Example/LuaSample</code> 及 <code>Example/PythonSample</code>。</p>
 </details>
@@ -433,7 +437,7 @@ rep = ''
 <summary>
 <h3>自定义主页 Popular 卡片</h3>
 </summary>
-具体示例详见 (Example/)BaseConfig/GlobalConfig.toml 中的 [[popularCards]] 数组。
+<p>具体示例详见 <code>(Example/)BaseConfig/GlobalConfig.toml</code> 中的 <code>[[popularCards]]</code> 数组。</p>
 <p>卡片数组至少六个，不足六个的将使用程序默认的卡片补齐，最高不限数量。</p>
 <p>当 <code>fromLocal</code> 为 <code>true</code> 且 <code>cardPixmap</code> 为空或不存在时，将自动获取本地文件的图标进行填充。</p>
 <p>当 <code>fromLocal</code> 为 <code>true</code> 时，卡片按钮文本将变为『启动』，同时自动将 <code>pathOrUrl</code> 中的路径进行 fromLocal 转化。</p>
@@ -457,13 +461,12 @@ start /b 要运行文件的文件名
 <summary>
 <h3>快捷清屏</h3>
 </summary>
-<p>可以使用快捷键 (默认为 Ctrl+L) 清除当前日志页面的输出。<br />
-更改快捷键请手动修改 <code>BaseConfig/GlobalConfig.toml</code> 中 <code>clearLogShortcut</code> 所存储的值。</p>
+<p>可以使用快捷键 (默认为 Ctrl+L) 清除当前日志页面的输出。</p>
 </details>
 <h2>⚙️ 编译指南</h2>
-<p>详见<a href="https://github.com/julixian/GalTranslPP/blob/master/how-to-build.md" target="_blank">how-to-build.md</a></p>
+<p>详见 <a href="https://github.com/julixian/GalTranslPP/blob/master/how-to-build.md" target="_blank">how-to-build.md</a></p>
 <h2>🤝 贡献指南</h2>
-<p>GalTransl++在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加文件处理器/插件。</p>
+<p>GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加 文件处理器/插件。</p>
 <h3>添加文件处理器 (Translator)</h3>
 <p>如你所见，GalTransl++ 的接口十分简单。</p>
 <p>由于所有的文件处理器需直接/间接继承自 <code>ITranslator</code>，如无特殊情况，一般直接继承 <code>NormalJsonTranslator</code> 即可。</p>
@@ -485,7 +488,9 @@ start /b 要运行文件的文件名
 <p>由于我的开发环境（特别是构建）基本绑定 windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 winapi 数量很少也很好替换，</p>
 <p>跨平台的事我自己也是不会主动考虑的。</p>
 <p>另外由于我所使用的环境较新，也可能会有一些比较罕见的问题。</p>
-<p><del>目前已知项目依赖 <code>mecab:x64-windows</code> 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022。</del>(此问题已修复)<br />
-由于 MSVC 的 <a href="https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&amp;refTime=1777570126918&amp;refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676">bug1</a> 和 <a href="https://developercommunity.visualstudio.com/t/MSVC-1452-regression:-C2079-in-std::get/11092704">bug2</a>，目前本项目无法使用 v14.51/v14.52预览 工具集构建。</p>
+<ul>
+<li><del>目前已知项目依赖 <code>mecab:x64-windows</code> 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022。</del>(此问题已修复)</li>
+<li>由于 MSVC 的 <a href="https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&amp;refTime=1777570126918&amp;refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676">bug1</a> 和 <a href="https://developercommunity.visualstudio.com/t/MSVC-1452-regression:-C2079-in-std::get/11092704">bug2</a>，目前本项目无法使用 v14.51/v14.52 工具集构建。</li>
+</ul>
 </body>
 </html>

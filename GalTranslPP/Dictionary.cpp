@@ -331,11 +331,14 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
             if (elem.contains("conditions") && elem.at("conditions").is_array()) {
                 const auto& conditions = elem.at("conditions");
+                // 出于 常用性/GUI支持 等方面的考量
+                // 条件字典 只支持 gppCondition 而不像 retranslKeys/skipProblems 那样可以外接脚本
                 GPPCondition gppCondition = createGppCondition(conditions);
                 if (!gppCondition.empty()) {
                     entry.dictCondition = std::make_unique<CheckSeCondNormalFunc>(
-                        [condition = std::move(gppCondition)](Sentence* se) {
-                            return checkGppCondition(condition, se);
+                        [gppConditionR = std::move(gppCondition)](Sentence* se)
+                        {
+                            return checkGppCondition(gppConditionR, se);
                         });
                 }
             }
@@ -378,7 +381,7 @@ std::string NormalDictionary::doReplace(Sentence* sentence, CachePart targetToMo
     for (const NormalDictEntry& entry : m_entries
         | std::views::filter([&](const NormalDictEntry& entry_)
             {
-                return !entry_.dictCondition.operator bool() || entry_.dictCondition->operator ()(sentence);
+                return !entry_.dictCondition.operator bool() || entry_.dictCondition->operator()(sentence);
             }))
     {
         if (entry.isReg) {

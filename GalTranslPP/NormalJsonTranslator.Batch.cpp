@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 namespace py = pybind11;
 
 bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
-    int threadId, int batchIndex, int& recursionIndex, int& recursionCount)
+    int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
 {
     for (Sentence* se : batch) {
         if (se->preproc.empty()) {
@@ -62,10 +62,10 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             recursionCount += 2;
             ++recursionIndex;
             bool firstOk = translateBatch(relInputPath, firstHalf, rollingContext,
-                threadId, batchIndex, recursionIndex, recursionCount);
+                                          recursionIndex, recursionCount, threadId, batchIndex);
             ++recursionIndex;
             bool secondOk = translateBatch(relInputPath, secondHalf, rollingContext,
-                threadId, batchIndex, recursionIndex, recursionCount);
+                                           recursionIndex, recursionCount, threadId, batchIndex);
 
             return firstOk && secondOk;
         }

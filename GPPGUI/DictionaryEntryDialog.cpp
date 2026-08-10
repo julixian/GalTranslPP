@@ -44,6 +44,8 @@ namespace
     const QStringList& conditionTargets()
     {
         static const QStringList targets = {
+            "index",
+            "filename",
             "name",
             "names",
             "nametrans",

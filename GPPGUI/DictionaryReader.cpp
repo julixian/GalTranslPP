@@ -185,7 +185,8 @@ QList<NormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath
 							++condition.sentenceOffset;
 							target = target.mid(5);
 						}
-						if (target != "name" && target != "names" && target != "nametrans" && target != "namestrans"
+						if (target != "index" && target != "filename"
+							&& target != "name" && target != "names" && target != "nametrans" && target != "namestrans"
 							&& target != "orig" && target != "preproc" && target != "problems" && target != "otherinfo"
 							&& target != "transby" && target != "transraw" && target != "transview") {
 							continue;

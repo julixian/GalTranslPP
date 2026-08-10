@@ -110,11 +110,13 @@ export
 
     enum class CachePart
     { 
-        None, Name, Names, NameTrans, NamesTrans, Orig, Preproc, Problems, OtherInfo, TransBy, TransRaw, Transview
+        None, Index, FileName, Name, Names, NameTrans, NamesTrans, Orig, Preproc, Problems, OtherInfo, TransBy, TransRaw, Transview
     };
 
     absl::btree_map<std::string_view, CachePart> names2CachePart =
     {
+        { "index", CachePart::Index },
+        { "filename", CachePart::FileName },
 	    { "name", CachePart::Name },
         { "names", CachePart::Names },
         { "nametrans", CachePart::NameTrans },

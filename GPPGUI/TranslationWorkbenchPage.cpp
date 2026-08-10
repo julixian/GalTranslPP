@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QButtonGroup>
+#include <QCollator>
 #include <QDateTime>
 #include <QPainter>
 #include <QScrollBar>
@@ -625,15 +626,17 @@ void TranslationWorkbenchPage::renderFiles()
 {
     m_fileModel->clear();
     QList<GuiRuntimeFileProgress> files = m_files.values();
-    // 未完成文件排前面，文件名按 locale 排序，方便运行中扫进度。
-    std::ranges::sort(files, [](const auto& a, const auto& b)
+    QCollator collator;
+    collator.setNumericMode(true);
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+    // 始终按文件名自然排序，避免文件完成时改变位置。
+    std::ranges::sort(files, [&](const auto& a, const auto& b)
         {
-            const bool aDone = a.total > 0 && a.completed >= a.total;
-            const bool bDone = b.total > 0 && b.completed >= b.total;
-            if (aDone != bDone) {
-                return !aDone;
+            const int result = collator.compare(a.filename, b.filename);
+            if (result != 0) {
+                return result < 0;
             }
-            return a.filename.localeAwareCompare(b.filename) < 0;
+            return QString::compare(a.filename, b.filename, Qt::CaseSensitive) < 0;
         });
     for (const auto& file : files) {
         QStandardItem* item = new QStandardItem(file.filename);

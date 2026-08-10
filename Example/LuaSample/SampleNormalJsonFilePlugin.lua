@@ -10,7 +10,7 @@ local function logRelFilePaths(relFilePaths)
 end
 
 local function finishSharedPostSteps()
-    if luaTranslator.m_reuseRepeatedBlocks and utils.isApiTranslationEngine(luaTranslator.m_transEngine) then
+    if luaTranslator.m_reuseRepeatedBlocks and luaTranslator.m_transEngine ~= TransEngine.ShowNormal then
         luaTranslator:resolveRepeatedBlockReferences()
     end
     if luaTranslator.m_agentEnabled and luaTranslator.m_transAgent ~= nil then
@@ -19,18 +19,30 @@ local function finishSharedPostSteps()
 end
 
 local function processCurrentFilesWithLua()
-    local relFilePaths = luaTranslator.m_currentRunRelFilePaths
-    if relFilePaths == nil then
-        utils.logger:info("当前翻译模式不需要逐文件处理")
-        return false
+    if luaTranslator.m_transEngine == TransEngine.DumpName then
+        luaTranslator.m_controller:updateBar(luaTranslator.m_controller.m_totalSentences)
+        return
     end
 
-    -- Lua 文件插件本身不手写多线程。这里把文件表交回 C++ 线程池，
-    -- 适合只想在 Lua 中查看、筛选或重排文件顺序的情况。
+    if luaTranslator.m_transEngine == TransEngine.NameTrans then
+        luaTranslator.m_nameTranslator:run(luaTranslator.m_nameTablePath)
+        return
+    end
+
+    if luaTranslator.m_transEngine == TransEngine.GenDict then
+        luaTranslator.m_dictionaryGenerator:generate(luaTranslator.m_projectDir / "ProjGptDict-Gen.toml")
+        return
+    end
+
+    local relFilePaths = luaTranslator.m_currentRunRelFilePaths
+    if relFilePaths == nil then
+        return
+    end
+
+    -- 由于语言性质，Lua 文件插件本身无法手写多线程，只能把文件表交回 C++ 线程池。
     logRelFilePaths(relFilePaths)
     luaTranslator:normalJsonProcessFiles(relFilePaths)
     finishSharedPostSteps()
-    return true
 end
 
 function init()
@@ -43,9 +55,7 @@ function run()
     luaTranslator:normalJsonBeforeRun()
 
     local ok, err = pcall(function()
-        if not processCurrentFilesWithLua() then
-            luaTranslator:normalJsonProcess()
-        end
+        processCurrentFilesWithLua()
     end)
 
     luaTranslator:normalJsonAfterRun()

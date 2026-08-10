@@ -24,15 +24,29 @@ local function logEpubJsonInfo()
 end
 
 local function processCurrentFilesWithLua()
+    if luaTranslator.m_transEngine == TransEngine.DumpName then
+        luaTranslator.m_controller:updateBar(luaTranslator.m_controller.m_totalSentences)
+        return
+    end
+
+    if luaTranslator.m_transEngine == TransEngine.NameTrans then
+        luaTranslator.m_nameTranslator:run(luaTranslator.m_nameTablePath)
+        return
+    end
+
+    if luaTranslator.m_transEngine == TransEngine.GenDict then
+        luaTranslator.m_dictionaryGenerator:generate(luaTranslator.m_projectDir / "ProjGptDict-Gen.toml")
+        return
+    end
+
     local relFilePaths = luaTranslator.m_currentRunRelFilePaths
     if relFilePaths == nil then
-        utils.logger:info("当前 EPUB 翻译模式不需要逐文件处理")
         return
     end
 
     luaTranslator:normalJsonProcessFiles(relFilePaths)
 
-    if luaTranslator.m_reuseRepeatedBlocks and utils.isApiTranslationEngine(luaTranslator.m_transEngine) then
+    if luaTranslator.m_reuseRepeatedBlocks and luaTranslator.m_transEngine ~= TransEngine.ShowNormal then
         luaTranslator:resolveRepeatedBlockReferences()
     end
     if luaTranslator.m_agentEnabled and luaTranslator.m_transAgent ~= nil then

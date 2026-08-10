@@ -688,6 +688,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 
 	lua.newEnum("CachePart",
 		"None", CachePart::None,
+		"Index", CachePart::Index,
+		"FileName", CachePart::FileName,
 		"Name", CachePart::Name,
 		"NameTrans", CachePart::NameTrans,
 		"Names", CachePart::Names,
@@ -1066,10 +1068,15 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_nameMap) value)
 			{ self.m_nameMap = std::move(value); }),
 		"m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths,
+		"m_savedTranslCacheRelFilePaths", lua_binding::property(
+			[](NormalJsonTranslator& self) { return self.m_savedTranslCacheRelFilePaths; },
+			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_savedTranslCacheRelFilePaths) value)
+			{ self.m_savedTranslCacheRelFilePaths = std::move(value); }),
 		"m_repeatedBlockCompletedRelFilePaths", lua_binding::property(
 			[](NormalJsonTranslator& self) { return self.m_repeatedBlockCompletedRelFilePaths; },
 			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_repeatedBlockCompletedRelFilePaths) value)
 			{ self.m_repeatedBlockCompletedRelFilePaths = std::move(value); }),
+		"m_repeatedBlockReferenceCount", &NormalJsonTranslator::m_repeatedBlockReferenceCount,
 		"m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed,
 		"m_onPerformApi", &NormalJsonTranslator::m_onPerformApi,
 		"m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed,
@@ -1191,7 +1198,6 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	utilsTable["extractHangul"] = &extractHangul;
 	utilsTable["extractCJK"] = &extractCJK;
 	utilsTable["getTraditionalChineseExtractor"] = &getTraditionalChineseExtractor;
-	utilsTable["isApiTranslationEngine"] = &isApiTranslationEngine;
 	utilsTable["executeCommand"] = [](std::string_view program, std::string_view args, std::optional<bool> showWindow, std::optional<int> timeDelayAfterCommand)
 		{
 			return executeCommand(ascii2Wide(program), ascii2Wide(args), showWindow.value_or(true), timeDelayAfterCommand.value_or(5));

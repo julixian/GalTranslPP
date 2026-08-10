@@ -65,6 +65,7 @@ export
             bool smartRetry,
             bool checkQuota,
             std::shared_mutex& transCacheMutex,
+            const absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
             const std::vector<fs::path>& knownRelFiles,
             const std::vector<fs::path>& gptDictionaryPaths,
             const std::optional<fs::path>& agentProjectNotePath,
@@ -127,6 +128,7 @@ export
         bool m_smartRetry = true;
         bool m_checkQuota = true;
         std::shared_mutex& m_transCacheMutex;
+        const absl::flat_hash_set<fs::path>& m_savedTranslCacheRelFilePaths;
         std::mutex m_stateMutex;
         json m_termLedgerCache = json::object();
         std::mutex m_fileNotesMutex;

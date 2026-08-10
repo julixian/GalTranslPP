@@ -38,13 +38,31 @@ def run() -> None:
 
 
 def processCurrentFilesWithPythonThreads() -> None:
-    relFilePaths = pythonTranslator.m_currentRunRelFilePaths
-    if relFilePaths is None:
-        logger.info("当前翻译模式不需要逐文件处理")
+    controller = pythonTranslator.m_controller
+
+    if pythonTranslator.m_transEngine == gpp.TransEngine.DumpName:
+        controller.updateBar(controller.m_totalSentences)
         return
 
-    controller = pythonTranslator.m_controller
-    maxWorkers = max(1, min(pythonTranslator.m_threadsNum, len(relFilePaths)))
+    if pythonTranslator.m_transEngine == gpp.TransEngine.NameTrans:
+        nameTranslator = pythonTranslator.m_nameTranslator
+        if nameTranslator is None:
+            raise RuntimeError("NameTranslator 未创建")
+        nameTranslator.run(pythonTranslator.m_nameTablePath)
+        return
+
+    if pythonTranslator.m_transEngine == gpp.TransEngine.GenDict:
+        dictionaryGenerator = pythonTranslator.m_dictionaryGenerator
+        if dictionaryGenerator is None:
+            raise RuntimeError("DictionaryGenerator 未创建")
+        dictionaryGenerator.generate(pythonTranslator.m_projectDir / "ProjGptDict-Gen.toml")
+        return
+
+    relFilePaths = pythonTranslator.m_currentRunRelFilePaths
+    if relFilePaths is None:
+        return
+
+    maxWorkers = min(pythonTranslator.m_threadsNum, len(relFilePaths))
 
     nextFileIndex = 0
     nextFileIndexLock = threading.Lock()
@@ -81,7 +99,8 @@ def processCurrentFilesWithPythonThreads() -> None:
     if errors:
         raise errors[0]
 
-    if pythonTranslator.m_reuseRepeatedBlocks:
+    if (pythonTranslator.m_reuseRepeatedBlocks
+            and pythonTranslator.m_transEngine != gpp.TransEngine.ShowNormal):
         pythonTranslator.resolveRepeatedBlockReferences()
     if pythonTranslator.m_agentEnabled and pythonTranslator.m_transAgent is not None:
         pythonTranslator.m_transAgent.applyAgentSuggestions()

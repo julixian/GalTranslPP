@@ -154,7 +154,7 @@ export
 
 
     std::string getNameString(const Sentence& se);
-    std::string getNameString(const json& j);
+    std::string getNameString(const json& item);
 
     const std::string& chooseStringRef(Sentence* sentence, CachePart target);
     std::string chooseString(Sentence* sentence, CachePart target);
@@ -173,7 +173,6 @@ export
         std::shared_ptr<IController> m_controller;
     };
 
-    bool isApiTranslationEngine(TransEngine transEngine);
     PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTime defaultTime);
     void waitForThreads(const std::shared_ptr<IController>& controller, ctpl::thread_pool& pool, std::vector<std::future<void>>& results);
 

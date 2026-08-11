@@ -132,8 +132,8 @@ export
         absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
         std::shared_mutex& transCacheMutex);
 
-    std::vector<ordered_json> splitJsonArrayNum(const ordered_json& originalData, int chunkSize);
-    std::vector<ordered_json> splitJsonArrayEqual(const ordered_json& originalData, int numParts);
+    std::vector<ordered_json> splitJsonArrayNum(ordered_json originalData, int chunkSize);
+    std::vector<ordered_json> splitJsonArrayEqual(ordered_json originalData, int numParts);
 
     int getSplittedFileIndex(const std::wstring& path);
     int calculateCachePartIndexDiff(const std::wstring& path1, const std::wstring& path2);

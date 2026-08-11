@@ -191,6 +191,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
     int nextTokenId = 1;
 
     for (const auto& [relFilePath, data] : filesWithData) {
+        const std::string relFileName = wide2Ascii(relFilePath);
         for (const auto& [index, item] : data | std::views::enumerate) {
             const std::string sentenceKey = buildRepeatedBlockSentenceKey(item);
             const auto [it, inserted] = tokenIds.emplace(sentenceKey, nextTokenId);
@@ -198,7 +199,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
                 ++nextTokenId;
             }
             tokens.push_back(it->second);
-            positions.push_back({ wide2Ascii(relFilePath), (int)index });
+            positions.push_back({ relFileName, (int)index });
         }
     }
 
@@ -289,8 +290,9 @@ void addReferenceInfoToInputJson(
     const RepeatedBlockReferenceMap& references
 )
 {
+    const std::string relFileName = wide2Ascii(relFilePath);
     for (auto [index, item] : data | std::views::enumerate) {
-        const SentencePosition position{ wide2Ascii(relFilePath), (int)index };
+        const SentencePosition position{ relFileName, (int)index };
         if (const auto it = references.targetToSourceMap.find(position); it != references.targetToSourceMap.end()) {
             item["_gpp_ref_to"] = sentencePositionToJson<ordered_json>(it->second);
         }
@@ -847,28 +849,36 @@ void saveTranslCache(
 }
 
 
-std::vector<ordered_json> splitJsonArrayNum(const ordered_json& originalData, int chunkSize) {
-    if (chunkSize <= 1 || originalData.empty()) {
-        return { originalData };
-    }
+std::vector<ordered_json> splitJsonArrayNum(ordered_json originalData, int chunkSize) {
     std::vector<ordered_json> parts;
+    if (chunkSize <= 1 || originalData.empty()) {
+        parts.emplace_back(std::move(originalData));
+        return parts;
+    }
     parts.reserve((originalData.size() + chunkSize - 1) / chunkSize);
-    const size_t totalSize = originalData.size();
+    auto& originalArray = originalData.get_ref<ordered_json::array_t&>();
+    const size_t totalSize = originalArray.size();
     for (size_t i = 0; i < totalSize; i += chunkSize) {
         const size_t end = std::min(i + chunkSize, totalSize);
-        parts.emplace_back(originalData.begin() + i, originalData.begin() + end);
+        parts.emplace_back(ordered_json::array());
+        auto& partArray = parts.back().get_ref<ordered_json::array_t&>();
+        partArray.insert(partArray.end(),
+            std::make_move_iterator(originalArray.begin() + i),
+            std::make_move_iterator(originalArray.begin() + end));
     }
     return parts;
 }
 
 
-std::vector<ordered_json> splitJsonArrayEqual(const ordered_json& originalData, int numParts) {
-    if (numParts == 1 || originalData.empty()) {
-        return { originalData };
-    }
+std::vector<ordered_json> splitJsonArrayEqual(ordered_json originalData, int numParts) {
     std::vector<ordered_json> parts;
+    if (numParts == 1 || originalData.empty()) {
+        parts.emplace_back(std::move(originalData));
+        return parts;
+    }
     parts.reserve(numParts);
-    const size_t totalSize = originalData.size();
+    auto& originalArray = originalData.get_ref<ordered_json::array_t&>();
+    const size_t totalSize = originalArray.size();
     const size_t partSize = totalSize / numParts;
     const size_t remainder = totalSize % numParts;
     size_t currentIndex = 0;
@@ -877,7 +887,11 @@ std::vector<ordered_json> splitJsonArrayEqual(const ordered_json& originalData, 
         if (currentPartSize == 0) {
             continue;
         }
-        parts.emplace_back(originalData.begin() + currentIndex, originalData.begin() + currentIndex + currentPartSize);
+        parts.emplace_back(ordered_json::array());
+        auto& partArray = parts.back().get_ref<ordered_json::array_t&>();
+        partArray.insert(partArray.end(),
+            std::make_move_iterator(originalArray.begin() + currentIndex),
+            std::make_move_iterator(originalArray.begin() + currentIndex + currentPartSize));
         currentIndex += currentPartSize;
     }
     return parts;

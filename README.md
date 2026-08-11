@@ -3,7 +3,7 @@
 ![GalTransl++ GUI](images/GalTranslPP.png?raw=true)
 ![GalTransl++ GUI En](images/GalTranslPP_en.png?raw=true)
 
-**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量Gal补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。
+**GalTransl++** 是继承了 [GalTransl](https://github.com/GalTransl/GalTransl)  `以项目为本`的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量 Gal 补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。
 
 **GalTransl++ GUI** 是包装了 GalTransl++ 核心的，以 `在GUI下尽可能保持高度自定义` 为目标的，Fluent UI 风格的交互界面，也是本项目的重点开发对象。
 
@@ -16,16 +16,16 @@
 * 可选正则形式的，高度自定义的译前译后字典和明确的优先级
 * 高度自定义的 Epub 提取
 * 基于 BabelDOC 的 PDF 提取和回注
-* OpenAI / Claude / Gemini 风格接口协议在同一 API 池中管理
-* 多 API key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置
+* OpenAI / Claude / Gemini 风格接口协议在同一 Api 池中管理
+* 多 Api key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置
 * Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文
-* 有效的 API 额度耗尽检测
+* 有效的 Api 额度耗尽检测
 * 卡片弹出式的完成提示 (仅GUI)
 * 更好的字典未使用检测
 * 可自定义的符号检测
 * 单独生成用以检查的预处理结果
 * 统合生成的翻译问题概览
-* 速度更快的Rebuild
+* 速度更快的 Rebuild
 * 更加方便的提示词自定义
 * 更清晰的字典使用设定
 * 重翻时附带已知问题
@@ -57,7 +57,7 @@ GalTransl++ 目前无论处理哪种文件格式，最后都是统一化为 json
 * **`# Sakura`**: 实际翻译模式，向 AI 输入自然语言形式的句子 (包含 `name` 和 `message` )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。
 * **`# DumpName`**: 提取所有的 `name` 键，在项目文件夹下生成 `NameTable.toml` 以供统一替换人名 (已有则仅更新)。
 * **`# NameTrans`**: 翻译人名表 (如果没有则先 Dump)。
-* **`# GenDict`**: 借助 AI 自动生成术语表，保存在项目文件夹下的 `ProjGptDict-Gen.toml` 中。由于规范要求以及我个人精力有限，翻译器中自带的字典生成很多时候并不完善，我个人习惯在字典生成后用 `Prompt_bak.txt` 中的提示词交给 codex 再处理一遍，或者你也可以用更加专业的字典生成软件。
+* **`# GenDict`**: 借助 AI 自动生成术语表，保存在项目文件夹下的 `ProjGptDict-Gen.toml` 中。由于规范要求以及我个人精力有限，翻译器中自带的字典生成很多时候并不完善。我个人习惯在字典生成后用 `Prompt_bak.txt` 中的提示词交给 codex 再处理一遍，或者你也可以用更加专业的字典生成软件如 [暴力喵喵](https://github.com/miaomiao0721/baolimiaomiao.git) 或 [KeywordGacha](https://github.com/neavo/KeywordGacha)。
 * **`# Rebuild`**: 即使 `retranslKeys` 命中也不会重翻，只根据缓存重建结果。
 * **`# ShowNormal`**: 保存预处理后的内容及句子到项目文件夹下带 `show_normal` 字段的文件夹中，如 Epub 格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。
 
@@ -82,9 +82,9 @@ GalTransl++ 的字典分为 **译前字典**，**GPT字典**，**译后字典** 
 具体一个项目要用哪些字典，可以在项目的 `翻译设置->字典设置` 中找到对应的选项进行选择。
 
 
-这三类字典中，译前/译后字典 为 **替换型字典**，GPT字典 为 **提示型字典**。
+这三类字典中，**译前字典** 和 **译后字典** 为 **替换型字典**，**GPT字典** 为 **提示型字典**。
 
-即译前和译后字典执行的是搜索替换，而 GPT字典 的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。
+即译前和译后字典执行的是搜索替换，而 **GPT字典** 的作用仅在于当原文中出现字典里的词时，将该条字典作为附加部分一并喂给 AI 以规范翻译，那至于 AI 想不想用，用成什么样，就不是程序能管得到的了。
 
 
 #### GUI中的字典处理
@@ -98,7 +98,7 @@ GalTransl++ 的字典分为 **译前字典**，**GPT字典**，**译后字典** 
 
 * **编辑模式与保存逻辑**
   * 人名表和字典都分别有 **纯文本模式** 和 **表模式**，具体在翻译时用哪个模式的数据会在你按开始翻译按钮时决定。
-  * 例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 **人名表(表模式)** 中的数据保存到 `NameTable.toml` 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
+  * 例如，你在按开始翻译按钮时，人名表是以表模式显示的，则会先将 **人名表 (表模式)** 中的数据保存到 `NameTable.toml` 中，然后再执行翻译。如果在纯文本模式下没有按 toml 格式来编辑，翻译时肯定会报错。
   * 按 **刷新** 将会重新从项目文件夹中的 toml 文件读取数据。如果你在 GUI 中还有修改了没有保存的数据，请务必先确认备份情况再刷新。
   * 按 **保存** 会在保存的同时刷新另一模式的数据。比如在纯文本模式中编辑后按下保存，则此时表模式也会更新刚刚编辑过的内容。另外，保存 **项目GPT字典** 时会 **删除**  `ProjGptDict-Gen.toml` 以防止数据重复，请务必注意。最好的实践是生成后立即保存，不要编辑 `ProjGptDict-Gen.toml`。
 
@@ -135,12 +135,10 @@ GalTransl++的缓存中可能包含如下键:
 * `_gpp_ref_by`: 引用信息，指明该句被哪些句子引用
 * `_gpp_ref_pending`: 引用信息，指明此句是否仍在等待 `_gpp_ref_to` 所指向句子的翻译
 
-条件对象还可使用 `filename`，其值为当前句子所属输入文件相对于输入目录的路径。
-
 ### 替换型字典语法
 
-* **译前字典** 搜索并替换 `pre_processed_text`，时机详见 [处理与翻译顺序](⚙️ 处理与翻译顺序)。
-* **译后字典** 搜索并替换 `translated_view_text`，时机详见 [处理与翻译顺序](⚙️ 处理与翻译顺序)。
+* **译前字典** 搜索并替换 `pre_processed_text`，时机详见 [处理与翻译顺序](#⚙️处理与翻译顺序)。
+* **译后字典** 搜索并替换 `translated_view_text`，时机详见 [处理与翻译顺序](#⚙️处理与翻译顺序)。
 
 替换型字典的每个词条使用 `[[normalDict]]` 表示。无条件词条可以省略 `conditions`；有条件词条使用 `conditions` 表数组，每项通过 `conditionTarget` 和 `conditionReg` 指定一个条件：
 
@@ -200,7 +198,7 @@ GPPCProblem: 通过 Prompt 让模型在翻译可疑句子时在译文结果前�
 
 <summary>
 
-### 问题分析 语法示例:
+### retranslKeys/skipProblems/问题开关与比较对象设定 语法示例:
 
 </summary>
 
@@ -275,7 +273,7 @@ GalTransl++ 将仅使用 [GUMBO](https://codeberg.org/gumbo-parser/gumbo-parser)
 ```
 <p class="class_s2C-0">「モテる男は<ruby><rb>辛</rb><rt>つら</rt></ruby>いね」</p>
 ```
-它会被拆解为 `「モテる男は` `辛` `つら` `いね」` 四个部分，作为 4 个 message 喂给AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。
+它会被拆解为 `「モテる男は` `辛` `つら` `いね」` 四个部分，作为 4 个 message 喂给 AI，这显然不是我们想要的。如果使用固定的 html 解析方法或固定的正则组进行提取，要么会丢失信息，要么提取的比较稀碎，总之很抽奖且上限已被定死，最后输出的效果理想与否完全取决于程序的解析与拼装模式是否正好符合用户的预期。所以 GalTransl++ 选择让用户根据自己的项目自行利用正则构建解析模式，这显然增长了一些门槛，不过作为回报大幅提升了自由度。
 
 Epub 正则设置依然使用 toml 语法解析配置，并支持两种正则写法: **一般正则**和**回调正则**。
 
@@ -362,17 +360,17 @@ rep = ''
 
 </summary>
 
-由于许多有关深度学习的库 (如分词器、PDF提取器等) 只有 Python 能方便的调用，本程序在发行时会默认附带小型的嵌入式 Python 环境，你无需手动下载。
+由于许多有关深度学习的库 (如**分词器**、**PDF提取器**等) 只有 Python 能方便的调用，本程序在发行时会默认附带小型的嵌入式 Python 环境，你无需手动下载。
 
 当遇到需要使用Python库的情况时 (如**翻译PDF**或**使用依赖Python的分词器**)，程序会自动为嵌入式环境下载对应的库。
 
-然而在不启用 GPU加速 的情况下使用如 `spaCy最好的trf模型` 或 `Stanza` 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。
+然而在不启用 GPU加速 的情况下使用如 `spaCy 最好的 trf 模型` 或 `Stanza` 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。
 
-**请确保自己有一定的动手和思考能力 && 一块还不错的显卡！**
+**请确保自己有一定的动手和思考能力 && 一块还不错的 NVIDIA 显卡！**
 
-#### 为 `Stanza` 启用 GPU加速
+#### 为 `spaCy` 启用 GPU加速
 
-- 1、 首先确保你安装了适配你显卡的 **最新的N卡驱动**，然后去 [NVIDIA CUDA Toolkit 官网](https://developer.nvidia.com/cuda-toolkit-archive) **选择合适的 CUDA Toolkit 版本**, 下载 CUDA Toolkit Installer 并安装。
+- 1、 首先确保你安装了适配你显卡的 **最新的 NVIDIA 显卡驱动**，然后去 [NVIDIA CUDA Toolkit 官网](https://developer.nvidia.com/cuda-toolkit-archive) **选择合适的 CUDA Toolkit 版本**, 下载 CUDA Toolkit Installer 并安装。
 不知道怎么选 CUDA 版本的可以在 cmd 里运行
 ```cmd
 nvidia-smi
@@ -386,19 +384,18 @@ nvcc --version
 以获取当前系统的 CUDA 版本，一般都向后兼容，选哪个问题都不大。
 - 3、 为嵌入式环境安装 PyTorch，注意启动的必须是 **嵌入式环境中的 Python (之后的操作默认均在此环境中进行)**。
 默认目录在 `BaseConfig\Python-3.12.10-embed-amd64`，请在此目录下打开 cmd 或在 cmd 每次执行命令时输入此环境的 `python.exe` 的**绝对路径**以避免与你可能安装过的 Python 混淆 (pip 同理，必须 `env/python.exe -m pip ...`)。
-- 4、 比如官网给我的命令是 `pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu129`，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 `python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu129`。
-注意: 如果你已经安装了 torch，最好先卸载它：`python -m pip uninstall torch`
-- 5、 重装 Stanza，`python -m pip uninstall stanza`  `python -m pip install stanza`
-- 6、 尝试运行 `BaseConfig\PythonScripts\check_stanza_gpu.py`，如果提示成功，则代表所有配置均已就绪。
-- 7、 此时打开 `BaseConfig\PythonScripts\tokenizer_stanza.py` 文件，将脚本中的 GPU 开关改为 `True`，即可为 Stanza 启用 GPU加速；GPU 不可用时会直接报错。
+- 4、 比如官网给我的命令是 `pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu132`，那我就可以在如上目录中打开 cmd (直接在路径栏输入 cmd 后回车)并运行 `python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu132`。
+- 5、 先卸载旧的 spaCy (如果安装过的话)，`python -m pip uninstall spacy`，并确保此环境中没有安装 `cupy`。
+- 6、 根据自己的 CUDA 版本 (获取 CUDA 版本方式见第二条)，安装 `cupy` 的特定版本，如 `cupy-cuda13x`: `python -m pip install cupy-cuda13x`，然后再把 spaCy 装回来 `python -m pip install spacy`。
+- 7、 尝试运行 `BaseConfig\PythonScripts\check_spacy_gpu.py`，如果提示成功，则代表所有配置均已就绪。
+- 8、 此时打开 `BaseConfig\PythonScripts\tokenizer_spacy.py` 文件，将 `USE_GPU = False` 改为 `USE_GPU = True`，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。
 
-#### 为 `spaCy` 启用 GPU加速
+#### 为 `Stanza` 启用 GPU加速
 
-- 1、 同 Stanza 第一条 至 第四条。
-- 2、 在 **嵌入式 Python环境 (详见 Stanza 第三条) 中** 重新安装 spacy。`python -m pip uninstall spacy`，并确保此环境中没有安装 `cupy`。
-- 3、 根据自己的 CUDA 版本(查看 Stanza 第二条以查看如何获取 CUDA 版本)，安装 `cupy` 的特定版本，如 `cupy-cuda13x`: `python -m pip install cupy-cuda13x`，然后再把 spacy 装回来 `python -m pip install spacy`。
-- 4、 尝试运行 `BaseConfig\PythonScripts\check_spacy_gpu.py`，如果提示成功，则代表所有配置均已就绪。
-- 5、 此时打开 `BaseConfig\PythonScripts\tokenizer_spacy.py` 文件，将 `USE_GPU = False` 改为 `USE_GPU = True`，即可为 spaCy 启用 GPU 加速；GPU 不可用时会直接报错。
+- 1、 同 spaCy 第一至四条。
+- 2、 在 **嵌入式 Python 环境 (详见 spaCy 第三条) 中** 重新安装 Stanza，`python -m pip uninstall stanza`，`python -m pip install stanza`。
+- 3、 尝试运行 `BaseConfig\PythonScripts\check_stanza_gpu.py`，如果提示成功，则代表所有配置均已就绪。
+- 4、 此时打开 `BaseConfig\PythonScripts\tokenizer_stanza.py` 文件，将脚本中的 GPU 开关改为 `True`，即可为 Stanza 启用 GPU加速；GPU 不可用时会直接报错。
 
 </details>
 
@@ -428,7 +425,7 @@ nvcc --version
 
 </summary>
 
-具体示例详见 `(Example/)BaseConfig/GlobalConfig.toml` 中的 \[\[popularCards\]\] 数组。
+具体示例详见 `(Example/)BaseConfig/GlobalConfig.toml` 中的 `[[popularCards]]` 数组。
 
 卡片数组至少六个，不足六个的将使用程序默认的卡片补齐，最高不限数量。
 
@@ -481,7 +478,7 @@ GUI 界面所有的以标签页形式呈现的字典、人名表、提示词等�
 
 ## 🤝 贡献指南
 
-GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加 文件处理器/插件。
+GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的 bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加 文件处理器/插件。
 
 ### 添加文件处理器 (Translator)
 
@@ -516,7 +513,7 @@ GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排�
 
 ### 其它注意事项
 
-由于我的开发环境（特别是构建）基本绑定 windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 winapi 数量很少也很好替换，
+由于我的开发环境（特别是构建）基本绑定 Windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 WinApi 数量很少也很好替换，
 
 跨平台的事我自己也是不会主动考虑的。
 

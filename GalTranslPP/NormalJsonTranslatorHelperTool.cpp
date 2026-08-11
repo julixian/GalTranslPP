@@ -173,9 +173,7 @@ namespace
                 continue;
             }
             std::vector<SentencePosition>& targets = references.sourceToTargetsMap[source];
-            if (!std::ranges::contains(targets, target)) {
-                targets.push_back(target);
-            }
+            targets.push_back(target);
         }
     }
 }
@@ -231,7 +229,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
         };
 
     absl::flat_hash_map<uint64_t, std::vector<int>> sourceByBlockHash;
-    absl::flat_hash_set<int> referencedPositions;
+    std::vector<uint8_t> referencedPositions(tokens.size(), 0);
 
     for (const RepeatedBlockOccurrence& occurrence : occurrences) {
         if (occurrence.start + minBlockSize > (int)tokens.size()) {
@@ -263,7 +261,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
 
         bool overlapsExistingReference = false;
         for (int offset = 0; offset < length; ++offset) {
-            if (referencedPositions.contains(occurrence.start + offset)) {
+            if (referencedPositions[occurrence.start + offset] != 0) {
                 overlapsExistingReference = true;
                 break;
             }
@@ -277,7 +275,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
             const SentencePosition target = positions[occurrence.start + offset];
             references.targetToSourceMap[target] = source;
             references.sourceToTargetsMap[source].push_back(target);
-            referencedPositions.insert(occurrence.start + offset);
+            referencedPositions[occurrence.start + offset] = 1;
         }
     }
 

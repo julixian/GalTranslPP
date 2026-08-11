@@ -22,7 +22,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "4. CachePart 新增 Index 和 FileName，对应条件对象指代名 index 和 filename",
         "5. 翻译中途暂停的情况下 问题概览/Agent建议 将仅输出保存过缓存的文件中的问题，不再一并输出旧缓存问题",
 		"6. Py/Lua 接口细节变更",
-        "7. [GUI] 翻译过程中文件进度中的卡片顺序现在会保持固定了",
+        "7. 优化性能",
+        "8. [GUI] 翻译过程中文件进度中的卡片顺序现在会保持固定了",
     };
 
     mainLayout->addWidget(updateTitle);

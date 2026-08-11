@@ -56,20 +56,27 @@ ordered_json buildProblemOverviewFromCache(
 
 void NormalJsonTranslator::normalJsonBeforeRun()
 {
-    if (fs::exists(m_transCacheDir)) {
-        try {
-            fs::copy(
-                m_transCacheDir,
-                m_transCacheDir.parent_path() / (m_transCacheDir.filename().wstring() + L"_bak"),
-                fs::copy_options::recursive | fs::copy_options::overwrite_existing
-            );
-        }
-        catch (const fs::filesystem_error& e) {
-            m_logger->error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "复制缓存文件夹时出现异常: %1")
-                .arg(e.what())
-                .toStdString());
-        }
-    }
+    std::jthread backupThread = [&]()
+	    {
+            if (fs::exists(m_transCacheDir)) {
+                return std::jthread([&]()
+                    {
+                        try {
+                            fs::copy(
+                                m_transCacheDir,
+                                m_transCacheDir.parent_path() / (m_transCacheDir.filename().wstring() + L"_bak"),
+                                fs::copy_options::recursive | fs::copy_options::overwrite_existing
+                            );
+                        }
+                        catch (const fs::filesystem_error& e) {
+                            m_logger->error(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "复制缓存文件夹时出现异常: %1")
+                                .arg(e.what())
+                                .toStdString());
+                        }
+                    });
+            }
+            return std::jthread{};
+        }();
 
     for (const auto& dir : { m_inputDir, m_outputDir, m_transCacheDir }) {
         if (!fs::exists(dir)) {
@@ -93,7 +100,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
     std::ifstream ifs;
     std::ofstream ofs;
 
-
+    m_logger->info("test1");
     // 扫描输入、校验 message 字段，并更新项目人名表。
     {
         int totalSentences = 0;
@@ -206,6 +213,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             return;
         }
     }
+    m_logger->info("test2");
 
     // 人名翻译模式。
     if (m_transEngine == TransEngine::NameTrans) {
@@ -693,7 +701,8 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
             atomicOutputFile(ofs, cachePath, bundle.cache.dump(2));
         }
 
-        if (!m_repeatedBlockCompletedRelFilePaths.contains(relFilePath)) {
+        const auto it = m_repeatedBlockCompletedRelFilePaths.find(relFilePath);
+        if (it == m_repeatedBlockCompletedRelFilePaths.end()) {
             continue;
         }
 
@@ -708,7 +717,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
                 "文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出")
                 .arg(wide2Ascii(relFilePath))
                 .toStdString());
-            m_repeatedBlockCompletedRelFilePaths.erase(relFilePath);
+            m_repeatedBlockCompletedRelFilePaths.erase(it);
             continue;
         }
 

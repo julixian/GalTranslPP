@@ -94,7 +94,7 @@ export
     }
 
     RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
-        const std::vector<std::pair<fs::path, ordered_json>>& filesWithData,
+        const std::vector<std::pair<fs::path, ordered_json*>>& filesWithData,
         int minBlockSize
     );
 
@@ -129,7 +129,7 @@ export
         const std::vector<Sentence>& sentences,
         const fs::path& cachePath,
         const fs::path& relInputPath,
-        absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+        absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
         std::shared_mutex& transCacheMutex);
 
     std::vector<ordered_json> splitJsonArrayNum(ordered_json originalData, int chunkSize);

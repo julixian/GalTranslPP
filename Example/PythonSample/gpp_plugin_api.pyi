@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Any, Callable, Sequence
 
 PathLike = str | Path
 NLPPair = tuple[str, str]
@@ -18,6 +18,7 @@ PathPathMap = dict[Path, Path]
 PathBoolMap = dict[Path, bool]
 PathPathBoolMap = dict[Path, PathBoolMap]
 PathJsonInfoMap = dict[Path, "JsonInfo"]
+PathJsonMap = dict[Path, Any]
 
 
 class NameType(Enum):
@@ -365,7 +366,8 @@ class NormalJsonTranslator(ITranslator):
     m_agentProjectNotePath: Path | None
     m_nameMap: StringStringMap
     m_currentRunRelFilePaths: list[Path] | None
-    m_savedTranslCacheRelFilePaths: set[Path]
+    m_inputJsonMap: PathJsonMap
+    m_savedTranslCacheMap: PathJsonMap
     m_repeatedBlockCompletedRelFilePaths: set[Path]
     m_repeatedBlockReferenceCount: int
     m_onFileProcessed: Callable[[Path], None] | None

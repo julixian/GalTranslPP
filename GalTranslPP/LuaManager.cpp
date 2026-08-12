@@ -1068,10 +1068,26 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_nameMap) value)
 			{ self.m_nameMap = std::move(value); }),
 		"m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths,
-		"m_savedTranslCacheRelFilePaths", lua_binding::property(
-			[](NormalJsonTranslator& self) { return self.m_savedTranslCacheRelFilePaths; },
-			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_savedTranslCacheRelFilePaths) value)
-			{ self.m_savedTranslCacheRelFilePaths = std::move(value); }),
+		"m_savedTranslCacheMap", lua_binding::property(
+			[luaState](NormalJsonTranslator& self)
+			{
+				luabridge::LuaRef result = luabridge::LuaRef::newTable(luaState);
+				for (const auto& [relFilePath, cacheJson] : self.m_savedTranslCacheMap) {
+					result[wide2Ascii(relFilePath)] = LuaJson::jsonValue2LuaRef(cacheJson, luaState);
+				}
+				return result;
+			},
+			[](NormalJsonTranslator& self, const luabridge::LuaRef& value)
+			{
+				absl::flat_hash_map<fs::path, json> converted;
+				for (const auto& [key, cacheValue] : luabridge::pairs(value)) {
+					converted.emplace(
+						ascii2Wide(key.cast<std::string>().value()),
+						LuaJson::luaRef2JsonValue(cacheValue)
+					);
+				}
+				self.m_savedTranslCacheMap = std::move(converted);
+			}),
 		"m_repeatedBlockCompletedRelFilePaths", lua_binding::property(
 			[](NormalJsonTranslator& self) { return self.m_repeatedBlockCompletedRelFilePaths; },
 			[](NormalJsonTranslator& self, decltype(NormalJsonTranslator::m_repeatedBlockCompletedRelFilePaths) value)

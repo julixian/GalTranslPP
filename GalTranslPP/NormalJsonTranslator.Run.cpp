@@ -19,17 +19,17 @@ namespace fs = std::filesystem;
 namespace py = pybind11;
 
 ordered_json buildProblemOverviewFromCache(
-    const fs::path& transCacheDir,
-    const absl::flat_hash_set<fs::path>& savedTranslCacheRelFilePaths,
-    const std::shared_ptr<spdlog::logger>& logger,
+    const absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     ctpl::thread_pool& threadPool
 )
 {
-    std::vector<fs::path> relFilePaths = savedTranslCacheRelFilePaths | std::ranges::to<std::vector>();
+    std::vector<fs::path> relFilePaths = savedTranslCacheMap | std::views::keys | std::ranges::to<std::vector>();
     std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
         {
 #ifdef _WIN32
             return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
+#else
+            return a < b;
 #endif
         });
 
@@ -38,33 +38,22 @@ ordered_json buildProblemOverviewFromCache(
     std::vector<std::future<ordered_json>> results;
     results.reserve(relFilePaths.size());
     for (const fs::path& relFilePath : relFilePaths) {
-        results.emplace_back(threadPool.push([transCacheDir, relFilePath, logger](int)
+        results.emplace_back(threadPool.push([&](int)
             {
                 ordered_json fileOverview = ordered_json::array();
-                const fs::path cachePath = transCacheDir / relFilePath;
-                try {
-                    std::ifstream ifs;
-                    const ordered_json cacheJson = parseOrderedJson(cachePath, ifs);
-                    const std::string relFileName = wide2Ascii(relFilePath);
-                    for (const ordered_json& item : cacheJson) {
-                        const auto problemsIt = item.find("problems");
-                        if (problemsIt == item.end() || !problemsIt->is_array() || problemsIt->empty()) {
-                            continue;
-                        }
-                        ordered_json newItem = ordered_json::object();
-                        newItem["filename"] = relFileName;
-                        for (const auto& kv : item.items()) {
-                            newItem[kv.key()] = kv.value();
-                        }
-                        fileOverview.push_back(std::move(newItem));
+                const json& cacheJson = savedTranslCacheMap.at(relFilePath);
+                const std::string relFileName = wide2Ascii(relFilePath);
+                for (const json& item : cacheJson) {
+                    const auto problemsIt = item.find("problems");
+                    if (problemsIt == item.end() || problemsIt->empty()) {
+                        continue;
                     }
-                }
-                catch (const std::exception& e) {
-                    logger->error(gppTr("buildProblemOverviewFromCache",
-                        "构建问题概览时读取缓存文件 [%1] 失败: %2")
-                        .arg(wide2Ascii(cachePath))
-                        .arg(e.what())
-                        .toStdString());
+                    ordered_json newItem = ordered_json::object();
+                    newItem["filename"] = relFileName;
+                    for (const auto& kv : item.items()) {
+                        newItem[kv.key()] = kv.value();
+                    }
+                    fileOverview.push_back(std::move(newItem));
                 }
                 return fileOverview;
             }));
@@ -136,7 +125,6 @@ void NormalJsonTranslator::normalJsonBeforeRun()
 
     std::map<std::string, int> runtimeFileTotals; // 路径可能会变为 split 切片，value 是句子数
 
-    std::ifstream ifs;
     std::ofstream ofs;
 
     // 扫描输入、校验 message 字段，并更新项目人名表。
@@ -152,14 +140,53 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 }
             };
 
+        std::vector<std::pair<fs::path, fs::path>> inputJsonPaths;
         for (const auto& entry : fs::recursive_directory_iterator(m_inputDir)) {
             if (!entry.is_regular_file() || !isSameExtension(entry.path(), L".json")) {
                 continue;
             }
-            const fs::path relInputPath = fs::relative(entry.path(), m_inputDir);
-            try {
-                json data = parseJson(entry.path(), ifs);
+            inputJsonPaths.emplace_back(entry.path(), fs::relative(entry.path(), m_inputDir));
+        }
 
+        const int inputWorkerCount = std::max(1, std::min(
+            (int)std::thread::hardware_concurrency(),
+            (int)inputJsonPaths.size()
+        ));
+        m_threadPool.resize(inputWorkerCount);
+        std::vector<std::future<ordered_json>> inputJsonResults;
+        inputJsonResults.reserve(inputJsonPaths.size());
+        for (const auto& inputPath : inputJsonPaths | std::views::keys) {
+            inputJsonResults.emplace_back(m_threadPool.push([&](int)
+                {
+                    std::ifstream ifs;
+                    return parseOrderedJson(inputPath, ifs);
+                }));
+        }
+
+        std::vector<ordered_json> inputJsonData;
+        inputJsonData.reserve(inputJsonPaths.size());
+        std::exception_ptr firstInputException;
+        for (auto [relInputPath, inputJsonResult] : std::views::zip(inputJsonPaths | std::views::values, inputJsonResults)) {
+            try {
+                inputJsonData.push_back(inputJsonResult.get());
+            }
+            catch (const std::exception& e) {
+                if (!firstInputException) {
+                    firstInputException = std::make_exception_ptr(std::runtime_error(gppTr(
+                        "NormalJsonTranslator.normalJsonBeforeRun",
+                        "读取文件 [%1] 时出错: %2")
+                        .arg(wide2Ascii(relInputPath))
+                        .arg(e.what())
+                        .toStdString()));
+                }
+            }
+        }
+        if (firstInputException) {
+            std::rethrow_exception(firstInputException);
+        }
+
+        for (auto [relInputPath, data] : std::views::zip(inputJsonPaths | std::views::values, inputJsonData)) {
+            try {
                 auto& fileSentenceNum = runtimeFileTotals[wide2Ascii(relInputPath)];
                 for (const auto& [index, item] : data | std::views::enumerate) {
                     if (!item.contains("message")) {
@@ -190,6 +217,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 }
 
                 relJsonPaths.push_back(relInputPath);
+                m_inputJsonMap.emplace(relInputPath, std::move(data));
             }
             catch (const std::exception& e) {
                 throw std::runtime_error(gppTr(
@@ -237,11 +265,14 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         toml::ordered_value newNameTable = toml::ordered_table{};
         newNameTable.comments().push_back("'原名' = [ '译名', 出现次数 ]");
         for (const std::string& key : nameTablePairsFromInputJson | std::views::keys) {
+            std::string transName;
             try {
-                newNameTable[key] = toml::array{ toml::find_or(orgNameTable, key, 0, ""), nameTableFromInputJson[key] };
+                transName = toml::find_or(orgNameTable, key, 0, "");
             }
-            catch (...) {
-                newNameTable[key] = toml::array{ "", nameTableFromInputJson[key] };
+            catch (...) { }
+            newNameTable[key] = toml::array{ transName, nameTableFromInputJson[key] };
+            if (!transName.empty()) {
+                m_nameMap.insert({ key, std::move(transName) });
             }
         }
         atomicOutputFile(ofs, m_nameTablePath, toml::format(newNameTable));
@@ -252,7 +283,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         }
     }
 
-    // 人名翻译模式。
+    // 人名翻译模式
     if (m_transEngine == TransEngine::NameTrans) {
         m_nameTranslator = std::make_unique<NameTranslator>(
             m_controller, m_logger, m_apiPool, m_gptDictionary, m_onPerformApi,
@@ -263,7 +294,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         return;
     }
 
-    // 字典生成模式。
+    // 字典生成模式
     if (m_transEngine == TransEngine::GenDict) {
         auto preProcessFunc = [this](Sentence* se)
             {
@@ -276,7 +307,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_threadsNum, m_inputBlockMaxLines, m_maxRequestCount, m_apiTimeOutMs, m_checkQuota,
             m_agentEnabled,
             m_projectDir,
-            m_inputDir,
+            m_inputJsonMap,
             relJsonPaths,
             m_agentProjectNotePath,
             m_genDictReviewSystemPrompt,
@@ -290,34 +321,13 @@ void NormalJsonTranslator::normalJsonBeforeRun()
 
     // 实际翻译模式
 
-    // 重新载入最终人名映射，供后处理替换使用。
-    try {
-        const auto nameTable = toml::uparse(m_nameTablePath);
-
-        for (const auto& [key, value] : nameTable.as_table()) {
-            if (!value.is_array() || value.size() == 0) {
-                continue;
-            }
-            const std::string transName = toml::find_or(value, 0, "");
-            if (!transName.empty()) {
-                m_nameMap.insert({ key, transName });
-            }
-        }
-    }
-    catch (const toml::exception& e) {
-        throw std::runtime_error(gppTr(
-            "NormalJsonTranslator.normalJsonBeforeRun",
-            "解析 NameTable.toml 时出错: %1")
-            .arg(e.what())
-            .toStdString());
-    }
-
     // 如启用了 splitFileMethod，则先预切分输入，后续按 part 参与并行调度。
     {
         auto splitFunc = [&](auto splitImplFunc)
             {
                 m_splitFileEnabled = true;
                 runtimeFileTotals.clear();
+                auto orgInputJsonMap = std::move(m_inputJsonMap);
                 m_logger->info(gppTr(
                     "NormalJsonTranslator.normalJsonBeforeRun",
                     "检测到文件分割模式 (%1)，开始预处理输入文件...")
@@ -325,10 +335,10 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                     .toStdString());
                 for (const auto& relJsonPath : relJsonPaths) {
                     try {
-                        ordered_json data = parseOrderedJson(m_inputDir / relJsonPath, ifs);
-                        const std::vector<ordered_json> parts = splitImplFunc(std::move(data), m_splitFileNum);
+                        ordered_json data = std::move(orgInputJsonMap.at(relJsonPath));
+                        std::vector<ordered_json> parts = splitImplFunc(std::move(data), m_splitFileNum);
                         const std::wstring relStem = relJsonPath.parent_path() / relJsonPath.stem();
-                        for (const auto& [index, part] : parts | std::views::enumerate) {
+                        for (auto [index, part] : parts | std::views::enumerate) {
                             const fs::path relPartPath = std::format(L"{}_part_{}{}",
                                 relStem, index, relJsonPath.extension().wstring());
                             m_splitFilePartsToJson[relPartPath] = relJsonPath;
@@ -338,6 +348,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                             m_jsonToSplitFileParts[relJsonPath].insert({ relPartPath, false });
                             const fs::path partPath = m_inputCacheDir / relPartPath;
                             atomicOutputFile(ofs, partPath, part.dump(2));
+                            m_inputJsonMap.emplace(relPartPath, std::move(part));
                         }
                         m_logger->debug(gppTr(
                             "NormalJsonTranslator.normalJsonBeforeRun",
@@ -386,14 +397,14 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             });
     }
     else if (m_sortMethod == "name") {
-#ifdef _WIN32
         std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
             {
+#ifdef _WIN32
                 return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-            });
 #else
-        std::ranges::sort(relFilePaths);
+                return a < b;
 #endif
+            });
     }
     else {
         throw std::invalid_argument(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "未知的排序模式: %1")
@@ -401,52 +412,29 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             .toStdString());
     }
 
-    // 分析跨文件连续重复块，并将带引用信息的输入统一写入 inputCacheDir。
+    // 分析跨文件连续重复块，并将带引用信息的输入统一写入 inputCacheDir
     if (m_reuseRepeatedBlocks) {
-        const fs::path& sourceRootDir = m_splitFileEnabled ? m_inputCacheDir : m_inputDir;
-        std::vector<std::pair<fs::path, ordered_json>> filesWithData;
-        filesWithData.reserve(relFilePaths.size());
-        const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)relFilePaths.size()));
-        m_threadPool.resize(workerCount);
-
-        std::vector<std::future<ordered_json>> loadResults;
-        loadResults.reserve(relFilePaths.size());
-        for (const fs::path& relFilePath : relFilePaths) {
-            filesWithData.emplace_back(relFilePath, ordered_json{});
-            loadResults.emplace_back(m_threadPool.push([sourceRootDir, relFilePath](int)
-                {
-                    std::ifstream ifs_;
-                    return parseOrderedJson(sourceRootDir / relFilePath, ifs_);
-                }));
-        }
-
-        std::exception_ptr firstLoadException;
-        for (auto [fileWithData, loadResult] : std::views::zip(filesWithData, loadResults)) {
-            try {
-                fileWithData.second = loadResult.get();
-            }
-            catch (...) {
-                if (!firstLoadException) {
-                    firstLoadException = std::current_exception();
-                }
-            }
-        }
-        if (firstLoadException) {
-            std::rethrow_exception(firstLoadException);
-        }
+        std::vector<std::pair<fs::path, ordered_json*>> filesWithData = relFilePaths
+            | std::views::transform([&](const fs::path& relFilePath) { return std::pair{ relFilePath, &m_inputJsonMap.at(relFilePath) }; })
+            | std::ranges::to<std::vector>();
 
         const RepeatedBlockReferenceMap repeatedBlockReferences = buildRepeatedBlockReferenceMap(filesWithData, m_repeatedBlockMinSize);
         m_repeatedBlockReferenceCount = repeatedBlockReferences.targetToSourceMap.size();
         if (!repeatedBlockReferences.targetToSourceMap.empty()) {
+            const int outputWorkerCount = std::max(1, std::min(
+                (int)std::thread::hardware_concurrency(),
+                (int)filesWithData.size()
+            ));
+            m_threadPool.resize(outputWorkerCount);
             std::vector<std::future<void>> outputResults;
             outputResults.reserve(filesWithData.size());
-            for (auto& [relFilePath, data] : filesWithData) {
-                outputResults.emplace_back(m_threadPool.push([this, relFilePath, &data, &repeatedBlockReferences](int)
+            for (const auto& [relFilePath, data] : filesWithData) {
+                outputResults.emplace_back(m_threadPool.push([&](int)
                     {
-                        addReferenceInfoToInputJson(relFilePath, data, repeatedBlockReferences);
+                        addReferenceInfoToInputJson(relFilePath, *data, repeatedBlockReferences);
                         const fs::path cachedInputPath = m_inputCacheDir / relFilePath;
                         std::ofstream ofs_;
-                        atomicOutputFile(ofs_, cachedInputPath, data.dump(2));
+                        atomicOutputFile(ofs_, cachedInputPath, data->dump(2));
                     }));
             }
 
@@ -465,7 +453,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 std::rethrow_exception(firstOutputException);
             }
 
-            // 理论上也有不延后的方法，但又要搞一个新队列，直接在最后用 m_savedTranslCacheRelFilePaths 会比较方便
+            // 理论上也有不延后的方法，但又要搞一个新队列，直接在最后用 m_savedTranslCacheMap 会比较方便
             m_logger->info(gppTr(
                 "NormalJsonTranslator.normalJsonBeforeRun",
                 "连续重复块引用分析完成，阈值 %1，共配置引用 %2 句，onFileProcessed/分割文件合并/文件输出 将被延后")
@@ -494,7 +482,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_gptDictionary,
             m_onPerformApi,
             m_projectDir,
-            (m_splitFileEnabled || m_reuseRepeatedBlocks) ? m_inputCacheDir : m_inputDir,
+            m_inputJsonMap,
             m_transCacheDir,
             m_agentTermLedgerPath,
             m_agentFileNotesDir,
@@ -514,7 +502,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_smartRetry,
             m_checkQuota,
             m_transCacheMutex,
-            m_savedTranslCacheRelFilePaths,
+            m_savedTranslCacheMap,
             relFilePaths,
             m_gptDictionaryPaths,
             m_agentProjectNotePath,
@@ -535,7 +523,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
     }
 
     ordered_json problemOverview = buildProblemOverviewFromCache(
-        m_transCacheDir, m_savedTranslCacheRelFilePaths, m_logger, m_threadPool);
+        m_savedTranslCacheMap, m_threadPool);
     if (m_problemOverviewFormat == "json") {
         atomicOutputFile(m_projectDir / "ProblemOverview.json", problemOverview.dump(2));
     }
@@ -628,9 +616,9 @@ void NormalJsonTranslator::normalJsonAfterRun()
 void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& relFilePaths)
 {
     std::vector<std::future<void>> results;
-    m_threadPool.resize(std::min(m_threadsNum, (int)relFilePaths.size()));
+    m_threadPool.resize(std::max(1, std::min(m_threadsNum, (int)relFilePaths.size())));
     for (const auto& relFilePath : relFilePaths) {
-        results.emplace_back(m_threadPool.push([=](const int id)
+        results.emplace_back(m_threadPool.push([this, relFilePath](const int id)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
                 try {
@@ -653,7 +641,7 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
         "已将 %1 个文件任务分配到线程池，等待处理完成...")
         .arg(results.size())
         .toStdString());
-    waitForThreads(m_controller, m_threadPool, results);
+    waitForTransThreads(m_controller, m_threadPool, results);
 }
 
 void NormalJsonTranslator::normalJsonProcess()
@@ -691,8 +679,8 @@ void NormalJsonTranslator::normalJsonProcess()
 void NormalJsonTranslator::resolveRepeatedBlockReferences()
 {
     struct FileBundle {
-        ordered_json input = ordered_json::array();
-        json cache = json::array();
+        ordered_json* input = nullptr;
+        json* cache = nullptr;
     };
     struct FileBundleResolveResult {
         fs::path relFilePath;
@@ -700,51 +688,26 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
         bool removeCompleted = false;
     };
 
-    const auto& relFilePaths = m_savedTranslCacheRelFilePaths;
-
     absl::flat_hash_map<fs::path, FileBundle> fileBundles;
+    fileBundles.reserve(m_savedTranslCacheMap.size());
+    for (auto& [relFilePath, cache] : m_savedTranslCacheMap) {
+        fileBundles.emplace(relFilePath, FileBundle{
+            .input = &m_inputJsonMap.at(relFilePath),
+            .cache = &cache
+        });
+    }
 
-    fileBundles.reserve(relFilePaths.size());
-    const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)relFilePaths.size()));
+    const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)fileBundles.size()));
     m_threadPool.resize(workerCount);
-    std::vector<std::future<std::pair<fs::path, FileBundle>>> loadResults;
-    loadResults.reserve(relFilePaths.size());
-    for (const fs::path& relFilePath : relFilePaths) {
-        loadResults.emplace_back(m_threadPool.push([this, relFilePath](int)
-            {
-                const fs::path inputPath = m_inputCacheDir / relFilePath;
-                const fs::path cachePath = m_transCacheDir / relFilePath;
-                std::ifstream ifs;
-                try {
-                    FileBundle bundle;
-                    bundle.input = parseOrderedJson(inputPath, ifs);
-                    bundle.cache = parseJson(cachePath, ifs);
-                    return std::pair{ relFilePath, std::move(bundle) };
-                }
-                catch (const std::exception& e) {
-                    throw std::runtime_error(gppTr(
-                        "NormalJsonTranslator.resolveRepeatedBlockReferences",
-                        "处理连续重复块引用复用时发生异常，可能是 [%1] 或 [%2] 遭到意外更改或删除: %3")
-                        .arg(wide2Ascii(inputPath))
-                        .arg(wide2Ascii(cachePath))
-                        .arg(e.what())
-                        .toStdString());
-                }
-            }));
-    }
-    for (auto& loadResult : loadResults) {
-        auto [relFilePath, bundle] = loadResult.get();
-        fileBundles.emplace(std::move(relFilePath), std::move(bundle));
-    }
 
     absl::flat_hash_map<SentencePosition, const json*> cacheByPosition;
     cacheByPosition.reserve(std::ranges::fold_left(fileBundles | std::views::values, 0uz, [](size_t acc, const FileBundle& bundle)
         {
-            return acc + bundle.cache.size();
+            return acc + bundle.cache->size();
         }));
     for (const auto& [relFilePath, bundle] : fileBundles) {
         const std::string relFileName = wide2Ascii(relFilePath);
-        for (const json& item : bundle.cache) {
+        for (const json& item : *bundle.cache) {
             const int index = item.value("index", -1);
             if (index >= 0) {
                 cacheByPosition[{ relFileName, index }] = &item;
@@ -755,12 +718,11 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
     std::vector<std::future<FileBundleResolveResult>> resolveResults;
     resolveResults.reserve(fileBundles.size());
     for (auto& [relFilePath, bundle] : fileBundles) {
-        const bool isCompleted = m_repeatedBlockCompletedRelFilePaths.contains(relFilePath);
-        resolveResults.emplace_back(m_threadPool.push([this, relFilePath, &bundle, &cacheByPosition, isCompleted](int)
+        resolveResults.emplace_back(m_threadPool.push([&](int)
             {
                 FileBundleResolveResult result{ .relFilePath = relFilePath };
                 bool cacheChanged = false;
-                for (json& cacheItem : bundle.cache) {
+                for (json& cacheItem : *bundle.cache) {
                     const auto refTo = getRefToFromItem(cacheItem);
                     if (!refTo.has_value()) {
                         continue;
@@ -790,14 +752,14 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
                 std::ofstream ofs;
                 if (cacheChanged) {
                     const fs::path cachePath = m_transCacheDir / relFilePath;
-                    atomicOutputFile(ofs, cachePath, bundle.cache.dump(2));
+                    atomicOutputFile(ofs, cachePath, bundle.cache->dump(2));
                 }
 
-                if (!isCompleted) {
+                if (!m_repeatedBlockCompletedRelFilePaths.contains(relFilePath)) {
                     return result;
                 }
 
-                const bool hasRefPending = std::ranges::any_of(bundle.cache, [](const json& cacheItem)
+                const bool hasRefPending = std::ranges::any_of(*bundle.cache, [](const json& cacheItem)
                     {
                         return isRefPendingFromItem(cacheItem);
                     });
@@ -813,15 +775,15 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
                 }
 
                 absl::flat_hash_map<int, const json*> cacheByIndex;
-                cacheByIndex.reserve(bundle.cache.size());
-                for (const json& cacheItem : bundle.cache) {
+                cacheByIndex.reserve(bundle.cache->size());
+                for (const json& cacheItem : *bundle.cache) {
                     const int index = cacheItem.value("index", -1);
                     if (index >= 0) {
                         cacheByIndex[index] = &cacheItem;
                     }
                 }
 
-                for (auto [index, item] : bundle.input | std::views::enumerate) {
+                for (auto [index, item] : *bundle.input | std::views::enumerate) {
                     if (!m_outputWithRefInfo) {
                         eraseItemReferenceInfo(item, false);
                     }
@@ -843,7 +805,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
                 }
 
                 const fs::path outputPath = m_splitFileEnabled ? (m_outputCacheDir / relFilePath) : (m_outputDir / relFilePath);
-                atomicOutputFile(ofs, outputPath, bundle.input.dump(2));
+                atomicOutputFile(ofs, outputPath, bundle.input->dump(2));
                 return result;
             }));
     }

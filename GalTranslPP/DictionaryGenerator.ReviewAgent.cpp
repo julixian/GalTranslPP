@@ -18,7 +18,7 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     const std::shared_ptr<IController>& controller,
     const std::shared_ptr<spdlog::logger>& logger,
     const std::unique_ptr<ApiPool>& apiPool,
-    const std::function<std::string(const std::string&)>& onPerformApi,
+    const std::function<std::string(std::string_view)>& onPerformApi,
     const fs::path& projectDir,
     const std::vector<fs::path>& relJsonPaths,
     const std::optional<fs::path>& agentProjectNotePath,
@@ -987,7 +987,7 @@ void DictionaryGeneratorReviewAgent::runReviewWorkers() {
                 m_controller->updateBar();
             }));
     }
-    waitForThreads(m_controller, pool, results);
+    waitForTransThreads(m_controller, pool, results);
 }
 
 // 将审校账本转换为最终保留的字典列表；未审校的术语不补默认候选。

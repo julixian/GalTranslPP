@@ -43,9 +43,9 @@ export
             const std::shared_ptr<spdlog::logger>& logger,
             const std::unique_ptr<ApiPool>& apiPool,
             const std::unique_ptr<GptDictionary>& gptDictionary,
-            const std::function<std::string(const std::string&)>& onPerformApi,
+            const std::function<std::string(std::string_view)>& onPerformApi,
             const fs::path& projectDir,
-            const fs::path& sourceRootDir,
+            const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
             const fs::path& transCacheDir,
             const fs::path& agentTermLedgerPath,
             const fs::path& agentFileNotesDir,
@@ -65,7 +65,7 @@ export
             bool smartRetry,
             bool checkQuota,
             std::shared_mutex& transCacheMutex,
-            const absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+            absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
             const std::vector<fs::path>& knownRelFiles,
             const std::vector<fs::path>& gptDictionaryPaths,
             const std::optional<fs::path>& agentProjectNotePath,
@@ -107,7 +107,7 @@ export
         std::shared_ptr<spdlog::logger> m_logger;
         const std::unique_ptr<ApiPool>& m_apiPool;
         const std::unique_ptr<GptDictionary>& m_gptDictionary;
-        const std::function<std::string(const std::string&)>& m_onPerformApi;
+        const std::function<std::string(std::string_view)>& m_onPerformApi;
         fs::path m_projectDir;
         fs::path m_transCacheDir;
         fs::path m_agentTermLedgerPath;
@@ -128,7 +128,7 @@ export
         bool m_smartRetry = true;
         bool m_checkQuota = true;
         std::shared_mutex& m_transCacheMutex;
-        const absl::flat_hash_set<fs::path>& m_savedTranslCacheRelFilePaths;
+        absl::flat_hash_map<fs::path, json>& m_savedTranslCacheMap;
         std::mutex m_stateMutex;
         json m_termLedgerCache = json::object();
         std::mutex m_fileNotesMutex;

@@ -32,10 +32,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         .arg(wide2Ascii(relInputPath))
         .toStdString());
 
-    std::ifstream ifs;
     const fs::path inputPath = (m_splitFileEnabled || m_reuseRepeatedBlocks)
-	    ? (m_inputCacheDir / relInputPath)
-	    : (m_inputDir / relInputPath);
+        ? (m_inputCacheDir / relInputPath)
+        : (m_inputDir / relInputPath);
     const fs::path outputPath = (m_splitFileEnabled || m_reuseRepeatedBlocks)
         ? (m_outputCacheDir / relInputPath)
         : (m_outputDir / relInputPath);
@@ -43,12 +42,11 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
     createParent(outputPath);
     createParent(cachePath);
-    ordered_json jSentences;
+    ordered_json& jSentences = m_inputJsonMap.at(relInputPath);
     std::vector<Sentence> sentences;
 
-    // 读取输入文件并构造句子链表。
+    // 使用预加载的输入并构造句子链表。
     try {
-        jSentences = parseOrderedJson(inputPath, ifs);
         sentences.reserve(jSentences.size());
         const std::string relInputFileName = wide2Ascii(relInputPath);
         for (const auto& [index, item] : jSentences | std::views::enumerate) {
@@ -78,7 +76,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     catch (const std::exception& e) {
         throw std::runtime_error(gppTr(
             "NormalJsonTranslator.processFile",
-            "[线程 %1] [文件 %2] 输入文件解析失败: %3")
+            "[线程 %1] [文件 %2] 输入数据处理失败: %3")
             .arg(threadId)
             .arg(wide2Ascii(relInputPath))
             .arg(e.what())
@@ -132,6 +130,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 try {
                     json jsonArr;
                     {
+                        std::ifstream ifs;
                         std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
                         jsonArr = parseJson(potentialCachePath, ifs);
                     }
@@ -218,6 +217,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 try {
                     json cacheJsonList;
                     {
+                        std::ifstream ifs;
                         std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
                         cacheJsonList = parseJson(cp, ifs);
                     }
@@ -310,7 +310,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     .toStdString()
                 );
                 saveTranslCache(sentences, cachePath, relInputPath,
-                    m_savedTranslCacheRelFilePaths, m_transCacheMutex);
+                    m_savedTranslCacheMap, m_transCacheMutex);
                 return;
             }
         }
@@ -351,7 +351,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     .arg(wide2Ascii(relInputPath))
                     .toStdString());
                 saveTranslCache(sentences, cachePath, relInputPath,
-                    m_savedTranslCacheRelFilePaths, m_transCacheMutex);
+                    m_savedTranslCacheMap, m_transCacheMutex);
                 return;
             }
 
@@ -385,7 +385,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     .arg(wide2Ascii(relInputPath))
                     .toStdString());
                 saveTranslCache(sentences, cachePath, relInputPath,
-                    m_savedTranslCacheRelFilePaths, m_transCacheMutex);
+                    m_savedTranslCacheMap, m_transCacheMutex);
             }
         }
 
@@ -401,7 +401,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         .arg(wide2Ascii(relInputPath))
         .toStdString());
     saveTranslCache(sentences, cachePath, relInputPath,
-        m_savedTranslCacheRelFilePaths, m_transCacheMutex);
+        m_savedTranslCacheMap, m_transCacheMutex);
 
     m_logger->info(gppTr("NormalJsonTranslator.processFile", "[线程 %1] [文件 %2] 处理完成")
         .arg(threadId)

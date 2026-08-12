@@ -18,7 +18,7 @@ NameTranslator::NameTranslator(
     const std::shared_ptr<spdlog::logger>& logger,
     const std::unique_ptr<ApiPool>& apiPool,
     const std::unique_ptr<GptDictionary>& gptDictionary,
-    const std::function<std::string(const std::string&)>& onPerformApi,
+    const std::function<std::string(std::string_view)>& onPerformApi,
     const std::string& systemPrompt,
     const std::string& userPrompt,
     const std::string& apiStrategy,
@@ -278,7 +278,7 @@ void NameTranslator::run(const fs::path& nameTablePath) {
                 }
             }));
     }
-    waitForThreads(m_controller, pool, results);
+    waitForTransThreads(m_controller, pool, results);
 
     // 4. 回写结果
     int updatedCount = 0;

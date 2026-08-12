@@ -3,6 +3,9 @@ module;
 #include "GPPMacros.hpp"
 #include <toml.hpp>
 #include <ctpl_stl.h>
+#ifdef _WIN32
+#include <Shlwapi.h>
+#endif
 
 module DictionaryGenerator;
 
@@ -19,10 +22,11 @@ DictionaryGenerator::~DictionaryGenerator() {
 
 DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, const std::unique_ptr<ApiPool>& apiPool,
     const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
-    const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(const std::string&)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
+    const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
     int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
-    bool agentEnabled, const fs::path& projectDir, const fs::path& inputDir,
+    bool agentEnabled, const fs::path& projectDir,
+    const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
     const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,
     const std::string& genDictReviewSystemPrompt, const std::string& genDictReviewUserPrompt,
     int agentMaxTurnsPerChunk, int agentSearchResultLimit, int agentContextLinesLimit)
@@ -34,7 +38,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota),
     m_agentEnabled(agentEnabled),
     m_projectDir(projectDir),
-    m_inputDir(inputDir),
+    m_inputJsonMap(inputJsonMap),
     m_relJsonPaths(relJsonPaths),
     m_agentProjectNotePath(agentProjectNotePath),
     m_genDictReviewSystemPrompt(genDictReviewSystemPrompt),
@@ -44,19 +48,26 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_agentContextLinesLimit(agentContextLinesLimit),
     m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_dictgen.json")
 {
+	std::ranges::sort(m_relJsonPaths, [](const fs::path& a, const fs::path& b)
+		{
+#ifdef _WIN32
+			return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
+#else
+			return a < b;
+#endif
+		});
 	loadTokenizeCache(m_tokenizeCacheMap, m_tokenizeCachePath, m_logger);
 }
 
-void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jsonFiles) {
+void DictionaryGenerator::preprocessAndTokenize() {
     m_logger->info(gppTr("DictionaryGenerator.preprocessAndTokenize", "阶段一: 预处理和分词...")
         .toStdString());
     std::string currentSegment;
-    constexpr size_t MaxSegmentLength = 512;
+    constexpr size_t maxSegmentLength = 512;
 
-    std::ifstream ifs;
-    for (const auto& jsonFile : jsonFiles)
+    for (const fs::path& relJsonPath : m_relJsonPaths)
     {
-        const json data = parseJson(jsonFile, ifs);
+        const ordered_json& data = m_inputJsonMap.at(relJsonPath);
 
         std::vector<Sentence> sourceSentences;
         sourceSentences.reserve(data.size());
@@ -104,7 +115,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
             }
             currentText += se.preproc + "\n";
             currentSegment += currentText;
-            if (currentSegment.length() > MaxSegmentLength && countGraphemes(currentSegment) > MaxSegmentLength) {
+            if (currentSegment.length() > maxSegmentLength && countGraphemes(currentSegment) > maxSegmentLength) {
                 m_segments.push_back(std::move(currentSegment));
                 currentSegment.clear();
             }
@@ -124,7 +135,7 @@ void DictionaryGenerator::preprocessAndTokenize(const std::vector<fs::path>& jso
 
     m_logger->info(gppTr(
         "DictionaryGenerator.preprocessAndTokenize",
-        "共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...")
+        "共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢) ...")
         .arg(m_segments.size())
         .toStdString());
     m_controller->makeBar((int)m_segments.size(), 1);
@@ -291,11 +302,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
             .toStdString());
     }
 
-    const std::vector<fs::path> jsonFiles = m_relJsonPaths
-        | std::views::transform([&](const auto& p) { return m_inputDir / p; })
-        | std::ranges::to<std::vector>();
-
-    preprocessAndTokenize(jsonFiles);
+    preprocessAndTokenize();
 
     if (m_controller->shouldStop()) {
         m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将不会生成字典文件").toStdString());
@@ -388,7 +395,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
                 m_controller->updateBar();
             }));
     }
-    waitForThreads(m_controller, pool, results);
+    waitForTransThreads(m_controller, pool, results);
 
     if (m_controller->shouldStop()) {
         m_logger->info(gppTr("DictionaryGenerator.generate", "任务终止，将保存已经生成的字典结果").toStdString());

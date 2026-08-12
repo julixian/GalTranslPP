@@ -18,6 +18,116 @@ import Tool;
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
+namespace
+{
+    py::object jsonToPython(const json& value)
+    {
+        if (value.is_null()) {
+            return py::none();
+        }
+        if (value.is_boolean()) {
+            return py::bool_(value.get<bool>());
+        }
+        if (value.is_number_unsigned()) {
+            return py::int_(value.get<json::number_unsigned_t>());
+        }
+        if (value.is_number_integer()) {
+            return py::int_(value.get<json::number_integer_t>());
+        }
+        if (value.is_number_float()) {
+            return py::float_(value.get<json::number_float_t>());
+        }
+        if (value.is_string()) {
+            return py::str(value.get_ref<const std::string&>());
+        }
+        if (value.is_array()) {
+            py::list result(value.size());
+            for (size_t i = 0; i < value.size(); ++i) {
+                result[i] = jsonToPython(value[i]);
+            }
+            return result;
+        }
+
+        py::dict result;
+        for (auto it = value.cbegin(); it != value.cend(); ++it) {
+            result[py::str(it.key())] = jsonToPython(it.value());
+        }
+        return result;
+    }
+
+    json pythonToJson(const py::handle& value, std::set<const PyObject*>& references)
+    {
+        if (!value || value.is_none()) {
+            return nullptr;
+        }
+        if (py::isinstance<py::bool_>(value)) {
+            return value.cast<bool>();
+        }
+        if (py::isinstance<py::int_>(value)) {
+            try {
+                const auto signedValue = value.cast<json::number_integer_t>();
+                if (py::int_(signedValue).equal(value)) {
+                    return signedValue;
+                }
+            }
+            catch (...) { }
+            try {
+                const auto unsignedValue = value.cast<json::number_unsigned_t>();
+                if (py::int_(unsignedValue).equal(value)) {
+                    return unsignedValue;
+                }
+            }
+            catch (...) { }
+            throw std::runtime_error("Python integer is outside the nlohmann::json integer range");
+        }
+        if (py::isinstance<py::float_>(value)) {
+            return value.cast<json::number_float_t>();
+        }
+        if (py::isinstance<py::bytes>(value)) {
+            return py::module_::import("base64")
+                .attr("b64encode")(value)
+                .attr("decode")("utf-8")
+                .cast<std::string>();
+        }
+        if (py::isinstance<py::str>(value)) {
+            return value.cast<std::string>();
+        }
+        if (py::isinstance<py::tuple>(value) || py::isinstance<py::list>(value)) {
+            const auto [referenceIt, inserted] = references.insert(value.ptr());
+            if (!inserted) {
+                throw std::runtime_error("Circular reference detected while converting Python value to JSON");
+            }
+            json result = json::array();
+            for (const py::handle item : value) {
+                result.push_back(pythonToJson(item, references));
+            }
+            references.erase(referenceIt);
+            return result;
+        }
+        if (py::isinstance<py::dict>(value)) {
+            const auto [referenceIt, inserted] = references.insert(value.ptr());
+            if (!inserted) {
+                throw std::runtime_error("Circular reference detected while converting Python value to JSON");
+            }
+            const py::dict dictionary = py::reinterpret_borrow<py::dict>(value);
+            json result = json::object();
+            for (const auto& [key, item] : dictionary) {
+                result[py::str(key).cast<std::string>()] = pythonToJson(item, references);
+            }
+            references.erase(referenceIt);
+            return result;
+        }
+        throw std::runtime_error("Unsupported Python value while converting to JSON: "
+            + py::repr(value).cast<std::string>());
+    }
+
+    json pythonToJson(const py::handle& value)
+    {
+        std::set<const PyObject*> references;
+        return pythonToJson(value, references);
+    }
+}
+
 namespace pybind11::detail
 {
     template <typename Key, typename Value, typename Hash, typename Equal, typename Alloc>
@@ -35,6 +145,49 @@ namespace pybind11::detail
     template <typename Key, typename Compare, typename Alloc>
     struct type_caster<absl::btree_set<Key, Compare, Alloc>>
         : set_caster<absl::btree_set<Key, Compare, Alloc>, Key> {};
+
+    template <>
+    struct type_caster<json>
+    {
+        PYBIND11_TYPE_CASTER(json, _("json"));
+
+        bool load(handle src, bool)
+        {
+            try {
+                value = pythonToJson(src);
+                return true;
+            }
+            catch (...) {
+                return false;
+            }
+        }
+
+        static handle cast(json src, return_value_policy, handle)
+        {
+            return jsonToPython(src).release();
+        }
+    };
+
+    template <>
+    struct type_caster<ordered_json>
+    {
+        PYBIND11_TYPE_CASTER(ordered_json, _("json"));
+
+        bool load(handle src, bool convert)
+        {
+            type_caster<json> jsonCaster;
+            if (!jsonCaster.load(src, convert)) {
+                return false;
+            }
+            value = ordered_json(cast_op<json&&>(std::move(jsonCaster)));
+            return true;
+        }
+
+        static handle cast(ordered_json src, return_value_policy policy, handle parent)
+        {
+            return type_caster<json>::cast(json(std::move(src)), policy, parent);
+        }
+    };
 }
 
 static fs::path s_pythonExePath;
@@ -863,7 +1016,8 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_agentProjectNotePath", &NormalJsonTranslator::m_agentProjectNotePath)
         .def_readwrite("m_nameMap", &NormalJsonTranslator::m_nameMap)
         .def_readwrite("m_currentRunRelFilePaths", &NormalJsonTranslator::m_currentRunRelFilePaths)
-        .def_readwrite("m_savedTranslCacheRelFilePaths", &NormalJsonTranslator::m_savedTranslCacheRelFilePaths)
+        .def_readwrite("m_inputJsonMap", &NormalJsonTranslator::m_inputJsonMap)
+        .def_readwrite("m_savedTranslCacheMap", &NormalJsonTranslator::m_savedTranslCacheMap)
         .def_readwrite("m_repeatedBlockCompletedRelFilePaths", &NormalJsonTranslator::m_repeatedBlockCompletedRelFilePaths)
         .def_readwrite("m_repeatedBlockReferenceCount", &NormalJsonTranslator::m_repeatedBlockReferenceCount)
         .def_readwrite("m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed)

@@ -179,7 +179,7 @@ namespace
 }
 
 RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
-    const std::vector<std::pair<fs::path, ordered_json>>& filesWithData,
+    const std::vector<std::pair<fs::path, ordered_json*>>& filesWithData,
     int minBlockSize
 )
 {
@@ -192,7 +192,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
 
     for (const auto& [relFilePath, data] : filesWithData) {
         const std::string relFileName = wide2Ascii(relFilePath);
-        for (const auto& [index, item] : data | std::views::enumerate) {
+        for (const auto& [index, item] : *data | std::views::enumerate) {
             const std::string sentenceKey = buildRepeatedBlockSentenceKey(item);
             const auto [it, inserted] = tokenIds.emplace(sentenceKey, nextTokenId);
             if (inserted) {
@@ -814,7 +814,7 @@ void saveTranslCache(
     const std::vector<Sentence>& sentences,
     const fs::path& cachePath,
     const fs::path& relInputPath,
-    absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+    absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     std::shared_mutex& transCacheMutex)
 {
     json cacheJson = json::array();
@@ -843,9 +843,10 @@ void saveTranslCache(
         sentenceReferenceInfoToItem(cacheItem, se, true);
         cacheJson.push_back(std::move(cacheItem));
     }
+    std::string cacheText = cacheJson.dump(2);
     std::lock_guard<std::shared_mutex> lock(transCacheMutex);
-    atomicOutputFile(cachePath, cacheJson.dump(2));
-    savedTransCacheRelFilePaths.insert(relInputPath);
+    atomicOutputFile(cachePath, cacheText);
+    savedTranslCacheMap.insert_or_assign(relInputPath, std::move(cacheJson));
 }
 
 

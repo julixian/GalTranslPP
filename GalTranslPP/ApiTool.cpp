@@ -407,7 +407,7 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
 
 
 
-ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(const std::string&)>& onPerformApi,
+ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int threadId, int apiTimeOutMs)
 {
     ApiResponse apiResponse;
@@ -416,7 +416,10 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
     const cpr::Header headers = makeApiHeaders(api); // 加 key，extraHeaders
 
     applyApiPayloadOptions(payload, api); // 模型、温度、思考，extraBody
-    const std::string payloadStr = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
+    std::string payloadStr = payload.dump();
+    if (onPerformApi) {
+        payloadStr = onPerformApi(payloadStr);
+    }
 
     const cpr::Proxies proxies = api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{};
 

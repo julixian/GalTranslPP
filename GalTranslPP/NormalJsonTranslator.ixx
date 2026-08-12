@@ -116,14 +116,15 @@ export
 
         absl::flat_hash_map<std::string, std::string> m_nameMap;
         std::optional<std::vector<fs::path>> m_currentRunRelFilePaths;
-        absl::flat_hash_set<fs::path> m_savedTranslCacheRelFilePaths;
+        absl::flat_hash_map<fs::path, ordered_json> m_inputJsonMap;
+        absl::flat_hash_map<fs::path, json> m_savedTranslCacheMap;
         size_t m_repeatedBlockReferenceCount{};
         absl::flat_hash_set<fs::path> m_repeatedBlockCompletedRelFilePaths;
         std::function<void(const fs::path&)> m_onFileProcessed;
-        std::function<std::string(const std::string&)> m_onPerformApi;
+        std::function<std::string(std::string_view)> m_onPerformApi;
         std::function<DictList(const DictList&)> m_onDictProcessed;
 
-        ctpl::thread_pool m_threadPool{1};
+        ctpl::thread_pool m_threadPool;
         std::unique_ptr<ApiPool> m_apiPool;
         std::unique_ptr<GptDictionary> m_gptDictionary;
         std::unique_ptr<NormalDictionary> m_preDictionary;

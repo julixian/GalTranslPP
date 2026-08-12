@@ -64,7 +64,7 @@ export
 
     ApiTestResponse testApiConnection(const TranslationApi& api, int apiTimeOutMs);
 
-    ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(const std::string&)>& onPerformApi,
+    ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string_view)>& onPerformApi,
         const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int threadId, int apiTimeOutMs);
 
 }

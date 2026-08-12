@@ -4,6 +4,9 @@ module;
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
+#ifdef _WIN32
+#include <Shlwapi.h>
+#endif
 
 module NormalJsonTranslator;
 
@@ -19,9 +22,9 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     const std::shared_ptr<spdlog::logger>& logger,
     const std::unique_ptr<ApiPool>& apiPool,
     const std::unique_ptr<GptDictionary>& gptDictionary,
-    const std::function<std::string(const std::string&)>& onPerformApi,
+    const std::function<std::string(std::string_view)>& onPerformApi,
     const fs::path& projectDir,
-    const fs::path& sourceRootDir,
+    const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
     const fs::path& transCacheDir,
     const fs::path& agentTermLedgerPath,
     const fs::path& agentFileNotesDir,
@@ -41,7 +44,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     bool smartRetry,
     bool checkQuota,
     std::shared_mutex& transCacheMutex,
-    const absl::flat_hash_set<fs::path>& savedTransCacheRelFilePaths,
+    absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     const std::vector<fs::path>& knownRelFiles,
     const std::vector<fs::path>& gptDictionaryPaths,
     const std::optional<fs::path>& agentProjectNotePath,
@@ -72,11 +75,20 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     m_smartRetry(smartRetry),
     m_checkQuota(checkQuota),
     m_transCacheMutex(transCacheMutex),
-    m_savedTranslCacheRelFilePaths(savedTransCacheRelFilePaths),
+    m_savedTranslCacheMap(savedTranslCacheMap),
     m_knownRelFiles(knownRelFiles),
     m_gptDictionaryPaths(gptDictionaryPaths),
     m_agentProjectNotePath(agentProjectNotePath)
 {
+    std::ranges::sort(m_knownRelFiles, [](const fs::path& a, const fs::path& b)
+        {
+#ifdef _WIN32
+            return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
+#else
+            return a < b;
+#endif
+        });
+
     fs::create_directories(m_agentFileNotesDir);
     if (!fs::exists(m_agentTermLedgerPath)) {
         atomicOutputFile(m_agentTermLedgerPath, m_termLedgerCache.dump(2));
@@ -88,17 +100,12 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
         catch (...) { }
     }
 
-    std::ifstream ifs;
     for (const fs::path& relFilePath : m_knownRelFiles) {
-        const fs::path filePath = sourceRootDir / relFilePath;
-        if (!fs::exists(filePath)) {
-            continue;
-        }
+        const ordered_json& inputJson = inputJsonMap.at(relFilePath);
         try {
-            const ordered_json data = parseOrderedJson(filePath, ifs);
             m_sourceFileViews.insert_or_assign(
                 relFilePath,
-                buildAgentCommonSourceFileViewFromJson(data, preProcessFunc)
+                buildAgentCommonSourceFileViewFromJson(inputJson, preProcessFunc)
             );
         }
         catch (...) { }
@@ -1283,34 +1290,13 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
     }
 
     int markedCount = 0;
-    std::ifstream ifs;
     for (const auto& [relFilePath, suggestionsByIndex] : m_agentSuggestions) {
-        if (!m_savedTranslCacheRelFilePaths.contains(relFilePath)) {
+        const auto cacheIt = m_savedTranslCacheMap.find(relFilePath);
+        if (cacheIt == m_savedTranslCacheMap.end()) {
             continue;
         }
         const fs::path cachePath = m_transCacheDir / relFilePath;
-        if (!fs::exists(cachePath)) {
-            m_logger->warn(gppTr(
-                "NormalJsonTranslatorTransAgent.applyAgentSuggestions",
-                "Agent 建议目标 [%1] 没有缓存文件，已跳过")
-                .arg(wide2Ascii(relFilePath))
-                .toStdString());
-            continue;
-        }
-
-        json cacheJson;
-        try {
-            cacheJson = parseJson(cachePath, ifs);
-        }
-        catch (const std::exception& e) {
-            m_logger->warn(gppTr(
-                "NormalJsonTranslatorTransAgent.applyAgentSuggestions",
-                "Agent 建议目标缓存 [%1] 读取失败: %2")
-                .arg(wide2Ascii(relFilePath))
-                .arg(e.what())
-                .toStdString());
-            continue;
-        }
+        json& cacheJson = cacheIt->second;
 
         bool cacheChanged = false;
         for (json& item : cacheJson) {
@@ -1333,6 +1319,7 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
             continue;
         }
 
+        std::lock_guard<std::shared_mutex> lock(m_transCacheMutex);
         atomicOutputFile(cachePath, cacheJson.dump(2));
     }
 

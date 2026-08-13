@@ -31,6 +31,7 @@ public:
     QString getProjectName();
     fs::path getProjectDir();
     bool getIsRunning();
+    void initialize();
 
 	void apply2Config() override;
     void refreshCommonDicts();
@@ -44,6 +45,7 @@ private:
     fs::path m_projectDir;
     toml::ordered_value& m_globalConfig;
     toml::ordered_value m_projectConfig;
+    bool m_fullPagesInitialized = false;
 
     // UI 控件
     QStackedWidget* m_stackedWidget = nullptr;

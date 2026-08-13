@@ -409,7 +409,18 @@ sk-...</translation>
         <translation>GalTransl settings</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
+        <source>延迟项目初始化</source>
+        <oldsource>延迟初始化项目设置页</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
         <source>(DumpName/NameTrans)/GenDict任务成功后自动刷新人名表/项目GPT字典</source>
         <translation>Auto refresh NameTable/GptDict after (DumpName/NameTrans)/GenDict</translation>
     </message>
@@ -621,7 +632,7 @@ sk-...</translation>
         <translation>Note</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+84"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -631,13 +642,13 @@ sk-...</translation>
         <translation>Cannot open file: %1</translation>
     </message>
     <message>
-        <location line="+53"/>
-        <location line="+290"/>
+        <location line="+54"/>
+        <location line="+293"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-289"/>
+        <location line="-292"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
@@ -663,33 +674,33 @@ sk-...</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+44"/>
+        <location line="+45"/>
         <source>重命名失败</source>
         <translation>Fail to rename</translation>
     </message>
     <message>
-        <location line="-44"/>
-        <location line="+205"/>
+        <location line="-45"/>
+        <location line="+208"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation>Dict name can not be empty or contain point symbol, slash, backslash!</translation>
     </message>
     <message>
-        <location line="-196"/>
-        <location line="+196"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <location line="+9"/>
         <location line="+10"/>
         <source>新建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-214"/>
-        <location line="+175"/>
-        <location line="+30"/>
+        <location line="-217"/>
+        <location line="+168"/>
+        <location line="+40"/>
         <source>字典 %1 已存在</source>
         <translation>Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-177"/>
         <source>重命名成功</source>
         <translation>Renamed successfully</translation>
     </message>
@@ -700,8 +711,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+4"/>
+        <source>字典 %1 重命名失败: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>字典 %1 重命名失败</source>
-        <translation>Failed to rename dict %1</translation>
+        <translation type="vanished">Failed to rename dict %1</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -729,7 +744,7 @@ sk-...</translation>
         <translation>This deletes the dictionary file. Back up first.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -739,7 +754,7 @@ sk-...</translation>
         <translation>Dict %1 removed from list and disk!</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+51"/>
         <source>所有默认字典配置均已保存</source>
         <translation>All dicts are saved successfully</translation>
     </message>
@@ -749,18 +764,18 @@ sk-...</translation>
         <translation>Choose dict file</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location line="+9"/>
+        <location line="+13"/>
+        <location line="+10"/>
         <source>导入失败</source>
         <translation>Fail to import</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="+0"/>
         <source>原文件删除失败</source>
         <translation>Fail to remove original file</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+7"/>
         <location line="+41"/>
         <source>创建成功</source>
         <translation>Created successfully</translation>
@@ -1642,7 +1657,7 @@ sk-...</translation>
         <translation>Project dict settings</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+68"/>
         <source>选择要启用的译前字典</source>
         <translation>PreDicts to enable</translation>
     </message>
@@ -1652,49 +1667,54 @@ sk-...</translation>
         <translation>Project PreDict</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>选择要启用的GPT字典</source>
         <translation>GptDicts to enable</translation>
     </message>
     <message>
-        <location line="-6"/>
+        <location line="-7"/>
         <source>项目GPT字典</source>
         <translation>Project GptDict</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+9"/>
         <source>选择要启用的译后字典</source>
         <translation>PostDicts to enable</translation>
     </message>
     <message>
-        <location line="-6"/>
+        <location line="-8"/>
         <source>项目译后字典</source>
         <translation>Project PostDict</translation>
     </message>
     <message>
-        <location line="+13"/>
-        <source>将译前字典用在name字段</source>
-        <translation>Use predicts in name section</translation>
+        <location line="+16"/>
+        <source>将译前字典用在 name 字段</source>
+        <oldsource>将译前字典用在name字段</oldsource>
+        <translation type="unfinished">Use predicts in name section</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>将译后字典用在name字段</source>
-        <translation>Use postdicts in name section</translation>
+        <source>将译后字典用在 name 字段</source>
+        <oldsource>将译后字典用在name字段</oldsource>
+        <translation type="unfinished">Use postdicts in name section</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>将译前字典用在msg字段</source>
-        <translation>Use predicts in msg section</translation>
+        <source>将译前字典用在 message 字段</source>
+        <oldsource>将译前字典用在msg字段</oldsource>
+        <translation type="unfinished">Use predicts in msg section</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>将译后字典用在msg字段</source>
-        <translation>Use postdicts in msg section</translation>
+        <source>将译后字典用在 message 字段</source>
+        <oldsource>将译后字典用在msg字段</oldsource>
+        <translation type="unfinished">Use postdicts in msg section</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>启用GPT字典替换name字段</source>
-        <translation>Use gptdicts to replace name section</translation>
+        <source>启用GPT字典替换 name 字段</source>
+        <oldsource>启用GPT字典替换name字段</oldsource>
+        <translation type="unfinished">Use gptdicts to replace name section</translation>
     </message>
 </context>
 <context>
@@ -1705,7 +1725,7 @@ sk-...</translation>
         <translation>Project dicts settings</translation>
     </message>
     <message>
-        <location line="+39"/>
+        <location line="+40"/>
         <source>纯文本</source>
         <translation>Plain text</translation>
     </message>
@@ -1775,7 +1795,7 @@ sk-...</translation>
         <translation>Failt to delete GenDict</translation>
     </message>
     <message>
-        <location line="+73"/>
+        <location line="+69"/>
         <source>选择字典文件</source>
         <translation>Choose dict file</translation>
     </message>
@@ -2141,18 +2161,18 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+154"/>
+        <location filename="GPPGUI.cpp" line="+195"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+59"/>
         <source>无法创建共享内存段，程序即将退出。</source>
         <translation>Cannot create shared memory. Exiting.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+76"/>
+        <location line="+88"/>
         <location line="+54"/>
         <source>错误</source>
         <translation>Error</translation>
@@ -2263,7 +2283,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+48"/>
+        <location filename="Mainwindow.cpp" line="+64"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2283,7 +2303,7 @@ Issue summary:</translation>
         <translation>Where is the app&apos;s config file!?</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+21"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
@@ -2339,13 +2359,13 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location line="+69"/>
-        <location line="+176"/>
+        <location line="+80"/>
+        <location line="+199"/>
         <source>新建项目</source>
         <translation>New</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-198"/>
         <source>打开项目</source>
         <translation>Open</translation>
     </message>
@@ -2381,13 +2401,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+62"/>
+        <location line="+83"/>
         <source>应用设置</source>
         <oldsource>设置</oldsource>
         <translation>App settings</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-79"/>
         <source>更改程序主题</source>
         <translation>Change theme</translation>
     </message>
@@ -2397,7 +2417,7 @@ Issue summary:</translation>
         <translation>Clear log</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+38"/>
         <source>主页</source>
         <translation>Home page</translation>
     </message>
@@ -2432,7 +2452,7 @@ Issue summary:</translation>
         <translation>Projects</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>使用说明</source>
         <translation>Instructions</translation>
     </message>
@@ -2442,7 +2462,7 @@ Issue summary:</translation>
         <translation>About</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <location line="+6"/>
         <source>请稍候</source>
         <translation>Wait a minute</translation>
@@ -2458,7 +2478,7 @@ Issue summary:</translation>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>选择新项目的存放位置</source>
         <translation>Choose new dir to store project</translation>
     </message>
@@ -2469,32 +2489,32 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+10"/>
+        <location line="+9"/>
+        <location line="+4"/>
         <location line="+6"/>
-        <location line="+6"/>
-        <location line="+14"/>
+        <location line="+12"/>
         <location line="+5"/>
-        <location line="+43"/>
+        <location line="+49"/>
         <source>创建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <location line="+107"/>
+        <location line="-85"/>
+        <location line="+118"/>
         <source>已存在同名项目！</source>
         <translation>Project name exists!</translation>
     </message>
     <message>
-        <location line="-101"/>
         <source>项目名称不能为空，且不能包含斜杠或反斜杠！</source>
-        <translation>Project name can not be empty or contain slash/backslash!</translation>
+        <translation type="vanished">Project name can not be empty or contain slash/backslash!</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="-105"/>
         <source>目录下存在同名文件或文件夹！</source>
         <translation>File/dir with the same name has already existed!</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+18"/>
         <source>无法创建新文件！</source>
         <translation>Can not create new file!</translation>
     </message>
@@ -2504,7 +2524,7 @@ Issue summary:</translation>
         <translation>Can not read template file!</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+49"/>
         <source>无法写入配置文件！</source>
         <translation>Can not write into config file!</translation>
     </message>
@@ -2556,7 +2576,12 @@ Issue summary:</translation>
         <translation>Fail to remove</translation>
     </message>
     <message>
-        <location line="-36"/>
+        <location line="-134"/>
+        <source>非法的项目名！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+98"/>
         <source>目录下不存在 Config.toml 文件！</source>
         <translation>No Config.toml file exists in this directory!</translation>
     </message>
@@ -3847,18 +3872,18 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+35"/>
+        <location filename="ProjectSettingsPage.cpp" line="+52"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+244"/>
+        <location line="+304"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-211"/>
+        <location line="-271"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
@@ -3956,7 +3981,7 @@ Cache: %4</translation>
         <translation>Others</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+109"/>
         <source>项目仍在运行中，无法刷新配置</source>
         <translation>Project is still running</translation>
     </message>
@@ -3971,7 +3996,7 @@ Cache: %4</translation>
         <translation>Project %1 config is invalid</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+23"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>

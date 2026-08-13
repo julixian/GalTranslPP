@@ -37,12 +37,12 @@
 <context>
     <name>ApiTool.queryApiModels</name>
     <message>
-        <location filename="ApiTool.cpp" line="507"/>
+        <location filename="ApiTool.cpp" line="504"/>
         <source>模型列表响应 JSON 解析失败: %1</source>
         <translation>Model list response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiTool.cpp" line="518"/>
+        <location filename="ApiTool.cpp" line="515"/>
         <source>模型列表响应模型字段解析失败: %1</source>
         <translation>Failed parsing model list field: %1</translation>
     </message>
@@ -2551,7 +2551,7 @@ Problem overview:
 <context>
     <name>testApiConnection</name>
     <message>
-        <location filename="ApiTool.cpp" line="555"/>
+        <location filename="ApiTool.cpp" line="552"/>
         <source>Api 响应 JSON 解析失败，%1</source>
         <translation>Api response JSON parse failed: %1</translation>
     </message>

@@ -18,7 +18,7 @@ class DictSettingsPage : public BasePage
 public:
     explicit DictSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig,
         toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-    void refreshDicts();
+    void refreshGptDict();
 
 private:
 
@@ -27,7 +27,7 @@ private:
     toml::ordered_value& m_globalConfig;
     toml::ordered_value& m_projectConfig;
 
-    std::function<void()> m_refreshFunc;
+    std::function<void()> m_refreshGptDictFunc;
 
     QList<GptDictEntry> m_withdrawGptList;
     QList<NormalDictEntry> m_withdrawPreList;

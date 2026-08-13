@@ -204,6 +204,24 @@ void AppSettingsPage::setupUi()
     centerLayout->addSpacing(15);
     centerLayout->addWidget(helperText);
 
+    // 延迟项目初始化
+    ElaScrollPageArea* lazyProjectInitializationArea = new ElaScrollPageArea(centralWidget);
+    QHBoxLayout* lazyProjectInitializationLayout = new QHBoxLayout(lazyProjectInitializationArea);
+    ElaDoubleText* lazyProjectInitializationText = new ElaDoubleText(
+        tr("延迟项目初始化"), 16,
+        tr("增加启动速度，但第一次进入某个项目时会增加卡一下初始化"),
+        10, "", lazyProjectInitializationArea);
+    lazyProjectInitializationLayout->addWidget(lazyProjectInitializationText);
+    lazyProjectInitializationLayout->addStretch();
+    ElaToggleSwitch* lazyProjectInitializationSwitch = new ElaToggleSwitch(lazyProjectInitializationArea);
+    lazyProjectInitializationSwitch->setIsToggled(toml::find_or(m_globalConfig, "lazyProjectInitialization", true));
+    connect(lazyProjectInitializationSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+        {
+            insertToml(m_globalConfig, "lazyProjectInitialization", isChecked);
+        });
+    lazyProjectInitializationLayout->addWidget(lazyProjectInitializationSwitch);
+    centerLayout->addWidget(lazyProjectInitializationArea);
+
     // 任务完成后自动刷新人名表和字典
     ElaScrollPageArea* autoRefreshArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* autoRefreshLayout = new QHBoxLayout(autoRefreshArea);
@@ -447,6 +465,7 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "stackSwitchMode", stackSwitchGroup->id(stackSwitchGroup->checkedButton()));
 
             insertToml(m_globalConfig, "autoRefreshAfterTranslate", autoRefreshSwitch->getIsToggled());
+            insertToml(m_globalConfig, "lazyProjectInitialization", lazyProjectInitializationSwitch->getIsToggled());
             insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());

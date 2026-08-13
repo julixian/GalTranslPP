@@ -7,6 +7,7 @@ clearLogShortcut = "Ctrl+L"
 defaultDictOpenMode = 1
 defaultNameTableOpenMode = 1
 language = "zh_CN"
+lazyProjectInitialization = true
 navigationMode = 0
 projects = []
 pythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64"

@@ -1,11 +1,11 @@
 module;
 
 #include "GPPMacros.hpp"
-#include <toml.hpp>
-#include <ctpl_stl.h>
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
+#include <toml.hpp>
+#include <ctpl_stl.h>
 
 module DictionaryGenerator;
 

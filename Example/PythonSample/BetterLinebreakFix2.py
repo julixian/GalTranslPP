@@ -26,9 +26,10 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
-maxLineLength = 24
-linebreakSymbol = "\\n"
-dialogueNewLinePrefix = "\u2002"
+gameMaxLineLength = 30
+commonMaxLineLength = gameMaxLineLength - 2
+linebreakSymbol = "\r\n"
+dialogueNewLinePrefix = ""
 
 @dataclass(frozen=True)
 class InlineTokenRule:
@@ -39,16 +40,12 @@ class InlineTokenRule:
 # 格式变更时，只需修改/增加规则及其显示宽度算法。规则重叠时前者优先。
 inlineTokenRules = (
     InlineTokenRule(
-        re.compile(r"\{([^\{\}:]+?):([^\{\}:]+?)\}"),
+        re.compile(r"\[([^\[\]/]+?)/([^\[\]/]+?)\]"),
         lambda match: len(match.group(1)),
     ),
     InlineTokenRule(
-        re.compile(r"\{\{text_area_layer\}\}"),
-        lambda match: 1,
-    ),
-    InlineTokenRule(
-        re.compile(r"\{\{(.+?)\}\}"),
-        lambda match: 2,
+        re.compile(r"\\[A-Za-z\d\+;]+"),
+        lambda match: 0,
     ),
 )
 
@@ -139,7 +136,7 @@ def isDialogue(text: str) -> bool:
     return depth == 0
 
 def hasLongPart(transView: str):
-    maxLen = maxLineLength
+    maxLen = gameMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     if not segments:
@@ -148,11 +145,11 @@ def hasLongPart(transView: str):
     for index, segment in enumerate(segments):
         if dialogue:
             if index == 0:
-                maxLen = maxLineLength
+                maxLen = gameMaxLineLength
             else:
-                maxLen = maxLineLength - 1
+                maxLen = gameMaxLineLength - 1
         else:
-            maxLen = maxLineLength
+            maxLen = gameMaxLineLength
         if displayLength(segment) > maxLen:
             return True
     return False
@@ -165,7 +162,7 @@ def processSentence(se: gpp.Sentence):
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     transView = "".join(segments)
-    maxLen = maxLineLength
+    maxLen = commonMaxLineLength
     tokens = splitIntoTokens(transView)
     if not tokens:
         return
@@ -175,14 +172,16 @@ def processSentence(se: gpp.Sentence):
     currentLine = tokens[0]
     residualTokens = tokens[1:]
 
-    for index, currentToken in enumerate(residualTokens):
+    index = 0
+    while index < len(residualTokens):
+        currentToken = residualTokens[index]
         if dialogue:
             if not newLines:
-                maxLen = maxLineLength
+                maxLen = commonMaxLineLength
             else:
-                maxLen = maxLineLength - 1
+                maxLen = commonMaxLineLength - 1
         else:
-            maxLen = maxLineLength
+            maxLen = commonMaxLineLength
         if displayLength(currentLine) + displayLength(currentToken) <= maxLen:
             if index + 1 < len(residualTokens):
                 nextToken = residualTokens[index + 1]
@@ -192,6 +191,7 @@ def processSentence(se: gpp.Sentence):
                         #『\n...
                         newLines.append(currentLine)
                         currentLine = currentToken
+                        index += 1
                         continue
                     if gpp.utils.isAllPunctuation(nextToken) and nextToken not in excludePuncts:
                         if any(currentLine.endswith(excludePunct) for excludePunct in excludePuncts):
@@ -199,24 +199,51 @@ def processSentence(se: gpp.Sentence):
                             #『word\n。』
                             newLines.append(currentLine[:-1])
                             currentLine = currentLine[-1] + currentToken
+                            index += 1
                         else:
                             # cccc  n
                             # word\n，
+                            punctuationTokens = []
+                            punctuationEndIndex = index + 1
+                            while (
+                                punctuationEndIndex < len(residualTokens)
+                                and gpp.utils.isAllPunctuation(residualTokens[punctuationEndIndex])
+                            ):
+                                punctuationTokens.append(residualTokens[punctuationEndIndex])
+                                punctuationEndIndex += 1
+                            punctuationText = "".join(punctuationTokens)
+                            if (displayLength(currentLine)
+                                + displayLength(currentToken)
+                                + displayLength(punctuationText)
+                                <= gameMaxLineLength
+                                and punctuationText[-1] not in excludePuncts
+                            ):
+                                newLines.append(currentLine + currentToken + punctuationText)
+                                if punctuationEndIndex < len(residualTokens):
+                                    currentLine = residualTokens[punctuationEndIndex]
+                                    index = punctuationEndIndex + 1
+                                else:
+                                    currentLine = ""
+                                    index = punctuationEndIndex
+                                continue
                             newLines.append(currentLine)
                             currentLine = currentToken
+                            index += 1
                         continue
             currentLine += currentToken
         else:
             newLines.append(currentLine)
             currentLine = currentToken
-    newLines.append(currentLine)
+        index += 1
+    if currentLine:
+        newLines.append(currentLine)
     
     se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
 
 def linkLine(se: gpp.Sentence):
     transView = se.transview
     dialogue = isDialogue(transView)
-    maxLen = maxLineLength
+    maxLen = commonMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     
@@ -229,21 +256,19 @@ def linkLine(se: gpp.Sentence):
     for currentSegment in segments[1:]:
         if dialogue:
             if not newLines:
-                maxLen = maxLineLength
+                maxLen = commonMaxLineLength
             else:
-                maxLen = maxLineLength - 1
+                maxLen = commonMaxLineLength - 1
         else:
-            maxLen = maxLineLength
+            maxLen = commonMaxLineLength
         if displayLength(currentLine) + displayLength(currentSegment) <= maxLen:
             currentLine += currentSegment
         else:
             newLines.append(currentLine)
             currentLine = currentSegment
-
     newLines.append(currentLine)
+
     se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
-    if se.orig.startswith("　") and not se.transview.startswith("　"):
-        se.transview = "　" + se.transview
 
 
 
@@ -257,16 +282,21 @@ def init(projectDir: Path):
         with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
             tokenizeCache = json.load(f)
 
-def dPostRun(se: gpp.Sentence):
+def dPostRunImpl(se : gpp.Sentence):
     try:
-        if (se.filename == "cheat.sal.txt.json" or se.filename == "himekuri.sal.txt.json"):
+        if "＆" in se.name:
             return
-        if not gpp.utils.hasCJK(se.transview) or se.orig.startswith("　　"):
+        if not gpp.utils.hasCJK(se.transview):
             return
         processSentence(se)
         linkLine(se)
     except Exception as e:
         logger.error(f"Error during BetterLinebreakFix dPostRun(): {e}")
+
+def dPostRun(se: gpp.Sentence):
+    dPostRunImpl(se)
+    if se.transview.count(linebreakSymbol) > 1:
+        se.problems += ["单行太长"] 
 
 
 def unload():

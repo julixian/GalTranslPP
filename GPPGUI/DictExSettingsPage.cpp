@@ -33,67 +33,67 @@ void DictExSettingsPage::setupUi()
 	mainLayout->setContentsMargins(20, 15, 15, 0);
 
 	auto createDictSelectAreaFunc =
-		[=](const QString& text, const QString& defaultItem, const std::vector<std::string>& projectDictFileNames,
-			const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
+		    [=](const QString& tipText, const QString& projectDictShowName, const std::string& projectDictStdName,
+			    const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
 		{
-			ElaScrollPageArea* dictNamesArea = new ElaScrollPageArea(mainWidget);
-			QHBoxLayout* dictNamesLayout = new QHBoxLayout(dictNamesArea);
-			ElaText* dictNamesText = new ElaText(dictNamesArea);
-			dictNamesText->setText(text);
-			dictNamesText->setWordWrap(false);
-			dictNamesText->setTextPixelSize(16);
-			dictNamesLayout->addWidget(dictNamesText);
-			dictNamesLayout->addStretch();
-			ElaMultiSelectComboBox* dictNamesComboBox = new ElaMultiSelectComboBox(dictNamesArea);
+			ElaScrollPageArea* dictSelectArea = new ElaScrollPageArea(mainWidget);
+			QHBoxLayout* dictSelectLayout = new QHBoxLayout(dictSelectArea);
+			ElaText* dictSelectText = new ElaText(dictSelectArea);
+			dictSelectText->setText(tipText);
+			dictSelectText->setWordWrap(false);
+			dictSelectText->setTextPixelSize(16);
+			dictSelectLayout->addWidget(dictSelectText);
+			dictSelectLayout->addStretch();
+			ElaMultiSelectComboBox* dictNamesComboBox = new ElaMultiSelectComboBox(dictSelectArea);
 			dictNamesComboBox->setFixedWidth(500);
 			const auto& globalConfigDictNames = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
-				for (const auto& dictName : globalConfigDictNames) {
-					if (dictName.is_string()) {
-						dictNamesComboBox->addItem(QString::fromStdString(dictName.as_string()));
+				for (const auto& globalConfigDictName : globalConfigDictNames) {
+					if (globalConfigDictName.is_string()) {
+						dictNamesComboBox->addItem(QString::fromStdString(globalConfigDictName.as_string()));
 					}
 				}
-			dictNamesComboBox->addItem(defaultItem);
+			dictNamesComboBox->addItem(projectDictShowName);
 			const auto& projectConfigDictNames = toml::find_or_default<toml::array>(m_projectConfig, "dictionary", projectConfigKey);
 			QList<int> indexesToSelect;
-			for (const auto& dictName : projectConfigDictNames) {
-				if (dictName.is_string()) {
-					QString dictNameStr;
-					if (std::ranges::contains(projectDictFileNames, dictName.as_string())) {
-						dictNameStr = defaultItem;
-					}
-					else {
-						dictNameStr = QString::fromStdWString(fs::path(ascii2Wide(dictName.as_string())).stem().wstring());
-					}
-					int index = dictNamesComboBox->findText(dictNameStr);
-					if (index < 0 || indexesToSelect.contains(index)) {
-						continue;
-					}
-					indexesToSelect.append(index);
+			for (const auto& projectConfigDictName : projectConfigDictNames) {
+				if (!projectConfigDictName.is_string()) {
+					continue;
 				}
+				const QString dictShowName = projectDictStdName == projectConfigDictName.as_string()
+					? projectDictShowName
+					: QString::fromStdWString(fs::path(ascii2Wide(projectConfigDictName.as_string())).stem().wstring());
+				const int index = dictNamesComboBox->findText(dictShowName);
+				if (index < 0 || indexesToSelect.contains(index)) {
+					continue;
+				}
+				indexesToSelect.append(index);
 			}
 			dictNamesComboBox->setCurrentSelection(indexesToSelect);
 
-			dictNamesLayout->addWidget(dictNamesComboBox);
-			mainLayout->addWidget(dictNamesArea);
+			dictSelectLayout->addWidget(dictNamesComboBox);
+			mainLayout->addWidget(dictSelectArea);
 			return dictNamesComboBox;
 		};
 
-	const QString projectPreDictItem = tr("项目译前字典");
-	const QString projectGptDictItem = tr("项目GPT字典");
-	const QString projectPostDictItem = tr("项目译后字典");
-	const std::vector<std::string> projectPreDictFiles = { "ProjPreDict.toml" };
-	const std::vector<std::string> projectGptDictFiles = { "ProjGptDict.toml" };
-	const std::vector<std::string> projectPostDictFiles = { "ProjPostDict.toml" };
-	ElaMultiSelectComboBox* comboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), projectPreDictItem, projectPreDictFiles, "commonPreDicts", "preDicts");
-	ElaMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), projectGptDictItem, projectGptDictFiles, "commonGptDicts", "gptDicts");
-	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), projectPostDictItem, projectPostDictFiles, "commonPostDicts", "postDicts");
+	const QString projectPreDictShowName = tr("项目译前字典");
+	const QString projectGptDictShowName = tr("项目GPT字典");
+	const QString projectPostDictShowName = tr("项目译后字典");
+	const std::string projectPreDictStdName = "ProjPreDict.toml";
+	const std::string projectGptDictStdName = "ProjGptDict.toml";
+	const std::string projectPostDictStdName = "ProjPostDict.toml";
+	ElaMultiSelectComboBox* preDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), projectPreDictShowName,
+		projectPreDictStdName, "commonPreDicts", "preDicts");
+	ElaMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), projectGptDictShowName,
+		projectGptDictStdName, "commonGptDicts", "gptDicts");
+	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), projectPostDictShowName,
+		projectPostDictStdName, "commonPostDicts", "postDicts");
 
 
 	bool usePreDictInName = toml::find_or(m_projectConfig, "dictionary", "usePreDictInName", false);
 	ElaScrollPageArea* usePreDictInNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePreDictInNameLayout = new QHBoxLayout(usePreDictInNameArea);
 	ElaText* usePreDictInNameText = new ElaText(usePreDictInNameArea);
-	usePreDictInNameText->setText(tr("将译前字典用在name字段"));
+	usePreDictInNameText->setText(tr("将译前字典用在 name 字段"));
 	usePreDictInNameText->setWordWrap(false);
 	usePreDictInNameText->setTextPixelSize(16);
 	usePreDictInNameLayout->addWidget(usePreDictInNameText);
@@ -107,7 +107,7 @@ void DictExSettingsPage::setupUi()
 	ElaScrollPageArea* usePostDictInNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePostDictInNameLayout = new QHBoxLayout(usePostDictInNameArea);
 	ElaText* usePostDictInNameText = new ElaText(usePostDictInNameArea);
-	usePostDictInNameText->setText(tr("将译后字典用在name字段"));
+	usePostDictInNameText->setText(tr("将译后字典用在 name 字段"));
 	usePostDictInNameText->setWordWrap(false);
 	usePostDictInNameText->setTextPixelSize(16);
 	usePostDictInNameLayout->addWidget(usePostDictInNameText);
@@ -121,7 +121,7 @@ void DictExSettingsPage::setupUi()
 	ElaScrollPageArea* usePreDictInMsgArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePreDictInMsgLayout = new QHBoxLayout(usePreDictInMsgArea);
 	ElaText* usePreDictInMsgText = new ElaText(usePreDictInMsgArea);
-	usePreDictInMsgText->setText(tr("将译前字典用在msg字段"));
+	usePreDictInMsgText->setText(tr("将译前字典用在 message 字段"));
 	usePreDictInMsgText->setWordWrap(false);
 	usePreDictInMsgText->setTextPixelSize(16);
 	usePreDictInMsgLayout->addWidget(usePreDictInMsgText);
@@ -135,7 +135,7 @@ void DictExSettingsPage::setupUi()
 	ElaScrollPageArea* usePostDictInMsgArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* usePostDictInMsgLayout = new QHBoxLayout(usePostDictInMsgArea);
 	ElaText* usePostDictInMsgText = new ElaText(usePostDictInMsgArea);
-	usePostDictInMsgText->setText(tr("将译后字典用在msg字段"));
+	usePostDictInMsgText->setText(tr("将译后字典用在 message 字段"));
 	usePostDictInMsgText->setWordWrap(false);
 	usePostDictInMsgText->setTextPixelSize(16);
 	usePostDictInMsgLayout->addWidget(usePostDictInMsgText);
@@ -149,7 +149,7 @@ void DictExSettingsPage::setupUi()
 	ElaScrollPageArea* useGPTDictToReplaceNameArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* useGPTDictToReplaceNameLayout = new QHBoxLayout(useGPTDictToReplaceNameArea);
 	ElaText* useGPTDictToReplaceNameText = new ElaText(useGPTDictToReplaceNameArea);
-	useGPTDictToReplaceNameText->setText(tr("启用GPT字典替换name字段"));
+	useGPTDictToReplaceNameText->setText(tr("启用GPT字典替换 name 字段"));
 	useGPTDictToReplaceNameText->setWordWrap(false);
 	useGPTDictToReplaceNameText->setTextPixelSize(16);
 	useGPTDictToReplaceNameLayout->addWidget(useGPTDictToReplaceNameText);
@@ -163,16 +163,17 @@ void DictExSettingsPage::setupUi()
 	m_refreshCommonDictsListFunc = [=]()
 		{
 			auto refreshCommonDictsListFunc =
-				[=](const QString& excludeName, const std::string& globalConfigKey, ElaMultiSelectComboBox* comboBox_)
+				    [=](const QString& projectDictShowName, const std::string& globalConfigKey, ElaMultiSelectComboBox* dictNamesComboBox)
 				{
-					const auto& commonDictsArr = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
+					const toml::array commonDictNamesArr = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 					QList<int> dictIndexesToRemove;
-					for (int i = 0; i < comboBox_->count(); i++) {
+					for (int i = 0; i < dictNamesComboBox->count(); ++i) {
 						if (
-							comboBox_->itemText(i) != excludeName &&
-							!std::ranges::any_of(commonDictsArr, [=](const auto& elem)
+							const QString dictNameInComboBox = dictNamesComboBox->itemText(i);
+							dictNameInComboBox != projectDictShowName &&
+							!std::ranges::any_of(commonDictNamesArr, [&](const toml::value& commonDictName)
 								{
-									return elem.is_string() && elem.as_string() == comboBox_->itemText(i).toStdString();
+									return commonDictName.is_string() && commonDictName.as_string() == dictNameInComboBox.toStdString();
 								})
 							)
 						{
@@ -180,55 +181,51 @@ void DictExSettingsPage::setupUi()
 						}
 					}
 					std::ranges::sort(dictIndexesToRemove, [](int a, int b) { return a > b; });
-					for (int index : dictIndexesToRemove) {
-						comboBox_->removeItem(index);
+					for (const int index : dictIndexesToRemove) {
+						dictNamesComboBox->removeItem(index);
 					}
-					QStringList commonDictsChosen = comboBox_->getCurrentSelection();
-					for (const auto& dictName : commonDictsArr) {
-						if (dictName.is_string()) {
-							int index = comboBox_->findText(QString::fromStdString(dictName.as_string()));
-							if (index >= 0) {
-								continue;
-							}
-							comboBox_->insertItem(0, QString::fromStdString(dictName.as_string()));
-							if (toml::find_or(m_globalConfig, globalConfigKey, "spec", dictName.as_string(), "defaultOn", true)) {
-								commonDictsChosen.append(QString::fromStdString(dictName.as_string()));
-							}
+					QStringList selectedDictNames = dictNamesComboBox->getCurrentSelection();
+					for (const auto& commonDictName : commonDictNamesArr) {
+						if (!commonDictName.is_string()) {
+							continue;
+						}
+						const int index = dictNamesComboBox->findText(QString::fromStdString(commonDictName.as_string()));
+						if (index >= 0) {
+							continue;
+						}
+						dictNamesComboBox->insertItem(0, QString::fromStdString(commonDictName.as_string()));
+						if (toml::find_or(m_globalConfig, globalConfigKey, "spec", commonDictName.as_string(), "defaultOn", true)) {
+							selectedDictNames.append(QString::fromStdString(commonDictName.as_string()));
 						}
 					}
-					comboBox_->setCurrentSelection(commonDictsChosen);
+					dictNamesComboBox->setCurrentSelection(selectedDictNames);
 				};
 
-			refreshCommonDictsListFunc(projectPreDictItem, "commonPreDicts", comboBox);
-			refreshCommonDictsListFunc(projectGptDictItem, "commonGptDicts", gptDictNamesComboBox);
-			refreshCommonDictsListFunc(projectPostDictItem, "commonPostDicts", postDictNamesComboBox);
+			refreshCommonDictsListFunc(projectPreDictShowName, "commonPreDicts", preDictNamesComboBox);
+			refreshCommonDictsListFunc(projectGptDictShowName, "commonGptDicts", gptDictNamesComboBox);
+			refreshCommonDictsListFunc(projectPostDictShowName, "commonPostDicts", postDictNamesComboBox);
 
 		};
 
 
 	m_applyFunc = [=]()
 		{
-			auto appendDictNames = [](toml::array& dictNamesArr, const QStringList& selectedNames,
-				const QString& projectDictItem, const std::vector<std::string>& projectDictFileNames)
+			auto appendDictNamesFunc = [](toml::array& dictNamesArr, const ElaMultiSelectComboBox* dictNamesComboBox,
+				const QString& projectDictShowName, const std::string& projectDictStdName)
 				{
-					for (const auto& name : selectedNames) {
-						if (name == projectDictItem) {
-							for (const std::string& fileName : projectDictFileNames) {
-								dictNamesArr.push_back(fileName);
-							}
+					for (const auto& selectedDictName : dictNamesComboBox->getCurrentSelection()) {
+						if (selectedDictName == projectDictShowName) {
+							dictNamesArr.push_back(projectDictStdName);
 						}
 						else {
-							dictNamesArr.push_back(name.toStdString() + ".toml");
+							dictNamesArr.push_back(selectedDictName.toStdString() + ".toml");
 						}
 					}
 				};
 			toml::array preDictNamesArr, gptDictNamesArr, postDictNamesArr;
-			QStringList preDictNamesStr = comboBox->getCurrentSelection(),
-				gptDictNames = gptDictNamesComboBox->getCurrentSelection(),
-				postDictNames = postDictNamesComboBox->getCurrentSelection();
-			appendDictNames(preDictNamesArr, preDictNamesStr, projectPreDictItem, projectPreDictFiles);
-			appendDictNames(gptDictNamesArr, gptDictNames, projectGptDictItem, projectGptDictFiles);
-			appendDictNames(postDictNamesArr, postDictNames, projectPostDictItem, projectPostDictFiles);
+			appendDictNamesFunc(preDictNamesArr, preDictNamesComboBox, projectPreDictShowName, projectPreDictStdName);
+			appendDictNamesFunc(gptDictNamesArr, gptDictNamesComboBox, projectGptDictShowName, projectGptDictStdName);
+			appendDictNamesFunc(postDictNamesArr, postDictNamesComboBox, projectPostDictShowName, projectPostDictStdName);
 			insertToml(m_projectConfig, "dictionary.preDicts", preDictNamesArr);
 			insertToml(m_projectConfig, "dictionary.gptDicts", gptDictNamesArr);
 			insertToml(m_projectConfig, "dictionary.postDicts", postDictNamesArr);

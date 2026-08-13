@@ -66,7 +66,7 @@ private:
     QString m_projectExpanderKey;
 
     QString m_aboutKey;
-    QString m_transIllustrationKey;
+    QString m_illustrationKey;
     QString m_appSettingsKey;
 
     QShortcut* m_clearLogShortcut = nullptr;

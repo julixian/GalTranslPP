@@ -33,10 +33,10 @@ DictSettingsPage::DictSettingsPage(fs::path& projectDir, toml::ordered_value& gl
 	setupUi();
 }
 
-void DictSettingsPage::refreshDicts()
+void DictSettingsPage::refreshGptDict()
 {
-	if (m_refreshFunc) {
-		m_refreshFunc();
+	if (m_refreshGptDictFunc) {
+		m_refreshGptDictFunc();
 	}
 }
 
@@ -53,9 +53,10 @@ void DictSettingsPage::setupUi()
 
 
 	auto createDictTabFunc =
-		[=]<typename EntryType>(const std::function<QString()>& readPlainTextFunc, const std::function<QList<EntryType>()>& readEntriesFunc,
-			QList<EntryType>& withdrawList, const std::string& configKey, const QString& tabName, const fs::path& dictPath)
-		-> std::pair<std::function<void()>, std::function<void(bool)>>
+		[=]<typename EntryType>
+	    (const std::function<QString()>& readPlainTextFunc, const std::function<QList<EntryType>()>& readEntriesFunc,
+	     QList<EntryType>& withdrawList, const std::string& configKey, const QString& tabName, const fs::path& dictPath)
+	     -> std::pair<std::function<void()>, std::function<void(bool)>>
 	{
 		using ModelType = std::conditional_t<std::is_same_v<EntryType, GptDictEntry>, GptDictModel, NormalDictModel>;
 		QWidget* dictWidget = new QWidget(mainWidget);
@@ -193,17 +194,17 @@ void DictSettingsPage::setupUi()
 						dictModel->loadData(DictionaryReader::readGptDict(dictPath));
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						toml::ordered_value dictArr = toml::array{};
-						const QList<EntryType>& entries = dictModel->getEntriesRef();
-						for (const auto& entry : entries) {
-							toml::ordered_table dictTbl;
-							dictTbl.insert({ "org", entry.original.toStdString() });
-							dictTbl.insert({ "rep", entry.translation.toStdString() });
-							dictTbl.insert({ "note", entry.description.toStdString() });
-							dictArr.push_back(dictTbl);
+						toml::ordered_value dictsArr = toml::array{};
+						const QList<EntryType>& dictEntries = dictModel->getEntriesRef();
+						for (const auto& dictEntry : dictEntries) {
+							toml::ordered_table dictTable;
+							dictTable.insert({ "org", dictEntry.original.toStdString() });
+							dictTable.insert({ "rep", dictEntry.translation.toStdString() });
+							dictTable.insert({ "note", dictEntry.description.toStdString() });
+							dictsArr.push_back(std::move(dictTable));
 						}
-						dictArr.as_array_fmt().fmt = toml::array_format::multiline;
-						atomicOutputFile(ofs, dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictArr}} }));
+						dictsArr.as_array_fmt().fmt = toml::array_format::multiline;
+						atomicOutputFile(ofs, dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictsArr}} }));
 						plainTextEdit->setPlainText(DictionaryReader::readDictStr(dictPath));
 					}
 					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", dictTableView->columnWidth(GptDictModel::Original));
@@ -218,27 +219,27 @@ void DictSettingsPage::setupUi()
 						dictModel->loadData(readEntriesFunc());
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						toml::ordered_value dictArr = toml::array{};
-						for (const NormalDictEntry& entry : dictModel->getEntriesRef()) {
-							toml::ordered_table dictTbl;
-							dictTbl.insert({ "org", entry.original.toStdString() });
-							dictTbl.insert({ "rep", entry.translation.toStdString() });
-							if (!entry.conditions.isEmpty()) {
+						toml::ordered_value dictsArr = toml::array{};
+						for (const NormalDictEntry& dictEntry : dictModel->getEntriesRef()) {
+							toml::ordered_table dictTable;
+							dictTable.insert({ "org", dictEntry.original.toStdString() });
+							dictTable.insert({ "rep", dictEntry.translation.toStdString() });
+							if (!dictEntry.conditions.isEmpty()) {
 								toml::ordered_value conditions = toml::array{};
-								for (const NormalCondition& condition : entry.conditions) {
-									toml::ordered_table conditionTbl;
-									conditionTbl.insert({ "conditionReg", condition.pattern.toStdString() });
-									conditionTbl.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
-									conditions.push_back(std::move(conditionTbl));
+								for (const NormalCondition& condition : dictEntry.conditions) {
+									toml::ordered_table conditionTable;
+									conditionTable.insert({ "conditionReg", condition.pattern.toStdString() });
+									conditionTable.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
+									conditions.push_back(std::move(conditionTable));
 								}
-								dictTbl.insert({ "conditions", std::move(conditions) });
+								dictTable.insert({ "conditions", std::move(conditions) });
 							}
-							dictTbl.insert({ "isReg", entry.isReg });
-							dictTbl.insert({ "priority", entry.priority });
-							dictArr.push_back(std::move(dictTbl));
+							dictTable.insert({ "isReg", dictEntry.isReg });
+							dictTable.insert({ "priority", dictEntry.priority });
+							dictsArr.push_back(std::move(dictTable));
 						}
 						atomicOutputFile(ofs, dictPath,
-							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictArr) }} }));
+							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictsArr) }} }));
 						plainTextEdit->setPlainText(readPlainTextFunc());
 					}
 					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.0", dictTableView->columnWidth(NormalDictModel::Original));
@@ -251,37 +252,33 @@ void DictSettingsPage::setupUi()
 			};
 		connect(importDictButton, &ElaIconButton::clicked, this, [=]()
 			{
-				QString filter;
-				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
-					filter = "TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)";
-				}
-				else {
-					filter = "TOML files (*.toml);;JSON files (*.json)";
-				}
-				QString dictPathStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
+				const QString filter = std::is_same_v<EntryType, GptDictEntry>
+					? "TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)"
+					: "TOML files (*.toml);;JSON files (*.json)";
+				const QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 					QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectDictPath", wide2Ascii(m_projectDir))), filter);
-				if (dictPathStr.isEmpty()) {
+				if (importDictPathQStr.isEmpty()) {
 					return;
 				}
-				insertToml(m_globalConfig, "lastProjectDictPath", dictPathStr.toStdString());
-				fs::path importDictPath = dictPathStr.toStdWString();
-				QList<EntryType> entries;
+				insertToml(m_globalConfig, "lastProjectDictPath", importDictPathQStr.toStdString());
+				const fs::path importDictPath = importDictPathQStr.toStdWString();
+				QList<EntryType> dictEntries;
 				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
-					entries = DictionaryReader::readGptDict(importDictPath);
+					dictEntries = DictionaryReader::readGptDict(importDictPath);
 				}
 				else {
-					entries = DictionaryReader::readNormalDict(importDictPath);
+					dictEntries = DictionaryReader::readNormalDict(importDictPath);
 				}
-				if (entries.isEmpty()) {
+				if (dictEntries.isEmpty()) {
 					ElaMessageBar::warning(ElaMessageBarType::TopLeft, tr("导入失败"), tr("字典文件中没有词条"), 3000);
 					return;
 				}
-				dictModel->loadData(entries);
+				dictModel->loadData(dictEntries);
 				saveDictFunc(true);
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("导入成功"),
 					tr("从文件 %1 中导入了 %2 个词条")
 					.arg(QString::fromStdWString(importDictPath.filename().wstring()))
-					.arg(QString::number(entries.size())), 3000);
+					.arg(QString::number(dictEntries.size())), 3000);
 			});
 		connect(plainTextModeButtom, &ElaToolButton::clicked, this, [=]()
 			{
@@ -436,7 +433,7 @@ void DictSettingsPage::setupUi()
 			"gpt", tr("项目GPT字典"), gptDictPath);
 
 
-	fs::path preDictPath = m_projectDir / L"ProjPreDict.toml";
+	const fs::path preDictPath = m_projectDir / L"ProjPreDict.toml";
 	std::function<QString()> preReadPlainTextFunc = [=]() -> QString
 		{
 			return DictionaryReader::readDictStr(preDictPath);
@@ -450,7 +447,7 @@ void DictSettingsPage::setupUi()
 			"pre", tr("项目译前字典"), preDictPath);
 
 
-	fs::path postDictPath = m_projectDir / L"ProjPostDict.toml";
+	const fs::path postDictPath = m_projectDir / L"ProjPostDict.toml";
 	std::function<QString()> postReadPlainTextFunc = [=]() -> QString
 		{
 			return DictionaryReader::readDictStr(postDictPath);
@@ -464,11 +461,9 @@ void DictSettingsPage::setupUi()
 			"post", tr("项目译后字典"), postDictPath);
 
 
-	m_refreshFunc = [=]()
+	m_refreshGptDictFunc = [=]()
 		{
 			refreshAndSaveGptDictFunc.first();
-			//refreshAndSavePreDictFunc.first();
-			//refreshAndSavePostDictFunc.first();
 		};
 
 

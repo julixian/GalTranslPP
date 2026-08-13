@@ -70,10 +70,10 @@ void CommonGptDictsPage::setupUi()
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
 
-	auto createGptTab = [=](const fs::path& orgDictPath) -> QWidget*
+	auto createGptDictTabFunc = [=](const fs::path& orgDictPath) -> QWidget*
 		{
-			const fs::path dictPath = defaultGptDictPath / fs::path(orgDictPath.filename()).replace_extension(".toml");
-			const std::string dictName = wide2Ascii(orgDictPath.stem().wstring());
+			const fs::path initDictPath = defaultGptDictPath / fs::path(orgDictPath.filename()).replace_extension(".toml");
+			const std::string initDictName = wide2Ascii(orgDictPath.stem().wstring());
 			GptTabEntry gptTabEntry;
 
 			QWidget* pageMainWidget = new QWidget(tabWidget);
@@ -167,10 +167,10 @@ void CommonGptDictsPage::setupUi()
 			model->loadData(gptData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
-			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "openMode", 1));
-			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "0", 346));
-			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "1", 199));
-			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "columnWidth", "2", 559));
+			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "commonGptDicts", "spec", initDictName, "openMode", 1));
+			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_globalConfig, "commonGptDicts", "spec", initDictName, "columnWidth", "0", 346));
+			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_globalConfig, "commonGptDicts", "spec", initDictName, "columnWidth", "1", 199));
+			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_globalConfig, "commonGptDicts", "spec", initDictName, "columnWidth", "2", 559));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("备注"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
 			pageButtonLayout->insertWidget(3, searchBar);
@@ -183,8 +183,8 @@ void CommonGptDictsPage::setupUi()
 				&& tableView->selectionModel()->hasSelection());
 			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 				&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
-			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, "commonGptDicts", "spec", dictName, "defaultOn", true));
-			insertToml(m_globalConfig, "commonGptDicts.spec." + dictName + ".defaultOn", defaultOnSwitch->getIsToggled());
+			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, "commonGptDicts", "spec", initDictName, "defaultOn", true));
+			insertToml(m_globalConfig, "commonGptDicts.spec." + initDictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
 			connect(plainTextModeButton, &ElaToolButton::clicked, this, [=]()
 				{
@@ -213,7 +213,15 @@ void CommonGptDictsPage::setupUi()
 
 			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
 				{
-					insertToml(m_globalConfig, "commonGptDicts.spec." + dictName
+					const auto it = std::ranges::find_if(m_gptTabEntries, [=](const GptTabEntry& entry)
+						{
+							return entry.pageMainWidget == pageMainWidget;
+						});
+					if (it == m_gptTabEntries.end()) {
+						return;
+					}
+					const std::string currentDictName = wide2Ascii(it->dictPath.stem().wstring());
+					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName
 						+ ".defaultOn", checked);
 				});
 
@@ -234,16 +242,16 @@ void CommonGptDictsPage::setupUi()
 								}
 								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
 									const QList<GptDictEntry> dictEntries = model->getEntries();
-									toml::ordered_value dictArr = toml::array{};
+									toml::ordered_value dictsArr = toml::array{};
 									for (const auto& entry : dictEntries) {
 										toml::ordered_table dictTable;
 										dictTable.insert({ "org", entry.original.toStdString() });
 										dictTable.insert({ "rep", entry.translation.toStdString() });
 										dictTable.insert({ "note", entry.description.toStdString() });
-										dictArr.push_back(dictTable);
+										dictsArr.push_back(dictTable);
 									}
-									dictArr.as_array_fmt().fmt = toml::array_format::multiline;
-									atomicOutputFile(it->dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictArr}} }));
+									dictsArr.as_array_fmt().fmt = toml::array_format::multiline;
+									atomicOutputFile(it->dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictsArr}} }));
 								}
 							}
 							catch (...) {
@@ -257,7 +265,7 @@ void CommonGptDictsPage::setupUi()
 						return false;
 					}
 
-					const std::string tmpDictName = wide2Ascii(it->dictPath.stem().wstring());
+					const std::string currentDictName = wide2Ascii(it->dictPath.stem().wstring());
 
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
 						const QList<GptDictEntry> newDictEntries = DictionaryReader::readGptDict(it->dictPath);
@@ -267,25 +275,26 @@ void CommonGptDictsPage::setupUi()
 						plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
 					}
 
-					auto& dictNamesArr = m_globalConfig["commonGptDicts"]["dictNames"];
-					if (!dictNamesArr.is_array()) {
-						dictNamesArr = toml::array{ tmpDictName };
-					}
-					else {
+					auto& globalConfigDictNames = m_globalConfig["commonGptDicts"]["dictNames"];
+					if (globalConfigDictNames.is_array()) {
 						if (
-							!std::ranges::any_of(dictNamesArr.as_array(), [=](const toml::ordered_value& name)
-							{
-								return name.is_string() && name.as_string() == tmpDictName;
-							})
-							) {
-							dictNamesArr.push_back(tmpDictName);
+							!std::ranges::any_of(globalConfigDictNames.as_array(), [=](const auto& globalConfigDictName)
+								{
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
+								})
+							)
+						{
+							globalConfigDictNames.push_back(currentDictName);
 						}
 					}
+					else {
+						globalConfigDictNames = toml::array{ currentDictName };
+					}
 
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".openMode", stackedWidget->currentIndex());
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.0", tableView->columnWidth(GptDictModel::Original));
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.1", tableView->columnWidth(GptDictModel::Translation));
-					insertToml(m_globalConfig, "commonGptDicts.spec." + tmpDictName + ".columnWidth.2", tableView->columnWidth(GptDictModel::Description));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName + ".openMode", stackedWidget->currentIndex());
+					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName + ".columnWidth.0", tableView->columnWidth(GptDictModel::Original));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName + ".columnWidth.1", tableView->columnWidth(GptDictModel::Translation));
+					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName + ".columnWidth.2", tableView->columnWidth(GptDictModel::Description));
 					return true;
 				};
 			gptTabEntry.saveFunc = saveFunc;
@@ -415,7 +424,7 @@ void CommonGptDictsPage::setupUi()
 					plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
 					model->loadData(DictionaryReader::readGptDict(it->dictPath));
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
-						tr("字典 %1 已刷新").arg(QString::fromStdWString(it->dictPath.filename().wstring())), 3000);
+						tr("字典 %1 已刷新").arg(QString::fromStdWString(it->dictPath.stem().wstring())), 3000);
 				});
 			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
 				{
@@ -443,7 +452,7 @@ void CommonGptDictsPage::setupUi()
 						{
 							return entry.pageMainWidget != pageMainWidget && entry.dictPath.stem().wstring() == newDictName.toStdWString();
 						});
-					if (hasSameNameTab || newDictName == "项目GPT字典") {
+					if (hasSameNameTab) {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
 							tr("字典 %1 已存在").arg(newDictName), 3000);
 						return;
@@ -454,33 +463,34 @@ void CommonGptDictsPage::setupUi()
 					const fs::path newDictPath = defaultGptDictPath / (newDictName.toStdWString() + L".toml");
 					try {
 						if (fs::exists(oldDictPath)) {
-							try {
-								fs::rename(oldDictPath, newDictPath);
-							}
-							catch (...) { }
+							fs::rename(oldDictPath, newDictPath);
+						}
+						else {
+							atomicOutputFile(newDictPath, std::string{});
 						}
 						gptTabEntryIt->dictPath = newDictPath;
-						auto& dictNames = m_globalConfig["commonGptDicts"]["dictNames"];
-						if (dictNames.is_array()) {
-							const auto dicrNameIt = std::ranges::find_if(dictNames.as_array(), [=](const auto& elem)
+						auto& globalConfigDictNames = m_globalConfig["commonGptDicts"]["dictNames"];
+						if (globalConfigDictNames.is_array()) {
+							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
+								  [=](const auto& globalConfigDictName)
 								{
-									return elem.is_string() && elem.as_string() == oldDictName;
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == oldDictName;
 								});
-							if (dicrNameIt != dictNames.as_array().end()) {
-								*dicrNameIt = newDictName.toStdString();
+							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
+								*globalConfigDictNameIt = newDictName.toStdString();
 							}
 						}
 						else {
-							dictNames = toml::array{};
+							globalConfigDictNames = toml::array{ newDictName.toStdString() };
 						}
 						tabWidget->setTabText(tabWidget->indexOf(pageMainWidget), newDictName);
 						Q_EMIT commonDictsChangedSignal();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("重命名成功"),
 							tr("字典 %1 已重命名为 %2").arg(QString::fromStdWString(oldDictPath.stem().wstring()), newDictName), 3000);
 					}
-					catch (...) {
+					catch (const std::exception& e) {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("重命名失败"),
-							tr("字典 %1 重命名失败").arg(QString::fromStdWString(oldDictPath.stem().wstring())), 3000);
+							tr("字典 %1 重命名失败: %2").arg(QString::fromStdWString(oldDictPath.stem().wstring())).arg(e.what()), 3000);
 						return;
 					}
 				});
@@ -494,7 +504,7 @@ void CommonGptDictsPage::setupUi()
 						return;
 					}
 
-					const std::string tmpDictName = wide2Ascii(gptTabEntryIt->dictPath.stem().wstring());
+					const std::string currentDictName = wide2Ascii(gptTabEntryIt->dictPath.stem().wstring());
 
 					// 删除提示框
 					ElaContentDialog helpDialog(window());
@@ -503,45 +513,46 @@ void CommonGptDictsPage::setupUi()
 					helpDialog.setMiddleButtonText(tr("思考人生"));
 					helpDialog.setLeftButtonText(tr("否"));
 
-					QWidget* widget = new QWidget(&helpDialog);
-					QVBoxLayout* layout = new QVBoxLayout(widget);
-					layout->setContentsMargins(15, 25, 15, 10);
-					ElaText* confirmText = new ElaText(tr("你确定要删除 %1 吗？").arg(QString::fromStdString(tmpDictName)), widget);
-					confirmText->setTextStyle(ElaTextType::Title);
-					confirmText->setWordWrap(false);
-					layout->addWidget(confirmText);
-					layout->addSpacing(2);
-					ElaText* subTitle = new ElaText(tr("将永久删除该字典文件，如有需要请先备份！"), 16, widget);
-					subTitle->setTextStyle(ElaTextType::Body);
-					layout->addWidget(subTitle);
-					layout->addStretch();
-					helpDialog.setCentralWidget(widget);
+					QWidget* helpDialogWidget = new QWidget(&helpDialog);
+					QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+					helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+					ElaText* helpDialogTitle = new ElaText(tr("你确定要删除 %1 吗？").arg(QString::fromStdString(currentDictName)), helpDialogWidget);
+					helpDialogTitle->setTextStyle(ElaTextType::Title);
+					helpDialogTitle->setWordWrap(false);
+					helpDialogLayout->addWidget(helpDialogTitle);
+					helpDialogLayout->addSpacing(2);
+					ElaText* helpDialogBody = new ElaText(tr("将永久删除该字典文件，如有需要请先备份！"), 16, helpDialogWidget);
+					helpDialogBody->setTextStyle(ElaTextType::Body);
+					helpDialogLayout->addWidget(helpDialogBody);
+					helpDialogLayout->addStretch();
+					helpDialog.setCentralWidget(helpDialogWidget);
 
 					if (helpDialog.exec() == QDialog::Accepted) {
-						pageMainWidget->deleteLater();
 						tabWidget->removeTab(tabWidget->indexOf(pageMainWidget));
+						pageMainWidget->deleteLater();
 						saveAllButton->setEnabled(tabWidget->count() > 0);
 						try {
 							fs::remove(gptTabEntryIt->dictPath);
 						}
-						catch (...) {}
+						catch (...) { }
 						m_gptTabEntries.erase(gptTabEntryIt);
-						auto& dictNames = m_globalConfig["commonGptDicts"]["dictNames"];
-						if (dictNames.is_array()) {
-							const auto dictNameIt = std::ranges::find_if(dictNames.as_array(), [=](const auto& elem)
+						auto& globalConfigDictNames = m_globalConfig["commonGptDicts"]["dictNames"];
+						if (globalConfigDictNames.is_array()) {
+							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
+								  [=](const auto& globalConfigDictName)
 								{
-									return elem.is_string() && elem.as_string() == tmpDictName;
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
 								});
-							if (dictNameIt != dictNames.as_array().end()) {
-								dictNames.as_array().erase(dictNameIt);
+							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
+								globalConfigDictNames.as_array().erase(globalConfigDictNameIt);
 							}
 						}
 						else {
-							dictNames = toml::array{};
+							globalConfigDictNames = toml::array{};
 						}
 						Q_EMIT commonDictsChangedSignal();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("删除成功"),
-							tr("字典 %1 已从字典管理和磁盘中移除！").arg(QString::fromStdString(tmpDictName)), 3000);
+							tr("字典 %1 已从字典管理和磁盘中移除！").arg(QString::fromStdString(currentDictName)), 3000);
 					}
 				});
 
@@ -550,35 +561,36 @@ void CommonGptDictsPage::setupUi()
 			gptTabEntry.plainTextEdit = plainTextEdit;
 			gptTabEntry.tableView = tableView;
 			gptTabEntry.dictModel = model;
-			gptTabEntry.dictPath = dictPath;
+			gptTabEntry.dictPath = initDictPath;
 			m_gptTabEntries.push_back(gptTabEntry);
 
-			if (!fs::exists(dictPath)) {
+			if (!fs::exists(initDictPath)) {
 				saveFunc(true);
 			}
 			return pageMainWidget;
 		};
 
-	auto& commonGptDicts = m_globalConfig["commonGptDicts"]["dictNames"];
-	if (commonGptDicts.is_array()) {
-		auto it = commonGptDicts.as_array().begin();
-		while (it != commonGptDicts.as_array().end()) {
+	auto& globalConfigDictNames = m_globalConfig["commonGptDicts"]["dictNames"];
+	if (globalConfigDictNames.is_array()) {
+		auto& globalConfigDictNamesArr = globalConfigDictNames.as_array();
+		auto it = globalConfigDictNamesArr.begin();
+		while (it != globalConfigDictNamesArr.end()) {
 			if (!it->is_string()) {
-				it = commonGptDicts.as_array().erase(it);
+				it = globalConfigDictNamesArr.erase(it);
 				continue;
 			}
-			fs::path dictPath = defaultGptDictPath / (ascii2Wide(it->as_string()) + L".toml");
+			const fs::path dictPath = defaultGptDictPath / (ascii2Wide(it->as_string()) + L".toml");
 			if (!fs::exists(dictPath)) {
-				it = commonGptDicts.as_array().erase(it);
+				it = globalConfigDictNamesArr.erase(it);
 				continue;
 			}
-			QWidget* pageMainWidget = createGptTab(dictPath);
+			QWidget* pageMainWidget = createGptDictTabFunc(dictPath);
 			tabWidget->addTab(pageMainWidget, QString::fromStdWString(dictPath.stem().wstring()));
 			++it;
 		}
 	}
 	else {
-		commonGptDicts = toml::array{};
+		globalConfigDictNames = toml::array{};
 	}
 
 	tabWidget->setCurrentIndex(0);
@@ -596,24 +608,14 @@ void CommonGptDictsPage::setupUi()
 
 	connect(importButton, &ElaToolButton::clicked, this, [=]()
 		{
-			QString importDictPathStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
+			QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonGptDictPath", "./")),
 				"TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)");
-			if (importDictPathStr.isEmpty()) {
+			if (importDictPathQStr.isEmpty()) {
 				return;
 			}
-			insertToml(m_globalConfig, "lastCommonGptDictPath", importDictPathStr.toStdString());
-			fs::path importDictPath = importDictPathStr.toStdWString();
-			fs::path newDictPath = defaultGptDictPath / importDictPath.filename().replace_extension(".toml");
-			if (fs::exists(newDictPath) && !fs::equivalent(importDictPath, newDictPath)) {
-				try {
-					fs::remove(newDictPath);
-				}
-				catch (...) {
-					ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"), tr("原文件删除失败"), 3000);
-					return;
-				}
-			}
+			insertToml(m_globalConfig, "lastCommonGptDictPath", importDictPathQStr.toStdString());
+			const fs::path importDictPath = importDictPathQStr.toStdWString();
 			const bool hasSameNameTab = std::ranges::any_of(m_gptTabEntries, [=](const GptTabEntry& entry)
 				{
 					return entry.dictPath.stem().wstring() == importDictPath.stem().wstring();
@@ -623,7 +625,17 @@ void CommonGptDictsPage::setupUi()
 					tr("字典 %1 已存在").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 				return;
 			}
-			QWidget* pageMainWidget = createGptTab(importDictPath);
+			const fs::path newDictPath = defaultGptDictPath / importDictPath.filename().replace_extension(".toml");
+			if (fs::exists(newDictPath) && !fs::equivalent(importDictPath, newDictPath)) {
+				try {
+					fs::remove(newDictPath);
+				}
+				catch (...) {
+					ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"), tr("原文件删除失败"), 3000);
+					return;
+				}
+			}
+			QWidget* pageMainWidget = createGptDictTabFunc(importDictPath);
 			tabWidget->addTab(pageMainWidget, QString::fromStdWString(importDictPath.stem().wstring()));
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"),
@@ -632,13 +644,13 @@ void CommonGptDictsPage::setupUi()
 
 	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
 		{
-			QString dictName;
-			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), dictName, window());
+			QString newDictName;
+			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}
 
-			if (dictName.isEmpty() || dictName.contains('/') || dictName.contains('\\') || dictName.contains('.')) {
+			if (newDictName.isEmpty() || newDictName.contains('/') || newDictName.contains('\\') || newDictName.contains('.')) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft,
 					tr("新建失败"), tr("字典名称不能为空，且不能包含点号、斜杠或反斜杠！"), 3000);
 				return;
@@ -646,15 +658,15 @@ void CommonGptDictsPage::setupUi()
 
 			const bool hasSameNameTab = std::ranges::any_of(m_gptTabEntries, [=](const GptTabEntry& entry)
 				{
-					return entry.dictPath.stem().wstring() == dictName.toStdWString();
+					return entry.dictPath.stem().wstring() == newDictName.toStdWString();
 				});
-			if (hasSameNameTab || dictName == "项目GPT字典") {
+			if (hasSameNameTab) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
-					tr("字典 %1 已存在").arg(dictName), 3000);
+					tr("字典 %1 已存在").arg(newDictName), 3000);
 				return;
 			}
 
-			const fs::path newDictPath = defaultGptDictPath / (dictName.toStdWString() + L".toml");
+			const fs::path newDictPath = defaultGptDictPath / (newDictName.toStdWString() + L".toml");
 			try {
 				atomicOutputFile(newDictPath, std::string{});
 			}
@@ -664,8 +676,8 @@ void CommonGptDictsPage::setupUi()
 				return;
 			}
 
-			QWidget* pageMainWidget = createGptTab(newDictPath);
-			tabWidget->addTab(pageMainWidget, dictName);
+			QWidget* pageMainWidget = createGptDictTabFunc(newDictPath);
+			tabWidget->addTab(pageMainWidget, newDictName);
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"),
 				tr("字典页 %1 已创建").arg(QString::fromStdWString(newDictPath.stem().wstring())), 3000);
@@ -695,16 +707,20 @@ void CommonGptDictsPage::setupUi()
 
 			auto& spec = m_globalConfig["commonGptDicts"]["spec"];
 			if (spec.is_table()) {
-				for (const auto& key : spec.as_table() | std::views::keys) {
+				auto& specTable = spec.as_table();
+				auto it = specTable.begin();
+				while (it != specTable.end()) {
 					if (
-						!std::ranges::any_of(dictNamesArr, [&](const auto& elem)
+						!std::ranges::any_of(dictNamesArr, [&](const auto& dictName)
 							{
-								return elem.is_string() && elem.as_string() == key;
+								return dictName.is_string() && dictName.as_string() == it->first;
 							})
-							)
+						)
 					{
-						spec.as_table().erase(key);
+						it = specTable.erase(it);
+						continue;
 					}
+					++it;
 				}
 			}
 			else{

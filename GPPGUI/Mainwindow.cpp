@@ -5,7 +5,9 @@
 #include <QFileDialog>
 #include <QProcess>
 #include <QApplication>
+#include <QDebug>
 #include <QDesktopServices>
+#include <QElapsedTimer>
 #include <QShortcut>
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -24,6 +26,7 @@
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
 #include "UpdateChecker.h"
+#include "StartupTiming.h"
 
 #include "HomePage.h"
 #include "DefaultPromptsPage.h"
@@ -39,6 +42,19 @@ import PythonManager;
 MainWindow::MainWindow(QWidget* parent)
     : ElaWindow(parent)
 {
+    QElapsedTimer startupTimer;
+    startupTimer.start();
+    qint64 lastStartupTime = 0;
+    auto logStartupTime = [&](const QString& stage)
+        {
+            const qint64 elapsed = startupTimer.elapsed();
+            const QString message = QStringLiteral("[StartupTiming][MainWindow] +%1 ms / %2 ms: %3")
+                .arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
+            qInfo().noquote() << message;
+            appendStartupTimingLog(message);
+            lastStartupTime = elapsed;
+        };
+
     if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
             m_globalConfig = toml::uoparse(fs::path(L"BaseConfig/GlobalConfig.toml"));
@@ -54,16 +70,20 @@ MainWindow::MainWindow(QWidget* parent)
         MessageBoxW(nullptr, tr("不是哥们").toStdWString().c_str(), tr("有病吧，你把我软件的配置文件删了！？").toStdWString().c_str(), MB_ICONERROR);
 #endif
     }
+    logStartupTime(QStringLiteral("读取全局配置"));
 
     setIsAllowPageOpenInNewWindow(false);
 
     initWindow();
+    logStartupTime(QStringLiteral("initWindow"));
 
     //额外布局
     initEdgeLayout();
+    logStartupTime(QStringLiteral("initEdgeLayout"));
 
     //中心窗口
     initContent();
+    logStartupTime(QStringLiteral("initContent"));
 
     // 拦截默认关闭事件
     m_closeDialog = new ElaContentDialog(this);
@@ -143,6 +163,7 @@ MainWindow::MainWindow(QWidget* parent)
     else {
         fs::create_directories(L"cache");
     }
+    logStartupTime(QStringLiteral("关闭对话框、信号与启动提示"));
 }
 
 ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)
@@ -153,8 +174,18 @@ ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& proje
         {
             setNavigationNodeTitle(nodeKey, newProjectName);
         });
+    if (!toml::find_or(m_globalConfig, "lazyProjectInitialization", true)) {
+        newPage->initialize();
+    }
     m_projectPages.push_back(newPage);
     addPageNode(QString::fromStdWString(projectDir.filename().wstring()), newPage.get(), m_projectExpanderKey, ElaIconType::Projector);
+    ProjectSettingsPage* page = newPage.get();
+    connect(this, &MainWindow::navigationNodeClicked, page, [page](ElaNavigationType::NavigationNodeType nodeType, const QString& nodeKey)
+        {
+            if (nodeType == ElaNavigationType::PageNode && page->property("ElaPageKey").toString() == nodeKey) {
+                page->initialize();
+            }
+        });
     return newPage.get();
 }
 
@@ -272,51 +303,73 @@ void MainWindow::initEdgeLayout()
 
 void MainWindow::initContent()
 {
+    QElapsedTimer startupTimer;
+    startupTimer.start();
+    qint64 lastStartupTime = 0;
+    auto logStartupTime = [&](const QString& stage)
+        {
+            const qint64 elapsed = startupTimer.elapsed();
+            const QString message = QStringLiteral("[StartupTiming][MainWindow::initContent] +%1 ms / %2 ms: %3")
+                .arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
+            qInfo().noquote() << message;
+            appendStartupTimingLog(message);
+            lastStartupTime = elapsed;
+        };
+
     m_homePage = new HomePage(m_globalConfig, this);
+    logStartupTime(QStringLiteral("主页"));
     m_defaultPromptPage = new DefaultPromptsPage(this);
+    logStartupTime(QStringLiteral("默认提示词页"));
 
     m_commonPreDictsPage = new CommonNormalDictsPage("pre", m_globalConfig, this);
+    logStartupTime(QStringLiteral("通用译前字典页"));
     m_commonGptDictsPage = new CommonGptDictsPage(m_globalConfig, this);
+    logStartupTime(QStringLiteral("通用 GPT 字典页"));
     m_commonPostDictsPage = new CommonNormalDictsPage("post", m_globalConfig, this);
+    logStartupTime(QStringLiteral("通用译后字典页"));
 
     m_appSettingsPage = new AppSettingsPage(m_globalConfig, this);
+    logStartupTime(QStringLiteral("应用设置页"));
 
     addPageNode(tr("主页"), m_homePage, ElaIconType::House);
 
     addPageNode(tr("默认提示词管理"), m_defaultPromptPage, ElaIconType::Text);
 
     addExpanderNode(tr("通用字典管理"), m_commonDictExpanderKey, ElaIconType::FontCase);
-    auto refreshCommonDicts = [=]()
+    auto refreshCommonDictsFunc = [=]()
         {
-            for (auto& page : m_projectPages) {
+            for (const auto& page : m_projectPages) {
                 page->refreshCommonDicts();
             }
         };
     addPageNode(tr("通用译前字典"), m_commonPreDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonPreDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    connect(m_commonPreDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
     addPageNode(tr("通用GPT字典"), m_commonGptDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonGptDictsPage, &CommonGptDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    connect(m_commonGptDictsPage, &CommonGptDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
     addPageNode(tr("通用译后字典"), m_commonPostDictsPage, m_commonDictExpanderKey, ElaIconType::OctagonDivide);
-    connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDicts);
+    connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
 
     addExpanderNode(tr("项目管理"), m_projectExpanderKey, ElaIconType::BriefcaseBlank);
+    logStartupTime(QStringLiteral("公共页面导航注册"));
     const auto projects = toml::find_or_default<toml::array>(m_globalConfig, "projects");
     for (const auto& project : projects) {
             if (project.is_string()) {
-                fs::path projectDir(ascii2Wide(project.as_string()));
+                const fs::path projectDir(ascii2Wide(project.as_string()));
                 if (!fs::exists(projectDir / L"Config.toml")) {
                     continue;
                 }
                 createProjectSettingsPage(projectDir);
+                logStartupTime(QString("项目页：%1").arg(QString::fromStdWString(projectDir.filename().wstring())));
             }
     }
     expandNavigationNode(m_projectExpanderKey);
 
-    addFooterNode(tr("使用说明"), nullptr, m_transIllustrationKey, 0, ElaIconType::BookOpen);
+    addFooterNode(tr("使用说明"), nullptr, m_illustrationKey, 0, ElaIconType::BookOpen);
     addFooterNode(tr("关于"), nullptr, m_aboutKey, 0, ElaIconType::User);
     m_aboutDialog = new AboutDialog();
     m_aboutDialog->hide();
     addFooterNode(tr("应用设置"), m_appSettingsPage, m_appSettingsKey, 0, ElaIconType::GearComplex);
+    logStartupTime(QStringLiteral("页脚与关于对话框"));
 
     connect(m_aboutDialog, &AboutDialog::checkUpdateSignal, this, [=]()
         {
@@ -332,7 +385,7 @@ void MainWindow::initContent()
 
     connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, const QString& nodeKey)
         {
-            if (m_transIllustrationKey == nodeKey) {
+            if (m_illustrationKey == nodeKey) {
                 QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/foundation.html"));
             }
             else if (m_aboutKey == nodeKey)
@@ -358,6 +411,7 @@ void MainWindow::initContent()
 	    {
             onClearLog(false);
 	    });
+    logStartupTime(QStringLiteral("initContent 信号连接"));
 }
 
 void MainWindow::onClearLog(bool forceClear) {
@@ -374,17 +428,17 @@ void MainWindow::onClearLog(bool forceClear) {
 
 void MainWindow::onNewProjectTriggered()
 {
-    const QString parentPath = QFileDialog::getExistingDirectory(this, tr("选择新项目的存放位置"),
+    const QString parentPathQStr = QFileDialog::getExistingDirectory(this, tr("选择新项目的存放位置"),
         QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectPath", "./Projects")));
-    if (parentPath.isEmpty()) {
+    if (parentPathQStr.isEmpty()) {
         return;
     }
 
-    insertToml(m_globalConfig, "lastProjectPath", parentPath.toStdString());
+    insertToml(m_globalConfig, "lastProjectPath", parentPathQStr.toStdString());
 
     QString projectName;
     ElaInputDialog inputDialog(tr("请输入项目名称"), tr("新建项目"), projectName, this);
-    if (inputDialog.exec() != QDialog::Accepted) {
+    if (inputDialog.exec() != QDialog::Accepted || projectName.isEmpty()) {
         return;
     }
 
@@ -393,38 +447,43 @@ void MainWindow::onNewProjectTriggered()
             return projectName == page->getProjectName();
         }))
     {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("已存在同名项目！"), 3000);
+        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("已存在同名项目！"), 3000);
         return;
     }
 
-    if (projectName.isEmpty() || projectName.contains("/") || projectName.contains("\\"))
-    {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("项目名称不能为空，且不能包含斜杠或反斜杠！"), 3000);
+    const fs::path parentPath = parentPathQStr.toStdWString();
+    const fs::path newProjectDir = parentPath / projectName.toStdWString();
+
+    try {
+        if (!fs::equivalent(newProjectDir.parent_path(), parentPath)) {
+            ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("非法的项目名！"), 3000);
+            return;
+        }
+        if (fs::exists(newProjectDir)) {
+            ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("目录下存在同名文件或文件夹！"), 3000);
+            return;
+        }
+        fs::create_directory(newProjectDir);
+    }
+    catch (const std::exception& e) {
+        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), e.what(), 3000);
         return;
     }
 
-    const fs::path newProjectDir = fs::path(parentPath.toStdWString()) / projectName.toStdWString();
-    if (fs::exists(newProjectDir)) {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("目录下存在同名文件或文件夹！"), 3000);
-        return;
-    }
-
-    fs::create_directories(newProjectDir);
-
-    QFile resourceFile(":/GPPGUI/Resource/SampleProject.zip");
-    if (resourceFile.open(QIODevice::ReadOnly)) {
-        QFile outputFile(parentPath + "/" + projectName + "/SampleProject.zip");
-        if (outputFile.open(QIODevice::WriteOnly)) {
-            outputFile.write(resourceFile.readAll());
-            outputFile.close();
+    QFile resourceSampleProjectFile(":/GPPGUI/Resource/SampleProject.zip");
+    if (resourceSampleProjectFile.open(QIODevice::ReadOnly)) {
+        QFile outputSampleProjectFile(parentPathQStr + "/" + projectName + "/SampleProject.zip");
+        if (outputSampleProjectFile.open(QIODevice::WriteOnly)) {
+            outputSampleProjectFile.write(resourceSampleProjectFile.readAll());
+            outputSampleProjectFile.close();
         }
         else {
-            ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法创建新文件！"), 3000);
+            ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法创建新文件！"), 3000);
             return;
         }
     }
     else {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法读取模板文件！"), 3000);
+        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法读取模板文件！"), 3000);
         return;
     }
 
@@ -441,22 +500,28 @@ void MainWindow::onNewProjectTriggered()
 
         auto addCommonDictsToProjectConfig = [&](const std::string& globalConfigKey, const std::string& projectConfigKey)
             {
-                auto& globalDictNames = m_globalConfig[globalConfigKey]["dictNames"];
+                auto& globalConfigDictNames = m_globalConfig[globalConfigKey]["dictNames"];
                 auto& projectDictNames = configData["dictionary"][projectConfigKey];
-                if (globalDictNames.is_array() && projectDictNames.is_array()) {
-                    for (const auto& dictName : globalDictNames.as_array()) {
-                        if (!dictName.is_string()) {
-                            continue;
-                        }
-                        if (!toml::find_or(m_globalConfig, globalConfigKey, "spec", dictName.as_string(), "defaultOn", true)) {
-                            continue;
-                        }
-                        projectDictNames.push_back(dictName.as_string() + ".toml");
-                    }
+                if (!globalConfigDictNames.is_array()) {
+                    globalConfigDictNames = toml::array{};
                 }
-                else {
-                    globalDictNames = toml::array{};
-                    projectDictNames = toml::array{};
+
+                projectDictNames = toml::array{};
+                for (const auto& globalConfigDictName : globalConfigDictNames.as_array()) {
+                    if (!globalConfigDictName.is_string()) {
+                        continue;
+                    }
+                    if (!toml::find_or(m_globalConfig, globalConfigKey, "spec", globalConfigDictName.as_string(), "defaultOn", true)) {
+                        continue;
+                    }
+                    if (std::ranges::any_of(projectDictNames.as_array(), [&](const toml::ordered_value& projectDictName)
+	                    {
+                            return projectDictName.is_string() && projectDictName.as_string() == globalConfigDictName.as_string();
+	                    }))
+                    {
+                        continue;
+                    }
+                    projectDictNames.push_back(globalConfigDictName.as_string() + ".toml");
                 }
             };
 
@@ -467,7 +532,7 @@ void MainWindow::onNewProjectTriggered()
         atomicOutputFile(newProjectDir / L"Config.toml", toml::format(configData));
     }
     catch (...) {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法写入配置文件！"), 3000);
+        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法写入配置文件！"), 3000);
         return;
     }
 
@@ -515,10 +580,10 @@ void MainWindow::onOpenProjectTriggered()
 
 void MainWindow::onRemoveProjectTriggered()
 {
-    QString pageKey = getCurrentNavigationPageKey();
-    const auto it = std::ranges::find_if(m_projectPages, [&](auto& page)
+    QString currentPageKey = getCurrentNavigationPageKey();
+    const auto it = std::ranges::find_if(m_projectPages, [&](const auto& projectPage)
         {
-            return page->property("ElaPageKey").toString() == pageKey;
+            return projectPage->property("ElaPageKey").toString() == currentPageKey;
         });
     if (it == m_projectPages.end()) {
         ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移除失败"), tr("当前页面不是项目页面！"), 3000);
@@ -534,24 +599,24 @@ void MainWindow::onRemoveProjectTriggered()
     helpDialog.setMiddleButtonText(tr("思考人生"));
     helpDialog.setLeftButtonText(tr("否"));
 
-    QWidget* widget = new QWidget(&helpDialog);
-    QVBoxLayout* layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(15, 25, 15, 10);
-    ElaText* confirmText = new ElaText(tr("你确定要移除当前项目吗？"), widget);
-    confirmText->setTextStyle(ElaTextType::Title);
-    confirmText->setWordWrap(false);
-    layout->addWidget(confirmText);
-    layout->addSpacing(2);
-    ElaText* subTitle = new ElaText(tr("从项目管理中移除该项目，但不会删除其项目文件夹"), widget);
-    subTitle->setTextStyle(ElaTextType::Body);
-    layout->addWidget(subTitle);
-    layout->addStretch();
-    helpDialog.setCentralWidget(widget);
+    QWidget* helpDialogWidget = new QWidget(&helpDialog);
+    QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+    helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+    ElaText* helpDialogTitle = new ElaText(tr("你确定要移除当前项目吗？"), helpDialogWidget);
+    helpDialogTitle->setTextStyle(ElaTextType::Title);
+    helpDialogTitle->setWordWrap(false);
+    helpDialogLayout->addWidget(helpDialogTitle);
+    helpDialogLayout->addSpacing(2);
+    ElaText* helpDialogBody = new ElaText(tr("从项目管理中移除该项目，但不会删除其项目文件夹"), helpDialogWidget);
+    helpDialogBody->setTextStyle(ElaTextType::Body);
+    helpDialogLayout->addWidget(helpDialogBody);
+    helpDialogLayout->addStretch();
+    helpDialog.setCentralWidget(helpDialogWidget);
 
     if (helpDialog.exec() == QDialog::Accepted) {
-        QString projectName = it->get()->getProjectName();
+        const QString projectName = it->get()->getProjectName();
         it->get()->apply2Config();
-        removeNavigationNode(pageKey);
+        removeNavigationNode(currentPageKey);
         m_projectPages.erase(it);
         if (getCurrentNavigationPageKey() == m_appSettingsPage->property("ElaPageKey").toString()) {
             if (m_projectPages.empty()) {
@@ -568,10 +633,10 @@ void MainWindow::onRemoveProjectTriggered()
 
 void MainWindow::onDeleteProjectTriggered()
 {
-    const QString pageKey = getCurrentNavigationPageKey();
-    const auto it = std::ranges::find_if(m_projectPages, [&](auto& page)
+    const QString currentPageKey = getCurrentNavigationPageKey();
+    const auto it = std::ranges::find_if(m_projectPages, [&](const auto& projectPage)
         {
-            return page->property("ElaPageKey").toString() == pageKey;
+            return projectPage->property("ElaPageKey").toString() == currentPageKey;
         });
     if (it == m_projectPages.end()) {
         ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), tr("当前页面不是项目页面！"), 3000);
@@ -587,19 +652,19 @@ void MainWindow::onDeleteProjectTriggered()
     helpDialog.setMiddleButtonText(tr("思考人生"));
     helpDialog.setLeftButtonText(tr("否"));
 
-    QWidget* widget = new QWidget(&helpDialog);
-    QVBoxLayout* layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(15, 25, 15, 10);
-    ElaText* confirmText = new ElaText(tr("你确定要删除当前项目吗？                "), widget);
-    confirmText->setTextStyle(ElaTextType::Title);
-    confirmText->setWordWrap(false);
-    layout->addWidget(confirmText);
-    layout->addSpacing(2);
-    ElaText* subTitle = new ElaText(tr("将删除该项目的项目文件夹，如果不备份，再次翻译将必须从头开始！"), widget);
-    subTitle->setTextStyle(ElaTextType::Body);
-    layout->addWidget(subTitle);
-    layout->addStretch();
-    helpDialog.setCentralWidget(widget);
+    QWidget* helpDialogWidget = new QWidget(&helpDialog);
+    QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+    helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+    ElaText* helpDialogTitle = new ElaText(tr("你确定要删除当前项目吗？                "), helpDialogWidget);
+    helpDialogTitle->setTextStyle(ElaTextType::Title);
+    helpDialogTitle->setWordWrap(false);
+    helpDialogLayout->addWidget(helpDialogTitle);
+    helpDialogLayout->addSpacing(2);
+    ElaText* helpDialogBody = new ElaText(tr("将删除该项目的项目文件夹，如果不备份，再次翻译将必须从头开始！"), helpDialogWidget);
+    helpDialogBody->setTextStyle(ElaTextType::Body);
+    helpDialogLayout->addWidget(helpDialogBody);
+    helpDialogLayout->addStretch();
+    helpDialog.setCentralWidget(helpDialogWidget);
 
     if (helpDialog.exec() == QDialog::Accepted) {
         const fs::path projectDir = it->get()->getProjectDir();
@@ -611,7 +676,7 @@ void MainWindow::onDeleteProjectTriggered()
             ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), e.what(), 3000);
             return;
         }
-        removeNavigationNode(pageKey);
+        removeNavigationNode(currentPageKey);
         m_projectPages.erase(it);
         if (getCurrentNavigationPageKey() == m_appSettingsPage->property("ElaPageKey").toString()) {
             if (m_projectPages.empty()) {
@@ -628,10 +693,10 @@ void MainWindow::onDeleteProjectTriggered()
 
 void MainWindow::onSaveProjectTriggered()
 {
-    const QString pageKey = getCurrentNavigationPageKey();
-    const auto it = std::ranges::find_if(m_projectPages, [&](auto& page)
+    const QString currentPageKey = getCurrentNavigationPageKey();
+    const auto it = std::ranges::find_if(m_projectPages, [&](const auto& projectPage)
         {
-            return page->property("ElaPageKey").toString() == pageKey;
+            return projectPage->property("ElaPageKey").toString() == currentPageKey;
         });
     if (it == m_projectPages.end()) {
         ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("保存失败"), tr("当前页面不是项目页面！"), 3000);
@@ -656,9 +721,9 @@ void MainWindow::onCloseWindowClicked(bool restart)
     m_commonPostDictsPage->apply2Config();
 
     toml::array projects;
-    for (auto& page : m_projectPages) {
-        page->apply2Config();
-        projects.push_back(wide2Ascii(page->getProjectDir()));
+    for (const auto& projectPage : m_projectPages) {
+        projectPage->apply2Config();
+        projects.push_back(wide2Ascii(projectPage->getProjectDir()));
     }
     insertToml(m_globalConfig, "projects", projects);
 

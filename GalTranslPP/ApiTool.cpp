@@ -416,10 +416,7 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
     const cpr::Header headers = makeApiHeaders(api); // 加 key，extraHeaders
 
     applyApiPayloadOptions(payload, api); // 模型、温度、思考，extraBody
-    std::string payloadStr = payload.dump();
-    if (onPerformApi) {
-        payloadStr = onPerformApi(payloadStr);
-    }
+    const std::string payloadStr = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
 
     const cpr::Proxies proxies = api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{};
 

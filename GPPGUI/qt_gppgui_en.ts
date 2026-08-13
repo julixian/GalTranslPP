@@ -412,12 +412,12 @@ sk-...</translation>
         <location line="+10"/>
         <source>延迟项目初始化</source>
         <oldsource>延迟初始化项目设置页</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>Lazy project init</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</source>
-        <translation type="unfinished"></translation>
+        <translation>Faster startup; first project open may pause briefly</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -712,11 +712,7 @@ sk-...</translation>
     <message>
         <location line="+4"/>
         <source>字典 %1 重命名失败: %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>字典 %1 重命名失败</source>
-        <translation type="vanished">Failed to rename dict %1</translation>
+        <translation>Failed to rename %1: %2</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -985,11 +981,7 @@ sk-...</translation>
     <message>
         <location line="+6"/>
         <source>字典 %1 重命名失败: %2</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>字典 %1 重命名失败</source>
-        <translation type="vanished">Failed to rename dict %1</translation>
+        <translation>Failed to rename %1: %2</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1299,10 +1291,6 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <source>保存项目日志</source>
-        <translation type="vanished">Save project logs</translation>
-    </message>
-    <message>
         <location line="-341"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
@@ -1448,10 +1436,6 @@ sk-...</translation>
         <translation>spaCy model name</translation>
     </message>
     <message>
-        <source>spaCy模型名称，新模型下载后需重启程序</source>
-        <translation type="vanished">spaCy model name, you need reboot app after downloading a new model</translation>
-    </message>
-    <message>
         <location line="+1"/>
         <source>sm模型的效果有点一言难尽，有条件的建议上trf模型</source>
         <translation>sm model is not so satisfying, use trf model if conditions allowing</translation>
@@ -1466,10 +1450,6 @@ sk-...</translation>
         <location line="-13"/>
         <source>Stanza语言ID</source>
         <translation>Stanza lang id</translation>
-    </message>
-    <message>
-        <source>Stanza语言ID，新模型下载后需重启程序</source>
-        <translation type="vanished">Stanza lang id, you need reboot app after downloading a new model</translation>
     </message>
     <message>
         <location line="+109"/>
@@ -1497,11 +1477,6 @@ sk-...</translation>
         <location line="+34"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
-    </message>
-    <message>
-        <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。&lt;br&gt;具体替换时机详见使用说明，auto为自动检测</source>
-        <oldsource>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行，具体替换时机详见使用说明，auto为自动检测</oldsource>
-        <translation type="vanished">All linebreak symbols will be replaced to &amp;lt;br&amp;gt; for programming use</translation>
     </message>
     <message>
         <location line="+74"/>
@@ -1536,57 +1511,6 @@ sk-...</translation>
         <location line="+16"/>
         <source>基类继承</source>
         <translation>Inherit base class</translation>
-    </message>
-</context>
-<context>
-    <name>DefaultPromptPage</name>
-    <message>
-        <source>默认提示词管理</source>
-        <translation type="vanished">Default prompts</translation>
-    </message>
-    <message>
-        <source>解析失败</source>
-        <translation type="vanished">Fail to analyze</translation>
-    </message>
-    <message>
-        <source>默认提示词配置文件不符合 toml 规范</source>
-        <translation type="vanished">Default prompts config file is nonconforming</translation>
-    </message>
-    <message>
-        <source>agent用户</source>
-        <translation type="vanished">User-agent</translation>
-    </message>
-    <message>
-        <source>agent系统</source>
-        <translation type="vanished">Sys-agent</translation>
-    </message>
-    <message>
-        <source>保存成功</source>
-        <translation type="vanished">Saved successfully</translation>
-    </message>
-    <message>
-        <source>所有默认提示词配置已保存。</source>
-        <translation type="vanished">All default prompts settings are saved.</translation>
-    </message>
-    <message>
-        <source>默认 %1 提示词配置已保存。</source>
-        <translation type="vanished">Default %1 prompt saved.</translation>
-    </message>
-    <message>
-        <source>用户提示词</source>
-        <translation type="vanished">User prompt</translation>
-    </message>
-    <message>
-        <source>系统提示词</source>
-        <translation type="vanished">System prompt</translation>
-    </message>
-    <message>
-        <source>全部保存</source>
-        <translation type="vanished">Save all</translation>
-    </message>
-    <message>
-        <source>保存</source>
-        <translation type="vanished">Save</translation>
     </message>
 </context>
 <context>
@@ -1694,31 +1618,31 @@ sk-...</translation>
         <location line="+16"/>
         <source>将译前字典用在 name 字段</source>
         <oldsource>将译前字典用在name字段</oldsource>
-        <translation type="unfinished">Use predicts in name section</translation>
+        <translation>Apply pre-dicts to name</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在 name 字段</source>
         <oldsource>将译后字典用在name字段</oldsource>
-        <translation type="unfinished">Use postdicts in name section</translation>
+        <translation>Apply post-dicts to name</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译前字典用在 message 字段</source>
         <oldsource>将译前字典用在msg字段</oldsource>
-        <translation type="unfinished">Use predicts in msg section</translation>
+        <translation>Apply pre-dicts to message</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在 message 字段</source>
         <oldsource>将译后字典用在msg字段</oldsource>
-        <translation type="unfinished">Use postdicts in msg section</translation>
+        <translation>Apply post-dicts to message</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>启用GPT字典替换 name 字段</source>
         <oldsource>启用GPT字典替换name字段</oldsource>
-        <translation type="unfinished">Use gptdicts to replace name section</translation>
+        <translation>Apply GPT dicts to name</translation>
     </message>
 </context>
 <context>
@@ -2153,30 +2077,22 @@ sk-...</translation>
         <source>Epub 后处理正则不符合 toml 规范</source>
         <translation>Invalid Epub postprocess TOML</translation>
     </message>
-    <message>
-        <source>Epub预处理正则格式错误</source>
-        <translation type="vanished">Epub PreProcRegex is nonconforming</translation>
-    </message>
-    <message>
-        <source>Epub后处理正则格式错误</source>
-        <translation type="vanished">Epub PostProcRegex is nonconforming</translation>
-    </message>
 </context>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+195"/>
+        <location filename="GPPGUI.cpp" line="+156"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+58"/>
         <source>无法创建共享内存段，程序即将退出。</source>
         <translation>Cannot create shared memory. Exiting.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+88"/>
+        <location line="+75"/>
         <location line="+54"/>
         <source>错误</source>
         <translation>Error</translation>
@@ -2205,41 +2121,6 @@ sk-...</translation>
         <location line="+9"/>
         <source>遇到了未知的错误，程序即将退出。</source>
         <translation>Unknown error. Exiting.</translation>
-    </message>
-</context>
-<context>
-    <name>GPPGUI.main</name>
-    <message>
-        <source>Updater 更新错误</source>
-        <translation type="vanished">Updater error</translation>
-    </message>
-    <message>
-        <source>无法创建共享内存段，程序即将退出。</source>
-        <translation type="vanished">Cannot create shared memory. Exiting.</translation>
-    </message>
-    <message>
-        <source>错误</source>
-        <translation type="vanished">Error</translation>
-    </message>
-    <message>
-        <source>无法启动本地服务，程序即将退出。</source>
-        <translation type="vanished">Cannot start local service. Exiting.</translation>
-    </message>
-    <message>
-        <source>缓存删除错误</source>
-        <translation type="vanished">Cache delete error</translation>
-    </message>
-    <message>
-        <source>TOML 错误</source>
-        <translation type="vanished">TOML error</translation>
-    </message>
-    <message>
-        <source>标准错误</source>
-        <translation type="vanished">Std error</translation>
-    </message>
-    <message>
-        <source>遇到了未知的错误，程序即将退出。</source>
-        <translation type="vanished">Unknown error. Exiting.</translation>
     </message>
 </context>
 <context>
@@ -2287,7 +2168,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+64"/>
+        <location filename="Mainwindow.cpp" line="+49"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2307,7 +2188,7 @@ Issue summary:</translation>
         <translation>Where is the app&apos;s config file!?</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+16"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
@@ -2363,13 +2244,13 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location line="+80"/>
-        <location line="+199"/>
+        <location line="+79"/>
+        <location line="+176"/>
         <source>新建项目</source>
         <translation>New</translation>
     </message>
     <message>
-        <location line="-198"/>
+        <location line="-175"/>
         <source>打开项目</source>
         <translation>Open</translation>
     </message>
@@ -2405,13 +2286,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+83"/>
+        <location line="+62"/>
         <source>应用设置</source>
         <oldsource>设置</oldsource>
         <translation>App settings</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-58"/>
         <source>更改程序主题</source>
         <translation>Change theme</translation>
     </message>
@@ -2421,7 +2302,7 @@ Issue summary:</translation>
         <translation>Clear log</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+19"/>
         <source>主页</source>
         <translation>Home page</translation>
     </message>
@@ -2456,7 +2337,7 @@ Issue summary:</translation>
         <translation>Projects</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+13"/>
         <source>使用说明</source>
         <translation>Instructions</translation>
     </message>
@@ -2466,7 +2347,7 @@ Issue summary:</translation>
         <translation>About</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+7"/>
         <location line="+6"/>
         <source>请稍候</source>
         <translation>Wait a minute</translation>
@@ -2482,7 +2363,7 @@ Issue summary:</translation>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+48"/>
         <source>选择新项目的存放位置</source>
         <translation>Choose new dir to store project</translation>
     </message>
@@ -2507,10 +2388,6 @@ Issue summary:</translation>
         <location line="+118"/>
         <source>已存在同名项目！</source>
         <translation>Project name exists!</translation>
-    </message>
-    <message>
-        <source>项目名称不能为空，且不能包含斜杠或反斜杠！</source>
-        <translation type="vanished">Project name can not be empty or contain slash/backslash!</translation>
     </message>
     <message>
         <location line="-105"/>
@@ -2582,7 +2459,7 @@ Issue summary:</translation>
     <message>
         <location line="-134"/>
         <source>非法的项目名！</source>
-        <translation type="unfinished"></translation>
+        <translation>Invalid project name!</translation>
     </message>
     <message>
         <location line="+98"/>
@@ -3266,11 +3143,6 @@ Cache: %4</translation>
         <translation>Open settings</translation>
     </message>
     <message>
-        <source>点击下方『语法示例』按钮以获取具体语法规则及作用</source>
-        <oldsource>点击下方『语法示例』按钮以获取语法规则及作用</oldsource>
-        <translation type="vanished">Push the button below to get detailed explanation of grammars and effects</translation>
-    </message>
-    <message>
         <location line="+54"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
@@ -3523,10 +3395,6 @@ Cache: %4</translation>
         <location line="+268"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
-    </message>
-    <message>
-        <source>%1；显示前 %2 条</source>
-        <translation type="vanished">%1; showing first %2</translation>
     </message>
     <message>
         <location line="-59"/>
@@ -3837,12 +3705,6 @@ Cache: %4</translation>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
-        <source>
-...</source>
-        <translation type="vanished">
-...</translation>
-    </message>
-    <message>
         <location line="-12"/>
         <location line="+158"/>
         <source>无匹配内容</source>
@@ -3864,10 +3726,6 @@ Cache: %4</translation>
         <translation>Replaced %1 in %2 files; save to write.</translation>
     </message>
     <message>
-        <source>批量替换完成，记得保存修改</source>
-        <translation type="vanished">Batch replace done; save changes.</translation>
-    </message>
-    <message>
         <location line="+50"/>
         <source>点击搜索此问题</source>
         <translation>Click to search this problem</translation>
@@ -3876,18 +3734,18 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+52"/>
+        <location filename="ProjectSettingsPage.cpp" line="+36"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+304"/>
+        <location line="+276"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-271"/>
+        <location line="-244"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
@@ -3897,12 +3755,12 @@ Cache: %4</translation>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-57"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+57"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
@@ -3985,7 +3843,7 @@ Cache: %4</translation>
         <translation>Others</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+82"/>
         <source>项目仍在运行中，无法刷新配置</source>
         <translation>Project is still running</translation>
     </message>

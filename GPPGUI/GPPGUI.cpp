@@ -4,7 +4,6 @@
 #include <QCommandLineParser>
 #include <QDebug>
 #include <QDir>
-#include <QElapsedTimer>
 #include <QFontDatabase>
 #include <QLocalServer>
 #include <QLocalSocket>
@@ -15,7 +14,6 @@
 
 #include "ElaApplication.h"
 #include "Mainwindow.h"
-#include "StartupTiming.h"
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -114,20 +112,6 @@ void waitForProcessToExit(qint64 pid) {
 
 int main(int argc, char* argv[])
 {
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-    qint64 lastStartupTime = 0;
-    QString processStartupMessage;
-    auto logStartupTime = [&](const QString& stage)
-        {
-            const qint64 elapsed = startupTimer.elapsed();
-            const QString message = QStringLiteral("[StartupTiming] +%1 ms / %2 ms: %3")
-                .arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
-            qInfo().noquote() << message;
-            appendStartupTimingLog(message);
-            lastStartupTime = elapsed;
-        };
-
     // 公共初始化
 #ifdef Q_OS_WIN
     SetUnhandledExceptionFilter(writeMiniDump);
@@ -135,25 +119,7 @@ int main(int argc, char* argv[])
     SetConsoleCP(CP_UTF8);
     std::setlocale(LC_ALL, ".UTF-8");
 
-    FILETIME creationTime{};
-    FILETIME exitTime{};
-    FILETIME kernelTime{};
-    FILETIME userTime{};
-    FILETIME currentTime{};
-    if (GetProcessTimes(GetCurrentProcess(), &creationTime, &exitTime, &kernelTime, &userTime)) {
-        GetSystemTimeAsFileTime(&currentTime);
-        ULARGE_INTEGER creationValue{};
-        creationValue.LowPart = creationTime.dwLowDateTime;
-        creationValue.HighPart = creationTime.dwHighDateTime;
-        ULARGE_INTEGER currentValue{};
-        currentValue.LowPart = currentTime.dwLowDateTime;
-        currentValue.HighPart = currentTime.dwHighDateTime;
-        processStartupMessage = QStringLiteral("[StartupTiming] 进程创建至 main 平台初始化完成：%1 ms")
-            .arg((currentValue.QuadPart - creationValue.QuadPart) / 10'000);
-        qInfo().noquote() << processStartupMessage;
-    }
 #endif
-    logStartupTime(QStringLiteral("平台初始化"));
 
     // 使用一个唯一的key
     const QString uniqueKey = "{957C27D8-37BB-4F54-9EBE-D0F5C701CBBF}";
@@ -164,10 +130,6 @@ int main(int argc, char* argv[])
     QTranslator coreTranslator;
     QTranslator guiTranslator;
     QApplication app(argc, argv);
-    if (!processStartupMessage.isEmpty()) {
-        appendStartupTimingLog(processStartupMessage);
-    }
-    logStartupTime(QStringLiteral("QApplication 构造"));
     QCoreApplication::setApplicationName("GalTransl++ GUI");
     QDir::setCurrent(QApplication::applicationDirPath());
     QNetworkProxyFactory::setUseSystemConfiguration(true);
@@ -176,7 +138,6 @@ int main(int argc, char* argv[])
     parser.addHelpOption();
     parser.addOption({ QStringList{"pid"}, "pid", "pid" });
     parser.process(app);
-    logStartupTime(QStringLiteral("基础 Qt 设置与命令行解析"));
     if (parser.isSet("pid")) {
         const qint64 pid = parser.value("pid").toLongLong();
         waitForProcessToExit(pid);
@@ -197,7 +158,6 @@ int main(int argc, char* argv[])
 #endif
         }
     }
-    logStartupTime(QStringLiteral("更新器残留处理"));
     
     try {
         // 依赖配置的初始化
@@ -258,21 +218,15 @@ int main(int argc, char* argv[])
                     return 1; // 创建失败，退出
                 }
             }
-            logStartupTime(QStringLiteral("全局配置、翻译与单实例初始化"));
-
             const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
             const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
             startUpPythonEnv(pythonEnvPath, release);
-            logStartupTime(QStringLiteral("Python 环境初始化"));
         }
-        catch (...) {
-            logStartupTime(QStringLiteral("依赖配置初始化异常退出"));
-        }
+        catch (...) { }
 
         
 
         eApp->init();
-        logStartupTime(QStringLiteral("ElaApplication 初始化"));
         const int fontId = QFontDatabase::addApplicationFont(":/GPPGUI/Resource/fonts/MonaspaceNeon-Regular.otf");
         QFont uiFont = app.font();
         if (fontId >= 0) {
@@ -287,15 +241,8 @@ int main(int argc, char* argv[])
             }
         }
         app.setFont(uiFont);
-        logStartupTime(QStringLiteral("应用字体加载"));
         MainWindow w;
-        logStartupTime(QStringLiteral("MainWindow 构造"));
         w.show();
-        logStartupTime(QStringLiteral("MainWindow.show"));
-        QTimer::singleShot(0, &w, [&]()
-            {
-                logStartupTime(QStringLiteral("首次事件循环"));
-            });
         if (checkUpdate) {
             QTimer::singleShot(2000, &w, &MainWindow::checkUpdate);
         }

@@ -234,10 +234,6 @@
         <source>共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢) ...</source>
         <translation>Split into %1 blocks; tokenizing (Python tokenizers without GPU may be slow) ...</translation>
     </message>
-    <message>
-        <source>共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢)...</source>
-        <translation type="vanished">Split into %1 blocks; tokenizing (Python tokenizers without GPU may be slow)...</translation>
-    </message>
 </context>
 <context>
     <name>DictionaryGeneratorReviewAgent.applyCommitResult</name>
@@ -355,10 +351,6 @@
         <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1086"/>
         <source>字典审校 Agent 已停止。最终保留术语数: %1</source>
         <translation>Dictionary Review Agent stopped. Final retained terms: %1</translation>
-    </message>
-    <message>
-        <source>字典审校 Agent 已停止，已保留完成审校的词条。最终保留术语数: %1</source>
-        <translation type="vanished">Review Agent stopped; reviewed entries kept. Terms kept: %1</translation>
     </message>
     <message>
         <location filename="DictionaryGenerator.ReviewAgent.cpp" line="1092"/>
@@ -1049,10 +1041,6 @@ Problem overview:
         <translation>Updated NameTable.toml</translation>
     </message>
     <message>
-        <source>解析 NameTable.toml 时出错: %1</source>
-        <translation type="vanished">Error parsing NameTable.toml: %1</translation>
-    </message>
-    <message>
         <location filename="NormalJsonTranslator.Run.cpp" line="331"/>
         <source>检测到文件分割模式 (%1)，开始预处理输入文件...</source>
         <translation>File split mode detected (%1); preprocessing input files...</translation>
@@ -1081,10 +1069,6 @@ Problem overview:
         <location filename="NormalJsonTranslator.Run.cpp" line="457"/>
         <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句，onFileProcessed/分割文件合并/文件输出 将被延后</source>
         <translation>Repeat refs: min %1, %2 lines; callback/merge/output deferred</translation>
-    </message>
-    <message>
-        <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句</source>
-        <translation type="vanished">Repeat-block refs done: threshold %1, %2 lines linked</translation>
     </message>
     <message>
         <location filename="NormalJsonTranslator.Run.cpp" line="467"/>
@@ -1241,11 +1225,6 @@ Problem overview:
         <translation>[Thread %1] start processing file: %2</translation>
     </message>
     <message>
-        <source>[线程 %1] [文件 %2] 输入文件解析失败: %3</source>
-        <oldsource>[线程 %1] [文件 %2] 解析失败: %3</oldsource>
-        <translation type="vanished">[Thread %1] [File %2] input parse failed: %3</translation>
-    </message>
-    <message>
         <location filename="NormalJsonTranslator.File.cpp" line="77"/>
         <source>[线程 %1] [文件 %2] 输入数据处理失败: %3</source>
         <translation>[Thread %1] [File %2] input processing failed: %3</translation>
@@ -1287,21 +1266,9 @@ Problem overview:
         <translation>[T%1][File %2] Done; saving final cache...</translation>
     </message>
     <message>
-        <source>[线程 %1] [文件 %2] 重建完成，正在进行最终保存...</source>
-        <translation type="vanished">[Thread %1] [File %2] rebuild completed, doing final save...</translation>
-    </message>
-    <message>
-        <source>[线程 %1] [文件 %2] 翻译完成，正在进行最终保存...</source>
-        <translation type="vanished">[Thread %1] [File %2] translation done; final save...</translation>
-    </message>
-    <message>
         <location filename="NormalJsonTranslator.File.cpp" line="406"/>
         <source>[线程 %1] [文件 %2] 处理完成</source>
         <translation>[Thread %1] [File %2] processing completed</translation>
-    </message>
-    <message>
-        <source>[线程 %1] [文件 %2] 连续重复块引用模式启用，延后最终输出回填与文件回调</source>
-        <translation type="vanished">[T%1][File %2] Repeat-block refs on; delaying output fill/callback</translation>
     </message>
     <message>
         <location filename="NormalJsonTranslator.File.cpp" line="441"/>
@@ -1314,14 +1281,6 @@ Problem overview:
         <translation>Merging cache files for [%1]...</translation>
     </message>
     <message>
-        <source>文件 %1 尚未全部处理完成，跳过合并</source>
-        <translation type="vanished">File %1 is not fully processed; skipping merge</translation>
-    </message>
-    <message>
-        <source>开始合并 %1 的缓存文件...</source>
-        <translation type="vanished">Merging cache files for %1...</translation>
-    </message>
-    <message>
         <location filename="NormalJsonTranslator.File.cpp" line="454"/>
         <source>[线程 %1] [文件 %2] 合并处理完成</source>
         <translation>[Thread %1] [File %2] merge processing completed</translation>
@@ -1329,10 +1288,6 @@ Problem overview:
 </context>
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
-    <message>
-        <source>处理连续重复块引用复用时发生异常，可能是 [%1] 或 [%2] 遭到意外更改或删除: %3</source>
-        <translation type="vanished">Repeat-ref error; [%1] or [%2] changed/deleted: %3</translation>
-    </message>
     <message>
         <location filename="NormalJsonTranslator.Run.cpp" line="768"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
@@ -1425,14 +1380,6 @@ Problem overview:
 </context>
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
-    <message>
-        <source>Agent 建议目标 [%1] 没有缓存文件，已跳过</source>
-        <translation type="vanished">Agent suggestion target [%1] has no cache file; skipped</translation>
-    </message>
-    <message>
-        <source>Agent 建议目标缓存 [%1] 读取失败: %2</source>
-        <translation type="vanished">Failed to read Agent suggestion target cache [%1]: %2</translation>
-    </message>
     <message>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="1327"/>
         <source>Agent 已将 %1 条建议写入缓存问题</source>
@@ -2177,20 +2124,9 @@ Problem overview:
 <context>
     <name>buildContextHistory</name>
     <message>
-        <source>未知的 PromptType</source>
-        <translation type="vanished">Unknown PromptType</translation>
-    </message>
-    <message>
         <location filename="NormalJsonTranslatorHelperTool.cpp" line="445"/>
         <source>内部错误: 未知的 PromptType</source>
         <translation>Internal error: Unknown PromptType</translation>
-    </message>
-</context>
-<context>
-    <name>buildProblemOverviewFromCache</name>
-    <message>
-        <source>构建问题概览时读取缓存文件 [%1] 失败: %2</source>
-        <translation type="vanished">Problem overview: failed reading cache [%1]: %2</translation>
     </message>
 </context>
 <context>
@@ -2351,11 +2287,6 @@ Problem overview:
 <context>
     <name>chooseCachePart</name>
     <message>
-        <source>无效的 CachePart %1</source>
-        <oldsource>内部错误: 无效的 CachePart %1</oldsource>
-        <translation type="vanished">Invalid CachePart %1</translation>
-    </message>
-    <message>
         <location filename="Tool.cpp" line="794"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
@@ -2363,11 +2294,6 @@ Problem overview:
 </context>
 <context>
     <name>chooseStringRef</name>
-    <message>
-        <source>无效的条件目标 None</source>
-        <oldsource>内部错误: 无效的条件目标 None</oldsource>
-        <translation type="vanished">Invalid target: None</translation>
-    </message>
     <message>
         <location filename="Tool.cpp" line="777"/>
         <source>无法获取字符串的条件目标 %1</source>
@@ -2391,14 +2317,6 @@ Problem overview:
         <location filename="NormalJsonTranslatorHelperTool.cpp" line="768"/>
         <source>文件 [%1] 合并完成，已保存到 [%2]</source>
         <translation>File [%1] merged, saved to [%2]</translation>
-    </message>
-    <message>
-        <source>试图合并 %1 时出错，缺少文件 %2</source>
-        <translation type="vanished">Error merging %1: missing file %2</translation>
-    </message>
-    <message>
-        <source>文件 %1 合并完成，已保存到 %2</source>
-        <translation type="vanished">File %1 merged, saved to %2</translation>
     </message>
 </context>
 <context>

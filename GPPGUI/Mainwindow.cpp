@@ -7,7 +7,6 @@
 #include <QApplication>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QElapsedTimer>
 #include <QShortcut>
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -26,7 +25,6 @@
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
 #include "UpdateChecker.h"
-#include "StartupTiming.h"
 
 #include "HomePage.h"
 #include "DefaultPromptsPage.h"
@@ -42,19 +40,6 @@ import PythonManager;
 MainWindow::MainWindow(QWidget* parent)
     : ElaWindow(parent)
 {
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-    qint64 lastStartupTime = 0;
-    auto logStartupTime = [&](const QString& stage)
-        {
-            const qint64 elapsed = startupTimer.elapsed();
-            const QString message = QStringLiteral("[StartupTiming][MainWindow] +%1 ms / %2 ms: %3")
-                .arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
-            qInfo().noquote() << message;
-            appendStartupTimingLog(message);
-            lastStartupTime = elapsed;
-        };
-
     if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
             m_globalConfig = toml::uoparse(fs::path(L"BaseConfig/GlobalConfig.toml"));
@@ -70,20 +55,15 @@ MainWindow::MainWindow(QWidget* parent)
         MessageBoxW(nullptr, tr("不是哥们").toStdWString().c_str(), tr("有病吧，你把我软件的配置文件删了！？").toStdWString().c_str(), MB_ICONERROR);
 #endif
     }
-    logStartupTime(QStringLiteral("读取全局配置"));
-
     setIsAllowPageOpenInNewWindow(false);
 
     initWindow();
-    logStartupTime(QStringLiteral("initWindow"));
 
     //额外布局
     initEdgeLayout();
-    logStartupTime(QStringLiteral("initEdgeLayout"));
 
     //中心窗口
     initContent();
-    logStartupTime(QStringLiteral("initContent"));
 
     // 拦截默认关闭事件
     m_closeDialog = new ElaContentDialog(this);
@@ -163,7 +143,6 @@ MainWindow::MainWindow(QWidget* parent)
     else {
         fs::create_directories(L"cache");
     }
-    logStartupTime(QStringLiteral("关闭对话框、信号与启动提示"));
 }
 
 ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)
@@ -303,33 +282,14 @@ void MainWindow::initEdgeLayout()
 
 void MainWindow::initContent()
 {
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-    qint64 lastStartupTime = 0;
-    auto logStartupTime = [&](const QString& stage)
-        {
-            const qint64 elapsed = startupTimer.elapsed();
-            const QString message = QStringLiteral("[StartupTiming][MainWindow::initContent] +%1 ms / %2 ms: %3")
-                .arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
-            qInfo().noquote() << message;
-            appendStartupTimingLog(message);
-            lastStartupTime = elapsed;
-        };
-
     m_homePage = new HomePage(m_globalConfig, this);
-    logStartupTime(QStringLiteral("主页"));
     m_defaultPromptPage = new DefaultPromptsPage(this);
-    logStartupTime(QStringLiteral("默认提示词页"));
 
     m_commonPreDictsPage = new CommonNormalDictsPage("pre", m_globalConfig, this);
-    logStartupTime(QStringLiteral("通用译前字典页"));
     m_commonGptDictsPage = new CommonGptDictsPage(m_globalConfig, this);
-    logStartupTime(QStringLiteral("通用 GPT 字典页"));
     m_commonPostDictsPage = new CommonNormalDictsPage("post", m_globalConfig, this);
-    logStartupTime(QStringLiteral("通用译后字典页"));
 
     m_appSettingsPage = new AppSettingsPage(m_globalConfig, this);
-    logStartupTime(QStringLiteral("应用设置页"));
 
     addPageNode(tr("主页"), m_homePage, ElaIconType::House);
 
@@ -350,7 +310,6 @@ void MainWindow::initContent()
     connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
 
     addExpanderNode(tr("项目管理"), m_projectExpanderKey, ElaIconType::BriefcaseBlank);
-    logStartupTime(QStringLiteral("公共页面导航注册"));
     const auto projects = toml::find_or_default<toml::array>(m_globalConfig, "projects");
     for (const auto& project : projects) {
             if (project.is_string()) {
@@ -359,7 +318,6 @@ void MainWindow::initContent()
                     continue;
                 }
                 createProjectSettingsPage(projectDir);
-                logStartupTime(QString("项目页：%1").arg(QString::fromStdWString(projectDir.filename().wstring())));
             }
     }
     expandNavigationNode(m_projectExpanderKey);
@@ -369,7 +327,6 @@ void MainWindow::initContent()
     m_aboutDialog = new AboutDialog();
     m_aboutDialog->hide();
     addFooterNode(tr("应用设置"), m_appSettingsPage, m_appSettingsKey, 0, ElaIconType::GearComplex);
-    logStartupTime(QStringLiteral("页脚与关于对话框"));
 
     connect(m_aboutDialog, &AboutDialog::checkUpdateSignal, this, [=]()
         {
@@ -411,7 +368,6 @@ void MainWindow::initContent()
 	    {
             onClearLog(false);
 	    });
-    logStartupTime(QStringLiteral("initContent 信号连接"));
 }
 
 void MainWindow::onClearLog(bool forceClear) {

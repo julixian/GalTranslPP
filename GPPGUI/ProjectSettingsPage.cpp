@@ -2,7 +2,6 @@
 
 #include <QHBoxLayout>
 #include <QDebug>
-#include <QElapsedTimer>
 #include <QVBoxLayout>
 #include <QStackedWidget>
 
@@ -28,27 +27,12 @@
 #include "PromptSettingsPage.h"
 #include "ProjectCachePage.h"
 #include "ProblemOverviewTracker.h"
-#include "StartupTiming.h"
 
 import Tool;
 
 ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent)
     : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig)
 {
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-    qint64 lastStartupTime = 0;
-    const QString projectName = QString::fromStdWString(m_projectDir.filename().wstring());
-    auto logStartupTime = [&](const QString& stage)
-        {
-            const qint64 elapsed = startupTimer.elapsed();
-            const QString message = QStringLiteral("[StartupTiming][Project:%1] +%2 ms / %3 ms: %4")
-                .arg(projectName).arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
-            qInfo().noquote() << message;
-            appendStartupTimingLog(message);
-            lastStartupTime = elapsed;
-        };
-
     setWindowTitle(tr("项目设置主页"));
     setTitleVisible(false);
 
@@ -61,7 +45,6 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
             tr("解析失败"), tr("项目 %1 的配置文件不符合 toml 规范")
             .arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
     }
-    logStartupTime(QStringLiteral("读取 Config.toml"));
     insertToml(m_projectConfig, "GUIConfig.isRunning", false);
     m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, m_projectConfig, this);
 }
@@ -257,63 +240,38 @@ void ProjectSettingsPage::setupUi()
 
 void ProjectSettingsPage::createPages()
 {
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-    qint64 lastStartupTime = 0;
-    const QString projectName = QString::fromStdWString(m_projectDir.filename().wstring());
-    auto logStartupTime = [&](const QString& stage)
-        {
-            const qint64 elapsed = startupTimer.elapsed();
-            const QString message = QStringLiteral("[StartupTiming][Project:%1][createPages] +%2 ms / %3 ms: %4")
-                .arg(projectName).arg(elapsed).arg(elapsed - lastStartupTime).arg(stage);
-            qInfo().noquote() << message;
-            appendStartupTimingLog(message);
-            lastStartupTime = elapsed;
-        };
-
     if (!m_apiSettingsPage) {
         m_apiSettingsPage = new ApiSettingsPage(m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("ApiSettingsPage"));
     }
     if (!m_commonSettingsPage) {
         m_commonSettingsPage = new CommonSettingsPage(m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("CommonSettingsPage"));
     }
     if (!m_paSettingsPage) {
         m_paSettingsPage = new PASettingsPage(m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("PASettingsPage"));
     }
     if (!m_nameTableSettingsPage) {
         m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("NameTableSettingsPage"));
     }
     if (!m_dictSettingsPage) {
         m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("DictSettingsPage"));
     }
     if (!m_dictExSettingsPage) {
         m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("DictExSettingsPage"));
     }
     if (!m_promptSettingsPage) {
         m_promptSettingsPage = new PromptSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("PromptSettingsPage"));
     }
     if (!m_pluginSettingsPage) {
         m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("PluginSettingsPage"));
     }
     if (!m_projectCachePage) {
         m_projectCachePage = new ProjectCachePage(m_projectDir, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("ProjectCachePage"));
     }
     if (!m_startSettingsPage) {
         m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("StartSettingsPage"));
     }
     if (!m_otherSettingsPage) {
         m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
-        logStartupTime(QStringLiteral("OtherSettingsPage"));
     }
 
     m_stackedWidget->addWidget(m_apiSettingsPage);
@@ -327,7 +285,6 @@ void ProjectSettingsPage::createPages()
     m_stackedWidget->addWidget(m_projectCachePage);
     m_stackedWidget->addWidget(m_startSettingsPage);
     m_stackedWidget->addWidget(m_otherSettingsPage);
-    logStartupTime(QStringLiteral("页面加入 QStackedWidget"));
 
     if (m_startSettingsPage && m_otherSettingsPage) {
         connect(m_startSettingsPage, &StartSettingsPage::startTranslatingSignal, this, &ProjectSettingsPage::onStartTranslating);
@@ -339,7 +296,6 @@ void ProjectSettingsPage::createPages()
                 Q_EMIT this->changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
             });
     }
-    logStartupTime(QStringLiteral("页面信号连接"));
 }
 
 void ProjectSettingsPage::initialize()

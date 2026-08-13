@@ -22,9 +22,8 @@ struct GptTabEntry {
     ElaTableView* tableView{};
     GptDictModel* dictModel{};
     fs::path dictPath;
-    std::function<bool(bool)>saveFunc;
-    QSharedPointer<QList<GptDictEntry>> withdrawList;
-    GptTabEntry() : withdrawList(new QList<GptDictEntry>){}
+    std::function<bool(bool)> saveFunc;
+    QList<GptDictEntry> withdrawList;
 };
 
 class CommonGptDictsPage : public BasePage
@@ -43,7 +42,7 @@ private:
 
     toml::ordered_value& m_globalConfig;
 
-    QList<GptTabEntry> m_gptTabEntries;
+    QList<QSharedPointer<GptTabEntry>> m_gptTabEntries;
 };
 
 #endif

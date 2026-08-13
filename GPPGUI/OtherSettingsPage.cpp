@@ -369,19 +369,19 @@ void OtherSettingsPage::setupUi()
 			helpDialog.setMiddleButtonText(tr("思考人生"));
 			helpDialog.setRightButtonText(tr("是"));
 
-			QWidget* widget = new QWidget(&helpDialog);
-			QVBoxLayout* layout = new QVBoxLayout(widget);
-			layout->setContentsMargins(15, 25, 15, 10);
-			ElaText* confirmText = new ElaText(tr("你确定要刷新项目配置吗？"), widget);
-			confirmText->setTextStyle(ElaTextType::Title);
-			confirmText->setWordWrap(false);
-			layout->addWidget(confirmText);
-			layout->addSpacing(2);
-			ElaText* subTitle = new ElaText(tr("GUI中未保存的数据将会被覆盖！"), widget);
-			subTitle->setTextStyle(ElaTextType::Body);
-			layout->addWidget(subTitle);
-			layout->addStretch();
-			helpDialog.setCentralWidget(widget);
+			QWidget* helpDialogWidget = new QWidget(&helpDialog);
+			QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+			helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+			ElaText* helpDialogTitle = new ElaText(tr("你确定要刷新项目配置吗？"), helpDialogWidget);
+			helpDialogTitle->setTextStyle(ElaTextType::Title);
+			helpDialogTitle->setWordWrap(false);
+			helpDialogLayout->addWidget(helpDialogTitle);
+			helpDialogLayout->addSpacing(2);
+			ElaText* helpDialogBody = new ElaText(tr("GUI中未保存的数据将会被覆盖！"), helpDialogWidget);
+			helpDialogBody->setTextStyle(ElaTextType::Body);
+			helpDialogLayout->addWidget(helpDialogBody);
+			helpDialogLayout->addStretch();
+			helpDialog.setCentralWidget(helpDialogWidget);
 
 			if (helpDialog.exec() == QDialog::Accepted) {
 				Q_EMIT refreshProjectConfigSignal();
@@ -415,19 +415,19 @@ void OtherSettingsPage::setupUi()
 			helpDialog.setMiddleButtonText(tr("思考人生"));
 			helpDialog.setRightButtonText(tr("是"));
 
-			QWidget* widget = new QWidget(&helpDialog);
-			QVBoxLayout* layout = new QVBoxLayout(widget);
-			layout->setContentsMargins(15, 25, 15, 10);
-			ElaText* confirmText = new ElaText(tr("你确定要删除项目翻译缓存吗？"), widget);
-			confirmText->setTextStyle(ElaTextType::Title);
-			confirmText->setWordWrap(false);
-			layout->addWidget(confirmText);
-			layout->addSpacing(2);
-			ElaText* subTitle = new ElaText(tr("再次翻译将会重新从头开始！"), widget);
-			subTitle->setTextStyle(ElaTextType::Body);
-			layout->addWidget(subTitle);
-			layout->addStretch();
-			helpDialog.setCentralWidget(widget);
+			QWidget* helpDialogWidget = new QWidget(&helpDialog);
+			QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+			helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+			ElaText* helpDialogTitle = new ElaText(tr("你确定要删除项目翻译缓存吗？"), helpDialogWidget);
+			helpDialogTitle->setTextStyle(ElaTextType::Title);
+			helpDialogTitle->setWordWrap(false);
+			helpDialogLayout->addWidget(helpDialogTitle);
+			helpDialogLayout->addSpacing(2);
+			ElaText* helpDialogBody = new ElaText(tr("再次翻译将会重新从头开始！"), helpDialogWidget);
+			helpDialogBody->setTextStyle(ElaTextType::Body);
+			helpDialogLayout->addWidget(helpDialogBody);
+			helpDialogLayout->addStretch();
+			helpDialog.setCentralWidget(helpDialogWidget);
 
 			if (helpDialog.exec() == QDialog::Accepted) {
 				try {

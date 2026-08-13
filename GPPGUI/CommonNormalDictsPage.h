@@ -3,6 +3,7 @@
 
 #include "BasePage.h"
 #include "NormalTabEntry.h"
+#include <QSharedPointer>
 #include <toml.hpp>
 
 namespace fs = std::filesystem;
@@ -23,7 +24,7 @@ private:
 
     toml::ordered_value& m_globalConfig;
 
-    QList<NormalTabEntry> m_normalTabEntries;
+    QList<QSharedPointer<NormalTabEntry>> m_normalTabEntries;
 
     std::string m_mode;
     std::string m_modeConfigKey;

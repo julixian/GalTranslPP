@@ -92,11 +92,11 @@ void CommonNormalDictsPage::setupUi()
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
 
-	auto createNormalTab = [=](const fs::path& orgDictPath) -> QWidget*
+	auto createNormalDictTabFunc = [=](const fs::path& orgDictPath) -> QWidget*
 		{
-			const fs::path dictPath = m_modeDictDir / orgDictPath.filename().replace_extension(L".toml");
-			const std::string dictName = wide2Ascii(orgDictPath.stem().wstring());
-			NormalTabEntry normalTabEntry;
+			const fs::path initDictPath = m_modeDictDir / orgDictPath.filename().replace_extension(L".toml");
+			const std::string initDictName = wide2Ascii(orgDictPath.stem().wstring());
+			auto normalTabEntry = QSharedPointer<NormalTabEntry>::create();
 
 			QWidget* pageMainWidget = new QWidget(tabWidget);
 			QVBoxLayout* pageMainLayout = new QVBoxLayout(pageMainWidget);
@@ -188,12 +188,12 @@ void CommonNormalDictsPage::setupUi()
 			model->loadData(normalData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
-			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "openMode", 1));
-			tableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "0", 285));
-			tableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "1", 195));
-			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "2", 350));
-			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "3", 82));
-			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "columnWidth", "4", 65));
+			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "openMode", 1));
+			tableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "0", 285));
+			tableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "1", 195));
+			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "2", 350));
+			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "3", 82));
+			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "4", 65));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("条件"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
 			pageButtonLayout->insertWidget(3, searchBar);
@@ -206,8 +206,8 @@ void CommonNormalDictsPage::setupUi()
 				&& tableView->selectionModel()->hasSelection());
 			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 				&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
-			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", dictName, "defaultOn", true));
-			insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".defaultOn", defaultOnSwitch->getIsToggled());
+			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "defaultOn", true));
+			insertToml(m_globalConfig, m_modeConfigKey + ".spec." + initDictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
 			connect(plainTextModeButton, &ElaToolButton::clicked, this, [=]()
 				{
@@ -230,59 +230,57 @@ void CommonNormalDictsPage::setupUi()
 					removeDictButton->setEnabled(tableView->selectionModel()->hasSelection());
 					editEntryButton->setEnabled(tableView->selectionModel()->hasSelection()
 						&& tableView->currentIndex().isValid());
-					withdrawButton->setEnabled(!normalTabEntry.withdrawList->empty());
+					withdrawButton->setEnabled(!normalTabEntry->withdrawList.empty());
 					searchBar->show();
 				});
 
 			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
 				{
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName
+					const std::string currentDictName = wide2Ascii(normalTabEntry->dictPath.stem().wstring());
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName
 						+ ".defaultOn", checked);
 				});
 
+			const QWeakPointer<NormalTabEntry> weakNormalTabEntry = normalTabEntry.toWeakRef();
 			auto saveFunc = [=](bool forceSaveInTableModeToInit) -> bool // param 导入时先强制保存一下来给纯文本模式作初始化
 				{
-					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const NormalTabEntry& entry)
-						{
-							return entry.pageMainWidget == pageMainWidget;
-						});
-					if (it == m_normalTabEntries.end()) {
+					const QSharedPointer<NormalTabEntry> currentNormalTabEntry = weakNormalTabEntry.toStrongRef();
+					if (!currentNormalTabEntry) {
 						return false;
 					}
-
 					auto writeDictFile = [&]() -> bool
 						{
 							try {
 								if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-									atomicOutputFile(it->dictPath, plainTextEdit->toPlainText().toStdString());
+									atomicOutputFile(currentNormalTabEntry->dictPath, plainTextEdit->toPlainText().toStdString());
 								}
 								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-									toml::ordered_value dictArr = toml::array{};
-									for (const NormalDictEntry& entry : model->getEntriesRef()) {
-										toml::ordered_table dictTbl;
-										dictTbl.insert({ "org", entry.original.toStdString() });
-										dictTbl.insert({ "rep", entry.translation.toStdString() });
-										if (!entry.conditions.isEmpty()) {
-											toml::ordered_value conditions = toml::array{};
-											for (const NormalCondition& condition : entry.conditions) {
-												toml::ordered_table conditionTbl;
-											conditionTbl.insert({ "conditionReg", condition.pattern.toStdString() });
-											conditionTbl.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
-											conditions.push_back(std::move(conditionTbl));
-											}
-											dictTbl.insert({ "conditions", std::move(conditions) });
-										}
-										dictTbl.insert({ "isReg", entry.isReg });
-							dictTbl.insert({ "priority", entry.priority });
-										dictArr.push_back(std::move(dictTbl));
-									}
-									atomicOutputFile(it->dictPath,
-										toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictArr) }} }));
+						toml::ordered_value dictsArr = toml::array{};
+						for (const NormalDictEntry& entry : model->getEntriesRef()) {
+							toml::ordered_table dictTable;
+							dictTable.insert({ "org", entry.original.toStdString() });
+							dictTable.insert({ "rep", entry.translation.toStdString() });
+							if (!entry.conditions.isEmpty()) {
+								toml::ordered_value conditions = toml::array{};
+								for (const NormalCondition& condition : entry.conditions) {
+									toml::ordered_table conditionTable;
+									conditionTable.insert({ "conditionReg", condition.pattern.toStdString() });
+									conditionTable.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
+									conditions.push_back(std::move(conditionTable));
+								}
+								dictTable.insert({ "conditions", std::move(conditions) });
+							}
+							dictTable.insert({ "isReg", entry.isReg });
+							dictTable.insert({ "priority", entry.priority });
+							dictsArr.push_back(std::move(dictTable));
+						}
+						atomicOutputFile(currentNormalTabEntry->dictPath,
+							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictsArr) }} }));
 								}
 							}
 							catch (...) {
 								ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("保存失败"),
-									tr("无法打开字典: %1").arg(QString::fromStdWString(dictPath.wstring())), 3000);
+									tr("无法打开字典: %1").arg(QString::fromStdWString(currentNormalTabEntry->dictPath.wstring())), 3000);
 								return false;
 							}
 							return true;
@@ -291,54 +289,48 @@ void CommonNormalDictsPage::setupUi()
 						return false;
 					}
 
-					const std::string tmpDictName = wide2Ascii(it->dictPath.stem().wstring());
+					const std::string currentDictName = wide2Ascii(currentNormalTabEntry->dictPath.stem().wstring());
 
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-						const QList<NormalDictEntry> newDictEntries = DictionaryReader::readNormalDict(it->dictPath);
+						const QList<NormalDictEntry> newDictEntries = DictionaryReader::readNormalDict(currentNormalTabEntry->dictPath);
 						model->loadData(newDictEntries);
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
+						plainTextEdit->setPlainText(DictionaryReader::readDictStr(currentNormalTabEntry->dictPath));
 					}
 
-					auto& dictNamesArr = m_globalConfig[m_modeConfigKey]["dictNames"];
-					if (!dictNamesArr.is_array()) {
-						dictNamesArr = toml::array{ tmpDictName };
-					}
-					else {
+					auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
+					if (globalConfigDictNames.is_array()) {
 						if (
-							!std::ranges::any_of(dictNamesArr.as_array(), [=](const toml::ordered_value& name)
-							{
-								return name.is_string() && name.as_string() == tmpDictName;
-							})
-							) {
-							dictNamesArr.push_back(tmpDictName);
+							!std::ranges::any_of(globalConfigDictNames.as_array(), [=](const auto& globalConfigDictName)
+								{
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
+								})
+							)
+						{
+							globalConfigDictNames.push_back(currentDictName);
 						}
 					}
+					else {
+						globalConfigDictNames = toml::array{ currentDictName };
+					}
 
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".openMode", stackedWidget->currentIndex());
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".columnWidth.0", tableView->columnWidth(NormalDictModel::Original));
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".columnWidth.1", tableView->columnWidth(NormalDictModel::Translation));
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".columnWidth.2", tableView->columnWidth(NormalDictModel::Conditions));
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".columnWidth.3", tableView->columnWidth(NormalDictModel::IsReg));
-					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + dictName + ".columnWidth.4", tableView->columnWidth(NormalDictModel::Priority));
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".openMode", stackedWidget->currentIndex());
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".columnWidth.0", tableView->columnWidth(NormalDictModel::Original));
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".columnWidth.1", tableView->columnWidth(NormalDictModel::Translation));
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".columnWidth.2", tableView->columnWidth(NormalDictModel::Conditions));
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".columnWidth.3", tableView->columnWidth(NormalDictModel::IsReg));
+					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".columnWidth.4", tableView->columnWidth(NormalDictModel::Priority));
 					return true;
 				};
-			normalTabEntry.saveFunc = saveFunc;
+			normalTabEntry->saveFunc = saveFunc;
 
 			connect(saveButton, &ElaPushButton::clicked, this, [=]()
 				{
-					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const NormalTabEntry& entry)
-						{
-							return entry.pageMainWidget == pageMainWidget;
-						});
-					if (it == m_normalTabEntries.end()) {
-						return;
-					}
-					if (it->saveFunc(false)) {
+					if (normalTabEntry->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
-							tr("字典 %1 已保存").arg(QString::fromStdWString(it->dictPath.stem().wstring())), 3000);
+							tr("字典 %1 已保存").arg(QString::fromStdWString(normalTabEntry->dictPath.stem().wstring())), 3000);
 					}
 				});
 			auto openEntryDialog = [=](const NormalDictEntry& entry, NormalDictEntry& result) -> bool
@@ -415,10 +407,10 @@ void CommonNormalDictsPage::setupUi()
 							return a.row() > b.row();
 						});
 					for (const auto& index : selectedRows) {
-						if (normalTabEntry.withdrawList->size() > 100) {
-							normalTabEntry.withdrawList->pop_front();
+						if (normalTabEntry->withdrawList.size() > 100) {
+							normalTabEntry->withdrawList.pop_front();
 						}
-						normalTabEntry.withdrawList->push_back(entries[index.row()]);
+						normalTabEntry->withdrawList.push_back(entries[index.row()]);
 						model->removeRow(index.row());
 					}
 					if (!selectedRows.isEmpty()) {
@@ -427,35 +419,35 @@ void CommonNormalDictsPage::setupUi()
 				});
 			connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
 				{
-					if (normalTabEntry.withdrawList->empty()) {
+					if (normalTabEntry->withdrawList.empty()) {
 						return;
 					}
-					const NormalDictEntry entry = normalTabEntry.withdrawList->back();
-					normalTabEntry.withdrawList->pop_back();
+					const NormalDictEntry entry = normalTabEntry->withdrawList.back();
+					normalTabEntry->withdrawList.pop_back();
 					model->insertRow(0, entry);
-					if (normalTabEntry.withdrawList->empty()) {
+					if (normalTabEntry->withdrawList.empty()) {
 						withdrawButton->setEnabled(false);
 					}
 				});
 			connect(refreshButton, &ElaPushButton::clicked, this, [=]()
 				{
-					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const NormalTabEntry& entry)
+					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
-							return entry.pageMainWidget == pageMainWidget;
+							return entry->pageMainWidget == pageMainWidget;
 						});
 					if (it == m_normalTabEntries.end()) {
 						return;
 					}
-					plainTextEdit->setPlainText(DictionaryReader::readDictStr(it->dictPath));
-					model->loadData(DictionaryReader::readNormalDict(it->dictPath));
+					plainTextEdit->setPlainText(DictionaryReader::readDictStr((*it)->dictPath));
+					model->loadData(DictionaryReader::readNormalDict((*it)->dictPath));
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
-						tr("字典 %1 已刷新").arg(QString::fromStdWString(it->dictPath.stem().wstring())), 3000);
+						tr("字典 %1 已刷新").arg(QString::fromStdWString((*it)->dictPath.stem().wstring())), 3000);
 				});
 			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
 				{
-					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const NormalTabEntry& entry)
+					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
-							return entry.pageMainWidget == pageMainWidget;
+							return entry->pageMainWidget == pageMainWidget;
 						});
 					if (normalTabEntryIt == m_normalTabEntries.end()) {
 						return;
@@ -473,9 +465,9 @@ void CommonNormalDictsPage::setupUi()
 						return;
 					}
 
-					const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const NormalTabEntry& entry)
+					const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
-							return entry.pageMainWidget != pageMainWidget && entry.dictPath.stem().wstring() == newDictName.toStdWString();
+							return entry->pageMainWidget != pageMainWidget && entry->dictPath.stem().wstring() == newDictName.toStdWString();
 					});
 					if (hasSameNameTab || newDictName == "项目译前字典" || newDictName == "项目译后字典") {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
@@ -483,29 +475,30 @@ void CommonNormalDictsPage::setupUi()
 						return;
 					}
 
-					const fs::path oldDictPath = normalTabEntryIt->dictPath;
+					const fs::path oldDictPath = (*normalTabEntryIt)->dictPath;
 					const std::string oldDictName = wide2Ascii(oldDictPath.stem().wstring());
 					const fs::path newDictPath = m_modeDictDir / (newDictName.toStdWString() + L".toml");
 					try {
 						if (fs::exists(oldDictPath)) {
-							try {
-								fs::rename(oldDictPath, newDictPath);
-							}
-							catch(...) { }
+							fs::rename(oldDictPath, newDictPath);
 						}
-						normalTabEntryIt->dictPath = newDictPath;
-						auto& dictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-						if (dictNames.is_array()) {
-							const auto dictNameIt = std::ranges::find_if(dictNames.as_array(), [=](const auto& elem)
+						else {
+							atomicOutputFile(newDictPath, std::string{});
+						}
+						(*normalTabEntryIt)->dictPath = newDictPath;
+						auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
+						if (globalConfigDictNames.is_array()) {
+							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
+								[=](const auto& globalConfigDictName)
 								{
-									return elem.is_string() && elem.as_string() == oldDictName;
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == oldDictName;
 								});
-							if (dictNameIt != dictNames.as_array().end()) {
-								*dictNameIt = newDictName.toStdString();
+							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
+								*globalConfigDictNameIt = newDictName.toStdString();
 							}
 						}
 						else {
-							dictNames = toml::array{};
+							globalConfigDictNames = toml::array{ newDictName.toStdString() };
 						}
 						tabWidget->setTabText(tabWidget->indexOf(pageMainWidget), newDictName);
 						Q_EMIT commonDictsChangedSignal();
@@ -514,23 +507,23 @@ void CommonNormalDictsPage::setupUi()
 							.arg(QString::fromStdWString(oldDictPath.stem().wstring()))
 							.arg(newDictName), 3000);
 					}
-					catch (...) {
+					catch (const std::exception& e) {
 						ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("重命名失败"),
-							tr("字典 %1 重命名失败").arg(QString::fromStdWString(oldDictPath.stem().wstring())), 3000);
+							tr("字典 %1 重命名失败: %2").arg(QString::fromStdWString(oldDictPath.stem().wstring())).arg(e.what()), 3000);
 						return;
 					}
 				});
 			connect(removeTabButton, &ElaPushButton::clicked, this, [=]()
 				{
-					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const NormalTabEntry& entry)
+					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
-							return entry.pageMainWidget == pageMainWidget;
+							return entry->pageMainWidget == pageMainWidget;
 						});
 					if (normalTabEntryIt == m_normalTabEntries.end()) {
 						return;
 					}
 
-					std::string tmpDictName = wide2Ascii(normalTabEntryIt->dictPath.stem().wstring());
+					const std::string currentDictName = wide2Ascii((*normalTabEntryIt)->dictPath.stem().wstring());
 
 					// 删除提示框
 					ElaContentDialog helpDialog(window());
@@ -539,82 +532,84 @@ void CommonNormalDictsPage::setupUi()
 					helpDialog.setMiddleButtonText(tr("思考人生"));
 					helpDialog.setLeftButtonText(tr("否"));
 
-					QWidget* widget = new QWidget(&helpDialog);
-					QVBoxLayout* layout = new QVBoxLayout(widget);
-					layout->setContentsMargins(15, 25, 15, 10);
-					ElaText* confirmText = new ElaText(tr("你确定要删除 %1 吗？").arg(QString::fromStdString(tmpDictName)), widget);
-					confirmText->setTextStyle(ElaTextType::Title);
-					confirmText->setWordWrap(false);
-					layout->addWidget(confirmText);
-					layout->addSpacing(2);
-					ElaText* subTitle = new ElaText(tr("将永久删除该字典文件，如有需要请先备份！"), 16, widget);
-					subTitle->setTextStyle(ElaTextType::Body);
-					layout->addWidget(subTitle);
-					layout->addStretch();
-					helpDialog.setCentralWidget(widget);
+					QWidget* helpDialogWidget = new QWidget(&helpDialog);
+					QVBoxLayout* helpDialogLayout = new QVBoxLayout(helpDialogWidget);
+					helpDialogLayout->setContentsMargins(15, 25, 15, 10);
+					ElaText* helpDialogTitle = new ElaText(tr("你确定要删除 %1 吗？").arg(QString::fromStdString(currentDictName)), helpDialogWidget);
+					helpDialogTitle->setTextStyle(ElaTextType::Title);
+					helpDialogTitle->setWordWrap(false);
+					helpDialogLayout->addWidget(helpDialogTitle);
+					helpDialogLayout->addSpacing(2);
+					ElaText* helpDialogBody = new ElaText(tr("将永久删除该字典文件，如有需要请先备份！"), 16, helpDialogWidget);
+					helpDialogBody->setTextStyle(ElaTextType::Body);
+					helpDialogLayout->addWidget(helpDialogBody);
+					helpDialogLayout->addStretch();
+					helpDialog.setCentralWidget(helpDialogWidget);
 
 					if (helpDialog.exec() == QDialog::Accepted) {
-						pageMainWidget->deleteLater();
 						tabWidget->removeTab(tabWidget->indexOf(pageMainWidget));
+						pageMainWidget->deleteLater();
 						saveAllButton->setEnabled(tabWidget->count() > 0);
 						try {
-							fs::remove(normalTabEntryIt->dictPath);
+							fs::remove((*normalTabEntryIt)->dictPath);
 						}
-						catch (...) {}
+						catch (...) { }
 						m_normalTabEntries.erase(normalTabEntryIt);
-						auto& dictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-						if (dictNames.is_array()) {
-							auto dictNameIt = std::ranges::find_if(dictNames.as_array(), [=](const auto& elem)
+						auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
+						if (globalConfigDictNames.is_array()) {
+							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
+								[=](const auto& globalConfigDictName)
 								{
-									return elem.is_string() && elem.as_string() == tmpDictName;
+									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
 								});
-							if (dictNameIt != dictNames.as_array().end()) {
-								dictNames.as_array().erase(dictNameIt);
+							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
+								globalConfigDictNames.as_array().erase(globalConfigDictNameIt);
 							}
 						}
 						else {
-							dictNames = toml::array{};
+							globalConfigDictNames = toml::array{};
 						}
 						Q_EMIT commonDictsChangedSignal();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("删除成功"),
-							tr("字典 %1 已从字典管理和磁盘中移除！").arg(QString::fromStdString(tmpDictName)), 3000);
+							tr("字典 %1 已从字典管理和磁盘中移除！").arg(QString::fromStdString(currentDictName)), 3000);
 					}
 				});
 
-			normalTabEntry.pageMainWidget = pageMainWidget;
-			normalTabEntry.stackedWidget = stackedWidget;
-			normalTabEntry.plainTextEdit = plainTextEdit;
-			normalTabEntry.tableView = tableView;
-			normalTabEntry.dictModel = model;
-			normalTabEntry.dictPath = dictPath;
+			normalTabEntry->pageMainWidget = pageMainWidget;
+			normalTabEntry->stackedWidget = stackedWidget;
+			normalTabEntry->plainTextEdit = plainTextEdit;
+			normalTabEntry->tableView = tableView;
+			normalTabEntry->dictModel = model;
+			normalTabEntry->dictPath = initDictPath;
 			m_normalTabEntries.push_back(normalTabEntry);
 
-			if (!fs::exists(dictPath)) {
+			if (!fs::exists(initDictPath)) {
 				saveFunc(true);
 			}
 			return pageMainWidget;
 		};
 
-	auto& commonNormalDicts = m_globalConfig[m_modeConfigKey]["dictNames"];
-	if (commonNormalDicts.is_array()) {
-		auto it = commonNormalDicts.as_array().begin();
-		while (it != commonNormalDicts.as_array().end()) {
+	auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
+	if (globalConfigDictNames.is_array()) {
+		auto& globalConfigDictNamesArr = globalConfigDictNames.as_array();
+		auto it = globalConfigDictNamesArr.begin();
+		while (it != globalConfigDictNamesArr.end()) {
 			if (!it->is_string()) {
-				it = commonNormalDicts.as_array().erase(it);
+				it = globalConfigDictNamesArr.erase(it);
 				continue;
 			}
-			fs::path dictPath = m_modeDictDir / (ascii2Wide(it->as_string()) + L".toml");
+			const fs::path dictPath = m_modeDictDir / (ascii2Wide(it->as_string()) + L".toml");
 			if (!fs::exists(dictPath)) {
-				it = commonNormalDicts.as_array().erase(it);
+				it = globalConfigDictNamesArr.erase(it);
 				continue;
 			}
-			QWidget* pageMainWidget = createNormalTab(dictPath);
+			QWidget* pageMainWidget = createNormalDictTabFunc(dictPath);
 			tabWidget->addTab(pageMainWidget, QString::fromStdString(it->as_string()));
 			++it;
 		}
 	}
 	else {
-		commonNormalDicts = toml::array{};
+		globalConfigDictNames = toml::array{};
 	}
 
 	tabWidget->setCurrentIndex(0);
@@ -638,9 +633,18 @@ void CommonNormalDictsPage::setupUi()
 			if (importDictPathQStr.isEmpty()) {
 				return;
 			}
-			insertToml(m_globalConfig, "lastCommonNormalDictPath", importDictPathQStr.toStdString());
-			const fs::path importDictPath = importDictPathQStr.toStdWString();
-			const fs::path newDictPath = m_modeDictDir / (importDictPath.stem().wstring() + L".toml");
+				insertToml(m_globalConfig, "lastCommonNormalDictPath", importDictPathQStr.toStdString());
+				const fs::path importDictPath = importDictPathQStr.toStdWString();
+				const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
+					{
+						return entry->dictPath.stem().wstring() == importDictPath.stem().wstring();
+					});
+				if (hasSameNameTab) {
+					ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"),
+						tr("字典 %1 已存在").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
+					return;
+				}
+				const fs::path newDictPath = m_modeDictDir / (importDictPath.stem().wstring() + L".toml");
 			if (fs::exists(newDictPath) && !fs::equivalent(importDictPath, newDictPath)) {
 				try {
 					fs::remove(newDictPath);
@@ -650,16 +654,7 @@ void CommonNormalDictsPage::setupUi()
 					return;
 				}
 			}
-			const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const NormalTabEntry& entry)
-				{
-					return entry.dictPath.stem().wstring() == importDictPath.stem().wstring();
-			});
-			if (hasSameNameTab) {
-				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("导入失败"),
-					tr("字典 %1 已存在").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
-				return;
-			}
-			QWidget* pageMainWidget = createNormalTab(importDictPath);
+			QWidget* pageMainWidget = createNormalDictTabFunc(importDictPath);
 			tabWidget->addTab(pageMainWidget, QString::fromStdWString(importDictPath.stem().wstring()));
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("创建成功"),
@@ -668,24 +663,24 @@ void CommonNormalDictsPage::setupUi()
 
 	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
 		{
-			QString dictName;
-			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), dictName, window());
+			QString newDictName;
+			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}
 
-			if (dictName.isEmpty() || dictName.contains('/') || dictName.contains('\\') || dictName.contains('.')) {
+			if (newDictName.isEmpty() || newDictName.contains('/') || newDictName.contains('\\') || newDictName.contains('.')) {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft,
 					tr("新建失败"), tr("字典名称不能为空，且不能包含点号、斜杠或反斜杠！"), 3000);
 				return;
 			}
 
-			const fs::path newDictPath = m_modeDictDir / (dictName.toStdWString() + L".toml");
-			const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const NormalTabEntry& entry)
+			const fs::path newDictPath = m_modeDictDir / (newDictName.toStdWString() + L".toml");
+			const bool hasSameNameTab = std::ranges::any_of(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 				{
-					return entry.dictPath.stem().wstring() == dictName.toStdWString();
-			});
-			if (hasSameNameTab || dictName == "项目译前字典" || dictName == "项目译后字典") {
+					return entry->dictPath.stem().wstring() == newDictName.toStdWString();
+				});
+			if (hasSameNameTab || newDictName == "项目译前字典" || newDictName == "项目译后字典") {
 				ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("新建失败"),
 					tr("字典 %1 已存在").arg(QString::fromStdWString(newDictPath.stem().wstring())), 3000);
 				return;
@@ -700,8 +695,8 @@ void CommonNormalDictsPage::setupUi()
 				return;
 			}
 
-			QWidget* pageMainWidget = createNormalTab(newDictPath);
-			tabWidget->addTab(pageMainWidget, dictName);
+			QWidget* pageMainWidget = createNormalDictTabFunc(newDictPath);
+			tabWidget->addTab(pageMainWidget, newDictName);
 			tabWidget->setCurrentIndex(tabWidget->count() - 1);
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("新建成功"),
 				tr("字典页 %1 已创建").arg(QString::fromStdWString(newDictPath.stem().wstring())), 3000);
@@ -712,12 +707,12 @@ void CommonNormalDictsPage::setupUi()
 		{
 			toml::array dictNamesArr;
 			std::vector<std::pair<std::string, QWidget*>> pageWidgets;
-			for (const NormalTabEntry& entry : m_normalTabEntries) {
-				if (!entry.saveFunc(false)) {
+			for (const QSharedPointer<NormalTabEntry>& entry : m_normalTabEntries) {
+				if (!entry->saveFunc(false)) {
 					continue;
 				}
-				std::string dictName = wide2Ascii(entry.dictPath.stem().wstring());
-				pageWidgets.push_back({ dictName, entry.pageMainWidget });
+				std::string dictName = wide2Ascii(entry->dictPath.stem().wstring());
+				pageWidgets.push_back({ std::move(dictName), entry->pageMainWidget });
 			}
 			std::ranges::sort(pageWidgets, [=](const auto& a, const auto& b)
 				{
@@ -731,16 +726,20 @@ void CommonNormalDictsPage::setupUi()
 
 			auto& spec = m_globalConfig[m_modeConfigKey]["spec"];
 			if (spec.is_table()) {
-				for (const auto& key : spec.as_table() | std::views::keys) {
+				auto& specTable = spec.as_table();
+				auto it = specTable.begin();
+				while (it != specTable.end()) {
 					if (
-						!std::ranges::any_of(dictNamesArr, [&](const auto& elem)
+						!std::ranges::any_of(dictNamesArr, [&](const auto& dictName)
 							{
-								return elem.is_string() && elem.as_string() == key;
+								return dictName.is_string() && dictName.as_string() == it->first;
 							})
 						)
 					{
-						spec.as_table().erase(key);
+						it = specTable.erase(it);
+						continue;
 					}
+					++it;
 				}
 			}
 			else {

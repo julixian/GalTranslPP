@@ -632,7 +632,7 @@ sk-...</translation>
         <translation>Note</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+75"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -642,7 +642,7 @@ sk-...</translation>
         <translation>Cannot open file: %1</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+47"/>
         <location line="+293"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
@@ -905,7 +905,7 @@ sk-...</translation>
         <translation>Rules</translation>
     </message>
     <message>
-        <location line="+87"/>
+        <location line="+85"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -915,13 +915,13 @@ sk-...</translation>
         <translation>Cannot open dict: %1</translation>
     </message>
     <message>
-        <location line="+55"/>
-        <location line="+290"/>
+        <location line="+49"/>
+        <location line="+293"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-289"/>
+        <location line="-292"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
@@ -947,33 +947,33 @@ sk-...</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+46"/>
+        <location line="+47"/>
         <source>重命名失败</source>
         <translation>Fail to rename</translation>
     </message>
     <message>
-        <location line="-46"/>
-        <location line="+207"/>
+        <location line="-47"/>
+        <location line="+210"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation>Dict name can not be empty or contain point symbol, slash, backslash!</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+198"/>
+        <location line="-201"/>
+        <location line="+201"/>
         <location line="+10"/>
         <location line="+9"/>
         <source>新建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-216"/>
-        <location line="+177"/>
-        <location line="+31"/>
+        <location line="-219"/>
+        <location line="+170"/>
+        <location line="+41"/>
         <source>字典 %1 已存在</source>
         <translation>Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-178"/>
+        <location line="-180"/>
         <source>重命名成功</source>
         <translation>Renamed successfully</translation>
     </message>
@@ -984,8 +984,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+6"/>
+        <source>字典 %1 重命名失败: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>字典 %1 重命名失败</source>
-        <translation>Failed to rename dict %1</translation>
+        <translation type="vanished">Failed to rename dict %1</translation>
     </message>
     <message>
         <location line="+19"/>
@@ -1013,7 +1017,7 @@ sk-...</translation>
         <translation>This deletes the dictionary file. Back up first.</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+30"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -1023,7 +1027,7 @@ sk-...</translation>
         <translation>Dict %1 removed from list and disk!</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+51"/>
         <source>所有默认字典配置均已保存</source>
         <translation>All dicts are saved successfully</translation>
     </message>
@@ -1033,18 +1037,18 @@ sk-...</translation>
         <translation>Choose dict file</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <location line="+9"/>
+        <location line="+13"/>
+        <location line="+10"/>
         <source>导入失败</source>
         <translation>Fail to import</translation>
     </message>
     <message>
-        <location line="-9"/>
+        <location line="+0"/>
         <source>原文件删除失败</source>
         <translation>Fail to remove original file</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+7"/>
         <source>创建成功</source>
         <translation>Created successfully</translation>
     </message>
@@ -1790,12 +1794,12 @@ sk-...</translation>
         <translation>Reloaded %1</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+11"/>
         <source>生成字典删除失败</source>
         <translation>Failt to delete GenDict</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+68"/>
         <source>选择字典文件</source>
         <translation>Choose dict file</translation>
     </message>

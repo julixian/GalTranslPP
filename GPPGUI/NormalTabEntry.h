@@ -3,7 +3,6 @@
 
 #include "NormalDictModel.h"
 #include <QList>
-#include <QSharedPointer>
 #include <QStackedWidget>
 #include <filesystem>
 
@@ -20,8 +19,7 @@ struct NormalTabEntry {
     NormalDictModel* dictModel{};
     fs::path dictPath;
     std::function<bool(bool)> saveFunc;
-    QSharedPointer<QList<NormalDictEntry>> withdrawList;
-    NormalTabEntry() : withdrawList(new QList<NormalDictEntry>) {}
+    QList<NormalDictEntry> withdrawList;
 };
 
 #endif

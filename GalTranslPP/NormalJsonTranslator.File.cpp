@@ -110,7 +110,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
 
     std::vector<Sentence*> toTranslate;
 
-    // 读取 trans_cache，并根据缓存命中情况决定本轮实际需要翻译哪些句子。
+    // 读取 transl_cache，并根据缓存命中情况决定本轮实际需要翻译哪些句子。
     {
         absl::flat_hash_map<std::string, json> cacheMap;
 

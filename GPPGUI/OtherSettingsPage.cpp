@@ -191,7 +191,7 @@ void OtherSettingsPage::setupUi()
 	ElaScrollPageArea* importArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* importLayout = new QHBoxLayout(importArea);
 	ElaDoubleText* importLabel = new ElaDoubleText(tr("导入翻译问题概览至翻译缓存"), 16,
-		tr("使用 ProblemOverview.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence"), 10, "", importArea);
+		tr("使用 ProblemOverview.json/.toml 中的 Sentence 替换 transl_cache 中的 Sentence"), 10, "", importArea);
 	importLayout->addWidget(importLabel);
 	importLayout->addStretch();
 	ElaToolButton* importButton = new ElaToolButton(importArea);
@@ -292,7 +292,7 @@ void OtherSettingsPage::setupUi()
 					}
 				}
 
-				const QString completeQStr = tr("成功导入 %1 个句子至 trans_cache").arg(QString::number(importCount));
+				const QString completeQStr = tr("成功导入 %1 个句子至 transl_cache").arg(QString::number(importCount));
 				if (!problems.empty()) {
 					const fs::path problemPath = m_projectDir / L"import_problems.log";
 					std::string problemLog;

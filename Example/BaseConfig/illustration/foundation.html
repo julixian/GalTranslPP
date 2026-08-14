@@ -149,7 +149,7 @@
 <ul>
 <li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向 AI 输入 TSV 格式的句子 (包含 <code>name</code> 和 <code>message</code>) 并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。</li>
 <li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向 AI 输入和解析的时候都不带 <code>name</code> 键。</li>
-<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子 (包含 <code>name</code> 和 <code>message</code> ) 并要求 AI 以 json 格式回复，程序将解析返回的 JSON。容易出现傻瓜引号解析错误的问题，建议优先使用 ForGalTsv。</li>
+<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子 (包含 <code>name</code> 和 <code>message</code> ) 并要求 AI 以 json 格式回复，程序将解析返回的 JSON。</li>
 <li><strong><code># Sakura</code></strong>: 实际翻译模式，向 AI 输入自然语言形式的句子 (包含 <code>name</code> 和 <code>message</code> )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
 <li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名 (已有则仅更新)。</li>
 <li><strong><code># NameTrans</code></strong>: 翻译人名表 (如果没有则先 Dump)。</li>
@@ -158,7 +158,7 @@
 <li><strong><code># ShowNormal</code></strong>: 保存预处理后的内容及句子到项目文件夹下带 <code>show_normal</code> 字段的文件夹中，如 Epub 格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错。</li>
 </ul>
 <h3>缓存机制</h3>
-<p>在 <code>Rebuild</code> 中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>trans_cache</code> 文件夹中的 json 文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
+<p>在 <code>Rebuild</code> 中所提到的缓存，是指翻译过后留存在项目文件夹下，<code>transl_cache</code> 文件夹中的 json 文件，其中按顺序存储了每个文件对应的序列号，原文和译文等信息。所有的实际翻译模式都会先读取缓存，然后只挑选出缓存中还没有的原文进行翻译。</p>
 <blockquote>
 <p><strong>⚠️ 特别注意</strong>：在使用单文件分割功能的情况下，由于缓存命中结合了上下文，所以当你改变文件本身，或者 分割数/分割方式 时，会有一部分无关的句子不能命中缓存。理论上文件切的越碎，最终分割出的文件份数比最大线程数超过的更多，则不能命中缓存的句子越多。GalTransl++ 会尽可能在这种情况下保证原有缓存的命中 (你也可以调整 <code>分割缓存查找距离</code> 来控制缓存查找)，不过如果希望达到更好的缓存命中，最好还是不改变分割方式和分割数。为此也可以使用 <code>ShowNormal</code> 模式观察切割后的文件。</p>
 </blockquote>

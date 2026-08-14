@@ -2800,8 +2800,8 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+12"/>
-        <source>使用 ProblemOverview.json/.toml 中的 Sentence 替换 trans_cache 中的 Sentence</source>
-        <translation>Replace Sentences in trans_cache with Sentences from ProblemOverview.json/.toml</translation>
+        <source>使用 ProblemOverview.json/.toml 中的 Sentence 替换 transl_cache 中的 Sentence</source>
+        <translation>Replace Sentences in transl_cache with Sentences from ProblemOverview.json/.toml</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -2883,7 +2883,7 @@ Issue summary:</translation>
     <message>
         <location line="+10"/>
         <source>导入翻译问题概览至翻译缓存</source>
-        <translation>Import issue summary to trans_cache</translation>
+        <translation>Import issue summary to transl_cache</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -2932,8 +2932,8 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+8"/>
-        <source>成功导入 %1 个句子至 trans_cache</source>
-        <translation>Imported %1 sentences to trans_cache</translation>
+        <source>成功导入 %1 个句子至 transl_cache</source>
+        <translation>Imported %1 sentences to transl_cache</translation>
     </message>
     <message>
         <location line="+9"/>

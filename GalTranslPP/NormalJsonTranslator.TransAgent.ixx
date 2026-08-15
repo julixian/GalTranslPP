@@ -74,7 +74,7 @@ export
 
         // 翻译一个 NormalJsonTranslator 批次，内部完成工具调用、压缩上下文和提交校验。
         bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
-            int threadId, int batchIndex);
+            int& recursionIndex, int& recursionCount, int threadId, int batchIndex);
 
         // 把提交阶段记录的跨文件 Agent 建议写入翻译缓存的 problems 字段。
         void applyAgentSuggestions();

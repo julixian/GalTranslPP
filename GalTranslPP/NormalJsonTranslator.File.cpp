@@ -355,9 +355,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 return;
             }
 
+            int recursionIndex = 0;
+            int recursionCount = 0;
             if (m_agentEnabled) {
                 if (m_transAgent) {
-                    m_transAgent->translateBatch(relInputPath, batchView, rollingContext, threadId, batchIndex + 1);
+                    m_transAgent->translateBatch(relInputPath, batchView, rollingContext,
+                        recursionIndex, recursionCount, threadId, batchIndex + 1);
                 }
                 else {
 	                throw std::runtime_error(gppTr(
@@ -366,10 +369,8 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 }
             }
             else {
-                int recursionIndex = 0;
-                int recursionConut = 0;
                 translateBatch(relInputPath, batchView, rollingContext,
-                    recursionIndex, recursionConut, threadId, batchIndex + 1);
+                    recursionIndex, recursionCount, threadId, batchIndex + 1);
             }
             // 这里和 saveTranslCache() 中判断 transCompleted 是因为需要跳过还没翻译以及翻译中途暂停后未实际经过翻译的句子
             for (Sentence* se : batchView | std::views::filter([](Sentence* se_) { return se_->transCompleted; })) {

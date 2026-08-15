@@ -1037,7 +1037,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
 
 // 执行一个翻译 chunk 的完整 Agent 工作流。
 bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
-    int threadId, int batchIndex)
+    int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
 {
     // 智能体模式复用外层批次调度，但单个分块内可能进行多轮交互：
     // 先发起工具调用，再按需压缩上下文，最后提交通过校验的 `commit`。
@@ -1073,7 +1073,9 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     }
 
     bool retryExhausted = false;
-    const std::string batchIndexLog = std::format("{}", batchIndex);
+    const std::string batchIndexLog = recursionCount == 0
+        ? std::format("{}", batchIndex)
+        : std::format("{}-({}/{})", batchIndex, recursionIndex, recursionCount);
 
     std::vector<Sentence*> pending = collectPendingSentences(batch);
     if (pending.empty()) {
@@ -1126,6 +1128,45 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                 return true;
             }
             pendingSpan = std::span<Sentence*>(pending);
+
+            if (m_smartRetry && requestCount == 2 && pending.size() > 1) {
+                m_logger->warn(gppTr(
+                    "NormalJsonTranslatorTransAgent.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(requestCount + 1)
+                    .toStdString());
+
+                const size_t mid = pending.size() / 2;
+                const std::span<Sentence*> firstHalf = pendingSpan.subspan(0, mid);
+                const std::span<Sentence*> secondHalf = pendingSpan.subspan(mid);
+
+                recursionCount += 2;
+                ++recursionIndex;
+                const bool firstOk = translateBatch(
+                    relInputPath, firstHalf, rollingContext,
+                    recursionIndex, recursionCount, threadId, batchIndex);
+                ++recursionIndex;
+                const bool secondOk = translateBatch(
+                    relInputPath, secondHalf, rollingContext,
+                    recursionIndex, recursionCount, threadId, batchIndex);
+                return firstOk && secondOk;
+            }
+            if (m_smartRetry && requestCount == 3) {
+                m_logger->warn(gppTr(
+                    "NormalJsonTranslatorTransAgent.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(requestCount + 1)
+                    .toStdString());
+                rollingContext.clear();
+                messages = buildBaseMessages(relInputPath, pendingSpan, rollingContext);
+                messageBytes = approximateAgentCommonMessagesBytes(messages);
+            }
 
             const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
             if (!apiOpt.has_value()) {

@@ -1277,9 +1277,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>解析结果失败时尝试折半重翻与清空上下文，在 Agent 模式下无效</source>
-        <oldsource>解析结果失败时尝试折半重翻与清空上下文</oldsource>
-        <translation>On parse failure, retry halves and clear context, invalid in agent mode</translation>
+        <source>解析结果失败时尝试折半重翻与清空上下文</source>
+        <oldsource>解析结果失败时尝试折半重翻与清空上下文，在 Agent 模式下无效</oldsource>
+        <translation>On parse failure, retry halves and clear context</translation>
     </message>
     <message>
         <location line="+14"/>

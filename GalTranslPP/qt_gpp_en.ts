@@ -1251,37 +1251,37 @@ Problem overview:
         <translation>[Thread %1] [File %2] translation stopped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="363"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="366"/>
         <source>transAgent 未创建</source>
         <translation>transAgent not created</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="381"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="382"/>
         <source>[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...</source>
         <translation>[Thread %1] [File %2] save interval reached; updating cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="397"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="398"/>
         <source>[线程 %1] [文件 %2] 翻译完成，正在保存最终缓存...</source>
         <translation>[T%1][File %2] Done; saving final cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="406"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="407"/>
         <source>[线程 %1] [文件 %2] 处理完成</source>
         <translation>[Thread %1] [File %2] processing completed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="441"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="442"/>
         <source>文件 [%1] 尚未全部处理完成，跳过合并</source>
         <translation>[%1] incomplete; skipping merge</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="447"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="448"/>
         <source>开始合并 [%1] 的缓存文件...</source>
         <translation>Merging cache files for [%1]...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="454"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="455"/>
         <source>[线程 %1] [文件 %2] 合并处理完成</source>
         <translation>[Thread %1] [File %2] merge processing completed</translation>
     </message>
@@ -1381,7 +1381,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1329"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1370"/>
         <source>Agent 已将 %1 条建议写入缓存问题</source>
         <translation>Agent wrote %1 suggestions into cache problems</translation>
     </message>
@@ -1495,70 +1495,80 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1086"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1088"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 开始翻译，最多 %4 轮，共 %5 句:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] Agent starts translation, max %4 turns, %5 sentences total:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1104"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1106"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 上下文接近上限，要求模型先压缩上下文</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Context near limit; requesting compression</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1132"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1133"/>
+        <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...</source>
+        <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Splitting sentences in half and retrying...</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1158"/>
+        <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...</source>
+        <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Retrying after clearing context...</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1173"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1141"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1182"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 开始请求，剩余 %6 句，上下文 %7 字节</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Start: %6 lines left, %7-byte context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1156"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1197"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1174"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1215"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 成功响应，响应内容:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent responded successfully, content:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1199"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1240"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理成功，处理结果:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent response processed successfully, result:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1215"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1256"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理失败，错误: %6，响应内容:
 %7</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Response failed: %6; content:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1225"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1266"/>
         <source>内容为空</source>
         <translation>Empty content</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1231"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1272"/>
         <source>Agent 响应处理失败: %1</source>
         <translation>Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1261"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1302"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 因超过最大轮数 (%4 轮) 而失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Agent exceeded %4 turns; translated %5/%6 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1273"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1314"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 在 %5 次请求后彻底失败，共翻译 (%6 / %7) 句</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Failed after %5 requests; translated %6/%7 lines</translation>
     </message>

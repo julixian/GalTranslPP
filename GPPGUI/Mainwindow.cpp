@@ -5,7 +5,6 @@
 #include <QFileDialog>
 #include <QProcess>
 #include <QApplication>
-#include <QDebug>
 #include <QDesktopServices>
 #include <QShortcut>
 #ifdef Q_OS_WIN
@@ -454,15 +453,16 @@ void MainWindow::onNewProjectTriggered()
 
         toml::ordered_value configData = toml::uoparse(newProjectDir / L"Config.toml");
 
-        auto addCommonDictsToProjectConfig = [&](const std::string& globalConfigKey, const std::string& projectConfigKey)
+        auto addCommonDictsToProjectConfig = [&](const std::string& projectDictStdName, const std::string& globalConfigKey, const std::string& projectConfigKey)
             {
                 auto& globalConfigDictNames = m_globalConfig[globalConfigKey]["dictNames"];
-                auto& projectDictNames = configData["dictionary"][projectConfigKey];
+                auto& projectDictFileNames = configData["dictionary"][projectConfigKey];
                 if (!globalConfigDictNames.is_array()) {
                     globalConfigDictNames = toml::array{};
                 }
 
-                projectDictNames = toml::array{};
+                projectDictFileNames = toml::array{};
+                projectDictFileNames.push_back(projectDictStdName);
                 for (const auto& globalConfigDictName : globalConfigDictNames.as_array()) {
                     if (!globalConfigDictName.is_string()) {
                         continue;
@@ -470,20 +470,21 @@ void MainWindow::onNewProjectTriggered()
                     if (!toml::find_or(m_globalConfig, globalConfigKey, "spec", globalConfigDictName.as_string(), "defaultOn", true)) {
                         continue;
                     }
-                    if (std::ranges::any_of(projectDictNames.as_array(), [&](const toml::ordered_value& projectDictName)
+                    const std::string globalConfigDictFileName = globalConfigDictName.as_string() + ".toml";
+                    if (std::ranges::any_of(projectDictFileNames.as_array(), [&](const auto& projectDictFileName)
 	                    {
-                            return projectDictName.is_string() && projectDictName.as_string() == globalConfigDictName.as_string();
+                            return projectDictFileName.is_string() && projectDictFileName.as_string() == globalConfigDictFileName;
 	                    }))
                     {
                         continue;
                     }
-                    projectDictNames.push_back(globalConfigDictName.as_string() + ".toml");
+                    projectDictFileNames.push_back(globalConfigDictFileName);
                 }
             };
 
-        addCommonDictsToProjectConfig("commonPreDicts", "preDicts");
-        addCommonDictsToProjectConfig("commonGptDicts", "gptDicts");
-        addCommonDictsToProjectConfig("commonPostDicts", "postDicts");
+        addCommonDictsToProjectConfig("ProjPreDict.toml", "commonPreDicts", "preDicts");
+        addCommonDictsToProjectConfig("ProjGptDict.toml", "commonGptDicts", "gptDicts");
+        addCommonDictsToProjectConfig("ProjPostDict.toml", "commonPostDicts", "postDicts");
 
         atomicOutputFile(newProjectDir / L"Config.toml", toml::format(configData));
     }

@@ -271,6 +271,7 @@ void DictSettingsPage::setupUi()
 					ElaMessageBar::warning(ElaMessageBarType::TopLeft, tr("导入失败"), tr("字典文件中没有词条"), 3000);
 					return;
 				}
+				dictEntries.append(model->getEntriesRef());
 				model->loadData(dictEntries);
 				saveFunc(true);
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("导入成功"),

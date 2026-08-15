@@ -2,7 +2,6 @@
 #include "../GalTranslPP/GPPMacros.hpp"
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QDebug>
 #include <QDir>
 #include <QFontDatabase>
 #include <QLocalServer>

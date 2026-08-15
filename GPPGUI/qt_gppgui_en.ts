@@ -1739,7 +1739,7 @@ sk-...</translation>
         <translation>No dicts in the file</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>导入成功</source>
         <translation>Import successfully</translation>
     </message>
@@ -2082,7 +2082,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+156"/>
+        <location filename="GPPGUI.cpp" line="+155"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -2169,7 +2169,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+49"/>
+        <location filename="Mainwindow.cpp" line="+48"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2380,18 +2380,18 @@ Issue summary:</translation>
         <location line="+6"/>
         <location line="+12"/>
         <location line="+5"/>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>创建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-85"/>
-        <location line="+118"/>
+        <location line="-87"/>
+        <location line="+120"/>
         <source>已存在同名项目！</source>
         <translation>Project name exists!</translation>
     </message>
     <message>
-        <location line="-105"/>
+        <location line="-107"/>
         <source>目录下存在同名文件或文件夹！</source>
         <translation>File/dir with the same name has already existed!</translation>
     </message>
@@ -2406,7 +2406,7 @@ Issue summary:</translation>
         <translation>Can not read template file!</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>无法写入配置文件！</source>
         <translation>Can not write into config file!</translation>
     </message>
@@ -2458,12 +2458,12 @@ Issue summary:</translation>
         <translation>Fail to remove</translation>
     </message>
     <message>
-        <location line="-134"/>
+        <location line="-136"/>
         <source>非法的项目名！</source>
         <translation>Invalid project name!</translation>
     </message>
     <message>
-        <location line="+98"/>
+        <location line="+100"/>
         <source>目录下不存在 Config.toml 文件！</source>
         <translation>No Config.toml file exists in this directory!</translation>
     </message>
@@ -3735,7 +3735,7 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+36"/>
+        <location filename="ProjectSettingsPage.cpp" line="+35"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>

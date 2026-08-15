@@ -1,7 +1,6 @@
 #include "ProjectSettingsPage.h"
 
 #include <QHBoxLayout>
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QStackedWidget>
 

@@ -1,5 +1,5 @@
 gptDict = [
-    {org = "責め", rep = "责难", note = ""},
+    {org = "責め", rep = "责难||折磨||拷问||惩罚", note = "根据情境选择"},
     {org = "キンタマ", rep = "蛋蛋", note = ""},
     {org = "おちんちん", rep = "肉棒", note = ""},
     {org = "ちんちん", rep = "肉棒", note = ""},

@@ -468,25 +468,6 @@ Protocol JSON schema:
 ```
         </output>
     </example>
-
-    <example type="Agent_Tool_Use (Unresolved_Nickname)">
-        <input>美咲\t兄ちゃん、待ってよ！\t6</input>
-        <assistant_tool_call>
-```json
-{"schema":"gpp-agent-v1","action":"tool_calls","calls":[{"id":"find-brother","name":"search_text","arguments":{"queries":["兄ちゃん"],"scope":"all_files","context_lines":1}},{"id":"check-ledger","name":"search_term","arguments":{"queries":["兄","ちゃん"]}}],"translations":[],"term_updates":[],"agent_suggest":[],"file_note_patch":{},"rolling_context":""}
-```
-        </assistant_tool_call>
-        <tool_results>
-```json
-[{"id":"find-brother","name":"search_text","result":{"queries":["兄ちゃん"],"scope":"all_files","current_file":"scene01.json","start":0,"limit":20,"include_speaker":true,"total":1,"context_lines":1,"matches":[{"file":"scene00.json","id":18,"speaker":"美咲","message":"悠斗兄ちゃん、待ってよ！","nearby_lines":[]}]}},{"id":"check-ledger","name":"search_term","result":{"queries":["兄","ちゃん"],"start":0,"limit":20,"total":0,"matches":[]}}]
-```
-        </tool_results>
-        <assistant_commit>
-```json
-{"schema":"gpp-agent-v1","action":"commit","calls":[],"translations":[{"id":6,"dst":"哥哥，等等我！"}],"term_updates":[{"source_term":"兄ちゃん","target_term":"哥哥","category":"称呼","note":"美咲对其兄长悠斗的称呼；源文也会省略为“兄ちゃん”。","status":"final","line_ids":[6]}],"agent_suggest":[],"file_note_patch":{},"rolling_context":""}
-```
-        </assistant_commit>
-    </example>
 </few_shot_examples>
 
 <self_correction_checklist>
@@ -723,25 +704,6 @@ Protocol JSON schema:
 {"id": 5, "dst": "喂，你这家伙，这是在乱立Flag啊。"}
 ```
         </output>
-    </example>
-
-    <example type="Agent_Tool_Use (Unresolved_Nickname)">
-        <input>兄ちゃん、待ってよ！\t6</input>
-        <assistant_tool_call>
-```json
-{"schema":"gpp-agent-v1","action":"tool_calls","calls":[{"id":"find-brother","name":"search_text","arguments":{"queries":["兄ちゃん"],"scope":"all_files","context_lines":1}},{"id":"check-ledger","name":"search_term","arguments":{"queries":["兄","ちゃん"]}}],"translations":[],"term_updates":[],"agent_suggest":[],"file_note_patch":{},"rolling_context":""}
-```
-        </assistant_tool_call>
-        <tool_results>
-```json
-[{"id":"find-brother","name":"search_text","result":{"queries":["兄ちゃん"],"scope":"all_files","current_file":"chapter01.json","start":0,"limit":20,"include_speaker":true,"total":1,"context_lines":1,"matches":[{"file":"prologue.json","id":18,"speaker":"","message":"悠斗兄ちゃん、待ってよ！","nearby_lines":[]}]}},{"id":"check-ledger","name":"search_term","result":{"queries":["兄","ちゃん"],"start":0,"limit":20,"total":0,"matches":[]}}]
-```
-        </tool_results>
-        <assistant_commit>
-```json
-{"schema":"gpp-agent-v1","action":"commit","calls":[],"translations":[{"id":6,"dst":"哥哥，等等我！"}],"term_updates":[{"source_term":"兄ちゃん","target_term":"哥哥","category":"称呼","note":"叙述中的说话者对其兄长悠斗的称呼；源文也会省略为“兄ちゃん”。","status":"final","line_ids":[6]}],"agent_suggest":[],"file_note_patch":{},"rolling_context":""}
-```
-        </assistant_commit>
     </example>
 </few_shot_examples>
 

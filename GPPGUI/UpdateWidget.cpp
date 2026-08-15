@@ -17,7 +17,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. Api 报错检测优化",
-		"2. Agent 提示词优化",
+		"2. 提示词优化",
 		"3. 连续引用复用在 Rebuild 模式下也会生效了，暨引用句的缓存也会绑定在被引用句上，单独改引用句缓存会被刷掉",
         "4. CachePart 新增 Index 和 FileName，对应条件对象指代名 index 和 filename",
         "5. 翻译中途暂停的情况下 问题概览/Agent建议 将仅输出保存过缓存的文件中的问题，不再一并输出旧缓存问题",

@@ -19,9 +19,7 @@ namespace fs = std::filesystem;
 namespace py = pybind11;
 
 ordered_json buildProblemOverviewFromCache(
-    const absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
-    ctpl::thread_pool& threadPool
-)
+    const absl::flat_hash_map<fs::path, json>& savedTranslCacheMap)
 {
     std::vector<fs::path> relFilePaths = savedTranslCacheMap | std::views::keys | std::ranges::to<std::vector>();
     std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
@@ -34,7 +32,7 @@ ordered_json buildProblemOverviewFromCache(
         });
 
     const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)relFilePaths.size()));
-    threadPool.resize(workerCount);
+    ctpl::thread_pool threadPool(workerCount);
     std::vector<std::future<ordered_json>> results;
     results.reserve(relFilePaths.size());
     for (const fs::path& relFilePath : relFilePaths) {
@@ -152,11 +150,11 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             (int)std::thread::hardware_concurrency(),
             (int)inputJsonPaths.size()
         ));
-        m_threadPool.resize(inputWorkerCount);
+        ctpl::thread_pool inputThreadPool(inputWorkerCount);
         std::vector<std::future<ordered_json>> inputJsonResults;
         inputJsonResults.reserve(inputJsonPaths.size());
         for (const auto& inputPath : inputJsonPaths | std::views::keys) {
-            inputJsonResults.emplace_back(m_threadPool.push([&](int)
+            inputJsonResults.emplace_back(inputThreadPool.push([&](int)
                 {
                     std::ifstream ifs;
                     return parseOrderedJson(inputPath, ifs);
@@ -425,11 +423,11 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 (int)std::thread::hardware_concurrency(),
                 (int)filesWithData.size()
             ));
-            m_threadPool.resize(outputWorkerCount);
+            ctpl::thread_pool outputThreadPool(outputWorkerCount);
             std::vector<std::future<void>> outputResults;
             outputResults.reserve(filesWithData.size());
             for (const auto& [relFilePath, data] : filesWithData) {
-                outputResults.emplace_back(m_threadPool.push([&](int)
+                outputResults.emplace_back(outputThreadPool.push([&](int)
                     {
                         addReferenceInfoToInputJson(relFilePath, *data, repeatedBlockReferences);
                         const fs::path cachedInputPath = m_inputCacheDir / relFilePath;
@@ -522,8 +520,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
         return;
     }
 
-    ordered_json problemOverview = buildProblemOverviewFromCache(
-        m_savedTranslCacheMap, m_threadPool);
+    ordered_json problemOverview = buildProblemOverviewFromCache(m_savedTranslCacheMap);
     if (m_problemOverviewFormat == "json") {
         atomicOutputFile(m_projectDir / "ProblemOverview.json", problemOverview.dump(2));
     }
@@ -698,7 +695,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
     }
 
     const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)fileBundles.size()));
-    m_threadPool.resize(workerCount);
+    ctpl::thread_pool resolveThreadPool(workerCount);
 
     absl::flat_hash_map<SentencePosition, const json*> cacheByPosition;
     cacheByPosition.reserve(std::ranges::fold_left(fileBundles | std::views::values, 0uz, [](size_t acc, const FileBundle& bundle)
@@ -718,7 +715,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
     std::vector<std::future<FileBundleResolveResult>> resolveResults;
     resolveResults.reserve(fileBundles.size());
     for (auto& [relFilePath, bundle] : fileBundles) {
-        resolveResults.emplace_back(m_threadPool.push([&](int)
+        resolveResults.emplace_back(resolveThreadPool.push([&](int)
             {
                 FileBundleResolveResult result{ .relFilePath = relFilePath };
                 bool cacheChanged = false;

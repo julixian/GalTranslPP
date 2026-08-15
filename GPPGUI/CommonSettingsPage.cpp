@@ -336,7 +336,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
 	ElaDoubleText* smartRetryTextWidget = new ElaDoubleText(tr("智能重试"), 16,
-		tr("解析结果失败时尝试折半重翻与清空上下文"), 10,
+		tr("解析结果失败时尝试折半重翻与清空上下文，在 Agent 模式下无效"), 10,
 		"如果用的打野 key 其实不建议开这个", smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();

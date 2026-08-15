@@ -898,8 +898,8 @@ int NormalJsonTranslatorTransAgent::applyCommit(
     }
     
     for (const auto& patch : sentencePatches) {
-        commitResultLog += std::format("name: {}, dst: {}, id: {}\n",
-            patch.sentence->nameType != NameType::None ? getNameString(*patch.sentence) : "None",
+        commitResultLog += std::format("{}\t{}\t{}\n",
+            patch.sentence->nameType != NameType::None ? getNameString(*patch.sentence) : "null",
             patch.dst, patch.sentence->index);
     }
 

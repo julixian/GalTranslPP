@@ -445,7 +445,7 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
 
         cpr::WriteCallback writeCallbackInstance(callbackLambda);
 
-        cpr::Response response = cpr::Post(
+        const cpr::Response response = cpr::Post(
             cpr::Url{ requestUrl },
             cpr::Body{ payloadStr },
             headers,
@@ -463,7 +463,7 @@ ApiResponse performApiRequest(json& payload, const TranslationApi& api, const st
         }
     }
     else {
-        cpr::Response response = cpr::Post(
+        const cpr::Response response = cpr::Post(
             cpr::Url{ requestUrl },
             cpr::Body{ payloadStr },
             headers,

@@ -31,5 +31,6 @@ gptDict = [
     {org = "サワラ", rep = "马鲛", note = ""},
     {org = "カマイタチ", rep = "镰鼬", note = ""},
     {org = "肉じゃが", rep = "土豆炖肉", note = ""},
+    {org = "通い妻", rep = "走婚妻", note = ""},
 ]
 

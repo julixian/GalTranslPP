@@ -172,6 +172,13 @@ std::optional<json> tryParseAgentCommonJsonEnvelope(const std::string& text) {
         return std::nullopt;
     }
 
+    if (size_t pos = newText.find("</think>"); pos != std::string::npos) {
+        newText = newText.substr(pos + 8);
+    }
+    else if (pos = newText.find("<end_think>"); pos != std::string::npos) {
+        newText = newText.substr(pos + 11);
+    }
+
     const size_t fencedStart = newText.find("```");
     if (fencedStart != std::string::npos) {
         const size_t lineEnd = newText.find('\n', fencedStart);

@@ -935,7 +935,7 @@ bool createParent(const fs::path& path) {
 }
 
 bool isSameExtension(const fs::path& filePath, std::wstring_view ext) {
-    return str2Lower(filePath.extension()) == str2Lower(ext);
+    return boost::algorithm::iequals(filePath.extension().wstring(), ext);
 }
 
 

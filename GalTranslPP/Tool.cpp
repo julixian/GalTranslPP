@@ -562,7 +562,9 @@ std::string truncateUtf8Prefix(std::string_view str, size_t maxCodepoints, std::
     if (prefix.size() == str.size()) {
         return std::string(str);
     }
-    return std::string(prefix).append(ellipsis);
+    std::string ret(prefix);
+    ret.append(ellipsis);
+    return ret;
 }
 
 std::string_view truncateUtf8SuffixView(std::string_view str, size_t maxCodepoints) {
@@ -590,7 +592,9 @@ std::string truncateUtf8Suffix(std::string_view str, size_t maxCodepoints, std::
     if (suffix.size() == str.size()) {
         return std::string(str);
     }
-    return std::string(ellipsis).append(suffix);
+    std::string ret(ellipsis);
+    ret.append(suffix);
+    return ret;
 }
 
 std::string maskApikey(std::string_view apikey) {

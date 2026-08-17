@@ -2297,7 +2297,7 @@ Problem overview:
 <context>
     <name>chooseCachePart</name>
     <message>
-        <location filename="Tool.cpp" line="794"/>
+        <location filename="Tool.cpp" line="798"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2305,7 +2305,7 @@ Problem overview:
 <context>
     <name>chooseStringRef</name>
     <message>
-        <location filename="Tool.cpp" line="777"/>
+        <location filename="Tool.cpp" line="781"/>
         <source>无法获取字符串的条件目标 %1</source>
         <oldsource>无法获取字符串的无效条件目标 %1</oldsource>
         <translation>Invalid string target %1</translation>
@@ -2390,12 +2390,12 @@ Problem overview:
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1078"/>
+        <location filename="Tool.cpp" line="1082"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1084"/>
+        <location filename="Tool.cpp" line="1088"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2432,12 +2432,12 @@ Problem overview:
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1096"/>
+        <location filename="Tool.cpp" line="1100"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1101"/>
+        <location filename="Tool.cpp" line="1105"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>

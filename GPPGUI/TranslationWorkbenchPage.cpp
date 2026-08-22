@@ -19,13 +19,13 @@
 
 namespace
 {
-    constexpr int SuccessRole = Qt::UserRole + 1;
-    constexpr int ErrorRole = Qt::UserRole + 2;
-    constexpr int FileRole = Qt::UserRole + 3;
-    constexpr int MaxSuccessEvents = 500;
-    constexpr int MaxRenderedSuccessEvents = 100;
-    constexpr int MaxErrorEvents = 80;
-    constexpr int SuccessItemHeight = 138;
+    constexpr int kSuccessRole = Qt::UserRole + 1;
+    constexpr int kErrorRole = Qt::UserRole + 2;
+    constexpr int kFileRole = Qt::UserRole + 3;
+    constexpr int kMaxSuccessEvents = 500;
+    constexpr int kMaxRenderedSuccessEvents = 100;
+    constexpr int kMaxErrorEvents = 80;
+    constexpr int kSuccessItemHeight = 138;
 
     QString compactPreview(QString text, int maxChars = 180)
     {
@@ -84,7 +84,7 @@ namespace
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
 
-            const auto event = index.data(SuccessRole).value<GuiRuntimeTransSuccessEvent>();
+            const auto event = index.data(kSuccessRole).value<GuiRuntimeTransSuccessEvent>();
             const bool selected = option.state.testFlag(QStyle::State_Selected);
             const bool hovered = option.state.testFlag(QStyle::State_MouseOver);
             QRectF card = option.rect.adjusted(6, 4, -6, -5);
@@ -197,7 +197,7 @@ namespace
             // 错误卡片默认只展示短摘要，完整错误放 tooltip，避免 Api 长报文拖慢绘制。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-            const auto event = index.data(ErrorRole).value<GuiRuntimeTransErrorEvent>();
+            const auto event = index.data(kErrorRole).value<GuiRuntimeTransErrorEvent>();
             const bool selected = option.state.testFlag(QStyle::State_Selected);
             const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
             QRectF card = option.rect.adjusted(5, 5, -7, -7);
@@ -304,7 +304,7 @@ namespace
             // 文件进度卡片是右侧的可点击筛选入口；点击后会过滤左侧成功句流。
             painter->save();
             painter->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-            const auto file = index.data(FileRole).value<GuiRuntimeFileProgress>();
+            const auto file = index.data(kFileRole).value<GuiRuntimeFileProgress>();
             QRectF card = option.rect.adjusted(5, 4, -5, -5);
             painter->setPen(QPen(themeColor(ElaThemeType::BasicBorder), 1.0));
             painter->setBrush(themeColor(ElaThemeType::BasicBaseAlpha));
@@ -402,7 +402,7 @@ void TranslationWorkbenchPage::setupUi()
     m_successList->setModel(m_successModel);
     m_successList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_successList->setUniformItemSizes(true);
-    m_successList->setItemHeight(SuccessItemHeight);
+    m_successList->setItemHeight(kSuccessItemHeight);
     m_successList->setItemDelegate(new SuccessDelegate(m_successList));
     successLayout->addWidget(m_successList, 1);
     bodyLayout->addWidget(successPane, 5);
@@ -453,7 +453,7 @@ void TranslationWorkbenchPage::setupUi()
     connect(m_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             // 文件进度项同时也是筛选开关：可快速只看某个文件产生的成功句。
-            const auto file = index.data(FileRole).value<GuiRuntimeFileProgress>();
+            const auto file = index.data(kFileRole).value<GuiRuntimeFileProgress>();
             if (!file.filename.isEmpty()) {
                 if (m_successFileFilters.contains(file.filename)) {
                     m_successFileFilters.remove(file.filename);
@@ -577,19 +577,19 @@ void TranslationWorkbenchPage::renderSuccesses()
     }
     m_successModel->clear();
     QVector<GuiRuntimeTransSuccessEvent> visible;
-    visible.reserve(qMin(m_successes.size(), MaxRenderedSuccessEvents));
+    visible.reserve(qMin(m_successes.size(), kMaxRenderedSuccessEvents));
     for (const GuiRuntimeTransSuccessEvent& event : m_successes) {
         if (!m_successFileFilters.isEmpty() && !m_successFileFilters.contains(event.filename)) {
             continue;
         }
         visible.push_back(event);
-        if (visible.size() >= MaxRenderedSuccessEvents) {
+        if (visible.size() >= kMaxRenderedSuccessEvents) {
             break;
         }
     }
     for (const auto& event : visible) {
         QStandardItem* item = new QStandardItem(event.filename);
-        item->setData(QVariant::fromValue(event), SuccessRole);
+        item->setData(QVariant::fromValue(event), kSuccessRole);
         if (!event.problems.isEmpty()) {
             item->setToolTip(event.problems.join("\n"));
         }
@@ -612,7 +612,7 @@ void TranslationWorkbenchPage::renderErrors()
         GuiRuntimeTransErrorEvent displayEvent = event;
         displayEvent.message = compactPreview(displayEvent.message, 240);
         QStandardItem* item = new QStandardItem(displayEvent.message);
-        item->setData(QVariant::fromValue(displayEvent), ErrorRole);
+        item->setData(QVariant::fromValue(displayEvent), kErrorRole);
         item->setToolTip(displayEvent.message);
         item->setEditable(false);
         m_errorModel->appendRow(item);
@@ -640,7 +640,7 @@ void TranslationWorkbenchPage::renderFiles()
         });
     for (const auto& file : files) {
         QStandardItem* item = new QStandardItem(file.filename);
-        item->setData(QVariant::fromValue(file), FileRole);
+        item->setData(QVariant::fromValue(file), kFileRole);
         item->setEditable(false);
         m_fileModel->appendRow(item);
     }
@@ -681,7 +681,7 @@ void TranslationWorkbenchPage::refreshHeader()
 void TranslationWorkbenchPage::trimSuccesses()
 {
     // 保留上限控制在追加阶段做；m_successTotal 不裁剪，用于展示本轮累计进入句流的总数。
-    while (m_successes.size() > MaxSuccessEvents) {
+    while (m_successes.size() > kMaxSuccessEvents) {
         m_successes.pop_back();
     }
 }
@@ -689,7 +689,7 @@ void TranslationWorkbenchPage::trimSuccesses()
 void TranslationWorkbenchPage::trimErrors()
 {
     // 错误多为诊断入口，保留最近即可。
-    while (m_errors.size() > MaxErrorEvents) {
+    while (m_errors.size() > kMaxErrorEvents) {
         m_errors.pop_back();
     }
 }

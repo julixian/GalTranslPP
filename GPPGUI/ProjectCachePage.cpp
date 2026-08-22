@@ -61,7 +61,7 @@ void ProjectCachePage::setupUi()
     QHBoxLayout* topLayout = new QHBoxLayout();
     topLayout->setSpacing(8);
 
-    m_cacheDirLabel = new ElaText(QString::fromStdWString(getCacheDir().wstring()), BodyFontPx, mainWidget);
+    m_cacheDirLabel = new ElaText(QString::fromStdWString(getCacheDir().wstring()), kBodyFontPx, mainWidget);
     m_cacheDirLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_cacheDirLabel->setStyleSheet(auxiliaryTextStyle());
     topLayout->addWidget(m_cacheDirLabel, 1);
@@ -166,7 +166,7 @@ void ProjectCachePage::setupUi()
             button->setMinimumHeight(30);
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             QFont font = button->font();
-            font.setPixelSize(BodyFontPx);
+            font.setPixelSize(kBodyFontPx);
             button->setFont(font);
             m_sidebarButtonGroup->addButton(button, index);
             navLayout->addWidget(button);
@@ -417,7 +417,7 @@ void ProjectCachePage::setupUi()
 
     searchLayout->addWidget(m_replacePanel);
 
-    m_searchStatusLabel = new ElaText("", BodyFontPx, searchTab);
+    m_searchStatusLabel = new ElaText("", kBodyFontPx, searchTab);
     m_searchStatusLabel->setStyleSheet(auxiliaryTextStyle());
     searchLayout->addWidget(m_searchStatusLabel);
 
@@ -433,7 +433,7 @@ void ProjectCachePage::setupUi()
     connect(m_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
         {
             if (index.isValid()) {
-                jumpToHit(index.data(HitIndexRole).toInt());
+                jumpToHit(index.data(kHitIndexRole).toInt());
             }
         });
     searchLayout->addWidget(m_searchResultList, 1);
@@ -472,7 +472,7 @@ void ProjectCachePage::setupUi()
                     break;
                 }
             }
-            m_globalSearchEdit->setText(index.data(ProblemTextRole).toString());
+            m_globalSearchEdit->setText(index.data(kProblemTextRole).toString());
             runGlobalSearch();
         });
     problemsLayout->addWidget(m_problemList, 1);
@@ -487,13 +487,13 @@ void ProjectCachePage::setupUi()
     editorLayout->setSpacing(8);
 
     QHBoxLayout* currentLayout = new QHBoxLayout();
-    m_currentFileLabel = new ElaText(tr("未选择缓存文件"), TitleFontPx, editorWidget);
+    m_currentFileLabel = new ElaText(tr("未选择缓存文件"), kTitleFontPx, editorWidget);
     m_currentFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     QFont currentFont = m_currentFileLabel->font();
     currentFont.setBold(true);
     m_currentFileLabel->setFont(currentFont);
     currentLayout->addWidget(m_currentFileLabel, 1);
-    m_currentSummaryLabel = new ElaText("", BodyFontPx, editorWidget);
+    m_currentSummaryLabel = new ElaText("", kBodyFontPx, editorWidget);
     m_currentSummaryLabel->setStyleSheet(auxiliaryTextStyle());
     m_currentSummaryLabel->setWordWrap(false);
     m_currentSummaryLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -594,7 +594,7 @@ void ProjectCachePage::setupUi()
     connect(m_entryList, &ElaListView::doubleClicked, this, [=](const QModelIndex& index)
         {
             if (index.isValid()) {
-                openEntryEditor(index.data(JsonRowRole).toInt());
+                openEntryEditor(index.data(kJsonRowRole).toInt());
             }
         });
     editorLayout->addWidget(m_entryList, 1);

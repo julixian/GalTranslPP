@@ -23,7 +23,7 @@
 
 namespace
 {
-    constexpr auto RowMimeType = "application/x-galtranslpp-table-row";
+    constexpr auto kRowMimeType = "application/x-galtranslpp-table-row";
 
     class DragHandleDelegate final : public QStyledItemDelegate
     {
@@ -74,15 +74,15 @@ ReorderableTableView::ReorderableTableView(QWidget* parent)
     setDragDropOverwriteMode(false);
     setDropIndicatorShown(false);
     setAutoScroll(true);
-    setItemDelegateForColumn(HandleColumn, new DragHandleDelegate(this));
+    setItemDelegateForColumn(kHandleColumn, new DragHandleDelegate(this));
 }
 
 void ReorderableTableView::setModel(QAbstractItemModel* model)
 {
     ElaTableView::setModel(model);
-    if (model && model->columnCount() > HandleColumn) {
-        horizontalHeader()->setSectionResizeMode(HandleColumn, QHeaderView::Fixed);
-        setColumnWidth(HandleColumn, HandleColumnWidth);
+    if (model && model->columnCount() > kHandleColumn) {
+        horizontalHeader()->setSectionResizeMode(kHandleColumn, QHeaderView::Fixed);
+        setColumnWidth(kHandleColumn, kHandleColumnWidth);
     }
 }
 
@@ -131,10 +131,10 @@ void ReorderableTableView::startDrag(Qt::DropActions supportedActions)
 
     QByteArray payload;
     QDataStream stream(&payload, QIODevice::WriteOnly);
-    stream << qint32(m_dragSourceRow);
+    stream << m_dragSourceRow;
 
     auto* mimeData = new QMimeData();
-    mimeData->setData(RowMimeType, payload);
+    mimeData->setData(kRowMimeType, payload);
 
     QDrag drag(this);
     drag.setMimeData(mimeData);
@@ -211,7 +211,7 @@ void ReorderableTableView::dropEvent(QDropEvent* event)
     const int movedRow = destinationChild > sourceRow
         ? destinationChild - 1
         : destinationChild;
-    const QModelIndex movedIndex = model()->index(movedRow, HandleColumn);
+    const QModelIndex movedIndex = model()->index(movedRow, kHandleColumn);
     setCurrentIndex(movedIndex);
     selectRow(movedRow);
     scrollTo(movedIndex, QAbstractItemView::EnsureVisible);
@@ -243,17 +243,17 @@ void ReorderableTableView::paintEvent(QPaintEvent* event)
 
 bool ReorderableTableView::isHandleIndex(const QModelIndex& index) const
 {
-    return index.isValid() && index.column() == HandleColumn
+    return index.isValid() && index.column() == kHandleColumn
         && index.flags().testFlag(Qt::ItemIsEnabled);
 }
 
 bool ReorderableTableView::readSourceRow(const QMimeData* mimeData, int& sourceRow) const
 {
-    if (!mimeData || !mimeData->hasFormat(RowMimeType)) {
+    if (!mimeData || !mimeData->hasFormat(kRowMimeType)) {
         return false;
     }
 
-    QByteArray payload = mimeData->data(RowMimeType);
+    QByteArray payload = mimeData->data(kRowMimeType);
     QDataStream stream(&payload, QIODevice::ReadOnly);
     qint32 row = -1;
     stream >> row;
@@ -274,13 +274,13 @@ int ReorderableTableView::insertionRowAt(const QPoint& position) const
 
     const int hoveredRow = rowAt(position.y());
     if (hoveredRow >= 0) {
-        const QRect rowRect = visualRect(model()->index(hoveredRow, HandleColumn));
+        const QRect rowRect = visualRect(model()->index(hoveredRow, kHandleColumn));
         return position.y() < rowRect.center().y()
             ? hoveredRow
             : hoveredRow + 1;
     }
 
-    const QRect firstRowRect = visualRect(model()->index(0, HandleColumn));
+    const QRect firstRowRect = visualRect(model()->index(0, kHandleColumn));
     if (position.y() < firstRowRect.top()) {
         return 0;
     }
@@ -295,12 +295,12 @@ int ReorderableTableView::insertionLineY(int insertionRow) const
     }
 
     if (insertionRow <= 0) {
-        return visualRect(model()->index(0, HandleColumn)).top();
+        return visualRect(model()->index(0, kHandleColumn)).top();
     }
     if (insertionRow >= rowCount) {
-        return visualRect(model()->index(rowCount - 1, HandleColumn)).bottom() + 1;
+        return visualRect(model()->index(rowCount - 1, kHandleColumn)).bottom() + 1;
     }
-    return visualRect(model()->index(insertionRow, HandleColumn)).top();
+    return visualRect(model()->index(insertionRow, kHandleColumn)).top();
 }
 
 void ReorderableTableView::setDropRow(int row)

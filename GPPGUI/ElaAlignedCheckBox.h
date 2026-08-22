@@ -17,7 +17,7 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    static constexpr int IndicatorTopOffset = 8;
+    static constexpr int kIndicatorTopOffset = 8;
 };
 
 #endif

@@ -77,7 +77,7 @@ namespace ProjectCachePagePrivate
         edit->setLineWrapMode(QPlainTextEdit::WidgetWidth);
         edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         QFont font = edit->font();
-        font.setPixelSize(BodyFontPx);
+        font.setPixelSize(kBodyFontPx);
         edit->setFont(font);
     }
 
@@ -131,7 +131,7 @@ namespace ProjectCachePagePrivate
             const bool selected = option.state.testFlag(QStyle::State_Selected);
             const bool hovered = option.state.testFlag(QStyle::State_MouseOver);
             const bool dark = eTheme->getThemeMode() == ElaThemeType::Dark;
-            const QString problem = index.data(EntryProblemRole).toString();
+            const QString problem = index.data(kEntryProblemRole).toString();
 
             QRectF cardRect = option.rect.adjusted(6, 4, -6, -5);
             QColor cardColor = themeColor(ElaThemeType::BasicBaseAlpha);
@@ -191,10 +191,10 @@ namespace ProjectCachePagePrivate
             QColor engineFill = themeColor(ElaThemeType::PrimaryNormal);
             engineFill.setAlpha(dark ? 65 : 32);
 
-            drawPill(QString("#%1").arg(index.data(EntryIndexRole).toInt()), subtleFill, detailColor, true);
-            drawPill(index.data(EntrySpeakerRole).toString(), subtleFill, textColor, true);
+            drawPill(QString("#%1").arg(index.data(kEntryIndexRole).toInt()), subtleFill, detailColor, true);
+            drawPill(index.data(kEntrySpeakerRole).toString(), subtleFill, textColor, true);
             drawPill(problem, problemFill, problemText, true);
-            drawPill(index.data(EntryEngineRole).toString(), engineFill, themeColor(ElaThemeType::PrimaryNormal), true);
+            drawPill(index.data(kEntryEngineRole).toString(), engineFill, themeColor(ElaThemeType::PrimaryNormal), true);
 
             auto drawLine = [&](int lineY, const QString& label, const QString& text)
                 {
@@ -206,7 +206,7 @@ namespace ProjectCachePagePrivate
                     painter->drawText(labelRect, Qt::AlignVCenter | Qt::AlignLeft, label);
 
                     QFont bodyFont = option.font;
-                    bodyFont.setPixelSize(BodyFontPx);
+                    bodyFont.setPixelSize(kBodyFontPx);
                     painter->setFont(bodyFont);
                     painter->setPen(textColor);
                     QFontMetrics fm(bodyFont);
@@ -215,8 +215,8 @@ namespace ProjectCachePagePrivate
                         fm.elidedText(text, Qt::ElideRight, textRect.width()));
                 };
 
-            drawLine(contentRect.top() + 29, QObject::tr("原文"), index.data(EntrySourceRole).toString());
-            drawLine(contentRect.top() + 53, QObject::tr("译文"), index.data(EntryDstRole).toString());
+            drawLine(contentRect.top() + 29, QObject::tr("原文"), index.data(kEntrySourceRole).toString());
+            drawLine(contentRect.top() + 53, QObject::tr("译文"), index.data(kEntryDstRole).toString());
 
             painter->restore();
         }
@@ -252,8 +252,8 @@ namespace ProjectCachePagePrivate
             const QColor textColor = themeColor(ElaThemeType::BasicText);
             const QColor detailColor = themeColor(ElaThemeType::BasicDetailsText);
             const QColor primaryColor = themeColor(ElaThemeType::PrimaryNormal);
-            const QString problemText = index.data(HitProblemRole).toString();
-            const QStringList badges = index.data(HitBadgesRole).toStringList();
+            const QString problemText = index.data(kHitProblemRole).toString();
+            const QStringList badges = index.data(kHitBadgesRole).toStringList();
             const bool hasProblem = !problemText.isEmpty();
             const QColor problemColor = dark ? QColor(255, 96, 96) : QColor(190, 38, 38);
             const QColor problemFill = dark ? QColor(92, 32, 36, 170) : QColor(255, 225, 225, 210);
@@ -282,7 +282,7 @@ namespace ProjectCachePagePrivate
             painter->setPen(primaryColor);
             QFontMetrics titleMetrics(titleFont);
             QRect titleRect(contentRect.left() + tagWidth + 8, contentRect.top(), contentRect.width() - tagWidth - 8, 24);
-            const QString title = index.data(HitFileRole).toString();
+            const QString title = index.data(kHitFileRole).toString();
             painter->drawText(titleRect, Qt::AlignVCenter | Qt::AlignLeft,
                 titleMetrics.elidedText(title, Qt::ElideMiddle, titleRect.width()));
 
@@ -293,7 +293,7 @@ namespace ProjectCachePagePrivate
             QFontMetrics problemMetrics(problemFont);
             QRect problemRect(contentRect.left(), contentRect.top() + 29, contentRect.width(), 20);
             const QString problemLine = QString("#%1  %2")
-                .arg(index.data(HitSentenceRole).toInt())
+                .arg(index.data(kHitSentenceRole).toInt())
                 .arg(hasProblem ? problemText : badges.join("/"));
             painter->setPen(hasProblem ? accentColor : detailColor);
             painter->drawText(problemRect, Qt::AlignVCenter | Qt::AlignLeft,
@@ -323,8 +323,8 @@ namespace ProjectCachePagePrivate
                         fm.elidedText(text, Qt::ElideRight, textRect.width()));
                 };
 
-            drawLine(contentRect.top() + 56, QObject::tr("原文"), index.data(HitSourceRole).toString());
-            drawLine(contentRect.top() + 79, QObject::tr("译文"), index.data(HitDstRole).toString());
+            drawLine(contentRect.top() + 56, QObject::tr("原文"), index.data(kHitSourceRole).toString());
+            drawLine(contentRect.top() + 79, QObject::tr("译文"), index.data(kHitDstRole).toString());
 
             painter->restore();
         }

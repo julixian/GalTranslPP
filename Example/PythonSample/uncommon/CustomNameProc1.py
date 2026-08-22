@@ -3,6 +3,8 @@ from pathlib import Path
 import re
 from typing import Callable, cast
 
+# 颜艺社妙妙脚本
+
 tokenizeResult = tuple[list[tuple[str, str]], list[tuple[str, str]]]
 tokenizeFuncType = Callable[[str], tokenizeResult]
 

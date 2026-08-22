@@ -288,15 +288,15 @@ void ProjectCachePage::runGlobalSearch()
         if (hit.matchDst) badges << tr("译文");
         if (hit.matchProblem) badges << tr("问题");
         QStandardItem* item = new QStandardItem(hit.filename);
-        item->setData(i, HitIndexRole);
-        item->setData(hit.filename, HitFileRole);
-        item->setData(hit.sentenceIndex, HitSentenceRole);
-        item->setData(badges, HitBadgesRole);
-        item->setData(hit.sourcePreview, HitSourceRole);
-        item->setData(hit.dstPreview, HitDstRole);
-        item->setData(hit.problemPreview, HitProblemRole);
+        item->setData(i, kHitIndexRole);
+        item->setData(hit.filename, kHitFileRole);
+        item->setData(hit.sentenceIndex, kHitSentenceRole);
+        item->setData(badges, kHitBadgesRole);
+        item->setData(hit.sourcePreview, kHitSourceRole);
+        item->setData(hit.dstPreview, kHitDstRole);
+        item->setData(hit.problemPreview, kHitProblemRole);
         item->setEditable(false);
-        setModelItemFont(item, BodyFontPx);
+        setModelItemFont(item, kBodyFontPx);
         m_searchModel->appendRow(item);
     }
     m_searchStatusLabel->setText(tr("%1 条结果").arg(m_searchHits.size()));
@@ -406,7 +406,7 @@ void ProjectCachePage::previewReplace()
     ElaText* title = new ElaText(tr("批量替换预览"), content);
     title->setTextStyle(ElaTextType::Title);
     layout->addWidget(title);
-    ElaText* summaryText = new ElaText(summary, BodyFontPx, content);
+    ElaText* summaryText = new ElaText(summary, kBodyFontPx, content);
     summaryText->setStyleSheet(auxiliaryTextStyle());
     layout->addWidget(summaryText);
 
@@ -421,7 +421,7 @@ void ProjectCachePage::previewReplace()
     pageSpinBox->setValue(1);
     pageSpinBox->setToolTip(tr("跳转页码"));
     paginationLayout->addWidget(pageSpinBox);
-    ElaText* pageLabel = new ElaText(tr("第 %1 / %2 页").arg(1).arg(pageCount), BodyFontPx, content);
+    ElaText* pageLabel = new ElaText(tr("第 %1 / %2 页").arg(1).arg(pageCount), kBodyFontPx, content);
     pageLabel->setStyleSheet(auxiliaryTextStyle());
     paginationLayout->addWidget(pageLabel);
     paginationLayout->addStretch();
@@ -431,7 +431,7 @@ void ProjectCachePage::previewReplace()
     previewBrowser->setOpenLinks(false);
     previewBrowser->setStyleSheet("QTextBrowser{background:transparent;border:none;}");
     QFont previewFont = previewBrowser->font();
-    previewFont.setPixelSize(BodyFontPx);
+    previewFont.setPixelSize(kBodyFontPx);
     previewBrowser->setFont(previewFont);
     layout->addWidget(previewBrowser, 1);
 
@@ -567,10 +567,10 @@ void ProjectCachePage::loadProblems()
         const QString& problem = itemPair.first;
         const int count = itemPair.second;
         QStandardItem* item = new QStandardItem(QString("%1  (%2)").arg(problem).arg(count));
-        item->setData(problem, ProblemTextRole);
+        item->setData(problem, kProblemTextRole);
         item->setToolTip(tr("点击搜索此问题"));
         item->setEditable(false);
-        setModelItemFont(item, BodyFontPx);
+        setModelItemFont(item, kBodyFontPx);
         m_problemModel->appendRow(item);
     }
     if (m_problemsNavButton) {
@@ -605,7 +605,7 @@ void ProjectCachePage::selectEntryByRow(int row)
     renderEntries();
     for (int modelRow = 0; modelRow < m_entryModel->rowCount(); ++modelRow) {
         const QModelIndex index = m_entryModel->index(modelRow, 0);
-        if (index.data(JsonRowRole).toInt() == row) {
+        if (index.data(kJsonRowRole).toInt() == row) {
             m_entryList->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
             m_entryList->setCurrentIndex(index);
             m_entryList->scrollTo(index, QAbstractItemView::PositionAtCenter);
@@ -623,5 +623,5 @@ int ProjectCachePage::currentJsonRow() const
     if (selected.empty()) {
         return -1;
     }
-    return selected.first().data(JsonRowRole).toInt();
+    return selected.first().data(kJsonRowRole).toInt();
 }

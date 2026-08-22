@@ -51,8 +51,8 @@ private Q_SLOTS:
 
 
 private:
-    static constexpr qsizetype MaxPendingLogBytes = 5 * 1024 * 1024;
-    static constexpr int MaxLogLineCount = 10000;
+    static constexpr qsizetype kMaxPendingLogBytes = 5uz * 1024 * 1024;
+    static constexpr int kMaxLogLineCount = 10000;
 
     void ensureWorkerThread();
     void disposeWorkerThread();

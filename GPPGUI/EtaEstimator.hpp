@@ -8,7 +8,7 @@
 
 class EtaEstimator {
 private:
-    static constexpr double SpeedWindowSeconds = 120.0;
+    static constexpr double kSpeedWindowSeconds = 120.0;
 
     struct ProgressEvent {
         std::chrono::steady_clock::time_point time;
@@ -20,7 +20,7 @@ private:
     void trimProgressEvents(std::chrono::steady_clock::time_point now)
     {
         while (!m_progressEvents.empty() &&
-            std::chrono::duration<double>(now - m_progressEvents.front().time).count() > SpeedWindowSeconds) {
+            std::chrono::duration<double>(now - m_progressEvents.front().time).count() > kSpeedWindowSeconds) {
             m_progressEvents.pop_front();
         }
     }
@@ -35,7 +35,7 @@ public:
             processedInWindow += event.amount;
         }
 
-        const double speed = processedInWindow / SpeedWindowSeconds;
+        const double speed = processedInWindow / kSpeedWindowSeconds;
         if (speed <= 1e-9) {
             return std::make_pair(0.0, std::chrono::duration<double>(std::numeric_limits<double>::infinity()));
         }

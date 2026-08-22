@@ -103,7 +103,7 @@ void DictionaryGenerator::preprocessAndTokenize() {
                 m_wordCounter[se.name] += 2;
             }
             else if (se.nameType == NameType::Multiple) {
-                for (const auto& name : se.names | std::views::filter([](const std::string& name) { return !name.empty(); })) {
+                for (const auto& name : se.names | std::views::filter([](const std::string& name_) { return !name_.empty(); })) {
                     m_nameSet.insert(name);
                     m_wordCounter[name] += 2;
                 }

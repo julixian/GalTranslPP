@@ -122,7 +122,7 @@ void ProjectCachePage::renderFileList()
         item->setData(file.relativeName, Qt::UserRole);
         item->setToolTip(file.parseOk ? file.relativeName : file.error);
         item->setEditable(false);
-        setModelItemFont(item, BodyFontPx);
+        setModelItemFont(item, kBodyFontPx);
         m_fileModel->appendRow(item);
         if (m_currentFile == file.relativeName) {
             const QModelIndex index = m_fileModel->indexFromItem(item);

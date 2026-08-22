@@ -17,8 +17,8 @@ class ReorderableTableView : public ElaTableView
     Q_OBJECT
 
 public:
-    static constexpr int HandleColumn = 0;
-    static constexpr int HandleColumnWidth = 34;
+    static constexpr int kHandleColumn = 0;
+    static constexpr int kHandleColumnWidth = 34;
 
     explicit ReorderableTableView(QWidget* parent = nullptr);
 

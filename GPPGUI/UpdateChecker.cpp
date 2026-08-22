@@ -15,9 +15,9 @@ import Tool;
 
 namespace
 {
-    constexpr int CheckTimeoutMs = 10000;
-    constexpr int DownloadStallTimeoutMs = 15000;
-    constexpr qint64 HashBufferSize = 1024 * 1024;
+    constexpr int kCheckTimeoutMs = 10000;
+    constexpr int kDownloadStallTimeoutMs = 15000;
+    constexpr qint64 kHashBufferSize = 1024 * 1024;
 
     QString networkErrorText(const QNetworkReply* reply)
     {
@@ -131,7 +131,7 @@ void UpdateChecker::startCheck(bool requestDownload)
     request.setRawHeader("User-Agent", "GalTranslPP-GUI");
 
     m_checkReply = m_checkManager->get(request);
-    m_checkTimer->start(CheckTimeoutMs);
+    m_checkTimer->start(kCheckTimeoutMs);
 }
 
 void UpdateChecker::onReplyTimeout()
@@ -269,7 +269,7 @@ QString UpdateChecker::calculateFileSha256(const QString& filePath)
 
     QCryptographicHash hash(QCryptographicHash::Sha256);
     while (!file.atEnd()) {
-        hash.addData(file.read(HashBufferSize));
+        hash.addData(file.read(kHashBufferSize));
     }
     return hash.result().toHex();
 }
@@ -340,7 +340,7 @@ void UpdateChecker::startDownload(const UpdateAssetInfo& asset)
         m_statusText->setText(tr("下载更新..."));
     }
     ElaMessageBar::information(ElaMessageBarType::Top, tr("下载更新"), tr("正在下载更新包..."), 5000);
-    m_downloadTimer->start(DownloadStallTimeoutMs);
+    m_downloadTimer->start(kDownloadStallTimeoutMs);
 }
 
 void UpdateChecker::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
@@ -349,13 +349,13 @@ void UpdateChecker::onDownloadProgress(qint64 bytesReceived, qint64 bytesTotal)
         const QString totalText = bytesTotal > 0 ? formatBytes(bytesTotal) : tr("未知大小");
         m_statusText->setText(tr("下载更新... %1/%2").arg(formatBytes(bytesReceived), totalText));
     }
-    m_downloadTimer->start(DownloadStallTimeoutMs);
+    m_downloadTimer->start(kDownloadStallTimeoutMs);
 }
 
 QString UpdateChecker::formatBytes(qint64 bytes)
 {
-    constexpr double Mib = 1024.0 * 1024.0;
-    return QString::number((double)bytes / Mib, 'f', 1) + " MB";
+    constexpr double kMib = 1024.0 * 1024.0;
+    return QString::number((double)bytes / kMib, 'f', 1) + " MB";
 }
 
 void UpdateChecker::onDownloadTimeout()

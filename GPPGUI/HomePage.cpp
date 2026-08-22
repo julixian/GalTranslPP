@@ -31,7 +31,7 @@ namespace
         const char* floatPixmap;
     };
 
-    constexpr std::array<DefaultPopularCard, 6> DefaultPopularCards = {
+    constexpr std::array<DefaultPopularCard, 6> kDefaultPopularCards = {
         DefaultPopularCard{
             "https://github.com/satan53x/SExtractor",
             "SExTractor",
@@ -241,8 +241,8 @@ namespace
         if (const auto cardOpt = getPopularCardConfig(globalConfig, index)) {
             applyPopularCardConfig(homeCard, *cardOpt, receiver);
         }
-        else if (index < DefaultPopularCards.size()) {
-            applyDefaultPopularCard(homeCard, DefaultPopularCards[index], receiver);
+        else if (index < kDefaultPopularCards.size()) {
+            applyDefaultPopularCard(homeCard, kDefaultPopularCards[index], receiver);
         }
         return homeCard;
     }
@@ -253,7 +253,7 @@ namespace
         flowLayout->setContentsMargins(18, 0, 0, 0);
         flowLayout->setIsAnimation(true);
 
-        for (size_t i = 0; i < DefaultPopularCards.size(); ++i) {
+        for (size_t i = 0; i < kDefaultPopularCards.size(); ++i) {
             ElaPopularCard* popularCard = createPopularCard(i, globalConfig, parent, receiver);
             popularCard->setCardFloatArea(cardFloatArea);
             flowLayout->addWidget(popularCard);
@@ -264,7 +264,7 @@ namespace
         }
 
         const auto& cards = globalConfig["popularCards"];
-        for (size_t i = DefaultPopularCards.size(); i < cards.size(); ++i) {
+        for (size_t i = kDefaultPopularCards.size(); i < cards.size(); ++i) {
             if (auto cardOpt = getPopularCardConfig(globalConfig, i)) {
                 ElaPopularCard* popularCard = new ElaPopularCard(parent);
                 applyPopularCardConfig(popularCard, *cardOpt, receiver);

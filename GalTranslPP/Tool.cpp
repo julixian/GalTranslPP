@@ -1119,10 +1119,10 @@ std::string currentTimestampString() {
 uint64_t calculateFileCRC64(const fs::path& filePath) {
     std::ifstream ifs(filePath, std::ios::binary);
     boost::crc_optimal<64, 0x42F0E1EBA9EA3693, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, true, true> crc;
-    constexpr size_t BUFFER_SIZE = 1024 * 1024;
-    std::vector<uint8_t> buffer(BUFFER_SIZE);
+    constexpr size_t bufferSize = 1024 * 1024;
+    std::vector<uint8_t> buffer(bufferSize);
     while (ifs) {
-        ifs.read((char*)buffer.data(), BUFFER_SIZE);
+        ifs.read((char*)buffer.data(), bufferSize);
         if (const auto readCount = ifs.gcount(); readCount > 0) {
             crc.process_bytes(buffer.data(), (size_t)readCount);
         }

@@ -71,15 +71,15 @@ void ProjectCachePage::renderEntries()
             continue;
         }
         QStandardItem* itemRow = new QStandardItem(entryListText(item, i));
-        itemRow->setData(i, JsonRowRole);
-        itemRow->setData(sentenceIndexOf(item, i), EntryIndexRole);
-        itemRow->setData(speakerString(item), EntrySpeakerRole);
-        itemRow->setData(problems, EntryProblemRole);
-        itemRow->setData(entryTransby(item), EntryEngineRole);
-        itemRow->setData(source, EntrySourceRole);
-        itemRow->setData(dst, EntryDstRole);
+        itemRow->setData(i, kJsonRowRole);
+        itemRow->setData(sentenceIndexOf(item, i), kEntryIndexRole);
+        itemRow->setData(speakerString(item), kEntrySpeakerRole);
+        itemRow->setData(problems, kEntryProblemRole);
+        itemRow->setData(entryTransby(item), kEntryEngineRole);
+        itemRow->setData(source, kEntrySourceRole);
+        itemRow->setData(dst, kEntryDstRole);
         itemRow->setEditable(false);
-        setModelItemFont(itemRow, BodyFontPx);
+        setModelItemFont(itemRow, kBodyFontPx);
         m_entryModel->appendRow(itemRow);
     }
 
@@ -103,7 +103,7 @@ void ProjectCachePage::syncSelectedEntryRows()
     }
     const QModelIndexList selected = m_entryList->selectionModel()->selectedRows();
     for (const QModelIndex& index : selected) {
-        const int row = index.data(JsonRowRole).toInt();
+        const int row = index.data(kJsonRowRole).toInt();
         if (row >= 0) {
             m_selectedEntryRows.insert(row);
         }
@@ -117,14 +117,14 @@ void ProjectCachePage::updateEntryListItem(int row)
     }
     for (int modelRow = 0; modelRow < m_entryModel->rowCount(); ++modelRow) {
         QStandardItem* item = m_entryModel->item(modelRow);
-        if (item && item->data(JsonRowRole).toInt() == row) {
+        if (item && item->data(kJsonRowRole).toInt() == row) {
             item->setText(entryListText(m_entries[row], row));
-            item->setData(sentenceIndexOf(m_entries[row], row), EntryIndexRole);
-            item->setData(speakerString(m_entries[row]), EntrySpeakerRole);
-            item->setData(problemString(m_entries[row], " | "), EntryProblemRole);
-            item->setData(entryTransby(m_entries[row]), EntryEngineRole);
-            item->setData(entrySource(m_entries[row]), EntrySourceRole);
-            item->setData(entryDst(m_entries[row]), EntryDstRole);
+            item->setData(sentenceIndexOf(m_entries[row], row), kEntryIndexRole);
+            item->setData(speakerString(m_entries[row]), kEntrySpeakerRole);
+            item->setData(problemString(m_entries[row], " | "), kEntryProblemRole);
+            item->setData(entryTransby(m_entries[row]), kEntryEngineRole);
+            item->setData(entrySource(m_entries[row]), kEntrySourceRole);
+            item->setData(entryDst(m_entries[row]), kEntryDstRole);
             return;
         }
     }
@@ -173,7 +173,7 @@ void ProjectCachePage::openEntryEditor(int row)
 
     auto addEditor = [&](const QString& labelText, const QString& value, bool readOnly, int height)
         {
-            ElaText* label = new ElaText(labelText, LabelFontPx, &dialog);
+            ElaText* label = new ElaText(labelText, kLabelFontPx, &dialog);
             label->setStyleSheet(auxiliaryTextStyle());
             mainLayout->addWidget(label);
 

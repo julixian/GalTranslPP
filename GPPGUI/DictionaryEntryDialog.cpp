@@ -521,7 +521,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const NormalDictEntry& entry, QWidg
     tableView->horizontalHeader()->setSectionResizeMode(Pattern, QHeaderView::Interactive);
     tableView->horizontalHeader()->setSectionResizeMode(SentenceOffset, QHeaderView::Interactive);
     tableView->horizontalHeader()->setSectionResizeMode(Target, QHeaderView::Interactive);
-    tableView->setColumnWidth(DragHandle, ReorderableTableView::HandleColumnWidth);
+    tableView->setColumnWidth(DragHandle, ReorderableTableView::kHandleColumnWidth);
     tableView->setColumnWidth(Pattern, s_patternColumnWidth);
     tableView->setColumnWidth(SentenceOffset, s_sentenceOffsetColumnWidth);
     tableView->setColumnWidth(Target, s_targetColumnWidth);

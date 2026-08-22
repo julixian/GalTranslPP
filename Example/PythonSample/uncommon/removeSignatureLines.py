@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+# 现在 SExtractor 的选项 『段落: 强制合并』 与 『addSpace=』 参数组合可能已经能处理这种需求了
 
 DEFAULT_SIGNATURE = "sext_sign"
 _LINE_ENDINGS = (

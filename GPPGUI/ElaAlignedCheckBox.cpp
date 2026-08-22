@@ -17,12 +17,12 @@ ElaAlignedCheckBox::ElaAlignedCheckBox(const QString& text, QWidget* parent)
 
 QSize ElaAlignedCheckBox::sizeHint() const
 {
-    return ElaCheckBox::sizeHint() + QSize(0, IndicatorTopOffset);
+    return ElaCheckBox::sizeHint() + QSize(0, kIndicatorTopOffset);
 }
 
 QSize ElaAlignedCheckBox::minimumSizeHint() const
 {
-    return ElaCheckBox::minimumSizeHint() + QSize(0, IndicatorTopOffset);
+    return ElaCheckBox::minimumSizeHint() + QSize(0, kIndicatorTopOffset);
 }
 
 void ElaAlignedCheckBox::paintEvent(QPaintEvent*)
@@ -36,7 +36,7 @@ void ElaAlignedCheckBox::paintEvent(QPaintEvent*)
         option.rect.width() - indicatorWidth, option.rect.height());
 
     QStyleOptionButton textOption = option;
-    textOption.rect.adjust(0, 0, 0, -IndicatorTopOffset);
+    textOption.rect.adjust(0, 0, 0, -kIndicatorTopOffset);
 
     QPainter painter(this);
     painter.save();
@@ -45,7 +45,7 @@ void ElaAlignedCheckBox::paintEvent(QPaintEvent*)
     painter.restore();
 
     QStyleOptionButton indicatorOption = textOption;
-    indicatorOption.rect.translate(0, IndicatorTopOffset);
+    indicatorOption.rect.translate(0, kIndicatorTopOffset);
     painter.setClipRect(indicatorClip);
     style()->drawControl(QStyle::CE_CheckBox, &indicatorOption, &painter, this);
 }

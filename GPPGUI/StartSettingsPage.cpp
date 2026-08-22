@@ -207,7 +207,7 @@ void StartSettingsPage::setLogPaused(bool paused)
 void StartSettingsPage::enqueuePendingLog(const QString& chunk)
 {
 	const qsizetype chunkBytes = chunk.size();
-	if (m_pendingLogBytes + chunkBytes > MaxPendingLogBytes && !m_pendingLog.contains(tr("```\n问题概览:"))) {
+	if (m_pendingLogBytes + chunkBytes > kMaxPendingLogBytes && !m_pendingLog.contains(tr("```\n问题概览:"))) {
 		m_pendingLog.clear();
 		m_pendingLogBytes = 0;
 		m_pendingOverflowed = true;
@@ -308,8 +308,8 @@ void StartSettingsPage::appendLogChunkToView(const QString& log)
 		}
 
 		const int currentLineCount = m_logOutput->document()->lineCount();
-		if (currentLineCount > MaxLogLineCount) {
-			const int toRemoveLineCount = currentLineCount - MaxLogLineCount;
+		if (currentLineCount > kMaxLogLineCount) {
+			const int toRemoveLineCount = currentLineCount - kMaxLogLineCount;
 			QTextCursor deleteCursor(m_logOutput->document());
 			deleteCursor.movePosition(QTextCursor::Start);
 			deleteCursor.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor, toRemoveLineCount);

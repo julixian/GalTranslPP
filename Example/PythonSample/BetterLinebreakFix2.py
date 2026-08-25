@@ -26,10 +26,10 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
-gameMaxLineLength = 30
-commonMaxLineLength = gameMaxLineLength - 2
+kGameMaxLineLength = 29
+kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "\r\n"
-dialogueNewLinePrefix = ""
+dialogueNewLinePrefix = "　"
 
 @dataclass(frozen=True)
 class InlineTokenRule:
@@ -136,7 +136,7 @@ def isDialogue(text: str) -> bool:
     return depth == 0
 
 def hasLongPart(transView: str):
-    maxLen = gameMaxLineLength
+    gameMaxLen = kGameMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     if not segments:
@@ -145,12 +145,12 @@ def hasLongPart(transView: str):
     for index, segment in enumerate(segments):
         if dialogue:
             if index == 0:
-                maxLen = gameMaxLineLength
+                gameMaxLen = kGameMaxLineLength
             else:
-                maxLen = gameMaxLineLength - 1
+                gameMaxLen = kGameMaxLineLength - 1
         else:
-            maxLen = gameMaxLineLength
-        if displayLength(segment) > maxLen:
+            gameMaxLen = kGameMaxLineLength
+        if displayLength(segment) > gameMaxLen:
             return True
     return False
 
@@ -162,7 +162,8 @@ def processSentence(se: gpp.Sentence):
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     transView = "".join(segments)
-    maxLen = commonMaxLineLength
+    commonMaxLen = kCommonMaxLineLength
+    gameMaxLen = kGameMaxLineLength
     tokens = splitIntoTokens(transView)
     if not tokens:
         return
@@ -177,15 +178,18 @@ def processSentence(se: gpp.Sentence):
         currentToken = residualTokens[index]
         if dialogue:
             if not newLines:
-                maxLen = commonMaxLineLength
+                commonMaxLen = kCommonMaxLineLength
+                gameMaxLen = kGameMaxLineLength
             else:
-                maxLen = commonMaxLineLength - 1
+                commonMaxLen = kCommonMaxLineLength - 1
+                gameMaxLen = kGameMaxLineLength - 1
         else:
-            maxLen = commonMaxLineLength
-        if displayLength(currentLine) + displayLength(currentToken) <= maxLen:
+            commonMaxLen = kCommonMaxLineLength
+            gameMaxLen = kGameMaxLineLength
+        if displayLength(currentLine) + displayLength(currentToken) <= commonMaxLen:
             if index + 1 < len(residualTokens):
                 nextToken = residualTokens[index + 1]
-                if displayLength(currentLine) + displayLength(currentToken) + displayLength(nextToken) > maxLen:
+                if displayLength(currentLine) + displayLength(currentToken) + displayLength(nextToken) > commonMaxLen:
                     if currentToken in excludePuncts:
                         # c
                         #『\n...
@@ -215,7 +219,7 @@ def processSentence(se: gpp.Sentence):
                             if (displayLength(currentLine)
                                 + displayLength(currentToken)
                                 + displayLength(punctuationText)
-                                <= gameMaxLineLength
+                                <= gameMaxLen
                                 and punctuationText[-1] not in excludePuncts
                             ):
                                 newLines.append(currentLine + currentToken + punctuationText)
@@ -243,7 +247,7 @@ def processSentence(se: gpp.Sentence):
 def linkLine(se: gpp.Sentence):
     transView = se.transview
     dialogue = isDialogue(transView)
-    maxLen = commonMaxLineLength
+    commonMaxLen = kCommonMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     
@@ -256,12 +260,12 @@ def linkLine(se: gpp.Sentence):
     for currentSegment in segments[1:]:
         if dialogue:
             if not newLines:
-                maxLen = commonMaxLineLength
+                commonMaxLen = kCommonMaxLineLength
             else:
-                maxLen = commonMaxLineLength - 1
+                commonMaxLen = kCommonMaxLineLength - 1
         else:
-            maxLen = commonMaxLineLength
-        if displayLength(currentLine) + displayLength(currentSegment) <= maxLen:
+            commonMaxLen = kCommonMaxLineLength
+        if displayLength(currentLine) + displayLength(currentSegment) <= commonMaxLen:
             currentLine += currentSegment
         else:
             newLines.append(currentLine)
@@ -284,7 +288,7 @@ def init(projectDir: Path):
 
 def dPostRunImpl(se : gpp.Sentence):
     try:
-        if "＆" in se.name:
+        if "＆" in se.name or "\\f" in se.transview:
             return
         if not gpp.utils.hasCJK(se.transview):
             return
@@ -295,9 +299,6 @@ def dPostRunImpl(se : gpp.Sentence):
 
 def dPostRun(se: gpp.Sentence):
     dPostRunImpl(se)
-    if se.transview.count(linebreakSymbol) > 1:
-        se.problems += ["单行太长"] 
-
 
 def unload():
     with open(tokenizeCachePath, 'w', encoding='utf-8') as f:

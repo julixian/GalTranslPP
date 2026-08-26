@@ -100,40 +100,51 @@ def displayLength(text: str) -> int:
         cursor = match.end()
     return width + len(text) - cursor
 
-def isDialogue(text: str) -> bool:
-    text = text.strip()
+def balancedGroupEnd(text: str, start: int) -> Optional[int]:
+    """返回从 start 开始的完整括号组的结束位置（左闭右开）。"""
     pairs = {
         "「": "」",
         "『": "』",
         "（": "）",
     }
+    closingSymbols = set(pairs.values())
 
-    if len(text) < 2:
+    if start >= len(text) or text[start] not in pairs:
+        return None
+
+    stack = []
+    for index in range(start, len(text)):
+        ch = text[index]
+        if ch in pairs:
+            stack.append(pairs[ch])
+        elif ch in closingSymbols:
+            if not stack or ch != stack[-1]:
+                return None
+            stack.pop()
+            if not stack:
+                return index + 1
+
+    return None
+
+
+def isDialogue(text: str) -> bool:
+    text = text.strip()
+    if len(text) < 2 or text[0] not in {"「", "『", "（"}:
         return False
 
-    left = text[0]
-    right = pairs.get(left)
-
-    if right is None or text[-1] != right:
+    firstEnd = balancedGroupEnd(text, 0)
+    if firstEnd is None:
         return False
 
-    # 必须是同一组符号完整包住整句。
-    # 例如：（xxx）xxxx（xxx）
-    # 虽然首尾也是 （），但中间提前闭合过，所以不是 dialogue。
-    depth = 0
-    for i, ch in enumerate(text):
-        if ch == left:
-            depth += 1
-        elif ch == right:
-            depth -= 1
+    # 原有结构：一个完整括号组包住整句。
+    if firstEnd == len(text):
+        return True
 
-            if depth == 0 and i != len(text) - 1:
-                return False
-
-            if depth < 0:
-                return False
-
-    return depth == 0
+    # 附注结构：完整对话后紧跟一个完整的全角括号组。
+    if text[0] not in {"「", "『"} or text[firstEnd] != "（":
+        return False
+    commentEnd = balancedGroupEnd(text, firstEnd)
+    return commentEnd == len(text)
 
 def hasLongPart(transView: str):
     gameMaxLen = kGameMaxLineLength

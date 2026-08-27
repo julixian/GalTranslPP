@@ -25,11 +25,13 @@ targetLangTokenizeFunc = cast(tokenizeFuncType, None)
 tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
-excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" }
+lineEndProhibitedPuncts = { "『", "「", "“", "‘", "《", "〈", "（", "【", "〔", "〖", "≪" }
+symmetricQuoteMarks = { "'", '"', "＇", "＂" }
 kGameMaxLineLength = 29
 kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "\r\n"
 dialogueNewLinePrefix = "　"
+checkIsDialogueByName = True
 
 @dataclass(frozen=True)
 class InlineTokenRule:
@@ -64,6 +66,7 @@ def findNextInlineToken(
             result = (rule, match)
     return result
 
+
 def splitPlainTextIntoTokens(text: str) -> list[str]:
     tokens = []
     if text in tokenizeCache:
@@ -74,6 +77,7 @@ def splitPlainTextIntoTokens(text: str) -> list[str]:
         tokens = gpp.utils.splitIntoTokens(wordPosVec, text)
         tokenizeCache[text] = wordPosVec
     return tokens
+
 
 def splitIntoTokens(text: str) -> list[str]:
     """仅对普通文本分词，行内特殊格式作为不可拆分的 token 保留原文。"""
@@ -89,6 +93,139 @@ def splitIntoTokens(text: str) -> list[str]:
         tokens.extend(splitPlainTextIntoTokens(text[cursor:]))
     return tokens
 
+
+def isAsciiWordChar(ch: Optional[str]) -> bool:
+    # .isalnum() 不接受符号
+    return ch is not None and ch.isascii() and (ch.isalnum() or ch == "_")
+
+
+def classifySymmetricQuotes(text: str) -> dict[int, str]:
+    """按原句字符位置将对称引号分为 infix / open / close。"""
+    roles = {}
+    quoteIsOpen = {mark: False for mark in symmetricQuoteMarks}
+    for index, ch in enumerate(text):
+        if ch not in symmetricQuoteMarks:
+            continue
+
+        previousChar = text[index - 1] if index > 0 else None
+        nextChar = text[index + 1] if index + 1 < len(text) else None
+
+        # don't / Let's 等英文词内用法两边都不允许断行。
+        if (
+            ch == "'"
+            and isAsciiWordChar(previousChar)
+            and isAsciiWordChar(nextChar)
+        ):
+            roles[index] = "infix"
+            continue
+
+        previousIsWord = previousChar is not None and previousChar.isalnum()
+        nextIsWord = nextChar is not None and nextChar.isalnum()
+        if not previousIsWord and nextIsWord:
+            roles[index] = "open"
+            quoteIsOpen[ch] = True
+        elif previousIsWord and not nextIsWord:
+            roles[index] = "close"
+            quoteIsOpen[ch] = False
+        elif quoteIsOpen[ch]:
+            roles[index] = "close"
+            quoteIsOpen[ch] = False
+        else:
+            roles[index] = "open"
+            quoteIsOpen[ch] = True
+    return roles
+
+
+def isPunctuationOrWhitespace(ch: str) -> bool:
+    return gpp.utils.isAllWhitespace(ch) or gpp.utils.isAllPunctuation(ch)
+
+
+def classifyEllipses(text: str) -> dict[int, str]:
+    """按原句字符位置将连续省略号分为 left / right / neutral。"""
+    roles = {}
+    for match in re.finditer(r"…+", text):
+        start, end = match.span()
+        if start == 0:
+            role = "right"
+        elif end == len(text):
+            role = "left"
+        else:
+            leftIsSeparator = isPunctuationOrWhitespace(text[start - 1])
+            rightIsSeparator = isPunctuationOrWhitespace(text[end])
+            if leftIsSeparator and rightIsSeparator:
+                role = "neutral"
+            elif leftIsSeparator:
+                role = "right"
+            else:
+                # 右边是分隔符，或左右都是正文时，均粘左。
+                role = "left"
+        for index in range(start, end):
+            roles[index] = role
+    return roles
+
+
+def shouldGlueTokenBoundary(
+    leftToken: str,
+    rightToken: str,
+    boundaryOffset: int,
+    symmetricQuoteRoles: dict[int, str],
+    ellipsisRoles: dict[int, str],
+) -> bool:
+    """返回两个 token 的边界是否禁止断行。"""
+    if not leftToken or not rightToken:
+        return False
+
+    leftChar = leftToken[-1]
+    rightChar = rightToken[0]
+    if leftChar == "…" and rightChar == "…":
+        return True
+    if leftChar == "…" and ellipsisRoles.get(boundaryOffset - 1) == "right":
+        return True
+    if rightChar == "…" and ellipsisRoles.get(boundaryOffset) == "left":
+        return True
+    if leftChar in lineEndProhibitedPuncts:
+        return True
+    if leftChar in symmetricQuoteMarks:
+        return symmetricQuoteRoles.get(boundaryOffset - 1) in {"infix", "open"}
+    if rightChar in symmetricQuoteMarks:
+        return symmetricQuoteRoles.get(boundaryOffset) in {"infix", "close"}
+    return (
+        rightChar != "…"
+        and gpp.utils.isAllPunctuation(rightChar)
+        and rightChar not in lineEndProhibitedPuncts
+    )
+
+
+def mergePunctuationTokens(tokens: list[str]) -> list[str]:
+    """把左标点粘到后文，把右标点和普通标点粘到前文。"""
+    if not tokens:
+        return []
+
+    text = "".join(tokens)
+    symmetricQuoteRoles = classifySymmetricQuotes(text)
+    ellipsisRoles = classifyEllipses(text)
+
+    mergedTokens = []
+    currentToken = tokens[0]
+    boundaryOffset = len(tokens[0])
+    for index in range(1, len(tokens)):
+        if shouldGlueTokenBoundary(
+            tokens[index - 1],
+            tokens[index],
+            boundaryOffset,
+            symmetricQuoteRoles,
+            ellipsisRoles,
+        ):
+            currentToken += tokens[index]
+        else:
+            mergedTokens.append(currentToken)
+            currentToken = tokens[index]
+        boundaryOffset += len(tokens[index])
+    mergedTokens.append(currentToken)
+
+    return mergedTokens
+
+
 def displayLength(text: str) -> int:
     """计算引擎实际显示的字符数，而不是原始字符串长度。"""
     width = 0
@@ -99,6 +236,7 @@ def displayLength(text: str) -> int:
         width += rule.displayWidth(match)
         cursor = match.end()
     return width + len(text) - cursor
+
 
 def balancedGroupEnd(text: str, start: int) -> Optional[int]:
     """返回从 start 开始的完整括号组的结束位置（左闭右开）。"""
@@ -127,34 +265,39 @@ def balancedGroupEnd(text: str, start: int) -> Optional[int]:
     return None
 
 
-def isDialogue(text: str) -> bool:
-    text = text.strip()
-    if len(text) < 2 or text[0] not in {"「", "『", "（"}:
+def checkIsDialogue(se: gpp.Sentence) -> bool:
+    if checkIsDialogueByName:
+        if not se.name and not se.names:
+            return False
+        return True
+    transView = se.transview
+    transView = transView.strip()
+    if len(transView) < 2 or transView[0] not in {"「", "『", "（"}:
         return False
 
-    firstEnd = balancedGroupEnd(text, 0)
+    firstEnd = balancedGroupEnd(transView, 0)
     if firstEnd is None:
         return False
 
-    # 原有结构：一个完整括号组包住整句。
-    if firstEnd == len(text):
+    # 一般结构：一个完整括号组包住整句。
+    if firstEnd == len(transView):
         return True
 
     # 附注结构：完整对话后紧跟一个完整的全角括号组。
-    if text[0] not in {"「", "『"} or text[firstEnd] != "（":
+    if transView[0] not in {"「", "『"} or transView[firstEnd] != "（":
         return False
-    commentEnd = balancedGroupEnd(text, firstEnd)
-    return commentEnd == len(text)
+    commentEnd = balancedGroupEnd(transView, firstEnd)
+    return commentEnd == len(transView)
 
-def hasLongPart(transView: str):
+
+def hasLongPart(transView: str, isDialogue: bool):
     gameMaxLen = kGameMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     if not segments:
         return False
-    dialogue = isDialogue(transView)
     for index, segment in enumerate(segments):
-        if dialogue:
+        if isDialogue:
             if index == 0:
                 gameMaxLen = kGameMaxLineLength
             else:
@@ -166,102 +309,39 @@ def hasLongPart(transView: str):
     return False
 
 
-def processSentence(se: gpp.Sentence):
+def processSentence(se: gpp.Sentence, isDialogue: bool):
     transView = se.transview
-    if not hasLongPart(transView):
+    if not hasLongPart(transView, isDialogue):
         return
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
     transView = "".join(segments)
-    commonMaxLen = kCommonMaxLineLength
-    gameMaxLen = kGameMaxLineLength
-    tokens = splitIntoTokens(transView)
+    tokens = mergePunctuationTokens(splitIntoTokens(transView))
     if not tokens:
         return
-    
-    dialogue = isDialogue(transView)
-    newLines = []
-    currentLine = tokens[0]
-    residualTokens = tokens[1:]
 
-    index = 0
-    while index < len(residualTokens):
-        currentToken = residualTokens[index]
-        if dialogue:
-            if not newLines:
-                commonMaxLen = kCommonMaxLineLength
-                gameMaxLen = kGameMaxLineLength
-            else:
-                commonMaxLen = kCommonMaxLineLength - 1
-                gameMaxLen = kGameMaxLineLength - 1
-        else:
-            commonMaxLen = kCommonMaxLineLength
-            gameMaxLen = kGameMaxLineLength
-        if displayLength(currentLine) + displayLength(currentToken) <= commonMaxLen:
-            if index + 1 < len(residualTokens):
-                nextToken = residualTokens[index + 1]
-                if displayLength(currentLine) + displayLength(currentToken) + displayLength(nextToken) > commonMaxLen:
-                    if currentToken in excludePuncts:
-                        # c
-                        #『\n...
-                        newLines.append(currentLine)
-                        currentLine = currentToken
-                        index += 1
-                        continue
-                    if gpp.utils.isAllPunctuation(nextToken) and nextToken not in excludePuncts:
-                        if any(currentLine.endswith(excludePunct) for excludePunct in excludePuncts):
-                            #  cccc  nnn
-                            #『word\n。』
-                            newLines.append(currentLine[:-1])
-                            currentLine = currentLine[-1] + currentToken
-                            index += 1
-                        else:
-                            # cccc  n
-                            # word\n，
-                            punctuationTokens = []
-                            punctuationEndIndex = index + 1
-                            while (
-                                punctuationEndIndex < len(residualTokens)
-                                and gpp.utils.isAllPunctuation(residualTokens[punctuationEndIndex])
-                            ):
-                                punctuationTokens.append(residualTokens[punctuationEndIndex])
-                                punctuationEndIndex += 1
-                            punctuationText = "".join(punctuationTokens)
-                            if (displayLength(currentLine)
-                                + displayLength(currentToken)
-                                + displayLength(punctuationText)
-                                <= gameMaxLen
-                                and punctuationText[-1] not in excludePuncts
-                            ):
-                                newLines.append(currentLine + currentToken + punctuationText)
-                                if punctuationEndIndex < len(residualTokens):
-                                    currentLine = residualTokens[punctuationEndIndex]
-                                    index = punctuationEndIndex + 1
-                                else:
-                                    currentLine = ""
-                                    index = punctuationEndIndex
-                                continue
-                            newLines.append(currentLine)
-                            currentLine = currentToken
-                            index += 1
-                        continue
-            currentLine += currentToken
-        else:
+    newLines = []
+    currentLine = ""
+    for token in tokens:
+        commonMaxLen = kCommonMaxLineLength
+        if isDialogue and newLines:
+            commonMaxLen -= 1
+
+        if currentLine and displayLength(currentLine) + displayLength(token) > commonMaxLen:
             newLines.append(currentLine)
-            currentLine = currentToken
-        index += 1
+            currentLine = token
+        else:
+            currentLine += token
     if currentLine:
         newLines.append(currentLine)
     
-    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
+    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if isDialogue else linebreakSymbol.join(newLines)
 
-def linkLine(se: gpp.Sentence):
+
+def linkLine(se: gpp.Sentence, isDialogue: bool):
     transView = se.transview
-    dialogue = isDialogue(transView)
-    commonMaxLen = kCommonMaxLineLength
     segments = transView.split(linebreakSymbol)
     segments = [s.strip() for s in segments if s.strip()]
-    
     if not segments:
         return
 
@@ -269,13 +349,10 @@ def linkLine(se: gpp.Sentence):
     currentLine = segments[0]
 
     for currentSegment in segments[1:]:
-        if dialogue:
-            if not newLines:
-                commonMaxLen = kCommonMaxLineLength
-            else:
-                commonMaxLen = kCommonMaxLineLength - 1
-        else:
-            commonMaxLen = kCommonMaxLineLength
+        commonMaxLen = kCommonMaxLineLength
+        if isDialogue and newLines:
+            commonMaxLen -= 1
+
         if displayLength(currentLine) + displayLength(currentSegment) <= commonMaxLen:
             currentLine += currentSegment
         else:
@@ -283,7 +360,7 @@ def linkLine(se: gpp.Sentence):
             currentLine = currentSegment
     newLines.append(currentLine)
 
-    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if dialogue else linebreakSymbol.join(newLines)
+    se.transview = (linebreakSymbol + dialogueNewLinePrefix).join(newLines) if isDialogue else linebreakSymbol.join(newLines)
 
 
 
@@ -297,14 +374,15 @@ def init(projectDir: Path):
         with open(tokenizeCachePath, 'r', encoding='utf-8') as f:
             tokenizeCache = json.load(f)
 
-def dPostRunImpl(se : gpp.Sentence):
+def dPostRunImpl(se: gpp.Sentence):
     try:
         if "＆" in se.name or "\\f" in se.transview:
             return
         if not gpp.utils.hasCJK(se.transview):
             return
-        processSentence(se)
-        linkLine(se)
+        isDialogue = checkIsDialogue(se)
+        processSentence(se, isDialogue)
+        linkLine(se, isDialogue)
     except Exception as e:
         logger.error(f"Error during BetterLinebreakFix dPostRun(): {e}")
 

@@ -335,7 +335,7 @@ Protocol JSON schema:
 5. `file_note_patch` is for durable file-level notes, not noisy per-turn chatter. Prefer translation-relevant clues such as long-lived scene state, unresolved clues, identity hints, relationship shifts, callbacks, and literary echoes.
 6. Prefer `file_note_patch` to be a compact object. Typical keys may include `summary`, `scene_state`, `unresolved_clues`, `relationship_updates`, `term_hints`, or other clearly named fields when truly useful.
 7. `rolling_context` is the short next-chunk handoff. Preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links. Keep it empty if ids aren't sequential or there's nothing meaningful.
-8. Use `agent_suggest` only for sentence-level suggestions as `{ "file": "...", "id": 123, "suggestion": "..." }`.
+8. Use `agent_suggest` for sentence-level cases needing human review, such as a suspected mistranslation outside the current chunk or a pun or difficult-to-translate joke, as `{ "file": "...", "id": 123, "suggestion": "..." }`.
 </commit_output_format>
 
 <decision_flow>
@@ -467,7 +467,7 @@ Protocol JSON schema:
 5. `file_note_patch` is for durable file-level notes, not noisy per-turn chatter. Prefer translation-relevant clues such as long-lived scene state, unresolved clues, identity hints, relationship shifts, callbacks, and literary echoes.
 6. Prefer `file_note_patch` to be a compact object. Typical keys may include `summary`, `scene_state`, `unresolved_clues`, `relationship_updates`, `term_hints`, or other clearly named fields when truly useful.
 7. `rolling_context` is the short next-chunk handoff. Preserve confirmed terms, tentative terms, unresolved questions, scene state, pending clues, pending translation decisions, and cross-file links. Keep it empty if ids aren't sequential or there's nothing meaningful.
-8. Use `agent_suggest` only for sentence-level suggestions as `{ "file": "...", "id": 123, "suggestion": "..." }`.
+8. Use `agent_suggest` for sentence-level cases needing human review, such as a suspected mistranslation outside the current chunk or a pun or difficult-to-translate joke, as `{ "file": "...", "id": 123, "suggestion": "..." }`.
 </commit_output_format>
 
 <decision_flow>

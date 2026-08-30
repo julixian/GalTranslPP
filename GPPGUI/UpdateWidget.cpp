@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. ",
+        "1. 优化字典和提示词",
     };
 
     mainLayout->addWidget(updateTitle);

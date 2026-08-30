@@ -26,11 +26,12 @@ tokenizeCachePath = Path("tokenizeCache_betterLinebreakFix.json")
 tokenizeCache = {}
 
 lineEndProhibitedPuncts = { "『", "「", "“", "‘", "《", "〈", "（", "【", "〔", "〖", "≪" }
-symmetricQuoteMarks = { "'", '"', "＇", "＂" }
-kGameMaxLineLength = 29
+symmetricQuoteMarks = { "'", '"', "＂" }
+lineBreakGlueMarks = { "…", "—" }
+kGameMaxLineLength = 36
 kCommonMaxLineLength = kGameMaxLineLength
-linebreakSymbol = "\r\n"
-dialogueNewLinePrefix = "　"
+linebreakSymbol = "{{BR}}"
+dialogueNewLinePrefix = ""
 checkIsDialogueByName = True
 
 @dataclass(frozen=True)
@@ -42,13 +43,13 @@ class InlineTokenRule:
 # 格式变更时，只需修改/增加规则及其显示宽度算法。规则重叠时前者优先。
 inlineTokenRules = (
     InlineTokenRule(
-        re.compile(r"\[([^\[\]/]+?)/([^\[\]/]+?)\]"),
+        re.compile(r"《([^《》｜]+?)｜([^《》｜]+?)》"),
         lambda match: len(match.group(1)),
     ),
-    InlineTokenRule(
-        re.compile(r"\\[A-Za-z\d\+;]+"),
-        lambda match: 0,
-    ),
+    # InlineTokenRule(
+    #     re.compile(r"\\[A-Za-z\d\+;]+"),
+    #     lambda match: 0,
+    # ),
 )
 
 
@@ -140,10 +141,11 @@ def isPunctuationOrWhitespace(ch: str) -> bool:
     return gpp.utils.isAllWhitespace(ch) or gpp.utils.isAllPunctuation(ch)
 
 
-def classifyEllipses(text: str) -> dict[int, str]:
-    """按原句字符位置将连续省略号分为 left / right / neutral。"""
+def classifyLineBreakGlueMarks(text: str) -> dict[int, str]:
+    """按原句字符位置将连续省略号或破折号分为 left / right / neutral。"""
     roles = {}
-    for match in re.finditer(r"…+", text):
+    markPattern = "[" + re.escape("".join(sorted(lineBreakGlueMarks))) + "]+"
+    for match in re.finditer(markPattern, text):
         start, end = match.span()
         if start == 0:
             role = "right"
@@ -169,7 +171,7 @@ def shouldGlueTokenBoundary(
     rightToken: str,
     boundaryOffset: int,
     symmetricQuoteRoles: dict[int, str],
-    ellipsisRoles: dict[int, str],
+    lineBreakGlueMarkRoles: dict[int, str],
 ) -> bool:
     """返回两个 token 的边界是否禁止断行。"""
     if not leftToken or not rightToken:
@@ -177,11 +179,11 @@ def shouldGlueTokenBoundary(
 
     leftChar = leftToken[-1]
     rightChar = rightToken[0]
-    if leftChar == "…" and rightChar == "…":
+    if leftChar in lineBreakGlueMarks and rightChar in lineBreakGlueMarks:
         return True
-    if leftChar == "…" and ellipsisRoles.get(boundaryOffset - 1) == "right":
+    if leftChar in lineBreakGlueMarks and lineBreakGlueMarkRoles.get(boundaryOffset - 1) == "right":
         return True
-    if rightChar == "…" and ellipsisRoles.get(boundaryOffset) == "left":
+    if rightChar in lineBreakGlueMarks and lineBreakGlueMarkRoles.get(boundaryOffset) == "left":
         return True
     if leftChar in lineEndProhibitedPuncts:
         return True
@@ -190,7 +192,7 @@ def shouldGlueTokenBoundary(
     if rightChar in symmetricQuoteMarks:
         return symmetricQuoteRoles.get(boundaryOffset) in {"infix", "close"}
     return (
-        rightChar != "…"
+        rightChar not in lineBreakGlueMarks
         and gpp.utils.isAllPunctuation(rightChar)
         and rightChar not in lineEndProhibitedPuncts
     )
@@ -203,7 +205,7 @@ def mergePunctuationTokens(tokens: list[str]) -> list[str]:
 
     text = "".join(tokens)
     symmetricQuoteRoles = classifySymmetricQuotes(text)
-    ellipsisRoles = classifyEllipses(text)
+    lineBreakGlueMarkRoles = classifyLineBreakGlueMarks(text)
 
     mergedTokens = []
     currentToken = tokens[0]
@@ -214,7 +216,7 @@ def mergePunctuationTokens(tokens: list[str]) -> list[str]:
             tokens[index],
             boundaryOffset,
             symmetricQuoteRoles,
-            ellipsisRoles,
+            lineBreakGlueMarkRoles,
         ):
             currentToken += tokens[index]
         else:
@@ -376,8 +378,6 @@ def init(projectDir: Path):
 
 def dPostRunImpl(se: gpp.Sentence):
     try:
-        if "＆" in se.name or "\\f" in se.transview:
-            return
         if not gpp.utils.hasCJK(se.transview):
             return
         isDialogue = checkIsDialogue(se)

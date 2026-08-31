@@ -28,11 +28,12 @@ tokenizeCache = {}
 lineEndProhibitedPuncts = { "『", "「", "“", "‘", "《", "〈", "（", "【", "〔", "〖", "≪" }
 symmetricQuoteMarks = { "'", '"', "＂" }
 lineBreakGlueMarks = { "…", "—" }
-kGameMaxLineLength = 36
+kGameMaxLineLength = 35
 kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "{{BR}}"
 dialogueNewLinePrefix = ""
 checkIsDialogueByName = True
+checkIsDialogueByQuotation = True
 
 @dataclass(frozen=True)
 class InlineTokenRule:
@@ -268,28 +269,34 @@ def balancedGroupEnd(text: str, start: int) -> Optional[int]:
 
 
 def checkIsDialogue(se: gpp.Sentence) -> bool:
-    if checkIsDialogueByName:
-        if not se.name and not se.names:
+    def checkByName(se_: gpp.Sentence) -> bool:
+        if not checkIsDialogueByName:
             return False
-        return True
-    transView = se.transview
-    transView = transView.strip()
-    if len(transView) < 2 or transView[0] not in {"「", "『", "（"}:
-        return False
+        return bool(se_.name) or bool(se_.names)
 
-    firstEnd = balancedGroupEnd(transView, 0)
-    if firstEnd is None:
-        return False
+    def checkByQuotataion(se_: gpp.Sentence) -> bool:
+        if not checkIsDialogueByQuotation:
+            return False
+        transView = se_.transview
+        transView = transView.strip()
+        if len(transView) < 2 or transView[0] not in {"「", "『", "（"}:
+            return False
 
-    # 一般结构：一个完整括号组包住整句。
-    if firstEnd == len(transView):
-        return True
+        firstEnd = balancedGroupEnd(transView, 0)
+        if firstEnd is None:
+            return False
 
-    # 附注结构：完整对话后紧跟一个完整的全角括号组。
-    if transView[0] not in {"「", "『"} or transView[firstEnd] != "（":
-        return False
-    commentEnd = balancedGroupEnd(transView, firstEnd)
-    return commentEnd == len(transView)
+        # 一般结构：一个完整括号组包住整句。
+        if firstEnd == len(transView):
+            return True
+
+        # 附注结构：完整对话后紧跟一个完整的全角括号组。
+        if transView[0] not in {"「", "『"} or transView[firstEnd] != "（":
+            return False
+        commentEnd = balancedGroupEnd(transView, firstEnd)
+        return commentEnd == len(transView)
+
+    return checkByName(se) or checkByQuotataion(se)
 
 
 def hasLongPart(transView: str, isDialogue: bool):

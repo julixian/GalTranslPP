@@ -27,7 +27,7 @@ tokenizeCache = {}
 
 lineEndProhibitedPuncts = { "『", "「", "“", "‘", "《", "〈", "（", "【", "〔", "〖", "≪" }
 symmetricQuoteMarks = { "'", '"', "＂" }
-lineBreakGlueMarks = { "…", "—" }
+lineBreakGlueMarks = { "…", "—", "～" }
 kGameMaxLineLength = 35
 kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "{{BR}}"

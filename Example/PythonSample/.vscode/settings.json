@@ -1,0 +1,10 @@
+{
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.indexing": true,
+    "python.analysis.extraPaths": [
+        "D:/VSProj/GalTranslPP/Example/PythonSample"
+    ],
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    }
+}

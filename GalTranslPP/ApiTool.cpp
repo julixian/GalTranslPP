@@ -306,8 +306,8 @@ std::expected<std::string, std::string> extractApiResponseContent(const std::str
         case ApiProtocol::Claude:
         {
             std::string content;
-            for (const auto& block : parsed["content"]) {
-                const json& textNode = block["text"];
+            for (const auto& block : parsed.at("content")) {
+                const json& textNode = block.at("text");
                 if (textNode.is_string()) {
                     content += textNode.get<std::string>();
                 }
@@ -315,13 +315,13 @@ std::expected<std::string, std::string> extractApiResponseContent(const std::str
             if (!content.empty()) {
                 return content;
             }
-            return parsed["content"][0]["text"].get<std::string>();
+            return parsed.at("content").at(0).at("text").get<std::string>();
         }
         case ApiProtocol::Gemini:
         {
             std::string content;
-            for (const auto& part : parsed["candidates"][0]["content"]["parts"]) {
-                const json& textNode = part["text"];
+            for (const auto& part : parsed.at("candidates").at(0).at("content").at("parts")) {
+                const json& textNode = part.at("text");
                 if (textNode.is_string()) {
                     content += textNode.get<std::string>();
                 }
@@ -329,11 +329,11 @@ std::expected<std::string, std::string> extractApiResponseContent(const std::str
             if (!content.empty()) {
                 return content;
             }
-            return parsed["candidates"][0]["content"]["parts"][0]["text"].get<std::string>();
+            return parsed.at("candidates").at(0).at("content").at("parts").at(0).at("text").get<std::string>();
         }
         case ApiProtocol::OpenAI:
         default:
-            return parsed["choices"][0]["message"]["content"].get<std::string>();
+            return parsed.at("choices").at(0).at("message").at("content").get<std::string>();
         }
     }
     catch (const std::exception& e) {

@@ -16,12 +16,13 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 优化字典和提示词",
+		"1. 修复一处可能导致闪退的解析 bug",
+        "2. 优化字典和提示词",
     };
 
     mainLayout->addWidget(updateTitle);
-    for (const auto& str : updateList) {
-        ElaText* updateItem = new ElaText(str, 13, this);
+    for (const auto& updateQStr : updateList) {
+        ElaText* updateItem = new ElaText(updateQStr, 13, this);
         updateItem->setIsWrapAnywhere(true);
         mainLayout->addWidget(updateItem);
     }

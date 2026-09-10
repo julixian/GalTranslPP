@@ -2390,12 +2390,12 @@ Problem overview:
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1082"/>
+        <location filename="Tool.cpp" line="1079"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1088"/>
+        <location filename="Tool.cpp" line="1085"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2432,12 +2432,12 @@ Problem overview:
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1100"/>
+        <location filename="Tool.cpp" line="1097"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1105"/>
+        <location filename="Tool.cpp" line="1102"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>

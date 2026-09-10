@@ -874,14 +874,11 @@ bool executeCommand(const std::wstring& program, const std::wstring& args, bool 
         commandLineStr = L"\"" + program + L"\" " + args;
     }
 
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-
-    ZeroMemory(&si, sizeof(si));
+    STARTUPINFOW si{};
+    si.cb = sizeof(si);
     si.dwFlags |= STARTF_USESHOWWINDOW;
     si.wShowWindow = showWindow ? SW_SHOW : SW_HIDE;
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    PROCESS_INFORMATION pi{};
 
     std::vector<wchar_t> commandLineVec(commandLineStr.begin(), commandLineStr.end());
     commandLineVec.push_back(L'\0');
@@ -892,7 +889,7 @@ bool executeCommand(const std::wstring& program, const std::wstring& args, bool 
     }
 
     if (!CreateProcessW(nullptr,
-        &commandLineVec[0],
+        commandLineVec.data(),
         nullptr,
         nullptr,
         FALSE,

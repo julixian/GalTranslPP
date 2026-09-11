@@ -228,18 +228,16 @@ The "Note" column should specify the type of proper noun. If it is a person's na
 The translation must preserve the original symbols and maintain the half-width/full-width usage(IMPORTANT!).
 However, do not retain any sourceLang-specific characters or words that are incongruous in a [TargetLang] context, such as Japanese characters(if sourceLang is jp) 々, さん, etc. You must determine the most suitable [TargetLang] translation based on the context. If a judgment is difficult, choose the most likely translation among the most common options.
 
-1. Your output must use TSV (Tab-Separated Values) format and must always begin with the following header:
-```
-Source\tTarget\tNote
+Your glossary output should be in a triple backtick code block (```TSV
 
-2. Begin outputting the glossary.
-+ If proper nouns are found, start outputting the glossary. Each field should be separated by a Tab. For a jp-to-zh-cn example:
+```) with TSV format, with elements on each line separated by Tab symbols, and always start with the following tsv header: Source\tTarget\tNote
+
+Then start outputting the glossary:
+1. If proper nouns are found, output the glossary rows after the header. For a jp-to-zh-cn example:
 陽菜\t阳菜\t人名，女性
-
-+ If no proper nouns are found in the input text, output a single line:
+2. If no proper nouns are found in the input text, output a single row after the header:
 NULL\tNULL\tNULL
-
-3. Then stop, without any other explanations or notes.
+Then stop outputting, without any other explanations or notes.
 
 ## Input
 [Input]
@@ -254,16 +252,20 @@ NAMETRANS_USER = """## Task
 Translate the following list of character names from the source language to [TargetLang].
 
 ## Requirements
-1.  **Format**: Output only TSV. Do not output Markdown fences or extra text.
-2.  **Header**: The first line must be: `Source\tTarget`
-3.  **Content**:
+Your name translation output should be in a triple backtick code block (```TSV
+
+```) with TSV format, with elements on each line separated by Tab symbols, and always start with the following tsv header: Source\tTarget
+
+Then start translating line by line:
+1.  **Content**:
     *   **Source**: The name exactly as provided in the input.
     *   **Target**: The localized name in [TargetLang].
-4.  **Consistency**: Refer to the provided [Glossary] (if any) to ensure consistency with existing terms (e.g., titles, clan names).
-5.  **Style**:
+2.  **Consistency**: Refer to the provided [Glossary] (if any) to ensure consistency with existing terms (e.g., titles, clan names).
+3.  **Style**:
     *   Preserve the "flavor" of the name.
     *   If a name is written in Katakana/foreign script, transcribe it phonetically to [TargetLang] unless it has a canonical translation.
     *   Retain the src name's half-width and full-width usage(IMPORTANT!).
+Then stop outputting, without any other explanations or notes.
 
 ## Glossary (Reference)
 [Glossary]
@@ -294,7 +296,9 @@ Protocol JSON schema:
    - return `compact_context`
    - return `commit`
 2. You never edit files directly. Durable changes only happen through `commit`.
-3. Output one protocol JSON object only. Do not emit any explanation outside it.
+3. Your protocol output should be in a triple backtick code block (```json
+
+```), write the whole protocol JSON object in the code block. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
 5. ALL durable state text MUST use [TargetLang], including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`.
 </protocol_rules>
@@ -428,7 +432,9 @@ Protocol JSON schema:
    - return `compact_context`
    - return `commit`
 2. You never edit files directly. Durable changes only happen through `commit`.
-3. Output one protocol JSON object only. Do not emit any explanation outside it.
+3. Your protocol output should be in a triple backtick code block (```json
+
+```), write the whole protocol JSON object in the code block. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
 5. ALL durable state text MUST use [TargetLang], including `term_updates.note`, `agent_suggest.suggestion`, every string in `file_note_patch`, and `rolling_context`.
 </protocol_rules>
@@ -556,7 +562,9 @@ Protocol JSON schema:
    - return `commit`
    - return `skip`
 2. You never edit files directly. Durable glossary changes only happen through `commit`.
-3. Output one protocol JSON object only. Do not emit any explanation outside it.
+3. Your protocol output should be in a triple backtick code block (```json
+
+```), write the whole protocol JSON object in the code block. Do not emit any explanation outside it.
 4. For `tool_calls`, use `{ "id": "...", "name": "tool_name", "arguments": { ... } }`.
 5. ALL human-readable glossary notes MUST use [TargetLang].
 </protocol_rules>

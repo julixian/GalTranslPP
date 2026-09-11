@@ -179,26 +179,6 @@ std::optional<json> tryParseAgentCommonJsonEnvelope(const std::string& text) {
         newText = newText.substr(pos + 11);
     }
 
-    const size_t fencedStart = newText.find("```");
-    if (fencedStart != std::string::npos) {
-        const size_t lineEnd = newText.find('\n', fencedStart);
-        const size_t fencedEnd = newText.rfind("```");
-        if (lineEnd != std::string::npos && fencedEnd != std::string::npos && fencedEnd > lineEnd) {
-            newText = newText.substr(lineEnd + 1, fencedEnd - lineEnd - 1);
-        }
-    }
-
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
-    newText = lightRepairJsonText(newText);
-    try {
-        return json::parse(newText);
-    }
-    catch (...) { }
-
     const size_t jsonStart = newText.find('{');
     const size_t jsonEnd = newText.rfind('}');
     if (jsonStart == std::string::npos || jsonEnd == std::string::npos || jsonEnd <= jsonStart) {

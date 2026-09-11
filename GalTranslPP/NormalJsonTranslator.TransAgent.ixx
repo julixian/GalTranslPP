@@ -64,6 +64,7 @@ export
             int glossaryMaxLines,
             bool smartRetry,
             bool checkQuota,
+            bool enhanceJailbreak,
             std::shared_mutex& transCacheMutex,
             absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
             const std::vector<fs::path>& knownRelFiles,
@@ -127,6 +128,7 @@ export
         int m_glossaryMaxLines = 5;
         bool m_smartRetry = true;
         bool m_checkQuota = true;
+        bool m_enhanceJailbreak = false;
         std::shared_mutex& m_transCacheMutex;
         absl::flat_hash_map<fs::path, json>& m_savedTranslCacheMap;
         std::mutex m_stateMutex;

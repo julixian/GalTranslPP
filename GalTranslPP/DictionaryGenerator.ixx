@@ -33,6 +33,7 @@ export
         int m_maxRequestCount;
         int m_apiTimeOutMs;
         bool m_checkQuota;
+        bool m_enhanceJailbreak;
         // 由 Dictionary Generator 重新用 input files 计算
         int m_totalSentences = 0;
         bool m_agentEnabled;
@@ -69,7 +70,7 @@ export
             const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
             const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-            int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
+            int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, bool enhanceJailbreak,
             bool agentEnabled, const fs::path& projectDir,
             const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
             const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,

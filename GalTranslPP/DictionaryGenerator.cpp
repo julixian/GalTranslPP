@@ -24,7 +24,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
+    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, bool enhanceJailbreak,
     bool agentEnabled, const fs::path& projectDir,
     const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
     const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,
@@ -35,7 +35,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_tokenizeSourceLangFunc(tokenizeSourceLangFunc),
     m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_apiStrategy(apiStrategy), m_targetLang(targetLang),
     m_threadsNum(threadsNum), m_inputBlockMaxLines(inputBlockMaxLines), m_maxRequestCount(maxRequestCount),
-    m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota),
+    m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota), m_enhanceJailbreak(enhanceJailbreak),
     m_agentEnabled(agentEnabled),
     m_projectDir(projectDir),
     m_inputJsonMap(inputJsonMap),
@@ -204,6 +204,9 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
         {{"role", "system"}, {"content", m_systemPrompt}},
         {{"role", "user"}, {"content", prompt}}
         });
+    if (m_enhanceJailbreak) {
+        messages.push_back({{"role", "assistant"}, {"content", "```TSV\n"}});
+    }
 
     int requestCount = 0;
     while (requestCount < m_maxRequestCount) {
@@ -429,7 +432,8 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
             m_agentSearchResultLimit,
             m_agentContextLinesLimit,
             m_apiTimeOutMs,
-            m_checkQuota
+            m_checkQuota,
+            m_enhanceJailbreak
         );
         DictList reviewedList = reviewAgent->review(
             m_finalDict,

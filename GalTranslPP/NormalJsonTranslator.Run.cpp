@@ -287,7 +287,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_controller, m_logger, m_apiPool, m_gptDictionary, m_onPerformApi,
             m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang,
             m_threadsNum, m_nameTransBatchSize, m_inputBlockMaxLines, m_glossaryMaxLines,
-            m_maxRequestCount, m_apiTimeOutMs, m_checkQuota
+            m_maxRequestCount, m_apiTimeOutMs, m_checkQuota, m_enhanceJailbreak
         );
         return;
     }
@@ -302,7 +302,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_controller, m_logger, m_apiPool, m_tokenizeSourceLangFunc, m_otherCacheDir,
             preProcessFunc, m_onPerformApi, m_onDictProcessed,
             m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang,
-            m_threadsNum, m_inputBlockMaxLines, m_maxRequestCount, m_apiTimeOutMs, m_checkQuota,
+            m_threadsNum, m_inputBlockMaxLines, m_maxRequestCount, m_apiTimeOutMs, m_checkQuota, m_enhanceJailbreak,
             m_agentEnabled,
             m_projectDir,
             m_inputJsonMap,
@@ -499,6 +499,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_glossaryMaxLines,
             m_smartRetry,
             m_checkQuota,
+            m_enhanceJailbreak,
             m_transCacheMutex,
             m_savedTranslCacheMap,
             relFilePaths,

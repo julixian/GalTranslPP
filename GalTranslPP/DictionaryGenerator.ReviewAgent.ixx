@@ -65,7 +65,8 @@ export
             int agentSearchResultLimit,
             int agentContextLinesLimit,
             int apiTimeOutMs,
-            bool checkQuota
+            bool checkQuota,
+            bool enhanceJailbreak
         );
 
         // 审校粗候选术语，并返回最终保留的字典词条。
@@ -114,6 +115,7 @@ export
         int m_agentContextLinesLimit;
         int m_apiTimeOutMs;
         bool m_checkQuota;
+        bool m_enhanceJailbreak;
         std::vector<DictionaryReviewTermGroup> m_groups;
         const std::vector<AgentCommonSourceFileView>* m_sourceFiles = nullptr;
         absl::flat_hash_map<fs::path, const AgentCommonSourceFileView*> m_sourceFileLookup;

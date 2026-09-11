@@ -35,7 +35,7 @@ export
     // 尽可能把路径转换为稳定的项目相对字符串。
     std::string safeRelativePath(const fs::path& path, const fs::path& root);
 
-    // 从模型文本中提取协议 JSON 外壳，允许代码块、轻量修复和外层说明文本。
+    // 截取模型文本中第一个左花括号到最后一个右花括号，并对协议 JSON 做轻量修复。
     std::optional<json> tryParseAgentCommonJsonEnvelope(const std::string& text);
 
     // 把工具返回数量限制夹到有效范围内，且不超过配置上限。

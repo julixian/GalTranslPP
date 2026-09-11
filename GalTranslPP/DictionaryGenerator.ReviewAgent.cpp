@@ -33,7 +33,8 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     int agentSearchResultLimit,
     int agentContextLinesLimit,
     int apiTimeOutMs,
-    bool checkQuota
+    bool checkQuota,
+    bool enhanceJailbreak
 ) : m_controller(controller),
     m_logger(logger),
     m_apiPool(apiPool),
@@ -52,7 +53,8 @@ DictionaryGeneratorReviewAgent::DictionaryGeneratorReviewAgent(
     m_agentSearchResultLimit(agentSearchResultLimit),
     m_agentContextLinesLimit(agentContextLinesLimit),
     m_apiTimeOutMs(apiTimeOutMs),
-    m_checkQuota(checkQuota)
+    m_checkQuota(checkQuota),
+    m_enhanceJailbreak(enhanceJailbreak)
 {
 
 }
@@ -842,6 +844,9 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
             const TranslationApi& currentApi = apiOpt.value();
 
             json payload = { {"messages", messages} };
+            if (m_enhanceJailbreak) {
+                payload["messages"].push_back({{"role", "assistant"}, {"content", "```json\n"}});
+            }
             m_logger->info(gppTr(
                 "DictionaryGeneratorReviewAgent.reviewTermGroup",
                 "[线程 %1] [术语 %2] [轮次 %3] [请求 %4] 字典审校 Agent 开始请求，上下文 %5 字节")

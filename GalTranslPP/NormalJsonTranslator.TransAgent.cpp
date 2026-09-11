@@ -43,6 +43,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     int glossaryMaxLines,
     bool smartRetry,
     bool checkQuota,
+    bool enhanceJailbreak,
     std::shared_mutex& transCacheMutex,
     absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     const std::vector<fs::path>& knownRelFiles,
@@ -74,6 +75,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     m_glossaryMaxLines(glossaryMaxLines),
     m_smartRetry(smartRetry),
     m_checkQuota(checkQuota),
+    m_enhanceJailbreak(enhanceJailbreak),
     m_transCacheMutex(transCacheMutex),
     m_savedTranslCacheMap(savedTranslCacheMap),
     m_knownRelFiles(knownRelFiles),
@@ -1178,6 +1180,9 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             const TranslationApi& currentApi = apiOpt.value();
 
             json payload = { {"messages", messages} };
+            if (m_enhanceJailbreak) {
+                payload["messages"].push_back({{"role", "assistant"}, {"content", "```json\n"}});
+            }
 
             m_logger->info(gppTr(
                 "NormalJsonTranslatorTransAgent.translateBatch",

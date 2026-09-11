@@ -16,7 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-		"1. 引入了 GalTransl 的改善拒答，并调整了下提示词顺序",
+		"1. 引入了 GalTransl 的改善拒答，并调整了下提示词顺序，让其在 Agent 模式下也能生效",
     };
 
     mainLayout->addWidget(updateTitle);

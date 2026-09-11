@@ -140,6 +140,25 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         }
         messages.push_back({ {"role", "user"}, {"content", promptReq} });
 
+        if (m_enhanceJailbreak) {
+            std::string assistantPrefill;
+            switch (m_transEngine)
+            {
+            case TransEngine::ForGalTsv:
+            case TransEngine::ForNovelTsv:
+                assistantPrefill = "```TSV\n";
+                break;
+            case TransEngine::ForGalJson:
+                assistantPrefill = "```jsonline\n";
+                break;
+            default:
+                break;
+            }
+            if (!assistantPrefill.empty()) {
+                messages.push_back({ {"role", "assistant"}, {"content", assistantPrefill} });
+            }
+        }
+
         const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
         if (!apiOpt.has_value()) {
             throw std::runtime_error(gppTr("NormalJsonTranslator.translateBatch", "没有可用的 Api key 了")
@@ -168,6 +187,8 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         {
             continue;
         }
+
+        
         if (m_logger->should_log(spdlog::level::trace)) {
             m_logger->trace(gppTr(
                 "NormalJsonTranslator.translateBatch",

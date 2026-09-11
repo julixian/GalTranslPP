@@ -324,6 +324,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_problemMaxLines = toml::find_or(configData, "common", "log", "problemMaxLines", 3);
         m_glossaryMaxLines = toml::find_or(configData, "common", "log", "glossaryMaxLines", 5);
         m_smartRetry = toml::find_or(configData, "common", "smartRetry", false);
+        m_enhanceJailbreak = toml::find_or(configData, "common", "enhanceJailbreak", false);
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);

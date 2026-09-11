@@ -74,6 +74,7 @@ export
         int m_apiTimeOutMs{};
         bool m_checkQuota{};
         bool m_smartRetry{};
+        bool m_enhanceJailbreak{};
         bool m_retransAllWhenFail{};
         bool m_usePreDictInName{};
         bool m_usePostDictInName{};

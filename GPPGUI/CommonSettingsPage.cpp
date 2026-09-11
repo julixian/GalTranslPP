@@ -345,6 +345,20 @@ void CommonSettingsPage::setupUi()
 	smartRetryLayout->addWidget(smartRetryToggle);
 	mainLayout->addWidget(smartRetryArea);
 
+	// 改善拒答（回复预填充）
+	bool enhanceJailbreak = toml::find_or(m_projectConfig, "common", "enhanceJailbreak", false);
+	ElaScrollPageArea* enhanceJailbreakArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
+	ElaDoubleText* enhanceJailbreakText = new ElaDoubleText(tr("改善拒答（回复预填充）"), 16,
+		tr("以 assistant 回复头开始续写，降低拒答并稳定输出格式"), 10,
+		tr("部分模型或 API 不支持末尾 assistant 消息，遇到请求错误时请关闭"), enhanceJailbreakArea);
+	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
+	enhanceJailbreakLayout->addStretch();
+	ElaToggleSwitch* enhanceJailbreakToggle = new ElaToggleSwitch(enhanceJailbreakArea);
+	enhanceJailbreakToggle->setIsToggled(enhanceJailbreak);
+	enhanceJailbreakLayout->addWidget(enhanceJailbreakToggle);
+	mainLayout->addWidget(enhanceJailbreakArea);
+
 	// 额度检测
 	bool shouldCheckQuota = toml::find_or(m_projectConfig, "common", "checkQuota", true);
 	ElaScrollPageArea* checkQuotaArea = new ElaScrollPageArea(mainWidget);
@@ -661,6 +675,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.contextHistorySize", contextNumSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 

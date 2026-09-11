@@ -132,11 +132,7 @@ After translation, generate a short rolling_context summary(in [TargetLang]) tha
 to help make next several batches of translation more accurate. You can use macro <ORIGINAL> to refer to the current rolling_context content to save tokens. 
 Keep it empty if ids aren't sequential or there's nothing meaningful.
 
-Your rolling_context output should be in a label pair (<rolling_context>
-
-</rolling_context>)
-
-Your translation output should be in a triple backtick code block (```
+Your translation output should be in a triple backtick code block (```TSV
 
 ```) with TSV format, with elements on each line separated by Tab symbols, and always start with the following tsv header: NAME\tDST\tID
 
@@ -145,6 +141,10 @@ Then start translating line by line, each line requires:
 2. Following the "translation_requirements" and "glossary" unless the current context proves it is inapplicable, translate the content of src into [TargetLang] and fill it into `DST`.
 3. Directly copy the `ID` from the input object to the output line (i.e., output the corresponding ID).
 Then stop outputting, without any other explanations or notes.
+
+Your rolling_context output should be in a label pair (<rolling_context>
+
+</rolling_context>) after translation output.
 </output_requirements>
 
 <problem>
@@ -300,11 +300,7 @@ After translation, generate a short rolling_context summary(in [TargetLang]) tha
 to help make next several batches of translation more accurate. You can use macro <ORIGINAL> to refer to the current rolling_context content to save tokens. 
 Keep it empty if ids aren't sequential or there's nothing meaningful.
 
-Your rolling_context output should be in a label pair (<rolling_context>
-
-</rolling_context>)
-
-Your translation output should be in a triple backtick code block (```
+Your translation output should be in a triple backtick code block (```TSV
 
 ```) with TSV format, with elements on each line separated by Tab symbols, and always start with the following tsv header: DST\tID
 
@@ -312,6 +308,10 @@ Then start translating line by line, each line requires:
 1. Following the "translation_requirements" and "glossary" unless the current context proves it is inapplicable, translate the content of src into [TargetLang] and fill it into `DST`.
 2. Directly copy the `ID` from the input object to the output line (i.e., output the corresponding ID).
 Then stop outputting, without any other explanations or notes.
+
+Your rolling_context output should be in a label pair (<rolling_context>
+
+</rolling_context>) after translation output.
 </output_requirements>
 
 <problem>
@@ -370,17 +370,19 @@ Keep it empty if ids aren't sequential or there's nothing meaningful.
 </translation_requirements>
 
 <output_requirements>
-Your rolling_context output should be in a label pair (<rolling_context>
+Your translation output should be in a triple backtick code block (```jsonline
 
-</rolling_context>)
-
-Your translation output starts with "```jsonline", write the whole result jsonlines in the code block.
+```), write the whole result jsonlines in the code block.
 In each line:
 1. Copy the value of `id` directly from input to the output jsonline.
 2. Follow the "translation_requirements" and "glossary", translate the value of `name` and `src` to [TargetLang]. Result should correspond to the current source line's text. Do not merge lines, split lines, over-translate, or omit content.
 3. Change key `src` -> `dst`, and fill in your translation result.
 Then stop, without any other explanations or notes.
 Output Recipe = { "id": int, (optional)"name": string, "dst": string }
+
+Your rolling_context output should be in a label pair (<rolling_context>
+
+</rolling_context>) after translation output.
 </output_requirements>
 
 <problem>

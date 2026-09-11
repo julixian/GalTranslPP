@@ -1226,6 +1226,21 @@ sk-...</translation>
     </message>
     <message>
         <location line="+14"/>
+        <source>改善拒答（回复预填充）</source>
+        <translation>Reduce refusals (assistant prefill)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>以 assistant 回复头开始续写，降低拒答并稳定输出格式</source>
+        <translation>Continue from an assistant prefix to reduce refusals and stabilize output formatting</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>部分模型或 API 不支持末尾 assistant 消息，遇到请求错误时请关闭</source>
+        <translation>Some models or APIs reject a trailing assistant message; disable this option if requests fail</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1235,7 +1250,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-498"/>
+        <location line="-512"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1282,7 +1297,7 @@ sk-...</translation>
         <translation>On parse failure, retry halves and clear context</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+28"/>
         <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
@@ -1292,7 +1307,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-341"/>
+        <location line="-355"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1323,7 +1338,7 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+173"/>
+        <location line="+187"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1453,12 +1468,12 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+109"/>
+        <location line="+110"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-148"/>
+        <location line="-149"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1480,7 +1495,7 @@ sk-...</translation>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+75"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

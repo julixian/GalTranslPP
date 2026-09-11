@@ -656,7 +656,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
 
     case TransEngine::ForGalJson:
     {
-        const size_t start = std::min(content.find("{\"id\""), content.find("{\"dst\""));
+        const size_t start = std::min({ content.find("{\"id\""), content.find("{\"dst\""), content.find("{\"name\"") });
         if (start == std::string::npos) {
             break;
         }

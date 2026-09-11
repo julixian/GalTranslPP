@@ -16,8 +16,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-		"1. 修复一处可能导致闪退的解析 bug",
-        "2. 优化字典和提示词",
+		"1. 引入了 GalTransl 的改善拒答，并调整了下提示词顺序",
     };
 
     mainLayout->addWidget(updateTitle);

@@ -140,6 +140,7 @@ maxRequestCount = 4             # 最大请求次数
 problemOverviewFormat = "json"  # 问题概览输出格式: json/toml
 contextHistorySize = 8          # 携带上文数量
 smartRetry = false              # 解析结果失败时尝试折半重翻与清空上下文，如果用的打野 key 其实不建议开这个
+enhanceJailbreak = false        # 使用 assistant 回复预填充改善拒答和输出格式；部分模型/API 不支持
 checkQuota = true               # 运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key
 
 # 解析不完整时重翻整段而非仅重翻漏掉的部分，增加模型因串行而导致解析失败时的容错

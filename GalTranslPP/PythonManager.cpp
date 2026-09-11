@@ -988,6 +988,7 @@ PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_inter
         .def_readwrite("m_apiTimeOutMs", &NormalJsonTranslator::m_apiTimeOutMs)
         .def_readwrite("m_checkQuota", &NormalJsonTranslator::m_checkQuota)
         .def_readwrite("m_smartRetry", &NormalJsonTranslator::m_smartRetry)
+        .def_readwrite("m_enhanceJailbreak", &NormalJsonTranslator::m_enhanceJailbreak)
         .def_readwrite("m_retransAllWhenFail", &NormalJsonTranslator::m_retransAllWhenFail)
         .def_readwrite("m_usePreDictInName", &NormalJsonTranslator::m_usePreDictInName)
         .def_readwrite("m_usePostDictInName", &NormalJsonTranslator::m_usePostDictInName)

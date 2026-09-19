@@ -1,7 +1,9 @@
 ﻿#ifndef GPPMACROS
 #define GPPMACROS
 
+#ifdef _MSC_VER
 #define _RANGES_ // import std.compat; 时如果有头文件 #include <ranges> 会导致调用 std::views::zip 时出现异常定义不一致的问题。这是 STL 的和 MSVC 的问题，不知道后续能不能修复
+#endif
 
 #define PROJECT_NO_ANSI
 

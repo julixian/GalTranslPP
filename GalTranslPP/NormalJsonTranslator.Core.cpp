@@ -3,7 +3,6 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <ctpl_stl.h>
 #include <proxy/proxy.h>
 #include <toml.hpp>
 

@@ -4,11 +4,11 @@ module;
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include <ctpl_stl.h>
 #include <toml.hpp>
 
 export module Tool;
 
+export import ctpl_stl;
 export import GPPDefines;
 export import ITranslator;
 

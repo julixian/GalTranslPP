@@ -4,7 +4,6 @@ module;
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <toml.hpp>
-#include <ctpl_stl.h>
 
 module LuaManager;
 
@@ -13,6 +12,7 @@ import EpubTranslator;
 import PDFTranslator;
 import NLPTool;
 
+import ctpl_stl;
 import ITranslator;
 import Tool;
 

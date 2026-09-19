@@ -7,7 +7,6 @@ module;
 #include <Shlwapi.h>
 #endif
 #include <toml.hpp>
-#include <ctpl_stl.h>
 #include <proxy/proxy.h>
 
 module NormalJsonTranslator;

@@ -3,12 +3,12 @@ module;
 #include "GPPMacros.hpp"
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
-#include <utf8cpp/utf8.h>
 #include <toml.hpp>
 
 module TextFull2Half;
 
 import Tool;
+import utf8cpp;
 
 namespace fs = std::filesystem;
 

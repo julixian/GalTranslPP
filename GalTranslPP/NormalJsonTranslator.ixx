@@ -3,13 +3,13 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <ctpl_stl.h>
 #include <proxy/proxy.h>
 #include <toml.hpp>
 
 export module NormalJsonTranslator;
 
 export import ApiPool;
+export import ctpl_stl;
 export import Dictionary;
 export import DictionaryGenerator;
 export import IPlugin;

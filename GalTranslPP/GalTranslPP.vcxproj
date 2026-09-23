@@ -210,6 +210,7 @@
     <ClCompile Include="AgentCommonSourceView.ixx" />
     <ClCompile Include="ApiTool.cpp" />
     <ClCompile Include="ApiTool.ixx" />
+    <ClCompile Include="base64.cpp" />
     <ClCompile Include="CodePageChecker.cpp" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />

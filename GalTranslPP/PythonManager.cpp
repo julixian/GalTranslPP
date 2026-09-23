@@ -713,6 +713,11 @@ void shutDownPythonEnv(std::unique_ptr<py::gil_scoped_release>& release) {
 // 所有脚本都可以通过 `import gpp_plugin_api` 来使用这些功能
 PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_interpreter_gil())
 {
+    PythonMainInterpreterManager::bindGppPluginApi(m);
+}
+
+void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
+{
     m.doc() = "GalTransl++ C++ Api for Python-based plugins";
 
     py::enum_<NameType>(m, "NameType")

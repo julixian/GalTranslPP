@@ -27,7 +27,7 @@ export
 {
     class NormalJsonTranslator : public ITranslator {
 
-        friend void pybind11_init_gpp_plugin_api(::pybind11::module_& m);
+        friend class PythonMainInterpreterManager;
         friend class LuaManager;
 
     protected:

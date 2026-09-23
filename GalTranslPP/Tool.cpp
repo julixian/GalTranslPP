@@ -21,8 +21,6 @@ module;
 #include <unicode/translit.h>
 #include <unicode/utext.h>
 
-#include <cpp-base64/base64.cpp>
-
 #pragma comment(lib, "python3.lib")
 #pragma comment(lib, "python312.lib")
 

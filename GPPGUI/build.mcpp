@@ -1,12 +1,11 @@
 import std;
 import mcpp;
 
-#include "../mcpp-build/qt_config.hpp"
-#include "../mcpp-build/mcpp_actions.hpp"
-
-// Translation and packaging actions are declared by the shared helper.
+#include "../mcpp-build-scripts/qt_config.hpp"
+#include "../mcpp-build-scripts/mcpp_actions.hpp"
 
 int main() {
+    track_build_scripts();
     if (configure_qt({"Qt6Core", "Qt6Gui", "Qt6Network", "Qt6Widgets"}) != 0) return 1;
 
     const char* updater = mcpp::dep_bin("gpp.updater", "Updater");
@@ -15,7 +14,9 @@ int main() {
         return 1;
     }
     executable_actions actions("GalTranslPP_GUI");
-    if (!actions.generate_gui_sources() || !actions.publish("GPPGUI")) return 1;
+    if (!actions.generate_gui_sources()) return 1;
+    const auto qm = actions.prepare_translations("GPPGUI");
+    if (!actions.publish_release("GPPGUI", qm)) return 1;
     if (std::string_view(mcpp::profile()) == "release") {
         actions.copy(updater, actions.release / "GPPGUI" / "Updater.exe");
         actions.copy(updater, actions.release / "GUICORE" / "Updater_new.exe");

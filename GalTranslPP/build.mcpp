@@ -1,11 +1,12 @@
 import std;
 import mcpp;
 
-#include "../mcpp-build/qt_config.hpp"
-#include "../mcpp-build/mcpp_translations.hpp"
-#include "../mcpp-build/vcpkg_link.hpp"
+#include "../mcpp-build-scripts/qt_config.hpp"
+#include "../mcpp-build-scripts/mcpp_translations.hpp"
+#include "../mcpp-build-scripts/vcpkg_link.hpp"
 
 int main() {
+    track_build_scripts();
     if (configure_qt({"Qt6Core"}) != 0) return 1;
     if (!link_vcpkg_libraries({
             "7zip", "bit7z64", "abseil_dll", "cld3", "cpr", "gumbo",

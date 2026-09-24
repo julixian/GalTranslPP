@@ -1,14 +1,15 @@
 import std;
 import mcpp;
 
-#include "../mcpp-build/qt_config.hpp"
-#include "../mcpp-build/mcpp_actions.hpp"
-#include "../mcpp-build/vcpkg_link.hpp"
-
-// Translation and packaging actions are declared by the shared helper.
+#include "../mcpp-build-scripts/qt_config.hpp"
+#include "../mcpp-build-scripts/mcpp_actions.hpp"
+#include "../mcpp-build-scripts/vcpkg_link.hpp"
 
 int main() {
+    track_build_scripts();
     if (configure_qt({"Qt6Core", "Qt6Gui", "Qt6Widgets"}) != 0) return 1;
     if (!link_vcpkg_libraries({"7zip", "bit7z64"})) return 1;
-    return executable_actions("Updater").publish("Updater") ? 0 : 1;
+    executable_actions actions("Updater");
+    const auto qm = actions.prepare_translations("Updater");
+    return actions.publish_release("Updater", qm) ? 0 : 1;
 }

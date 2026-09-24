@@ -23,14 +23,17 @@ inline std::filesystem::path qt_translation(const std::filesystem::path& project
     mcpp::rerun_if_changed_glob("**/*.hpp");
     mcpp::rerun_if_changed_glob("**/*.ixx");
     std::vector<fs::path> sources;
-    for (const auto& entry : fs::recursive_directory_iterator(project)) {
-        if (!entry.is_regular_file()) continue;
-        const auto rel = entry.path().lexically_relative(project);
-        if (rel.empty() || *rel.begin() == "target" || *rel.begin() == "mcpp-generated")
+    for (fs::recursive_directory_iterator it(project), end; it != end; ++it) {
+        if (it.depth() == 0 && it->is_directory() &&
+            (it->path().filename() == "target" ||
+             it->path().filename() == "mcpp-generated")) {
+            it.disable_recursion_pending();
             continue;
-        const auto ext = entry.path().extension().string();
+        }
+        if (!it->is_regular_file()) continue;
+        const auto ext = it->path().extension().string();
         if (ext == ".cpp" || ext == ".h" || ext == ".hpp" || ext == ".ixx")
-            sources.push_back(entry.path());
+            sources.push_back(it->path());
     }
     std::ranges::sort(sources);
 

@@ -19,14 +19,13 @@ struct executable_actions {
 
     explicit executable_actions(std::string name)
         : target(std::move(name)), target_file("${mcpp.target_file:" + target + "}") {
-        mcpp::rerun_if_changed(qt_config_path().string().c_str());
         // Private release directories are optional, as in the VS post-build events.
         mcpp::rerun_if_changed(release.string().c_str());
     }
 
     bool ready() const {
         if (qt.empty() || !std::filesystem::exists(qt / "bin" / "lrelease.exe")) {
-            std::cerr << "Qt tools missing; check mcpp-build/qt-root.txt\n";
+            std::cerr << "Qt tools missing; check mcpp-build-scripts/qt-root.txt\n";
             return false;
         }
         if (!std::filesystem::is_directory(vcpkg / "bin")) {
@@ -83,12 +82,48 @@ struct executable_actions {
         }
     }
 
-    bool publish(std::string_view member) {
+    void copy_runtime_files(std::string_view member, const path& destination) {
+        copy_matching(vcpkg / "bin", destination);
+        copy_matching(workspace / "3rdParty" / "pybind11" / "bin", destination, "python");
+        copy_if_present(workspace / "3rdParty" / "7z.dll", destination / "7z.dll");
+
+        std::vector<std::string_view> qt_dlls{"Qt6Core.dll"};
+        if (member != "GPPCLI") {
+            qt_dlls.insert(qt_dlls.end(), {"Qt6Gui.dll", "Qt6Widgets.dll"});
+        }
+        if (member == "GPPGUI") {
+            qt_dlls.insert(qt_dlls.end(),
+                           {"Qt6Network.dll", "Qt6Svg.dll", "opengl32sw.dll"});
+        }
+        for (const auto dll : qt_dlls)
+            copy_if_present(qt / "bin" / dll, destination / dll);
+
+        if (member == "GPPGUI") {
+            copy_if_present(workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
+                                "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll",
+                            destination / "ElaWidgetTools.dll");
+        }
+    }
+
+    void copy_translation_files(std::string_view member, const path& qm,
+                                const path& destination) {
+        const auto translations = destination / "translations";
+        copy_file(qm, translations / qm.filename());
+        if (member != "Updater") {
+            const auto core_qm = workspace / "GalTranslPP" / "qt_gpp_en.qm";
+            copy_file(core_qm, translations / core_qm.filename());
+        }
+    }
+
+    path prepare_translations(std::string_view member) const {
         const auto ts = project / (member == "GPPCLI" ? "qt_gppcli_en.ts" :
                                    member == "GPPGUI" ? "qt_gppgui_en.ts" :
                                                         "qt_gppupdater_en.ts");
-        const auto own_qm = qt_translation(project, ts,
-                                           path(mcpp::out_dir()) / (ts.stem().string() + ".qm"));
+        return qt_translation(project, ts,
+                              path(mcpp::out_dir()) / (ts.stem().string() + ".qm"));
+    }
+
+    bool publish_release(std::string_view member, const path& own_qm) {
         if (own_qm.empty()) return false;
         if (std::string_view(mcpp::profile()) != "release") return true;
         if (!ready()) return false;
@@ -97,15 +132,10 @@ struct executable_actions {
         const auto base = release / (cli ? "GPPCLI" : "GPPGUI");
         const auto mirror = release / (cli ? "GPPCLI_PRIVATE" : "GPPGUI_PRIVATE");
         const bool private_exists = std::filesystem::is_directory(mirror);
-        std::vector<path> runtime_destinations{base};
-        std::vector<path> translations{base};
-        if (gui) {
-            runtime_destinations.push_back(release / "GUICORE");
-            translations.push_back(release / "GUICORE");
-        }
+        std::vector<path> destinations{base};
+        if (gui) destinations.push_back(release / "GUICORE");
         if ((cli || gui) && private_exists) {
-            runtime_destinations.push_back(mirror);
-            translations.push_back(mirror);
+            destinations.push_back(mirror);
         }
 
         copy(target_file, base / (target + ".exe"));
@@ -117,32 +147,10 @@ struct executable_actions {
             copy(target_file, mirror / (target + ".exe"));
         }
 
-        for (const auto& dir : runtime_destinations) {
-            copy_matching(vcpkg / "bin", dir);
-            copy_matching(workspace / "3rdParty" / "pybind11" / "bin", dir, "python");
-            copy_if_present(workspace / "3rdParty" / "7z.dll", dir / "7z.dll");
-            const auto qt_dlls = cli
-                ? std::vector<std::string>{"Qt6Core.dll"}
-                : member == "Updater"
-                    ? std::vector<std::string>{"Qt6Core.dll", "Qt6Gui.dll", "Qt6Widgets.dll"}
-                    : std::vector<std::string>{"Qt6Core.dll", "Qt6Gui.dll", "Qt6Network.dll",
-                                               "Qt6Widgets.dll", "Qt6Svg.dll", "opengl32sw.dll"};
-            for (const auto& dll : qt_dlls)
-                copy_if_present(qt / "bin" / dll, dir / dll);
-            if (gui) copy_if_present(
-                workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
-                "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll",
-                dir / "ElaWidgetTools.dll");
-        }
+        for (const auto& dir : destinations) copy_runtime_files(member, dir);
         if (!cli) copy_plugins(base);
 
-        for (const auto& dir : translations) {
-            copy_file(own_qm, dir / "translations" / own_qm.filename());
-            if (cli || gui) {
-                const auto core_qm = workspace / "GalTranslPP" / "qt_gpp_en.qm";
-                copy_file(core_qm, dir / "translations" / core_qm.filename());
-            }
-        }
+        for (const auto& dir : destinations) copy_translation_files(member, own_qm, dir);
         return true;
     }
 
@@ -156,18 +164,22 @@ struct executable_actions {
         mcpp::rerun_if_changed_glob("**/*.h");
         mcpp::rerun_if_changed_glob("Resource/**");
         std::vector<path> headers;
-        for (const auto& entry : std::filesystem::recursive_directory_iterator(project)) {
-            if (!entry.is_regular_file() || entry.path().extension() != ".h") continue;
-            const auto relative = entry.path().lexically_relative(project);
-            if (relative.empty() || *relative.begin() == "target" ||
-                *relative.begin() == "mcpp-generated") continue;
-            mcpp::rerun_if_changed(entry.path().string().c_str());
-            std::ifstream input(entry.path());
+        for (std::filesystem::recursive_directory_iterator it(project), end;
+             it != end; ++it) {
+            if (it.depth() == 0 && it->is_directory() &&
+                (it->path().filename() == "target" ||
+                 it->path().filename() == "mcpp-generated")) {
+                it.disable_recursion_pending();
+                continue;
+            }
+            if (!it->is_regular_file() || it->path().extension() != ".h") continue;
+            mcpp::rerun_if_changed(it->path().string().c_str());
+            std::ifstream input(it->path());
             const std::string content(std::istreambuf_iterator<char>{input}, {});
             if (content.find("Q_OBJECT") != std::string::npos ||
                 content.find("Q_GADGET") != std::string::npos ||
                 content.find("Q_NAMESPACE") != std::string::npos)
-                headers.push_back(entry.path());
+                headers.push_back(it->path());
         }
         std::ranges::sort(headers);
         for (const auto& header : headers) {

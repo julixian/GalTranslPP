@@ -3,7 +3,6 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <ctpl_stl.h>
 
 module PythonManager;
 
@@ -12,6 +11,7 @@ import EpubTranslator;
 import PDFTranslator;
 import NLPTool;
 
+import ctpl_stl;
 import ITranslator;
 import Tool;
 
@@ -712,6 +712,11 @@ void shutDownPythonEnv(std::unique_ptr<py::gil_scoped_release>& release) {
 // 定义一个 C++ 模块，它将被嵌入到 Python 解释器中
 // 所有脚本都可以通过 `import gpp_plugin_api` 来使用这些功能
 PYBIND11_EMBEDDED_MODULE(gpp_plugin_api, m, py::multiple_interpreters::per_interpreter_gil())
+{
+    PythonMainInterpreterManager::bindGppPluginApi(m);
+}
+
+void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
 {
     m.doc() = "GalTransl++ C++ Api for Python-based plugins";
 

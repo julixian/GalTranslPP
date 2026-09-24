@@ -2,11 +2,11 @@ module;
 
 #include "GPPMacros.hpp"
 #include <unicode/ucnv_cb.h>
-#include <utf8cpp/utf8.h>
 
 module CodePageChecker;
 
 import Tool;
+import utf8cpp;
 
 namespace
 {

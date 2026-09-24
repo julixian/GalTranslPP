@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="IPlugin.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="EpubTranslator.ixx">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="TextLinebreakFix.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="ApiPool.ixx">
       <Filter>Tools</Filter>
@@ -32,7 +32,7 @@
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="PDFTranslator.ixx">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="PythonManager.ixx">
       <Filter>Tools</Filter>
@@ -44,7 +44,7 @@
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="SkipTrans.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="LuaManager.ixx">
       <Filter>Tools</Filter>
@@ -59,28 +59,28 @@
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="LuaTranslator.ixx">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="PythonTranslator.ixx">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="NLPTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="LuaTextPlugin.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="IPlugin.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="PythonTextPlugin.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="ITranslator.ixx">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="ITranslator.cpp">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="Tool.cpp">
       <Filter>Tools\Utils</Filter>
@@ -98,7 +98,7 @@
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="TextFull2Half.ixx">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="Dictionary.cpp">
       <Filter>Tools</Filter>
@@ -107,55 +107,55 @@
       <Filter>Tools\Utils</Filter>
     </ClCompile>
     <ClCompile Include="TextLinebreakFix.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="ApiPool.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="EpubTranslator.cpp">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="ProblemAnalyzer.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="PDFTranslator.cpp">
-      <Filter>filePlugins</Filter>
+      <Filter>FilePlugins</Filter>
     </ClCompile>
     <ClCompile Include="LuaTextPlugin.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="PythonTextPlugin.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="SkipTrans.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="TextFull2Half.cpp">
-      <Filter>textPlugins</Filter>
+      <Filter>TextPlugins</Filter>
     </ClCompile>
     <ClCompile Include="NameTranslator.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.TransAgent.cpp">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.TransAgent.ixx">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.Batch.cpp">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.Core.cpp">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.File.cpp">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.Run.cpp">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.ixx">
-      <Filter>filePlugins\NormalJsonTranslator</Filter>
+      <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="DictionaryGenerator.cpp">
       <Filter>Tools\DictionaryGenerator</Filter>
@@ -193,18 +193,6 @@
     <ClCompile Include="GPPDefines.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rdParty\json.ixx">
-      <Filter>Tools\Utils\3rdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\spdlog.ixx">
-      <Filter>Tools\Utils\3rdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\AbslContainers.ixx">
-      <Filter>Tools\Utils\3rdParty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\3rdParty\jpcre2\jpcre2.ixx">
-      <Filter>Tools\Utils\3rdParty</Filter>
-    </ClCompile>
     <ClCompile Include="GPPI18n.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
@@ -217,22 +205,37 @@
     <ClCompile Include="ApiTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\AbslContainers.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\json.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\spdlog.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\jpcre2\jpcre2.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\utf8cpp.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\boost.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\3rdParty\3rdModule\ctpl_stl.ixx">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="base64.cpp">
+      <Filter>Tools\Utils\3rdParty</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="filePlugins">
-      <UniqueIdentifier>{92ad8b24-7cf7-47e1-998d-a8327dbbc3cb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="textPlugins">
-      <UniqueIdentifier>{37fcb97f-7dfc-4f79-a33f-66e8e440d1d9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Tools">
       <UniqueIdentifier>{be76689c-5c70-4419-87f1-e4fa81fa2b9d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tools\Utils">
       <UniqueIdentifier>{a59529ed-a8a2-4ef2-810b-aeeefe790343}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="filePlugins\NormalJsonTranslator">
-      <UniqueIdentifier>{a41ce28e-4b90-422b-afee-9f30153d608d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Tools\DictionaryGenerator">
       <UniqueIdentifier>{ccbf815e-31b1-4b96-9a48-a775c055245b}</UniqueIdentifier>
@@ -242,6 +245,15 @@
     </Filter>
     <Filter Include="Translation Files">
       <UniqueIdentifier>{30b15c5b-bd56-4b8c-9e46-7c765f355cec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FilePlugins">
+      <UniqueIdentifier>{92ad8b24-7cf7-47e1-998d-a8327dbbc3cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FilePlugins\NormalJsonTranslator">
+      <UniqueIdentifier>{a41ce28e-4b90-422b-afee-9f30153d608d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextPlugins">
+      <UniqueIdentifier>{37fcb97f-7dfc-4f79-a33f-66e8e440d1d9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

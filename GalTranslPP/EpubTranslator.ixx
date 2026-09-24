@@ -54,7 +54,7 @@ export
 
     class EpubTranslator : public NormalJsonTranslator {
 
-        friend void pybind11_init_gpp_plugin_api(::pybind11::module_& m);
+        friend class PythonMainInterpreterManager;
         friend class LuaManager;
 
     protected:

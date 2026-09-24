@@ -3,13 +3,13 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <ctpl_stl.h>
 #include <proxy/proxy.h>
 #include <toml.hpp>
 
 export module NormalJsonTranslator;
 
 export import ApiPool;
+export import ctpl_stl;
 export import Dictionary;
 export import DictionaryGenerator;
 export import IPlugin;
@@ -27,7 +27,7 @@ export
 {
     class NormalJsonTranslator : public ITranslator {
 
-        friend void pybind11_init_gpp_plugin_api(::pybind11::module_& m);
+        friend class PythonMainInterpreterManager;
         friend class LuaManager;
 
     protected:

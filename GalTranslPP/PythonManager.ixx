@@ -29,6 +29,8 @@ export
     class PythonMainInterpreterManager {
     public:
 
+        static void bindGppPluginApi(py::module_& m);
+
         PythonMainInterpreterManager(PythonMainInterpreterManager&) = delete;
         PythonMainInterpreterManager(PythonMainInterpreterManager&&) = delete;
 

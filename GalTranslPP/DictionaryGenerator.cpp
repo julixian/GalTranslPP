@@ -5,12 +5,12 @@ module;
 #include <Shlwapi.h>
 #endif
 #include <toml.hpp>
-#include <ctpl_stl.h>
 
 module DictionaryGenerator;
 
-import :ReviewAgent;
 import AgentCommonSourceView;
+import ctpl_stl;
+import :ReviewAgent;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 

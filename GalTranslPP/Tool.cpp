@@ -8,14 +8,9 @@ module;
 #pragma comment(lib, "winhttp.lib")
 #endif
 
-#include <boost/algorithm/string.hpp>
-#include <boost/crc.hpp>
-
 #define BIT7Z_AUTO_FORMAT
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitfileextractor.hpp>
-
-#include <ctpl_stl.h>
 
 #include <opencc/opencc.h>
 
@@ -26,16 +21,14 @@ module;
 #include <unicode/translit.h>
 #include <unicode/utext.h>
 
-#include <utf8cpp/utf8.h>
-
-#include <cpp-base64/base64.cpp>
-
 #pragma comment(lib, "python3.lib")
 #pragma comment(lib, "python312.lib")
 
 module Tool;
 
+import boost;
 import ITranslator;
+import utf8cpp;
 
 namespace fs = std::filesystem;
 
@@ -315,12 +308,12 @@ std::pair<std::string, int> getMostCommonChar(std::string_view str) {
 
 
 std::string& replaceStrInplace(std::string& str, std::string_view org, std::string_view rep) {
-    boost::replace_all(str, org, rep);
+    boost::algorithm::replace_all(str, org, rep);
     return str;
 }
 
 std::string replaceStr(const std::string& str, std::string_view org, std::string_view rep) {
-    return boost::replace_all_copy(str, org, rep);
+    return boost::algorithm::replace_all_copy(str, org, rep);
 }
 
 

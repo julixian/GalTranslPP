@@ -195,10 +195,13 @@
     </QtTranslation>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rdParty\AbslContainers.ixx" />
-    <ClCompile Include="..\3rdParty\jpcre2\jpcre2.ixx" />
-    <ClCompile Include="..\3rdParty\json.ixx" />
-    <ClCompile Include="..\3rdParty\spdlog.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\AbslContainers.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\boost.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\ctpl_stl.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\jpcre2\jpcre2.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\json.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\spdlog.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\utf8cpp.ixx" />
     <ClCompile Include="ApiPool.cpp" />
     <ClCompile Include="ApiPool.ixx" />
     <ClCompile Include="AgentToolCommon.cpp" />
@@ -207,6 +210,7 @@
     <ClCompile Include="AgentCommonSourceView.ixx" />
     <ClCompile Include="ApiTool.cpp" />
     <ClCompile Include="ApiTool.ixx" />
+    <ClCompile Include="base64.cpp" />
     <ClCompile Include="CodePageChecker.cpp" />
     <ClCompile Include="CodePageChecker.ixx" />
     <ClCompile Include="ConditionTool.ixx" />

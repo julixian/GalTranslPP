@@ -3,11 +3,11 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <ctpl_stl.h>
 #include <toml.hpp>
 
 module NameTranslator;
 
+import ctpl_stl;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 

@@ -1,0 +1,12 @@
+import std;
+import mcpp;
+
+#include "../mcpp-build/qt_config.hpp"
+#include "../mcpp-build/mcpp_actions.hpp"
+
+// Translation and packaging actions are declared by the shared helper.
+
+int main() {
+    if (configure_qt({"Qt6Core"}) != 0) return 1;
+    return executable_actions("GalTranslPP_CLI").publish("GPPCLI") ? 0 : 1;
+}

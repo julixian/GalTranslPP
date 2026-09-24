@@ -4,7 +4,7 @@ module;
 
 export module GPPI18n;
 
-export import std.compat;
+export import std;
 
 export
 {

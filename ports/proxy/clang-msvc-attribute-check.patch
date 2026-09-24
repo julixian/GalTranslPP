@@ -1,0 +1,16 @@
+diff --git a/include/proxy/v4/detail/compatibility_check.h b/include/proxy/v4/detail/compatibility_check.h
+--- a/include/proxy/v4/detail/compatibility_check.h
++++ b/include/proxy/v4/detail/compatibility_check.h
+@@ -11,7 +11,11 @@
+ 
+ // clang-cl miscalculates the layout of an empty [[msvc::no_unique_address]]
+ // member in a base class (llvm/llvm-project#143245), corrupting pro::proxy.
+-#if __has_cpp_attribute(msvc::no_unique_address)
++// The mcpp LLVM clang++ driver also advertises this attribute but reports a
++// false positive for this probe under the MSVC ABI. The proxy implementation
++// still selects its normal attribute path in detail/core.h; skip this MSVC
++// compiler-only diagnostic for clang++ so the package can be used by mcpp.
++#if __has_cpp_attribute(msvc::no_unique_address) && !defined(__clang__)
+ namespace pro::inline v4::detail::compatibility_check {
+ struct empty {};
+ struct base {

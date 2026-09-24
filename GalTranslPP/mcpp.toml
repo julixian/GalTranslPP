@@ -1,0 +1,36 @@
+[package]
+namespace = "gpp"
+name = "core"
+description = "GalTransl++ core library"
+
+[build]
+default-profile = "release"
+sources = [
+  "**/*.cpp",
+  "**/*.ixx",
+  "../3rdParty/3rdModule/AbslContainers.ixx",
+  "../3rdParty/3rdModule/boost.ixx",
+  "../3rdParty/3rdModule/ctpl_stl.ixx",
+  "../3rdParty/3rdModule/jpcre2/jpcre2.ixx",
+  "../3rdParty/3rdModule/json.ixx",
+  "../3rdParty/3rdModule/spdlog.ixx",
+  "../3rdParty/3rdModule/utf8cpp.ixx"
+]
+module_extensions = [".ixx"]
+include_dirs = [
+  ".",
+  "../3rdParty/3rdModule",
+  "../3rdParty/pybind11/include",
+  "../3rdParty/pybind11/Python/include",
+  "../vcpkg_installed/gpp-x64-windows-release/include"
+]
+ldflags = [
+  "-L../3rdParty/pybind11/bin",
+  "-lpython312",
+  "-lpython3",
+  "-luser32",
+  "-loleaut32"
+]
+
+[targets.GalTranslPP]
+kind = "lib"

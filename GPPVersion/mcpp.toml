@@ -1,0 +1,11 @@
+[package]
+namespace = "gpp"
+name = "version"
+
+[build]
+default-profile = "release"
+sources = ["GPPVersion.ixx"]
+module_extensions = [".ixx"]
+
+[targets.GPPVersion]
+kind = "lib"

@@ -1,5 +1,47 @@
 # GalTransl++
 
+## mcpp 构建（Windows / LLVM 20.1.7）
+
+本仓库已加入 mcpp 构建入口，保留原项目的目标文件名和发布目录：
+
+- `GalTranslPP_CLI.exe` → `Release/GPPCLI/`
+- `GalTranslPP_GUI.exe` → `Release/GPPGUI/`
+- GUI 图标使用 `GPPGUI/Resource/images/julixian_s.ico`
+
+项目根目录的 [`mcpp.toml`](mcpp.toml) 固定使用 mcpp 管理的 `llvm@20.1.7`，MSVC STL/CRT/Windows SDK 按本机 Visual Studio 默认工具集解析，不在项目中强行锁定某个 MSVC 小版本。Qt 资源和 `Q_OBJECT` 代码由 [`tools/generate-qt.ps1`](tools/generate-qt.ps1) 生成。
+
+[`build-mcpp.ps1`](build-mcpp.ps1) 会构建两个目标，并将所选 exe 连同运行依赖复制到对应的 `Release` 目录。运行依赖取自 `D:/VSProj/GalTranslPP/Release`；脚本复制 DLL、Qt 插件、翻译和示例配置，但不复制原项目的 `Projects` 用户数据。CLI 由于 mcpp 当前共用 GUI 源码，也需要原 GUI 目录的几个 DLL。迁移到其他机器时，需调整脚本的 `-ReferenceRelease` 及 `mcpp.toml` 中 Qt、vcpkg、第三方库的路径。
+
+```powershell
+# 默认构建 GUI，并复制到 Release/GPPGUI/
+.\build-mcpp.ps1
+
+# 构建 CLI，并复制到 Release/GPPCLI/
+.\build-mcpp.ps1 -Target GalTranslPP_CLI
+```
+
+也可以直接使用 mcpp：
+
+```powershell
+& C:\Users\julixian\.xlings\subos\current\bin\mcpp.exe build
+```
+
+当前工作区不放置 `.vscode/settings.json`。按本机已验证的设置，只启用 `mcpp-language-server`（mcppls），禁用 mcpp VS Code 扩展和独立 clangd 扩展。mcppls 从 `mcpp.toml` 取得项目工具链配置；mcpp 构建时生成 `compile_commands.json`。这样也不会再触发 mcpp 扩展自动检查 xlings `clangd` revision 时的弹窗。
+
+当前 mcpp 配置复用了 `D:/VSProj/GalTranslPP/vcpkg_installed` 中原项目的 vcpkg 依赖，并使用 `D:/Qt/6.11.1/msvc2022_64`。Clang 编译 proxy 头文件时，已在该目录直接跳过只针对 clang-cl 的布局探针；后续稳定后应把这项修改移入 `ports/microsoft-proxy` 的 patch，而不是依赖本机手工改动。
+
+Clang 使用 MSVC STL 时，manifest 还定义了原项目使用的 `_RANGES_` 兼容宏，用来避免 `import std` 与 `<ranges>` 的重复定义。
+
+如果只想验证模块语法，可以运行：
+
+```powershell
+& C:\Users\julixian\.xlings\subos\current\bin\mcpp.exe build --configure-only
+```
+
+原有的 Visual Studio/vcpkg 构建说明和项目功能文档见下文。
+
+此前的小型 `import`/`export module` 演示保存在 [`examples/modern-modules-demo`](examples/modern-modules-demo)。
+
 ![GalTransl++ GUI](images/GalTranslPP.png?raw=true)
 ![GalTransl++ GUI En](images/GalTranslPP_en.png?raw=true)
 

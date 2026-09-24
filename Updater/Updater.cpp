@@ -20,7 +20,9 @@ import GPPVersion;
 
 namespace fs = std::filesystem;
 
+#if !defined(__clang__)
 #pragma comment(lib, "GPPVersion.lib")
+#endif
 
 QString gppTr(const char* context, const char* source) {
     return QCoreApplication::translate(context, source);

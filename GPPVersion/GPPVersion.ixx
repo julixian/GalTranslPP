@@ -1,6 +1,6 @@
 export module GPPVersion;
 
-export import std.compat;
+export import std;
 
 export
 {

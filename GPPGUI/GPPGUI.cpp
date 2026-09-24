@@ -23,8 +23,10 @@
 
 #include <toml.hpp>
 
+#if !defined(__clang__)
 #pragma comment(lib, "GPPVersion.lib")
 #pragma comment(lib, "GalTranslPP.lib")
+#endif
 #pragma comment(lib, "ElaWidgetTools.lib")
 
 import Tool;

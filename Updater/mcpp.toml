@@ -1,0 +1,26 @@
+[package]
+namespace = "gpp"
+name = "updater"
+
+[dependencies]
+"gpp.version" = { path = "../GPPVersion" }
+
+[build]
+default-profile = "release"
+include_dirs = [
+  ".",
+  "../vcpkg_installed/gpp-x64-windows-release/include"
+]
+ldflags = [
+  "-luser32",
+  "-loleaut32"
+]
+
+[targets.Updater]
+kind = "bin"
+main = "Updater.cpp"
+windows_subsystem = "windows"
+
+[resources]
+files = ["Updater.rc"]
+extra-inputs = ["Updater.manifest"]

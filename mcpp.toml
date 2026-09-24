@@ -1,0 +1,23 @@
+[workspace]
+members = ["GalTranslPP", "GPPVersion", "GPPCLI", "GPPGUI", "Updater"]
+
+[workspace.package]
+version = "3.1.0"
+standard = "c++23"
+license = "MIT"
+
+[toolchain]
+windows = "llvm@22.1.8"
+
+[workspace.build]
+cxxflags = [
+  "-finput-charset=UTF-8",
+  "-fexec-charset=UTF-8",
+  "-DNOMINMAX",
+  "-D_CRT_SECURE_NO_WARNINGS",
+  "-DSPDLOG_COMPILED_LIB",
+  "-DSPDLOG_WCHAR_FILENAMES",
+  "-D_RANGES_"
+]
+cflags = ["-DNOMINMAX", "-D_CRT_SECURE_NO_WARNINGS"]
+dialect_cxxflags = ["-fms-runtime-lib=dll"]

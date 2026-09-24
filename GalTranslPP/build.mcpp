@@ -1,0 +1,19 @@
+import std;
+import mcpp;
+
+#include "../mcpp-build/qt_config.hpp"
+#include "../mcpp-build/mcpp_translations.hpp"
+#include "../mcpp-build/vcpkg_link.hpp"
+
+int main() {
+    if (configure_qt({"Qt6Core"}) != 0) return 1;
+    if (!link_vcpkg_libraries({
+            "7zip", "bit7z64", "abseil_dll", "cld3", "cpr", "gumbo",
+            "icuio", "icuin", "icuuc", "icudt", "libprotobuf-lite", "fmt",
+            "lua", "mecab", "opencc", "pcre2-8", "spdlog", "tree-sitter",
+            "zip", "z"})) return 1;
+    const auto project = std::filesystem::path(mcpp::manifest_dir());
+    const auto qm = qt_translation(project, project / "qt_gpp_en.ts",
+                                   project / "qt_gpp_en.qm");
+    return qm.empty() ? 1 : 0;
+}

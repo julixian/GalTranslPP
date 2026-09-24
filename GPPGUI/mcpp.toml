@@ -1,0 +1,38 @@
+[package]
+namespace = "gpp"
+name = "gui"
+
+[dependencies]
+"gpp.core" = { path = "../GalTranslPP" }
+"gpp.version" = { path = "../GPPVersion" }
+
+[build-dependencies]
+"gpp.updater" = { path = "../Updater", tools = ["Updater"] }
+
+[build]
+default-profile = "release"
+sources = ["**/*.cpp", "**/*.c", "!GPPGUI.cpp", "!mcpp-generated/**"]
+include_dirs = [
+  ".",
+  "../GalTranslPP",
+  "../3rdParty/ElaWidgetTools/Install/ElaWidgetTools/include",
+  "../3rdParty/pybind11/include",
+  "../3rdParty/pybind11/Python/include",
+  "../vcpkg_installed/gpp-x64-windows-release/include"
+]
+ldflags = [
+  "-L../3rdParty/pybind11/bin",
+  "-lpython312",
+  "-lpython3",
+  "-L../3rdParty/ElaWidgetTools/Install/ElaWidgetTools/lib",
+  "-lElaWidgetTools"
+]
+
+[targets.GalTranslPP_GUI]
+kind = "bin"
+main = "GPPGUI.cpp"
+windows_subsystem = "windows"
+
+[resources]
+files = ["GPPGUI.rc"]
+extra-inputs = ["GPPGUI.manifest", "Resource/images/julixian_s.ico"]

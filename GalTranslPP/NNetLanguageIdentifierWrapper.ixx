@@ -1,6 +1,6 @@
 export module NNetLanguageIdentifierWrapper;
 
-export import std.compat;
+export import std;
 
 export
 {

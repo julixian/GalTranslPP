@@ -2097,7 +2097,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+155"/>
+        <location filename="GPPGUI.cpp" line="+157"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -3513,13 +3513,13 @@ Cache: %4</translation>
         <translation>Problems only</translation>
     </message>
     <message>
+        <location line="+20"/>
         <location filename="ProjectCachePageActions.cpp" line="+89"/>
-        <location filename="ProjectCachePage.cpp" line="+20"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+3"/>
+        <location line="+3"/>
         <source>删除缓存条目</source>
         <translation>Delete Cache Entries</translation>
     </message>
@@ -3597,13 +3597,13 @@ Cache: %4</translation>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageActions.cpp" line="+58"/>
         <location filename="ProjectCachePage.cpp" line="-241"/>
+        <location filename="ProjectCachePageActions.cpp" line="+58"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+220"/>
+        <location line="+220"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>

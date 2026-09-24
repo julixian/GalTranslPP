@@ -1,0 +1,14 @@
+import std;
+import mcpp;
+
+#include "../mcpp-build/qt_config.hpp"
+#include "../mcpp-build/mcpp_actions.hpp"
+#include "../mcpp-build/vcpkg_link.hpp"
+
+// Translation and packaging actions are declared by the shared helper.
+
+int main() {
+    if (configure_qt({"Qt6Core", "Qt6Gui", "Qt6Widgets"}) != 0) return 1;
+    if (!link_vcpkg_libraries({"7zip", "bit7z64"})) return 1;
+    return executable_actions("Updater").publish("Updater") ? 0 : 1;
+}

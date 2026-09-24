@@ -4,7 +4,7 @@ export import std.compat;
 
 export
 {
-    constexpr std::string_view GPPVERSION = "3.1.0";
+    constexpr std::string_view GPPVERSION = "3.1.1";
     constexpr std::string_view PYTHONVERSION = "1.0.0";
     constexpr std::string_view PROMPTVERSION = "1.0.3";
     constexpr std::string_view DICTVERSION = "1.0.3";

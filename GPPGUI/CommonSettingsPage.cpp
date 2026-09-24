@@ -326,7 +326,7 @@ void CommonSettingsPage::setupUi()
 	contextNumLayout->addWidget(contextNumText);
 	contextNumLayout->addStretch();
 	ElaSpinBox* contextNumSpinBox = new ElaSpinBox(contextNumArea);
-	contextNumSpinBox->setRange(1, 9999);
+	contextNumSpinBox->setRange(0, 9999);
 	contextNumSpinBox->setValue(contextNum);
 	contextNumLayout->addWidget(contextNumSpinBox);
 	mainLayout->addWidget(contextNumArea);

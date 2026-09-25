@@ -12,12 +12,13 @@ windows = "llvm@22.1.8"
 [workspace.build]
 cxxflags = [
   "-finput-charset=UTF-8",
-  "-fexec-charset=UTF-8",
-  "-DNOMINMAX",
-  "-D_CRT_SECURE_NO_WARNINGS",
-  "-DSPDLOG_COMPILED_LIB",
-  "-DSPDLOG_WCHAR_FILENAMES",
-  "-D_RANGES_"
+  "-fexec-charset=UTF-8"
 ]
-cflags = ["-DNOMINMAX", "-D_CRT_SECURE_NO_WARNINGS"]
+defines = [
+  "NOMINMAX",
+  "_CRT_SECURE_NO_WARNINGS",
+  "SPDLOG_COMPILED_LIB",
+  "SPDLOG_WCHAR_FILENAMES",
+  "_RANGES_"
+]
 dialect_cxxflags = ["-fms-runtime-lib=dll"]

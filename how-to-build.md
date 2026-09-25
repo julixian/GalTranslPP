@@ -25,7 +25,11 @@ irm https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_i
 xlings install mcpp -y
 ```
 
-如果你确实是通过 xlings 安装的 mcpp 的话，建议在安装完之后将 `.mcpp/config.toml` 中的 `[xlings.binary]` 从 `bundled` 改为 `system` 并将 `[xlings.home]` 改为 `.xlings` 所在目录。
+如果你确实是通过 xlings 安装的 mcpp 的话，建议在安装完之后先运行
+```cmd
+mcpp self init
+```
+然后将 `.mcpp/config.toml` 中的 `[xlings.binary]` 从 `bundled` 改为 `system` 并将 `[xlings.home]` 改为 `.xlings` 所在目录。
 
 ### 1.2 vcpkg 包管理器
 

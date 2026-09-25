@@ -54,7 +54,7 @@ cd vcpkg
 将 GalTranslPP 主仓库连同子模块依赖克隆至本地。
 
 ```cmd
-git clone --recurse-submodules https://github.com/julixian/GalTranslPP.git
+git clone --recursive https://github.com/julixian/GalTranslPP.git
 cd GalTranslPP
 ```
 

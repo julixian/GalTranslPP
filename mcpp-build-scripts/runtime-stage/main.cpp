@@ -194,6 +194,8 @@ void stage(const options& opts) {
     std::string manifest_text;
     for (const auto& [name, source] : selected)
         std::format_to(std::back_inserter(manifest_text), "{}\n", ascii(name));
+    if (!opts.manifest.parent_path().empty())
+        fs::create_directories(opts.manifest.parent_path());
     std::ofstream manifest(opts.manifest, std::ios::binary | std::ios::trunc);
     if (!manifest) throw std::runtime_error("cannot write runtime manifest");
     manifest.write(manifest_text.data(), static_cast<std::streamsize>(manifest_text.size()));

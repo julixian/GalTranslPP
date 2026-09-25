@@ -21,8 +21,8 @@ int main() {
         profile == "release" || profile == "fast-release") {
         actions.copy(updater, actions.release / "GPPGUI" / "Updater.exe");
         actions.copy(updater, actions.release / "GUICORE" / "Updater_new.exe");
-        const auto private_dir = actions.release / "GPPGUI_PRIVATE";
-        if (std::filesystem::is_directory(private_dir))
+        const auto private_dir = actions.private_release_dir("GPPGUI");
+        if (!private_dir.empty())
             actions.copy(updater, private_dir / "Updater_new.exe");
     }
     return 0;

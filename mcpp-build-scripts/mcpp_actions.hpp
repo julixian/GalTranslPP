@@ -19,8 +19,34 @@ struct executable_actions {
 
     explicit executable_actions(std::string name)
         : target(std::move(name)), target_file("${mcpp.target_file:" + target + "}") {
-        // Private release directories are optional, as in the VS post-build events.
+        // Private release path files are optional, as in the VS post-build events.
         mcpp::rerun_if_changed(release.string().c_str());
+    }
+
+    path private_release_dir(std::string_view member) const {
+        namespace fs = std::filesystem;
+        const auto config = release /
+            (member == "GPPCLI" ? "GPPCLI_PRIVATE.txt" : "GPPGUI_PRIVATE.txt");
+        const auto config_name = config.string();
+        mcpp::rerun_if_changed(config_name.c_str());
+        std::error_code error;
+        if (!fs::is_regular_file(config, error)) return {};
+
+        std::ifstream input(config);
+        std::string first_line;
+        if (!std::getline(input, first_line)) return {};
+        if (!first_line.empty() && first_line.back() == '\r') first_line.pop_back();
+        if (first_line.empty()) return {};
+
+        path destination(first_line);
+        if (destination.is_relative()) destination = release / destination;
+        destination = destination.lexically_normal();
+        error.clear();
+        if (!fs::is_directory(destination, error)) {
+            std::println(stderr, "Private release directory is unavailable: {}", destination.string());
+            return {};
+        }
+        return destination;
     }
 
     bool ready() const {
@@ -51,14 +77,16 @@ struct executable_actions {
         copy(source.lexically_normal().string(), destination);
     }
 
-    bool stage_runtime_files(std::string_view member, const path& destination) {
+    bool stage_runtime_files(std::string_view member, const path& destination,
+                             std::string_view destination_name) {
         const char* tool = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
         if (!tool || !*tool) {
             std::println(stderr, "runtime-stage host tool is unavailable");
             return false;
         }
-        const auto manifest = destination /
-            (".mcpp-runtime-" + std::string(member) + ".txt");
+        const auto manifest = release / ".mcpp-runtime" /
+            (".mcpp-runtime-" + std::string(member) + "-" +
+             std::string(destination_name) + ".txt");
         const auto exe = target_file;
         const auto output = manifest.lexically_normal().string();
         const auto dest = destination.lexically_normal().string();
@@ -122,12 +150,13 @@ struct executable_actions {
         const bool cli = member == "GPPCLI";
         const bool gui = member == "GPPGUI";
         const auto base = release / (cli ? "GPPCLI" : "GPPGUI");
-        const auto mirror = release / (cli ? "GPPCLI_PRIVATE" : "GPPGUI_PRIVATE");
-        const bool private_exists = std::filesystem::is_directory(mirror);
-        std::vector<path> destinations{base};
-        if (gui) destinations.push_back(release / "GUICORE");
+        const auto mirror = private_release_dir(member);
+        const bool private_exists = !mirror.empty();
+        std::vector<std::pair<path, std::string_view>> destinations{
+            {base, cli ? "GPPCLI" : "GPPGUI"}};
+        if (gui) destinations.emplace_back(release / "GUICORE", "GUICORE");
         if ((cli || gui) && private_exists) {
-            destinations.push_back(mirror);
+            destinations.emplace_back(mirror, cli ? "GPPCLI_PRIVATE" : "GPPGUI_PRIVATE");
         }
 
         copy(target_file, base / (target + ".exe"));
@@ -139,10 +168,11 @@ struct executable_actions {
             copy(target_file, mirror / (target + ".exe"));
         }
 
-        for (const auto& dir : destinations)
-            if (!stage_runtime_files(member, dir)) return false;
+        for (const auto& [dir, name] : destinations)
+            if (!stage_runtime_files(member, dir, name)) return false;
 
-        for (const auto& dir : destinations) copy_translation_files(member, own_qm, dir);
+        for (const auto& destination : destinations)
+            copy_translation_files(member, own_qm, destination.first);
         return true;
     }
 

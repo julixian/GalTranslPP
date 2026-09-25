@@ -18,3 +18,10 @@ export namespace absl
 	using ::absl::erase_if;
 #endif
 }
+
+// raw_hash_set names this debug hook in a friend declaration.  When a consumer
+// instantiates the container through this named module, Clang must see the hook
+// as well as the exported container aliases.
+export namespace absl::container_internal::hashtable_debug_internal {
+    using ::absl::container_internal::hashtable_debug_internal::HashtableDebugAccess;
+}

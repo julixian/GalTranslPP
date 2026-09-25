@@ -3,6 +3,7 @@ module;
 #include "GPPMacros.hpp"
 
 #include <cstdint>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <Shlwapi.h>

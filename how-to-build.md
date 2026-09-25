@@ -8,7 +8,7 @@
 - **版本控制工具**: [git](https://git-scm.com/)
 - **主要构建工具**: [xlings](https://github.com/openxlings/xlings)、[mcpp](https://github.com/mcpp-community/mcpp)
 - **辅助构建工具**: [CMake](https://cmake.org/download/)、[Python3](https://www.python.org/)、
-[Visual Studio Build Tools](https://visualstudio.microsoft.com/zh-hans/downloads/) (理论上不需要下完整 IDE，只需确保选中 `使用 C++ 的桌面开发` 的工作负载即可)。
+[Visual Studio Build Tools](https://visualstudio.microsoft.com/zh-hans/downloads/#build-tools-for-visual-studio-2026) (理论上不需要下完整 IDE，只需确保选中 `使用 C++ 的桌面开发` 的工作负载即可)。
 - **包管理工具**: [vcpkg](https://github.com/microsoft/vcpkg)
 
 ### 1.1 构建工具介绍

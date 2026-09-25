@@ -7,6 +7,6 @@ compile_commands.json
 mcpp-generated/
 /GalTranslPP/qt_gpp_en.qm
 
-# Files populated by Release.bat
+# Files populated by Release.py
 /Example/BaseConfig/opencc/
 /Example/BaseConfig/Python-3.12.10-embed-amd64/

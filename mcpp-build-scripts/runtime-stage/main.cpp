@@ -1,15 +1,4 @@
-#include <algorithm>
-#include <cstdint>
-#include <deque>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <vector>
+import std;
 
 namespace fs = std::filesystem;
 
@@ -145,17 +134,18 @@ struct options {
     std::vector<std::wstring> seeds;
 };
 
-options parse_options(int argc, wchar_t** argv) {
+template <typename Char>
+options parse_options(int argc, Char** argv) {
     options result;
     for (int i = 1; i < argc; ++i) {
         if (i + 1 == argc) throw std::runtime_error("missing option value");
-        const std::wstring_view flag(argv[i]);
-        const auto value = argv[++i];
-        if (flag == L"--exe") result.exe = value;
-        else if (flag == L"--manifest") result.manifest = value;
-        else if (flag == L"--dest") result.destination = value;
-        else if (flag == L"--search") result.search_dirs.emplace_back(value);
-        else if (flag == L"--seed") result.seeds.emplace_back(value);
+        const fs::path flag(argv[i]);
+        const fs::path value(argv[++i]);
+        if (flag == "--exe") result.exe = value;
+        else if (flag == "--manifest") result.manifest = value;
+        else if (flag == "--dest") result.destination = value;
+        else if (flag == "--search") result.search_dirs.push_back(value);
+        else if (flag == "--seed") result.seeds.push_back(value.wstring());
         else throw std::runtime_error("unknown runtime-stage option");
     }
     if (result.exe.empty() || result.manifest.empty() || result.destination.empty())
@@ -207,7 +197,11 @@ void stage(const options& opts) {
 
 }  // namespace
 
+#ifdef _WIN32
 int wmain(int argc, wchar_t** argv) {
+#else
+int main(int argc, char** argv) {
+#endif
     try {
         stage(parse_options(argc, argv));
         return 0;

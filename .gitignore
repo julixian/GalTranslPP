@@ -1,3 +1,6 @@
+# Private workspace
+/.vscode/
+
 # Local dependencies and build outputs
 /vcpkg_installed/
 /Release/

@@ -1,7 +1,6 @@
 # Local dependencies and build outputs
 /vcpkg_installed/
 /Release/
-/FastRelease/
 /lib/
 target/
 compile_commands.json

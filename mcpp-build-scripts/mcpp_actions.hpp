@@ -10,8 +10,7 @@ struct executable_actions {
 
     path project = path(mcpp::manifest_dir());
     path workspace = project.parent_path();
-    path release = workspace /
-        (std::string_view(mcpp::profile()) == "fast-release" ? "FastRelease" : "Release");
+    path release = workspace / "Release";
     path qt = qt_root_path();
     path vcpkg = workspace / "vcpkg_installed" / "gpp-x64-windows-release";
     std::string target;

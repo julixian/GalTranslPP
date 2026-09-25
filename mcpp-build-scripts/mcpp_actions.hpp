@@ -51,58 +51,69 @@ struct executable_actions {
         copy(source.lexically_normal().string(), destination);
     }
 
-    void copy_if_present(const path& source, const path& destination) {
-        if (std::filesystem::is_regular_file(source)) copy_file(source, destination);
+    bool copy_required(const path& source, const path& destination) {
+        if (!std::filesystem::is_regular_file(source)) {
+            std::cerr << "Missing runtime dependency: " << source << '\n';
+            return false;
+        }
+        copy_file(source, destination);
+        return true;
     }
 
-    void copy_matching(const path& dir, const path& destination,
-                       std::string_view prefix = {}) {
-        if (!std::filesystem::is_directory(dir)) return;
-        std::vector<path> files;
-        for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-            if (!entry.is_regular_file() || entry.path().extension() != ".dll") continue;
-            if (!prefix.empty() && !entry.path().filename().string().starts_with(prefix)) continue;
-            files.push_back(entry.path());
+    bool copy_versioned_vcpkg_dll(std::string_view prefix, const path& destination) {
+        std::vector<path> matches;
+        for (const auto& entry : std::filesystem::directory_iterator(vcpkg / "bin")) {
+            const auto filename = entry.path().filename().string();
+            if (entry.is_regular_file() && entry.path().extension() == ".dll" &&
+                filename.starts_with(prefix))
+                matches.push_back(entry.path());
         }
-        std::ranges::sort(files);
-        for (const auto& source : files) copy_file(source, destination / source.filename());
+        if (matches.size() != 1) {
+            std::cerr << "Expected one vcpkg DLL beginning with " << prefix
+                      << ", found " << matches.size() << '\n';
+            return false;
+        }
+        copy_file(matches.front(), destination / matches.front().filename());
+        return true;
     }
 
-    void copy_plugins(const path& destination) {
-        for (const char* name : {"generic", "iconengines", "imageformats",
-                                  "networkinformation", "platforms", "styles", "tls"}) {
-            const auto dir = qt / "plugins" / name;
-            if (!std::filesystem::is_directory(dir)) continue;
-            std::vector<path> files;
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
-                if (entry.is_regular_file()) files.push_back(entry.path());
-            std::ranges::sort(files);
-            for (const auto& source : files)
-                copy_file(source, destination / name / source.lexically_relative(dir));
+    bool copy_plugins(const path& destination) {
+        // Qt loads these at run time, so they do not appear in the EXE import table.
+        for (const char* plugin : {"platforms/qwindows.dll", "imageformats/qjpeg.dll",
+                                   "imageformats/qico.dll", "tls/qschannelbackend.dll"}) {
+            if (!copy_required(qt / "plugins" / plugin, destination / plugin)) return false;
         }
+        return true;
     }
 
-    void copy_runtime_files(std::string_view member, const path& destination) {
-        copy_matching(vcpkg / "bin", destination);
-        copy_matching(workspace / "3rdParty" / "pybind11" / "bin", destination, "python");
-        copy_if_present(workspace / "3rdParty" / "7z.dll", destination / "7z.dll");
+    bool copy_runtime_files(std::string_view member, const path& destination) {
+        if (!copy_required(workspace / "3rdParty" / "7z.dll", destination / "7z.dll") ||
+            !copy_required(qt / "bin" / "Qt6Core.dll", destination / "Qt6Core.dll"))
+            return false;
+        if (member == "Updater") return true;
 
-        std::vector<std::string_view> qt_dlls{"Qt6Core.dll"};
-        if (member != "GPPCLI") {
-            qt_dlls.insert(qt_dlls.end(), {"Qt6Gui.dll", "Qt6Widgets.dll"});
+        // PE imports of the GUI/CLI plus their transitive vcpkg DLL imports.
+        for (const char* dll : {"abseil_dll.dll", "bz2.dll", "cpr.dll", "fmt.dll",
+                                "libcurl.dll", "libprotobuf-lite.dll", "lua.dll",
+                                "mecab.dll", "opencc.dll", "pcre2-8.dll", "spdlog.dll",
+                                "z.dll", "zip.dll"}) {
+            if (!copy_required(vcpkg / "bin" / dll, destination / dll)) return false;
         }
+        if (!copy_versioned_vcpkg_dll("icuuc", destination) ||
+            !copy_versioned_vcpkg_dll("icudt", destination) ||
+            !copy_required(workspace / "3rdParty" / "pybind11" / "bin" / "python312.dll",
+                           destination / "python312.dll") ||
+            !copy_required(workspace / "3rdParty" / "pybind11" / "bin" / "python3.dll",
+                           destination / "python3.dll"))
+            return false;
         if (member == "GPPGUI") {
-            qt_dlls.insert(qt_dlls.end(),
-                           {"Qt6Network.dll", "Qt6Svg.dll", "opengl32sw.dll"});
+            for (const char* dll : {"Qt6Gui.dll", "Qt6Network.dll", "Qt6Widgets.dll"})
+                if (!copy_required(qt / "bin" / dll, destination / dll)) return false;
+            const auto ela = workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
+                             "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll";
+            if (!copy_required(ela, destination / "ElaWidgetTools.dll")) return false;
         }
-        for (const auto dll : qt_dlls)
-            copy_if_present(qt / "bin" / dll, destination / dll);
-
-        if (member == "GPPGUI") {
-            copy_if_present(workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
-                                "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll",
-                            destination / "ElaWidgetTools.dll");
-        }
+        return true;
     }
 
     void copy_translation_files(std::string_view member, const path& qm,
@@ -147,8 +158,9 @@ struct executable_actions {
             copy(target_file, mirror / (target + ".exe"));
         }
 
-        for (const auto& dir : destinations) copy_runtime_files(member, dir);
-        if (!cli) copy_plugins(base);
+        for (const auto& dir : destinations)
+            if (!copy_runtime_files(member, dir)) return false;
+        if (gui && !copy_plugins(base)) return false;
 
         for (const auto& dir : destinations) copy_translation_files(member, own_qm, dir);
         return true;

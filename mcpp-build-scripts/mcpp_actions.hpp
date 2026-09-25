@@ -77,18 +77,8 @@ struct executable_actions {
         return true;
     }
 
-    bool copy_plugins(const path& destination) {
-        // Qt loads these at run time, so they do not appear in the EXE import table.
-        for (const char* plugin : {"platforms/qwindows.dll", "imageformats/qjpeg.dll",
-                                   "imageformats/qico.dll", "tls/qschannelbackend.dll"}) {
-            if (!copy_required(qt / "plugins" / plugin, destination / plugin)) return false;
-        }
-        return true;
-    }
-
     bool copy_runtime_files(std::string_view member, const path& destination) {
-        if (!copy_required(workspace / "3rdParty" / "7z.dll", destination / "7z.dll") ||
-            !copy_required(qt / "bin" / "Qt6Core.dll", destination / "Qt6Core.dll"))
+        if (!copy_required(workspace / "3rdParty" / "7z.dll", destination / "7z.dll"))
             return false;
         if (member == "Updater") return true;
 
@@ -107,8 +97,6 @@ struct executable_actions {
                            destination / "python3.dll"))
             return false;
         if (member == "GPPGUI") {
-            for (const char* dll : {"Qt6Gui.dll", "Qt6Network.dll", "Qt6Widgets.dll"})
-                if (!copy_required(qt / "bin" / dll, destination / dll)) return false;
             const auto ela = workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
                              "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll";
             if (!copy_required(ela, destination / "ElaWidgetTools.dll")) return false;
@@ -160,7 +148,6 @@ struct executable_actions {
 
         for (const auto& dir : destinations)
             if (!copy_runtime_files(member, dir)) return false;
-        if (gui && !copy_plugins(base)) return false;
 
         for (const auto& dir : destinations) copy_translation_files(member, own_qm, dir);
         return true;

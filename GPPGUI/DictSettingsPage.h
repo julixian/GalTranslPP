@@ -29,9 +29,9 @@ private:
 
     std::function<void()> m_refreshGptDictFunc;
 
-    QList<GptDictEntry> m_withdrawGptList;
-    QList<NormalDictEntry> m_withdrawPreList;
-    QList<NormalDictEntry> m_withdrawPostList;
+    QList<GuiGptDictEntry> m_withdrawGptList;
+    QList<GuiNormalDictEntry> m_withdrawPreList;
+    QList<GuiNormalDictEntry> m_withdrawPostList;
 };
 
 #endif

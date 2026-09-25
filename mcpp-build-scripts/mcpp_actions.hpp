@@ -77,6 +77,18 @@ struct executable_actions {
         copy(source.lexically_normal().string(), destination);
     }
 
+    void stage_pdb() {
+        const auto source = "${mcpp.bin_dir}/" + target + ".pdb";
+        const auto output = (release / ".pdb" / (target + ".pdb")).lexically_normal().string();
+        const auto id = "stage-pdb-" + std::to_string(next_action++);
+        mcpp::action action;
+        action.id = id.c_str();
+        action.role = "artifact";
+        action.arg("${mcpp.self}").arg("stage").arg("--verify").arg("content")
+              .arg("--output").arg(output.c_str()).arg(source.c_str())
+              .input(target_file.c_str()).output(output.c_str()).submit();
+    }
+
     bool stage_runtime_files(std::string_view member, const path& destination,
                              std::string_view destination_name) {
         const char* tool = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
@@ -160,6 +172,7 @@ struct executable_actions {
         }
 
         copy(target_file, base / (target + ".exe"));
+        if (cli || gui) stage_pdb();
         if (gui) copy(target_file, release / "GUICORE" / (target + ".exe"));
         if (member == "Updater") {
             copy(target_file, release / "GUICORE" / "Updater_new.exe");

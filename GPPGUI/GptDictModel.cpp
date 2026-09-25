@@ -42,7 +42,7 @@ QVariant GptDictModel::data(const QModelIndex& index, int role) const
     // --- 核心逻辑：根据 'role' 提供不同的数据 ---
     if (role == Qt::DisplayRole || role == Qt::EditRole)
     {
-        const GptDictEntry& entry = m_entries.at(index.row());
+        const GuiGptDictEntry& entry = m_entries.at(index.row());
         switch (index.column())
         {
         case Column::Original: return entry.original;
@@ -106,7 +106,7 @@ bool GptDictModel::setData(const QModelIndex& index, const QVariant& value, int 
         return false;
     }
 
-    GptDictEntry& entry = m_entries[index.row()];
+    GuiGptDictEntry& entry = m_entries[index.row()];
     QString textValue = value.toString();
 
     // 根据列更新对应的数据
@@ -149,7 +149,7 @@ bool GptDictModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int 
         return false;
     }
 
-    QList<GptDictEntry> movedEntries;
+    QList<GuiGptDictEntry> movedEntries;
     movedEntries.reserve(count);
     for (int i = 0; i < count; ++i) {
         movedEntries.push_back(m_entries.takeAt(sourceRow));
@@ -165,7 +165,7 @@ bool GptDictModel::moveRows(const QModelIndex& sourceParent, int sourceRow, int 
 
 // --- 公共方法 ---
 
-void GptDictModel::loadData(const QList<GptDictEntry>& entries)
+void GptDictModel::loadData(const QList<GuiGptDictEntry>& entries)
 {
     // 在修改底层数据结构之前，必须调用 beginResetModel()
     beginResetModel();
@@ -174,7 +174,7 @@ void GptDictModel::loadData(const QList<GptDictEntry>& entries)
     endResetModel();
 }
 
-bool GptDictModel::insertRow(int row, const GptDictEntry& entry, const QModelIndex& parent)
+bool GptDictModel::insertRow(int row, const GuiGptDictEntry& entry, const QModelIndex& parent)
 {
     if (parent.isValid() || row < 0 || row > m_entries.count()) {
         return false;
@@ -203,7 +203,7 @@ bool GptDictModel::removeRow(int row, const QModelIndex& parent)
     return true;
 }
 
-bool GptDictModel::setEntry(int row, const GptDictEntry& entry)
+bool GptDictModel::setEntry(int row, const GuiGptDictEntry& entry)
 {
     if (row < 0 || row >= m_entries.count()
         || (m_entries[row].original == entry.original
@@ -217,12 +217,12 @@ bool GptDictModel::setEntry(int row, const GptDictEntry& entry)
     return true;
 }
 
-QList<GptDictEntry> GptDictModel::getEntries() const
+QList<GuiGptDictEntry> GptDictModel::getEntries() const
 {
     return m_entries;
 }
 
-const QList<GptDictEntry>& GptDictModel::getEntriesRef() const
+const QList<GuiGptDictEntry>& GptDictModel::getEntriesRef() const
 {
     return m_entries;
 }

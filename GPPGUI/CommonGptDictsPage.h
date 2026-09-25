@@ -23,7 +23,7 @@ struct GptTabEntry {
     GptDictModel* dictModel{};
     fs::path dictPath;
     std::function<bool(bool)> saveFunc;
-    QList<GptDictEntry> withdrawList;
+    QList<GuiGptDictEntry> withdrawList;
 };
 
 class CommonGptDictsPage : public BasePage

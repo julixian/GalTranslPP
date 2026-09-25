@@ -13,7 +13,7 @@ struct NormalCondition
     bool operator==(const NormalCondition&) const = default;
 };
 
-struct NormalDictEntry
+struct GuiNormalDictEntry
 {
     QString original;
     QString translation;
@@ -21,7 +21,7 @@ struct NormalDictEntry
     int priority = 0;
     bool isReg = false;
 
-    bool operator==(const NormalDictEntry&) const = default;
+    bool operator==(const GuiNormalDictEntry&) const = default;
 };
 
 QString serializeNormalConditionTarget(const NormalCondition& condition);
@@ -54,15 +54,15 @@ public:
     bool moveRows(const QModelIndex& sourceParent, int sourceRow, int count,
         const QModelIndex& destinationParent, int destinationChild) override;
 
-    void loadData(const QList<NormalDictEntry>& entries);
-    bool insertRow(int row, NormalDictEntry entry = {}, const QModelIndex& parent = QModelIndex());
+    void loadData(const QList<GuiNormalDictEntry>& entries);
+    bool insertRow(int row, GuiNormalDictEntry entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
-    bool setEntry(int row, NormalDictEntry entry);
-    QList<NormalDictEntry> getEntries() const;
-    const QList<NormalDictEntry>& getEntriesRef() const;
+    bool setEntry(int row, GuiNormalDictEntry entry);
+    QList<GuiNormalDictEntry> getEntries() const;
+    const QList<GuiNormalDictEntry>& getEntriesRef() const;
 
 private:
-    QList<NormalDictEntry> m_entries;
+    QList<GuiNormalDictEntry> m_entries;
     QStringList m_headerLabels;
 };
 

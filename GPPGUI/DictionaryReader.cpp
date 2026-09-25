@@ -15,9 +15,9 @@ QString DictionaryReader::readDictStr(const fs::path& dictPath)
 	return QString::fromStdString(result);
 }
 
-QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
+QList<GuiGptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 {
-	QList<GptDictEntry> result;
+	QList<GuiGptDictEntry> result;
 	if (!fs::exists(dictPath)) {
 		return result;
 	}
@@ -33,7 +33,7 @@ QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 				if (!dict.is_table()) {
 					continue;
 				}
-				GptDictEntry entry;
+				GuiGptDictEntry entry;
 				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
 				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
 				entry.description = dict.contains("note") ? QString::fromStdString(toml::find_or(dict, "note", "")) : QString{};
@@ -59,7 +59,7 @@ QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 				if (!elem.is_object()) {
 					continue;
 				}
-				GptDictEntry entry;
+				GuiGptDictEntry entry;
 				entry.original = QString::fromStdString(elem.value("src", ""));
 				entry.translation = QString::fromStdString(elem.value("dst", ""));
 				entry.description = QString::fromStdString(elem.value("info", ""));
@@ -85,7 +85,7 @@ QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 			if (tokens.size() < 2) {
 				continue;
 			}
-			GptDictEntry entry;
+			GuiGptDictEntry entry;
 			entry.original = QString::fromUtf8(tokens[0]);
 			entry.translation = QString::fromUtf8(tokens[1]);
 			if (tokens.size() > 2) {
@@ -105,9 +105,9 @@ QList<GptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 	return result;
 }
 
-QList<GptDictEntry> DictionaryReader::readGptDicts(const std::vector<fs::path>& dictPaths)
+QList<GuiGptDictEntry> DictionaryReader::readGptDicts(const std::vector<fs::path>& dictPaths)
 {
-	QList<GptDictEntry> result;
+	QList<GuiGptDictEntry> result;
 	for (const auto& dictPath : dictPaths) {
 		result.append(readGptDict(dictPath));
 	}
@@ -142,9 +142,9 @@ QString DictionaryReader::readGptDictsStr(const std::vector<fs::path>& dictPaths
 	return QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "gptDict", newDictArr }} }));
 }
 
-QList<NormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath)
+QList<GuiNormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath)
 {
-	QList<NormalDictEntry> result;
+	QList<GuiNormalDictEntry> result;
 	if (!fs::exists(dictPath)) {
 		return result;
 	}
@@ -160,7 +160,7 @@ QList<NormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath
 				if (!dict.is_table()) {
 					continue;
 				}
-				NormalDictEntry entry;
+				GuiNormalDictEntry entry;
 				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
 				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
 				entry.isReg = toml::find_or(dict, "isReg", false);
@@ -222,7 +222,7 @@ QList<NormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath
 				if (!elem.is_object()) {
 					continue;
 				}
-				NormalDictEntry entry;
+				GuiNormalDictEntry entry;
 				entry.original = QString::fromStdString(elem.value("src", ""));
 				entry.translation = QString::fromStdString(elem.value("dst", ""));
 				const QString conditionPattern = QString::fromStdString(elem.value("regex", ""));

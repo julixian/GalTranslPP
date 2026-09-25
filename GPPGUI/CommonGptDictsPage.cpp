@@ -163,7 +163,7 @@ void CommonGptDictsPage::setupUi()
 			tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 			tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 			GptDictModel* model = new GptDictModel(tableView);
-			const QList<GptDictEntry> gptData = DictionaryReader::readGptDict(orgDictPath);
+			const QList<GuiGptDictEntry> gptData = DictionaryReader::readGptDict(orgDictPath);
 			model->loadData(gptData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
@@ -232,7 +232,7 @@ void CommonGptDictsPage::setupUi()
 									atomicOutputFile(currentGptTabEntry->dictPath, plainTextEdit->toPlainText().toStdString());
 								}
 								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-									const QList<GptDictEntry> dictEntries = model->getEntries();
+									const QList<GuiGptDictEntry> dictEntries = model->getEntries();
 									toml::ordered_value dictsArr = toml::array{};
 									for (const auto& entry : dictEntries) {
 										toml::ordered_table dictTable;
@@ -259,7 +259,7 @@ void CommonGptDictsPage::setupUi()
 					const std::string currentDictName = wide2Ascii(currentGptTabEntry->dictPath.stem().wstring());
 
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-						const QList<GptDictEntry> newDictEntries = DictionaryReader::readGptDict(currentGptTabEntry->dictPath);
+						const QList<GuiGptDictEntry> newDictEntries = DictionaryReader::readGptDict(currentGptTabEntry->dictPath);
 						model->loadData(newDictEntries);
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
@@ -299,7 +299,7 @@ void CommonGptDictsPage::setupUi()
 					}
 				});
 
-			auto openEntryDialog = [=](const GptDictEntry& entry, GptDictEntry& result) -> bool
+			auto openEntryDialog = [=](const GuiGptDictEntry& entry, GuiGptDictEntry& result) -> bool
 				{
 					DictionaryEntryDialog dialog(entry, window());
 					if (dialog.exec() != QDialog::Accepted) {
@@ -311,11 +311,11 @@ void CommonGptDictsPage::setupUi()
 
 			auto editEntry = [=](int row)
 				{
-					const QList<GptDictEntry>& entries = model->getEntriesRef();
+					const QList<GuiGptDictEntry>& entries = model->getEntriesRef();
 					if (row < 0 || row >= entries.size()) {
 						return;
 					}
-					GptDictEntry editedEntry;
+					GuiGptDictEntry editedEntry;
 					if (openEntryDialog(entries.at(row), editedEntry)) {
 						model->setEntry(row, editedEntry);
 					}
@@ -323,8 +323,8 @@ void CommonGptDictsPage::setupUi()
 
 			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
 				{
-					GptDictEntry newEntry;
-					if (!openEntryDialog(GptDictEntry{}, newEntry)) {
+					GuiGptDictEntry newEntry;
+					if (!openEntryDialog(GuiGptDictEntry{}, newEntry)) {
 						return;
 					}
 					const QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
@@ -368,7 +368,7 @@ void CommonGptDictsPage::setupUi()
 						return;
 					}
 
-					const QList<GptDictEntry>& entries = model->getEntriesRef();
+					const QList<GuiGptDictEntry>& entries = model->getEntriesRef();
 					std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 						{
 							return a.row() > b.row();
@@ -389,7 +389,7 @@ void CommonGptDictsPage::setupUi()
 					if (gptTabEntry->withdrawList.empty()) {
 						return;
 					}
-					const GptDictEntry entry = gptTabEntry->withdrawList.back();
+					const GuiGptDictEntry entry = gptTabEntry->withdrawList.back();
 					gptTabEntry->withdrawList.pop_back();
 					model->insertRow(0, entry);
 					if (gptTabEntry->withdrawList.empty()) {

@@ -58,7 +58,7 @@ void DictSettingsPage::setupUi()
 	     QList<EntryType>& withdrawList, const std::string& configKey, const QString& tabName, const fs::path& dictPath)
 	     -> std::pair<std::function<void()>, std::function<void(bool)>>
 	{
-		using ModelType = std::conditional_t<std::is_same_v<EntryType, GptDictEntry>, GptDictModel, NormalDictModel>;
+		using ModelType = std::conditional_t<std::is_same_v<EntryType, GuiGptDictEntry>, GptDictModel, NormalDictModel>;
 		QWidget* pageMainWidget = new QWidget(mainWidget);
 		QVBoxLayout* pageMainLayout = new QVBoxLayout(pageMainWidget);
 		pageMainLayout->setContentsMargins(0, 0, 0, 0);
@@ -140,7 +140,7 @@ void DictSettingsPage::setupUi()
 		tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 		tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-		if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
+		if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
 			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 346));
 			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 199));
 			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 559));
@@ -157,7 +157,7 @@ void DictSettingsPage::setupUi()
 		stackedWidget->setCurrentIndex(toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableOpenMode",
 			toml::find_or(m_globalConfig, "defaultDictOpenMode", 1)));
 		DictionarySearchBar* searchBar = new DictionarySearchBar(tableView,
-			std::is_same_v<EntryType, GptDictEntry> ? tr("备注") : tr("条件"), pageMainWidget);
+			std::is_same_v<EntryType, GuiGptDictEntry> ? tr("备注") : tr("条件"), pageMainWidget);
 		searchBar->setVisible(stackedWidget->currentIndex() == 1);
 		pageButtonLayout->insertWidget(2, searchBar);
 		plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
@@ -178,7 +178,7 @@ void DictSettingsPage::setupUi()
 			};
 		auto saveFunc = [=](bool forceSaveInTableModeToInit)
 			{
-				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
+				if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
 					const fs::path generatedDictPath = m_projectDir / L"ProjGptDict-Gen.toml";
 					if (fs::exists(generatedDictPath)) {
 						try {
@@ -218,7 +218,7 @@ void DictSettingsPage::setupUi()
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
 						toml::ordered_value dictsArr = toml::array{};
-						for (const NormalDictEntry& dictEntry : model->getEntriesRef()) {
+						for (const GuiNormalDictEntry& dictEntry : model->getEntriesRef()) {
 							toml::ordered_table dictTable;
 							dictTable.insert({ "org", dictEntry.original.toStdString() });
 							dictTable.insert({ "rep", dictEntry.translation.toStdString() });
@@ -250,7 +250,7 @@ void DictSettingsPage::setupUi()
 			};
 		connect(importButton, &ElaIconButton::clicked, this, [=]()
 			{
-				const QString filter = std::is_same_v<EntryType, GptDictEntry>
+				const QString filter = std::is_same_v<EntryType, GuiGptDictEntry>
 					? "TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)"
 					: "TOML files (*.toml);;JSON files (*.json)";
 				const QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
@@ -261,7 +261,7 @@ void DictSettingsPage::setupUi()
 				insertToml(m_globalConfig, "lastProjectDictPath", importDictPathQStr.toStdString());
 				const fs::path importDictPath = importDictPathQStr.toStdWString();
 				QList<EntryType> dictEntries;
-				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
+				if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
 					dictEntries = DictionaryReader::readGptDict(importDictPath);
 				}
 				else {
@@ -315,7 +315,7 @@ void DictSettingsPage::setupUi()
 				if (dialog.exec() != QDialog::Accepted) {
 					return false;
 				}
-				if constexpr (std::is_same_v<EntryType, GptDictEntry>) {
+				if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
 					result = dialog.getGptEntry();
 				}
 				else {
@@ -423,7 +423,7 @@ void DictSettingsPage::setupUi()
 		{
 			return DictionaryReader::readGptDictsStr(gptDictPaths);
 		};
-	std::function<QList<GptDictEntry>()> gptReadEntriesFunc = [=]() -> QList<GptDictEntry>
+	std::function<QList<GuiGptDictEntry>()> gptReadEntriesFunc = [=]() -> QList<GuiGptDictEntry>
 		{
 			return DictionaryReader::readGptDicts(gptDictPaths);
 		};
@@ -437,7 +437,7 @@ void DictSettingsPage::setupUi()
 		{
 			return DictionaryReader::readDictStr(preDictPath);
 		};
-	std::function<QList<NormalDictEntry>()> preReadEntriesFunc = [=]() -> QList<NormalDictEntry>
+	std::function<QList<GuiNormalDictEntry>()> preReadEntriesFunc = [=]() -> QList<GuiNormalDictEntry>
 		{
 			return DictionaryReader::readNormalDict(preDictPath);
 		};
@@ -451,7 +451,7 @@ void DictSettingsPage::setupUi()
 		{
 			return DictionaryReader::readDictStr(postDictPath);
 		};
-	std::function<QList<NormalDictEntry>()> postReadEntriesFunc = [=]() -> QList<NormalDictEntry>
+	std::function<QList<GuiNormalDictEntry>()> postReadEntriesFunc = [=]() -> QList<GuiNormalDictEntry>
 		{
 			return DictionaryReader::readNormalDict(postDictPath);
 		};

@@ -184,7 +184,7 @@ void CommonNormalDictsPage::setupUi()
 			tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
 			tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 			NormalDictModel* model = new NormalDictModel(tableView);
-			QList<NormalDictEntry> normalData = DictionaryReader::readNormalDict(orgDictPath);
+			QList<GuiNormalDictEntry> normalData = DictionaryReader::readNormalDict(orgDictPath);
 			model->loadData(normalData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
@@ -256,7 +256,7 @@ void CommonNormalDictsPage::setupUi()
 								}
 								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
 						toml::ordered_value dictsArr = toml::array{};
-						for (const NormalDictEntry& entry : model->getEntriesRef()) {
+						for (const GuiNormalDictEntry& entry : model->getEntriesRef()) {
 							toml::ordered_table dictTable;
 							dictTable.insert({ "org", entry.original.toStdString() });
 							dictTable.insert({ "rep", entry.translation.toStdString() });
@@ -292,7 +292,7 @@ void CommonNormalDictsPage::setupUi()
 					const std::string currentDictName = wide2Ascii(currentNormalTabEntry->dictPath.stem().wstring());
 
 					if (stackedWidget->currentIndex() == 0 && !forceSaveInTableModeToInit) {
-						const QList<NormalDictEntry> newDictEntries = DictionaryReader::readNormalDict(currentNormalTabEntry->dictPath);
+						const QList<GuiNormalDictEntry> newDictEntries = DictionaryReader::readNormalDict(currentNormalTabEntry->dictPath);
 						model->loadData(newDictEntries);
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
@@ -333,7 +333,7 @@ void CommonNormalDictsPage::setupUi()
 							tr("字典 %1 已保存").arg(QString::fromStdWString(normalTabEntry->dictPath.stem().wstring())), 3000);
 					}
 				});
-			auto openEntryDialog = [=](const NormalDictEntry& entry, NormalDictEntry& result) -> bool
+			auto openEntryDialog = [=](const GuiNormalDictEntry& entry, GuiNormalDictEntry& result) -> bool
 				{
 					DictionaryEntryDialog dialog(entry, window());
 					if (dialog.exec() != QDialog::Accepted) {
@@ -345,11 +345,11 @@ void CommonNormalDictsPage::setupUi()
 
 			auto editEntry = [=](int row)
 				{
-					const QList<NormalDictEntry>& entries = model->getEntriesRef();
+					const QList<GuiNormalDictEntry>& entries = model->getEntriesRef();
 					if (row < 0 || row >= entries.size()) {
 						return;
 					}
-					NormalDictEntry editedEntry;
+					GuiNormalDictEntry editedEntry;
 					if (openEntryDialog(entries.at(row), editedEntry)) {
 						model->setEntry(row, std::move(editedEntry));
 					}
@@ -357,8 +357,8 @@ void CommonNormalDictsPage::setupUi()
 
 			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
 				{
-					NormalDictEntry newEntry;
-					if (!openEntryDialog(NormalDictEntry{}, newEntry)) {
+					GuiNormalDictEntry newEntry;
+					if (!openEntryDialog(GuiNormalDictEntry{}, newEntry)) {
 						return;
 					}
 					const QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
@@ -401,7 +401,7 @@ void CommonNormalDictsPage::setupUi()
 						return;
 					}
 
-					const QList<NormalDictEntry>& entries = model->getEntries();
+					const QList<GuiNormalDictEntry>& entries = model->getEntries();
 					std::ranges::sort(selectedRows, [](const QModelIndex& a, const QModelIndex& b)
 						{
 							return a.row() > b.row();
@@ -422,7 +422,7 @@ void CommonNormalDictsPage::setupUi()
 					if (normalTabEntry->withdrawList.empty()) {
 						return;
 					}
-					const NormalDictEntry entry = normalTabEntry->withdrawList.back();
+					const GuiNormalDictEntry entry = normalTabEntry->withdrawList.back();
 					normalTabEntry->withdrawList.pop_back();
 					model->insertRow(0, entry);
 					if (normalTabEntry->withdrawList.empty()) {

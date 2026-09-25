@@ -12,11 +12,11 @@ class DictionaryEntryDialog final : public ElaDialog
     Q_OBJECT
 
 public:
-    explicit DictionaryEntryDialog(const GptDictEntry& entry, QWidget* parent = nullptr);
-    explicit DictionaryEntryDialog(const NormalDictEntry& entry, QWidget* parent = nullptr);
+    explicit DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidget* parent = nullptr);
+    explicit DictionaryEntryDialog(const GuiNormalDictEntry& entry, QWidget* parent = nullptr);
 
-    GptDictEntry getGptEntry() const;
-    NormalDictEntry getNormalEntry() const;
+    GuiGptDictEntry getGptEntry() const;
+    GuiNormalDictEntry getNormalEntry() const;
 
 private:
     static QSize s_gptDialogSize;
@@ -25,8 +25,8 @@ private:
     static int s_sentenceOffsetColumnWidth;
     static int s_targetColumnWidth;
 
-    GptDictEntry m_gptEntry;
-    NormalDictEntry m_normalEntry;
+    GuiGptDictEntry m_gptEntry;
+    GuiNormalDictEntry m_normalEntry;
 };
 
 class DictionaryEntryDeleteDialog final : public ElaContentDialog

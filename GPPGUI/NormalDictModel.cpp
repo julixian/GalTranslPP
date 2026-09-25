@@ -45,7 +45,7 @@ QVariant NormalDictModel::data(const QModelIndex& index, int role) const
         return {};
     }
 
-    const NormalDictEntry& entry = m_entries.at(index.row());
+    const GuiNormalDictEntry& entry = m_entries.at(index.row());
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case Column::Original: return entry.original;
@@ -102,7 +102,7 @@ bool NormalDictModel::setData(const QModelIndex& index, const QVariant& value, i
         return false;
     }
 
-    NormalDictEntry& entry = m_entries[index.row()];
+    GuiNormalDictEntry& entry = m_entries[index.row()];
     switch (index.column()) {
     case Column::Original:
         if (entry.original == value.toString()) return false;
@@ -149,7 +149,7 @@ bool NormalDictModel::moveRows(const QModelIndex& sourceParent, int sourceRow, i
         return false;
     }
 
-    QList<NormalDictEntry> movedEntries;
+    QList<GuiNormalDictEntry> movedEntries;
     movedEntries.reserve(count);
     for (int i = 0; i < count; ++i) {
         movedEntries.push_back(m_entries.takeAt(sourceRow));
@@ -163,14 +163,14 @@ bool NormalDictModel::moveRows(const QModelIndex& sourceParent, int sourceRow, i
     return true;
 }
 
-void NormalDictModel::loadData(const QList<NormalDictEntry>& entries)
+void NormalDictModel::loadData(const QList<GuiNormalDictEntry>& entries)
 {
     beginResetModel();
     m_entries = entries;
     endResetModel();
 }
 
-bool NormalDictModel::insertRow(int row, NormalDictEntry entry, const QModelIndex& parent)
+bool NormalDictModel::insertRow(int row, GuiNormalDictEntry entry, const QModelIndex& parent)
 {
     if (parent.isValid() || row < 0 || row > m_entries.count()) {
         return false;
@@ -192,7 +192,7 @@ bool NormalDictModel::removeRow(int row, const QModelIndex& parent)
     return true;
 }
 
-bool NormalDictModel::setEntry(int row, NormalDictEntry entry)
+bool NormalDictModel::setEntry(int row, GuiNormalDictEntry entry)
 {
     if (row < 0 || row >= m_entries.count() || m_entries[row] == entry) {
         return false;
@@ -203,12 +203,12 @@ bool NormalDictModel::setEntry(int row, NormalDictEntry entry)
     return true;
 }
 
-QList<NormalDictEntry> NormalDictModel::getEntries() const
+QList<GuiNormalDictEntry> NormalDictModel::getEntries() const
 {
     return m_entries;
 }
 
-const QList<NormalDictEntry>& NormalDictModel::getEntriesRef() const
+const QList<GuiNormalDictEntry>& NormalDictModel::getEntriesRef() const
 {
     return m_entries;
 }

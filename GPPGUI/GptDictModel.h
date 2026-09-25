@@ -5,7 +5,7 @@
 #include <QList>
 
 // 定义一个结构体来表示一条字典记录
-struct GptDictEntry
+struct GuiGptDictEntry
 {
     QString original;
     QString translation;
@@ -40,15 +40,15 @@ public:
         const QModelIndex& destinationParent, int destinationChild) override;
 
     // --- 用于操作模型的公共方法 ---
-    void loadData(const QList<GptDictEntry>& entries); // 从外部加载数据
-    bool insertRow(int row, const GptDictEntry& entry = {}, const QModelIndex& parent = QModelIndex());
+    void loadData(const QList<GuiGptDictEntry>& entries); // 从外部加载数据
+    bool insertRow(int row, const GuiGptDictEntry& entry = {}, const QModelIndex& parent = QModelIndex());
     bool removeRow(int row, const QModelIndex& parent = QModelIndex());
-    bool setEntry(int row, const GptDictEntry& entry);
-    QList<GptDictEntry> getEntries() const;
-    const QList<GptDictEntry>& getEntriesRef() const;
+    bool setEntry(int row, const GuiGptDictEntry& entry);
+    QList<GuiGptDictEntry> getEntries() const;
+    const QList<GuiGptDictEntry>& getEntriesRef() const;
 
 private:
-    QList<GptDictEntry> m_entries; // 存储所有字典条目的列表
+    QList<GuiGptDictEntry> m_entries; // 存储所有字典条目的列表
     QStringList m_headerLabels;       // 存储表头标题
 };
 

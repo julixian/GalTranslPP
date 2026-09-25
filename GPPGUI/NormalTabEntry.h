@@ -19,7 +19,7 @@ struct NormalTabEntry {
     NormalDictModel* dictModel{};
     fs::path dictPath;
     std::function<bool(bool)> saveFunc;
-    QList<NormalDictEntry> withdrawList;
+    QList<GuiNormalDictEntry> withdrawList;
 };
 
 #endif

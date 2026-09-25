@@ -353,7 +353,7 @@ int DictionaryEntryDialog::s_patternColumnWidth = 470;
 int DictionaryEntryDialog::s_sentenceOffsetColumnWidth = 100;
 int DictionaryEntryDialog::s_targetColumnWidth = 260;
 
-DictionaryEntryDialog::DictionaryEntryDialog(const GptDictEntry& entry, QWidget* parent)
+DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidget* parent)
     : ElaDialog(parent), m_gptEntry(entry)
 {
     setWindowTitle(tr("编辑 GPT 字典词条"));
@@ -420,7 +420,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GptDictEntry& entry, QWidget*
     }
 }
 
-DictionaryEntryDialog::DictionaryEntryDialog(const NormalDictEntry& entry, QWidget* parent)
+DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QWidget* parent)
     : ElaDialog(parent), m_normalEntry(entry)
 {
     setWindowTitle(tr("编辑 Normal 字典词条"));
@@ -630,12 +630,12 @@ DictionaryEntryDialog::DictionaryEntryDialog(const NormalDictEntry& entry, QWidg
     }
 }
 
-GptDictEntry DictionaryEntryDialog::getGptEntry() const
+GuiGptDictEntry DictionaryEntryDialog::getGptEntry() const
 {
     return m_gptEntry;
 }
 
-NormalDictEntry DictionaryEntryDialog::getNormalEntry() const
+GuiNormalDictEntry DictionaryEntryDialog::getNormalEntry() const
 {
     return m_normalEntry;
 }

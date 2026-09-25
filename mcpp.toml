@@ -4,7 +4,7 @@ members = ["GalTranslPP", "GPPVersion", "GPPCLI", "GPPGUI", "Updater"]
 [workspace.package]
 version = "3.1.1"
 standard = "c++23"
-license = "MIT"
+license = "Apache-2.0"
 
 [toolchain]
 windows = "llvm@22.1.8"
@@ -19,6 +19,7 @@ defines = [
   "_CRT_SECURE_NO_WARNINGS",
   "SPDLOG_COMPILED_LIB",
   "SPDLOG_WCHAR_FILENAMES",
-  "_RANGES_"
+  "PROJECT_NO_ANSI",
+  "_RANGES_", # import std; 时如果有头文件 #include <ranges> 会导致调用 std::views::zip 时出现异常定义不一致的问题。这是 MSVC STL 的问题，不知道后续能不能修复
 ]
 dialect_cxxflags = ["-fms-runtime-lib=dll"]

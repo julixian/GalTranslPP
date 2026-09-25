@@ -13,17 +13,19 @@
 
 ### 1.1 构建工具介绍
 
-本项目使用 `mcpp` 作为构建系统，作为 2026 新兴构建系统，其安装非常简单，仅需两步即可。
+本项目使用 `mcpp` 作为构建系统，作为 2026 新兴的构建系统，其安装非常简单，仅需两步即可。
 
-首先安装作为系统包管理工具的 xlings，其可以方便的管理 mcpp 版本。
+首先使用 powershell 安装作为高级包管理工具的 xlings，让 mcpp 可以方便的安装、管理。
 ```powershell
-irm https://d2learn.org/xlings-install.ps1.txt | iex
+irm https://raw.githubusercontent.com/openxlings/xlings/main/tools/other/quick_install.ps1 | iex
 ```
 
 重启 cmd/powershell 后使用 xlings 安装 mcpp。
 ```cmd
 xlings install mcpp -y
 ```
+
+如果你确实是通过 xlings 安装的 mcpp 的话，建议在安装完之后将 `.mcpp/config.toml` 中的 `[xlings.binary]` 从 `bundled` 改为 `system` 并将 `[xlings.home]` 改为 `.xlings` 所在目录。
 
 ### 1.2 vcpkg 包管理器
 

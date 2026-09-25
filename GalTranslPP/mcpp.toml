@@ -3,6 +3,20 @@ namespace = "gpp"
 name = "core"
 description = "GalTransl++ core library"
 
+[profile.release]
+opt = 3
+debug = true
+lto = true
+strip = false
+ldflags = ["-Wl,/DEBUG", "-Wl,/OPT:REF", "-Wl,/OPT:ICF", "-Wl,/INCREMENTAL:NO"]
+
+[profile.fast-release]
+opt = 0
+debug = true
+lto = false
+strip = false
+ldflags = ["-Wl,/DEBUG"]
+
 [build]
 default-profile = "release"
 sources = [

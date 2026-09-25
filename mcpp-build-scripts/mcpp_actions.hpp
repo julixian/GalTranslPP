@@ -10,7 +10,8 @@ struct executable_actions {
 
     path project = path(mcpp::manifest_dir());
     path workspace = project.parent_path();
-    path release = workspace / "Release";
+    path release = workspace /
+        (std::string_view(mcpp::profile()) == "fast-release" ? "FastRelease" : "Release");
     path qt = qt_root_path();
     path vcpkg = workspace / "vcpkg_installed" / "gpp-x64-windows-release";
     std::string target;
@@ -51,56 +52,48 @@ struct executable_actions {
         copy(source.lexically_normal().string(), destination);
     }
 
-    bool copy_required(const path& source, const path& destination) {
-        if (!std::filesystem::is_regular_file(source)) {
-            std::cerr << "Missing runtime dependency: " << source << '\n';
+    bool stage_runtime_files(std::string_view member, const path& destination) {
+        const char* tool = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
+        if (!tool || !*tool) {
+            std::cerr << "runtime-stage host tool is unavailable\n";
             return false;
         }
-        copy_file(source, destination);
-        return true;
-    }
-
-    bool copy_versioned_vcpkg_dll(std::string_view prefix, const path& destination) {
-        std::vector<path> matches;
-        for (const auto& entry : std::filesystem::directory_iterator(vcpkg / "bin")) {
-            const auto filename = entry.path().filename().string();
-            if (entry.is_regular_file() && entry.path().extension() == ".dll" &&
-                filename.starts_with(prefix))
-                matches.push_back(entry.path());
+        const auto manifest = destination /
+            (".mcpp-runtime-" + std::string(member) + ".txt");
+        const auto exe = target_file;
+        const auto output = manifest.lexically_normal().string();
+        const auto dest = destination.lexically_normal().string();
+        const auto id = "runtime-stage-" + std::to_string(next_action++);
+        mcpp::action action;
+        action.id = id.c_str();
+        action.role = "artifact";
+        action.arg(tool).arg("--exe").arg(exe.c_str())
+              .arg("--manifest").arg(output.c_str())
+              .arg("--dest").arg(dest.c_str())
+              .input(exe.c_str()).input(tool).output(output.c_str());
+        const std::vector<path> search_dirs{
+            vcpkg / "bin",
+            workspace / "3rdParty" / "pybind11" / "bin",
+            workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
+                "ElaWidgetTools" / "bin",
+            workspace / "3rdParty"
+        };
+        for (const auto& dir : search_dirs) {
+            if (!std::filesystem::is_directory(dir)) continue;
+            const auto dir_arg = dir.lexically_normal().string();
+            action.arg("--search").arg(dir_arg.c_str());
+            for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+                if (!entry.is_regular_file() || entry.path().extension() != ".dll") continue;
+                const auto file = entry.path().lexically_normal().string();
+                action.input(file.c_str());
+            }
         }
-        if (matches.size() != 1) {
-            std::cerr << "Expected one vcpkg DLL beginning with " << prefix
-                      << ", found " << matches.size() << '\n';
-            return false;
+        action.arg("--seed").arg("7z.dll");
+        if (member != "Updater") {
+            action.arg("--seed").arg("python3.dll");
+            action.arg("--seed").arg("python312.dll");
         }
-        copy_file(matches.front(), destination / matches.front().filename());
-        return true;
-    }
-
-    bool copy_runtime_files(std::string_view member, const path& destination) {
-        if (!copy_required(workspace / "3rdParty" / "7z.dll", destination / "7z.dll"))
-            return false;
-        if (member == "Updater") return true;
-
-        // PE imports of the GUI/CLI plus their transitive vcpkg DLL imports.
-        for (const char* dll : {"abseil_dll.dll", "bz2.dll", "cpr.dll", "fmt.dll",
-                                "libcurl.dll", "libprotobuf-lite.dll", "lua.dll",
-                                "mecab.dll", "opencc.dll", "pcre2-8.dll", "spdlog.dll",
-                                "z.dll", "zip.dll"}) {
-            if (!copy_required(vcpkg / "bin" / dll, destination / dll)) return false;
-        }
-        if (!copy_versioned_vcpkg_dll("icuuc", destination) ||
-            !copy_versioned_vcpkg_dll("icudt", destination) ||
-            !copy_required(workspace / "3rdParty" / "pybind11" / "bin" / "python312.dll",
-                           destination / "python312.dll") ||
-            !copy_required(workspace / "3rdParty" / "pybind11" / "bin" / "python3.dll",
-                           destination / "python3.dll"))
-            return false;
-        if (member == "GPPGUI") {
-            const auto ela = workspace / "3rdParty" / "ElaWidgetTools" / "Install" /
-                             "ElaWidgetTools" / "bin" / "ElaWidgetTools.dll";
-            if (!copy_required(ela, destination / "ElaWidgetTools.dll")) return false;
-        }
+        action.submit();
         return true;
     }
 
@@ -124,7 +117,8 @@ struct executable_actions {
 
     bool publish_release(std::string_view member, const path& own_qm) {
         if (own_qm.empty()) return false;
-        if (std::string_view(mcpp::profile()) != "release") return true;
+        const auto profile = std::string_view(mcpp::profile());
+        if (profile != "release" && profile != "fast-release") return true;
         if (!ready()) return false;
         const bool cli = member == "GPPCLI";
         const bool gui = member == "GPPGUI";
@@ -147,7 +141,7 @@ struct executable_actions {
         }
 
         for (const auto& dir : destinations)
-            if (!copy_runtime_files(member, dir)) return false;
+            if (!stage_runtime_files(member, dir)) return false;
 
         for (const auto& dir : destinations) copy_translation_files(member, own_qm, dir);
         return true;

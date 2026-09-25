@@ -17,7 +17,8 @@ int main() {
     if (!actions.generate_gui_sources()) return 1;
     const auto qm = actions.prepare_translations("GPPGUI");
     if (!actions.publish_release("GPPGUI", qm)) return 1;
-    if (std::string_view(mcpp::profile()) == "release") {
+    if (const auto profile = std::string_view(mcpp::profile());
+        profile == "release" || profile == "fast-release") {
         actions.copy(updater, actions.release / "GPPGUI" / "Updater.exe");
         actions.copy(updater, actions.release / "GUICORE" / "Updater_new.exe");
         const auto private_dir = actions.release / "GPPGUI_PRIVATE";

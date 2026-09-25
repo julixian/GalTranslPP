@@ -1,0 +1,13 @@
+[package]
+namespace = "gpp"
+name = "runtime-stage"
+version = "0.1.0"
+standard = "c++23"
+
+[build]
+sources = []
+
+[targets.runtime_stage]
+kind = "bin"
+main = "main.cpp"
+windows_entry = "wmain"

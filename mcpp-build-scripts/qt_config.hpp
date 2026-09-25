@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdio>  // stderr is a C macro, not exported by import std.
+
 // mcpp caches build.mcpp separately from its included headers. Track the shared
 // build logic so editing a helper recompiles the programs that include it.
 inline void track_build_scripts() {
@@ -32,7 +34,7 @@ inline int configure_qt(std::initializer_list<std::string_view> modules) {
     namespace fs = std::filesystem;
     const fs::path qt_root = qt_root_path();
     if (!fs::is_directory(qt_root / "include") || !fs::is_directory(qt_root / "lib")) {
-        std::cerr << "Qt root is invalid; check mcpp-build-scripts/qt-root.txt\n";
+        std::println(stderr, "Qt root is invalid; check mcpp-build-scripts/qt-root.txt");
         return 1;
     }
     const auto config = qt_config_path();

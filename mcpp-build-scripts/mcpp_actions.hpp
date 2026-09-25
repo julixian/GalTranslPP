@@ -25,11 +25,11 @@ struct executable_actions {
 
     bool ready() const {
         if (qt.empty() || !std::filesystem::exists(qt / "bin" / "lrelease.exe")) {
-            std::cerr << "Qt tools missing; check mcpp-build-scripts/qt-root.txt\n";
+            std::println(stderr, "Qt tools missing; check mcpp-build-scripts/qt-root.txt");
             return false;
         }
         if (!std::filesystem::is_directory(vcpkg / "bin")) {
-            std::cerr << "vcpkg runtime bin missing; install project dependencies with the gpp-x64-windows-release triplet\n";
+            std::println(stderr, "vcpkg runtime bin missing; install project dependencies with the gpp-x64-windows-release triplet");
             return false;
         }
         return true;
@@ -54,7 +54,7 @@ struct executable_actions {
     bool stage_runtime_files(std::string_view member, const path& destination) {
         const char* tool = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
         if (!tool || !*tool) {
-            std::cerr << "runtime-stage host tool is unavailable\n";
+            std::println(stderr, "runtime-stage host tool is unavailable");
             return false;
         }
         const auto manifest = destination /
@@ -150,7 +150,7 @@ struct executable_actions {
         const auto moc = qt / "bin" / "moc.exe";
         const auto rcc = qt / "bin" / "rcc.exe";
         if (!std::filesystem::is_regular_file(moc) || !std::filesystem::is_regular_file(rcc)) {
-            std::cerr << "Qt moc/rcc missing under " << qt << '\n';
+            std::println(stderr, "Qt moc/rcc missing under {}", qt.string());
             return false;
         }
         mcpp::rerun_if_changed_glob("**/*.h");

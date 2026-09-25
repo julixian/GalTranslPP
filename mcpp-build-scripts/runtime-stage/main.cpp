@@ -1,3 +1,5 @@
+#include <cstdio>  // stderr is a C macro, not exported by import std.
+
 import std;
 
 namespace fs = std::filesystem;
@@ -189,9 +191,12 @@ void stage(const options& opts) {
     for (const auto& [name, source] : selected)
         fs::copy_file(source, opts.destination / source.filename(),
                       fs::copy_options::overwrite_existing);
+    std::string manifest_text;
+    for (const auto& [name, source] : selected)
+        std::format_to(std::back_inserter(manifest_text), "{}\n", ascii(name));
     std::ofstream manifest(opts.manifest, std::ios::binary | std::ios::trunc);
     if (!manifest) throw std::runtime_error("cannot write runtime manifest");
-    for (const auto& [name, source] : selected) manifest << ascii(name) << '\n';
+    manifest.write(manifest_text.data(), static_cast<std::streamsize>(manifest_text.size()));
     if (!manifest) throw std::runtime_error("cannot finish runtime manifest");
 }
 
@@ -206,7 +211,7 @@ int main(int argc, char** argv) {
         stage(parse_options(argc, argv));
         return 0;
     } catch (const std::exception& error) {
-        std::cerr << "runtime-stage: " << error.what() << '\n';
+        std::println(stderr, "runtime-stage: {}", error.what());
         return 1;
     }
 }

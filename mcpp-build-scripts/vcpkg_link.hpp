@@ -9,7 +9,7 @@ inline bool link_vcpkg_libraries(std::initializer_list<std::string_view> names) 
     for (const auto name : names) {
         const auto lib = lib_dir / (std::string(name) + ".lib");
         if (!fs::is_regular_file(lib)) {
-            std::cerr << "Missing vcpkg library: " << lib << '\n';
+            std::println(stderr, "Missing vcpkg library: {}", lib.string());
             return false;
         }
         const auto path = lib.generic_string();

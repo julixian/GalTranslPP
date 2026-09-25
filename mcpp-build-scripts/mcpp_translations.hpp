@@ -14,7 +14,7 @@ inline std::filesystem::path qt_translation(const std::filesystem::path& project
     const auto qm_path = qm.string();
     const auto stamp = (fs::path(mcpp::out_dir()) / (ts_name + ".lupdate.stamp")).string();
     if (!fs::is_regular_file(update) || !fs::is_regular_file(release)) {
-        std::cerr << "Qt Linguist tools missing under " << qt << '\n';
+        std::println(stderr, "Qt Linguist tools missing under {}", qt.string());
         return {};
     }
 

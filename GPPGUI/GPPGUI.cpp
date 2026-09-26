@@ -18,16 +18,9 @@
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <Strsafe.h>
-#pragma comment(lib, "Dbghelp.lib")
 #endif
 
 #include <toml.hpp>
-
-#if !defined(__clang__)
-#pragma comment(lib, "GPPVersion.lib")
-#pragma comment(lib, "GalTranslPP.lib")
-#endif
-#pragma comment(lib, "ElaWidgetTools.lib")
 
 import Tool;
 import PythonManager;
@@ -101,7 +94,7 @@ LONG WINAPI writeMiniDump(EXCEPTION_POINTERS* exceptionPointers) noexcept
 
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
-    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
+    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
     if (hProcess != nullptr) {
         WaitForSingleObject(hProcess, INFINITE);
         CloseHandle(hProcess);
@@ -160,12 +153,12 @@ int main(int argc, char* argv[])
         }
     }
     
+    std::unique_ptr<py::gil_scoped_release> release;
     try {
         // 依赖配置的初始化
         bool checkUpdate = true;
         bool allowMultiInstance = false;
         QLocalServer server;  // 创建 QLocalServer，用于接收来自新实例的消息
-        std::unique_ptr<py::gil_scoped_release> release;
 
         try {
             const toml::value globalConfig = toml::uparse(globalConfigPath);

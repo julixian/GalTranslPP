@@ -15,11 +15,6 @@ cxxflags = [
   "-fexec-charset=UTF-8"
 ]
 defines = [
-  "NOMINMAX",
-  "_CRT_SECURE_NO_WARNINGS",
   "SPDLOG_COMPILED_LIB",
-  "SPDLOG_WCHAR_FILENAMES",
   "PROJECT_NO_ANSI",
-  "_RANGES_", # import std; 时如果有头文件 #include <ranges> 会导致调用 std::views::zip 时出现异常定义不一致的问题。这是 MSVC STL 的问题，不知道后续能不能修复
 ]
-dialect_cxxflags = ["-fms-runtime-lib=dll"]

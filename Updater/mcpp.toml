@@ -2,35 +2,41 @@
 namespace = "gpp"
 name = "updater"
 
+[toolchain]
+windows = "llvm@22.1.8"
+
 [dependencies]
 "gpp.version" = { path = "../GPPVersion" }
 
 [build-dependencies]
+"gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
+
+[target.windows.build-dependencies]
 "gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime_stage"] }
 
 [profile.release]
 opt = 3
-debug = false
+debug = true
 lto = true
-strip = false
-ldflags = ["-Wl,/OPT:REF", "-Wl,/OPT:ICF", "-Wl,/INCREMENTAL:NO"]
 
 [profile.fast-release]
 opt = 0
-debug = false
+debug = true
 lto = false
-strip = false
 
 [build]
+# 当前 Windows / Clang 构建统一使用动态 CRT；此参数必须同时传给 import std。
+dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
-include_dirs = [
-  ".",
-  "../vcpkg_installed/gpp-x64-windows-release/include"
+sources = [
+  "../3rdParty/3rdModule/boost.ixx"
 ]
-ldflags = [
-  "-luser32",
-  "-loleaut32"
-]
+module_extensions = [".ixx"]
+include_dirs = ["."]
+
+[target.windows.build]
+defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
+ldflags = ["-luser32", "-loleaut32"]
 
 [targets.Updater]
 kind = "bin"

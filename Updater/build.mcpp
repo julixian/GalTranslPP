@@ -1,15 +1,17 @@
 import std;
 import mcpp;
-
-#include "../mcpp-build-scripts/qt_config.hpp"
-#include "../mcpp-build-scripts/mcpp_actions.hpp"
-#include "../mcpp-build-scripts/vcpkg_link.hpp"
+import mcpp.rules.qt;
+import gpp.build;
 
 int main() {
-    track_build_scripts();
-    if (configure_qt({"Qt6Core", "Qt6Gui", "Qt6Widgets"}) != 0) return 1;
-    if (!link_vcpkg_libraries({"7zip", "bit7z64"})) return 1;
-    executable_actions actions("Updater");
-    const auto qm = actions.prepare_translations("Updater");
-    return actions.publish_release("Updater", qm) ? 0 : 1;
+    return gpp::run_build_script([] {
+        gpp::configure_executable_link_options();
+        const auto vcpkg_directory = gpp::configure_vcpkg(std::vector<std::string>{"7zip", "bit7z64"});
+        auto qt_options = gpp::make_qt_options({"Core"});
+        const auto translation_file = gpp::configure_translation(qt_options, "qt_gppupdater_en.ts");
+        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        gpp::release_publisher publisher("Updater", vcpkg_directory);
+        publisher.publish_release("Updater", translation_file);
+        return 0;
+    });
 }

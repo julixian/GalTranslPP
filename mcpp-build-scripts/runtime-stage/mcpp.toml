@@ -3,6 +3,10 @@ namespace = "gpp"
 name = "runtime-stage"
 version = "1.0.0"
 standard = "c++23"
+license = "Apache-2.0"
+
+[toolchain]
+windows = "llvm@22.1.8"
 
 [build]
 sources = []
@@ -10,4 +14,3 @@ sources = []
 [targets.runtime_stage]
 kind = "bin"
 main = "main.cpp"
-windows_entry = "wmain"

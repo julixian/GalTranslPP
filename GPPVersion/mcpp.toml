@@ -6,20 +6,21 @@ name = "version"
 opt = 3
 debug = true
 lto = true
-strip = false
-ldflags = ["-Wl,/DEBUG", "-Wl,/OPT:REF", "-Wl,/OPT:ICF", "-Wl,/INCREMENTAL:NO"]
 
 [profile.fast-release]
 opt = 0
 debug = true
 lto = false
-strip = false
-ldflags = ["-Wl,/DEBUG"]
 
 [build]
+# 当前 Windows / Clang 构建统一使用动态 CRT；此参数必须同时传给 import std。
+dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["GPPVersion.ixx"]
 module_extensions = [".ixx"]
+
+[target.windows.build]
+defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
 
 [targets.GPPVersion]
 kind = "lib"

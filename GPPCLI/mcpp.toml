@@ -7,34 +7,37 @@ name = "cli"
 "gpp.version" = { path = "../GPPVersion" }
 
 [build-dependencies]
+"gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
+
+[target.windows.build-dependencies]
 "gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime_stage"] }
 
 [profile.release]
 opt = 3
 debug = true
 lto = true
-strip = false
-ldflags = ["-Wl,/DEBUG", "-Wl,/OPT:REF", "-Wl,/OPT:ICF", "-Wl,/INCREMENTAL:NO"]
 
 [profile.fast-release]
 opt = 0
 debug = true
 lto = false
-strip = false
-ldflags = ["-Wl,/DEBUG"]
 
 [build]
+# 当前 Windows / Clang 构建统一使用动态 CRT；此参数必须同时传给 import std。
+dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["ProgressBar.ixx", "TerminalController.ixx"]
 module_extensions = [".ixx"]
 include_dirs = [
   ".",
   "../GalTranslPP",
-  "../3rdParty/pybind11/include",
-  "../3rdParty/pybind11/Python/include",
-  "../vcpkg_installed/gpp-x64-windows-release/include"
+  "../3rdParty/pybind11/include"
 ]
-ldflags = ["-L../3rdParty/pybind11/bin", "-lpython312", "-lpython3"]
+
+[target.windows.build]
+include_dirs = ["../3rdParty/pybind11/Python/include"]
+# _RANGES_ 避免 MSVC STL 的 ranges 头文件与 import std 重复定义。
+defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
 
 [targets.GalTranslPP_CLI]
 kind = "bin"

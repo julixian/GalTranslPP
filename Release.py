@@ -20,15 +20,11 @@ def copy_tree(source: Path, destination: Path, *excluded: str) -> None:
 
 
 def main() -> None:
-    opencc = (ROOT / "vcpkg_installed" / "gpp-x64-windows-release"
-              / "share" / "opencc")
-    copy_tree(opencc, BASE_CONFIG / "opencc")
-
     for member in ("GPPCLI", "GPPGUI"):
-        copy_tree(BASE_CONFIG, RELEASE / member / "BaseConfig", PYTHON_ARCHIVE)
+        copy_tree(BASE_CONFIG, RELEASE / member / "BaseConfig", PYTHON_ARCHIVE, "opencc")
     copy_tree(
         BASE_CONFIG, RELEASE / "GUICORE" / "BaseConfig",
-        PYTHON_ARCHIVE, "GlobalConfig.toml", "mecab", "Python-3.12.10-embed-amd64",
+        PYTHON_ARCHIVE, "opencc", "GlobalConfig.toml", "mecab", "Python-3.12.10-embed-amd64",
     )
 
     archive_dll = ROOT / "3rdParty" / "7z.dll"

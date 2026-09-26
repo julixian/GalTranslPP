@@ -4,8 +4,6 @@ module;
 
 #ifdef _WIN32
 #include <Windows.h>
-#pragma comment(lib, "Shlwapi.lib")
-#pragma comment(lib, "winhttp.lib")
 #endif
 
 #define BIT7Z_AUTO_FORMAT
@@ -21,9 +19,6 @@ module;
 #include <unicode/translit.h>
 #include <unicode/utext.h>
 
-#pragma comment(lib, "python3.lib")
-#pragma comment(lib, "python312.lib")
-
 module Tool;
 
 import boost;
@@ -33,8 +28,8 @@ import utf8cpp;
 namespace fs = std::filesystem;
 
 
-std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
 #ifdef _WIN32
+std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         nullptr, 0, nullptr, usedDefaultChar);
     if (len == 0) return {};
@@ -42,11 +37,9 @@ std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefault
     WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         ascii.data(), len, nullptr, nullptr);
     return ascii;
-#endif
 }
 
 std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
-#ifdef _WIN32
     int len = MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         nullptr, 0);
     if (len == 0) return {};
@@ -54,8 +47,8 @@ std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
     MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         wide.data(), len);
     return wide;
-#endif
 }
+#endif
 
 
 

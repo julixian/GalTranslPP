@@ -36,17 +36,15 @@ export
     }
 #endif
 
+#ifdef _WIN32
     std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
     template<typename T>
         requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
     std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
-#ifdef _WIN32
         return wide2Ascii(path.native(), codePage, usedDefaultChar);
-#else
-        return wide2Ascii(path.wstring(), codePage, usedDefaultChar);
-#endif
     }
     std::wstring ascii2Wide(std::string_view ascii, UINT codePage = CP_UTF8);
+#endif
 
     template <typename CharT, typename Traits, typename Alloc>
     auto& str2LowerInplace(std::basic_string<CharT, Traits, Alloc>& str) {

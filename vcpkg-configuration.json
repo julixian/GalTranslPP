@@ -1,8 +1,8 @@
 {
   "overlay-ports": [
-    "ports"
+    "vcpkg-scripts/ports"
   ],
   "overlay-triplets": [
-    "triplets"
+    "vcpkg-scripts/triplets"
   ]
 }

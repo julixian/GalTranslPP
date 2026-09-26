@@ -1,29 +1,23 @@
 import std;
 import mcpp;
-
-#include "../mcpp-build-scripts/qt_config.hpp"
-#include "../mcpp-build-scripts/mcpp_actions.hpp"
+import mcpp.rules.qt;
+import gpp.build;
 
 int main() {
-    track_build_scripts();
-    if (configure_qt({"Qt6Core", "Qt6Gui", "Qt6Network", "Qt6Widgets"}) != 0) return 1;
+    return gpp::run_build_script([] {
+        gpp::configure_executable_link_options();
+        const auto vcpkg_directory = gpp::configure_vcpkg();
 
-    const char* updater = mcpp::dep_bin("gpp.updater", "Updater");
-    if (!updater || !*updater) {
-        std::cerr << "Updater build dependency produced no executable\n";
-        return 1;
-    }
-    executable_actions actions("GalTranslPP_GUI");
-    if (!actions.generate_gui_sources()) return 1;
-    const auto qm = actions.prepare_translations("GPPGUI");
-    if (!actions.publish_release("GPPGUI", qm)) return 1;
-    if (const auto profile = std::string_view(mcpp::profile());
-        profile == "release" || profile == "fast-release") {
-        actions.copy(updater, actions.release / "GPPGUI" / "Updater.exe");
-        actions.copy(updater, actions.release / "GUICORE" / "Updater_new.exe");
-        const auto private_dir = actions.private_release_dir("GPPGUI");
-        if (!private_dir.empty())
-            actions.copy(updater, private_dir / "Updater_new.exe");
-    }
-    return 0;
+        auto qt_options = gpp::make_qt_options({"Core", "Gui", "Network", "Widgets"});
+        qt_options.resources = {"GPPGUI.qrc"};
+        // deploy_plugins 在共享配置中为空；Qt 动态插件由用户手动部署。
+        const auto translation_file = gpp::configure_translation(qt_options, "qt_gppgui_en.ts");
+        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        const auto ela_widget_tools = gpp::use_ela_widget_tools(qt_options);
+
+        gpp::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);
+        publisher.additional_runtime_directories.emplace_back(ela_widget_tools.bin);
+        publisher.publish_release("GPPGUI", translation_file);
+        return 0;
+    });
 }

@@ -1,14 +1,18 @@
 # Private workspace
+/.idea/
 /.vscode/
 
 # Local dependencies and build outputs
 /vcpkg_installed/
 /Release/
-/lib/
 target/
 compile_commands.json
 mcpp-generated/
 /GalTranslPP/qt_gpp_en.qm
+/GPPCLI/qt_gppcli_en.qm
+/GPPGUI/qt_gppgui_en.qm
+/Updater/qt_gppupdater_en.qm
+mcpp.lock
 
 # Files populated by Release.py
 /Example/BaseConfig/opencc/

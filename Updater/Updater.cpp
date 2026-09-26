@@ -1,4 +1,4 @@
-﻿#include <QApplication>
+﻿#include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDir>
 #include <QProcess>
@@ -6,23 +6,18 @@
 
 #ifdef Q_OS_WIN
 #include <windows.h>
-#pragma comment(lib, "User32.lib")
 #endif
 
 #define BIT7Z_AUTO_FORMAT
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitfileextractor.hpp>
 
-#include <boost/algorithm/string.hpp>
 #include <toml.hpp>
 
+import boost;
 import GPPVersion;
 
 namespace fs = std::filesystem;
-
-#if !defined(__clang__)
-#pragma comment(lib, "GPPVersion.lib")
-#endif
 
 QString gppTr(const char* context, const char* source) {
     return QCoreApplication::translate(context, source);
@@ -30,7 +25,7 @@ QString gppTr(const char* context, const char* source) {
 
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
-    HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, pid);
+    HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
     if (hProcess != nullptr) {
         WaitForSingleObject(hProcess, INFINITE);
         CloseHandle(hProcess);
@@ -60,19 +55,16 @@ operator+(std::basic_string_view<CharT, Traits> lhs,
 }
 #endif
 
+#ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
 template<typename T>
     requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
 std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr) {
-#ifdef _WIN32
     return wide2Ascii(path.native(), codePage, usedDefaultChar);
-#else
-    return wide2Ascii(path.wstring(), codePage, usedDefaultChar);
-#endif
 }
 std::wstring ascii2Wide(std::string_view ascii, UINT codePage = CP_UTF8);
 
-#ifdef _WIN32
+
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
         nullptr, 0, nullptr, usedDefaultChar);
@@ -127,7 +119,7 @@ std::vector<std::string> splitString(std::string_view str, std::string_view deli
 }
 
 std::string replaceStr(const std::string& str, std::string_view org, std::string_view rep) {
-    return boost::replace_all_copy(str, org, rep);
+    return boost::algorithm::replace_all_copy(str, org, rep);
 }
 
 int compareVersion(std::string_view latestVer, std::string_view currentVer)
@@ -362,7 +354,7 @@ int main(int argc, char* argv[])
             fs::remove(sourceZip.toStdWString());
             if (parser.isSet("restart")) {
                 QStringList args;
-                args << "--pid" << QString::number(QApplication::applicationPid());
+                args << "--pid" << QString::number(QCoreApplication::applicationPid());
                 QProcess::startDetached(parser.value("restart"), args, targetDir);
             }
         }
@@ -383,8 +375,8 @@ int main(int argc, char* argv[])
         extractZipInclude(sourceZip.toStdWString(), targetDir.toStdWString() + L"/new",
             { "Updater_new.exe", "Qt6Core.dll", "7z.dll", "translations" });
         QStringList arguments;
-        arguments << "--newActionFlag" << QString::number(QApplication::applicationPid());
-        arguments << "--pid" << QString::number(QApplication::applicationPid());
+        arguments << "--newActionFlag" << QString::number(QCoreApplication::applicationPid());
+        arguments << "--pid" << QString::number(QCoreApplication::applicationPid());
         arguments << "--source" << sourceZip << "--target" << targetDir;
         arguments << "--gppVersion" << QString::fromUtf8(GPPVERSION);
         arguments << "--pythonVersion" << QString::fromUtf8(PYTHONVERSION);

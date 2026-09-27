@@ -539,15 +539,35 @@ void NormalJsonTranslator::normalJsonAfterRun()
             .toStdString());
     }
     else {
+#ifdef _WIN32
+        struct ProblemOverviewStringLess {
+            bool operator()(const std::wstring& left, const std::wstring& right) const {
+                if (left == right) return false;
+                const int order = StrCmpLogicalW(left.c_str(), right.c_str());
+                if (order != 0) return order < 0;
+                return left < right;
+            }
+        };
+        absl::btree_map<std::wstring,
+            absl::btree_set<std::wstring, ProblemOverviewStringLess>,
+            ProblemOverviewStringLess> problemMap;
+#else
         absl::btree_map<std::string_view, absl::btree_set<std::string_view>> problemMap;
+#endif
         for (const ordered_json& item : problemOverview) {
+#ifdef _WIN32
+            const std::wstring filename = ascii2Wide(item.at("filename").get_ref<const std::string&>());
+#else
+            const std::string& filename = item.at("filename").get_ref<const std::string&>();
+#endif
             for (const ordered_json& problemItem : item.at("problems")) {
                 const std::string& problem = problemItem.get_ref<const std::string&>();
+#ifdef _WIN32
+                auto& fileNames = problemMap[ascii2Wide(problem)];
+#else
                 auto& fileNames = problemMap[problem];
-                if (fileNames.size() <= 3) {
-                    const std::string& filename = item.at("filename").get_ref<const std::string&>();
-                    fileNames.insert(filename);
-                }
+#endif
+                fileNames.insert(filename);
             }
         }
 
@@ -557,24 +577,38 @@ void NormalJsonTranslator::normalJsonAfterRun()
             .toStdString();
         size_t problemCount = 0;
         for (const auto& [problem, files] : problemMap) {
-            std::string fileStr = "(";
+#ifdef _WIN32
+            const std::string problemText = wide2Ascii(problem);
+#else
+            const std::string_view problemText = problem;
+#endif
+            std::string fileStr = "[";
             size_t fileCount = 0;
             for (const auto& file : files) {
-                if (fileCount == 3) {
+                if (fileCount == 3) { // 要写第四个文件时就 break
                     break;
                 }
+#ifdef _WIN32
+                fileStr.append(wide2Ascii(file)).append(", ");
+#else
                 fileStr.append(file).append(", ");
+#endif
                 ++fileCount;
             }
             if (fileCount == files.size()) {
                 fileStr.pop_back();
                 fileStr.pop_back();
-                fileStr += ")";
+                fileStr += "]";
             }
             else {
                 fileStr += "...)";
             }
-            problemOverviewStr += std::format("{}. {}  |  {}\n", ++problemCount, problem, fileStr);
+            const std::string fileCountStr = gppTr(
+                "NormalJsonTranslator.normalJsonAfterRun",
+                "%1 个文件")
+                .arg(files.size())
+                .toStdString();
+            problemOverviewStr += std::format("{}. {}  |  {}  |  {}\n", ++problemCount, problemText, fileCountStr, fileStr);
         }
         m_logger->error(problemOverviewStr + gppTr(
             "NormalJsonTranslator.normalJsonAfterRun",

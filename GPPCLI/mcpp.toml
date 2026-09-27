@@ -23,7 +23,6 @@ debug = true
 lto = false
 
 [build]
-# 当前 Windows / Clang 构建统一使用动态 CRT；此参数必须同时传给 import std。
 dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["ProgressBar.ixx", "TerminalController.ixx"]
@@ -36,7 +35,6 @@ include_dirs = [
 
 [target.windows.build]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-# _RANGES_ 避免 MSVC STL 的 ranges 头文件与 import std 重复定义。
 defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
 
 [targets.GalTranslPP_CLI]

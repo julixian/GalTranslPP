@@ -17,6 +17,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
 		"1. 携带上文数量可设为 0",
+        "2. 问题概览现在会输出文件数量了",
     };
 
     mainLayout->addWidget(updateTitle);

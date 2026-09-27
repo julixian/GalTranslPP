@@ -13,7 +13,6 @@ debug = true
 lto = false
 
 [build]
-# 当前 Windows / Clang 构建统一使用动态 CRT；此参数必须同时传给 import std。
 dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["GPPVersion.ixx"]

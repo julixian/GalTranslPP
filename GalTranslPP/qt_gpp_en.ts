@@ -965,7 +965,7 @@ No problem overview
         <translation>Generated [ProblemOverview.%1] file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="554"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="574"/>
         <source>
 
 ```
@@ -978,7 +978,12 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="579"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="606"/>
+        <source>%1 个文件</source>
+        <translation>%1 files</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.Run.cpp" line="613"/>
         <source>问题概览结束
 ```
 </source>
@@ -987,17 +992,17 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="590"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="624"/>
         <source>rolling context 缓存已保存至 [%1]</source>
         <translation>rolling context cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="595"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="629"/>
         <source>rolling context 缓存 [%1] 保存失败</source>
         <translation>Failed to save rolling context cache [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="604"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="638"/>
         <source>重建过程中有句子未命中缓存 (%1 / %2 lines)，请检查日志以定位问题</source>
         <translation>Cache misses during rebuild (%1/%2 lines); see logs</translation>
     </message>
@@ -1193,7 +1198,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonProcessFiles</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="636"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="670"/>
         <source>已将 %1 个文件任务分配到线程池，等待处理完成...</source>
         <translation>Assigned %1 file tasks to thread pool; waiting...</translation>
     </message>
@@ -1289,17 +1294,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="765"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="799"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
         <translation>File [%1] has pending repeat-block refs; final output skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="830"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="864"/>
         <source>连续重复块引用回填完成，共复制 (%1 / %2) 句</source>
         <translation>Repeat-block fill done: copied %1/%2 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="844"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="878"/>
         <source>文件 [%1] 尚未翻译完毕或分割输出尚未全部回填完成，跳过本轮合并</source>
         <translation>File [%1] incomplete or split output pending; merge skipped</translation>
     </message>

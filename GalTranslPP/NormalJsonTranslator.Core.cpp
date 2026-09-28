@@ -318,7 +318,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
         m_linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
         m_maxRequestCount = toml::find_or(configData, "common", "maxRequestCount", 4);
-        m_contextHistorySize = toml::find_or(configData, "common", "contextHistorySize", 8);
+        m_contextHistorySize = toml::find_or(configData, "common", "contextHistorySize", 0);
         m_inputBlockMaxLines = toml::find_or(configData, "common", "log", "inputBlockMaxLines", 10);
         m_problemMaxLines = toml::find_or(configData, "common", "log", "problemMaxLines", 3);
         m_glossaryMaxLines = toml::find_or(configData, "common", "log", "glossaryMaxLines", 5);

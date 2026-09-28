@@ -318,7 +318,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(maxRequestArea);
 
 	// 携带上文数量
-	int contextNum = toml::find_or(m_projectConfig, "common", "contextHistorySize", 8);
+	int contextNum = toml::find_or(m_projectConfig, "common", "contextHistorySize", 0);
 	ElaScrollPageArea* contextNumArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* contextNumLayout = new QHBoxLayout(contextNumArea);
 	ElaDoubleText* contextNumText = new ElaDoubleText(tr("携带上文数量"), 16,

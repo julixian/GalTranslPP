@@ -16,6 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+		"1. 修复 3.1.1 版本中 opencc 文件缺失的 bug",
+        "v3.1.1 更新",
 		"1. 携带上文数量可设为 0",
         "2. 问题概览现在会输出文件数量了",
     };

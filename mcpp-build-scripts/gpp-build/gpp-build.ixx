@@ -229,13 +229,15 @@ struct release_publisher {
         copy_action.submit();
     }
 
-    void copy_opencc_share(std::string_view member, const fs::path& package_release_directory) {
+    void copy_opencc_share(std::string_view member, std::string_view destination_name,
+                           const fs::path& release_destination_directory) {
         const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
         if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
         const fs::path source_directory = vcpkg_installation_directory / "share" / "opencc";
-        const fs::path destination_directory = package_release_directory / "BaseConfig" / "opencc";
-        const fs::path manifest_file = release_directory / ".mcpp-runtime" /
-            ("OpenCC-" + std::string(member) + ".txt");
+        const fs::path destination_directory = release_destination_directory / "BaseConfig" / "opencc";
+        std::string manifest_name = "OpenCC-" + std::string(member);
+        if (destination_name != member) manifest_name += "-" + std::string(destination_name);
+        const fs::path manifest_file = release_directory / ".mcpp-runtime" / (manifest_name + ".txt");
         const fs::path dependency_file = manifest_file.generic_string() + ".d";
         const std::string manifest_path = manifest_file.generic_string();
         const std::string dependency_path = dependency_file.generic_string();
@@ -272,8 +274,10 @@ struct release_publisher {
             // PDB 是链接副产物；以 EXE 为依赖，避免把未声明的 PDB 当成 Ninja 输入。
             copy_file("${mcpp.bin_dir}/" + target_name + ".pdb",
                       release_directory / ".pdb" / (target_name + ".pdb"), false);
-            // OpenCC 只进入完整发行包；安装完成后递归复制 share/opencc 的全部文件。
-            copy_opencc_share(member, package_release_directory);
+            // 安装完成后递归复制 share/opencc；GUI 的 GUICORE 也需要完整配置。
+            copy_opencc_share(member, member, package_release_directory);
+            if (is_gui)
+                copy_opencc_share(member, "GUICORE", release_directory / "GUICORE");
         }
         for (const auto& [destination_directory, destination_name] : destinations) {
             const auto executable_filename = member == "Updater" && destination_name != "GPPGUI"

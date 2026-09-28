@@ -157,6 +157,27 @@ runtime_stage_options parse_arguments(int argc, char** argv) {
     return result;
 }
 
+std::string escape_dependency_path(const fs::path& file) {
+    std::string escaped;
+    for (char character : fs::absolute(file).lexically_normal().generic_string()) {
+        if (character == ' ' || character == '#' || character == ':') escaped += '\\';
+        if (character == '$') escaped += '$';
+        escaped += character;
+    }
+    return escaped;
+}
+
+void write_depfile(const fs::path& depfile_path, const fs::path& output,
+                   const std::vector<fs::path>& inputs) {
+    if (depfile_path.empty()) return;
+    if (!depfile_path.parent_path().empty()) fs::create_directories(depfile_path.parent_path());
+    std::ofstream depfile(depfile_path, std::ios::binary | std::ios::trunc);
+    depfile << escape_dependency_path(output) << ':';
+    for (const auto& input : inputs) depfile << ' ' << escape_dependency_path(input);
+    depfile << '\n';
+    if (!depfile) throw std::runtime_error("cannot write depfile: " + depfile_path.string());
+}
+
 void stage(const runtime_stage_options& command_options) {
     std::map<std::wstring, fs::path> available_libraries;
     for (const auto& search_directory : command_options.search_directories) {
@@ -206,32 +227,90 @@ void stage(const runtime_stage_options& command_options) {
     // 首次构建时 vcpkg/Ela 的 DLL 可能尚不存在，build.mcpp 无法提前枚举。
     // 执行时记录实际读取的文件，让后续仅 DLL 更新时也能触发发布。
     if (!command_options.depfile.empty()) {
-        auto escape_dependency_path = [](const fs::path& file) {
-            std::string escaped;
-            for (char character : fs::absolute(file).lexically_normal().generic_string()) {
-                if (character == ' ' || character == '#' || character == ':') escaped += '\\';
-                if (character == '$') escaped += '$';
-                escaped += character;
-            }
-            return escaped;
-        };
-        if (!command_options.depfile.parent_path().empty())
-            fs::create_directories(command_options.depfile.parent_path());
-        std::ofstream depfile(command_options.depfile, std::ios::binary | std::ios::trunc);
-        depfile << escape_dependency_path(command_options.manifest) << ": "
-                << escape_dependency_path(command_options.exe);
+        std::vector<fs::path> inputs{command_options.exe};
         for (const auto& [name, source] : selected_libraries)
-            depfile << ' ' << escape_dependency_path(source);
-        depfile << '\n';
-        if (!depfile) throw std::runtime_error("cannot write runtime depfile");
+            inputs.push_back(source);
+        write_depfile(command_options.depfile, command_options.manifest, inputs);
     }
+}
+
+struct tree_stage_options {
+    fs::path source;
+    fs::path destination;
+    fs::path manifest;
+    fs::path depfile;
+};
+
+tree_stage_options parse_tree_arguments(int argc, char** argv) {
+    tree_stage_options result;
+    for (int i = 2; i < argc; ++i) {
+        if (i + 1 == argc) throw std::runtime_error("missing option value");
+        const std::string_view flag(argv[i]);
+        const fs::path value(argv[++i]);
+        if (flag == "--source") result.source = value;
+        else if (flag == "--dest") result.destination = value;
+        else if (flag == "--manifest") result.manifest = value;
+        else if (flag == "--depfile") result.depfile = value;
+        else throw std::runtime_error("unknown copy-tree option");
+    }
+    if (result.source.empty() || result.destination.empty() || result.manifest.empty() || result.depfile.empty())
+        throw std::runtime_error("--copy-tree requires --source, --dest, --manifest and --depfile");
+    return result;
+}
+
+void copy_tree(const tree_stage_options& options) {
+    if (!fs::is_directory(options.source))
+        throw std::runtime_error("source directory does not exist: " + options.source.string());
+
+    std::vector<fs::path> directories{options.source};
+    std::vector<fs::path> files;
+    for (const auto& entry : fs::recursive_directory_iterator(options.source)) {
+        if (entry.is_directory()) directories.push_back(entry.path());
+        else if (entry.is_regular_file()) files.push_back(entry.path());
+    }
+    std::ranges::sort(directories);
+    std::ranges::sort(files);
+
+    std::string manifest_text;
+    for (const auto& source : files) {
+        const fs::path relative = source.lexically_relative(options.source);
+        const fs::path destination = options.destination / relative;
+        fs::create_directories(destination.parent_path());
+        bool different = !fs::is_regular_file(destination) ||
+                         fs::file_size(source) != fs::file_size(destination);
+        if (!different) {
+            std::ifstream source_stream(source, std::ios::binary);
+            std::ifstream destination_stream(destination, std::ios::binary);
+            if (!source_stream || !destination_stream)
+                throw std::runtime_error("cannot compare staged file: " + source.string());
+            different = !std::equal(std::istreambuf_iterator<char>(source_stream),
+                                    std::istreambuf_iterator<char>(),
+                                    std::istreambuf_iterator<char>(destination_stream),
+                                    std::istreambuf_iterator<char>());
+        }
+        if (different) fs::copy_file(source, destination, fs::copy_options::overwrite_existing);
+        std::format_to(std::back_inserter(manifest_text), "{}\n", relative.generic_string());
+    }
+
+    if (!options.manifest.parent_path().empty()) fs::create_directories(options.manifest.parent_path());
+    std::ofstream manifest(options.manifest, std::ios::binary | std::ios::trunc);
+    if (!manifest) throw std::runtime_error("cannot write tree manifest");
+    manifest.write(manifest_text.data(), static_cast<std::streamsize>(manifest_text.size()));
+    if (!manifest) throw std::runtime_error("cannot finish tree manifest");
+
+    // 目录追踪新增/删除的文件，文件追踪内容变化；安装目录首次由 prepare action 创建。
+    directories.insert(directories.end(), files.begin(), files.end());
+    write_depfile(options.depfile, options.manifest, directories);
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
     try {
-        stage(parse_arguments(argc, argv));
+        if (argc > 1 && std::string_view(argv[1]) == "--copy-tree")
+            copy_tree(parse_tree_arguments(argc, argv));
+        else
+            stage(parse_arguments(argc, argv));
         return 0;
     } catch (const std::exception& error) {
         std::cerr << std::format("runtime-stage: {}\n", error.what());

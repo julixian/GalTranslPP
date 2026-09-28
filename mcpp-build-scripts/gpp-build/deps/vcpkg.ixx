@@ -56,6 +56,7 @@ struct prefix {
     std::string bin;        // root/bin
     std::string share;      // root/share
     std::string triplet;
+    std::string install_stamp; // vcpkg prepare action 的输出；发布文件必须等安装完成。
     // The copies `options::deploy` produced, for a project's own layout.
     std::vector<mcpp::deps::deployed_file> deployed;
     explicit operator bool() const { return !root.empty(); }
@@ -183,6 +184,8 @@ inline prefix use(const options& opt = {}) {
     p.bin       = mcpp::deps::generic(root / "bin");
     p.share     = mcpp::deps::generic(root / "share");
     p.triplet   = triplet;
+    p.install_stamp = mcpp::deps::generic(
+        fs::path(mcpp::out_dir()) / "deps-vcpkg" / (triplet + ".stamp"));
 
     // ── the tool ──
     const bool host_windows = std::string_view(mcpp::host()).find("windows") != std::string_view::npos;
@@ -250,8 +253,7 @@ inline prefix use(const options& opt = {}) {
         // and package trees go to a short directory under vcpkg's per-user
         // directory, because a port's build nests deep and Windows tools still
         // enforce MAX_PATH.
-        const std::string stamp = mcpp::deps::generic(
-            fs::path(mcpp::out_dir()) / "deps-vcpkg" / (triplet + ".stamp"));
+        const std::string& stamp = p.install_stamp;
         const std::string id    = "deps-vcpkg:install:" + triplet;
         const std::string desc  = "VCPKG install " + triplet;
         const std::string exeS  = mcpp::deps::generic(exe);

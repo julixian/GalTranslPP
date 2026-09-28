@@ -141,13 +141,15 @@ gpp::deps::cmake::prefix use_ela_widget_tools(const mcpp::rules::qt::options& qt
 struct release_publisher {
     fs::path release_directory = workspace_directory() / "Release";
     fs::path vcpkg_installation_directory;
+    fs::path vcpkg_install_stamp;
     std::vector<fs::path> additional_runtime_directories;
     std::string target_name;
     std::string executable_file;
     unsigned next_action_number = 0;
 
     release_publisher(std::string executable_target, const gpp::deps::vcpkg::prefix& vcpkg)
-        : vcpkg_installation_directory(vcpkg.root), target_name(std::move(executable_target)),
+        : vcpkg_installation_directory(vcpkg.root), vcpkg_install_stamp(vcpkg.install_stamp),
+          target_name(std::move(executable_target)),
           executable_file("${mcpp.target_file:" + target_name + "}") {}
 
     fs::path private_release_directory(std::string_view member) const {
@@ -227,6 +229,32 @@ struct release_publisher {
         copy_action.submit();
     }
 
+    void copy_opencc_share(std::string_view member, const fs::path& package_release_directory) {
+        const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
+        if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
+        const fs::path source_directory = vcpkg_installation_directory / "share" / "opencc";
+        const fs::path destination_directory = package_release_directory / "BaseConfig" / "opencc";
+        const fs::path manifest_file = release_directory / ".mcpp-runtime" /
+            ("OpenCC-" + std::string(member) + ".txt");
+        const fs::path dependency_file = manifest_file.generic_string() + ".d";
+        const std::string manifest_path = manifest_file.generic_string();
+        const std::string dependency_path = dependency_file.generic_string();
+        const auto action_id = "release-opencc-" + std::to_string(next_action_number++);
+        mcpp::action copy_action;
+        copy_action.id = action_id.c_str();
+        copy_action.role = mcpp::roles::artifact;
+        copy_action.depfile = dependency_path.c_str();
+        copy_action.arg(runtime_stage_executable.c_str()).arg("--copy-tree")
+            .arg("--source").arg(source_directory.generic_string().c_str())
+            .arg("--dest").arg(destination_directory.generic_string().c_str())
+            .arg("--manifest").arg(manifest_path.c_str())
+            .arg("--depfile").arg(dependency_path.c_str())
+            .input(executable_file.c_str())
+            .input(vcpkg_install_stamp.generic_string().c_str())
+            .input(runtime_stage_executable.c_str())
+            .output(manifest_path.c_str()).submit();
+    }
+
     void publish_release(std::string_view member, const fs::path& translation_file) {
         if (!is_windows_target() || !is_release_profile()) return;
         const bool is_cli = member == "GPPCLI";
@@ -244,11 +272,8 @@ struct release_publisher {
             // PDB 是链接副产物；以 EXE 为依赖，避免把未声明的 PDB 当成 Ninja 输入。
             copy_file("${mcpp.bin_dir}/" + target_name + ".pdb",
                       release_directory / ".pdb" / (target_name + ".pdb"), false);
-            // OpenCC 属于完整发行包的 BaseConfig，只复制到本项目的发布目录。
-            // GUICORE 和 PRIVATE 目录沿用原有发布规则，不在这里写入全局配置。
-            for (const char* filename : {"t2s.json", "TSPhrases.ocd2", "TSCharacters.ocd2"})
-                copy_file((vcpkg_installation_directory / "share" / "opencc" / filename).generic_string(),
-                          package_release_directory / "BaseConfig" / "opencc" / filename);
+            // OpenCC 只进入完整发行包；安装完成后递归复制 share/opencc 的全部文件。
+            copy_opencc_share(member, package_release_directory);
         }
         for (const auto& [destination_directory, destination_name] : destinations) {
             const auto executable_filename = member == "Updater" && destination_name != "GPPGUI"

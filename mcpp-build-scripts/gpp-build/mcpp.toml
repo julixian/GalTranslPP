@@ -6,8 +6,7 @@ standard = "c++23"
 license = "Apache-2.0"
 
 [lib]
-# mcpp 固定先编译 lib.path；这里选不依赖同包其他模块的工具模块。
-path = "deps/tools.ixx"
+path = "gpp-build.ixx"
 
 [build]
 sources = ["gpp-build.ixx", "deps/*.ixx"]
@@ -15,4 +14,4 @@ module_extensions = [".ixx"]
 
 [build-dependencies]
 # 将插件的宿主模块提供给使用 gpp.build 的构建脚本，各成员无需重复声明。
-mcpp.plugins = { version = "0.15.1", features = ["deps", "rules-qt"], host-module = true, reexport = true }
+mcpp.plugins = { version = "0.16.0", features = ["deps", "rules-qt"], host-module = true, reexport = true }

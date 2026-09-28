@@ -5,9 +5,6 @@ version = "1.0.0"
 standard = "c++23"
 license = "Apache-2.0"
 
-[toolchain]
-windows = "llvm@22.1.8"
-
 [build]
 sources = []
 

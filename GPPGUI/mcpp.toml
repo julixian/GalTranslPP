@@ -5,10 +5,10 @@ name = "gui"
 [dependencies]
 "gpp.core" = { path = "../GalTranslPP" }
 "gpp.version" = { path = "../GPPVersion" }
+"gpp.updater" = { path = "../Updater", artifacts = ["Updater"] }
 
 [build-dependencies]
 "gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
-"gpp.updater" = { path = "../Updater", tools = ["Updater"] }
 
 [target.windows.build-dependencies]
 "gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime_stage"] }
@@ -24,7 +24,6 @@ debug = true
 lto = false
 
 [build]
-dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["**/*.cpp", "**/*.c", "!GPPGUI.cpp", "!mcpp-generated/**"]
 include_dirs = [

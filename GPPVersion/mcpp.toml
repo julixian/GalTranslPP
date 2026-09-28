@@ -13,7 +13,6 @@ debug = true
 lto = false
 
 [build]
-dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["GPPVersion.ixx"]
 module_extensions = [".ixx"]

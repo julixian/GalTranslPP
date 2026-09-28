@@ -10,6 +10,7 @@ license = "Apache-2.0"
 windows = "llvm@22.1.8"
 
 [workspace.build]
+cxx_runtime = "host-coupled"
 cxxflags = [
   "-finput-charset=UTF-8",
   "-fexec-charset=UTF-8"

@@ -23,7 +23,6 @@ debug = true
 lto = false
 
 [build]
-dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
 sources = ["ProgressBar.ixx", "TerminalController.ixx"]
 module_extensions = [".ixx"]

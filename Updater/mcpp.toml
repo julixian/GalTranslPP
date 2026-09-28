@@ -2,9 +2,6 @@
 namespace = "gpp"
 name = "updater"
 
-[toolchain]
-windows = "llvm@22.1.8"
-
 [dependencies]
 "gpp.version" = { path = "../GPPVersion" }
 
@@ -25,12 +22,7 @@ debug = true
 lto = false
 
 [build]
-dialect_cxxflags = ["-fms-runtime-lib=dll"]
 default-profile = "release"
-sources = [
-  "../3rdParty/3rdModule/boost.ixx"
-]
-module_extensions = [".ixx"]
 include_dirs = ["."]
 
 [target.windows.build]

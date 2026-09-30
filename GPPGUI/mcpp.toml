@@ -25,7 +25,7 @@ lto = false
 
 [build]
 default-profile = "release"
-sources = ["**/*.cpp", "**/*.c", "!GPPGUI.cpp", "!mcpp-generated/**"]
+sources = ["**/*.cpp", "**/*.c", "!GPPGUI.cpp"]
 include_dirs = [
   ".",
   "../GalTranslPP",

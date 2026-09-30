@@ -670,10 +670,10 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
 
         if (!envZipPath.empty()) {
             s_pythonExePath = fs::canonical(pythonEnvPath / L"python.exe");
-            PyConfig config;
-            PyConfig_InitPythonConfig(&config);
+            PyConfig config{};
+            PyConfig_InitIsolatedConfig(&config);
             PyConfig_SetString(&config, &config.home, fs::canonical(pythonEnvPath).c_str());
-            PyConfig_SetString(&config, &config.executable, fs::canonical(pythonEnvPath / L"python.exe").c_str());
+            PyConfig_SetString(&config, &config.executable, s_pythonExePath.c_str());
             PyConfig_SetString(&config, &config.pythonpath_env, envZipPath.c_str());
             py::initialize_interpreter(&config);
             {

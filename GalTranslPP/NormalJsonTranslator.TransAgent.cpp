@@ -1198,21 +1198,19 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger,
                 threadId, m_apiTimeOutMs);
 
-            const std::string checkResponseLogPrefix = gppTr(
-                "NormalJsonTranslatorTransAgent.translateBatch",
-                "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]")
-                .arg(threadId)
-                .arg(wide2Ascii(relInputPath))
-                .arg(batchIndexLog)
-                .arg(turn + 1)
-                .arg(requestCount + 1)
-                .toStdString();
-            if (
-                !checkResponse(
-                response, m_apiPool, currentApi, checkResponseLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
-                requestCount, m_checkQuota
-                ))
-            {
+            if (!response.content) {
+                const std::string errorLogPrefix = gppTr(
+                    "NormalJsonTranslatorTransAgent.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(turn + 1)
+                    .arg(requestCount + 1)
+                    .toStdString();
+                inferAndRecordApiError(
+                    response, m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
+                    requestCount, m_checkQuota);
                 continue;
             }
             if (m_logger->should_log(spdlog::level::trace)) {

@@ -858,19 +858,18 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
                 .toStdString());
             ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId,
                 m_apiTimeOutMs);
-            const std::string checkResponseLogPrefix = gppTr(
-                "DictionaryGeneratorReviewAgent.reviewTermGroup",
-                "[线程 %1] [术语 %2] [轮次 %3] [请求 %4]")
-                .arg(threadId)
-                .arg(sourceTermLog)
-                .arg(turn + 1)
-                .arg(requestCount + 1)
-                .toStdString();
-            if (!checkResponse(
-                response, m_apiPool, currentApi, checkResponseLogPrefix, fs::path{}, m_apiStrategy,
-                m_controller, m_logger, requestCount, m_checkQuota
-                ))
-            {
+            if (!response.content) {
+                const std::string errorLogPrefix = gppTr(
+                    "DictionaryGeneratorReviewAgent.reviewTermGroup",
+                    "[线程 %1] [术语 %2] [轮次 %3] [请求 %4]")
+                    .arg(threadId)
+                    .arg(sourceTermLog)
+                    .arg(turn + 1)
+                    .arg(requestCount + 1)
+                    .toStdString();
+                inferAndRecordApiError(
+                    response, m_apiPool, currentApi, errorLogPrefix, fs::path{}, m_apiStrategy,
+                    m_controller, m_logger, requestCount, m_checkQuota);
                 continue;
             }
             if (m_logger->should_log(spdlog::level::trace)) {

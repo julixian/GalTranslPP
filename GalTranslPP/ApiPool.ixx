@@ -35,7 +35,7 @@ export
         size_t size();
     };
 
-    bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
+    void inferAndRecordApiError(const ApiResponse& response, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
         const std::string& logPrefix, const fs::path& relFilePath, const std::string& apiStrategy,
         const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
         int& requestCount, bool checkQuota);

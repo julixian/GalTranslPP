@@ -387,7 +387,7 @@ std::string lightRepairJsonText(std::string_view jsonStr) {
     };
 
     std::string newText = std::string(jsonStr);
-    for (const std::string_view& field : repairableFields) {
+    for (const std::string_view field : repairableFields) {
         size_t searchPos = 0;
         while (searchPos < newText.size()) {
             const size_t fieldPos = newText.find(field, searchPos);

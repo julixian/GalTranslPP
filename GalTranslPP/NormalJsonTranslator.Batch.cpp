@@ -3,7 +3,6 @@ module;
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <proxy/proxy.h>
 
 module NormalJsonTranslator;
 
@@ -170,20 +169,18 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger, threadId, m_apiTimeOutMs);
 
         const std::string relInputPathLog = wide2Ascii(relInputPath);
-        const std::string checkResponseLogPrefix = gppTr(
-            "NormalJsonTranslator.translateBatch",
-            "[线程 %1] [文件 %2] [批次 %3] [请求 %4]")
-            .arg(threadId)
-            .arg(relInputPathLog)
-            .arg(batchIndexLog)
-            .arg(requestCount + 1)
-            .toStdString();
-        if (
-            !checkResponse(
-            response, m_apiPool, currentApi, checkResponseLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
-            requestCount, m_checkQuota
-            ))
-        {
+        if (!response.content) {
+            const std::string errorLogPrefix = gppTr(
+                "NormalJsonTranslator.translateBatch",
+                "[线程 %1] [文件 %2] [批次 %3] [请求 %4]")
+                .arg(threadId)
+                .arg(relInputPathLog)
+                .arg(batchIndexLog)
+                .arg(requestCount + 1)
+                .toStdString();
+            inferAndRecordApiError(
+                response, m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
+                requestCount, m_checkQuota);
             continue;
         }
 

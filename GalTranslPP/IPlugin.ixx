@@ -3,14 +3,14 @@
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <proxy/proxy.h> // 直接 export import proxy.v4; 也是可以的，但 IDE 的智能提示会疯狂报红。。。
+#include <proxy/proxy_macros.h>
 
 export module IPlugin;
 
 export import GPPDefines;
 export import LuaManager;
 export import PythonManager;
-// export import proxy.v4;
+export import proxy.v4;
 
 namespace fs = std::filesystem;
 

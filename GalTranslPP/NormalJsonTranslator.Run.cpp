@@ -6,7 +6,6 @@ module;
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
-#include <proxy/proxy.h>
 
 module NormalJsonTranslator;
 

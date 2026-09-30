@@ -122,18 +122,17 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
         ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger,
             threadId, m_apiTimeoutMs);
 
-        const std::string checkResponseLogPrefix = gppTr(
-            "NameTranslator.translateBatch",
-            "[线程 %1] [批次 %2] [请求 %3]")
-            .arg(threadId)
-            .arg(batchIndex)
-            .arg(requestCount + 1)
-            .toStdString();
-        if (!checkResponse(
-            response, m_apiPool, currentApi, checkResponseLogPrefix, fs::path{},
-            m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota
-            ))
-        {
+        if (!response.content) {
+            const std::string errorLogPrefix = gppTr(
+                "NameTranslator.translateBatch",
+                "[线程 %1] [批次 %2] [请求 %3]")
+                .arg(threadId)
+                .arg(batchIndex)
+                .arg(requestCount + 1)
+                .toStdString();
+            inferAndRecordApiError(
+                response, m_apiPool, currentApi, errorLogPrefix, fs::path{},
+                m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
             continue;
         }
 

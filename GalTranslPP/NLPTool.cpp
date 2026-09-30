@@ -182,7 +182,7 @@ std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, std::stri
     const std::vector<std::string_view> tokensView = splitIntoTokenViews(wordPosVec, text);
     std::vector<std::string> tokens;
     tokens.reserve(tokensView.size());
-    for (const auto& tokenView : tokensView) {
+    for (const auto tokenView : tokensView) {
         tokens.emplace_back(tokenView);
     }
     return tokens;

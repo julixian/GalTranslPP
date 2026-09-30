@@ -76,32 +76,32 @@
 <context>
     <name>ConditionTool.getCheckSeCondFunc</name>
     <message>
-        <location filename="ConditionTool.ixx" line="162"/>
+        <location filename="ConditionTool.ixx" line="161"/>
         <source>执行 Lua 条件函数 %1 时发生错误: %2</source>
         <translation>Error while running Lua condition function %1: %2</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="172"/>
+        <location filename="ConditionTool.ixx" line="171"/>
         <source>注册 Lua 脚本 [%1] 中的条件函数 %2 成功</source>
         <translation>Registered condition function %2 from Lua script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="180"/>
+        <location filename="ConditionTool.ixx" line="179"/>
         <source>注册 Lua 脚本 [%1] 中的条件函数 %2 失败</source>
         <translation>Failed to register condition function %2 from Lua script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="209"/>
+        <location filename="ConditionTool.ixx" line="208"/>
         <source>执行 Python 条件函数 %1 时发生错误: %2</source>
         <translation>Error while running Python condition function %1: %2</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="220"/>
+        <location filename="ConditionTool.ixx" line="219"/>
         <source>注册 Python 脚本 [%1] 中的条件函数 %2 成功</source>
         <translation>Registered condition function %2 from Python script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="228"/>
+        <location filename="ConditionTool.ixx" line="227"/>
         <source>注册 Python 脚本 [%1] 中的条件函数 %2 失败</source>
         <translation>Failed to register condition function %2 from Python script [%1]</translation>
     </message>
@@ -109,41 +109,41 @@
 <context>
     <name>DictionaryGenerator.callLLMToGenerate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="219"/>
+        <location filename="DictionaryGenerator.cpp" line="218"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="233"/>
+        <location filename="DictionaryGenerator.cpp" line="232"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 开始生成术语表:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] Start generating glossary:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="244"/>
+        <location filename="DictionaryGenerator.cpp" line="243"/>
         <source>[线程 %1] [批次 %2] [请求 %3]</source>
         <translation>[Thread %1] [Batch %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="260"/>
+        <location filename="DictionaryGenerator.cpp" line="259"/>
         <source>[线程 %1] [批次 %2] [请求 %3] AI 字典生成成功:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] AI dictionary generation succeeded:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="266"/>
+        <location filename="DictionaryGenerator.cpp" line="265"/>
         <source>内容为空</source>
         <translation>Empty content</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="278"/>
+        <location filename="DictionaryGenerator.cpp" line="277"/>
         <source>发现重复术语: %1	%2	%3</source>
         <translation>Duplicate term found: %1	%2	%3</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="291"/>
+        <location filename="DictionaryGenerator.cpp" line="290"/>
         <source>[线程 %1] [批次 %2] 在 %3 次请求后彻底失败，没有生成字典</source>
         <translation>[T%1][Batch %2] Failed after %3 requests; no dictionary</translation>
     </message>
@@ -151,73 +151,73 @@
 <context>
     <name>DictionaryGenerator.generate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="304"/>
+        <location filename="DictionaryGenerator.cpp" line="303"/>
         <source>没有输入文件，无法生成字典。</source>
         <translation>No input files; cannot generate dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="311"/>
-        <location filename="DictionaryGenerator.cpp" line="380"/>
+        <location filename="DictionaryGenerator.cpp" line="310"/>
+        <location filename="DictionaryGenerator.cpp" line="379"/>
         <source>任务终止，将不会生成字典文件</source>
         <translation>Task stopped; no dictionary file will be generated</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="315"/>
+        <location filename="DictionaryGenerator.cpp" line="314"/>
         <source>阶段二: 搜索并选择信息量最大的文本块(单线程)...</source>
         <translation>Stage 2: pick key text blocks (single-threaded)...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="384"/>
+        <location filename="DictionaryGenerator.cpp" line="383"/>
         <source>阶段三: 启动 %1 个线程，向 AI 发送 %2 个任务...</source>
         <translation>Stage 3: starting %1 threads and sending %2 tasks to AI...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="404"/>
+        <location filename="DictionaryGenerator.cpp" line="403"/>
         <source>任务终止，将保存已经生成的字典结果</source>
         <translation>Task stopped; saving generated dictionary results</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="406"/>
+        <location filename="DictionaryGenerator.cpp" line="405"/>
         <source>阶段四: 整理并保存结果...</source>
         <translation>Stage 4: organize and save results...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="449"/>
+        <location filename="DictionaryGenerator.cpp" line="448"/>
         <source>任务终止，已保留完成审校的词条</source>
         <translation>Task stopped; completed review entries have been kept</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="455"/>
+        <location filename="DictionaryGenerator.cpp" line="454"/>
         <source>阶段四: 字典审校 Agent 完成，使用审校后的字典结果</source>
         <translation>Stage 4: Review Agent done; using reviewed dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="469"/>
+        <location filename="DictionaryGenerator.cpp" line="468"/>
         <source>人名</source>
         <translation>Person name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="470"/>
+        <location filename="DictionaryGenerator.cpp" line="469"/>
         <source>地名</source>
         <translation>Place name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="486"/>
+        <location filename="DictionaryGenerator.cpp" line="485"/>
         <source>男性</source>
         <translation>Male</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="487"/>
+        <location filename="DictionaryGenerator.cpp" line="486"/>
         <source>女性</source>
         <translation>Female</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="491"/>
+        <location filename="DictionaryGenerator.cpp" line="490"/>
         <source>，与其它字典存在性别争议</source>
         <translation>, gender differs from other dicts</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="511"/>
+        <location filename="DictionaryGenerator.cpp" line="510"/>
         <source>字典生成完成，共 %1 个词语，已保存到 [%2]</source>
         <translation>Dictionary generation completed: %1 terms saved to [%2]</translation>
     </message>
@@ -225,12 +225,12 @@
 <context>
     <name>DictionaryGenerator.preprocessAndTokenize</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="63"/>
+        <location filename="DictionaryGenerator.cpp" line="62"/>
         <source>阶段一: 预处理和分词...</source>
         <translation>Stage 1: preprocess and tokenize...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="136"/>
+        <location filename="DictionaryGenerator.cpp" line="135"/>
         <source>共分割成 %1 个文本块，开始进行分词 (使用依赖 Python 且未进行 GPU加速 的分词器这步会非常慢) ...</source>
         <translation>Split into %1 blocks; tokenizing (Python tokenizers without GPU may be slow) ...</translation>
     </message>
@@ -436,7 +436,7 @@
 <context>
     <name>EpubTranslator.EpubTranslator</name>
     <message>
-        <location filename="EpubTranslator.cpp" line="59"/>
+        <location filename="EpubTranslator.cpp" line="58"/>
         <source>GalTransl++ EpubTranslator 启动...</source>
         <translation>GalTransl++ EpubTranslator started...</translation>
     </message>
@@ -444,80 +444,80 @@
 <context>
     <name>EpubTranslator.epubBeforeRun</name>
     <message>
-        <location filename="EpubTranslator.cpp" line="156"/>
+        <location filename="EpubTranslator.cpp" line="155"/>
         <source>已创建目录: [%1]</source>
         <translation>Created directory: [%1]</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="175"/>
+        <location filename="EpubTranslator.cpp" line="174"/>
         <source>未找到 EPUB 文件</source>
         <translation>EPUB file not found</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="212"/>
+        <location filename="EpubTranslator.cpp" line="211"/>
         <source>正在解压 [%1] 到 [%2]</source>
         <translation>Unzipping [%1] to [%2]</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="286"/>
+        <location filename="EpubTranslator.cpp" line="285"/>
         <source>[文件 %1] 未找到对应的元数据</source>
         <translation>[File %1] matching metadata not found</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="321"/>
+        <location filename="EpubTranslator.cpp" line="320"/>
         <source>[文件 %1] 元数据和翻译数据数量不匹配，无法重组 (%2 meta / %3 trans)</source>
         <translation>[File %1] meta/translation counts differ; cannot rebuild (%2/%3)</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="367"/>
+        <location filename="EpubTranslator.cpp" line="366"/>
         <source>正在打包 [%1]</source>
         <oldsource>正在打包 %1</oldsource>
         <translation>Packing [%1]</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="374"/>
+        <location filename="EpubTranslator.cpp" line="373"/>
         <source>无法创建 EPUB (zip) 文件，错误码: %1</source>
         <oldsource>无法创建 EPUB (zip) 文件: [%1]</oldsource>
         <translation>Can&apos;t create EPUB (zip), code: %1</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="386"/>
+        <location filename="EpubTranslator.cpp" line="385"/>
         <source>无法为 mimetype 创建 zip_source_file</source>
         <translation>Failed to create zip_source_file for mimetype</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="396"/>
+        <location filename="EpubTranslator.cpp" line="395"/>
         <source>无法将 mimetype 添加到 zip</source>
         <translation>Failed to add mimetype to zip</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="405"/>
+        <location filename="EpubTranslator.cpp" line="404"/>
         <source>无法将 mimetype 设置为不压缩模式</source>
         <oldsource>无法将 mimetype 设置为不压缩模式。</oldsource>
         <translation>Can&apos;t store mimetype uncompressed</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="412"/>
+        <location filename="EpubTranslator.cpp" line="411"/>
         <source>在源目录 [%1] 中未找到 mimetype 文件，生成的 EPUB 可能无效</source>
         <translation>No mimetype in [%1]; EPUB may be invalid</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="436"/>
+        <location filename="EpubTranslator.cpp" line="435"/>
         <source>无法为文件 [%1] 创建 zip_source_file</source>
         <translation>Failed to create zip_source_file for file [%1]</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="445"/>
+        <location filename="EpubTranslator.cpp" line="444"/>
         <source>无法将文件 [%1] 添加到 zip</source>
         <translation>Failed to add file [%1] to zip</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="456"/>
+        <location filename="EpubTranslator.cpp" line="455"/>
         <source>关闭 zip 存档时出错: %1</source>
         <translation>Error closing zip archive: %1</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="461"/>
+        <location filename="EpubTranslator.cpp" line="460"/>
         <source>已重建 EPUB 文件: [%1]</source>
         <translation>Rebuilt EPUB file: [%1]</translation>
     </message>
@@ -525,17 +525,17 @@
 <context>
     <name>EpubTranslator.epubInit</name>
     <message>
-        <location filename="EpubTranslator.cpp" line="92"/>
+        <location filename="EpubTranslator.cpp" line="91"/>
         <source>预处理正则 `%1` 编译失败</source>
         <translation>Preprocess regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="119"/>
+        <location filename="EpubTranslator.cpp" line="118"/>
         <source>预处理正则回调正则 `%1` 编译失败</source>
         <translation>Preprocess callback regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="EpubTranslator.cpp" line="144"/>
+        <location filename="EpubTranslator.cpp" line="143"/>
         <source>Epub 配置文件解析失败: %1</source>
         <translation>Failed to parse Epub config: %1</translation>
     </message>
@@ -543,7 +543,7 @@
 <context>
     <name>EpubTranslator.~EpubTranslator</name>
     <message>
-        <location filename="EpubTranslator.cpp" line="48"/>
+        <location filename="EpubTranslator.cpp" line="47"/>
         <source>所有任务已完成！EpubTranslator 结束</source>
         <translation>All tasks completed! EpubTranslator finished</translation>
     </message>
@@ -551,13 +551,13 @@
 <context>
     <name>GptDictionary.checkDictUse</name>
     <message>
-        <location filename="Dictionary.cpp" line="219"/>
+        <location filename="Dictionary.cpp" line="218"/>
         <source>GPT字典 `%1`-&gt;`%2` 未使用，但使用了 `%3`-&gt;`%4` 这一包含性字典</source>
         <translation>GPT dictionary `%1`-&gt;`%2` was not used, but containing dictionary `%3`-&gt;`%4` was used</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="232"/>
-        <location filename="Dictionary.cpp" line="270"/>
+        <location filename="Dictionary.cpp" line="231"/>
+        <location filename="Dictionary.cpp" line="269"/>
         <source>GPT字典 `%1`-&gt;`%2` 未使用</source>
         <translation>GPT dictionary `%1`-&gt;`%2` was not used</translation>
     </message>
@@ -565,8 +565,8 @@
 <context>
     <name>GptDictionary.getPrompt</name>
     <message>
-        <location filename="Dictionary.cpp" line="91"/>
-        <location filename="Dictionary.cpp" line="116"/>
+        <location filename="Dictionary.cpp" line="90"/>
+        <location filename="Dictionary.cpp" line="115"/>
         <source>内部错误: 无效的提示词类型</source>
         <translation>Internal error: invalid prompt type</translation>
     </message>
@@ -574,17 +574,17 @@
 <context>
     <name>GptDictionary.loadFromFile</name>
     <message>
-        <location filename="Dictionary.cpp" line="124"/>
+        <location filename="Dictionary.cpp" line="123"/>
         <source>GPT 字典文件 [%1] 不存在</source>
         <translation>GPT dictionary file [%1] does not exist</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="159"/>
+        <location filename="Dictionary.cpp" line="158"/>
         <source>GPT 字典文件 [%1] 解析错误: %2</source>
         <translation>GPT dictionary file [%1] parse error: %2</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="165"/>
+        <location filename="Dictionary.cpp" line="164"/>
         <source>已加载 GPT 字典文件 [%1], 共 %2 个词条</source>
         <translation>Loaded GPT dictionary file [%1], %2 entries total</translation>
     </message>
@@ -592,7 +592,7 @@
 <context>
     <name>LuaJson.luaRef2JsonValue</name>
     <message>
-        <location filename="LuaManager.cpp" line="457"/>
+        <location filename="LuaManager.cpp" line="456"/>
         <source>LuaJson: key 必须是字符串</source>
         <translation>LuaJson: key must be string</translation>
     </message>
@@ -600,35 +600,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1277"/>
-        <location filename="LuaManager.cpp" line="1289"/>
-        <location filename="LuaManager.cpp" line="1303"/>
-        <location filename="LuaManager.cpp" line="1318"/>
+        <location filename="LuaManager.cpp" line="1276"/>
+        <location filename="LuaManager.cpp" line="1288"/>
+        <location filename="LuaManager.cpp" line="1302"/>
+        <location filename="LuaManager.cpp" line="1317"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1294"/>
+        <location filename="LuaManager.cpp" line="1293"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1308"/>
+        <location filename="LuaManager.cpp" line="1307"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1323"/>
+        <location filename="LuaManager.cpp" line="1322"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1330"/>
+        <location filename="LuaManager.cpp" line="1329"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1337"/>
+        <location filename="LuaManager.cpp" line="1336"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -636,17 +636,17 @@
 <context>
     <name>LuaManager.registerFunction</name>
     <message>
-        <location filename="LuaManager.cpp" line="599"/>
+        <location filename="LuaManager.cpp" line="598"/>
         <source>脚本不存在: %1</source>
         <translation>Script not found: %1</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="627"/>
+        <location filename="LuaManager.cpp" line="626"/>
         <source>加载脚本 [%1] 失败: %2</source>
         <translation>Failed to load script [%1]: %2</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="654"/>
+        <location filename="LuaManager.cpp" line="653"/>
         <source>在脚本 [%1] 中未找到函数 %2</source>
         <translation>Function %2 not found in script [%1]</translation>
     </message>
@@ -717,7 +717,7 @@
 <context>
     <name>LuaToml.luaRef2TomlValue</name>
     <message>
-        <location filename="LuaManager.cpp" line="552"/>
+        <location filename="LuaManager.cpp" line="551"/>
         <source>LuaToml: key 必须是字符串</source>
         <translation>LuaToml: key must be string</translation>
     </message>
@@ -814,38 +814,38 @@ Error: %2</translation>
 <context>
     <name>NameTranslator.run</name>
     <message>
-        <location filename="NameTranslator.cpp" line="215"/>
+        <location filename="NameTranslator.cpp" line="214"/>
         <source>NameTrans: 未找到人名表文件 %1</source>
         <translation>NameTrans: name table not found: %1</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="221"/>
+        <location filename="NameTranslator.cpp" line="220"/>
         <source>NameTrans: 开始处理人名表...</source>
         <translation>NameTrans: processing name table...</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="229"/>
+        <location filename="NameTranslator.cpp" line="228"/>
         <source>NameTrans: 解析人名表失败: %1</source>
         <translation>NameTrans: failed to parse name table: %1</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="249"/>
+        <location filename="NameTranslator.cpp" line="248"/>
         <source>NameTrans: 没有发现需要翻译的名字（所有条目均已有译名）</source>
         <translation>NameTrans: no names need translation; all entries already have translations</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="254"/>
+        <location filename="NameTranslator.cpp" line="253"/>
         <source>NameTrans: 共发现 %1 个待翻译的名字</source>
         <translation>NameTrans: found %1 names to translate</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="262"/>
+        <location filename="NameTranslator.cpp" line="261"/>
         <source>NameTrans: 启动 %1 个线程，每批处理最多 %2 个名字</source>
         <oldsource>NameTrans: 启动 %1 个线程，每批处理 %2 个名字</oldsource>
         <translation>NameTrans: starting %1 threads, %2 names per batch</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="303"/>
+        <location filename="NameTranslator.cpp" line="302"/>
         <source>NameTrans 处理完成，已更新 %1 个译名，保存至 [%2]</source>
         <translation>NameTrans completed, updated %1 translations and saved to [%2]</translation>
     </message>
@@ -853,50 +853,50 @@ Error: %2</translation>
 <context>
     <name>NameTranslator.translateBatch</name>
     <message>
-        <location filename="NameTranslator.cpp" line="101"/>
+        <location filename="NameTranslator.cpp" line="100"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="113"/>
+        <location filename="NameTranslator.cpp" line="112"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 开始翻译人名，剩余 %4 个:
 %5</source>
         <translation>[Thread %1] [Batch %2] [Request %3] Start translating names, %4 remaining:
 %5</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="126"/>
+        <location filename="NameTranslator.cpp" line="125"/>
         <source>[线程 %1] [批次 %2] [请求 %3]</source>
         <translation>[Thread %1] [Batch %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="142"/>
+        <location filename="NameTranslator.cpp" line="141"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 人名翻译成功响应，响应内容:
 %4</source>
         <translation>[T%1][Batch %2][Req %3] Name translation OK:
 %4</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="174"/>
+        <location filename="NameTranslator.cpp" line="173"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 剩余 %4 个人名均被解析完毕，解析结果:
 %5</source>
         <translation>[Thread %1] [Batch %2] [Request %3] All %4 remaining names were parsed, result:
 %5</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="186"/>
+        <location filename="NameTranslator.cpp" line="185"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 人名翻译响应解析不完整 (%4 / %5)，解析结果:
 %6</source>
         <translation>[T%1][Batch %2][Req %3] Names parsed %4/%5:
 %6</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="195"/>
+        <location filename="NameTranslator.cpp" line="194"/>
         <source>内容为空</source>
         <translation>Empty</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="202"/>
+        <location filename="NameTranslator.cpp" line="201"/>
         <source>[线程 %1] [批次 %2] 人名翻译在 %3 次请求后彻底失败，共翻译 (%4 / %5) 个</source>
         <translation>[T%1][Batch %2] Names failed after %3 requests; translated %4/%5</translation>
     </message>
@@ -904,22 +904,22 @@ Error: %2</translation>
 <context>
     <name>NormalDictionary.loadFromFile</name>
     <message>
-        <location filename="Dictionary.cpp" line="284"/>
+        <location filename="Dictionary.cpp" line="283"/>
         <source>字典文件 [%1] 不存在</source>
         <translation>Dictionary file [%1] does not exist</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="316"/>
+        <location filename="Dictionary.cpp" line="315"/>
         <source>Normal 字典文件 [%1] 正则表达式 `%2` 编译失败</source>
         <translation>Normal dictionary file [%1] regex `%2` compile failed</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="350"/>
+        <location filename="Dictionary.cpp" line="349"/>
         <source>Normal 字典文件 [%1] 解析错误: %2</source>
         <translation>Normal dictionary file [%1] parse error: %2</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="356"/>
+        <location filename="Dictionary.cpp" line="355"/>
         <source>已加载 Normal 字典文件 [%1], 共 %2 个词条</source>
         <translation>Loaded Normal dictionary file [%1], %2 entries total</translation>
     </message>
@@ -927,17 +927,17 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.NormalJsonTranslator</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="252"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="251"/>
         <source>GalTransl++ NormalJsonTranslator 启动...</source>
         <translation>GalTransl++ NormalJsonTranslator started...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="273"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="272"/>
         <source>未找到 rolling context 缓存文件 [%1]</source>
         <translation>rolling context cache file [%1] not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="279"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="278"/>
         <source>读取 rolling context 缓存文件 [%1] 失败</source>
         <translation>Failed to read rolling context cache file [%1]</translation>
     </message>
@@ -945,7 +945,7 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.normalJsonAfterRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="551"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="550"/>
         <source>
 
 ```
@@ -960,12 +960,12 @@ No problem overview
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="544"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="543"/>
         <source>已生成 [ProblemOverview.%1] 文件</source>
         <translation>Generated [ProblemOverview.%1] file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="587"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="586"/>
         <source>
 
 ```
@@ -978,12 +978,12 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="619"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="618"/>
         <source>%1 个文件</source>
         <translation>%1 files</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="626"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="625"/>
         <source>问题概览结束
 ```
 </source>
@@ -992,17 +992,17 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="637"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="636"/>
         <source>rolling context 缓存已保存至 [%1]</source>
         <translation>rolling context cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="642"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="641"/>
         <source>rolling context 缓存 [%1] 保存失败</source>
         <translation>Failed to save rolling context cache [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="651"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="650"/>
         <source>重建过程中有句子未命中缓存 (%1 / %2 lines)，请检查日志以定位问题</source>
         <translation>Cache misses during rebuild (%1/%2 lines); see logs</translation>
     </message>
@@ -1010,73 +1010,73 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonBeforeRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="97"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="96"/>
         <source>复制缓存文件夹时出现异常: %1</source>
         <translation>Exception copying cache folder: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="109"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="108"/>
         <source>已创建目录: [%1]</source>
         <translation>Created directory: [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="190"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="189"/>
         <source>第 %1 个对象缺少 message 字段。</source>
         <translation>Object %1 is missing the message field</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="172"/>
-        <location filename="NormalJsonTranslator.Run.cpp" line="220"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="171"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="219"/>
         <source>读取文件 [%1] 时出错: %2</source>
         <translation>Error while reading file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="230"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="229"/>
         <source>未找到有效的 Sentence</source>
         <translation>No valid Sentence found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="253"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="252"/>
         <source>解析原人名表失败</source>
         <translation>Failed to parse source name table</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="282"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="281"/>
         <source>已更新 NameTable.toml 文件</source>
         <translation>Updated NameTable.toml</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="334"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="333"/>
         <source>检测到文件分割模式 (%1)，开始预处理输入文件...</source>
         <translation>File split mode detected (%1); preprocessing input files...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="356"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="355"/>
         <source>文件 [%1] 已被分割成 %2 份，存入输入缓存</source>
         <translation>File [%1] was split into %2 parts and saved to input cache</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="364"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="363"/>
         <source>分割文件 [%1] 时出错: %2</source>
         <translation>Error while splitting file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="390"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="389"/>
         <source>未知的文件分割模式: %1, 请使用 &apos;No&apos;, &apos;Equal&apos;, &apos;Num&apos;</source>
         <translation>Unknown file split mode: %1; use &apos;No&apos;, &apos;Equal&apos;, or &apos;Num&apos;</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="420"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="419"/>
         <source>未知的排序模式: %1</source>
         <translation>Unknown sort mode: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="467"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="466"/>
         <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句，onFileProcessed/分割文件合并/文件输出 将被延后</source>
         <translation>Repeat refs: min %1, %2 lines; callback/merge/output deferred</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="477"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="476"/>
         <source>连续重复块引用分析完成，未发现长度不小于 %1 的重复块</source>
         <translation>Repeat-block refs: none at length &gt;= %1</translation>
     </message>
@@ -1084,113 +1084,113 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonInit</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="296"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="295"/>
         <source>无效的 TransEngine: %1</source>
         <translation>Invalid TransEngine: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="341"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="340"/>
         <source>ProjectNote 路径已注册: [%1]</source>
         <translation>ProjectNote path registered: [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="354"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="353"/>
         <source>Agent 模式在 TransEngine %1 下已自动关闭</source>
         <translation>Agent mode has been disabled automatically for TransEngine %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="361"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="360"/>
         <source>Agent 模式已启用</source>
         <translation>Agent mode enabled</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="416"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="432"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="415"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="431"/>
         <source>未找到字典文件 [%1]，已忽略</source>
         <translation>Dictionary file [%1] not found; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="467"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="466"/>
         <source>apiStrategy 必须为 random 或 fallback</source>
         <translation>apiStrategy must be random or fallback</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="490"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="489"/>
         <source>backend.apis[%1] 未找到 Api 协议字段，默认使用 OpenAI 协议</source>
         <translation>backend.apis[%1] has no Api protocol field; defaulting to OpenAI protocol</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="497"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="496"/>
         <source>backend.apis[%1] apiurl 为空，已忽略</source>
         <translation>backend.apis[%1] apiurl is empty; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="508"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="507"/>
         <source>backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略</source>
         <translation>backend.apis[%1] modelName is empty and TransEngine is not Sakura; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="570"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="569"/>
         <source>找不到可用的 Api key</source>
         <translation>No available Api key found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="584"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="583"/>
         <source>找不到 Prompt.toml 文件</source>
         <translation>Prompt.toml not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="601"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="600"/>
         <source>Prompt.toml 中缺少 %1 键</source>
         <translation>Prompt.toml missing key %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="643"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="642"/>
         <source>内部错误: 未知的 TransEngine</source>
         <translation>Internal error: unknown TransEngine</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="666"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="665"/>
         <source>已配置 MeCab 分词器，首次使用时加载</source>
         <translation>MeCab tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="675"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="674"/>
         <source>已配置 spaCy 分词器，首次使用时加载</source>
         <translation>spaCy tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="684"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="683"/>
         <source>已配置 Stanza 分词器，首次使用时加载</source>
         <translation>Stanza tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="692"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="691"/>
         <source>无效的 tokenizerBackend: %1</source>
         <translation>Invalid tokenizerBackend: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="779"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="778"/>
         <source>retranslKeys 正则表达式 `%1` 编译失败</source>
         <translation>retranslKeys regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="797"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="796"/>
         <source>retranslKeys 的元素必须是字符串、表或表数组</source>
         <translation>retranslKeys items must be string/table/table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="814"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="813"/>
         <source>skipProblems 的内联表数组第一个元素必须是字符串</source>
         <translation>First item in skipProblems inline table array must be string</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="830"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="829"/>
         <source>skipProblems 的元素必须是字符串或表数组</source>
         <translation>skipProblems items must be string or table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="841"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="840"/>
         <source>项目配置文件解析失败: %1</source>
         <translation>Project config parse failed: %1</translation>
     </message>
@@ -1198,7 +1198,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonProcessFiles</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="683"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="682"/>
         <source>已将 %1 个文件任务分配到线程池，等待处理完成...</source>
         <translation>Assigned %1 file tasks to thread pool; waiting...</translation>
     </message>
@@ -1206,13 +1206,13 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.postProcess</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="853"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="954"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="852"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="953"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="964"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="963"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -1220,73 +1220,73 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.processFile</name>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="26"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="25"/>
         <source>处理文件</source>
         <translation>Processing file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="29"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="28"/>
         <source>[线程 %1] 开始处理文件: %2</source>
         <translation>[Thread %1] start processing file: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="76"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="75"/>
         <source>[线程 %1] [文件 %2] 输入数据处理失败: %3</source>
         <translation>[Thread %1] [File %2] input processing failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="139"/>
-        <location filename="NormalJsonTranslator.File.cpp" line="226"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="138"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="225"/>
         <source>[线程 %1] 缓存文件 [%2] 解析失败: %3</source>
         <translation>[Thread %1] cache file [%2] parse failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="286"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="285"/>
         <source>[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句</source>
         <translation>[Thread %1] [File %2] %3 sentences, %4 cache/skip hits, %5 to translate</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="302"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="301"/>
         <source>[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4</source>
         <translation>[Thread %1] [File %2] %3 sentences missed cache: %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="348"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="347"/>
         <source>[线程 %1] [文件 %2] 已停止翻译</source>
         <translation>[Thread %1] [File %2] translation stopped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="365"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="364"/>
         <source>transAgent 未创建</source>
         <translation>transAgent not created</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="381"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="380"/>
         <source>[线程 %1] [文件 %2] 达到保存间隔，正在更新缓存文件...</source>
         <translation>[Thread %1] [File %2] save interval reached; updating cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="397"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="396"/>
         <source>[线程 %1] [文件 %2] 翻译完成，正在保存最终缓存...</source>
         <translation>[T%1][File %2] Done; saving final cache...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="406"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="405"/>
         <source>[线程 %1] [文件 %2] 处理完成</source>
         <translation>[Thread %1] [File %2] processing completed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="441"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="440"/>
         <source>文件 [%1] 尚未全部处理完成，跳过合并</source>
         <translation>[%1] incomplete; skipping merge</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="447"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="446"/>
         <source>开始合并 [%1] 的缓存文件...</source>
         <translation>Merging cache files for [%1]...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="454"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="453"/>
         <source>[线程 %1] [文件 %2] 合并处理完成</source>
         <translation>[Thread %1] [File %2] merge processing completed</translation>
     </message>
@@ -1294,17 +1294,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="812"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="811"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
         <translation>File [%1] has pending repeat-block refs; final output skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="877"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="876"/>
         <source>连续重复块引用回填完成，共复制 (%1 / %2) 句</source>
         <translation>Repeat-block fill done: copied %1/%2 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="891"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="890"/>
         <source>文件 [%1] 尚未翻译完毕或分割输出尚未全部回填完成，跳过本轮合并</source>
         <translation>File [%1] incomplete or split output pending; merge skipped</translation>
     </message>
@@ -1378,7 +1378,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.~NormalJsonTranslator</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="232"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="231"/>
         <source>所有任务已完成！NormalJsonTranslator 结束，总耗时 %1 秒</source>
         <translation>All tasks completed! NormalJsonTranslator finished, total time %1 seconds</translation>
     </message>
@@ -1386,7 +1386,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1375"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1374"/>
         <source>Agent 已将 %1 条建议写入缓存问题</source>
         <translation>Agent wrote %1 suggestions into cache problems</translation>
     </message>
@@ -1394,22 +1394,22 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyCommit</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="882"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="881"/>
         <source>提交结果缺少句子 %1</source>
         <translation>Commit result is missing sentence %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="890"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="889"/>
         <source>提交结果中句子 %1 的 dst 为空</source>
         <translation>Sentence %1 in commit result has empty dst</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1003"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1002"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但术语账本/建议写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; term/suggestion write failed, no retry: %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1024"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1023"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但 file note 写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; file note write failed, no retry: %6</translation>
     </message>
@@ -1417,12 +1417,12 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.executeToolCalls</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="666"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="665"/>
         <source>未知工具: %1</source>
         <translation>Unknown tool: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="673"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="672"/>
         <source>工具返回结果:
 %1</source>
         <translation>Tool result:
@@ -1432,7 +1432,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.formatTermUpdateSuggestion</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="386"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="385"/>
         <source>注意！从此处生成/更新的术语 `%1` 的译名已由 `%2` 更新为 `%3`。请自行搜索全文以确认是否符合预期</source>
         <translation>Warning: term `%1` changed from `%2` to `%3`. Search all text to verify.</translation>
     </message>
@@ -1440,26 +1440,26 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="704"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="703"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 工具调用明细:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent tool call details:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="722"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="721"/>
         <source>执行工具调用 %1 个，进入下一轮。调用参数:
 %2</source>
         <translation>Executed %1 tool calls; entering the next turn. Call arguments:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="736"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="735"/>
         <source>完成上下文压缩，进入下一轮</source>
         <translation>Context compressed; next turn</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="750"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="749"/>
         <source>该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:
 %4</source>
         <translation>Saved %1 lines, %2 terms, %3 suggestions. Result:
@@ -1469,22 +1469,22 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.parseProtocolResponse</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="144"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="143"/>
         <source>翻译 Agent 响应不是合法 JSON 对象</source>
         <translation>Translation Agent response is not a valid JSON object</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="153"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="152"/>
         <source>翻译 Agent 响应缺少动作字段</source>
         <translation>Translation response lacks action</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="158"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="157"/>
         <source>翻译 Agent 返回了空工具调用</source>
         <translation>Translation Agent returned empty tool_calls</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="163"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="162"/>
         <source>翻译 Agent 返回未知动作: %1</source>
         <translation>Translation Agent returned unknown action: %1</translation>
     </message>
@@ -1492,7 +1492,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.runSearchTextTool</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="474"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="473"/>
         <source>search_text.scope 非法: %1。允许值仅有 current_file|all_files|specified_file</source>
         <translation>Invalid search_text.scope: %1. Allowed values: current_file|all_files|specified_file</translation>
     </message>
@@ -1500,80 +1500,80 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1090"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1089"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 开始翻译，最多 %4 轮，共 %5 句:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] Agent starts translation, max %4 turns, %5 sentences total:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1108"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1107"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 上下文接近上限，要求模型先压缩上下文</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Context near limit; requesting compression</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1135"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1134"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Splitting sentences in half and retrying...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1160"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1159"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Retrying after clearing context...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1175"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1174"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1187"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1186"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 开始请求，剩余 %6 句，上下文 %7 字节</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Start: %6 lines left, %7-byte context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1202"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1201"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1220"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1219"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 成功响应，响应内容:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent responded successfully, content:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1245"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1244"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理成功，处理结果:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent response processed successfully, result:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1261"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1260"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理失败，错误: %6，响应内容:
 %7</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Response failed: %6; content:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1271"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1270"/>
         <source>内容为空</source>
         <translation>Empty content</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1277"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1276"/>
         <source>Agent 响应处理失败: %1</source>
         <translation>Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1307"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1306"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 因超过最大轮数 (%4 轮) 而失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Agent exceeded %4 turns; translated %5/%6 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1319"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1318"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 在 %5 次请求后彻底失败，共翻译 (%6 / %7) 句</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Failed after %5 requests; translated %6/%7 lines</translation>
     </message>
@@ -1581,7 +1581,7 @@ Problem overview:
 <context>
     <name>PDFTranslator.PDFTranslator</name>
     <message>
-        <location filename="PDFTranslator.cpp" line="27"/>
+        <location filename="PDFTranslator.cpp" line="26"/>
         <source>GalTransl++ PDFTranslator 启动...</source>
         <translation>GalTransl++ PDFTranslator started...</translation>
     </message>
@@ -1589,52 +1589,52 @@ Problem overview:
 <context>
     <name>PDFTranslator.pdfBeforeRun</name>
     <message>
-        <location filename="PDFTranslator.cpp" line="58"/>
+        <location filename="PDFTranslator.cpp" line="57"/>
         <source>已创建目录: [%1]</source>
         <translation>Created directory: [%1]</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="77"/>
+        <location filename="PDFTranslator.cpp" line="76"/>
         <source>未找到 PDF 文件</source>
         <translation>PDF file not found</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="91"/>
+        <location filename="PDFTranslator.cpp" line="90"/>
         <source>正在提取 PDF 文件元数据: [%1]</source>
         <oldsource>正在提取文件: [%1]</oldsource>
         <translation>Reading PDF metadata: [%1]</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="98"/>
+        <location filename="PDFTranslator.cpp" line="97"/>
         <source>成功提取 PDF 文件元数据: %1</source>
         <oldsource>成功提取元数据: %1</oldsource>
         <translation>PDF metadata extracted: %1</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="103"/>
+        <location filename="PDFTranslator.cpp" line="102"/>
         <source>提取 PDF 文件元数据失败: %1</source>
         <oldsource>提取元数据失败: %1</oldsource>
         <translation>PDF metadata failed: %1</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="114"/>
+        <location filename="PDFTranslator.cpp" line="113"/>
         <source>[文件 %1] 未找到对应的元数据</source>
         <translation>[File %1] matching metadata not found</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="126"/>
+        <location filename="PDFTranslator.cpp" line="125"/>
         <source>正在回注 PDF 文件: [%1]</source>
         <oldsource>正在回注文件: %1</oldsource>
         <translation>Injecting PDF: [%1]</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="134"/>
+        <location filename="PDFTranslator.cpp" line="133"/>
         <source>成功回注 PDF 文件: %1</source>
         <oldsource>成功翻译文件: %1</oldsource>
         <translation>PDF injected: %1</translation>
     </message>
     <message>
-        <location filename="PDFTranslator.cpp" line="139"/>
+        <location filename="PDFTranslator.cpp" line="138"/>
         <source>回注 PDF 文件失败: %1</source>
         <oldsource>翻译文件失败: %1</oldsource>
         <translation>PDF injection failed: %1</translation>
@@ -1643,7 +1643,7 @@ Problem overview:
 <context>
     <name>PDFTranslator.pdfInit</name>
     <message>
-        <location filename="PDFTranslator.cpp" line="46"/>
+        <location filename="PDFTranslator.cpp" line="45"/>
         <source>PDF 配置文件解析失败: %1</source>
         <translation>PDF config parse failed: %1</translation>
     </message>
@@ -1651,7 +1651,7 @@ Problem overview:
 <context>
     <name>PDFTranslator.~PDFTranslator</name>
     <message>
-        <location filename="PDFTranslator.cpp" line="17"/>
+        <location filename="PDFTranslator.cpp" line="16"/>
         <source>所有任务已完成！PDFTranslator 结束</source>
         <translation>All tasks completed! PDFTranslator finished</translation>
     </message>
@@ -1974,27 +1974,27 @@ Problem overview:
 <context>
     <name>SkipTrans.SkipTrans</name>
     <message>
-        <location filename="SkipTrans.cpp" line="23"/>
+        <location filename="SkipTrans.cpp" line="22"/>
         <source>SkipTrans 不支持 %1 阶段运行</source>
         <translation>SkipTrans does not support %1 stage</translation>
     </message>
     <message>
-        <location filename="SkipTrans.cpp" line="59"/>
+        <location filename="SkipTrans.cpp" line="58"/>
         <source>skipKeys 正则表达式 `%1` 编译失败</source>
         <translation>skipKeys regex [%1] compile failed</translation>
     </message>
     <message>
-        <location filename="SkipTrans.cpp" line="77"/>
+        <location filename="SkipTrans.cpp" line="76"/>
         <source>skipKeys 元素必须是字符串、表或表数组</source>
         <translation>skipKeys items must be string/table/table array</translation>
     </message>
     <message>
-        <location filename="SkipTrans.cpp" line="81"/>
+        <location filename="SkipTrans.cpp" line="80"/>
         <source>插件 SkipTrans-%1 已加载, skipH: %2</source>
         <translation>Plugin SkipTrans-%1 loaded, skipH: %2</translation>
     </message>
     <message>
-        <location filename="SkipTrans.cpp" line="87"/>
+        <location filename="SkipTrans.cpp" line="86"/>
         <source>SkipTrans-%1 配置文件解析错误: %2</source>
         <translation>SkipTrans-%1 config parse error: %2</translation>
     </message>
@@ -2002,7 +2002,7 @@ Problem overview:
 <context>
     <name>SkipTrans.skipImpl</name>
     <message>
-        <location filename="SkipTrans.cpp" line="118"/>
+        <location filename="SkipTrans.cpp" line="117"/>
         <source>被第 %1 个 skipKeys 条件匹配到</source>
         <translation>Matched by skipKeys condition %1</translation>
     </message>
@@ -2010,17 +2010,17 @@ Problem overview:
 <context>
     <name>TextFull2Half.TextFull2Half</name>
     <message>
-        <location filename="TextFull2Half.cpp" line="54"/>
+        <location filename="TextFull2Half.cpp" line="53"/>
         <source>TextFull2Half 正则编译错误: %1</source>
         <translation>TextFull2Half regex compile error: %1</translation>
     </message>
     <message>
-        <location filename="TextFull2Half.cpp" line="65"/>
+        <location filename="TextFull2Half.cpp" line="64"/>
         <source>TextFull2Half-%1 已加载 - 替换标点: %2, 反向替换: %3</source>
         <translation>TextFull2Half-%1 loaded - replace punctuation: %2, reverse: %3</translation>
     </message>
     <message>
-        <location filename="TextFull2Half.cpp" line="74"/>
+        <location filename="TextFull2Half.cpp" line="73"/>
         <source>TextFull2Half-%1 配置文件解析错误: %2</source>
         <translation>TextFull2Half-%1 config parse error: %2</translation>
     </message>
@@ -2028,62 +2028,62 @@ Problem overview:
 <context>
     <name>TextLinebreakFix.TextLinebreakFix</name>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="26"/>
+        <location filename="TextLinebreakFix.cpp" line="25"/>
         <source>TextLinebreakFix 不支持 %1 阶段运行</source>
         <translation>TextLinebreakFix does not support %1 stage</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="64"/>
+        <location filename="TextLinebreakFix.cpp" line="63"/>
         <source>TextLinebreakFix-%1 无效的换行模式: %2</source>
         <translation>TextLinebreakFix-%1 invalid line break mode: %2</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="85"/>
+        <location filename="TextLinebreakFix.cpp" line="84"/>
         <source>TextLinebreakFix-%1 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>TextLinebreakFix-%1 configured MeCab tokenizer; will load on first use.</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="95"/>
+        <location filename="TextLinebreakFix.cpp" line="94"/>
         <source>TextLinebreakFix-%1 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>TextLinebreakFix-%1 configured spaCy tokenizer; will load on first use.</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="106"/>
+        <location filename="TextLinebreakFix.cpp" line="105"/>
         <source>TextLinebreakFix-%1 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>TextLinebreakFix-%1 configured Stanza tokenizer; will load on first use.</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="115"/>
+        <location filename="TextLinebreakFix.cpp" line="114"/>
         <source>TextLinebreakFix-%1 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>TextLinebreakFix-%1 configured pkuseg tokenizer; will load on first use.</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="124"/>
+        <location filename="TextLinebreakFix.cpp" line="123"/>
         <source>TextLinebreakFix-%1 无效的 tokenizerBackend: %2</source>
         <translation>TextLinebreakFix-%1 invalid tokenizerBackend: %2</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="134"/>
+        <location filename="TextLinebreakFix.cpp" line="133"/>
         <source>TextLinebreakFix-%1 分段字数阈值必须大于0</source>
         <translation>TextLinebreakFix-%1 segment char threshold must be &gt; 0</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="141"/>
+        <location filename="TextLinebreakFix.cpp" line="140"/>
         <source>TextLinebreakFix-%1 报错阈值必须大于0</source>
         <translation>TextLinebreakFix-%1 error threshold must be &gt; 0</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="148"/>
+        <location filename="TextLinebreakFix.cpp" line="147"/>
         <source>已加载插件 TextLinebreakFix-%1, 换行模式: %2, 优先阈值 %3, 分段字数阈值: %4, 强制修复: %5, 报错阈值: %6</source>
         <translation>Loaded plugin TextLinebreakFix-%1, mode: %2, priority %3, segment threshold: %4, force fix: %5, error threshold: %6</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="159"/>
+        <location filename="TextLinebreakFix.cpp" line="158"/>
         <source>插件 TextLinebreakFix-%1 分词器已启用</source>
         <translation>Plugin TextLinebreakFix-%1 tokenizer enabled</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="165"/>
+        <location filename="TextLinebreakFix.cpp" line="164"/>
         <source>TextLinebreakFix-%1 插件配置文件解析错误: %2</source>
         <translation>TextLinebreakFix-%1 plugin config parse error: %2</translation>
     </message>
@@ -2091,7 +2091,7 @@ Problem overview:
 <context>
     <name>TextLinebreakFix.checkLineLength</name>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="214"/>
+        <location filename="TextLinebreakFix.cpp" line="213"/>
         <source>第 %1 行字数超出报错阈值[%2/%3]</source>
         <translation>Line %1 exceeds error threshold [%2/%3]</translation>
     </message>
@@ -2099,39 +2099,39 @@ Problem overview:
 <context>
     <name>TextLinebreakFix.fixLinebreak</name>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="233"/>
+        <location filename="TextLinebreakFix.cpp" line="232"/>
         <source>需要修复换行的句子[%1]: 原文 %2 行, 译文 %3 行</source>
         <translation>Line [%1] needs break fix: source %2, target %3 lines</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="247"/>
-        <location filename="TextLinebreakFix.cpp" line="512"/>
+        <location filename="TextLinebreakFix.cpp" line="246"/>
+        <location filename="TextLinebreakFix.cpp" line="511"/>
         <source>换行修复</source>
         <translation>Line break fix</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="248"/>
-        <location filename="TextLinebreakFix.cpp" line="513"/>
+        <location filename="TextLinebreakFix.cpp" line="247"/>
+        <location filename="TextLinebreakFix.cpp" line="512"/>
         <source>原文 %1 行, 译文 %2 行, 修正后 %3 行</source>
         <translation>Source %1 lines, translation %2 lines, fixed %3 lines</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="253"/>
+        <location filename="TextLinebreakFix.cpp" line="252"/>
         <source>译文[%1](%2行) -&gt; 修正后译文[%3](%4行)</source>
         <translation>Target [%1](%2 lines) -&gt; fixed [%3](%4 lines)</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="496"/>
+        <location filename="TextLinebreakFix.cpp" line="495"/>
         <source>译文分词结果</source>
         <translation>Translation tokens</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="503"/>
+        <location filename="TextLinebreakFix.cpp" line="502"/>
         <source>无效的 TextLinebreakFix 模式</source>
         <translation>Invalid TextLinebreakFix mode</translation>
     </message>
     <message>
-        <location filename="TextLinebreakFix.cpp" line="518"/>
+        <location filename="TextLinebreakFix.cpp" line="517"/>
         <source>句子[%1](%2行) -&gt; 修正后译文[%3](%4行)</source>
         <translation>Sentence [%1](%2 lines) -&gt; fixed translation [%3](%4 lines)</translation>
     </message>
@@ -2139,7 +2139,7 @@ Problem overview:
 <context>
     <name>buildContextHistory</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="445"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="444"/>
         <source>内部错误: 未知的 PromptType</source>
         <translation>Internal error: Unknown PromptType</translation>
     </message>
@@ -2298,7 +2298,7 @@ Problem overview:
 <context>
     <name>chooseCachePart</name>
     <message>
-        <location filename="Tool.cpp" line="784"/>
+        <location filename="Tool.cpp" line="783"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2306,7 +2306,7 @@ Problem overview:
 <context>
     <name>chooseStringRef</name>
     <message>
-        <location filename="Tool.cpp" line="767"/>
+        <location filename="Tool.cpp" line="766"/>
         <source>无法获取字符串的条件目标 %1</source>
         <oldsource>无法获取字符串的无效条件目标 %1</oldsource>
         <translation>Invalid string target %1</translation>
@@ -2315,17 +2315,17 @@ Problem overview:
 <context>
     <name>combineOutputFiles</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="742"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="741"/>
         <source>开始合并文件: %1</source>
         <translation>Merging file: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="759"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="758"/>
         <source>试图合并 [%1] 时出错，缺少文件 [%2]</source>
         <translation>Error merging [%1]: missing file [%2]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="768"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="767"/>
         <source>文件 [%1] 合并完成，已保存到 [%2]</source>
         <translation>File [%1] merged, saved to [%2]</translation>
     </message>
@@ -2333,17 +2333,17 @@ Problem overview:
 <context>
     <name>countGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="219"/>
+        <location filename="Tool.cpp" line="218"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="228"/>
+        <location filename="Tool.cpp" line="227"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="234"/>
+        <location filename="Tool.cpp" line="233"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2351,23 +2351,23 @@ Problem overview:
 <context>
     <name>createTranslator</name>
     <message>
-        <location filename="ITranslator.cpp" line="145"/>
+        <location filename="ITranslator.cpp" line="144"/>
         <source>找不到配置文件 [%1]</source>
         <translation>Config file [%1] not found</translation>
     </message>
     <message>
-        <location filename="ITranslator.cpp" line="175"/>
+        <location filename="ITranslator.cpp" line="174"/>
         <source>无效的日志等级: %1</source>
         <translation>Invalid log level: %1</translation>
     </message>
     <message>
-        <location filename="ITranslator.cpp" line="202"/>
+        <location filename="ITranslator.cpp" line="201"/>
         <source>日志记录器初始化完成</source>
         <translation>Logger initialized</translation>
     </message>
     <message>
-        <location filename="ITranslator.cpp" line="225"/>
-        <location filename="ITranslator.cpp" line="249"/>
+        <location filename="ITranslator.cpp" line="224"/>
+        <location filename="ITranslator.cpp" line="248"/>
         <source>无效的基类名称: %1</source>
         <translation>Invalid base class name: %1</translation>
     </message>
@@ -2375,7 +2375,7 @@ Problem overview:
 <context>
     <name>fillBlockAndMap</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="517"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="516"/>
         <source>内部错误: 不支持的 TransEngine 用于构建输入</source>
         <translation>Internal error: unsupported TransEngine for building input</translation>
     </message>
@@ -2383,7 +2383,7 @@ Problem overview:
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="393"/>
+        <location filename="Tool.ixx" line="392"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2391,12 +2391,12 @@ Problem overview:
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1065"/>
+        <location filename="Tool.cpp" line="1064"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1071"/>
+        <location filename="Tool.cpp" line="1070"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2412,7 +2412,7 @@ Problem overview:
 <context>
     <name>parseContent</name>
     <message>
-        <location filename="NormalJsonTranslatorHelperTool.cpp" line="723"/>
+        <location filename="NormalJsonTranslatorHelperTool.cpp" line="722"/>
         <source>内部错误: 不支持的 TransEngine 用于解析输出</source>
         <translation>Internal error: unsupported TransEngine for parsing output</translation>
     </message>
@@ -2420,12 +2420,12 @@ Problem overview:
 <context>
     <name>parseToml</name>
     <message>
-        <location filename="Tool.ixx" line="267"/>
+        <location filename="Tool.ixx" line="266"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="285"/>
+        <location filename="Tool.ixx" line="284"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2433,12 +2433,12 @@ Problem overview:
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1083"/>
+        <location filename="Tool.cpp" line="1082"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1088"/>
+        <location filename="Tool.cpp" line="1087"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2446,17 +2446,17 @@ Problem overview:
 <context>
     <name>splitIntoGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="170"/>
+        <location filename="Tool.cpp" line="169"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="180"/>
+        <location filename="Tool.cpp" line="179"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="187"/>
+        <location filename="Tool.cpp" line="186"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2472,7 +2472,7 @@ Problem overview:
 <context>
     <name>splitTsvLine</name>
     <message>
-        <location filename="Tool.cpp" line="104"/>
+        <location filename="Tool.cpp" line="103"/>
         <source>内部错误: TSV 行切分不允许使用空分隔符</source>
         <translation>TSV split cannot use empty delimiter</translation>
     </message>
@@ -2487,7 +2487,7 @@ Problem overview:
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="353"/>
+        <location filename="Tool.ixx" line="352"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>
@@ -2495,54 +2495,54 @@ Problem overview:
 <context>
     <name>validateNormalJsonCoreConfig</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="25"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="24"/>
         <source>配置项 %1 无效: 当前值 %2，要求%3</source>
         <translation>Invalid config item %1: current value %2, required %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="70"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="78"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="86"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="118"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="142"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="150"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="166"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="174"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="182"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="195"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="220"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="69"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="77"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="85"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="117"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="141"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="149"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="165"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="173"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="181"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="194"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="219"/>
         <source>大于 0</source>
         <translation>greater than 0</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="94"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="93"/>
         <source>为 name 或 size</source>
         <translation>be name or size</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="102"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="101"/>
         <source>为 No、Num 或 Equal</source>
         <translation>be No, Num or Equal</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="110"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="109"/>
         <source>为 toml 或 json</source>
         <translation>toml or json</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="126"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="125"/>
         <source>大于等于 2</source>
         <translation>at least 2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="134"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="158"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="211"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="133"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="157"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="210"/>
         <source>大于等于 0</source>
         <translation>at least 0</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="203"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="202"/>
         <source>大于等于 1</source>
         <translation>greater than or equal to 1</translation>
     </message>

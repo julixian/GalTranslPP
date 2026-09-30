@@ -662,19 +662,26 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
                     if (isSameExtension(entry.path(), L".zip") &&
                         str2Lower(entry.path().filename().wstring()).starts_with(L"python"))
                     {
-                        return entry.path();
+                        return fs::canonical(entry.path());
                     }
                 }
                 return fs::path{};
             }();
 
         if (!envZipPath.empty()) {
-            s_pythonExePath = fs::canonical(pythonEnvPath / L"python.exe");
+            const fs::path pythonEnvCanonicalPath = fs::canonical(pythonEnvPath);
+            s_pythonExePath = fs::canonical(pythonEnvCanonicalPath / L"python.exe");
             PyConfig config{};
             PyConfig_InitIsolatedConfig(&config);
-            PyConfig_SetString(&config, &config.home, fs::canonical(pythonEnvPath).c_str());
+            config.site_import = 0;
+            config.module_search_paths_set = 1;
+            PyConfig_SetString(&config, &config.home, pythonEnvCanonicalPath.c_str());
             PyConfig_SetString(&config, &config.executable, s_pythonExePath.c_str());
-            PyConfig_SetString(&config, &config.pythonpath_env, envZipPath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, pythonEnvCanonicalPath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, envZipPath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"DLLs").c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib").c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib" / L"site-packages").c_str());
             py::initialize_interpreter(&config);
             {
                 py::module_::import("importlib.metadata");

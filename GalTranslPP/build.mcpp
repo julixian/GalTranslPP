@@ -5,8 +5,11 @@ import gpp.build;
 
 int main() {
     return gpp::run_build_script([] {
-        gpp::configure_vcpkg(gpp::core_link_libraries());
+        gpp::configure_vcpkg(gpp::core_link_libraries(), gpp::opencc_files());
         gpp::link_python_libraries();
+        // core 放置的文件随链接它的每个程序一起部署：7z.dll、OpenCC 数据与 BaseConfig。
+        gpp::deploy_seven_zip();
+        gpp::deploy_base_config();
         auto qt_options = gpp::make_qt_options({"Core"});
         gpp::configure_translation(qt_options, "qt_gpp_en.ts");
         if (!mcpp::rules::qt::compile(qt_options)) return 1;

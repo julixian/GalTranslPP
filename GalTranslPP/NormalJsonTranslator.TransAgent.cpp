@@ -6,7 +6,6 @@ module;
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
-#include <toml.hpp>
 
 module NormalJsonTranslator;
 

@@ -1,7 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#include <toml.hpp>
 
 module NormalJsonTranslatorHelperTool;
 
@@ -208,11 +207,11 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
         return references;
     }
 
-    std::vector<uint64_t> hashPrefix(tokens.size() + 1);
-    std::vector<uint64_t> hashPower(tokens.size() + 1, 1);
+    std::vector<std::uint64_t> hashPrefix(tokens.size() + 1);
+    std::vector<std::uint64_t> hashPower(tokens.size() + 1, 1);
     for (size_t i = 0; i < tokens.size(); ++i) {
-        constexpr uint64_t hashBase = 11400714819323198485ull;
-        hashPrefix[i + 1] = hashPrefix[i] * hashBase + (uint64_t)tokens[i] + 0x9E3779B97F4A7C15ull;
+        constexpr std::uint64_t hashBase = 11400714819323198485ull;
+        hashPrefix[i + 1] = hashPrefix[i] * hashBase + (std::uint64_t)tokens[i] + 0x9E3779B97F4A7C15ull;
         hashPower[i + 1] = hashPower[i] * hashBase;
     }
     auto windowHash = [&](int start, int length)
@@ -229,8 +228,8 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
             );
         };
 
-    absl::flat_hash_map<uint64_t, std::vector<int>> sourceByBlockHash;
-    std::vector<uint8_t> referencedPositions(tokens.size(), 0);
+    absl::flat_hash_map<std::uint64_t, std::vector<int>> sourceByBlockHash;
+    std::vector<std::uint8_t> referencedPositions(tokens.size(), 0);
 
     for (const RepeatedBlockOccurrence& occurrence : occurrences) {
         if (occurrence.start + minBlockSize > (int)tokens.size()) {

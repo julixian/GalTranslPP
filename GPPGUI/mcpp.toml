@@ -25,10 +25,16 @@ lto = false
 
 [build]
 default-profile = "release"
-sources = ["**/*.cpp", "**/*.c", "!GPPGUI.cpp"]
+sources = [
+  "*.cpp",
+  "TreeSitterGrammars/**/*.c",
+  "!GPPGUI.cpp",
+  "!x64/**",
+  "!x86/**",
+  "!ARM64/**"
+]
 include_dirs = [
   ".",
-  "../GalTranslPP",
   "../3rdParty/pybind11/include"
 ]
 

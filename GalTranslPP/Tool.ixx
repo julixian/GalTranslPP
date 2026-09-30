@@ -4,7 +4,6 @@ module;
 #ifdef _WIN32
 #include <Windows.h>
 #endif
-#include <toml.hpp>
 
 export module Tool;
 
@@ -205,7 +204,7 @@ export
 
 
     std::string currentTimestampString();
-    uint64_t calculateFileCRC64(const fs::path& filePath);
+    std::uint64_t calculateFileCRC64(const fs::path& filePath);
     int compareVersion(std::string_view latestVer, std::string_view currentVer);
 
     template<typename DataType>
@@ -382,7 +381,7 @@ export
             return value.template get<bool>();
         }
         else if (value.is_number_integer()) {
-            return value.template get<int64_t>();
+            return value.template get<std::int64_t>();
         }
         else if (value.is_number_float()) {
             return value.template get<double>();

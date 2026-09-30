@@ -129,6 +129,7 @@ if exist "$(TargetDir)..\GPPGUI_PRIVATE" copy "$(TargetPath)" "$(TargetDir)..\GP
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rdParty\3rdModule\toml.ixx" />
     <ClCompile Include="Updater.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -4,7 +4,6 @@ module;
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 #include <cpp-base64/base64.h>
-#include <toml.hpp>
 
 module SkipTrans;
 

@@ -26,8 +26,12 @@ sources = [
   "../3rdParty/3rdModule/ctpl_stl.ixx",
   "../3rdParty/3rdModule/jpcre2/jpcre2.ixx",
   "../3rdParty/3rdModule/json.ixx",
+  "../3rdParty/3rdModule/toml.ixx",
   "../3rdParty/3rdModule/spdlog.ixx",
-  "../3rdParty/3rdModule/utf8cpp.ixx"
+  "../3rdParty/3rdModule/utf8cpp.ixx",
+  "!x64/**",
+  "!x86/**",
+  "!ARM64/**"
 ]
 module_extensions = [".ixx"]
 include_dirs = [
@@ -38,7 +42,9 @@ include_dirs = [
 
 [target.windows.build]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
+defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES",
+  # 详见 https://github.com/microsoft/STL/issues/6121，https://developercommunity.visualstudio.com/t/11148844
+  "_RANGES_"]
 ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi"]
 
 [targets.GalTranslPP]

@@ -9,11 +9,10 @@
 #include <Windows.h>
 #endif
 
-#include <toml.hpp>
-
 import GPPVersion;
-import Tool;
 import PythonManager;
+import toml11;
+import Tool;
 import TerminalController;
 
 namespace fs = std::filesystem;

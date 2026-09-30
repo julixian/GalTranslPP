@@ -4,7 +4,6 @@ module;
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
-#include <toml.hpp>
 
 module DictionaryGenerator;
 
@@ -338,7 +337,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
     absl::flat_hash_set<std::string> coveredWords;
     coveredWords.reserve(allWords.size());
     std::vector<int> selectedIndices;
-    std::vector<uint8_t> usedIndices(filteredSegmentWords.size(), 0);
+    std::vector<std::uint8_t> usedIndices(filteredSegmentWords.size(), 0);
 
     m_controller->makeBar((int)allWords.size(), 1);
     {

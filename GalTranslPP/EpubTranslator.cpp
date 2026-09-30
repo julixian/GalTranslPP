@@ -8,7 +8,6 @@ module;
 #pragma  warning(disable: 4005) 
 #include <gumbo.h>
 #pragma  warning(pop) 
-#include <toml.hpp>
 
 module EpubTranslator;
 

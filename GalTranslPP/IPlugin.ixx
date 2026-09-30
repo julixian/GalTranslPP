@@ -3,7 +3,6 @@
 #define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
-#include <toml.hpp>
 #include <proxy/proxy.h> // 直接 export import proxy.v4; 也是可以的，但 IDE 的智能提示会疯狂报红。。。
 
 export module IPlugin;

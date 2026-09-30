@@ -12,7 +12,7 @@
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitfileextractor.hpp>
 
-#include <toml.hpp>
+import toml11;
 
 import boost;
 import GPPVersion;

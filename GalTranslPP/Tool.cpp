@@ -12,7 +12,6 @@ module;
 
 #include <opencc/opencc.h>
 
-#include <toml.hpp>
 
 #include <unicode/brkiter.h>
 #include <unicode/uscript.h>

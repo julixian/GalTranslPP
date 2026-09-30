@@ -3,7 +3,6 @@ module;
 #include "GPPMacros.hpp"
 #include <unicode/unistr.h>
 #include <unicode/uchar.h>
-#include <toml.hpp>
 
 module TextFull2Half;
 

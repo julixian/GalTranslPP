@@ -14,7 +14,12 @@ lto = false
 
 [build]
 default-profile = "release"
-sources = ["GPPVersion.ixx"]
+sources = [
+  "GPPVersion.ixx",
+  "!x64/**",
+  "!x86/**",
+  "!ARM64/**"
+]
 module_extensions = [".ixx"]
 
 [target.windows.build]

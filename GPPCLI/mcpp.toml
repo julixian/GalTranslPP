@@ -24,11 +24,16 @@ lto = false
 
 [build]
 default-profile = "release"
-sources = ["ProgressBar.ixx", "TerminalController.ixx"]
+sources = [
+  "ProgressBar.ixx",
+  "TerminalController.ixx",
+  "!x64/**",
+  "!x86/**",
+  "!ARM64/**"
+]
 module_extensions = [".ixx"]
 include_dirs = [
   ".",
-  "../GalTranslPP",
   "../3rdParty/pybind11/include"
 ]
 

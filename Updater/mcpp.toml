@@ -24,7 +24,11 @@ lto = false
 [build]
 default-profile = "release"
 sources = [
-  "../3rdParty/3rdModule/boost.ixx"
+  "../3rdParty/3rdModule/boost.ixx",
+  "../3rdParty/3rdModule/toml.ixx",
+  "!x64/**",
+  "!x86/**",
+  "!ARM64/**"
 ]
 module_extensions = [".ixx"]
 include_dirs = ["."]

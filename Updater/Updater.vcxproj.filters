@@ -14,6 +14,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\3rdParty\3rdModule\toml.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Updater.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

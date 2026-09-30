@@ -4,6 +4,7 @@ export import std;
 export import AbslContainers;
 export import jpcre2;
 export import nlohmann.json;
+export import toml11;
 export import spdlog;
 export import GPPI18n;
 

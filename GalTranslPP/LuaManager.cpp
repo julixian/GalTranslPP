@@ -706,7 +706,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	lua.newEnum("ApiProtocol",
 		"OpenAI", ApiProtocol::OpenAI,
 		"Claude", ApiProtocol::Claude,
-		"Gemini", ApiProtocol::Gemini
+		"Gemini", ApiProtocol::Gemini,
+		"OpenAIRes", ApiProtocol::OpenAIRes
 	);
 
 	lua.newUsertype<SentencePosition>("SentencePosition",

@@ -16,10 +16,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-		"1. 修复 3.1.1 版本中 opencc 文件缺失的 bug",
-        "v3.1.1 更新",
-		"1. 携带上文数量可设为 0",
-        "2. 问题概览现在会输出文件数量了",
+		"1. 修复使用非 InitIsolatedConfig 初始化 Python 可能导致的 bug",
+        "2. 增加对 OpenAI Response（openaires）协议的支持",
+        "3. ShowNormal 和 Rebuild 现在会忽略『最大线程数』设置，统一使用 文件数/CPU逻辑核心数 中的较小值",
     };
 
     mainLayout->addWidget(updateTitle);

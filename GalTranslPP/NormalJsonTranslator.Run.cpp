@@ -235,6 +235,12 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
             m_controller->setRuntimeFiles(runtimeFileTotals);
         }
+        else {
+            m_threadsNum = std::max(1, std::min(
+                (int)std::thread::hardware_concurrency(),
+                (int)runtimeFileTotals.size()
+            ));
+        }
         m_controller->makeBar(totalSentences, m_threadsNum);
 
         toml::value orgNameTable = toml::table{};
@@ -365,6 +371,13 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 }
                 if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
                     m_controller->setRuntimeFiles(runtimeFileTotals);
+                }
+                else {
+                    m_threadsNum = std::max(1, std::min(
+                        (int)std::thread::hardware_concurrency(),
+                        (int)runtimeFileTotals.size()
+                    ));
+                    m_controller->makeBar(m_controller->m_totalSentences, m_threadsNum);
                 }
             };
         if (m_splitFileMethod == "Equal") {

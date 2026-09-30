@@ -145,12 +145,12 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
                 .arg(threadId)
                 .arg(batchIndex)
                 .arg(requestCount + 1)
-                .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+                .arg(limitLogLines(response.content.value(), m_inputBlockMaxLines))
                 .toStdString());
         }
 
         int parsedCount = 0;
-        for (std::string_view line : splitStringView(response.content, '\n')) {
+        for (std::string_view line : splitStringView(response.content.value(), '\n')) {
             const std::vector<std::string_view> parts = splitStringView(line, '\t');
             if (parts.size() < 2 || parts[0] == "Source") {
                 continue;
@@ -178,7 +178,7 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
                 .arg(batchIndex)
                 .arg(requestCount + 1)
                 .arg(pendingNameCount)
-                .arg(limitLogLines(response.content, m_inputBlockMaxLines))
+                .arg(limitLogLines(response.content.value(), m_inputBlockMaxLines))
                 .toStdString());
             return;
         }
@@ -191,9 +191,9 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
                 .arg(requestCount + 1)
                 .arg(parsedCount)
                 .arg(pendingNameCount)
-                .arg(response.content.empty()
+                .arg(response.content.value().empty()
                     ? gppTr("NameTranslator.translateBatch", "内容为空").toStdString()
-                    : limitLogLines(response.content, m_inputBlockMaxLines))
+                    : limitLogLines(response.content.value(), m_inputBlockMaxLines))
                 .toStdString());
             ++requestCount;
             continue;

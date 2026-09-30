@@ -12,7 +12,8 @@ export
     enum class ApiProtocol {
         OpenAI,
         Claude,
-        Gemini
+        Gemini,
+        OpenAIRes
     };
 
     struct TranslationApi {
@@ -34,7 +35,7 @@ export
     };
 
     struct ApiResponse {
-        std::string content;
+        std::expected<std::string, std::string> content;
         long statusCode = 0;
     };
 

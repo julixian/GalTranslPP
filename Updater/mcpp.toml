@@ -23,10 +23,10 @@ lto = false
 
 [build]
 default-profile = "release"
-# sources = [
-#   "../3rdParty/3rdModule/boost.ixx"
-# ]
-# module_extensions = [".ixx"]
+sources = [
+  "../3rdParty/3rdModule/boost.ixx"
+]
+module_extensions = [".ixx"]
 include_dirs = ["."]
 
 [target.windows.build]

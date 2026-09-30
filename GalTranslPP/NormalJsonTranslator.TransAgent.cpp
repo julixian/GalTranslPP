@@ -1225,7 +1225,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(batchIndexLog)
                     .arg(turn + 1)
                     .arg(requestCount + 1)
-                    .arg(response.content)
+                    .arg(response.content.value())
                     .toStdString());
             }
 
@@ -1234,7 +1234,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                 pendingSpan,
                 rollingContext,
                 messages,
-                response.content,
+                response.content.value(),
                 makeTransby(currentApi.apikey, currentApi.modelName),
                 batchIndexLog,
                 turn,
@@ -1267,9 +1267,9 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
-                    .arg(response.content.empty()
+                    .arg(response.content.value().empty()
                         ? gppTr("NormalJsonTranslatorTransAgent.translateBatch", "内容为空").toStdString()
-                        : limitLogLines(response.content, m_inputBlockMaxLines))
+                        : limitLogLines(response.content.value(), m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",

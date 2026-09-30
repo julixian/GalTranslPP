@@ -21,7 +21,7 @@
 <context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
-        <location filename="ApiTool.cpp" line="183"/>
+        <location filename="ApiTool.cpp" line="201"/>
         <source>请用中文完整回复一句话：GPP Api 测试成功。</source>
         <translation>Reply in Chinese: GPP API test succeeded.</translation>
     </message>
@@ -29,7 +29,7 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="291"/>
+        <location filename="ApiTool.cpp" line="318"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -37,12 +37,12 @@
 <context>
     <name>ApiTool.queryApiModels</name>
     <message>
-        <location filename="ApiTool.cpp" line="504"/>
+        <location filename="ApiTool.cpp" line="587"/>
         <source>模型列表响应 JSON 解析失败: %1</source>
         <translation>Model list response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiTool.cpp" line="515"/>
+        <location filename="ApiTool.cpp" line="598"/>
         <source>模型列表响应模型字段解析失败: %1</source>
         <translation>Failed parsing model list field: %1</translation>
     </message>
@@ -600,35 +600,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1276"/>
-        <location filename="LuaManager.cpp" line="1288"/>
-        <location filename="LuaManager.cpp" line="1302"/>
-        <location filename="LuaManager.cpp" line="1317"/>
+        <location filename="LuaManager.cpp" line="1277"/>
+        <location filename="LuaManager.cpp" line="1289"/>
+        <location filename="LuaManager.cpp" line="1303"/>
+        <location filename="LuaManager.cpp" line="1318"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1293"/>
+        <location filename="LuaManager.cpp" line="1294"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1307"/>
+        <location filename="LuaManager.cpp" line="1308"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1322"/>
+        <location filename="LuaManager.cpp" line="1323"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1329"/>
+        <location filename="LuaManager.cpp" line="1330"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1336"/>
+        <location filename="LuaManager.cpp" line="1337"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -945,7 +945,7 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.normalJsonAfterRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="538"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="551"/>
         <source>
 
 ```
@@ -960,12 +960,12 @@ No problem overview
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="531"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="544"/>
         <source>已生成 [ProblemOverview.%1] 文件</source>
         <translation>Generated [ProblemOverview.%1] file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="574"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="587"/>
         <source>
 
 ```
@@ -978,12 +978,12 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="606"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="619"/>
         <source>%1 个文件</source>
         <translation>%1 files</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="613"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="626"/>
         <source>问题概览结束
 ```
 </source>
@@ -992,17 +992,17 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="624"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="637"/>
         <source>rolling context 缓存已保存至 [%1]</source>
         <translation>rolling context cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="629"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="642"/>
         <source>rolling context 缓存 [%1] 保存失败</source>
         <translation>Failed to save rolling context cache [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="638"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="651"/>
         <source>重建过程中有句子未命中缓存 (%1 / %2 lines)，请检查日志以定位问题</source>
         <translation>Cache misses during rebuild (%1/%2 lines); see logs</translation>
     </message>
@@ -1036,47 +1036,47 @@ Problem overview:
         <translation>No valid Sentence found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="247"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="253"/>
         <source>解析原人名表失败</source>
         <translation>Failed to parse source name table</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="276"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="282"/>
         <source>已更新 NameTable.toml 文件</source>
         <translation>Updated NameTable.toml</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="328"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="334"/>
         <source>检测到文件分割模式 (%1)，开始预处理输入文件...</source>
         <translation>File split mode detected (%1); preprocessing input files...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="350"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="356"/>
         <source>文件 [%1] 已被分割成 %2 份，存入输入缓存</source>
         <translation>File [%1] was split into %2 parts and saved to input cache</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="358"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="364"/>
         <source>分割文件 [%1] 时出错: %2</source>
         <translation>Error while splitting file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="377"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="390"/>
         <source>未知的文件分割模式: %1, 请使用 &apos;No&apos;, &apos;Equal&apos;, &apos;Num&apos;</source>
         <translation>Unknown file split mode: %1; use &apos;No&apos;, &apos;Equal&apos;, or &apos;Num&apos;</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="407"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="420"/>
         <source>未知的排序模式: %1</source>
         <translation>Unknown sort mode: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="454"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="467"/>
         <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句，onFileProcessed/分割文件合并/文件输出 将被延后</source>
         <translation>Repeat refs: min %1, %2 lines; callback/merge/output deferred</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="464"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="477"/>
         <source>连续重复块引用分析完成，未发现长度不小于 %1 的重复块</source>
         <translation>Repeat-block refs: none at length &gt;= %1</translation>
     </message>
@@ -1198,7 +1198,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonProcessFiles</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="670"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="683"/>
         <source>已将 %1 个文件任务分配到线程池，等待处理完成...</source>
         <translation>Assigned %1 file tasks to thread pool; waiting...</translation>
     </message>
@@ -1294,17 +1294,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="799"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="812"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
         <translation>File [%1] has pending repeat-block refs; final output skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="864"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="877"/>
         <source>连续重复块引用回填完成，共复制 (%1 / %2) 句</source>
         <translation>Repeat-block fill done: copied %1/%2 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="878"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="891"/>
         <source>文件 [%1] 尚未翻译完毕或分割输出尚未全部回填完成，跳过本轮合并</source>
         <translation>File [%1] incomplete or split output pending; merge skipped</translation>
     </message>
@@ -2205,38 +2205,34 @@ Problem overview:
 <context>
     <name>checkResponse</name>
     <message>
-        <location filename="ApiPool.cpp" line="101"/>
+        <location filename="ApiPool.cpp" line="105"/>
         <source>%1 [HTTP %2]</source>
         <translation>%1 [HTTP %2]</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="117"/>
         <source>%1 Api 响应 JSON 解析失败。错误: %2，原始响应:
 %3</source>
-        <translation>%1 Api response JSON parse failed. Error: %2, raw response:
+        <translation type="vanished">%1 Api response JSON parse failed. Error: %2, raw response:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="121"/>
-        <location filename="ApiPool.cpp" line="163"/>
-        <location filename="ApiPool.cpp" line="186"/>
-        <location filename="ApiPool.cpp" line="216"/>
-        <location filename="ApiPool.cpp" line="239"/>
+        <location filename="ApiPool.cpp" line="124"/>
+        <location filename="ApiPool.cpp" line="147"/>
+        <location filename="ApiPool.cpp" line="177"/>
+        <location filename="ApiPool.cpp" line="200"/>
         <source>空</source>
         <translation>Empty</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="127"/>
         <source>Api 响应 JSON 解析失败: %1</source>
-        <translation>Api response JSON parse failed: %1</translation>
+        <translation type="vanished">Api response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="139"/>
         <source>%1 切换到下一个 Api key</source>
-        <translation>%1 switching to the next Api key</translation>
+        <translation type="vanished">%1 switching to the next Api key</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="159"/>
+        <location filename="ApiPool.cpp" line="120"/>
         <source>%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:
 %3</source>
         <oldsource>%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:
@@ -2245,56 +2241,56 @@ Problem overview:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="169"/>
+        <location filename="ApiPool.cpp" line="130"/>
         <source>Api key 疑似额度用尽: %1</source>
         <translation>Api key may be exhausted: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="170"/>
-        <location filename="ApiPool.cpp" line="194"/>
-        <location filename="ApiPool.cpp" line="223"/>
-        <location filename="ApiPool.cpp" line="246"/>
+        <location filename="ApiPool.cpp" line="131"/>
+        <location filename="ApiPool.cpp" line="155"/>
+        <location filename="ApiPool.cpp" line="184"/>
+        <location filename="ApiPool.cpp" line="207"/>
         <source>响应为空</source>
         <translation>Empty response</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="182"/>
+        <location filename="ApiPool.cpp" line="143"/>
         <source>%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:
 %3</source>
         <translation>%1 key [%2] has no models; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="192"/>
+        <location filename="ApiPool.cpp" line="153"/>
         <source>Api key 没有模型 %1: %2</source>
         <translation>Api key has no model %1: %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="212"/>
+        <location filename="ApiPool.cpp" line="173"/>
         <source>%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:
 %3</source>
         <translation>%1 hit a rate limit or retryable error; retrying after %2 seconds. Raw response:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="222"/>
+        <location filename="ApiPool.cpp" line="183"/>
         <source>遇到频率限制或可再次请求错误: %1</source>
         <translation>Rate limit or retryable error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="236"/>
+        <location filename="ApiPool.cpp" line="197"/>
         <source>%1 遇到未知 Api 错误，原始响应:
 %2</source>
         <translation>%1 encountered an unknown Api error. Raw response:
 %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="245"/>
+        <location filename="ApiPool.cpp" line="206"/>
         <source>遇到未知 Api 错误: %1</source>
         <translation>Unknown Api error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="257"/>
+        <location filename="ApiPool.cpp" line="218"/>
         <source>%1 将切换到下一个 Api key</source>
         <translation>%1 will switch to the next Api key</translation>
     </message>
@@ -2408,9 +2404,9 @@ Problem overview:
 <context>
     <name>parseApiProtocol</name>
     <message>
-        <location filename="ApiTool.cpp" line="27"/>
-        <source>无效的 Api 协议: %1 不在 {openai, claude,  gemini} 中</source>
-        <translation>Invalid Api protocol: %1 is not in {openai, claude, gemini}</translation>
+        <location filename="ApiTool.cpp" line="30"/>
+        <source>无效的 Api 协议: %1 不在 {openai, claude, gemini, openaires} 中</source>
+        <translation>Invalid Api protocol: %1 is not in {openai, claude, gemini, openaires}</translation>
     </message>
 </context>
 <context>
@@ -2484,9 +2480,8 @@ Problem overview:
 <context>
     <name>testApiConnection</name>
     <message>
-        <location filename="ApiTool.cpp" line="552"/>
         <source>Api 响应 JSON 解析失败，%1</source>
-        <translation>Api response JSON parse failed: %1</translation>
+        <translation type="vanished">Api response JSON parse failed: %1</translation>
     </message>
 </context>
 <context>

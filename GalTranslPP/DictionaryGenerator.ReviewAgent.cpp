@@ -881,7 +881,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
                     .arg(sourceTermLog)
                     .arg(turn + 1)
                     .arg(requestCount + 1)
-                    .arg(response.content)
+                    .arg(response.content.value())
                     .toStdString());
             }
 
@@ -889,7 +889,7 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
                 currentFile,
                 group,
                 messages,
-                response.content,
+                response.content.value(),
                 sourceTermLog,
                 turn,
                 requestCount,
@@ -919,9 +919,9 @@ void DictionaryGeneratorReviewAgent::reviewTermGroup(const DictionaryReviewTermG
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
-                    .arg(response.content.empty()
+                    .arg(response.content.value().empty()
                         ? gppTr("DictionaryGeneratorReviewAgent.reviewTermGroup", "内容为空").toStdString()
-                        : limitLogLines(response.content, m_inputBlockMaxLines))
+                        : limitLogLines(response.content.value(), m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",

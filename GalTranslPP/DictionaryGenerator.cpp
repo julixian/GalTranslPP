@@ -262,11 +262,11 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
             .arg(threadId)
             .arg(batchIndex)
             .arg(requestCount + 1)
-            .arg(response.content.empty()
+            .arg(response.content.value().empty()
                 ? gppTr("DictionaryGenerator.callLLMToGenerate", "内容为空").toStdString()
-                : limitLogLines(response.content, m_inputBlockMaxLines))
+                : limitLogLines(response.content.value(), m_inputBlockMaxLines))
             .toStdString());
-        const auto lines = splitStringView(response.content, '\n');
+        const auto lines = splitStringView(response.content.value(), '\n');
         for (const auto& line : lines) {
             const auto parts = splitStringView(line, '\t');
             if (parts.size() < 3 || parts[0].starts_with("Source") || parts[0].starts_with("NULL")) {

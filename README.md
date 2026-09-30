@@ -15,7 +15,7 @@
 * 连续重复块引用复用，减少重复文本反复请求
 * 可选正则形式的，高度自定义的译前译后字典和明确的优先级
 * 高度自定义的 Epub 提取
-* OpenAI / Claude / Gemini 风格接口协议在同一 Api 池中管理
+* OpenAI Chat Completions / OpenAI Responses / Claude / Gemini 风格接口协议在同一 Api 池中管理
 * 多 Api key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置
 * Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文
 * 有效的 Api 额度耗尽检测

@@ -36,7 +36,8 @@ export
         int problems{0};
     };
 
-	class IController {
+	class IController
+	{
 	public:
 
 		std::atomic<int> m_totalSentences{ 0 };
@@ -87,12 +88,12 @@ export
 		virtual void onRuntimeTransError(const RuntimeTransErrorEvent& event) {}
 
 	private:
-		mutable std::mutex m_runtimeMutex;
+		std::mutex m_runtimeMutex;
 		std::map<std::string, RuntimeFileProgress> m_runtimeFiles;
 	};
 
-	class ITranslator {
-
+	class ITranslator
+	{
 	public:
 
 		virtual void run() = 0;

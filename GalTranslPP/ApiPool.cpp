@@ -97,57 +97,18 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
     int& requestCount, bool checkQuota)
 {
+    if (response.content.has_value()) {
+        return true;
+    }
+
     const std::string filename = wide2Ascii(relFilePath);
     const std::string prefix = gppTr("checkResponse", "%1 [HTTP %2]")
         .arg(logPrefix)
         .arg(response.statusCode)
         .toStdString();
 
-    if (response.statusCode == 200) {
-        if (currentApi.stream) {
-            return true;
-        }
-
-        const std::expected<std::string, std::string> extractedContent = extractApiResponseContent(response.content, currentApi.protocol);
-        if (extractedContent.has_value()) {
-            response.content = extractedContent.value();
-            return true;
-        }
-
-        logger->warn(gppTr("checkResponse", "%1 Api 响应 JSON 解析失败。错误: %2，原始响应:\n%3")
-            .arg(prefix)
-            .arg(extractedContent.error())
-            .arg(response.content.empty()
-                ? gppTr("checkResponse", "空").toStdString()
-                : response.content)
-            .toStdString());
-        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
-            .kind = "api",
-            .level = "warning",
-            .message = gppTr("checkResponse", "Api 响应 JSON 解析失败: %1")
-                .arg(extractedContent.error())
-                .toStdString(),
-            .filename = filename,
-            .requestCount = requestCount + 1,
-            .model = makeTransby(currentApi.apikey, currentApi.modelName),
-            .sleepSeconds = 2.0
-        });
-        ++requestCount;
-
-        if (apiStrategy == "fallback" && apiPool->size() > 1) {
-            apiPool->resortTokens();
-            logger->warn(gppTr("checkResponse", "%1 切换到下一个 Api key")
-                .arg(logPrefix)
-                .toStdString());
-        }
-        if (!controller->shouldStop()) {
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-        }
-        return false;
-    }
-
-    // response.statusCode != 200 就是有错误
-    const std::string errorMessageLower = str2Lower(response.content);
+    const std::string& error = response.content.error();
+    const std::string errorMessageLower = str2Lower(error);
 
     // 无效或额度用尽
     if (
@@ -159,15 +120,15 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
         logger->error(gppTr("checkResponse", "%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
             .arg(maskApikey(currentApi.apikey))
-            .arg(response.content.empty()
+            .arg(error.empty()
                 ? gppTr("checkResponse", "空").toStdString()
-                : response.content)
+                : error)
             .toStdString());
         controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "error",
             .message = gppTr("checkResponse", "Api key 疑似额度用尽: %1")
-                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
+                .arg(error.empty() ? gppTr("checkResponse", "响应为空").toStdString() : error)
                 .toStdString(),
             .filename = filename,
             .model = makeTransby(currentApi.apikey, currentApi.modelName)
@@ -182,16 +143,16 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
         logger->error(gppTr("checkResponse", "%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:\n%3")
             .arg(prefix)
             .arg(maskApikey(currentApi.apikey))
-            .arg(response.content.empty()
+            .arg(error.empty()
                 ? gppTr("checkResponse", "空").toStdString()
-                : response.content)
+                : error)
             .toStdString());
         controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "error",
             .message = gppTr("checkResponse", "Api key 没有模型 %1: %2")
                 .arg(currentApi.modelName)
-                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
+                .arg(error.empty() ? gppTr("checkResponse", "响应为空").toStdString() : error)
                 .toStdString(),
             .filename = filename,
             .model = makeTransby(currentApi.apikey, currentApi.modelName)
@@ -212,15 +173,15 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
         logger->warn(gppTr("checkResponse", "%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:\n%3")
             .arg(prefix)
             .arg(sleepSeconds)
-            .arg(response.content.empty()
+            .arg(error.empty()
                 ? gppTr("checkResponse", "空").toStdString()
-                : response.content)
+                : error)
             .toStdString());
         controller->recordRuntimeTransError(RuntimeTransErrorEvent{
             .kind = "api",
             .level = "warning",
             .message = gppTr("checkResponse", "遇到频率限制或可再次请求错误: %1")
-                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
+                .arg(error.empty() ? gppTr("checkResponse", "响应为空").toStdString() : error)
                 .toStdString(),
             .filename = filename,
             .model = makeTransby(currentApi.apikey, currentApi.modelName),
@@ -235,15 +196,15 @@ bool checkResponse(ApiResponse& response, const std::unique_ptr<ApiPool>& apiPoo
     // 其他无法识别的硬性错误
     logger->warn(gppTr("checkResponse", "%1 遇到未知 Api 错误，原始响应:\n%2")
         .arg(prefix)
-        .arg(response.content.empty()
+        .arg(error.empty()
             ? gppTr("checkResponse", "空").toStdString()
-            : response.content)
+            : error)
         .toStdString());
     controller->recordRuntimeTransError(RuntimeTransErrorEvent{
         .kind = "api",
         .level = "warning",
         .message = gppTr("checkResponse", "遇到未知 Api 错误: %1")
-                .arg(response.content.empty() ? gppTr("checkResponse", "响应为空").toStdString() : response.content)
+                .arg(error.empty() ? gppTr("checkResponse", "响应为空").toStdString() : error)
                 .toStdString(),
         .filename = filename,
         .requestCount = requestCount + 1,

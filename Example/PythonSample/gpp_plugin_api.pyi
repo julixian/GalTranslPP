@@ -62,6 +62,7 @@ class ApiProtocol(Enum):
     OpenAI = 0
     Claude = 1
     Gemini = 2
+    OpenAIRes = 3
 
 
 class LogLevel(Enum):

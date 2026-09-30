@@ -253,7 +253,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     protocolLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     ElaNoWheelComboBox* protocolComboBox = new ElaNoWheelComboBox(formWidget);
     protocolComboBox->setFixedWidth(protocolWidth);
-    protocolComboBox->addItems(QStringList{ "openai", "claude", "gemini" });
+    protocolComboBox->addItems(QStringList{ "openai", "claude", "gemini", "openaires" });
     if (const int protocolIndex = protocolComboBox->findText(QString::fromStdString(protocol)); protocolIndex >= 0) {
         protocolComboBox->setCurrentIndex(protocolIndex);
     }

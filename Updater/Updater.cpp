@@ -12,9 +12,9 @@
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitfileextractor.hpp>
 
-#include <boost/algorithm/string.hpp>
 #include <toml.hpp>
 
+import boost;
 import GPPVersion;
 
 namespace fs = std::filesystem;

@@ -7,7 +7,7 @@ apiTimeout = 300 # 请求超时时间，单位秒
   apikeys = []            # [ "sk-example-key1", "sk-example-key2" ] | filePlugin 为 sakura 时可不填
   apiurl = ""             # https://openai-example.com | 请求地址，加不加/v1都行
   modelName = ""          # modelName | filePlugin为sakura时可不填
-  protocol = "openai"
+  protocol = "openai"     # openai/claude/gemini/openaires（OpenAI Responses）
   thinkingLevel = "off"   # off/low/medium/high
   stream = false          # 流式输出
   useSystemProxy = true   # 使用系统代理
@@ -178,7 +178,7 @@ stanzaLang = "ja"
 
 [common.agent]
 enabled = false
-maxTurnsPerChunk = 20
+maxTurnsPerChunk = 50
 compactContextThresholdBytes = 150000
 searchResultLimit = 80
 contextLinesLimit = 20

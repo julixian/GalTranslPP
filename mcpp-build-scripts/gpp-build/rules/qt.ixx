@@ -205,7 +205,12 @@ inline std::vector<std::string> qrc_files(const std::filesystem::path& qrc) {
     if (!mcpp::plugins::xml::parse(read_file(qrc), doc, error)) return out;
     std::function<void(const mcpp::plugins::xml::node&)> walk = [&](const mcpp::plugins::xml::node& n) {
         if (n.name == "file") {
-            std::string text = mcpp::plugins::xml::trim_copy(n.text);
+            // XML 解析器将元素中的文本保存为 name 为空的子节点。
+            std::string text;
+            for (auto const& child : n.children) {
+                if (child.name.empty()) text += child.text;
+            }
+            text = mcpp::plugins::xml::trim_copy(text);
             if (!text.empty()) out.push_back(generic(qrc.parent_path() / text));
         }
         for (auto const& c : n.children) walk(c);

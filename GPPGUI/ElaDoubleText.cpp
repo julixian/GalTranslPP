@@ -8,6 +8,7 @@ ElaDoubleText::ElaDoubleText(const QString& firstLine, int firstLinePixelSize, c
 {
 	QVBoxLayout* textLayout = new QVBoxLayout(this);
 	textLayout->setContentsMargins(0, 5, 0, 5);
+	textLayout->addStretch(1);
 	m_firstLine = new ElaText(firstLine, firstLinePixelSize, this);
 	m_firstLine->setWordWrap(false);
 
@@ -20,9 +21,10 @@ ElaDoubleText::ElaDoubleText(const QString& firstLine, int firstLinePixelSize, c
 	if (!secondLine.isEmpty()) {
 		m_secondLine = new ElaText(secondLine, secondLinePixelSize, this);
 		m_secondLine->setWordWrap(false);
-		textLayout->setSpacing(2);
+		textLayout->addStretch();
 		textLayout->addWidget(m_secondLine);
 	}
+	textLayout->addStretch(1);
 }
 
 QString ElaDoubleText::getFirstLineText() const

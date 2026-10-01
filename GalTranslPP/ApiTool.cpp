@@ -65,8 +65,10 @@ std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol)
             return ret + "/messages";
         }
         return ret + "/v1/messages";
+
     case ApiProtocol::Gemini:
         return ret;
+
     case ApiProtocol::OpenAIRes:
         if (ret.ends_with("/responses")) {
             return ret;
@@ -75,6 +77,7 @@ std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol)
             return ret + "/responses";
         }
         return ret + "/v1/responses";
+
     case ApiProtocol::OpenAI:
     default:
         if (ret.ends_with("/chat/completions")) {
@@ -137,6 +140,7 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
             return ret + "/models";
         }
         return ret + "/v1/models";
+
     case ApiProtocol::Gemini:
         if (const size_t pos = ret.find(":generateContent"); pos != std::string::npos) {
             ret.erase(pos);
@@ -151,6 +155,7 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
             return ret + "/models";
         }
         return ret + "/v1beta/models";
+
     case ApiProtocol::OpenAIRes:
     case ApiProtocol::OpenAI:
     default:
@@ -185,14 +190,17 @@ cpr::Header makeApiHeaders(const TranslationApi& api)
         headers["x-api-key"] = api.apikey;
         headers["anthropic-version"] = "2023-06-01";
         break;
+
     case ApiProtocol::Gemini:
         headers["x-goog-api-key"] = api.apikey;
         break;
+
     case ApiProtocol::OpenAI:
     default:
         headers["Authorization"] = "Bearer " + api.apikey;
         break;
     }
+
     for (const auto& [key, value] : api.extraHeaders) {
         headers[key] = value;
     }
@@ -216,6 +224,7 @@ json makeApiTestPayload(const TranslationApi& api)
                 }
             })}
         };
+
     case ApiProtocol::Claude:
     case ApiProtocol::OpenAI:
     case ApiProtocol::OpenAIRes:
@@ -506,6 +515,7 @@ std::expected<std::string, std::string> parseApiContent(const json& parsed, ApiP
         }
         return content;
     }
+
     case ApiProtocol::Claude:
     {
         if (stream) {
@@ -523,6 +533,7 @@ std::expected<std::string, std::string> parseApiContent(const json& parsed, ApiP
         }
         return content;
     }
+
     case ApiProtocol::Gemini:
     {
         if (stream && (!parsed.contains("candidates") || parsed["candidates"].empty() ||
@@ -537,6 +548,7 @@ std::expected<std::string, std::string> parseApiContent(const json& parsed, ApiP
         }
         return content;
     }
+
     case ApiProtocol::OpenAI:
     default:
         if (stream) {
@@ -587,6 +599,7 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
             }
         }
         break;
+
     case ApiProtocol::Claude:
     case ApiProtocol::OpenAI:
     case ApiProtocol::OpenAIRes:
@@ -603,6 +616,7 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
         }
         break;
     }
+
     return models;
 }
 
@@ -667,6 +681,8 @@ ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& 
         };
     auto callbackFunc = [&](std::string_view data, intptr_t)
         {
+            // 流式消息一般每个 data 返回 data: xxx\n\n
+            // 结束返回 [Done]
             rawBody.append(data);
             sseBuffer.append(data);
             size_t pos;

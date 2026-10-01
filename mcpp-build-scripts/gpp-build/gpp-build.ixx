@@ -1,28 +1,32 @@
-// gpp.build：供各项目的 build.mcpp 导入，配置依赖、Qt 代码生成与 Release 布局。
-// Qt 插件负责编译及项目翻译生成；发布动作将 QM 复制到 Release。
+// gpp.build：供各项目的 build.mcpp 导入，配置依赖、Qt 代码生成、程序旁的数据文件与 Release 打包格式。
+// 依赖安装、Qt 代码生成与部署由 mcpp:plugins 提供（deps-vcpkg、deps-cmake、deps-archive、rules-qt），
+// 这里只描述本项目特有的部分：链接的库、BaseConfig 与发布目录的布局。
 export module gpp.build;
 
 import std;
 import mcpp;
-import mcpp.deps;
-import gpp.deps.vcpkg;
-import gpp.deps.cmake;
+import mcpp.plugins.fs;
+import mcpp.deps.vcpkg;
+import mcpp.deps.cmake;
+import mcpp.deps.archive;
 import mcpp.rules.qt;
 
 export namespace gpp {
 
 namespace fs = std::filesystem;
 
-// ===== 本机工具路径配置 =====
+// ===== 本机工具路径配置（可选） =====
+// 均可留空：留空时使用 xlings 提供的版本，无需手动安装。
 // 在 R"(...)" 的括号内填写绝对路径，Windows 反斜杠无需转义。
-// vcpkg：填写安装根目录（包含 vcpkg.exe 和 scripts），留空则从 PATH 查找。
+// vcpkg：安装根目录（包含 vcpkg.exe 和 scripts），留空使用 xim:vcpkg。
 // 示例：R"(D:\vcpkg)"
 const fs::path vcpkg_root = R"()";
-// CMake：填写可执行文件路径，留空则从 PATH 查找。
+// CMake：可执行文件路径，留空使用 xim:cmake。
 // 示例：R"(C:\Program Files\CMake\bin\cmake.exe)"
 const fs::path cmake_executable = R"()";
-// Qt：填写 SDK 根目录（包含 include、lib、bin），不可留空。
-const fs::path qt_root = R"(D:\Qt\6.11.1\msvc2022_64)";
+// Qt：SDK 根目录（包含 include、lib、bin），留空依次使用环境变量 QT_ROOT_DIR 与根 mcpp.toml 声明的 xim:qt-base。
+// 示例：R"(D:\Qt\6.11.1\msvc2022_64)"
+const fs::path qt_root = R"()";
 // ===== 配置结束 =====
 
 fs::path workspace_directory() { return fs::path(mcpp::manifest_dir()).parent_path(); }
@@ -43,15 +47,6 @@ std::string read_first_line(const fs::path& file) {
     return text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
 }
 
-fs::path qt_directory() {
-    if (qt_root.empty() || !qt_root.is_absolute())
-        throw std::runtime_error("请在 gpp-build.ixx 顶部的 qt_root 中填写 Qt SDK 的绝对路径");
-    const auto directory = qt_root.lexically_normal();
-    if (!fs::is_directory(directory / "include") || !fs::is_directory(directory / "lib"))
-        throw std::runtime_error("Qt SDK 路径无效：" + directory.generic_string());
-    return directory;
-}
-
 // Windows 系统库由各成员的 target.windows.build 声明。
 // 这里处理按 profile 变化的 PE 链接选项，不把 /DEBUG 等传到 ELF/Mach-O 链接器。
 void configure_executable_link_options() {
@@ -70,8 +65,10 @@ void configure_executable_link_options() {
 
 constexpr const char* windows_triplet = "gpp-x64-windows-release";
 
-gpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries = {}) {
-    gpp::deps::vcpkg::options options;
+// 安装根目录 vcpkg.json 中的库；link_libraries 为本成员链接的库，deploy 为放到程序旁的前缀文件。
+mcpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries = {},
+                                          std::vector<mcpp::plugins::fs::deploy_entry> deploy = {}) {
+    mcpp::deps::vcpkg::options options;
     options.vcpkg_root = vcpkg_root.generic_string();
     if (is_windows_target()) {
         if (std::string_view(mcpp::target_arch()) != "x86_64" ||
@@ -79,10 +76,9 @@ gpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries
             throw std::runtime_error("GPP 自定义 triplet 当前只配置了 Windows x64 / MSVC ABI");
         options.triplet = windows_triplet;
     }
-    options.manifest_root = workspace_directory().generic_string();
-    options.install_root = (workspace_directory() / "vcpkg_installed").generic_string();
     options.libraries = std::move(link_libraries);
-    const auto dependencies = gpp::deps::vcpkg::use(options);
+    options.deploy = std::move(deploy);
+    auto dependencies = mcpp::deps::vcpkg::use(options);
     if (!dependencies) throw std::runtime_error("vcpkg 依赖配置失败");
     return dependencies;
 }
@@ -93,205 +89,263 @@ std::vector<std::string> core_link_libraries() {
             "lua", "mecab", "opencc", "pcre2-8", "spdlog", "tree-sitter", "zip", "z"};
 }
 
+// OpenCC 的全部配置与词典，程序从 BaseConfig/opencc 读取（与上游 3.1.2 一致，复制整个 share/opencc）。
+// 文件名须在安装前写明，这里是 vcpkg 基线中 opencc 1.4.1 安装的全部文件（其 data/CMakeLists.txt 的
+// CONFIG_FILES 与 DICTS）。t2s.json 本身读取四个词典：CJK_Compatibility_Ideographs、TSPhrases、
+// TSCharactersExt、TSCharacters。CI 比较这份清单与安装目录，基线变化时由此发现。
+std::vector<mcpp::plugins::fs::deploy_entry> opencc_files() {
+    constexpr const char* configs[] = {
+        "hk2s", "hk2sp", "hk2t", "jp2t", "s2hk", "s2hkp", "s2t", "s2tw", "s2twp",
+        "t2hk", "t2jp", "t2s", "t2tw", "tw2s", "tw2sp", "tw2t"};
+    constexpr const char* dictionaries[] = {
+        "CJK_Compatibility_Ideographs", "STCharacters", "STPhrases", "TSCharacters", "TSPhrases",
+        "TWPhrases", "TWPhrasesRev", "TWVariantsPhrases", "TWVariants", "TWVariantsRevPhrases",
+        "HKVariantsPhrases", "HKVariants", "HKVariantsRevPhrases", "HKPhrases", "HKPhrasesRev",
+        "JPShinjitaiCharacters", "JPShinjitaiPhrases", "TSCharactersExt",
+        "STPhrases_GeneratedFromRegionalPhrases", "TWVariantsRev", "HKVariantsRev",
+        "JPShinjitaiCharactersRev"};
+    std::vector<mcpp::plugins::fs::deploy_entry> files;
+    for (const char* name : configs) files.push_back({"share/opencc/" + std::string(name) + ".json", "BaseConfig/opencc"});
+    for (const char* name : dictionaries) files.push_back({"share/opencc/" + std::string(name) + ".ocd2", "BaseConfig/opencc"});
+    return files;
+}
+
+
+// 仓库自带的是 Windows Python 的导入库与 DLL；DLL 目录作为运行时搜索目录，由 mcpp 放到程序旁。
 void link_python_libraries() {
-    if (!is_windows_target()) return; // 仓库自带的是 Windows Python 导入库。
+    if (!is_windows_target()) return;
     const auto python_library_directory = workspace_directory() / "3rdParty" / "pybind11" / "bin";
     for (const char* library_name : {"python3", "python312"})
         mcpp::link_flag((python_library_directory / (std::string(library_name) + ".lib")).generic_string().c_str());
+    mcpp::runtime_search_dir(python_library_directory.generic_string().c_str());
 }
 
+// bit7z 在运行时加载 7z.dll，来自根 mcpp.toml 声明的 xim:7zip。
+void deploy_seven_zip() {
+    if (!is_windows_target()) return;
+    const fs::path directory = mcpp::xpkg_dir("xim", "7zip");
+    if (directory.empty()) throw std::runtime_error("未找到 xim:7zip，请检查根 mcpp.toml 的 xlings.workspace");
+    mcpp::deploy((directory / "7z.dll").generic_string().c_str(), ".");
+}
+
+// 把 directory 下的文件按路径顺序放到程序旁的 destination 目录；skip 以相对路径判断，返回 true 的文件或子目录不放置。
+template<class Skip>
+void deploy_directory(const fs::path& directory, const fs::path& destination, Skip skip) {
+    std::vector<fs::path> files;
+    std::error_code error;
+    for (auto entry = fs::recursive_directory_iterator(directory, error);
+         entry != fs::recursive_directory_iterator(); entry.increment(error)) {
+        if (error) break;
+        const auto relative = entry->path().lexically_relative(directory);
+        if (entry->is_directory(error)) {
+            if (skip(relative)) entry.disable_recursion_pending();
+        } else if (entry->is_regular_file(error) && !skip(relative)) {
+            files.push_back(relative);
+        }
+    }
+    std::ranges::sort(files);
+    for (const auto& relative : files) {
+        const auto parent = relative.has_parent_path() ? destination / relative.parent_path() : destination;
+        mcpp::deploy((directory / relative).generic_string().c_str(), parent.generic_string().c_str());
+    }
+}
+
+// ===== 程序旁的数据文件：`mcpp run` 直接使用，`mcpp pack` 一并打包 =====
+
+constexpr std::string_view python_environment = "Python-3.12.10-embed-amd64";
+
+// 由 core 调用，放到每个链接 core 的程序旁：Example/BaseConfig、从其中压缩包解出的嵌入式 Python，
+// 以及 vcpkg 安装的 OpenCC 数据（由 configure_vcpkg 的 deploy 放置）。
+void deploy_base_config() {
+    const auto base_config_directory = workspace_directory() / "Example" / "BaseConfig";
+    const fs::path python_directory(python_environment);
+    const fs::path python_archive = std::string(python_environment) + ".zip";
+    mcpp::rerun_if_changed_glob("../Example/BaseConfig/**");
+    // 压缩包由下面的动作解出；旧版手动步骤可能在源码目录留下的 opencc 与 Python 目录不再使用。
+    deploy_directory(base_config_directory, "BaseConfig", [&](const fs::path& relative) {
+        return relative == python_archive || relative == python_directory || relative == "opencc";
+    });
+
+    mcpp::deps::archive::options python;
+    python.archive = (base_config_directory / python_archive).generic_string();
+    python.to = "BaseConfig";
+    python.cmake = cmake_executable.generic_string();
+    if (!mcpp::deps::archive::unpack(python)) throw std::runtime_error("嵌入式 Python 解压配置失败");
+}
+
+// 由 GPPCLI 调用：示例项目放到程序旁。
+void deploy_sample_project() {
+    mcpp::rerun_if_changed_glob("../Example/SampleProject/**");
+    deploy_directory(workspace_directory() / "Example" / "SampleProject", "SampleProject",
+                     [](const fs::path&) { return false; });
+}
+
+// ===== Qt =====
+
 mcpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
+    if (!qt_root.empty() && !qt_root.is_absolute())
+        throw std::runtime_error("gpp-build.ixx 中的 qt_root 须为绝对路径");
     mcpp::rules::qt::options qt_options;
-    qt_options.root = qt_directory().generic_string();
+    qt_options.root = qt_root.lexically_normal().generic_string();
     qt_options.modules = std::move(modules);
-    qt_options.deploy_plugins = {}; // 用户自行部署 platforms/styles/imageformats 等 Qt 动态插件。
-    qt_options.i18n.qt_languages = {}; // 不生成 Qt 自带的 qt_zh_CN.qm 等翻译。
+    qt_options.deploy_plugins = {}; // 需要 Qt 插件的程序自行列出，例如 GUI 的 platforms/styles/imageformats。
     return qt_options;
 }
 
-// 在 compile(qt_options) 前配置；插件负责 lupdate/lrelease，返回供 Release 发布使用的 QM 路径。
-fs::path configure_translation(mcpp::rules::qt::options& qt_options, const char* translation_source_filename) {
-    const fs::path project_directory = mcpp::manifest_dir();
+// 在 compile(qt_options) 前配置；插件负责 lupdate/lrelease，QM 文件放到程序旁的 translations。
+void configure_translation(mcpp::rules::qt::options& qt_options, const char* translation_source_filename) {
     qt_options.i18n.ts = {translation_source_filename};
     qt_options.i18n.update_sources = true;
     qt_options.i18n.tr_function_alias = {"translate+=gppTr"};
-    qt_options.i18n.out_dir = project_directory.generic_string();
-    return project_directory / (fs::path(translation_source_filename).stem().string() + ".qm");
 }
 
-gpp::deps::cmake::prefix use_ela_widget_tools(const mcpp::rules::qt::options& qt_options) {
-    gpp::deps::cmake::options options;
+mcpp::deps::cmake::prefix use_ela_widget_tools(const mcpp::rules::qt::options& qt_options) {
+    mcpp::deps::cmake::options options;
     options.cmake = cmake_executable.generic_string();
     options.source = (workspace_directory() / "3rdParty" / "ElaWidgetTools").generic_string();
     options.name = "ElaWidgetTools";
-    options.cache_args = {"-DQT_SDK_DIR=" + qt_options.root,
+    options.cache_args = {"-DQT_SDK_DIR=" + mcpp::rules::qt::root(qt_options),
                           "-DELAWIDGETTOOLS_BUILD_EXAMPLE=OFF",
                           "-DELAWIDGETTOOLS_BUILD_STATIC_LIB=OFF"};
     options.dirs = {.include = "ElaWidgetTools/include", .lib = "ElaWidgetTools/lib",
                     .bin = "ElaWidgetTools/bin"};
     options.libraries = {"ElaWidgetTools"};
     options.shared = true;
-    const auto dependencies = gpp::deps::cmake::use(options);
+    auto dependencies = mcpp::deps::cmake::use(options);
     if (!dependencies) throw std::runtime_error("ElaWidgetTools 构建配置失败");
     return dependencies;
 }
 
-// 自定义 Release 发布不读取可能尚未部署完成的 bin 目录。
-// runtime_stage 从 vcpkg/Python/Ela 源目录收集非 Qt DLL；Qt 由用户另外部署。
-struct release_publisher {
-    fs::path release_directory = workspace_directory() / "Release";
-    fs::path vcpkg_installation_directory;
-    fs::path vcpkg_install_stamp;
-    std::vector<fs::path> additional_runtime_directories;
-    std::string target_name;
-    std::string executable_file;
+// ===== `mcpp pack --format release`：Release 发布目录 =====
+//
+// mcpp pack 暂存的目录已含程序、按导入表收集的 DLL，以及放到程序旁的全部文件（Qt 插件与翻译、7z.dll、
+// BaseConfig 等）。这里只按原有布局把它复制到 Release：
+//   GPPCLI           CLI 的完整目录
+//   GPPGUI           GUI 的完整目录，含 Updater.exe
+//   GUICORE          GUI 目录去掉全局配置、MeCab 与 Python，Updater 为 Updater_new.exe（OpenCC 随更新包提供，3.1.2 起）
+//   *_PRIVATE        Release/GPPCLI_PRIVATE.txt 或 GPPGUI_PRIVATE.txt 第一行指定的目录，不含 BaseConfig 与 SampleProject
+//   .pdb             程序的 PDB
+
+constexpr const char* release_pack_format = "release";
+
+// 文件在某个布局中的相对路径；返回空表示该布局不含此文件。
+using release_layout = std::function<fs::path(const fs::path&)>;
+
+fs::path private_release_directory(const fs::path& release_directory, std::string_view member) {
+    const auto configuration_file = release_directory / (std::string(member) + "_PRIVATE.txt");
+    mcpp::rerun_if_changed(configuration_file.generic_string().c_str());
+    if (!fs::is_regular_file(configuration_file)) return {};
+    const auto configured_path = read_first_line(configuration_file);
+    if (configured_path.empty()) return {};
+    fs::path destination_directory(configured_path);
+    if (destination_directory.is_relative()) destination_directory = release_directory / destination_directory;
+    destination_directory = destination_directory.lexically_normal();
+    if (!fs::is_directory(destination_directory)) {
+        mcpp::warning(("PRIVATE 发布路径不存在：" + destination_directory.generic_string()).c_str());
+        return {};
+    }
+    return destination_directory;
+}
+
+// 以 `mcpp stage` 复制一个文件的发布动作；input 为动作的依赖，默认即源文件。
+void stage_file(const std::string& action_id, const std::string& source_file, const fs::path& destination_file,
+                const std::string& input = {}) {
+    const auto output_file = destination_file.lexically_normal().generic_string();
+    mcpp::action copy_action;
+    copy_action.id = action_id.c_str();
+    copy_action.role = mcpp::roles::artifact;
+    copy_action.arg("${mcpp.self}").arg("stage")
+        .arg("--verify").arg("content")
+        .arg("--output").arg(output_file.c_str())
+        .arg(source_file.c_str())
+        .input(input.empty() ? source_file.c_str() : input.c_str())
+        .output(output_file.c_str()).submit();
+}
+
+// 以一个 `mcpp stage --list` 动作把 placements（暂存目录中的相对路径，发布目录中的目标）复制到一个发布目录。
+// 每个文件的语义与 stage_file 相同：内容相同则不重写。清单写暂存目录的绝对路径，动作的输入写 ${mcpp.stage_dir}，
+// 两者都来自本次 pack 的暂存目录。
+void stage_files(const std::string& action_id, const fs::path& stage_directory,
+                 const std::vector<std::pair<fs::path, fs::path>>& placements) {
+    if (placements.empty()) return;
+    const auto list_file = (fs::path(mcpp::out_dir()) / "release" / (action_id + ".list")).generic_string();
+    std::string list;
+    for (const auto& [file, destination_file] : placements)
+        list += (stage_directory / file).generic_string() + '\t' + destination_file.lexically_normal().generic_string() + '\n';
+    mcpp::plugins::fs::write_if_changed(list_file, list);
+    mcpp::action copy_action;
+    copy_action.id = action_id.c_str();
+    copy_action.role = mcpp::roles::artifact;
+    copy_action.arg("${mcpp.self}").arg("stage").arg("--list").arg(list_file.c_str()).input(list_file.c_str());
+    for (const auto& [file, destination_file] : placements)
+        copy_action.input(("${mcpp.stage_dir}/" + file.generic_string()).c_str())
+            .output(destination_file.lexically_normal().generic_string().c_str());
+    copy_action.submit();
+}
+
+// 由 GPPCLI 与 GPPGUI 调用。格式总是声明；只有 `mcpp pack --format release` 在暂存完成后才提交复制动作，
+// 因此 `mcpp build` 与 `mcpp run` 不写 Release。
+void provide_release_pack(std::string_view member, const std::string& target_name) {
+    mcpp::provides_pack_format(release_pack_format);
+    if (std::string_view(mcpp::pack_format()) != release_pack_format) return;
+    const fs::path stage_directory = mcpp::pack_stage_dir();
+    if (stage_directory.empty()) return;
+
+    // 暂存清单的第一行说明 DLL 闭包是否完整；不完整的目录不写入 Release。
+    std::ifstream stage_manifest(fs::path(stage_directory.generic_string() + ".stage-manifest"));
+    std::string closure;
+    std::getline(stage_manifest, closure);
+    if (!closure.starts_with("closure = walked"))
+        throw std::runtime_error("mcpp pack 暂存的 DLL 闭包不完整（" + closure + "），见 " +
+                                 stage_directory.generic_string() + ".stage-manifest");
+
+    std::vector<fs::path> staged_files;
+    for (const auto& entry : fs::recursive_directory_iterator(stage_directory))
+        if (entry.is_regular_file()) staged_files.push_back(entry.path().lexically_relative(stage_directory));
+    std::ranges::sort(staged_files);
+
+    const auto release_directory = workspace_directory() / "Release";
+    // Windows 的暂存目录是平铺的；其它平台的程序与其旁的文件位于 bin/ 下。以程序所在目录为基准判断。
+    const fs::path program_directory = fs::is_directory(stage_directory / "bin") ? fs::path("bin") : fs::path();
+    auto beside_program = [program_directory](const fs::path& file) {
+        return (program_directory.empty() ? file : file.lexically_relative(program_directory)).generic_string();
+    };
+    const std::string python_directory = "BaseConfig/" + std::string(python_environment) + "/";
+    auto whole = [](const fs::path& file) { return file; };
+    auto updater_renamed = [](const fs::path& file) {
+        return file.filename() == "Updater.exe" ? file.parent_path() / "Updater_new.exe" : file;
+    };
+    auto without_data = [=](const fs::path& file) {
+        const auto name = beside_program(file);
+        return name.starts_with("BaseConfig/") || name.starts_with("SampleProject/") ? fs::path() : updater_renamed(file);
+    };
+    auto gui_core = [=](const fs::path& file) {
+        const auto name = beside_program(file);
+        if (name == "BaseConfig/GlobalConfig.toml" || name.starts_with("BaseConfig/mecab/") ||
+            name.starts_with(python_directory))
+            return fs::path();
+        return updater_renamed(file);
+    };
+
+    std::vector<std::pair<fs::path, release_layout>> layouts{{release_directory / member, whole}};
+    if (member == "GPPGUI") layouts.emplace_back(release_directory / "GUICORE", gui_core);
+    if (const auto private_directory = private_release_directory(release_directory, member); !private_directory.empty())
+        layouts.emplace_back(private_directory, without_data);
+
+    // 每个发布目录一个复制动作。
     unsigned next_action_number = 0;
-
-    release_publisher(std::string executable_target, const gpp::deps::vcpkg::prefix& vcpkg)
-        : vcpkg_installation_directory(vcpkg.root), vcpkg_install_stamp(vcpkg.install_stamp),
-          target_name(std::move(executable_target)),
-          executable_file("${mcpp.target_file:" + target_name + "}") {}
-
-    fs::path private_release_directory(std::string_view member) const {
-        const auto configuration_file = release_directory /
-            (member == "GPPCLI" ? "GPPCLI_PRIVATE.txt" : "GPPGUI_PRIVATE.txt");
-        mcpp::rerun_if_changed(configuration_file.generic_string().c_str());
-        if (!fs::is_regular_file(configuration_file)) return {};
-        const auto configured_path = read_first_line(configuration_file);
-        if (configured_path.empty()) return {};
-        fs::path destination_directory(configured_path);
-        if (destination_directory.is_relative()) destination_directory = release_directory / destination_directory;
-        destination_directory = destination_directory.lexically_normal();
-        if (!fs::is_directory(destination_directory)) {
-            mcpp::warning(("PRIVATE 发布路径不存在：" + destination_directory.generic_string()).c_str());
-            return {};
-        }
-        return destination_directory;
+    for (const auto& [directory, layout] : layouts) {
+        std::vector<std::pair<fs::path, fs::path>> placements;
+        for (const auto& file : staged_files)
+            if (const auto destination = layout(file); !destination.empty())
+                placements.emplace_back(file, directory / destination);
+        stage_files("release-" + std::to_string(next_action_number++), stage_directory, placements);
     }
-
-    void copy_file(const std::string& source_file, const fs::path& destination_file,
-                   bool track_source = true) {
-        const auto output_file = destination_file.lexically_normal().generic_string();
-        const auto action_id = "release-stage-" + std::to_string(next_action_number++);
-        mcpp::action copy_action;
-        copy_action.id = action_id.c_str();
-        copy_action.role = mcpp::roles::artifact;
-        copy_action.arg("${mcpp.self}").arg("stage")
-            .arg("--verify").arg("content")
-            .arg("--output").arg(output_file.c_str())
-            .arg(source_file.c_str())
-            .input(executable_file.c_str());
-        if (track_source) copy_action.input(source_file.c_str());
-        copy_action.output(output_file.c_str()).submit();
-    }
-
-    void copy_runtime_libraries(std::string_view member, const fs::path& destination_directory,
-                                std::string_view destination_name) {
-        const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
-        if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
-        const auto manifest_file = (release_directory / ".mcpp-runtime" /
-            (std::string(member) + "-" + std::string(destination_name) + ".txt")).generic_string();
-        const auto dependency_file = manifest_file + ".d";
-        const auto action_id = "release-runtime-" + std::to_string(next_action_number++);
-        mcpp::action copy_action;
-        copy_action.id = action_id.c_str();
-        copy_action.role = mcpp::roles::artifact;
-        copy_action.depfile = dependency_file.c_str();
-        copy_action.arg(runtime_stage_executable.c_str())
-            .arg("--exe").arg(executable_file.c_str())
-            .arg("--dest").arg(destination_directory.generic_string().c_str())
-            .arg("--manifest").arg(manifest_file.c_str())
-            .arg("--depfile").arg(dependency_file.c_str())
-            .input(executable_file.c_str())
-            .input(runtime_stage_executable.c_str())
-            .output(manifest_file.c_str());
-        std::vector<fs::path> runtime_search_directories = {
-            vcpkg_installation_directory / "bin",
-            workspace_directory() / "3rdParty" / "pybind11" / "bin",
-            workspace_directory() / "3rdParty"
-        };
-        runtime_search_directories.insert(runtime_search_directories.end(),
-            additional_runtime_directories.begin(), additional_runtime_directories.end());
-        for (const auto& search_directory : runtime_search_directories) {
-            // Ela 首次构建时尚未安装，搜索目录也必须传入；exe 的链接已依赖 prepare。
-            copy_action.arg("--search").arg(search_directory.generic_string().c_str());
-            if (!fs::is_directory(search_directory)) continue;
-            for (const auto& entry : fs::directory_iterator(search_directory))
-                if (entry.is_regular_file() && entry.path().extension() == ".dll")
-                    copy_action.input(entry.path().generic_string().c_str());
-        }
-        // 这些 DLL 可能由程序动态加载，无法只靠 EXE 的导入表找到。
-        copy_action.arg("--include-dll").arg("7z.dll");
-        if (member != "Updater") {
-            copy_action.arg("--include-dll").arg("python3.dll");
-            copy_action.arg("--include-dll").arg("python312.dll");
-        }
-        copy_action.submit();
-    }
-
-    void copy_opencc_share(std::string_view member, std::string_view destination_name,
-                           const fs::path& release_destination_directory) {
-        const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
-        if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
-        const fs::path source_directory = vcpkg_installation_directory / "share" / "opencc";
-        const fs::path destination_directory = release_destination_directory / "BaseConfig" / "opencc";
-        std::string manifest_name = "OpenCC-" + std::string(member);
-        if (destination_name != member) manifest_name += "-" + std::string(destination_name);
-        const fs::path manifest_file = release_directory / ".mcpp-runtime" / (manifest_name + ".txt");
-        const fs::path dependency_file = manifest_file.generic_string() + ".d";
-        const std::string manifest_path = manifest_file.generic_string();
-        const std::string dependency_path = dependency_file.generic_string();
-        const auto action_id = "release-opencc-" + std::to_string(next_action_number++);
-        mcpp::action copy_action;
-        copy_action.id = action_id.c_str();
-        copy_action.role = mcpp::roles::artifact;
-        copy_action.depfile = dependency_path.c_str();
-        copy_action.arg(runtime_stage_executable.c_str()).arg("--copy-tree")
-            .arg("--source").arg(source_directory.generic_string().c_str())
-            .arg("--dest").arg(destination_directory.generic_string().c_str())
-            .arg("--manifest").arg(manifest_path.c_str())
-            .arg("--depfile").arg(dependency_path.c_str())
-            .input(executable_file.c_str())
-            .input(vcpkg_install_stamp.generic_string().c_str())
-            .input(runtime_stage_executable.c_str())
-            .output(manifest_path.c_str()).submit();
-    }
-
-    void publish_release(std::string_view member, const fs::path& translation_file) {
-        if (!is_windows_target() || !is_release_profile()) return;
-        const bool is_cli = member == "GPPCLI";
-        const bool is_gui = member == "GPPGUI";
-        const auto package_release_directory = release_directory / (is_cli ? "GPPCLI" : "GPPGUI");
-        const auto private_directory = private_release_directory(member);
-        std::vector<std::pair<fs::path, std::string>> destinations{
-            {package_release_directory, is_cli ? "GPPCLI" : "GPPGUI"}
-        };
-        if (is_gui || member == "Updater")
-            destinations.emplace_back(release_directory / "GUICORE", "GUICORE");
-        if (!private_directory.empty())
-            destinations.emplace_back(private_directory, is_cli ? "GPPCLI_PRIVATE" : "GPPGUI_PRIVATE");
-        if (is_cli || is_gui) {
-            // PDB 是链接副产物；以 EXE 为依赖，避免把未声明的 PDB 当成 Ninja 输入。
-            copy_file("${mcpp.bin_dir}/" + target_name + ".pdb",
-                      release_directory / ".pdb" / (target_name + ".pdb"), false);
-            // 安装完成后递归复制 share/opencc；GUI 的 GUICORE 也需要完整配置。
-            copy_opencc_share(member, member, package_release_directory);
-            if (is_gui)
-                copy_opencc_share(member, "GUICORE", release_directory / "GUICORE");
-        }
-        for (const auto& [destination_directory, destination_name] : destinations) {
-            const auto executable_filename = member == "Updater" && destination_name != "GPPGUI"
-                ? "Updater_new.exe" : target_name + ".exe";
-            copy_file(executable_file, destination_directory / executable_filename);
-            copy_runtime_libraries(member, destination_directory, destination_name);
-            copy_file(translation_file.generic_string(),
-                      destination_directory / "translations" / translation_file.filename());
-            if (member != "Updater")
-                copy_file((workspace_directory() / "GalTranslPP" / "qt_gpp_en.qm").generic_string(),
-                          destination_directory / "translations" / "qt_gpp_en.qm");
-        }
-    }
-};
+    // PDB 是链接副产物，不在暂存目录中；以 EXE 为依赖，避免把未声明的 PDB 当成 Ninja 输入。
+    if (is_windows_target())
+        stage_file("release-pdb", "${mcpp.bin_dir}/" + target_name + ".pdb",
+                   release_directory / ".pdb" / (target_name + ".pdb"), "${mcpp.target_file:" + target_name + "}");
+}
 
 template<class Function>
 int run_build_script(Function configure) {

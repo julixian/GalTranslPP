@@ -9,6 +9,13 @@ license = "Apache-2.0"
 [toolchain]
 windows = "llvm@22.1.8"
 
+# Windows 构建使用的 xlings 包，在此声明一次，各成员继承。
+# xim:qt-base 为 Qt SDK；改用本机 Qt 时注释该行，见 how-to-build.md。
+# xim:7zip 提供 bit7z 运行时加载的 7z.dll。
+[target.windows.xlings.workspace]
+"xim:qt-base" = "6.11.1"
+"xim:7zip" = ">=26.02"
+
 [workspace.build]
 cxx_runtime = "host-coupled"
 cxxflags = [

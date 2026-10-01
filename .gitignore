@@ -5,6 +5,7 @@
 *.user
 
 # Local dependencies and build outputs
+/.xlings/
 x64/
 x86/
 Release/

@@ -9,9 +9,9 @@ license = "Apache-2.0"
 path = "gpp-build.ixx"
 
 [build]
-sources = ["gpp-build.ixx", "deps/*.ixx"]
+sources = ["gpp-build.ixx"]
 module_extensions = [".ixx"]
 
 [build-dependencies]
 # 将插件的宿主模块提供给使用 gpp.build 的构建脚本，各成员无需重复声明。
-mcpp.plugins = { version = "0.16.0", features = ["deps", "rules-qt"], host-module = true, reexport = true }
+mcpp.plugins = { version = "0.18.1", features = ["deps-vcpkg", "deps-cmake", "deps-archive", "rules-qt"], host-module = true, reexport = true }

@@ -6,12 +6,12 @@ import gpp.build;
 int main() {
     return gpp::run_build_script([] {
         gpp::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::configure_vcpkg(std::vector<std::string>{"7zip", "bit7z64"});
+        gpp::configure_vcpkg(std::vector<std::string>{"7zip", "bit7z64"});
+        // Updater 由 GPPGUI 的 artifacts 依赖构建到 GUI 旁，使用 GUI 目录中的 7z.dll 与 Qt 翻译；
+        // 其 QM 由这里的翻译配置生成，随 GUI 一并放置。
         auto qt_options = gpp::make_qt_options({"Core"});
-        const auto translation_file = gpp::configure_translation(qt_options, "qt_gppupdater_en.ts");
+        gpp::configure_translation(qt_options, "qt_gppupdater_en.ts");
         if (!mcpp::rules::qt::compile(qt_options)) return 1;
-        gpp::release_publisher publisher("Updater", vcpkg_directory);
-        publisher.publish_release("Updater", translation_file);
         return 0;
     });
 }

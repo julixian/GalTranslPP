@@ -136,11 +136,16 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>off/low/medium/high，具体效果由接口协议和模型支持情况决定</source>
-        <translation>off/low/medium/high; exact behavior depends on protocol and model support</translation>
+        <source>不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度</source>
+        <translation>Omit uses the API default. Other levels are mapped by protocol and model to the closest available level; models that cannot disable thinking use the lowest effort.</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+4"/>
+        <source>不传递</source>
+        <translation>Omit</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>流式输出</source>
         <translation>Stream output</translation>
     </message>
@@ -201,9 +206,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+23"/>
-        <source>JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为 off</source>
+        <source>JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递</source>
         <oldsource>JSON 对象，用于追加或覆盖请求 body 字段</oldsource>
-        <translation>Body overrides; set thinking off for model options</translation>
+        <translation>Body overrides; set thinking to Omit for model-specific options</translation>
     </message>
     <message>
         <location line="+15"/>

@@ -55,7 +55,8 @@ std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol)
         ret.pop_back();
     }
 
-    switch (protocol) {
+    switch (protocol)
+    {
     case ApiProtocol::Claude:
         if (ret.ends_with("/v1/messages") || ret.ends_with("/messages")) {
             return ret;
@@ -122,7 +123,8 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
         ret.pop_back();
     }
 
-    switch (api.protocol) {
+    switch (api.protocol)
+    {
     case ApiProtocol::Claude:
         if (ret.ends_with("/messages")) {
             ret.resize(ret.size() - std::string_view("/messages").size());
@@ -177,7 +179,8 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
 cpr::Header makeApiHeaders(const TranslationApi& api)
 {
     cpr::Header headers{ {"Content-Type", "application/json"} };
-    switch (api.protocol) {
+    switch (api.protocol)
+    {
     case ApiProtocol::Claude:
         headers["x-api-key"] = api.apikey;
         headers["anthropic-version"] = "2023-06-01";
@@ -231,11 +234,42 @@ json makeApiTestPayload(const TranslationApi& api)
 
 void applyApiPayloadOptions(json& payload, const TranslationApi& api)
 {
-    if (api.protocol == ApiProtocol::OpenAIRes) {
+    std::string modelName = str2Lower(api.modelName);
+    std::ranges::replace(modelName, '.', '-');
+    const bool claude35 = api.protocol == ApiProtocol::Claude && (modelName.contains("claude-3-5")
+        || modelName.contains("claude-sonnet-3-5") || modelName.contains("claude-haiku-3-5"));
+
+    // 提示词转化
+    if (api.protocol == ApiProtocol::Claude) {
+        // 3.5 系列的输出上限为 8192；其余模型默认给 16384，仍可由 extraBody 覆盖。
+        payload["max_tokens"] = claude35 ? 8192 : 16384;
+        json systemBlocks = json::array();
+        auto& messages = payload.at("messages");
+        for (auto message = messages.begin(); message != messages.end();) {
+            if (message->at("role") == "system") {
+                auto& content = message->at("content");
+                if (content.is_string() && !content.get_ref<const std::string&>().empty()) {
+                    systemBlocks.push_back({ {"type", "text"}, {"text", content} });
+                }
+                else {
+                    systemBlocks.insert(systemBlocks.end(), content.begin(), content.end());
+                }
+                message = messages.erase(message);
+            }
+            else {
+                ++message;
+            }
+        }
+        if (!systemBlocks.empty()) {
+            payload["system"] = std::move(systemBlocks);
+        }
+    }
+    else if (api.protocol == ApiProtocol::OpenAIRes) {
         payload["input"] = std::move(payload.at("messages"));
         payload.erase("messages");
         payload["store"] = false;
     }
+
     payload["model"] = api.modelName;
     if (api.temperature.has_value()) {
         payload["temperature"] = api.temperature.value();
@@ -252,31 +286,144 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
     if (api.stream) {
         payload["stream"] = true;
     }
-    std::string thinkingLevel = api.thinkingLevel;
-    str2LowerInplace(thinkingLevel);
-    if (thinkingLevel != "off" && !thinkingLevel.empty()) {
-        if (api.protocol == ApiProtocol::Claude) {
-            const int budgetTokens = thinkingLevel == "high" ? 2048 : thinkingLevel == "medium" ? 1536 : 1024;
-            payload["thinking"] = {
-                {"type", "enabled"},
-                {"budget_tokens", budgetTokens}
+
+    // off 或空字符串表示不传递思考参数，使用接口默认行为；none 则请求关闭或最低强度。
+    if (std::string thinkingLevel = str2Lower(api.thinkingLevel); thinkingLevel != "off" && !thinkingLevel.empty()) {
+        const auto isModel = [&](std::string_view name)
+            {
+                const auto pos = modelName.find(name);
+                if (pos == std::string::npos) return false;
+                const auto suffix = std::string_view(modelName).substr(pos + name.size());
+                return suffix.empty() || suffix.starts_with(':') || suffix.starts_with("-20")
+                    || (suffix.size() > 1 && suffix.front() == '-' && (suffix[1] < '0' || suffix[1] > '9'));
             };
+        // 规则按近期官方模型维护；未识别的模型采用最新格式和档位范围。
+        // OpenAI: https://developers.openai.com/api/docs/guides/reasoning
+        // Claude: https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+        // Gemini: https://ai.google.dev/gemini-api/docs/generate-content/thinking
+        switch (api.protocol)
+        {
+        case ApiProtocol::OpenAI:
+        case ApiProtocol::OpenAIRes:
+        {
+            // Chat Completions 使用 reasoning_effort，Responses 使用 reasoning.effort。
+            // GPT-5.1 的最高档为 high，5.2/5.4/5.5 为 xhigh，5.6 和 GPT-6 系列为 max。
+            // minimal 映射到 low；支持 none 的型号保留 none，Codex 的 none 改为 low。
+            // Pro 的最低档为 medium；未识别型号按最新模型处理，最低 low、最高 max。
+            const bool gpt51 = isModel("gpt-5-1");
+            const bool gpt52To55 = isModel("gpt-5-2") || isModel("gpt-5-4") || isModel("gpt-5-5");
+            const bool pro = isModel("gpt-5-2-pro") || isModel("gpt-5-4-pro") || isModel("gpt-5-5-pro");
+            const bool supportsNone = gpt51 || gpt52To55 || isModel("gpt-5-6")
+                || isModel("gpt-6-sol") || isModel("gpt-6-luna");
+            if (thinkingLevel == "minimal" || (thinkingLevel == "none" && !supportsNone)) {
+                thinkingLevel = "low";
+            }
+            if (thinkingLevel == "none" && modelName.contains("-codex")) thinkingLevel = "low";
+            if (pro && (thinkingLevel == "none" || thinkingLevel == "low")) thinkingLevel = "medium";
+            if (gpt51 && (thinkingLevel == "xhigh" || thinkingLevel == "max")) {
+                thinkingLevel = "high";
+            }
+            else if (gpt52To55 && thinkingLevel == "max") {
+                thinkingLevel = "xhigh";
+            }
+            if (api.protocol == ApiProtocol::OpenAIRes) {
+                payload["reasoning"]["effort"] = thinkingLevel;
+            }
+            else {
+                payload["reasoning_effort"] = thinkingLevel;
+            }
         }
-        else if (api.protocol == ApiProtocol::Gemini) {
-            const std::string geminiThinkingLevel = thinkingLevel == "high" ? "HIGH"
-                : thinkingLevel == "medium" ? "MEDIUM" : "LOW";
-            payload["generationConfig"]["thinkingConfig"] = {
-                {"thinkingLevel", geminiThinkingLevel},
-                {"includeThoughts", true}
-            };
+        break;
+
+        case ApiProtocol::Claude:
+        {
+            // 3.5 系列不支持扩展思考，任何档位均不追加 thinking 或 effort。
+            // 3.7、4.0、4.1、4.5 使用 enabled + budget_tokens；4.6 及以后使用 adaptive + effort。
+            // 只识别这些已知旧版本，其余型号按最新 adaptive 规范处理。
+            if (claude35) break;
+            const bool manualThinking = isModel("claude-3-7-sonnet") || isModel("claude-sonnet-3-7")
+                || isModel("claude-sonnet-4") || isModel("claude-opus-4") || isModel("claude-opus-4-1")
+                || isModel("claude-opus-4-5") || isModel("claude-sonnet-4-5") || isModel("claude-haiku-4-5");
+            const bool claude46 = isModel("claude-opus-4-6") || isModel("claude-sonnet-4-6");
+            const bool supportsDisabled = manualThinking || claude46 || isModel("claude-opus-4-7")
+                || isModel("claude-opus-4-8") || isModel("claude-opus-5") || isModel("claude-sonnet-5");
+            if (thinkingLevel == "none" && (supportsDisabled || isModel("claude-sonnet-5-5"))) {
+                // 支持关闭的旧模型发送 disabled；Sonnet 5.5 用 between_tools 关闭回答前的思考。
+                // 同时使用 low effort；手动预算模型中只有 Opus 4.5 支持 effort。
+                payload["thinking"] = {{"type", supportsDisabled ? "disabled" : "between_tools"}};
+                if (!manualThinking || isModel("claude-opus-4-5")) {
+                    payload["output_config"]["effort"] = "low";
+                }
+            }
+            else if (manualThinking) {
+                // minimal/low/medium/high/xhigh/max 分别映射到 1024/2048/4096/8192/12288/15360。
+                // 预算至少 1024，且小于默认 max_tokens=16384，为正文保留输出空间。
+                // Opus 4.5 额外传 effort：minimal 降为 low，xhigh/max 降为 high。
+                const int budgetTokens = thinkingLevel == "max" ? 15360 : thinkingLevel == "xhigh" ? 12288
+                    : thinkingLevel == "high" ? 8192 : thinkingLevel == "medium" ? 4096
+                    : thinkingLevel == "low" ? 2048 : 1024;
+                payload["thinking"] = {{"type", "enabled"}, {"budget_tokens", budgetTokens}};
+                if (isModel("claude-opus-4-5")) {
+                    payload["output_config"]["effort"] = thinkingLevel == "minimal" ? "low"
+                        : thinkingLevel == "xhigh" || thinkingLevel == "max" ? "high" : thinkingLevel;
+                }
+            }
+            else {
+                // adaptive 不传预算，low/medium/high/xhigh/max 直接作为 effort。
+                // Opus 5.5、Fable、Mythos 及未识别型号不关闭思考，none/minimal 映射到 low。
+                // 4.6 和 Mythos Preview 不支持 xhigh，映射到 high；max 保留。
+                if (thinkingLevel == "none" || thinkingLevel == "minimal") thinkingLevel = "low";
+                if (thinkingLevel == "xhigh" && (claude46 || isModel("claude-mythos-preview"))) thinkingLevel = "high";
+                payload["thinking"] = {{"type", "adaptive"}};
+                payload["output_config"]["effort"] = thinkingLevel;
+            }
         }
-        else if (api.protocol == ApiProtocol::OpenAIRes) {
-            payload["reasoning"]["effort"] = thinkingLevel;
+        break;
+
+        case ApiProtocol::Gemini:
+        {
+            // generateContent 的思考参数位于 generationConfig.thinkingConfig。
+            // includeThoughts 只用于返回思考摘要；2.5 使用预算，3 系列及未识别型号使用等级。
+            auto& thinkingConfig = payload["generationConfig"]["thinkingConfig"];
+            thinkingConfig = {{"includeThoughts", true}};
+            if (isModel("gemini-2-5-pro") || isModel("gemini-2-5-flash")) {
+                // 2.5 Flash/Lite 的 none=0（关闭），Pro 不能关闭，none/minimal 使用最低预算 128。
+                // Flash/Lite 的 minimal=512；low/medium/high/xhigh 为 2048/4096/8192/16384。
+                // max 使用模型预算上限：Pro=32768，Flash/Lite=24576。
+                const bool pro = isModel("gemini-2-5-pro");
+                const int budgetTokens = thinkingLevel == "none" ? (pro ? 128 : 0)
+                    : thinkingLevel == "minimal" ? (pro ? 128 : 512)
+                    : thinkingLevel == "low" ? 2048 : thinkingLevel == "medium" ? 4096
+                    : thinkingLevel == "high" ? 8192 : thinkingLevel == "xhigh" ? 16384 : (pro ? 32768 : 24576);
+                thinkingConfig["thinkingBudget"] = budgetTokens;
+            }
+            else {
+                // 3 Flash、3.1 Flash-Lite、3.5/3.6 Flash 支持 minimal，none/minimal 使用该档。
+                // 其余型号（含未识别型号）最低 low；xhigh/max 统一映射到最高档 high。
+                // 3 Pro 只有 low/high，medium 映射到 high；3.1 Pro 支持 medium。
+                const bool supportsMinimal = isModel("gemini-3-flash") || isModel("gemini-3-1-flash-lite")
+                    || isModel("gemini-3-5-flash") || isModel("gemini-3-6-flash");
+                if (thinkingLevel == "none" || thinkingLevel == "minimal") {
+                    thinkingLevel = supportsMinimal ? "minimal" : "low";
+                }
+                if (thinkingLevel == "xhigh" || thinkingLevel == "max"
+                    || (thinkingLevel == "medium" && isModel("gemini-3-pro")))
+                {
+                    thinkingLevel = "high";
+                }
+                // Flash-Lite Image 只有 minimal/high 两档。
+                if (isModel("gemini-3-1-flash-lite-image") && thinkingLevel != "minimal") thinkingLevel = "high";
+                std::ranges::transform(thinkingLevel, thinkingLevel.begin(),
+                    [](unsigned char ch) { return (char)std::toupper(ch); });
+                thinkingConfig["thinkingLevel"] = thinkingLevel;
+            }
         }
-        else {
-            payload["reasoning_effort"] = thinkingLevel;
+        break;
+
         }
     }
+
+    // extraBody 覆盖
     if (api.extraBody.is_object()) {
         for (auto it = api.extraBody.cbegin(); it != api.extraBody.cend(); ++it) {
             payload[it.key()] = it.value();

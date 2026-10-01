@@ -401,12 +401,15 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     auto [thinkingConfigArea, thinkingConfigLayout] = createFormRow(basicPage);
     thinkingConfigLayout->addWidget(new ElaDoubleText(tr("思考等级"), 16,
-        tr("off/low/medium/high，具体效果由接口协议和模型支持情况决定"), 10, "", thinkingConfigArea));
+        tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度"), 10, "", thinkingConfigArea));
     thinkingConfigLayout->addStretch();
     ElaNoWheelComboBox* thinkingComboBox = new ElaNoWheelComboBox(thinkingConfigArea);
     thinkingComboBox->setFixedWidth(130);
-    thinkingComboBox->addItems(QStringList{ "off", "low", "medium", "high" });
-    if (const int thinkingIndex = thinkingComboBox->findText(QString::fromStdString(thinkingLevel)); thinkingIndex >= 0) {
+    thinkingComboBox->addItem(tr("不传递"), "off");
+    for (const auto& level : QStringList{ "none", "minimal", "low", "medium", "high", "xhigh", "max" }) {
+        thinkingComboBox->addItem(level, level);
+    }
+    if (const int thinkingIndex = thinkingComboBox->findData(QString::fromStdString(thinkingLevel)); thinkingIndex >= 0) {
         thinkingComboBox->setCurrentIndex(thinkingIndex);
     }
     thinkingConfigLayout->addWidget(thinkingComboBox);
@@ -538,7 +541,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     extraBodyTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraBodyTitleLayout->setSpacing(8);
     extraBodyTitleLayout->addWidget(new ElaDoubleText("extraBody", 16,
-        tr("JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为 off"),
+        tr("JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递"),
         10, "", extraBodyArea));
     extraBodyTitleLayout->addStretch();
     ElaAlignedCheckBox* extraBodyCheckBox = new ElaAlignedCheckBox(extraBodyArea);
@@ -684,7 +687,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             api_.apikey = firstConfiguredApiKey();
             api_.apiurl = cvt2StdApiUrl(url_.toStdString(), api_.protocol);
             api_.modelName = modelName.toStdString();
-            api_.thinkingLevel = thinkingComboBox->currentText().toStdString();
+            api_.thinkingLevel = thinkingComboBox->currentData().toString().toStdString();
             api_.stream = streamConfigSwitch->getIsToggled();
             api_.useSystemProxy = systemProxySwitch->getIsToggled();
             if (temperatureCheckBox->isChecked()) {
@@ -867,7 +870,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             apiTable.insert({ "stream", streamConfigSwitch->getIsToggled() });
             apiTable.insert({ "useSystemProxy", systemProxySwitch->getIsToggled() });
             apiTable.insert({ "enable", enableCheckBox->isChecked() });
-            apiTable.insert({ "thinkingLevel", thinkingComboBox->currentText().toStdString() });
+            apiTable.insert({ "thinkingLevel", thinkingComboBox->currentData().toString().toStdString() });
             if (temperatureCheckBox->isChecked()) {
                 apiTable.insert({ "temperature", temperatureSlider->value() });
             }

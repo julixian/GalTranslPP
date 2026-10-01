@@ -15,6 +15,7 @@ export
     private:
         std::vector<TranslationApi> m_apis;
         std::shared_ptr<spdlog::logger> m_logger;
+        std::chrono::steady_clock::time_point m_lastResortTime = std::chrono::steady_clock::time_point::min();
         std::mutex m_mutex;
 
         std::unique_ptr<std::mt19937> m_gen;
@@ -27,7 +28,8 @@ export
         std::optional<TranslationApi> getApi(const std::string& apiStrategy);
         std::optional<TranslationApi> getFirstApi();
 
-        void resortTokens();
+        // 成功 resort 后返回将要使用的第一个 apikey
+        std::optional<std::string> resortTokens();
 
         void reportProblem(const TranslationApi& badApi);
 

@@ -620,8 +620,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             lines << tr("HTTP 状态: %1").arg(result.statusCode);
             lines << tr("请求结果: %1").arg(result.success ? tr("成功") : tr("失败"));
             lines << "";
-            lines << (result.success ? tr("解析出的模型回复: ") : tr("错误信息: "));
-            lines << (result.content.empty() ? tr("(空)") : QString::fromStdString(result.content));
+            lines << (result.success ? tr("模型回复:") : tr("原始响应:"));
+            lines << QString::fromStdString(result.content);
             return lines.join('\n');
         };
 

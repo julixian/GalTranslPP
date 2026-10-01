@@ -28,7 +28,7 @@ export
         std::optional<double> topP;
         std::optional<double> frequencyPenalty;
         std::optional<double> presencePenalty;
-        std::chrono::steady_clock::time_point lastReportTime = std::chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point lastReportTime = std::chrono::steady_clock::time_point::min();
         int reportCount = 0;
         bool stream = false;
         bool useSystemProxy = true;
@@ -59,10 +59,8 @@ export
 
     std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol);
 
-    std::expected<std::string, std::string> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol);
-
+    // For Gui
     ApiModelListResponse queryApiModels(const TranslationApi& api, int apiTimeOutMs);
-
     ApiTestResponse testApiConnection(const TranslationApi& api, int apiTimeOutMs);
 
     ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string_view)>& onPerformApi,

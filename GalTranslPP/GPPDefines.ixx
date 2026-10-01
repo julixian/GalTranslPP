@@ -1,12 +1,13 @@
 ﻿export module GPPDefines;
 
 export import std;
+
 export import AbslContainers;
+export import GPPI18n;
 export import jpcre2;
 export import nlohmann.json;
-export import toml11;
 export import spdlog;
-export import GPPI18n;
+export import toml11;
 
 namespace fs = std::filesystem;
 

@@ -1,7 +1,5 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module NameTranslator;

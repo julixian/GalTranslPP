@@ -1,6 +1,6 @@
 import std;
 import mcpp;
-import mcpp.rules.qt;
+import gpp.rules.qt;
 import gpp.build;
 
 int main() {
@@ -10,7 +10,6 @@ int main() {
 
         auto qt_options = gpp::make_qt_options({"Core", "Gui", "Network", "Widgets"});
         qt_options.resources = {"GPPGUI.qrc"};
-        // deploy_plugins 在共享配置中为空；Qt 动态插件由用户手动部署。
         const auto translation_file = gpp::configure_translation(qt_options, "qt_gppgui_en.ts");
         // 只扫描手写源码，避免把 VS 的 x64/Release/qt 生成文件交给 lupdate。
         for (const char* glob : {"*.cpp", "*.h", "*.hpp"}) mcpp::rerun_if_changed_glob(glob);
@@ -20,7 +19,7 @@ int main() {
                 qt_options.i18n.sources.push_back(entry.path().generic_string());
         }
         std::ranges::sort(qt_options.i18n.sources);
-        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        if (!gpp::rules::qt::compile(qt_options)) return 1;
         const auto ela_widget_tools = gpp::use_ela_widget_tools(qt_options);
 
         gpp::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);

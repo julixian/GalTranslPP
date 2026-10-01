@@ -12,10 +12,9 @@
 #include <bit7z/bitarchivereader.hpp>
 #include <bit7z/bitfileextractor.hpp>
 
-import toml11;
-
 import boost;
 import GPPVersion;
+import toml11;
 
 namespace fs = std::filesystem;
 
@@ -25,7 +24,7 @@ QString gppTr(const char* context, const char* source) {
 
 void waitForProcessToExit(qint64 pid) {
 #ifdef Q_OS_WIN
-    HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
+    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
     if (hProcess != nullptr) {
         WaitForSingleObject(hProcess, INFINITE);
         CloseHandle(hProcess);

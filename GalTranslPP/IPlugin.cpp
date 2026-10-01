@@ -1,17 +1,15 @@
 ﻿module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module IPlugin;
 
-import Tool;
 import SkipTrans;
 import TextFull2Half;
 import TextLinebreakFix;
 import LuaTextPlugin;
 import PythonTextPlugin;
+import Tool;
 
 namespace fs = std::filesystem;
 

@@ -1,6 +1,6 @@
 import std;
 import mcpp;
-import mcpp.rules.qt;
+import gpp.rules.qt;
 import gpp.build;
 
 int main() {
@@ -9,7 +9,7 @@ int main() {
         gpp::link_python_libraries();
         auto qt_options = gpp::make_qt_options({"Core"});
         gpp::configure_translation(qt_options, "qt_gpp_en.ts");
-        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        if (!gpp::rules::qt::compile(qt_options)) return 1;
         return 0;
     });
 }

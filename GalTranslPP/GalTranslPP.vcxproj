@@ -205,6 +205,8 @@
     <ClCompile Include="..\3rdParty\3rdModule\jpcre2\jpcre2.ixx" />
     <ClCompile Include="..\3rdParty\3rdModule\json.ixx" />
     <ClCompile Include="..\3rdParty\3rdModule\toml.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\pybind11.ixx" />
+    <ClCompile Include="..\3rdParty\3rdModule\luabridge.ixx" />
     <ClCompile Include="..\3rdParty\3rdModule\spdlog.ixx" />
     <ClCompile Include="..\3rdParty\3rdModule\utf8cpp.ixx" />
     <ClCompile Include="ApiPool.cpp" />
@@ -279,6 +281,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPPMacros.hpp" />
+    <ClInclude Include="..\3rdParty\3rdModule\pybind11_headers.hpp" />
+    <ClInclude Include="..\3rdParty\3rdModule\luabridge_headers.hpp" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="qt_gpp_en.ts" />

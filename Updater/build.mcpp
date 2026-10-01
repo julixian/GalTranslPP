@@ -1,6 +1,6 @@
 import std;
 import mcpp;
-import mcpp.rules.qt;
+import gpp.rules.qt;
 import gpp.build;
 
 int main() {
@@ -9,7 +9,7 @@ int main() {
         const auto vcpkg_directory = gpp::configure_vcpkg(std::vector<std::string>{"7zip", "bit7z64"});
         auto qt_options = gpp::make_qt_options({"Core"});
         const auto translation_file = gpp::configure_translation(qt_options, "qt_gppupdater_en.ts");
-        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        if (!gpp::rules::qt::compile(qt_options)) return 1;
         gpp::release_publisher publisher("Updater", vcpkg_directory);
         publisher.publish_release("Updater", translation_file);
         return 0;

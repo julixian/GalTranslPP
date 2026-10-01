@@ -1,12 +1,11 @@
 ﻿module;
 
-#define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
 
 module PDFTool;
 
-import Tool;
 import PythonManager;
+import Tool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

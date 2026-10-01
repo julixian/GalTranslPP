@@ -7,7 +7,7 @@ import mcpp;
 import mcpp.deps;
 import gpp.deps.vcpkg;
 import gpp.deps.cmake;
-import mcpp.rules.qt;
+import gpp.rules.qt;
 
 export namespace gpp {
 
@@ -100,17 +100,16 @@ void link_python_libraries() {
         mcpp::link_flag((python_library_directory / (std::string(library_name) + ".lib")).generic_string().c_str());
 }
 
-mcpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
-    mcpp::rules::qt::options qt_options;
+gpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
+    gpp::rules::qt::options qt_options;
     qt_options.root = qt_directory().generic_string();
     qt_options.modules = std::move(modules);
-    qt_options.deploy_plugins = {}; // 用户自行部署 platforms/styles/imageformats 等 Qt 动态插件。
     qt_options.i18n.qt_languages = {}; // 不生成 Qt 自带的 qt_zh_CN.qm 等翻译。
     return qt_options;
 }
 
 // 在 compile(qt_options) 前配置；插件负责 lupdate/lrelease，返回供 Release 发布使用的 QM 路径。
-fs::path configure_translation(mcpp::rules::qt::options& qt_options, const char* translation_source_filename) {
+fs::path configure_translation(gpp::rules::qt::options& qt_options, const char* translation_source_filename) {
     const fs::path project_directory = mcpp::manifest_dir();
     qt_options.i18n.ts = {translation_source_filename};
     qt_options.i18n.update_sources = true;
@@ -119,11 +118,13 @@ fs::path configure_translation(mcpp::rules::qt::options& qt_options, const char*
     return project_directory / (fs::path(translation_source_filename).stem().string() + ".qm");
 }
 
-gpp::deps::cmake::prefix use_ela_widget_tools(const mcpp::rules::qt::options& qt_options) {
+gpp::deps::cmake::prefix use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
     gpp::deps::cmake::options options;
     options.cmake = cmake_executable.generic_string();
     options.source = (workspace_directory() / "3rdParty" / "ElaWidgetTools").generic_string();
     options.name = "ElaWidgetTools";
+    // target 被源码扫描和 rerun glob 排除；build-* 也符合 Ela 的 Git 忽略规则。
+    options.cache = (fs::path(options.source) / "target" / "build-deps-cmake").generic_string();
     options.cache_args = {"-DQT_SDK_DIR=" + qt_options.root,
                           "-DELAWIDGETTOOLS_BUILD_EXAMPLE=OFF",
                           "-DELAWIDGETTOOLS_BUILD_STATIC_LIB=OFF"};

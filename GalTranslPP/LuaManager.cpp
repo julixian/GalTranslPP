@@ -1,6 +1,5 @@
 module;
 
-#define PYBIND11_HEADERS
 #define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
@@ -9,10 +8,9 @@ module LuaManager;
 import NormalJsonTranslator;
 import EpubTranslator;
 import PDFTranslator;
-import NLPTool;
-
 import ctpl_stl;
 import ITranslator;
+import NLPTool;
 import Tool;
 
 namespace fs = std::filesystem;
@@ -272,7 +270,7 @@ namespace lua_binding
 			template<typename Value>
 			Item& operator=(Value value)
 			{
-				if constexpr (luabridge::detail::is_callable_v<Value>) {
+				if constexpr (luabridge::detail::is_callable<Value>::value) {
 					m_table[m_key] = luabridge::LuaRef::newFunction(m_table.state(), std::move(value));
 				}
 				else {
@@ -422,7 +420,7 @@ public:
 			const bool isInteger = lua_isinteger(obj.state(), -1);
 			lua_pop(obj.state(), 1);
 			if (isInteger) {
-				return obj.cast<int64_t>().value();
+				return obj.cast<std::int64_t>().value();
 			}
 			return obj.cast<double>().value();
 		}
@@ -473,9 +471,9 @@ public:
 		case json::value_t::string:
 			return luabridge::LuaRef(lua, value.get<std::string>());
 		case json::value_t::number_unsigned:
-			return luabridge::LuaRef(lua, value.get<uint64_t>());
+			return luabridge::LuaRef(lua, value.get<std::uint64_t>());
 		case json::value_t::number_integer:
-			return luabridge::LuaRef(lua, value.get<int64_t>());
+			return luabridge::LuaRef(lua, value.get<std::int64_t>());
 		case json::value_t::number_float:
 			return luabridge::LuaRef(lua, value.get<double>());
 		case json::value_t::boolean:
@@ -517,7 +515,7 @@ public:
 			const bool isInteger = lua_isinteger(obj.state(), -1);
 			lua_pop(obj.state(), 1);
 			if (isInteger) {
-				return toml::value(obj.cast<int64_t>().value());
+				return toml::value(obj.cast<std::int64_t>().value());
 			}
 			return toml::value(obj.cast<double>().value());
 		}

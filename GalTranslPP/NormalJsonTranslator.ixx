@@ -1,7 +1,5 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 export module NormalJsonTranslator;
@@ -17,7 +15,6 @@ export import LuaManager;
 export import NameTranslator;
 export import :TransAgent;
 export import ProblemAnalyzer;
-export import proxy.v4;
 export import PythonManager;
 
 namespace fs = std::filesystem;

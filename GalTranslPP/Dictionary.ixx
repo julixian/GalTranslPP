@@ -1,14 +1,12 @@
 ﻿module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 export module Dictionary;
 
 export import GPPDefines;
-export import PythonManager;
 export import LuaManager;
+export import PythonManager;
 
 namespace fs = std::filesystem;
 

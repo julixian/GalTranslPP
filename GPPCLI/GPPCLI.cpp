@@ -1,7 +1,4 @@
-﻿#define PYBIND11_HEADERS
-#include "../GalTranslPP/GPPMacros.hpp"
-
-#include <QCoreApplication>
+﻿#include <QCoreApplication>
 #include <QDir>
 #include <QTranslator>
 
@@ -11,9 +8,9 @@
 
 import GPPVersion;
 import PythonManager;
+import TerminalController;
 import toml11;
 import Tool;
-import TerminalController;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

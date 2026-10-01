@@ -4,8 +4,6 @@ module;
 
 module DictionaryGenerator;
 
-import AgentToolCommon;
-import AgentCommonSourceView;
 import ctpl_stl;
 import :ReviewAgent;
 import NormalJsonTranslatorHelperTool;

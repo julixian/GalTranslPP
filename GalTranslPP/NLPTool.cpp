@@ -1,13 +1,12 @@
 module;
 
-#define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
 #include <mecab/mecab.h>
 
 module NLPTool;
 
-import Tool;
 import PythonManager;
+import Tool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

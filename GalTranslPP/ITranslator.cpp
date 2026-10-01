@@ -1,17 +1,15 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module ITranslator;
 
-import Tool;
 import NormalJsonTranslator;
 import EpubTranslator;
 import PDFTranslator;
 import LuaTranslator;
 import PythonTranslator;
+import Tool;
 
 namespace fs = std::filesystem;
 

@@ -4,7 +4,6 @@ module;
 
 export module AgentToolCommon;
 
-export import GPPDefines;
 export import AgentCommonSourceView;
 
 namespace fs = std::filesystem;

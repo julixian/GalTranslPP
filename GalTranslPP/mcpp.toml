@@ -27,6 +27,8 @@ sources = [
   "../3rdParty/3rdModule/jpcre2/jpcre2.ixx",
   "../3rdParty/3rdModule/json.ixx",
   "../3rdParty/3rdModule/toml.ixx",
+  "../3rdParty/3rdModule/pybind11.ixx",
+  "../3rdParty/3rdModule/luabridge.ixx",
   "../3rdParty/3rdModule/proxy.ixx",
   "../3rdParty/3rdModule/spdlog.ixx",
   "../3rdParty/3rdModule/utf8cpp.ixx",

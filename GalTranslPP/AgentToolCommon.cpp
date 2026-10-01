@@ -2,9 +2,6 @@ module;
 
 #include "GPPMacros.hpp"
 
-#include <cstdint>
-#include <filesystem>
-
 #ifdef _WIN32
 #include <Shlwapi.h>
 #endif
@@ -145,7 +142,7 @@ json runAgentCommonSourceSearchTextTool(
 
 std::optional<int> parseAgentCommonJsonInt(const json& object) {
     if (object.is_number_integer()) {
-        const int64_t value = object.get<int64_t>();
+        const std::int64_t value = object.get<std::int64_t>();
         if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max()) {
             return (int)value;
         }

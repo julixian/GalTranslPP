@@ -1,13 +1,11 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module Dictionary;
 
-import Tool;
 import ConditionTool;
+import Tool;
 
 namespace fs = std::filesystem;
 
@@ -177,7 +175,7 @@ std::string GptDictionary::doReplace(Sentence* se, CachePart targetToModify) con
     return textToModify;
 }
 
-uint8_t checkTransIncludeReplace(const std::string& trans, const std::string& replace) {
+std::uint8_t checkTransIncludeReplace(const std::string& trans, const std::string& replace) {
     return std::ranges::any_of(replace | std::views::split(std::string_view("||"))
         | std::views::transform([](const auto& subStrView)
         {
@@ -193,7 +191,7 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
     const std::string& origText = chooseStringRef(sentence, base);
     const std::string& transView = chooseStringRef(sentence, check);
 
-    std::vector<uint8_t> checkResults(m_entries.size(), 0); // 0: 原文不包含, 1: 原文包含且译文使用字典, 2: 原文包含但译文没有使用字典
+    std::vector<std::uint8_t> checkResults(m_entries.size(), 0); // 0: 原文不包含, 1: 原文包含且译文使用字典, 2: 原文包含但译文没有使用字典
     for (auto [checkResult, entry] : std::views::zip(checkResults, m_entries | std::views::as_const)) {
         if (!origText.contains(entry.org)) {
             continue;

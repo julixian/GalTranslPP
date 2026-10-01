@@ -2097,7 +2097,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+150"/>
+        <location filename="GPPGUI.cpp" line="+148"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>

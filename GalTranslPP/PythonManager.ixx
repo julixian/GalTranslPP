@@ -1,11 +1,11 @@
 ﻿module;
 
-#define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
 
 export module PythonManager;
 
 export import GPPDefines;
+export import pybind11;
 export import SafeQueue;
 
 namespace fs = std::filesystem;

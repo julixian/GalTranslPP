@@ -4,8 +4,8 @@ module;
 
 module ApiPool;
 
-import Tool;
 import NormalJsonTranslatorHelperTool;
+import Tool;
 
 namespace fs = std::filesystem;
 

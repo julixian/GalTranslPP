@@ -1,6 +1,6 @@
 import std;
 import mcpp;
-import mcpp.rules.qt;
+import gpp.rules.qt;
 import gpp.build;
 
 int main() {
@@ -9,7 +9,7 @@ int main() {
         const auto vcpkg_directory = gpp::configure_vcpkg();
         auto qt_options = gpp::make_qt_options({"Core"});
         const auto translation_file = gpp::configure_translation(qt_options, "qt_gppcli_en.ts");
-        if (!mcpp::rules::qt::compile(qt_options)) return 1;
+        if (!gpp::rules::qt::compile(qt_options)) return 1;
         gpp::release_publisher publisher("GalTranslPP_CLI", vcpkg_directory);
         publisher.publish_release("GPPCLI", translation_file);
         return 0;

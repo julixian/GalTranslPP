@@ -1,6 +1,5 @@
 module;
 
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module LuaTextPlugin;

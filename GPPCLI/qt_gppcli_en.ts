@@ -4,97 +4,97 @@
 <context>
     <name>GPPCLI.GPPCLI</name>
     <message>
-        <location filename="GPPCLI.cpp" line="60"/>
+        <location filename="GPPCLI.cpp" line="57"/>
         <source>未设置 Python 环境，将无法使用需要 Python 环境的模块</source>
         <translation>Python environment is not set; modules requiring Python will be unavailable</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="65"/>
+        <location filename="GPPCLI.cpp" line="62"/>
         <source>Python 环境配置失败</source>
         <translation>Python environment setup failed</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="69"/>
+        <location filename="GPPCLI.cpp" line="66"/>
         <source>无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在</source>
         <translation>Cannot read global config; check whether BaseConfig/GlobalConfig.toml exists</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="76"/>
+        <location filename="GPPCLI.cpp" line="73"/>
         <source>检测到异常退出，请注意备份相关翻译缓存</source>
         <translation>Abnormal exit detected; back up related translation caches</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="83"/>
+        <location filename="GPPCLI.cpp" line="80"/>
         <source>缓存检测或创建错误: %1</source>
         <translation>Cache check/create error: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="97"/>
+        <location filename="GPPCLI.cpp" line="94"/>
         <source>请输入项目文件夹或 Config.toml 的路径。</source>
         <translation>Enter the path to the project folder or Config.toml</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="99"/>
+        <location filename="GPPCLI.cpp" line="96"/>
         <source> (直接按 Enter 可再次处理: %1)</source>
         <translation> (Enter to rerun: %1)</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="127"/>
+        <location filename="GPPCLI.cpp" line="124"/>
         <source>首次运行，请输入一个有效的项目路径</source>
         <translation>First run: enter a valid project path</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="132"/>
+        <location filename="GPPCLI.cpp" line="129"/>
         <source>再次处理项目: %1</source>
         <translation>Rerun project: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="150"/>
+        <location filename="GPPCLI.cpp" line="147"/>
         <source>路径 &apos;%1&apos; 不存在或不是一个有效的文件夹，请重新输入</source>
         <translation>Path &apos;%1&apos; does not exist or is not a valid folder; please enter it again</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="158"/>
+        <location filename="GPPCLI.cpp" line="155"/>
         <source>开始处理项目: %1</source>
         <translation>Start project: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="165"/>
+        <location filename="GPPCLI.cpp" line="162"/>
         <source>创建翻译器实例失败，请检查项目配置</source>
         <translation>Translator creation failed; check project config</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="174"/>
+        <location filename="GPPCLI.cpp" line="171"/>
         <source>项目 &apos;%1&apos; 处理完成！</source>
         <translation>Project &apos;%1&apos; done!</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="180"/>
+        <location filename="GPPCLI.cpp" line="177"/>
         <source>[参数错误] %1</source>
         <translation>[Arg error] %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="185"/>
+        <location filename="GPPCLI.cpp" line="182"/>
         <source>[运行时错误] %1</source>
         <translation>[Runtime error] %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="190"/>
+        <location filename="GPPCLI.cpp" line="187"/>
         <source>[标准库错误] %1</source>
         <translation>[Std error] %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="195"/>
+        <location filename="GPPCLI.cpp" line="192"/>
         <source>发生未知错误</source>
         <translation>Unknown error</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="205"/>
+        <location filename="GPPCLI.cpp" line="202"/>
         <source>缓存删除错误: %1</source>
         <translation>Cache delete error: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="210"/>
+        <location filename="GPPCLI.cpp" line="207"/>
         <source>程序退出</source>
         <translation>Program exited</translation>
     </message>

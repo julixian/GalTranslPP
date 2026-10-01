@@ -1,8 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#define PYBIND11_HEADERS
-#include "../GalTranslPP/GPPMacros.hpp"
 #include "ElaWindow.h"
 
 #include <QMainWindow>
@@ -21,7 +19,6 @@ class UpdateChecker;
 class QShortcut;
 
 namespace fs = std::filesystem;
-namespace py = pybind11;
 
 class MainWindow : public ElaWindow
 {

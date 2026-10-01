@@ -1,28 +1,12 @@
 ﻿#ifndef GPPMACROS
 #define GPPMACROS
 
-#ifdef PYBIND11_HEADERS 
-#define PYBIND11_DETAILED_ERROR_MESSAGES
-#include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-#include <pybind11/complex.h>
-#include <pybind11/functional.h>
-#include <pybind11/stl_bind.h>
-#include <pybind11/embed.h>
-#include <pybind11/subinterpreter.h>
+#ifdef PYBIND11_HEADERS
+#include "../3rdParty/3rdModule/pybind11_headers.hpp"
 #endif
 
 #ifdef LUABRIDGE3_HEADERS
-#include <lua.hpp>
-#define LUABRIDGE_DISABLE_CXX17_FILESYSTEM
-#define LUABRIDGE_SAFE_LUA_C_EXCEPTION_HANDLING 1
-#include <luabridge3/LuaBridge/LuaBridge.h>
-#include <luabridge3/LuaBridge/Array.h>
-#include <luabridge3/LuaBridge/Map.h>
-#include <luabridge3/LuaBridge/Set.h>
-#include <luabridge3/LuaBridge/UnorderedMap.h>
-#include <luabridge3/LuaBridge/UnorderedSet.h>
-#include <luabridge3/LuaBridge/Vector.h>
+#include "../3rdParty/3rdModule/luabridge_headers.hpp"
 #endif
 
 #define IMPL_LITERAL_TO_STR(x) #x

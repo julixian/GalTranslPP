@@ -1,14 +1,12 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 export module ConditionTool;
 
-export import Tool;
-export import PythonManager;
 export import LuaManager;
+export import PythonManager;
+export import Tool;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;

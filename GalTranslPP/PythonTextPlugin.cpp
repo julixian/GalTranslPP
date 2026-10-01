@@ -1,6 +1,5 @@
 module;
 
-#define PYBIND11_HEADERS
 #include "GPPMacros.hpp"
 
 module PythonTextPlugin;

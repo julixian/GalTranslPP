@@ -12,6 +12,14 @@ path = "gpp-build.ixx"
 sources = ["gpp-build.ixx", "deps/*.ixx"]
 module_extensions = [".ixx"]
 
+[features]
+default = ["rules-qt"]
+
+[features.rules-qt]
+sources = ["rules/qt.ixx"]
+rule_module = "gpp.rules.qt"
+device_extensions = [".ui", ".qrc", ".ts"]
+
 [build-dependencies]
 # 将插件的宿主模块提供给使用 gpp.build 的构建脚本，各成员无需重复声明。
-mcpp.plugins = { version = "0.16.0", features = ["deps", "rules-qt"], host-module = true, reexport = true }
+mcpp.plugins = { version = "0.18.1", features = ["deps"], host-module = true, reexport = true }

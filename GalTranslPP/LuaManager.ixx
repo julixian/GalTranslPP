@@ -6,6 +6,7 @@
 export module LuaManager;
 
 export import GPPDefines;
+export import luabridge;
 export import SafeQueue;
 
 namespace fs = std::filesystem;

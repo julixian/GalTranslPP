@@ -1,7 +1,6 @@
 module;
 
 #define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module PythonManager;
@@ -9,10 +8,9 @@ module PythonManager;
 import NormalJsonTranslator;
 import EpubTranslator;
 import PDFTranslator;
-import NLPTool;
-
 import ctpl_stl;
 import ITranslator;
+import NLPTool;
 import Tool;
 
 namespace fs = std::filesystem;

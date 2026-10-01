@@ -1,5 +1,3 @@
-#define PYBIND11_HEADERS
-#include "../GalTranslPP/GPPMacros.hpp"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
@@ -22,8 +20,9 @@
 
 #include <toml.hpp>
 
-import Tool;
 import PythonManager;
+import Tool;
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -112,7 +111,6 @@ int main(int argc, char* argv[])
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
     std::setlocale(LC_ALL, ".UTF-8");
-
 #endif
 
     // 使用一个唯一的key

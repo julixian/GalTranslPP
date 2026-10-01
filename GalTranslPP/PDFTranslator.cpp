@@ -1,13 +1,11 @@
 module;
 
-#define PYBIND11_HEADERS
-#define LUABRIDGE3_HEADERS
 #include "GPPMacros.hpp"
 
 module PDFTranslator;
 
-import Tool;
 import PDFTool;
+import Tool;
 
 namespace fs = std::filesystem;
 

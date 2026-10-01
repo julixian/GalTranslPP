@@ -21,7 +21,7 @@
 <context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
-        <location filename="ApiTool.cpp" line="204"/>
+        <location filename="ApiTool.cpp" line="212"/>
         <source>请用中文完整回复一句话：GPP Api 测试成功。</source>
         <translation>Reply in Chinese: GPP API test succeeded.</translation>
     </message>
@@ -29,7 +29,7 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="465"/>
+        <location filename="ApiTool.cpp" line="474"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -37,12 +37,12 @@
 <context>
     <name>ApiTool.queryApiModels</name>
     <message>
-        <location filename="ApiTool.cpp" line="734"/>
+        <location filename="ApiTool.cpp" line="750"/>
         <source>模型列表响应 JSON 解析失败: %1</source>
         <translation>Model list response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiTool.cpp" line="745"/>
+        <location filename="ApiTool.cpp" line="761"/>
         <source>模型列表响应模型字段解析失败: %1</source>
         <translation>Failed parsing model list field: %1</translation>
     </message>

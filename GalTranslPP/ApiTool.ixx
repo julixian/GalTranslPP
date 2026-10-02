@@ -40,9 +40,32 @@ export
         bool agentGeminiInteractions = true;
     };
 
-    struct ApiResponse {
-        std::expected<std::string, std::string> content;
+    enum class ApiErrorType {
+        Unknown,
+        Transport,
+        InvalidKeyOrQuota,
+        ModelUnavailable,
+        RateLimit,
+        Refusal,
+        JsonParse,
+        ResponseParse,
+        Incomplete
+    };
+
+    struct ApiError {
+        ApiErrorType type = ApiErrorType::Unknown;
+        std::string message;
+        // 原始响应单独保存，日志和界面在展示时再决定如何拼接。
+        std::string rawResponse;
         long statusCode = 0;
+    };
+
+    ApiError makeApiError(ApiErrorType type, std::string detail = {}, std::string rawResponse = {}, long statusCode = 0);
+    std::string formatApiError(const ApiError& error, const std::string& actionMessage = {});
+    std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, ApiProtocol protocol, bool geminiInteractions = false);
+
+    struct ApiResponse {
+        std::expected<std::string, ApiError> content;
     };
 
     struct ApiAgentToolCall {
@@ -58,8 +81,7 @@ export
     };
 
     struct ApiAgentResponse {
-        std::expected<ApiAgentReply, std::string> content;
-        long statusCode = 0;
+        std::expected<ApiAgentReply, ApiError> content;
     };
 
     struct ApiAgentSession {
@@ -78,17 +100,12 @@ export
         const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs);
 
     struct ApiTestResponse {
-        bool success = false;
-        std::string content;
+        std::expected<std::string, ApiError> content;
         std::string requestBody;
-        long statusCode = 0;
     };
 
     struct ApiModelListResponse {
-        bool success = false;
-        std::vector<std::string> models;
-        std::string content;
-        long statusCode = 0;
+        std::expected<std::vector<std::string>, ApiError> models;
     };
 
 

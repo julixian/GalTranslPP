@@ -229,8 +229,8 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
                 .arg(batchIndex)
                 .arg(requestCount + 1)
                 .toStdString();
-            inferAndRecordApiError(
-                response, m_apiPool, currentApi, errorLogPrefix, fs::path{},
+            handleApiError(
+                response.content.error(), m_apiPool, currentApi, errorLogPrefix, fs::path{},
                 m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
             continue;
         }

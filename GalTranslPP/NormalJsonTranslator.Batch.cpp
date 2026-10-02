@@ -167,8 +167,8 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                 .arg(batchIndexLog)
                 .arg(requestCount + 1)
                 .toStdString();
-            inferAndRecordApiError(
-                response, m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
+            handleApiError(
+                response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
                 requestCount, m_checkQuota);
             continue;
         }

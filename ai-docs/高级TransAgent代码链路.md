@@ -158,6 +158,6 @@ parseProtocolResponse
 
 重建通过 `rebuildSession()` 清除旧历史、服务端 id 和 sentCount；通过 `appendBatch()` 重新带入摘要、文件备注、术语和当前批次。重建不会删除已提交的译文与持久化记忆。
 
-请求失败统一交给 `ApiPool.cpp::inferAndRecordApiError()` 记录、等待、更新 API 健康或调整 fallback 顺序。业务循环检测 `response.content`，失败时使用其中的错误文本；HTTP statusCode 仅用于错误推断和记录。
+请求失败统一返回 `ApiError`，`type`、`message`、`rawResponse`、`statusCode` 分别保存分类、说明、原始响应和 HTTP 状态。`ApiTool.Error.cpp::parseApiResponse()` 共用 JSON 解析及协议错误判断，普通 batch 和原生 Agent 各自提取文本或工具调用。业务循环检测 `response.content`，失败时把 `response.content.error()` 交给 `ApiPool.cpp::handleApiError()`；后者只按分类记录日志、等待、更新 API 健康或调整 fallback 顺序，不再匹配错误文本。原始响应保留到展示时再拼接，不会覆盖 JSON 解析异常等具体原因。
 
 建议第一次阅读按第 1—8 节顺序跟完一个“搜索原文 → 工具回填 → 提交译文”的正常批次，再回来看第 9 节的压缩和重试分支。

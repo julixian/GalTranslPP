@@ -19,6 +19,75 @@
     </message>
 </context>
 <context>
+    <name>ApiTool.extractApiResponseContent</name>
+    <message>
+        <location filename="ApiTool.cpp" line="579"/>
+        <source>响应中没有文本内容</source>
+        <translation>The response contains no text</translation>
+    </message>
+</context>
+<context>
+    <name>ApiTool.formatApiError</name>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="44"/>
+        <source>[GPP.响应为空]</source>
+        <translation>[GPP.Empty response]</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="43"/>
+        <source>原始响应:</source>
+        <translation>Raw response:</translation>
+    </message>
+</context>
+<context>
+    <name>ApiTool.makeApiError</name>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="25"/>
+        <source>Api 网络请求失败</source>
+        <translation>API network request failed</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="26"/>
+        <source>Api key 疑似无效或额度用尽</source>
+        <translation>The API key may be invalid or its quota exhausted</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="27"/>
+        <source>Api 没有可用模型或没有模型访问权限</source>
+        <translation>No available model or no model access permission</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="28"/>
+        <source>Api 频率限制或暂时不可用</source>
+        <translation>API rate limit or temporary unavailability</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="29"/>
+        <source>Api 拒答或内容被拦截</source>
+        <translation>API refusal or blocked content</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="30"/>
+        <source>Api 响应 JSON 解析失败</source>
+        <translation>Failed to parse the API response JSON</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="31"/>
+        <source>Api 响应字段解析失败</source>
+        <translation>Failed to parse API response fields</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="32"/>
+        <source>Api 回复未完成或已截断</source>
+        <translation>The API response is incomplete or truncated</translation>
+    </message>
+    <message>
+        <location filename="ApiTool.Error.cpp" line="33"/>
+        <source>未知 Api 错误</source>
+        <translation>Unknown API error</translation>
+    </message>
+</context>
+<context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
         <location filename="ApiTool.cpp" line="212"/>
@@ -35,16 +104,30 @@
     </message>
 </context>
 <context>
+    <name>ApiTool.parseAgentReply</name>
+    <message>
+        <location filename="ApiTool.Agent.cpp" line="279"/>
+        <source>响应中没有文本内容或工具调用</source>
+        <translation>The response contains no text or tool calls</translation>
+    </message>
+</context>
+<context>
     <name>ApiTool.queryApiModels</name>
     <message>
-        <location filename="ApiTool.cpp" line="693"/>
         <source>模型列表响应 JSON 解析失败: %1</source>
-        <translation>Model list response JSON parse failed: %1</translation>
+        <translation type="vanished">Model list response JSON parse failed: %1</translation>
     </message>
     <message>
-        <location filename="ApiTool.cpp" line="704"/>
         <source>模型列表响应模型字段解析失败: %1</source>
-        <translation>Failed parsing model list field: %1</translation>
+        <translation type="vanished">Failed parsing model list field: %1</translation>
+    </message>
+</context>
+<context>
+    <name>ApiTool.sendApiHttpRequest</name>
+    <message>
+        <location filename="ApiTool.cpp" line="646"/>
+        <source>响应为空</source>
+        <translation>Empty response</translation>
     </message>
 </context>
 <context>
@@ -2137,11 +2220,33 @@ Problem overview:
     </message>
 </context>
 <context>
+    <name>handleApiError</name>
+    <message>
+        <location filename="ApiPool.cpp" line="126"/>
+        <source>Api key [%1] 短期内多次报告将从池中移除</source>
+        <translation>API key [%1] will be removed from the pool after repeated reports in a short period</translation>
+    </message>
+    <message>
+        <location filename="ApiPool.cpp" line="130"/>
+        <source>等待 %1 秒后重新请求</source>
+        <translation>Retrying after %1 seconds</translation>
+    </message>
+    <message>
+        <location filename="ApiPool.cpp" line="133"/>
+        <source>%1 [HTTP %2] %3</source>
+        <translation>%1 [HTTP %2] %3</translation>
+    </message>
+    <message>
+        <location filename="ApiPool.cpp" line="156"/>
+        <source>%1 将切换到下一个 Api key: %2</source>
+        <translation>%1 Switching to the next API key: %2</translation>
+    </message>
+</context>
+<context>
     <name>inferAndRecordApiError</name>
     <message>
-        <location filename="ApiPool.cpp" line="115"/>
         <source>%1 [HTTP %2]</source>
-        <translation>%1 [HTTP %2]</translation>
+        <translation type="vanished">%1 [HTTP %2]</translation>
     </message>
     <message>
         <source>%1 Api 响应 JSON 解析失败。错误: %2，原始响应:
@@ -2150,10 +2255,8 @@ Problem overview:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="185"/>
-        <location filename="ApiPool.cpp" line="208"/>
         <source>空</source>
-        <translation>Empty</translation>
+        <translation type="vanished">Empty</translation>
     </message>
     <message>
         <source>Api 响应 JSON 解析失败: %1</source>
@@ -2164,12 +2267,11 @@ Problem overview:
         <translation type="vanished">%1 switching to the next Api key</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="130"/>
         <source>%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:
 %3</source>
         <oldsource>%1 Api key [%2] 疑似额度用尽，短期内多次报告将从池中移除。原始响应:
 %3</oldsource>
-        <translation>%1 key [%2] may be invalid or lack quota; repeat reports remove it temporarily. Raw:
+        <translation type="vanished">%1 key [%2] may be invalid or lack quota; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>
@@ -2177,56 +2279,46 @@ Problem overview:
         <translation type="vanished">Api key may be exhausted: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="192"/>
-        <location filename="ApiPool.cpp" line="215"/>
         <source>响应为空</source>
-        <translation>Empty response</translation>
+        <translation type="vanished">Empty response</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="151"/>
         <source>%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:
 %3</source>
-        <translation>%1 key [%2] has no models; repeat reports remove it temporarily. Raw:
+        <translation type="vanished">%1 key [%2] has no models; repeat reports remove it temporarily. Raw:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="138"/>
         <source>Api key 疑似失效: %1</source>
-        <translation>API key may be invalid: %1</translation>
+        <translation type="vanished">API key may be invalid: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="159"/>
         <source>Api key 没有模型 %1: %2</source>
-        <translation>Api key has no model %1: %2</translation>
+        <translation type="vanished">Api key has no model %1: %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="181"/>
         <source>%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:
 %3</source>
-        <translation>%1 hit a rate limit or retryable error; retrying after %2 seconds. Raw response:
+        <translation type="vanished">%1 hit a rate limit or retryable error; retrying after %2 seconds. Raw response:
 %3</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="191"/>
         <source>遇到频率限制或可再次请求错误: %1</source>
-        <translation>Rate limit or retryable error: %1</translation>
+        <translation type="vanished">Rate limit or retryable error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="205"/>
         <source>%1 遇到未知 Api 错误，原始响应:
 %2</source>
-        <translation>%1 encountered an unknown Api error. Raw response:
+        <translation type="vanished">%1 encountered an unknown Api error. Raw response:
 %2</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="214"/>
         <source>遇到未知 Api 错误: %1</source>
-        <translation>Unknown Api error: %1</translation>
+        <translation type="vanished">Unknown Api error: %1</translation>
     </message>
     <message>
-        <location filename="ApiPool.cpp" line="226"/>
         <source>%1 将切换到下一个 Api key: %2</source>
-        <translation>%1 Switching to the next API key: %2</translation>
+        <translation type="vanished">%1 Switching to the next API key: %2</translation>
     </message>
 </context>
 <context>
@@ -2295,7 +2387,7 @@ Problem overview:
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="657"/>
+        <location filename="ApiTool.cpp" line="659"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>

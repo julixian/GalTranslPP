@@ -499,7 +499,7 @@ std::expected<NormalJsonTranslatorTransAgent::TransAgentTurnResult, std::string>
                 .action = TransAgentTurnResult::Action::ContinueTurn,
                 .summary = gppTr(
                     "NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
-                    "执行工具调用 %1 个，进入下一轮。调用参数:\n%2")
+                    "执行工具调用 %1 个，进入下一轮。调用概览:\n%2")
                     .arg(protocol.calls.size())
                     .arg(toolCallResult.summary)
                     .toStdString()
@@ -988,8 +988,8 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .toStdString();
-                inferAndRecordApiError(
-                    response, m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
+                handleApiError(
+                    response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
                     requestCount, m_checkQuota);
                 continue;
             }

@@ -71,7 +71,7 @@ Gemini 的 `agentGeminiInteractions = false` 使用 generateContent；2.5 等采
 
 原生历史只在本轮运行的内存中保存。可持久化记忆仍是术语账本、文件备注和翻译缓存。
 
-高级 Agent 的 HTTP 错误、协议 JSON 解析失败、明确拒答或截断，均进入共用的 `inferAndRecordApiError` 请求重试流程。每个模型轮次重新计算 `maxRequestCount`；普通错误计数并等待 2 秒，限流类错误等待 1～64 秒且不计数，无效 key/额度与模型无权限类错误记录 API 健康且不计数。因此最大请求次数不是所有 HTTP 调用的硬上限。fallback 可按现有策略调整 API，身份改变时重建会话；random 保持原 API 直到被移出池。
+高级 Agent 的 HTTP 错误、协议 JSON 解析失败、明确拒答或截断，均由 API 层生成 `ApiError`，分别保存错误类型、说明、原始响应和 HTTP 状态。普通 batch、默认 Agent 和高级 Agent 共用协议错误判断；`handleApiError` 只负责日志、等待和重试策略，展示时先放说明，再附原始响应。每个模型轮次重新计算 `maxRequestCount`；普通错误计数并等待 2 秒，限流类错误等待 1～64 秒且不计数，无效 key/额度与模型无权限类错误记录 API 健康且不计数。因此最大请求次数不是所有 HTTP 调用的硬上限。fallback 可按现有策略调整 API，身份改变时重建会话；random 保持原 API 直到被移出池。
 
 工具参数或提交不完整时，错误按调用 id 回填，让模型在下一轮修正；只返回正文时提醒调用工具。它们占用 `maxTurnsPerChunk`，不计入 HTTP 请求重试数；连续无工具调用另行计数，上限同样使用 `maxRequestCount`，有工具调用即清零。请求重试耗尽、连续无工具调用达到上限或达到最大轮数，当前批次标记失败；压缩摘要失败则沿用上次有效滚动记忆重建会话后继续。
 
@@ -121,7 +121,7 @@ read/search 的参数统一为 `file`、`ids`、`fields`、`offset`、`limit`。
 
 原有文本 Agent 的读、搜索、备注工具与高级模式共用 `runReadTool()`：名称和参数全部对齐，旧 `read_lines/search_text/search_term/get_file_note/get_project_note` 不作为别名保留。自定义文本提示词需要更新工具声明和调用示例；文本 `action=tool_calls|commit|compact_context` 协议保持现有形式。
 
-请求和协议解析在 `GalTranslPP/ApiTool.Agent.cpp`；worker 会话、工具声明和执行在 `GalTranslPP/NormalJsonTranslator.TransAgent.Advanced.cpp`。旧批次流程继续在 `NormalJsonTranslator.TransAgent.cpp`。HTTP 发送共用 `sendApiHttpRequest`，失败统一交给 `inferAndRecordApiError`。插件返回的最终请求 JSON 直接发送，不做二次校验。
+原生 Agent 请求和内容提取在 `GalTranslPP/ApiTool.Agent.cpp`；共用错误分类及协议错误判断在 `GalTranslPP/ApiTool.Error.cpp`；worker 会话、工具声明和执行在 `GalTranslPP/NormalJsonTranslator.TransAgent.Advanced.cpp`。旧批次流程继续在 `NormalJsonTranslator.TransAgent.cpp`。HTTP 发送共用 `sendApiHttpRequest`，失败统一交给 `handleApiError`。插件返回的最终请求 JSON 直接发送，不做二次校验。
 
 ## 协议依据
 

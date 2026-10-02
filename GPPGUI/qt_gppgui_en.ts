@@ -345,8 +345,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+0"/>
-        <source>原始响应:</source>
-        <translation>Raw response:</translation>
+        <source>错误信息:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>(空)</source>

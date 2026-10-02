@@ -191,7 +191,6 @@ namespace
         json additions = json::array();
         bool compacted = false;
         std::string previousId;
-        if (parsed.contains("error") && !parsed["error"].is_null()) throw std::runtime_error(parsed.dump());
 
         switch (session.api.protocol)
         {
@@ -199,8 +198,6 @@ namespace
         {
             const auto& choice = parsed.at("choices").at(0);
             const auto& message = choice.at("message");
-            if (choice.value("finish_reason", "") == "length" || choice.value("finish_reason", "") == "content_filter"
-                || (message.contains("refusal") && !message["refusal"].is_null())) throw std::runtime_error(parsed.dump());
             if (message.contains("content") && message["content"].is_string()) reply.text = message.at("content");
             for (const auto& call : message.value("tool_calls", json::array())) {
                 reply.calls.push_back({call.at("id"), call.at("function").at("name"), call.at("function").at("arguments")});
@@ -210,14 +207,12 @@ namespace
         }
 
         case ApiProtocol::OpenAIRes:
-            if (parsed.value("status", "") != "completed") throw std::runtime_error(parsed.dump());
             for (const auto& item : parsed.at("output")) {
                 if (item.value("type", "") == "function_call") {
                     reply.calls.push_back({item.at("call_id"), item.at("name"), item.at("arguments")});
                 }
                 else if (item.value("type", "") == "message") {
                     for (const auto& block : item.at("content")) {
-                        if (block.value("type", "") == "refusal") throw std::runtime_error(parsed.dump());
                         if (block.value("type", "") == "output_text" && item.value("phase", "") != "commentary")
                         {
                             reply.text += block.at("text").get<std::string>();
@@ -232,7 +227,6 @@ namespace
 
         case ApiProtocol::Claude:
         {
-            if (parsed.value("stop_reason", "") == "max_tokens" || parsed.value("stop_reason", "") == "refusal") throw std::runtime_error(parsed.dump());
             const auto& content = parsed.at("content");
             auto retainedBegin = content.begin();
             for (auto it = content.begin(); it != content.end(); ++it) {
@@ -255,8 +249,6 @@ namespace
 
         case ApiProtocol::Gemini:
             if (session.api.agentGeminiInteractions) {
-                const auto status = parsed.value("status", "");
-                if (status != "completed" && status != "requires_action") throw std::runtime_error(parsed.dump());
                 for (const auto& step : parsed.at("steps")) {
                     if (step.value("type", "") == "function_call") reply.calls.push_back({step.at("id"), step.at("name"), step.at("arguments")});
                     else if (step.value("type", "") == "model_output") {
@@ -270,7 +262,6 @@ namespace
             }
             else {
                 const auto& candidate = parsed.at("candidates").at(0);
-                if (candidate.value("finishReason", "STOP") != "STOP") throw std::runtime_error(parsed.dump());
                 const auto& content = candidate.at("content");
                 for (const auto& part : content.at("parts")) {
                     if (part.contains("functionCall")) {
@@ -284,7 +275,8 @@ namespace
             break;
         }
 
-        if (reply.text.empty() && reply.calls.empty()) throw std::runtime_error(parsed.dump());
+        if (reply.text.empty() && reply.calls.empty())
+            throw std::runtime_error(gppTr("ApiTool.parseAgentReply", "响应中没有文本内容或工具调用").toStdString());
         // 整个响应解析成功后才更新会话，失败重试不会留下半截工具调用。
         if (compacted) session.history = std::move(additions);
         else session.history.insert(session.history.end(), additions.begin(), additions.end());
@@ -333,12 +325,18 @@ ApiAgentResponse performAgentApiRequest(ApiAgentSession& session, const json& to
         ApiResponse response = sendApiHttpRequest(body, api,
             api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions ? interactionApiUrl(api) : cvt2RequestApiUrl(api),
             controller, logger, apiTimeOutMs);
-        statusCode = response.statusCode;
-        if (!response.content) return {std::unexpected(response.content.error()), statusCode};
+        if (!response.content) return {std::unexpected(std::move(response.content.error()))};
+        statusCode = 200;
         responseBody = std::move(*response.content);
-        return {parseAgentReply(json::parse(responseBody), session), statusCode};
+        auto parsed = parseApiResponse(responseBody, api.protocol, api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions);
+        if (!parsed) {
+            parsed.error().statusCode = statusCode;
+            return {std::unexpected(std::move(parsed.error()))};
+        }
+        return {parseAgentReply(*parsed, session)};
     }
     catch (const std::exception& e) {
-        return {std::unexpected(responseBody.empty() ? std::string(e.what()) : std::move(responseBody)), statusCode};
+        return {std::unexpected(makeApiError(statusCode == 200 ? ApiErrorType::ResponseParse : ApiErrorType::Unknown,
+            e.what(), std::move(responseBody), statusCode))};
     }
 }

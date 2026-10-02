@@ -510,12 +510,6 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
     {
     case ApiProtocol::OpenAIRes:
     {
-        const std::string status = parsed.value("status", "");
-        if ((parsed.contains("error") && !parsed["error"].is_null()) ||
-            status == "failed" || status == "incomplete")
-        {
-            return std::nullopt;
-        }
         std::optional<std::string> content;
         for (const auto& item : parsed.at("output")) {
             if (item.value("type", "") != "message" || item.value("phase", "") == "commentary") {
@@ -574,16 +568,19 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
     }
 }
 
-std::expected<std::string, std::string> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol)
+std::expected<std::string, ApiError> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol)
 {
+    auto parsed = parseApiResponse(responseContent, protocol);
+    if (!parsed) return std::unexpected(std::move(parsed.error()));
     try {
-        std::optional<std::string> parsed = parseApiContent(json::parse(responseContent), protocol);
-        if (parsed.has_value()) {
-            return std::move(parsed.value());
-        }
+        auto content = parseApiContent(*parsed, protocol);
+        if (content) return std::move(*content);
+        return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
+            gppTr("ApiTool.extractApiResponseContent", "响应中没有文本内容").toStdString(), responseContent));
     }
-    catch (...) { }
-    return std::unexpected(responseContent);
+    catch (const std::exception& e) {
+        return std::unexpected(makeApiError(ApiErrorType::ResponseParse, e.what(), responseContent));
+    }
 }
 
 std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol protocol)
@@ -640,10 +637,14 @@ ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationA
         cpr::Timeout{ apiTimeOutMs }, api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{},
         cpr::ProgressCallback{ [controller](cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, intptr_t)
             { return !controller || !controller->shouldStop(); } });
-    if (response.status_code != 200 || response.error.code != cpr::ErrorCode::OK || response.text.empty()) {
-        return { std::unexpected(response.text.empty() ? response.error.message : response.text), response.status_code };
-    }
-    return { response.text, response.status_code };
+    if (response.error.code != cpr::ErrorCode::OK)
+        return {std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code))};
+    if (response.status_code != 200)
+        return {std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code))};
+    if (response.text.empty())
+        return {std::unexpected(makeApiError(ApiErrorType::ResponseParse,
+            gppTr("ApiTool.sendApiHttpRequest", "响应为空").toStdString(), {}, response.status_code))};
+    return {response.text};
 }
 
 ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& api,
@@ -653,18 +654,25 @@ ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& 
     ApiResponse response = sendApiHttpRequest(payloadStr, api, cvt2RequestApiUrl(api), controller, logger, apiTimeOutMs);
     if (!response.content) return response;
     auto content = extractApiResponseContent(*response.content, api.protocol);
+    if (!content) content.error().statusCode = 200;
     if (content && !onlyReturnParsedContent) {
         content = *response.content + "\n\n" + gppTr("sendApiRequest", "最终解析出的回复为:").toStdString() + "\n" + *content;
     }
-    return { std::move(content), response.statusCode };
+    return {std::move(content)};
 }
 
 ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int threadId, int apiTimeOutMs)
 {
-    applyApiPayloadOptions(payload, api);
-    const std::string payloadStr = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
-    return sendApiRequest(payloadStr, api, controller, logger, apiTimeOutMs, true);
+    try {
+        applyApiPayloadOptions(payload, api);
+        const std::string payloadStr = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
+        return sendApiRequest(payloadStr, api, controller, logger, apiTimeOutMs, true);
+    }
+    catch (const std::exception& e) {
+        // unlikely
+        return {std::unexpected(makeApiError(ApiErrorType::Unknown, e.what()))};
+    }
 }
 
 ApiModelListResponse queryApiModels(const TranslationApi& api, int apiTimeOutMs)
@@ -677,33 +685,23 @@ ApiModelListResponse queryApiModels(const TranslationApi& api, int apiTimeOutMs)
         cpr::Timeout{ apiTimeOutMs },
         api.useSystemProxy ? makeSystemProxies() : cpr::Proxies{}
     );
-    result.statusCode = response.status_code;
-    result.content = response.text.empty() ? response.error.message : response.text;
-    result.success = response.status_code == 200;
-    if (!result.success) {
-        return result;
-    }
-
-    json parsed;
-    try {
-        parsed = json::parse(result.content);
-    }
-    catch (const std::exception& e) {
-        result.success = false;
-        result.content = gppTr("ApiTool.queryApiModels", "模型列表响应 JSON 解析失败: %1")
-            .arg(e.what())
-            .toStdString();
-        return result;
-    }
-
-    try {
-        result.models = extractApiModelNames(parsed, api.protocol);
-    }
-    catch (const json::exception& e) {
-        result.success = false;
-        result.content = gppTr("ApiTool.queryApiModels", "模型列表响应模型字段解析失败: %1")
-            .arg(e.what())
-            .toStdString();
+    if (response.error.code != cpr::ErrorCode::OK)
+        result.models = std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code));
+    else if (response.status_code != 200)
+        result.models = std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code));
+    else {
+        try {
+            const auto parsed = json::parse(response.text);
+            if (parsed.contains("error") && !parsed.at("error").is_null())
+                result.models = std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code));
+            else result.models = extractApiModelNames(parsed, api.protocol);
+        }
+        catch (const json::parse_error& e) {
+            result.models = std::unexpected(makeApiError(ApiErrorType::JsonParse, e.what(), response.text, response.status_code));
+        }
+        catch (const std::exception& e) {
+            result.models = std::unexpected(makeApiError(ApiErrorType::ResponseParse, e.what(), response.text, response.status_code));
+        }
     }
     return result;
 }
@@ -715,8 +713,6 @@ ApiTestResponse testApiConnection(const TranslationApi& api, int apiTimeOutMs)
     applyApiPayloadOptions(payload, api);
     result.requestBody = payload.dump(2);
     const ApiResponse response = sendApiRequest(payload.dump(), api, nullptr, nullptr, apiTimeOutMs, false);
-    result.statusCode = response.statusCode;
-    result.success = response.content.has_value();
-    result.content = result.success ? response.content.value() : response.content.error();
+    result.content = response.content;
     return result;
 }

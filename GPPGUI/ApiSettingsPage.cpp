@@ -629,22 +629,22 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             lines << tr("请求类型: 获取模型列表");
             lines << tr("请求方法: GET");
             lines << "";
-            lines << tr("HTTP 状态: %1").arg(result.statusCode);
-            lines << tr("请求结果: %1").arg(result.success ? tr("成功") : tr("失败"));
+            lines << tr("HTTP 状态: %1").arg(result.models ? 200 : result.models.error().statusCode);
+            lines << tr("请求结果: %1").arg(result.models ? tr("成功") : tr("失败"));
             lines << "";
             lines << tr("解析到的模型: ");
-            if (result.models.empty()) {
+            if (!result.models || result.models->empty()) {
                 lines << tr("(没有解析到模型)");
             }
             else {
-                for (const std::string& model_ : result.models) {
+                for (const std::string& model_ : *result.models) {
                     lines << QString::fromStdString(model_);
                 }
             }
-            if (!result.success && !result.content.empty()) {
+            if (!result.models) {
                 lines << "";
                 lines << tr("错误信息: ");
-                lines << QString::fromStdString(result.content);
+                lines << QString::fromStdString(formatApiError(result.models.error()));
             }
             return lines.join('\n');
         };
@@ -657,11 +657,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             lines << tr("发出的请求体: ");
             lines << QString::fromStdString(result.requestBody);
             lines << "";
-            lines << tr("HTTP 状态: %1").arg(result.statusCode);
-            lines << tr("请求结果: %1").arg(result.success ? tr("成功") : tr("失败"));
+            lines << tr("HTTP 状态: %1").arg(result.content ? 200 : result.content.error().statusCode);
+            lines << tr("请求结果: %1").arg(result.content ? tr("成功") : tr("失败"));
             lines << "";
-            lines << (result.success ? tr("模型回复:") : tr("原始响应:"));
-            lines << QString::fromStdString(result.content);
+            lines << (result.content ? tr("模型回复:") : tr("错误信息:"));
+            lines << QString::fromStdString(result.content ? *result.content : formatApiError(result.content.error()));
             return lines.join('\n');
         };
 
@@ -809,9 +809,9 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                                 if (testButtonPtr) {
                                     testButtonPtr->setEnabled(true);
                                 }
-                                if (result.success && !result.models.empty()) {
+                                if (result.models && !result.models->empty()) {
                                     QStringList modelLines;
-                                    for (const std::string& model_ : result.models) {
+                                    for (const std::string& model_ : *result.models) {
                                         modelLines.push_back(QString::fromStdString(model_));
                                     }
                                     if (modelEditPtr && modelEditPtr->text().trimmed().isEmpty()) {
@@ -823,7 +823,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                                     return;
                                 }
                                 ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("模型获取"),
-                                    result.success ? tr("请求成功，但没有解析到模型") : tr("模型列表请求失败"), 3000);
+                                    result.models ? tr("请求成功，但没有解析到模型") : tr("模型列表请求失败"), 3000);
                                 showApiResultWindow(tr("模型列表"), formatModelListResult(result));
                             }, Qt::QueuedConnection);
                         return;
@@ -844,7 +844,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                             if (testButtonPtr) {
                                 testButtonPtr->setEnabled(true);
                             }
-                            if (result.success) {
+                            if (result.content) {
                                 ElaMessageBar::success(ElaMessageBarType::TopRight, tr("模型测试"),
                                     tr("模型请求成功"), 3000);
                             }

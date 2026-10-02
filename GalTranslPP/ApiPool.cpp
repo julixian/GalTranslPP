@@ -106,130 +106,57 @@ size_t ApiPool::size() {
     return m_apis.size();
 }
 
-void inferAndRecordApiError(const ApiResponse& response, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
+void handleApiError(const ApiError& error, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
     const std::string& logPrefix, const fs::path& relFilePath, const std::string& apiStrategy,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
     int& requestCount, bool checkQuota)
 {
-    const std::string filename = wide2Ascii(relFilePath);
-    const std::string prefix = gppTr("inferAndRecordApiError", "%1 [HTTP %2]")
-        .arg(logPrefix)
-        .arg(response.statusCode)
-        .toStdString();
-
-    const std::string& error = response.content.error();
-    const std::string errorMessageLower = str2Lower(error);
-
-    // 无效或额度用尽
-    if (
-        checkQuota &&
-        (errorMessageLower.contains("quota") ||
-            errorMessageLower.contains("invalid token"))
-        )
-    {
-        logger->error(gppTr("inferAndRecordApiError", "%1 Api key [%2] 疑似无效或额度用尽，短期内多次报告将从池中移除。原始响应:\n%3")
-            .arg(prefix)
-            .arg(maskApikey(currentApi.apikey))
-            .arg(error)
-            .toStdString());
-        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
-            .kind = "api",
-            .level = "error",
-            .message = gppTr("inferAndRecordApiError", "Api key 疑似失效: %1")
-                .arg(error)
-                .toStdString(),
-            .filename = filename,
-            .model = makeTransby(currentApi.apikey, currentApi.modelName)
-        });
-        apiPool->reportProblem(currentApi);
-        // 不需要增加 requestCount
-        return;
+    // API 层已经完成分类，这里只执行重试、健康记录和日志策略，不再匹配错误文本。
+    const bool badApi = error.type == ApiErrorType::ModelUnavailable ||
+        (checkQuota && error.type == ApiErrorType::InvalidKeyOrQuota);
+    const bool rateLimited = error.type == ApiErrorType::RateLimit;
+    int sleepSeconds = badApi ? 0 : 2;
+    if (rateLimited) {
+        std::mt19937 gen(std::random_device{}());
+        sleepSeconds = std::uniform_int_distribution<>(1, 64)(gen);
     }
 
-    // key 没有这个模型
-    if (errorMessageLower.contains("no available") || errorMessageLower.contains("no access")) {
-        logger->error(gppTr("inferAndRecordApiError", "%1 Api key [%2] 没有可用模型，短期内多次报告将从池中移除。原始响应:\n%3")
-            .arg(prefix)
-            .arg(maskApikey(currentApi.apikey))
-            .arg(error)
-            .toStdString());
-        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
-            .kind = "api",
-            .level = "error",
-            .message = gppTr("inferAndRecordApiError", "Api key 没有模型 %1: %2")
-                .arg(currentApi.modelName)
-                .arg(error)
-                .toStdString(),
-            .filename = filename,
-            .model = makeTransby(currentApi.apikey, currentApi.modelName)
-        });
-        apiPool->reportProblem(currentApi);
-        return;
+    std::string actionMessage;
+    if (badApi) {
+        actionMessage = gppTr("handleApiError", "Api key [%1] 短期内多次报告将从池中移除")
+            .arg(maskApikey(currentApi.apikey)).toStdString();
     }
-
-    // 频率限制或其他可再次请求错误
-    // 状态码 429 是最明确的信号
-    if (response.statusCode == 429 || errorMessageLower.contains("rate limit") ||
-        errorMessageLower.contains("try again") || errorMessageLower.contains("饱和"))
-    {
-        // 429 也不加 requestCount
-        // 实现指数退避与抖动
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<> distrib(1, (int)std::pow(2, 6));
-        const int sleepSeconds = distrib(gen);
-        logger->warn(gppTr("inferAndRecordApiError", "%1 遇到频率限制或可再次请求错误，将等待 %2 秒后重新请求。原始响应:\n%3")
-            .arg(prefix)
-            .arg(sleepSeconds)
-            .arg(error.empty()
-                ? gppTr("inferAndRecordApiError", "空").toStdString()
-                : error)
-            .toStdString());
-        controller->recordRuntimeTransError(RuntimeTransErrorEvent{
-            .kind = "api",
-            .level = "warning",
-            .message = gppTr("inferAndRecordApiError", "遇到频率限制或可再次请求错误: %1")
-                .arg(error.empty() ? gppTr("inferAndRecordApiError", "响应为空").toStdString() : error)
-                .toStdString(),
-            .filename = filename,
-            .model = makeTransby(currentApi.apikey, currentApi.modelName),
-            .sleepSeconds = (double)sleepSeconds
-        });
-        if (sleepSeconds > 0 && !controller->shouldStop()) {
-            std::this_thread::sleep_for(std::chrono::seconds(sleepSeconds));
-        }
-        return;
+    else {
+        actionMessage = gppTr("handleApiError", "等待 %1 秒后重新请求").arg(sleepSeconds).toStdString();
     }
-
-    // 其他无法识别的硬性错误
-    logger->warn(gppTr("inferAndRecordApiError", "%1 遇到未知 Api 错误，原始响应:\n%2")
-        .arg(prefix)
-        .arg(error.empty()
-            ? gppTr("inferAndRecordApiError", "空").toStdString()
-            : error)
-        .toStdString());
+    std::string message = formatApiError(error, actionMessage);
+    const auto logMessage = gppTr("handleApiError", "%1 [HTTP %2] %3")
+        .arg(logPrefix).arg(error.statusCode).arg(message).toStdString();
+    if (badApi) logger->error(logMessage);
+    else logger->warn(logMessage);
     controller->recordRuntimeTransError(RuntimeTransErrorEvent{
         .kind = "api",
-        .level = "warning",
-        .message = gppTr("inferAndRecordApiError", "遇到未知 Api 错误: %1")
-                .arg(error.empty() ? gppTr("inferAndRecordApiError", "响应为空").toStdString() : error)
-                .toStdString(),
-        .filename = filename,
-        .requestCount = requestCount + 1,
+        .level = badApi ? "error" : "warning",
+        .message = std::move(message),
+        .filename = wide2Ascii(relFilePath),
+        .requestCount = badApi || rateLimited ? -1 : requestCount + 1,
         .model = makeTransby(currentApi.apikey, currentApi.modelName),
-        .sleepSeconds = 2.0
+        .sleepSeconds = badApi ? -1.0 : (double)sleepSeconds
     });
-    ++requestCount;
 
-    if (apiStrategy == "fallback") {
-        if (const std::optional<std::string> apikeyOpt = apiPool->resortTokens()) {
-            logger->warn(gppTr("inferAndRecordApiError", "%1 将切换到下一个 Api key: %2")
-                .arg(logPrefix)
-                .arg(apikeyOpt.value())
-                .toStdString());
+    if (badApi) {
+        apiPool->reportProblem(currentApi);
+        return;
+    }
+    // 限流不消耗请求次数；其它错误仍按既有策略计数并允许 fallback 调整顺序。
+    if (!rateLimited) {
+        ++requestCount;
+        if (apiStrategy == "fallback") {
+            if (const auto apikey = apiPool->resortTokens()) {
+                logger->warn(gppTr("handleApiError", "%1 将切换到下一个 Api key: %2")
+                    .arg(logPrefix).arg(*apikey).toStdString());
+            }
         }
     }
-    if (!controller->shouldStop()) {
-        std::this_thread::sleep_for(std::chrono::seconds(2)); // 简单等待
-    }
+    if (!controller->shouldStop()) std::this_thread::sleep_for(std::chrono::seconds(sleepSeconds));
 }

@@ -152,7 +152,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) break;
             if (m_controller->shouldStop()) return false;
-            inferAndRecordApiError({std::unexpected(response.content.error()), response.statusCode}, m_apiPool, worker.session->api,
+            handleApiError(response.content.error(), m_apiPool, worker.session->api,
                 logPrefix, relInputPath, m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
             // 报错允许 fallback 轮转；正常工具轮一直使用同一 API。
             const auto previousApi = worker.session->api;
@@ -166,13 +166,13 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         if (!response.content) {
             if (!compacting) break;
             m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 压缩请求重试耗尽，清空会话历史后继续当前批次: %2")
-                .arg(logPrefix).arg(response.content.error()).toStdString());
+                .arg(logPrefix).arg(formatApiError(response.content.error())).toStdString());
             restartAfterCompaction();
             continue;
         }
         auto& session = *worker.session;
         auto& reply = *response.content;
-        m_logger->trace(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] 回复正文:\n%3，工具调用数: %4")
+        m_logger->trace(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] 回复正文:\n%3\n工具调用数: %4")
             .arg(logPrefix).arg(turn + 1).arg(reply.text).arg(reply.calls.size()).toStdString());
         // 连续没有工具调用时沿用请求重试次数作为上限，任意工具调用都会清零。
         noToolCallCount = reply.calls.empty() ? noToolCallCount + 1 : 0;

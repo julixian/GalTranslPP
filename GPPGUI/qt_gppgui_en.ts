@@ -159,7 +159,7 @@ sk-...</translation>
         <translation>Basic settings</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效</source>
         <translation>These options apply only when Agent mode and Advanced Agent are enabled.</translation>
     </message>
@@ -189,9 +189,14 @@ sk-...</translation>
         <translation>Native automatic compaction</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>Responses 使用原生自动压缩；Claude 使用 compact beta 接口，模型和中转需支持</source>
-        <translation>Use native automatic compaction for Responses or the compact beta API for Claude. The model and endpoint must support it.</translation>
+        <location line="+1"/>
+        <source>Responses/Claude 原生自动压缩；不支持时可能报错或超出上下文上限</source>
+        <translation>Native compaction for Responses/Claude; unsupported models or endpoints may fail or exceed the context limit</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。</source>
+        <translation>The model and endpoint must support this. Enabling it bypasses local summarization at the byte threshold. Unsupported models or endpoints may return errors, or ignore compaction settings and eventually exceed the context limit.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -202,6 +207,11 @@ sk-...</translation>
         <location line="+1"/>
         <source>0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值</source>
         <translation>0 uses the default: 100000 for Responses; the server default for Claude</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>仅在启用原生自动压缩时生效</source>
+        <translation>Only applies when native automatic compaction is enabled</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -1210,7 +1220,7 @@ sk-...</translation>
         <location line="+1"/>
         <source>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
         <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用</oldsource>
-        <translation type="unfinished">Currently only ForGalTsv and ForNovelTsv actually enable it</translation>
+        <translation>Currently applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1231,7 +1241,7 @@ sk-...</translation>
         <location line="+1"/>
         <source>各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错</source>
         <oldsource>仅 ForGalTsv、ForNovelTsv 生效，各协议能力在 Api 设置中配置</oldsource>
-        <translation type="unfinished">Applies only to ForGalTsv and ForNovelTsv. Configure protocol capabilities in API settings.</translation>
+        <translation>Configure protocol capabilities in API settings. Check model and endpoint support to avoid request errors.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1255,9 +1265,9 @@ sk-...</translation>
         <translation>Without native compaction, summarize and rebuild the session above this byte count</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>单位为字节</source>
-        <translation>Unit: bytes</translation>
+        <location line="+1"/>
+        <source>单位为字节；高级 Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效</source>
+        <translation>Unit: bytes. Ignored by the advanced Agent when native automatic compaction is enabled for Responses/Claude.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1288,7 +1298,7 @@ sk-...</translation>
         <location line="+1"/>
         <source>Agent 可选读取的项目说明文件，需自己加 `read_project_note()` 的工具提示词</source>
         <oldsource>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</oldsource>
-        <translation type="unfinished">Optional project note file for Agent to read; add the `get_project_note()` tool prompt yourself</translation>
+        <translation>Optional project note file for Agent to read; add the `read_project_note()` tool prompt yourself</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1312,8 +1322,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>以 assistant 回复头开始续写，降低拒答并稳定输出格式</source>
-        <translation>Continue from an assistant prefix to reduce refusals and stabilize output formatting</translation>
+        <source>以 assistant 回复头开始续写，降低拒答并稳定输出格式，在高级 Agent 模式下无效</source>
+        <translation>Continue from an assistant prefix to reduce refusals and stabilize output formatting; ignored in advanced Agent mode</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1328,7 +1338,7 @@ sk-...</translation>
     <message>
         <location line="+14"/>
         <source>不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错，在 Agent 模式下无效</source>
-        <translation type="unfinished"></translation>
+        <translation>When disabled, retry only missing lines. Enable to tolerate parse failures from misaligned lines; ignored in both Agent modes.</translation>
     </message>
     <message>
         <location line="+254"/>
@@ -1336,7 +1346,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-509"/>
+        <location line="-510"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1367,15 +1377,14 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+162"/>
+        <location line="+163"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>解析结果失败时尝试折半重翻与清空上下文</source>
-        <oldsource>解析结果失败时尝试折半重翻与清空上下文，在 Agent 模式下无效</oldsource>
-        <translation>On parse failure, retry halves and clear context</translation>
+        <source>解析结果失败时尝试折半重翻与清空上下文，在高级 Agent 模式下无效</source>
+        <translation>On parse failure, retry halves and clear context; ignored in advanced Agent mode</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1388,7 +1397,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-352"/>
+        <location line="-353"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1419,7 +1428,7 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+184"/>
+        <location line="+185"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>

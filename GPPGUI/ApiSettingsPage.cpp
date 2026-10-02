@@ -428,10 +428,10 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     const ScrollableTabPage agentTabPage = createScrollablePage(tabWidget);
     std::map<std::string, ElaToggleSwitch*> agentSwitches;
     std::map<std::string, QWidget*> agentAreas;
-    const auto addAgentSwitch = [&](const std::string& key, const QString& title, const QString& description, bool defaultValue)
+    const auto addAgentSwitch = [&](const std::string& key, const QString& title, const QString& description, bool defaultValue, const QString& toolTip = {})
         {
             auto [area, layout] = createFormRow(agentTabPage.content);
-            layout->addWidget(new ElaDoubleText(title, 16, description, 10, "", area));
+            layout->addWidget(new ElaDoubleText(title, 16, description, 10, toolTip, area));
             layout->addStretch();
             ElaToggleSwitch* toggle = new ElaToggleSwitch(area);
             toggle->setIsToggled(toml::find_or(api, key, defaultValue));
@@ -440,13 +440,17 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             agentSwitches[key] = toggle;
             agentAreas[key] = area;
         };
-    agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 14, agentTabPage.content));
+    agentTabPage.layout->addSpacing(8);
+    agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 18, agentTabPage.content));
     addAgentSwitch("agentStrictTools", tr("严格工具参数"), tr("为 OpenAI 和 Claude 启用严格工具参数 schema"), true);
     addAgentSwitch("agentStateful", tr("服务端会话续接"), tr("使用 previous_response_id 或 previous_interaction_id，启用服务端存储"), true);
-    addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"), tr("Responses 使用原生自动压缩；Claude 使用 compact beta 接口，模型和中转需支持"), false);
+    addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"),
+        tr("Responses/Claude 原生自动压缩；不支持时可能报错或超出上下文上限"), false,
+        tr("需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
     auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
     agentCompactTokensLayout->addWidget(new ElaDoubleText(tr("原生自动压缩 token 阈值"), 16,
-        tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10, "", agentCompactTokensArea));
+        tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10,
+        tr("仅在启用原生自动压缩时生效"), agentCompactTokensArea));
     agentCompactTokensLayout->addStretch();
     ElaSpinBox* agentCompactTokensSpinBox = new ElaSpinBox(agentCompactTokensArea);
     agentCompactTokensSpinBox->setRange(0, 1000000000);

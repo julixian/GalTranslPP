@@ -22,7 +22,8 @@ apiTimeout = 300 # 请求超时时间，单位秒
   agentStrictTools = true
   agentStateful = true    # Responses/Interactions 续接服务端会话，会启用服务端存储
   agentNativeAutoCompaction = false # Responses/Claude 原生自动压缩，需模型和接口支持
-  agentCompactThresholdTokens = 0 # 原生压缩阈值；0 表示 Responses 用 100000、Claude 用服务端默认值
+  # 不支持的模型或中转开启后可能报错，或忽略压缩参数并最终超出上下文上限；开启后不会使用本地摘要压缩兜底
+  agentCompactThresholdTokens = 0 # 仅在启用原生自动压缩时生效；0 表示 Responses 用 100000、Claude 用服务端默认值
   agentGeminiInteractions = true # Gemini 使用 Interactions；false 使用 generateContent
 
 [plugins]
@@ -36,9 +37,9 @@ baseClassName = "NormalJson"
 # ForNovelTsv: 和 ForGalTsv 的区别是输入不带 name，使用 FORNOVELTSV_SYSTEM 和 FORNOVELTSV_USER 作为提示词
 # ForGalJson: 向 AI 输入 json 格式的对话并要求 AI 以 json 格式回复，使用 FORGALJSON_SYSTEM 和 FORGALJSON_USER 作为提示词。
 # json 格式一般比 TSV 格式更耗 token 但破限能力更强。
-# Sakura: 使用 SAKURA_SYSTEM 和 SAKURA_USER 作为提示词
+# Sakura: 向 AI 输入 自然语言 格式的对话并要求 AI 以 自然语言 格式回复，使用 SAKURA_SYSTEM 和 SAKURA_USER 作为提示词
 # DumpName: 更新 NameTable.toml 以供替换人名
-# NameTrans: 翻译人名表(如果没有则先Dump)，使用 NAMETRANS_SYSTEM 和 NAMETRANS_USER 作为提示词
+# NameTrans: 翻译人名表(如果没有则会先自动 Dump)，使用 NAMETRANS_SYSTEM 和 NAMETRANS_USER 作为提示词
 # GenDict: 借助 AI 自动生成术语表，使用 GENDICT_SYSTEM 和 GENDICT_USER 作为提示词
 # Rebuild: 即使 problem 或 orig 中包含 retranslKey 也不会重翻，只根据缓存翻译重建结果
 # ShowNormal: 展示预处理后的内容及句子，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错
@@ -143,11 +144,12 @@ saveCacheInterval = 1           # 每翻译 n 次保存一次缓存
 linebreakSymbol = "auto"        # 这个项目文本所使用的换行符
 maxRequestCount = 4             # 最大请求次数
 problemOverviewFormat = "json"  # 问题概览输出格式: json/toml
-smartRetry = false              # 解析结果失败时尝试折半重翻与清空上下文，如果用的打野 key 其实不建议开这个
-enhanceJailbreak = false        # 使用 assistant 回复预填充改善拒答和输出格式；部分模型/API 不支持
+smartRetry = false              # 解析结果失败时尝试折半重翻与清空上下文，在高级 Agent 模式下无效；如果用的打野 key 其实不建议开这个
+enhanceJailbreak = false        # 使用 assistant 回复预填充改善拒答和输出格式，在高级 Agent 模式下无效；部分模型/API 不支持
 checkQuota = true               # 运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key
 
 # 解析不完整时重翻整段而非仅重翻漏掉的部分，增加模型因串行而导致解析失败时的容错
+# 在普通 Agent 和高级 Agent 模式下均无效
 # 默认关闭以节省 token，以及防止因模型截断造成无限循环
 retransAllWhenFail = false
 
@@ -184,7 +186,7 @@ stanzaLang = "ja"
 enabled = false
 advancedEnabled = false # 启用原生工具调用，并按 worker 保留跨文件会话；关闭时使用原有文本协议
 maxTurnsPerChunk = 50
-compactContextThresholdBytes = 150000 # 未启用原生压缩时，请求模型总结完整历史并重建会话
+compactContextThresholdBytes = 150000 # 请求模型总结完整历史并重建会话；高级 Agent 在 Responses/Claude 启用原生自动压缩时无效
 searchResultLimit = 80
 contextLinesLimit = 20
 # 可选，Agent 可选择性读取。默认以项目路径作为基础路径

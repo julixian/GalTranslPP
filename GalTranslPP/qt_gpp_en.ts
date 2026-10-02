@@ -106,7 +106,7 @@
 <context>
     <name>ApiTool.parseAgentReply</name>
     <message>
-        <location filename="ApiTool.Agent.cpp" line="279"/>
+        <location filename="ApiTool.Agent.cpp" line="293"/>
         <source>响应中没有文本内容或工具调用</source>
         <translation>The response contains no text or tool calls</translation>
     </message>
@@ -1015,57 +1015,57 @@ Problem overview:
         <translation>Prompt.toml not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="585"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="587"/>
         <source>Prompt.toml 中缺少 %1 键</source>
         <translation>Prompt.toml missing key %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="623"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="630"/>
         <source>内部错误: 未知的 TransEngine</source>
         <translation>Internal error: unknown TransEngine</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="646"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="653"/>
         <source>已配置 MeCab 分词器，首次使用时加载</source>
         <translation>MeCab tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="655"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="662"/>
         <source>已配置 spaCy 分词器，首次使用时加载</source>
         <translation>spaCy tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="664"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="671"/>
         <source>已配置 Stanza 分词器，首次使用时加载</source>
         <translation>Stanza tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="672"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="679"/>
         <source>无效的 tokenizerBackend: %1</source>
         <translation>Invalid tokenizerBackend: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="759"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="766"/>
         <source>retranslKeys 正则表达式 `%1` 编译失败</source>
         <translation>retranslKeys regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="777"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="784"/>
         <source>retranslKeys 的元素必须是字符串、表或表数组</source>
         <translation>retranslKeys items must be string/table/table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="794"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="801"/>
         <source>skipProblems 的内联表数组第一个元素必须是字符串</source>
         <translation>First item in skipProblems inline table array must be string</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="810"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="817"/>
         <source>skipProblems 的元素必须是字符串或表数组</source>
         <translation>skipProblems items must be string or table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="821"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="828"/>
         <source>项目配置文件解析失败: %1</source>
         <translation>Project config parse failed: %1</translation>
     </message>
@@ -1081,13 +1081,13 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.postProcess</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="833"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="934"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="840"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="941"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="944"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="951"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -1204,48 +1204,48 @@ Problem overview:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="151"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="155"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="162"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="166"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4]</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="178"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="182"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 成功响应，响应内容:
 %5</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Successful response, content:
 %5</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="201"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="205"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 剩余 %5 句文本均被解析完毕，解析结果:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] All %5 remaining sentences were parsed, result:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="215"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="219"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 解析失败或不完整 (%5 / %6), 解析结果:
 %7</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Parse failed or incomplete (%5 / %6), result:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="225"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="229"/>
         <source>内容为空</source>
         <translation>Empty content</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="231"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="235"/>
         <source>解析失败或不完整 (%1 / %2)</source>
         <translation>Parse failed or incomplete (%1 / %2)</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="253"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="257"/>
         <source>[线程 %1] [文件 %2] [批次 %3] 在 %4 次请求后彻底失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Failed after %4 requests; translated %5/%6 lines</translation>
     </message>
@@ -1261,7 +1261,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1152"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1156"/>
         <source>Agent 已将 %1 条建议写入缓存问题</source>
         <translation>Agent wrote %1 suggestions into cache problems</translation>
     </message>
@@ -1269,22 +1269,22 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyCommit</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="660"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="664"/>
         <source>提交结果缺少句子 %1</source>
         <translation>Commit result is missing sentence %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="668"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="672"/>
         <source>提交结果中句子 %1 的 dst 为空</source>
         <translation>Sentence %1 in commit result has empty dst</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="781"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="785"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但术语账本/建议写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; term/suggestion write failed, no retry: %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="802"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="806"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但 file note 写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; file note write failed, no retry: %6</translation>
     </message>
@@ -1296,6 +1296,7 @@ Problem overview:
         <translation type="vanished">Unknown tool: %1</translation>
     </message>
     <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="300"/>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="451"/>
         <source>工具返回结果:
 %1</source>
@@ -1322,9 +1323,11 @@ Problem overview:
     </message>
     <message>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="500"/>
-        <source>执行工具调用 %1 个，进入下一轮。调用参数:
+        <source>执行工具调用 %1 个，进入下一轮。调用概览:
 %2</source>
-        <translation>Executed %1 tool calls; entering the next turn. Call arguments:
+        <oldsource>执行工具调用 %1 个，进入下一轮。调用参数:
+%2</oldsource>
+        <translation type="unfinished">Executed %1 tool calls; entering the next turn. Call arguments:
 %2</translation>
     </message>
     <message>
@@ -1333,6 +1336,7 @@ Problem overview:
         <translation>Context compressed; next turn</translation>
     </message>
     <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="265"/>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="528"/>
         <source>该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:
 %4</source>
@@ -1373,147 +1377,238 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateAdvancedBatch</name>
     <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="193"/>
+        <source>[GPP.正文为空]</source>
+        <translation>[GPP.Empty response text]</translation>
+    </message>
+    <message>
         <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="84"/>
         <source>[线程 %1] [文件 %2] [批次 %3] 高级 Agent</source>
         <translation>[Thread %1] [File %2] [Batch %3] Advanced Agent</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="89"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="86"/>
+        <source>%1 开始翻译，最多 %2 轮，共 %3 句:
+%4</source>
+        <translation>%1 Starts translation, max %2 turns, %3 sentences total:
+%4</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="92"/>
         <source>%1 创建会话: %2 / %3</source>
         <translation>%1 Created conversation: %2 / %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="96"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="99"/>
         <source>没有可用的 Api key 了</source>
         <translation>No API keys are available.</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="136"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="143"/>
+        <source>%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文</source>
+        <translation>%1 [Turn %2] Context exceeds the byte threshold; asking the model to summarize first</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="156"/>
+        <source>%1 [轮次 %2] [请求 %3]</source>
+        <translation>%1 [Turn %2] [Request %3]</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="158"/>
+        <source>%1 开始请求，剩余 %2 句，本地上下文 %3 字节</source>
+        <translation>%1 Starting request, %2 sentences remaining, %3 bytes of local context</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="191"/>
+        <source>%1 成功响应，回复正文:
+%2
+工具调用:
+%3</source>
+        <translation>%1 Response received, response text:
+%2
+Tool calls:
+%3</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="199"/>
+        <source>%1 工具调用 %2 个，调用概览:
+%3</source>
+        <translation>%1 Received %2 tool calls, call overview:
+%3</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="206"/>
+        <source>%1 未调用工具，连续 %2 / %3 轮未调用工具</source>
+        <translation>%1 No tool calls, %2 / %3 consecutive turns without tool calls</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="263"/>
+        <source>%1 响应处理成功，处理结果:
+%2</source>
+        <translation>%1 Response processed successfully, result:
+%2</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="284"/>
+        <source>工具 %1 执行失败: %2</source>
+        <translation>Tool %1 failed: %2</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="298"/>
+        <source>%1 工具调用明细:
+%2</source>
+        <translation>%1 Tool call details:
+%2</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="305"/>
+        <source>%1 已回填 %2 个工具结果，进入下一轮</source>
+        <translation>%1 Added %2 tool results to the conversation; proceeding to the next turn</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="323"/>
+        <source>%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句</source>
+        <translation>%1 [Turn %2] Failed after %3 requests; translated (%4 / %5) sentences</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="327"/>
+        <source>%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句</source>
+        <translation>%1 [Turn %2] Failed after %3 consecutive turns without tool calls; translated (%4 / %5) sentences</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="331"/>
+        <source>%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句</source>
+        <translation>%1 Failed after reaching the maximum turn count (%2 turns); translated (%3 / %4) sentences</translation>
+    </message>
+    <message>
         <source>%1 上下文超过字节阈值，要求模型先压缩上下文</source>
-        <translation>%1 Context exceeds the byte threshold; asking the model to summarize first</translation>
+        <translation type="vanished">%1 Context exceeds the byte threshold; asking the model to summarize first</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="149"/>
         <source>%1 [轮次 %2] [请求 %3] 开始请求，剩余 %4 句</source>
-        <translation>%1 [Turn %2] [Request %3] Starting request, %4 sentences remaining</translation>
+        <translation type="vanished">%1 [Turn %2] [Request %3] Starting request, %4 sentences remaining</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="168"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="180"/>
         <source>%1 压缩请求重试耗尽，清空会话历史后继续当前批次: %2</source>
         <translation>%1 Compaction request retries exhausted; clearing session history and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="175"/>
         <source>%1 [轮次 %2] 回复正文:
 %3，工具调用数: %4</source>
-        <translation>%1 [Turn %2] Response text:
+        <translation type="vanished">%1 [Turn %2] Response text:
 %3; tool calls: %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="191"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="221"/>
         <source>%1 摘要无效，清空会话历史后继续当前批次: %2</source>
         <translation>%1 Invalid summary; clearing session history and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="199"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="229"/>
+        <source>%1 压缩后的滚动上下文:
+%2</source>
+        <translation>%1 Rolling context after compaction:
+%2</translation>
+    </message>
+    <message>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="233"/>
         <source>%1 已完成上下文压缩，继续当前批次</source>
         <translation>%1 Context compaction completed; continuing the current batch</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="229"/>
         <source>%1 已提交 %2 句:
 %3</source>
-        <translation>%1 Committed %2 sentences:
+        <translation type="vanished">%1 Committed %2 sentences:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="241"/>
+        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="279"/>
         <source>%1 工具 %2 执行失败: %3</source>
         <translation>%1 Tool %2 failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="259"/>
         <source>%1 已达到请求或轮次上限，%2 句翻译失败</source>
-        <translation>%1 Reached the request or turn limit; %2 sentences failed to translate</translation>
+        <translation type="vanished">%1 Reached the request or turn limit; %2 sentences failed to translate</translation>
     </message>
 </context>
 <context>
     <name>NormalJsonTranslatorTransAgent.translateBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="869"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="873"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 开始翻译，最多 %4 轮，共 %5 句:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] Agent starts translation, max %4 turns, %5 sentences total:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="887"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="891"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 上下文接近上限，要求模型先压缩上下文</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Context near limit; requesting compression</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="914"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="918"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Splitting sentences in half and retrying...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="939"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="943"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Retrying after clearing context...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="954"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="958"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="966"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="970"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 开始请求，剩余 %6 句，上下文 %7 字节</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Start: %6 lines left, %7-byte context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="982"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="986"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="997"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1001"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 成功响应，响应内容:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent responded successfully, content:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1022"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1026"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理成功，处理结果:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Turn %4] [Request %5] Agent response processed successfully, result:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1038"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1042"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理失败，错误: %6，响应内容:
 %7</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Response failed: %6; content:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1048"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1052"/>
         <source>内容为空</source>
         <translation>Empty content</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1054"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1058"/>
         <source>Agent 响应处理失败: %1</source>
         <translation>Agent response processing failed: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1084"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1088"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent 因超过最大轮数 (%4 轮) 而失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Agent exceeded %4 turns; translated %5/%6 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1096"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="1100"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 在 %5 次请求后彻底失败，共翻译 (%6 / %7) 句</source>
         <translation>[T%1][File %2][Batch %3][Turn %4] Failed after %5 requests; translated %6/%7 lines</translation>
     </message>

@@ -207,7 +207,20 @@ namespace
         }
 
         case ApiProtocol::OpenAIRes:
-            for (const auto& item : parsed.at("output")) {
+        {
+            const auto& output = parsed.at("output");
+            auto retainedBegin = output.begin();
+            for (auto it = output.begin(); it != output.end(); ++it) {
+                if (it->value("type", "") != "compaction") continue;
+                const auto encrypted = it->find("encrypted_content");
+                // 最新有效压缩项已承载之前的上下文；只清理本地副本，服务端续接 id 仍正常保留。
+                if (encrypted != it->end() && encrypted->is_string() && !encrypted->get_ref<const std::string&>().empty()) {
+                    retainedBegin = it;
+                    compacted = true;
+                }
+            }
+            for (auto it = retainedBegin; it != output.end(); ++it) {
+                const auto& item = *it;
                 if (item.value("type", "") == "function_call") {
                     reply.calls.push_back({item.at("call_id"), item.at("name"), item.at("arguments")});
                 }
@@ -224,6 +237,7 @@ namespace
             }
             if (session.api.agentStateful) previousId = parsed.at("id");
             break;
+        }
 
         case ApiProtocol::Claude:
         {

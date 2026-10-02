@@ -117,14 +117,18 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             .toStdString());
         
 
+        std::string systemPrompt = m_systemPrompt;
         std::string promptReq = m_userPrompt;
-        replaceStrInplace(promptReq, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
-        replaceStrInplace(promptReq, "[RollingContext]", rollingContext.empty() ? "None" : rollingContext);
-        replaceStrInplace(promptReq, "[Input]", inputBlock);
-        replaceStrInplace(promptReq, "[TargetLang]", m_targetLang);
-        replaceStrInplace(promptReq, "[Glossary]", glossary.empty() ? "None" : glossary);
+        // 普通 batch 的两种提示词共用批次占位符，使用副本避免改写下一批的模板。
+        for (std::string* prompt : {&systemPrompt, &promptReq}) {
+            replaceStrInplace(*prompt, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
+            replaceStrInplace(*prompt, "[RollingContext]", rollingContext.empty() ? "None" : rollingContext);
+            replaceStrInplace(*prompt, "[Input]", inputBlock);
+            replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
+            replaceStrInplace(*prompt, "[Glossary]", glossary.empty() ? "None" : glossary);
+        }
 
-        json messages = json::array({ {{"role", "system"}, {"content", m_systemPrompt}} });
+        json messages = json::array({ {{"role", "system"}, {"content", systemPrompt}} });
         messages.push_back({ {"role", "user"}, {"content", promptReq} });
 
         if (m_enhanceJailbreak) {

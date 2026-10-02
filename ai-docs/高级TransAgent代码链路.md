@@ -10,6 +10,7 @@
 - `common.agent.advancedEnabled` 写入 `m_agentAdvancedEnabled`，决定使用原生工具流程还是原有文本协议。
 - `backend.apis` 的每一项构造 `TranslationApi`，高级协议选项跟着具体 API 保存。
 - 提示词键在原来的 TransEngine 分支中选择：高级模式使用 `FORGALTSV_AGENT_ADVANCED_SYSTEM/USER` 或 `FORNOVELTSV_AGENT_ADVANCED_SYSTEM/USER`；仍按“项目 Prompt.toml → BaseConfig/Prompt.toml”读取，都缺键就抛出异常，没有代码中的默认提示词。
+- `readPromptString()` 对所有 SYSTEM、USER 统一替换目标语言占位符。高级 SYSTEM 保存固定翻译要求与工具规则，高级 USER 只保存本批次的数据，不再把整套规范反复追加进历史。普通 batch 和普通 Agent 的 SYSTEM、USER 共用各自的批次占位符。
 
 `TranslationApi` 以及下面的会话、回复类型定义在 `GalTranslPP/ApiTool.ixx`。
 
@@ -101,7 +102,7 @@ buildAgentPayload(session, tools)
 | 协议 | 请求与工具结果 | 回复与历史 |
 | --- | --- | --- |
 | Chat Completions | messages、tools、tool 消息 | assistant 消息及 tool_calls |
-| Responses | input、instructions、function_call_output | 原样保存 output，包括 reasoning、compaction 等项目 |
+| Responses | input、instructions、function_call_output | 原样保存 output；收到有效 compaction 项后只保留该项及后续内容，仍保留续接 id |
 | Claude | 顶层 system、messages、tool_result | 保存 content 块，包括 thinking、签名；收到有效 compaction 后只保留该块及之后的内容 |
 | Gemini Interactions | input 步骤、function_result | 保存 steps 和最新 interaction id |
 | Gemini generateContent | contents、functionResponse | 完整保存 model parts 和 thoughtSignature |
@@ -151,7 +152,7 @@ parseProtocolResponse
 
 每轮请求前先检查压缩：
 
-- 开启 `agentNativeAutoCompaction` 且协议为 Responses/Claude：请求附带原生自动压缩参数，服务端根据 tokens 判断阈值，客户端保存并继续使用返回的原生压缩内容，不单独调用 `/responses/compact`。Claude 响应解析成功且包含非空摘要的 compaction 块时，删除该块之前的本地历史，只保留最新有效压缩块及后续内容；空摘要不会清除旧历史。
+- 开启 `agentNativeAutoCompaction` 且协议为 Responses/Claude：请求附带原生自动压缩参数，服务端根据 tokens 判断阈值，客户端保存并继续使用返回的原生压缩内容，不单独调用 `/responses/compact`。响应解析成功后，Responses 在 compaction 项包含非空 `encrypted_content` 时只保留最新有效项及后续内容；Claude 在 compaction 块包含非空摘要时只保留该块及后续内容。无效压缩项不会清除旧历史。Responses 的最新续接 id 保留，`sentCount` 按裁剪后的历史更新，服务端会话链不修改。
 - 其他情况：检查 `history.dump().size()` 是否超过 `compactContextThresholdBytes`，专门发送只有 `compact_context` 工具的请求，摘要必须通过该工具返回。
 - 摘要成功：用新 rolling_context 重建会话，再追加当前未提交批次。
 - 摘要无效或压缩请求重试耗尽：沿用上次有效滚动记忆重建，不继续保留越来越长的历史重试摘要。

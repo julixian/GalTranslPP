@@ -46,6 +46,8 @@ agentGeminiInteractions = true
 
 `agentNativeAutoCompaction` 控制原生自动压缩，仅用于 Responses 和 Claude，默认关闭。Responses 使用 `context_management` 自动压缩；Claude 使用 `compact-2026-01-12` beta 的阈值压缩，需模型和中转支持。不支持时关闭该选项，程序不通过请求错误自动探测能力。
 
+Responses 返回有效 compaction 项后，客户端删除它之前的本地历史，只保留最新有效压缩项及后续内容，压缩项原样保存。有效项要求 `encrypted_content` 为非空字符串，整个响应解析成功后才清理。启用 ID 续接时仍保留最新 `previous_response_id`，并按缩短后的历史更新 `sentCount`，下一轮只发送新增输入；本地副本清理不修改服务端会话链。
+
 Claude 返回有效 compaction 块后，客户端会删除它之前的历史，只保留最新有效压缩块及之后的回复、推理和工具调用，后续请求直接发送这份缩短的历史。只有整个响应解析成功且压缩摘要为非空字符串时才清理；压缩失败返回空摘要时保留旧历史。
 
 在 Chat Completions 或 Gemini 上设置为 true 不会发送原生自动压缩参数，仍使用字节阈值。Responses/Claude 设置为 true 时会直接传参数；不支持的模型或中转可能拒绝请求，按现有 API 错误流程处理，不自动关闭开关。中转若忽略该字段，也不能据此认为已经启用压缩。
@@ -54,9 +56,11 @@ API 属性 `agentCompactThresholdTokens` 只控制原生自动压缩，单位为
 
 没有启用原生压缩的高级会话以及原有文本流程，都使用 `compactContextThresholdBytes`。高级模式在每轮请求前检查客户端原生历史的 JSON 字节数；超过阈值后，专门请求模型通过 `compact_context` 总结完整历史。成功收到非空 `rolling_context` 后，清除旧消息、服务端会话 id 和推理签名，用新摘要、文件备注、术语和当前未提交批次重建会话。摘要无效时直接重建，沿用上次成功提交的滚动记忆；请求错误先经过统一重试与轮转，压缩请求重试耗尽后也按此方式重建。重建不会删除已经保存的译文、术语和备注。压缩占用一个 Agent 轮次；刚重建的批次在历史增加前不会反复触发压缩。
 
-ID 续接与原生压缩是独立功能。Responses 和 Gemini Interactions 即使使用服务端 id，客户端仍保存整个会话的已发送输入、工具结果及返回内容。没有原生压缩时，字节阈值检查这份完整历史，而非当次发送的新增消息。它只是本地估算，不等于包含隐藏推理在内的服务端 token 数。开启原生压缩的 Responses、Claude 则由服务端按有效上下文 tokens 判断阈值，客户端不使用字节数触发摘要重建。
+ID 续接与原生压缩是独立功能。Responses 和 Gemini Interactions 即使使用服务端 id，客户端仍保存已发送输入、工具结果及返回内容；收到有效原生压缩项时，Responses 才裁掉已经被压缩替代的本地内容。没有原生压缩时，字节阈值检查这份本地历史，而非当次发送的新增消息。它只是本地估算，不等于包含隐藏推理在内的服务端 token 数。开启原生压缩的 Responses、Claude 则由服务端按有效上下文 tokens 判断阈值，客户端不使用字节数触发摘要重建。
 
 Chat Completions、Gemini generateContent 和普通模型的 Interactions 当前没有这里所用的原生压缩参数，使用上述摘要流程。Interactions 的服务端会话续接和上下文缓存不等于自动摘要压缩。
+
+原生压缩的生效判断目前只看开关和 Responses/Claude 协议，不检查模型或渠道能力，也不自动降级。对不支持的模型或渠道开启后，可能报参数错误；如果渠道忽略压缩参数，本地字节摘要仍被禁用，历史可能增长到上下文上限。Gemini 和 Chat 即使开启该开关，也仍使用字节阈值摘要。
 
 Gemini 的 `agentGeminiInteractions = false` 使用 generateContent；2.5 等采用 thinkingBudget 的旧模型应选择该路径。思考等级继续沿用已有模型规则。Interactions v1 的 generation_config 不使用温度、top_p 或惩罚参数，这条路径不传递 GUI 中对应的采样选项；自定义请求字段仍可通过 extraBody 配置。
 
@@ -117,7 +121,9 @@ read/search 的参数统一为 `file`、`ids`、`fields`、`offset`、`limit`。
 
 `Example/BaseConfig/Prompt.toml` 提供 `FORGALTSV_AGENT_ADVANCED_SYSTEM/USER` 和 `FORNOVELTSV_AGENT_ADVANCED_SYSTEM/USER`。项目可用同名键覆盖；项目和 BaseConfig 都没有所需键时直接抛出缺键异常，代码没有内置默认提示词。高级提示词只描述翻译任务，工具参数由 API 声明，不需要手写文本动作协议。可用的批次占位符与原 Agent 相同。
 
-高级提示词以原有 Agent 提示词为基础，保留完整翻译要求、示例、术语优先级、文件备注和滚动记忆规则，仅将文本协议改为原生工具调用。`Prompt_MyCustom.toml` 中对应的高级键保留该文件自己的中文风格要求和示例。系统提示词通过各协议的系统指令字段发送；用户提示词由 `buildBaseMessages()` 填入目标语言、当前原文、词典、问题提示、文件备注、术语和滚动记忆后加入会话。工具声明只负责工具名称、用途及参数结构，不代替业务提示词。`agent_suggest` 也通过提交工具参数保留，用于把句子级翻译疑点记录到缓存。
+高级提示词以原有 Agent 提示词为基础，保留完整翻译要求、示例、术语优先级、文件备注和滚动记忆规则，仅将文本协议改为原生工具调用。`Prompt_MyCustom.toml` 中对应的高级键保留该文件自己的中文风格要求和示例。固定角色、翻译要求、工具规则、提交规则和决策流程放在高级 SYSTEM 中，通过各协议的系统指令字段发送，不再随每个批次追加进历史；高级 USER 只保留当前文件、句子范围、原文、词典、问题提示、文件备注、术语和滚动记忆，由 `buildBaseMessages()` 填入后加入会话。压缩或重建会话时沿用固定 SYSTEM，不依赖摘要保存翻译规范。项目自定义的高级提示词也应按此方式拆分。
+
+所有提示词读取时统一替换 `[TargetLang]` 和 `[AgentTargetLang]`。普通 batch 和普通 Agent 的 SYSTEM、USER 还共用各自的批次占位符，使用模板副本替换，不修改后续批次的模板；高级 SYSTEM 不应放入当前文件或原文等批次占位符。工具声明只负责工具名称、用途及参数结构，不代替业务提示词。`agent_suggest` 也通过提交工具参数保留，用于把句子级翻译疑点记录到缓存。
 
 原有文本 Agent 的读、搜索、备注工具与高级模式共用 `runReadTool()`：名称和参数全部对齐，旧 `read_lines/search_text/search_term/get_file_note/get_project_note` 不作为别名保留。自定义文本提示词需要更新工具声明和调用示例；文本 `action=tool_calls|commit|compact_context` 协议保持现有形式。
 

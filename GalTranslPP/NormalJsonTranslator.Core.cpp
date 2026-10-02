@@ -576,17 +576,24 @@ void NormalJsonTranslator::normalJsonInit()
 
             const auto readPromptString = [&](const std::string& key) -> std::string
                 {
+                    std::string prompt;
                     if (hasProjectPrompt && projectPromptData.contains(key)) {
-                        return projectPromptData.at(key).as_string();
+                        prompt = projectPromptData.at(key).as_string();
                     }
-                    if (hasDefaultPrompt && defaultPromptData.contains(key)) {
-                        return defaultPromptData.at(key).as_string();
+                    else if (hasDefaultPrompt && defaultPromptData.contains(key)) {
+                        prompt = defaultPromptData.at(key).as_string();
                     }
-                    throw std::invalid_argument(gppTr(
-                        "NormalJsonTranslator.normalJsonInit",
-                        "Prompt.toml 中缺少 %1 键")
-                        .arg(key)
-                        .toStdString());
+                    else {
+                        throw std::invalid_argument(gppTr(
+                            "NormalJsonTranslator.normalJsonInit",
+                            "Prompt.toml 中缺少 %1 键")
+                            .arg(key)
+                            .toStdString());
+                    }
+                    // 固定语言占位符统一在读取时替换，SYSTEM 与 USER 使用相同规则。
+                    replaceStrInplace(prompt, "[TargetLang]", m_targetLang);
+                    replaceStrInplace(prompt, "[AgentTargetLang]", m_targetLang);
+                    return prompt;
                 };
 
             if (m_transEngine == TransEngine::GenDict) {

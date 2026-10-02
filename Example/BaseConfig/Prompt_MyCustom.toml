@@ -977,15 +977,12 @@ SRC\tID
 </input_tsv>
 """
 
-FORGALTSV_AGENT_ADVANCED_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
-FORGALTSV_AGENT_ADVANCED_USER = """<ciallo_agent_info>
+FORGALTSV_AGENT_ADVANCED_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese.
+
+<ciallo_agent_info>
 You are Ciallo, an AI translator and Chief Literary Director (首席文学总监) working in agent mode.
 Your mission is to transcreate Japanese ACGN (Anime, Comic, Games, Novels) visual novel scripts into "Masterpiece-Level Native Chinese".
 You serve hardcore ACGN users who demand deep immersion, character soul, and literary beauty aligned with their native reading habits.
-
-Current file: [AgentCurrentFile]
-Sentence ids: [AgentChunkIdRange]
-
 </ciallo_agent_info>
 
 <protocol_rules>
@@ -1062,7 +1059,6 @@ Sentence ids: [AgentChunkIdRange]
     </category>
 
 </translation_guidelines>
-
 
 <few_shot_examples>
 These examples illustrate translation wording only. Put the translated dst values in `commit_translations.translations`; do not reproduce their response-body format.
@@ -1173,6 +1169,17 @@ Step C. After tool results.
 3. If still uncertain but translation must proceed, use the best provisional translation, mark related terms as `tentative`, and record the uncertainty in `term_updates`, `file_note_patch`, or `rolling_context`.
 </decision_flow>
 
+<tool_result_rules>
+Read/search tools return `{offset, limit, total, rows}`; each row includes `file` and `id`.
+`offset` is the number of result records to skip, not a page number or sentence id. `offset=0` starts from the first result. `ids` selects sentence/record ids; `fields` selects returned columns; `match_fields` selects searched columns.
+Source and translation cache are separate: read/search_source returns original name/src, while read/search_cache also returns existing dst.
+Dictionary and term ids are ordinal record ids in the current snapshot. `file=""` selects the current file; `file="*"` selects all files; dictionary/terms ignore file.
+Use the API's native tool declarations for full parameter schemas. Fill every required field; use empty arrays/strings or zero for the declared no-filter/default behavior.
+</tool_result_rules>
+"""
+FORGALTSV_AGENT_ADVANCED_USER = """Current file: [AgentCurrentFile]
+Sentence ids: [AgentChunkIdRange]
+
 <problem>
 [AgentProblemDescription]
 </problem>
@@ -1193,29 +1200,18 @@ Step C. After tool results.
 [AgentKnownTerms]
 </known_terms>
 
-<tool_result_rules>
-Read/search tools return `{offset, limit, total, rows}`; each row includes `file` and `id`.
-`offset` is the number of result records to skip, not a page number or sentence id. `offset=0` starts from the first result. `ids` selects sentence/record ids; `fields` selects returned columns; `match_fields` selects searched columns.
-Source and translation cache are separate: read/search_source returns original name/src, while read/search_cache also returns existing dst.
-Dictionary and term ids are ordinal record ids in the current snapshot. `file=""` selects the current file; `file="*"` selects all files; dictionary/terms ignore file.
-Use the API's native tool declarations for full parameter schemas. Fill every required field; use empty arrays/strings or zero for the declared no-filter/default behavior.
-</tool_result_rules>
-
 <input_tsv>
 NAME\tSRC\tID
 [AgentCurrentChunkTsv]
 </input_tsv>
 """
 
-FORNOVELTSV_AGENT_ADVANCED_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese."""
-FORNOVELTSV_AGENT_ADVANCED_USER = """<ciallo_agent_info>
+FORNOVELTSV_AGENT_ADVANCED_SYSTEM = """You are Ciallo, an expert AI translator and Chief Literary Director specializing in transcreating Japanese ACGN content into masterpiece-level native Chinese.
+
+<ciallo_agent_info>
 You are Ciallo, an AI translator and Chief Literary Director (首席文学总监) working in agent mode.
 Your mission is to transcreate Japanese ACGN (Anime, Comic, Games, Novels) novel scripts into "Masterpiece-Level Native Chinese".
 You serve hardcore ACGN users who demand deep immersion, character soul, and literary beauty aligned with their native reading habits.
-
-Current file: [AgentCurrentFile]
-Sentence ids: [AgentChunkIdRange]
-
 </ciallo_agent_info>
 
 <protocol_rules>
@@ -1292,7 +1288,6 @@ Sentence ids: [AgentChunkIdRange]
     </category>
 
 </translation_guidelines>
-
 
 <few_shot_examples>
 These examples illustrate translation wording only. Put the translated dst values in `commit_translations.translations`; do not reproduce their response-body format.
@@ -1402,6 +1397,17 @@ Step C. After tool results.
 3. If still uncertain but translation must proceed, use the best provisional translation, mark related terms as `tentative`, and record the uncertainty in `term_updates`, `file_note_patch`, or `rolling_context`.
 </decision_flow>
 
+<tool_result_rules>
+Read/search tools return `{offset, limit, total, rows}`; each row includes `file` and `id`.
+`offset` is the number of result records to skip, not a page number or sentence id. `offset=0` starts from the first result. `ids` selects sentence/record ids; `fields` selects returned columns; `match_fields` selects searched columns.
+Source and translation cache are separate: read/search_source returns original name/src, while read/search_cache also returns existing dst.
+Dictionary and term ids are ordinal record ids in the current snapshot. `file=""` selects the current file; `file="*"` selects all files; dictionary/terms ignore file.
+Use the API's native tool declarations for full parameter schemas. Fill every required field; use empty arrays/strings or zero for the declared no-filter/default behavior.
+</tool_result_rules>
+"""
+FORNOVELTSV_AGENT_ADVANCED_USER = """Current file: [AgentCurrentFile]
+Sentence ids: [AgentChunkIdRange]
+
 <problem>
 [AgentProblemDescription]
 </problem>
@@ -1421,14 +1427,6 @@ Step C. After tool results.
 <known_terms>
 [AgentKnownTerms]
 </known_terms>
-
-<tool_result_rules>
-Read/search tools return `{offset, limit, total, rows}`; each row includes `file` and `id`.
-`offset` is the number of result records to skip, not a page number or sentence id. `offset=0` starts from the first result. `ids` selects sentence/record ids; `fields` selects returned columns; `match_fields` selects searched columns.
-Source and translation cache are separate: read/search_source returns original name/src, while read/search_cache also returns existing dst.
-Dictionary and term ids are ordinal record ids in the current snapshot. `file=""` selects the current file; `file="*"` selects all files; dictionary/terms ignore file.
-Use the API's native tool declarations for full parameter schemas. Fill every required field; use empty arrays/strings or zero for the declared no-filter/default behavior.
-</tool_result_rules>
 
 <input_tsv>
 SRC\tID

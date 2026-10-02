@@ -245,7 +245,8 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* agentCompactThresholdArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
 	ElaDoubleText* agentCompactThresholdText = new ElaDoubleText(tr("压缩上下文阈值"), 16,
-		tr("未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话"), 10, tr("单位为字节"), agentCompactThresholdArea);
+		tr("未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话"), 10,
+		tr("单位为字节；高级 Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效"), agentCompactThresholdArea);
 	agentCompactThresholdLayout->addWidget(agentCompactThresholdText);
 	agentCompactThresholdLayout->addStretch();
 	ElaSpinBox* agentCompactThresholdSpinBox = new ElaSpinBox(agentCompactThresholdArea);
@@ -333,7 +334,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
 	ElaDoubleText* smartRetryTextWidget = new ElaDoubleText(tr("智能重试"), 16,
-		tr("解析结果失败时尝试折半重翻与清空上下文"), 10,
+		tr("解析结果失败时尝试折半重翻与清空上下文，在高级 Agent 模式下无效"), 10,
 		"如果用的打野 key 其实不建议开这个", smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();
@@ -347,7 +348,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* enhanceJailbreakArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
 	ElaDoubleText* enhanceJailbreakText = new ElaDoubleText(tr("改善拒答（回复预填充）"), 16,
-		tr("以 assistant 回复头开始续写，降低拒答并稳定输出格式"), 10,
+		tr("以 assistant 回复头开始续写，降低拒答并稳定输出格式，在高级 Agent 模式下无效"), 10,
 		tr("部分模型或 API 不支持末尾 assistant 消息，遇到请求错误时请关闭"), enhanceJailbreakArea);
 	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
 	enhanceJailbreakLayout->addStretch();

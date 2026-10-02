@@ -598,21 +598,25 @@ json NormalJsonTranslatorTransAgent::buildBaseMessages(
         "\"rolling_context\":\"\""
         "}";
 
+    std::string systemPrompt = m_agentSystemPrompt;
     std::string userPrompt = m_agentUserPrompt;
-    replaceStrInplace(userPrompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
-    replaceStrInplace(userPrompt, "[AgentChunkIdRange]", std::format("{}-{}", pending.front()->index, pending.back()->index));
-    replaceStrInplace(userPrompt, "[TargetLang]", m_targetLang);
-    replaceStrInplace(userPrompt, "[AgentTargetLang]", m_targetLang);
-    replaceStrInplace(userPrompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
-    replaceStrInplace(userPrompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
-    replaceStrInplace(userPrompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump());
-    replaceStrInplace(userPrompt, "[AgentRollingContext]", rollingContext.empty() ? "None" : rollingContext);
-    replaceStrInplace(userPrompt, "[AgentKnownTerms]", knownTerms);
-    replaceStrInplace(userPrompt, "[AgentCurrentChunkTsv]", inputBlock);
-    replaceStrInplace(userPrompt, "[AgentSchemaDescription]", schemaDescription);
+    // 普通 Agent 的 SYSTEM 与 USER 共用占位符；高级会话只追加这里生成的 USER 批次数据。
+    for (std::string* prompt : {&systemPrompt, &userPrompt}) {
+        replaceStrInplace(*prompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
+        replaceStrInplace(*prompt, "[AgentChunkIdRange]", std::format("{}-{}", pending.front()->index, pending.back()->index));
+        replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
+        replaceStrInplace(*prompt, "[AgentTargetLang]", m_targetLang);
+        replaceStrInplace(*prompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
+        replaceStrInplace(*prompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
+        replaceStrInplace(*prompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump());
+        replaceStrInplace(*prompt, "[AgentRollingContext]", rollingContext.empty() ? "None" : rollingContext);
+        replaceStrInplace(*prompt, "[AgentKnownTerms]", knownTerms);
+        replaceStrInplace(*prompt, "[AgentCurrentChunkTsv]", inputBlock);
+        replaceStrInplace(*prompt, "[AgentSchemaDescription]", schemaDescription);
+    }
 
     return json::array({
-        {{"role", "system"}, {"content", m_agentSystemPrompt}},
+        {{"role", "system"}, {"content", systemPrompt}},
         {{"role", "user"}, {"content", userPrompt}}
     });
 }

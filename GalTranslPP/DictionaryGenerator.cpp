@@ -8,7 +8,6 @@ module;
 module DictionaryGenerator;
 
 import ctpl_stl;
-import :ReviewAgent;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -23,27 +22,16 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
     int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, bool enhanceJailbreak,
-    bool agentEnabled, const fs::path& projectDir,
     const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
-    const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,
-    const std::string& genDictReviewSystemPrompt, const std::string& genDictReviewUserPrompt,
-    int agentMaxTurnsPerChunk, int agentSearchResultLimit, int agentContextLinesLimit)
+    const std::vector<fs::path>& relJsonPaths)
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool),
     m_preProcessFunc(preProcessFunc), m_onPerformApi(onPerformApi), m_onDictProcessed(onDictProcessed),
     m_tokenizeSourceLangFunc(tokenizeSourceLangFunc),
     m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_apiStrategy(apiStrategy), m_targetLang(targetLang),
     m_threadsNum(threadsNum), m_inputBlockMaxLines(inputBlockMaxLines), m_maxRequestCount(maxRequestCount),
     m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota), m_enhanceJailbreak(enhanceJailbreak),
-    m_agentEnabled(agentEnabled),
-    m_projectDir(projectDir),
     m_inputJsonMap(inputJsonMap),
     m_relJsonPaths(relJsonPaths),
-    m_agentProjectNotePath(agentProjectNotePath),
-    m_genDictReviewSystemPrompt(genDictReviewSystemPrompt),
-    m_genDictReviewUserPrompt(genDictReviewUserPrompt),
-    m_agentMaxTurnsPerChunk(agentMaxTurnsPerChunk),
-    m_agentSearchResultLimit(agentSearchResultLimit),
-    m_agentContextLinesLimit(agentContextLinesLimit),
     m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_dictgen.json")
 {
 	std::ranges::sort(m_relJsonPaths, [](const fs::path& a, const fs::path& b)
@@ -66,9 +54,6 @@ void DictionaryGenerator::preprocessAndTokenize() {
     for (const fs::path& relJsonPath : m_relJsonPaths)
     {
         const ordered_json& data = m_inputJsonMap.at(relJsonPath);
-
-        std::vector<Sentence> sourceSentences;
-        sourceSentences.reserve(data.size());
 
         for (const auto& [index, item] : data | std::views::enumerate) {
             ++m_totalSentences;
@@ -93,8 +78,6 @@ void DictionaryGenerator::preprocessAndTokenize() {
             }
             replaceStrInplace(se.preproc, "<br>", "");
             replaceStrInplace(se.preproc, "<tab>", "");
-
-            sourceSentences.push_back(se);
 
             if (se.nameType == NameType::Single && !se.name.empty()) {
                 m_nameSet.insert(se.name);
@@ -124,7 +107,6 @@ void DictionaryGenerator::preprocessAndTokenize() {
             currentSegment.clear();
         }
 
-        m_reviewSourceFiles.push_back(buildAgentCommonSourceFileViewFromSentences(sourceSentences));
     }
 
     if (!currentSegment.empty()) {
@@ -408,53 +390,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
         });
 
     DictList finalList;
-    if (m_agentEnabled && !m_controller->shouldStop() && !m_finalDict.empty()) {
-        auto reviewAgent = std::make_unique<DictionaryGeneratorReviewAgent>(
-            m_controller,
-            m_logger,
-            m_apiPool,
-            m_onPerformApi,
-            m_projectDir,
-            m_relJsonPaths,
-            m_agentProjectNotePath,
-            m_genDictReviewSystemPrompt,
-            m_genDictReviewUserPrompt,
-            m_apiStrategy,
-            m_targetLang,
-            m_inputBlockMaxLines,
-            m_maxRequestCount,
-            m_threadsNum,
-            m_agentMaxTurnsPerChunk,
-            m_agentSearchResultLimit,
-            m_agentContextLinesLimit,
-            m_apiTimeOutMs,
-            m_checkQuota,
-            m_enhanceJailbreak
-        );
-        DictList reviewedList = reviewAgent->review(
-            m_finalDict,
-            m_finalCounter,
-            m_segments,
-            selectedIndices,
-            m_nameSet,
-            m_wordCounter,
-            m_reviewSourceFiles
-        );
-        finalList = m_onDictProcessed ? m_onDictProcessed(std::move(reviewedList)) : std::move(reviewedList);
-        if (m_controller->shouldStop()) {
-            m_logger->info(gppTr(
-                "DictionaryGenerator.generate",
-                "任务终止，已保留完成审校的词条")
-                .toStdString());
-        }
-        else {
-            m_logger->info(gppTr(
-                "DictionaryGenerator.generate",
-                "阶段四: 字典审校 Agent 完成，使用审校后的字典结果")
-                .toStdString());
-        }
-    }
-    else if (m_onDictProcessed) {
+    if (m_onDictProcessed) {
         finalList = m_onDictProcessed(m_finalDict);
     }
     else {

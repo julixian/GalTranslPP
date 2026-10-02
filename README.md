@@ -17,7 +17,7 @@
 * 高度自定义的 Epub 提取
 * OpenAI Chat Completions / OpenAI Responses / Claude / Gemini 风格接口协议在同一 Api 池中管理
 * 多 Api key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置
-* Agent 翻译与字典审校，支持工具搜索、术语账本、文件笔记和滚动上下文
+* Agent 翻译，支持工具搜索、术语账本、文件笔记和滚动上下文
 * 有效的 Api 额度耗尽检测
 * 卡片弹出式的完成提示 (仅GUI)
 * 更好的字典未使用检测

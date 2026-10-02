@@ -323,14 +323,11 @@ class NormalJsonTranslator(ITranslator):
     m_userPrompt: str
     m_agentSystemPrompt: str
     m_agentUserPrompt: str
-    m_genDictReviewSystemPrompt: str
-    m_genDictReviewUserPrompt: str
     m_targetLang: str
     m_pythonTranslator: bool
     m_threadsNum: int
     m_nameTransBatchSize: int
     m_batchSize: int
-    m_contextHistorySize: int
     m_inputBlockMaxLines: int
     m_problemMaxLines: int
     m_glossaryMaxLines: int

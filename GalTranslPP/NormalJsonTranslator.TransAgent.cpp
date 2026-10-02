@@ -410,11 +410,15 @@ std::optional<int> NormalJsonTranslatorTransAgent::getSourceFileLineCount(const 
 absl::flat_hash_map<int, json> NormalJsonTranslatorTransAgent::loadCacheDstMap(const fs::path& targetRelPath) const {
     absl::flat_hash_map<int, json> cacheMap;
     const fs::path cachePath = m_transCacheDir / targetRelPath;
-    if (!fs::exists(cachePath)) {
-        return cacheMap;
-    }
     std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
-    json cacheJson = parseJson(cachePath);
+    json cacheJson;
+    if (const auto it = m_savedTranslCacheMap.find(targetRelPath); it != m_savedTranslCacheMap.end()) {
+        cacheJson = it->second;
+    }
+    else if (fs::exists(cachePath)) {
+        cacheJson = parseJson(cachePath);
+    }
+    else return cacheMap;
     for (const auto& item : cacheJson) {
         const int index = item.value("index", -1);
         if (index >= 0) {
@@ -422,202 +426,6 @@ absl::flat_hash_map<int, json> NormalJsonTranslatorTransAgent::loadCacheDstMap(c
         }
     }
     return cacheMap;
-}
-
-// 读取源文件连续行，并按需附带已有缓存译文。
-json NormalJsonTranslatorTransAgent::runReadLinesTool(const fs::path& relInputPath, const json& arguments) {
-    const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
-    const int start = std::max(0, arguments.value("start", 0));
-    const int count = std::max(0, arguments.value("count", m_agentSearchResultLimit));
-    const bool includeSrc = arguments.value("include_src", true);
-    const bool includeDst = arguments.value("include_dst", true);
-    json result = { {"file", wide2Ascii(targetRelPath)}, {"lines", json::array()} };
-    const AgentCommonSourceFileView* sourceView = findSourceFileView(targetRelPath);
-    const auto cacheMap = loadCacheDstMap(targetRelPath);
-    if (sourceView == nullptr) {
-        result["error"] = std::format("Source view not found for {}", wide2Ascii(targetRelPath));
-        return result;
-    }
-    for (int i = start; i < (int)sourceView->lines.size() && i < start + count; ++i) {
-        const AgentCommonSourceLineView& sourceLine = sourceView->lines[i];
-        json line = { {"id", sourceLine.id} };
-        const auto cacheIt = cacheMap.find(sourceLine.id);
-        if (!sourceLine.speaker.empty()) {
-            line["name"] = sourceLine.speaker;
-        }
-        if (includeSrc) {
-            line["src"] = sourceLine.sourceText;
-        }
-        if (includeDst && cacheIt != cacheMap.end()) {
-            line["dst"] = cacheIt->second.value("translated_raw_text", "");
-        }
-        result["lines"].push_back(std::move(line));
-    }
-    return result;
-}
-
-// 在源文中搜索文本。
-json NormalJsonTranslatorTransAgent::runSearchTextTool(const fs::path& relInputPath, const json& arguments) const {
-    return runAgentCommonSourceSearchTextTool(
-        relInputPath,
-        m_knownRelFiles,
-        [this](const fs::path& relPath)
-        {
-            return findSourceFileView(relPath);
-        },
-        m_agentSearchResultLimit,
-        m_agentContextLinesLimit,
-        false,
-        gppTr(
-            "NormalJsonTranslatorTransAgent.runSearchTextTool",
-            "search_text.scope 非法: %1。允许值仅有 current_file|all_files|specified_file")
-            .arg(arguments.value("scope", ""))
-            .toStdString(),
-        arguments
-    );
-}
-
-// 在术语账本里搜索术语。
-json NormalJsonTranslatorTransAgent::runSearchTermTool(const json& arguments) {
-    const std::vector<std::string> queries = collectAgentCommonToolQueries(arguments);
-    const std::vector<std::string> queryLowers = queries
-        | std::views::transform([](const std::string& query) { return str2Lower(query); })
-        | std::ranges::to<std::vector>();
-    const int start = std::max(0, arguments.value("start", 0));
-    const int limit = sanitizeAgentCommonToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
-    const json termLedger = loadTermLedger();
-    json matches = json::array();
-
-    if (!termLedger.is_object()) {
-        return json{
-            {"queries", queries},
-            {"start", start},
-            {"limit", limit},
-            {"total", 0},
-            {"matches", matches}
-        };
-    }
-
-    int matchCount = 0;
-    for (const auto& item : termLedger.items()) {
-        const json& entry = item.value();
-        const std::string sourceTerm = item.key();
-        const std::string targetTerm = entry.value("target_term", "");
-        const std::string category = entry.value("category", "");
-        const std::string note = entry.value("note", "");
-        const std::string haystack = queryLowers.empty()
-            ? std::string{}
-            : str2Lower(sourceTerm + "\n" + targetTerm + "\n" + category + "\n" + note);
-        const bool matched = queryLowers.empty() || std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
-            {
-                return !queryLower.empty() && haystack.contains(queryLower);
-            });
-        if (!matched) {
-            continue;
-        }
-
-        ++matchCount;
-        if (matchCount <= start || (int)matches.size() >= limit) {
-            continue;
-        }
-        matches.push_back(json{
-            {"source_term", sourceTerm},
-            {"target_term", targetTerm},
-            {"status", entry.value("status", "tentative")},
-            {"category", category},
-            {"note", note},
-            {"occurrences", entry.value("occurrences", json::array())}
-        });
-    }
-
-    return json{
-        {"queries", queries},
-        {"start", start},
-        {"limit", limit},
-        {"total", matchCount},
-        {"matches", matches}
-    };
-}
-
-// 在配置的 GPT 字典里搜索术语。
-json NormalJsonTranslatorTransAgent::runSearchDictionaryTool(const json& arguments) {
-    const std::vector<std::string> queries = collectAgentCommonToolQueries(arguments);
-    const std::vector<std::string> queryLowers = queries
-        | std::views::transform([](const std::string& query) { return str2Lower(query); })
-        | std::ranges::to<std::vector>();
-    const int start = std::max(0, arguments.value("start", 0));
-    const int limit = sanitizeAgentCommonToolLimit(arguments.value("limit", m_agentSearchResultLimit), m_agentSearchResultLimit);
-    json matches = json::array();
-    int matchCount = 0;
-
-    const auto matchedByPrecomputedHaystack = [&](const std::string& haystackLower)
-        {
-            if (queryLowers.empty()) {
-                return true;
-            }
-            return std::ranges::any_of(queryLowers, [&](const std::string& queryLower)
-                {
-                    return !queryLower.empty() && haystackLower.contains(queryLower);
-                });
-        };
-
-    const auto loadDictionaryEntriesCache = [&]() -> std::shared_ptr<const json>
-        {
-            {
-                std::shared_lock<std::shared_mutex> lock(m_loadedDictionaryEntriesCacheMutex);
-                if (m_loadedDictionaryEntriesCache) {
-                    return m_loadedDictionaryEntriesCache;
-                }
-            }
-
-            std::unique_lock<std::shared_mutex> lock(m_loadedDictionaryEntriesCacheMutex);
-            if (m_loadedDictionaryEntriesCache) {
-                return m_loadedDictionaryEntriesCache;
-            }
-            json loadedEntries = json::array();
-            for (const LoadedDictionaryEntry& entry : loadDictionaryEntries()) {
-                loadedEntries.push_back({
-                    {"source_term", entry.sourceTerm},
-                    {"target_term", entry.targetTerm},
-                    {"note", entry.note},
-                    {"haystack_lower", entry.haystackLower}
-                });
-            }
-            m_loadedDictionaryEntriesCache = std::make_shared<const json>(std::move(loadedEntries));
-            return m_loadedDictionaryEntriesCache;
-        };
-
-    for (const json& entry : *loadDictionaryEntriesCache()) {
-        if (!matchedByPrecomputedHaystack(entry.value("haystack_lower", ""))) {
-            continue;
-        }
-        ++matchCount;
-        if (matchCount <= start || (int)matches.size() >= limit) {
-            continue;
-        }
-        matches.push_back({
-            {"source_term", entry.value("source_term", "")},
-            {"target_term", entry.value("target_term", "")},
-            {"note", entry.value("note", "")}
-        });
-    }
-
-    return json{
-        {"queries", queries},
-        {"start", start},
-        {"limit", limit},
-        {"total", matchCount},
-        {"matches", matches}
-    };
-}
-
-// 读取某个文件的 Agent 文件备注。
-json NormalJsonTranslatorTransAgent::runGetFileNoteTool(const fs::path& relInputPath, const json& arguments) {
-    const fs::path targetRelPath = ascii2Wide(arguments.value("file", wide2Ascii(relInputPath)));
-    return json{
-        {"file", wide2Ascii(targetRelPath)},
-        {"note", loadFileNote(targetRelPath)}
-    };
 }
 
 // 执行模型请求的工具调用序列。
@@ -630,39 +438,12 @@ NormalJsonTranslatorTransAgent::TransAgentToolCallResult NormalJsonTranslatorTra
     executionResult.summary = formatAgentCommonToolCallDetails(calls);
     for (const auto& call : calls) {
         json result = { {"id", call.id}, {"name", call.name} };
-        if (call.name == "list_files") {
-            result["result"] = runAgentCommonListFilesTool(
-                m_knownRelFiles,
-                [this](const fs::path& relPath)
-                {
-                    return getSourceFileLineCount(relPath);
-                },
-                m_agentSearchResultLimit,
-                call.arguments
-            );
+        try {
+            result["result"] = runReadTool(relInputPath, call.name, call.arguments);
         }
-        else if (call.name == "read_lines") {
-            result["result"] = runReadLinesTool(relInputPath, call.arguments);
-        }
-        else if (call.name == "search_text") {
-            result["result"] = runSearchTextTool(relInputPath, call.arguments);
-        }
-        else if (call.name == "search_dictionary") {
-            result["result"] = runSearchDictionaryTool(call.arguments);
-        }
-        else if (call.name == "search_term") {
-            result["result"] = runSearchTermTool(call.arguments);
-        }
-        else if (call.name == "get_file_note") {
-            result["result"] = runGetFileNoteTool(relInputPath, call.arguments);
-        }
-        else if (call.name == "get_project_note") {
-            result["result"] = runAgentCommonGetProjectNoteTool(m_projectDir, m_agentProjectNotePath, call.arguments);
-        }
-        else {
-            result["error"] = gppTr("NormalJsonTranslatorTransAgent.executeToolCalls", "未知工具: %1")
-                .arg(call.name)
-                .toStdString();
+        catch (const std::exception& e) {
+            // 单个工具失败也按调用 id 回填，其他工具仍继续执行。
+            result["result"] = {{"error", e.what()}};
         }
         executionResult.results.push_back(std::move(result));
     }
@@ -1038,6 +819,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
 bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
     int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
 {
+    if (m_advancedEnabled) return translateAdvancedBatch(relInputPath, batch, rollingContext, threadId, batchIndex);
     // 智能体模式复用外层批次调度，但单个分块内可能进行多轮交互：
     // 先发起工具调用，再按需压缩上下文，最后提交通过校验的 `commit`。
     //
@@ -1050,9 +832,9 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     // 3. buildAgentBaseMessages() 把当前 chunk TSV、file_note、term_ledger 摘要、rollingContext 和工具说明拼成 messages。
     // 4. 模型可以先返回 tool_calls：
     //    { "action":"tool_calls", "calls":[
-    //      { "name":"list_files", "arguments":{"start":0,"limit":20} },
-    //      { "name":"read_lines", "arguments":{"file":"chapter01.json","start":40,"count":5} },
-    //      { "name":"search_term", "arguments":{"query":"アリス","limit":5} }
+    //      { "name":"list_files", "arguments":{"offset":0,"limit":20} },
+    //      { "name":"read_source", "arguments":{"file":"chapter01.json","offset":40,"limit":5,"fields":["name","src"]} },
+    //      { "name":"search_terms", "arguments":{"query":"アリス","limit":5,"fields":["src","dst"]} }
     //    ] }
     //    executeToolCalls() 会同步执行这些只读工具，把结果作为新的 user message 回填给下一轮模型。
     // 5. 模型最终必须返回 commit：
@@ -1060,7 +842,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     //      "term_updates":[{"source_term":"アリス","target_term":"爱丽丝","line_ids":[20]}],
     //      "file_note_patch":{"summary":"..."},"rolling_context":"..." }
     //    translations 的 id 可以是数字或数字字符串；它和 sourceView.lines 的 id、list_files 的 lines 范围、
-    //    read_lines.start / search result id 都在同一个翻译索引空间内。
+    //    read_source.ids / search result id 都在同一个翻译索引空间内；offset 是分页位置。
     //    term_updates 写入共享 term_ledger；file_note_patch 合并到 file_notes/chapter01.json；
     //    rolling_context 更新 rollingContext。
     // 6. 若某个 term 的 target_term 变化，applyCommit() 会基于 term_ledger 里已有 occurrences

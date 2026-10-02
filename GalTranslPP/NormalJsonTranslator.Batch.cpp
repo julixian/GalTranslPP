@@ -20,7 +20,6 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     }
 
     int requestCount = 0;
-    std::string contextHistory = buildContextHistory(batch, m_transEngine, m_contextHistorySize, 1024);
     std::string glossary = m_gptDictionary->generatePrompt(batch, m_transEngine);
     const std::string batchIndexLog = recursionCount == 0
         ? std::format("{}", batchIndex)
@@ -74,7 +73,6 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                 .arg(batchIndexLog)
                 .arg(requestCount + 1)
                 .toStdString());
-            contextHistory.clear();
             rollingContext.clear();
         }
 
@@ -104,9 +102,6 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         if (m_logger->should_log(spdlog::level::debug) && !rollingContext.empty()) {
             logBlock += "\nRollingContext:\n" + rollingContext + "\n";
         }
-        if (m_logger->should_log(spdlog::level::trace) && !contextHistory.empty()) {
-            logBlock += "\nContext:\n" + contextHistory + "\n";
-        }
         if (!glossary.empty()) {
             logBlock += "\nDict:\n" + limitLogLines(glossary, m_glossaryMaxLines);
         }
@@ -130,10 +125,6 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         replaceStrInplace(promptReq, "[Glossary]", glossary.empty() ? "None" : glossary);
 
         json messages = json::array({ {{"role", "system"}, {"content", m_systemPrompt}} });
-        if (!contextHistory.empty()) {
-            messages.push_back({ {"role", "user"}, {"content", "<input>(...truncated history source texts...)</input><output>\n"} });
-            messages.push_back({ {"role", "assistant"}, {"content", contextHistory} });
-        }
         messages.push_back({ {"role", "user"}, {"content", promptReq} });
 
         if (m_enhanceJailbreak) {

@@ -49,6 +49,11 @@ std::optional<TranslationApi> ApiPool::getFirstApi() {
     return m_apis.front();
 }
 
+bool ApiPool::containsApi(const TranslationApi& api) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return std::ranges::any_of(m_apis, [&](const TranslationApi& item) { return isSameApi(item, api); });
+}
+
 std::optional<std::string> ApiPool::resortTokens() {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_apis.size() > 1) {
@@ -68,7 +73,7 @@ void ApiPool::reportProblem(const TranslationApi& badApi) {
     std::lock_guard<std::mutex> lock(m_mutex);
     const auto it = std::ranges::find_if(m_apis, [&](const TranslationApi& api)
         {
-            return api.apikey == badApi.apikey && api.apiurl == badApi.apiurl && api.modelName == badApi.modelName;
+            return isSameApi(api, badApi);
         });
     if (it == m_apis.end()) {
         return;

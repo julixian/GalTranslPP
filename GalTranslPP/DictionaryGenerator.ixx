@@ -5,7 +5,6 @@ module;
 export module DictionaryGenerator;
 
 export import ApiPool;
-export import AgentCommonSourceView;
 export import GPPDefines;
 export import ITranslator;
 
@@ -36,16 +35,8 @@ export
         bool m_enhanceJailbreak;
         // 由 Dictionary Generator 重新用 input files 计算
         int m_totalSentences = 0;
-        bool m_agentEnabled;
-        fs::path m_projectDir;
         const absl::flat_hash_map<fs::path, ordered_json>& m_inputJsonMap;
         std::vector<fs::path> m_relJsonPaths;
-        std::optional<fs::path> m_agentProjectNotePath;
-        std::string m_genDictReviewSystemPrompt;
-        std::string m_genDictReviewUserPrompt;
-        int m_agentMaxTurnsPerChunk;
-        int m_agentSearchResultLimit;
-        int m_agentContextLinesLimit;
 
         // 阶段一和二的结果
         fs::path m_tokenizeCachePath;
@@ -55,7 +46,6 @@ export
         std::vector<absl::flat_hash_set<std::string>> m_segmentWords;
         absl::flat_hash_map<std::string, int> m_wordCounter;
         absl::flat_hash_set<std::string> m_nameSet;
-        std::vector<AgentCommonSourceFileView> m_reviewSourceFiles;
 
         // 阶段四的结果 (线程安全)
         DictList m_finalDict;
@@ -71,11 +61,8 @@ export
             const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
             const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
             int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, bool enhanceJailbreak,
-            bool agentEnabled, const fs::path& projectDir,
             const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
-            const std::vector<fs::path>& relJsonPaths, const std::optional<fs::path>& agentProjectNotePath,
-            const std::string& genDictReviewSystemPrompt, const std::string& genDictReviewUserPrompt,
-            int agentMaxTurnsPerChunk, int agentSearchResultLimit, int agentContextLinesLimit);
+            const std::vector<fs::path>& relJsonPaths);
 
         ~DictionaryGenerator();
 

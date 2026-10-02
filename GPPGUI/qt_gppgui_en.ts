@@ -63,7 +63,7 @@
         <translation>Add new Api</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+84"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -145,12 +145,11 @@ sk-...</translation>
         <translation>Omit</translation>
     </message>
     <message>
-        <location line="+11"/>
         <source>流式输出</source>
-        <translation>Stream output</translation>
+        <translation type="vanished">Stream output</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+11"/>
         <source>使用系统代理</source>
         <translation>Use system proxy</translation>
     </message>
@@ -158,6 +157,66 @@ sk-...</translation>
         <location line="+8"/>
         <source>基础设置</source>
         <translation>Basic settings</translation>
+    </message>
+    <message>
+        <location line="+17"/>
+        <source>以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效</source>
+        <translation>These options apply only when Agent mode and Advanced Agent are enabled.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>严格工具参数</source>
+        <translation>Strict tool arguments</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>为 OpenAI 和 Claude 启用严格工具参数 schema</source>
+        <translation>Enable strict tool parameter schemas for OpenAI and Claude.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>服务端会话续接</source>
+        <translation>Server-side conversation continuation</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>使用 previous_response_id 或 previous_interaction_id，启用服务端存储</source>
+        <translation>Continue using previous_response_id or previous_interaction_id and enable server-side storage.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>原生自动压缩</source>
+        <translation>Native automatic compaction</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Responses 使用原生自动压缩；Claude 使用 compact beta 接口，模型和中转需支持</source>
+        <translation>Use native automatic compaction for Responses or the compact beta API for Claude. The model and endpoint must support it.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>原生自动压缩 token 阈值</source>
+        <translation>Native automatic compaction token threshold</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值</source>
+        <translation>0 uses the default: 100000 for Responses; the server default for Claude</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>为 TransAgent 启用 Interactions API</source>
+        <translation>Enable Interactions API for TransAgent</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用</source>
+        <translation>Use Gemini Interactions. When disabled, use native tools with generateContent.</translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>高级 Agent</source>
+        <translation>Advanced Agent</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -261,12 +320,11 @@ sk-...</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+17"/>
         <source>错误信息: </source>
         <translation>Error message: </translation>
     </message>
     <message>
-        <location line="-8"/>
+        <location line="+9"/>
         <source>请求类型: 测试模型回复</source>
         <translation>Request type: test model reply</translation>
     </message>
@@ -282,16 +340,20 @@ sk-...</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>解析出的模型回复: </source>
-        <translation>Parsed model reply: </translation>
+        <source>模型回复:</source>
+        <translation>Model reply:</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+0"/>
+        <source>原始响应:</source>
+        <translation>Raw response:</translation>
+    </message>
+    <message>
         <source>(空)</source>
-        <translation>(empty)</translation>
+        <translation type="vanished">(empty)</translation>
     </message>
     <message>
-        <location line="+47"/>
+        <location line="+48"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
@@ -308,7 +370,7 @@ sk-...</translation>
         <translation>Model name cannot be empty</translation>
     </message>
     <message>
-        <location line="+70"/>
+        <location line="+69"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
@@ -1146,8 +1208,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>当前仅 ForGalTsv、ForNovelTsv、GenDict 会实际启用</source>
-        <translation>Currently only ForGalTsv, ForNovelTsv, and GenDict actually enable it</translation>
+        <source>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
+        <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用</oldsource>
+        <translation type="unfinished">Currently only ForGalTsv and ForNovelTsv actually enable it</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1155,7 +1218,23 @@ sk-...</translation>
         <translation>Allows the model to call tools for more context</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+10"/>
+        <source>高级 Agent</source>
+        <translation>Advanced Agent</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议</source>
+        <translation>Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错</source>
+        <oldsource>仅 ForGalTsv、ForNovelTsv 生效，各协议能力在 Api 设置中配置</oldsource>
+        <translation type="unfinished">Applies only to ForGalTsv and ForNovelTsv. Configure protocol capabilities in API settings.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>单块最大轮数</source>
         <translation>Max turns per block</translation>
     </message>
@@ -1171,8 +1250,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Agent 消息上下文超过该字节数后触发压缩</source>
-        <translation>Compress Agent context above this byte count</translation>
+        <source>未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话</source>
+        <oldsource>Agent 消息上下文超过该字节数后触发压缩</oldsource>
+        <translation>Without native compaction, summarize and rebuild the session above this byte count</translation>
     </message>
     <message>
         <location line="+0"/>
@@ -1206,8 +1286,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</source>
-        <translation>Optional project note file for Agent to read; add the `get_project_note()` tool prompt yourself</translation>
+        <source>Agent 可选读取的项目说明文件，需自己加 `read_project_note()` 的工具提示词</source>
+        <oldsource>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</oldsource>
+        <translation type="unfinished">Optional project note file for Agent to read; add the `get_project_note()` tool prompt yourself</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1221,11 +1302,6 @@ sk-...</translation>
     </message>
     <message>
         <location line="+26"/>
-        <source>携带上文数量</source>
-        <translation>Num of context to attached</translation>
-    </message>
-    <message>
-        <location line="+14"/>
         <source>智能重试</source>
         <translation>Smart retry</translation>
     </message>
@@ -1250,12 +1326,17 @@ sk-...</translation>
         <translation>Check quota</translation>
     </message>
     <message>
-        <location line="+268"/>
+        <location line="+14"/>
+        <source>不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错，在 Agent 模式下无效</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+254"/>
         <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。具体替换时机详见使用说明，auto 为自动检测</source>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-512"/>
+        <location line="-509"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1286,14 +1367,9 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+151"/>
+        <location line="+162"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
-    </message>
-    <message>
-        <location line="+14"/>
-        <source>对现代模型而言意义不大了，推荐值 ≤ 10</source>
-        <translation>Less useful for modern models; recommended value ≤ 10</translation>
     </message>
     <message>
         <location line="+14"/>
@@ -1312,7 +1388,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-355"/>
+        <location line="-352"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1343,17 +1419,12 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+184"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错</source>
-        <translation>Off: retry omissions only. On: tolerate serialization parse failures.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>默认关闭以节省token/防止因模型截断造成无限循环</source>
         <translation>Off by default to save tokens and avoid truncation loops</translation>
     </message>
@@ -4011,7 +4082,7 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="-176"/>
+        <location filename="ApiSettingsPage.cpp" line="-175"/>
         <location line="+7"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>

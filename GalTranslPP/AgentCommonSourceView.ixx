@@ -12,8 +12,6 @@ export
         int id = -1;
         std::string speaker;
         std::string sourceText;
-        std::string sourceTextLower;
-        std::string sourceTextWithSpeakerLower;
     };
 
     struct AgentCommonSourceFileView {
@@ -29,6 +27,4 @@ export
         const std::function<void(Sentence*)>& preProcessFunc
     );
 
-    // 为 search_text 工具结果构造命中行附近的上下文窗口。
-    json buildAgentCommonSourceNearbyLines(const std::vector<AgentCommonSourceLineView>& lines, int matchIndex, int contextLines);
 }

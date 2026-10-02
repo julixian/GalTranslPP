@@ -166,8 +166,7 @@ void PromptSettingsPage::setupUi()
 		"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM");
 	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_USER", "FORGALJSON_SYSTEM");
 	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_USER", "SAKURA_SYSTEM");
-	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM",
-		"GENDICT_REVIEW_USER", "GENDICT_REVIEW_SYSTEM");
+	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_USER", "NAMETRANS_SYSTEM");
 
 	m_applyFunc = [=]()

@@ -9,7 +9,6 @@ import NLPTool;
 import Tool;
 
 namespace fs = std::filesystem;
-namespace py = pybind11;
 
 namespace
 {
@@ -29,7 +28,6 @@ namespace
     } while (false)
 
     struct NormalJsonCoreConfig {
-        TransEngine transEngine{};
         std::string_view sortMethod;
         std::string_view splitFileMethod;
         std::string_view problemOverviewFormat;
@@ -42,7 +40,6 @@ namespace
         int cacheSearchDistance{};
         int saveCacheInterval{};
         int maxRequestCount{};
-        int contextHistorySize{};
         int inputBlockMaxLines{};
         int problemMaxLines{};
         int glossaryMaxLines{};
@@ -148,14 +145,6 @@ namespace
                 "大于 0")
                 .toStdString());
         GPP_REQUIRE_CONFIG(
-            config.contextHistorySize >= 0,
-            "common.contextHistorySize",
-            config.contextHistorySize,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于等于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
             config.inputBlockMaxLines > 0,
             "common.log.inputBlockMaxLines",
             config.inputBlockMaxLines,
@@ -208,16 +197,14 @@ namespace
                 "validateNormalJsonCoreConfig",
                 "大于等于 0")
                 .toStdString());
-        if (config.transEngine != TransEngine::GenDict) {
-            GPP_REQUIRE_CONFIG(
-                config.agentCompactContextThresholdBytes > 0,
-                "common.agent.compactContextThresholdBytes",
-                config.agentCompactContextThresholdBytes,
-                gppTr(
-                    "validateNormalJsonCoreConfig",
-                    "大于 0")
-                    .toStdString());
-        }
+        GPP_REQUIRE_CONFIG(
+            config.agentCompactContextThresholdBytes > 0,
+            "common.agent.compactContextThresholdBytes",
+            config.agentCompactContextThresholdBytes,
+            gppTr(
+                "validateNormalJsonCoreConfig",
+                "大于 0")
+                .toStdString());
     }
 
 #undef GPP_REQUIRE_CONFIG
@@ -314,7 +301,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
         m_linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
         m_maxRequestCount = toml::find_or(configData, "common", "maxRequestCount", 4);
-        m_contextHistorySize = toml::find_or(configData, "common", "contextHistorySize", 0);
         m_inputBlockMaxLines = toml::find_or(configData, "common", "log", "inputBlockMaxLines", 10);
         m_problemMaxLines = toml::find_or(configData, "common", "log", "problemMaxLines", 3);
         m_glossaryMaxLines = toml::find_or(configData, "common", "log", "glossaryMaxLines", 5);
@@ -323,6 +309,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
+        m_agentAdvancedEnabled = toml::find_or(configData, "common", "agent", "advancedEnabled", false);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
         m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 150000);
         m_agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);
@@ -343,8 +330,7 @@ void NormalJsonTranslator::normalJsonInit()
         if (m_agentEnabled)
         {
             if (m_transEngine != TransEngine::ForGalTsv &&
-                m_transEngine != TransEngine::ForNovelTsv &&
-                m_transEngine != TransEngine::GenDict)
+                m_transEngine != TransEngine::ForNovelTsv)
             {
                 m_agentEnabled = false;
                 m_logger->warn(gppTr(
@@ -362,7 +348,6 @@ void NormalJsonTranslator::normalJsonInit()
         }
 
         validateNormalJsonCoreConfig({
-            .transEngine = m_transEngine,
             .sortMethod = m_sortMethod,
             .splitFileMethod = m_splitFileMethod,
             .problemOverviewFormat = m_problemOverviewFormat,
@@ -375,7 +360,6 @@ void NormalJsonTranslator::normalJsonInit()
             .cacheSearchDistance = m_cacheSearchDistance,
             .saveCacheInterval = m_saveCacheInterval,
             .maxRequestCount = m_maxRequestCount,
-            .contextHistorySize = m_contextHistorySize,
             .inputBlockMaxLines = m_inputBlockMaxLines,
             .problemMaxLines = m_problemMaxLines,
             .glossaryMaxLines = m_glossaryMaxLines,
@@ -505,7 +489,11 @@ void NormalJsonTranslator::normalJsonInit()
                         "backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略").arg(apiIndex).toStdString());
                     continue;
                 }
-                api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
+                api.agentStrictTools = !apiTbl.contains("agentStrictTools") || apiTbl.at("agentStrictTools").as_boolean();
+                api.agentStateful = !apiTbl.contains("agentStateful") || apiTbl.at("agentStateful").as_boolean();
+                api.agentNativeAutoCompaction = apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").as_boolean();
+                if (apiTbl.contains("agentCompactThresholdTokens")) api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
+                api.agentGeminiInteractions = !apiTbl.contains("agentGeminiInteractions") || apiTbl.at("agentGeminiInteractions").as_boolean();
                 api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
                 api.thinkingLevel = "off";
                 if (apiTbl.contains("thinkingLevel")) {
@@ -604,10 +592,6 @@ void NormalJsonTranslator::normalJsonInit()
             if (m_transEngine == TransEngine::GenDict) {
                 m_systemPrompt = readPromptString("GENDICT_SYSTEM");
                 m_userPrompt = readPromptString("GENDICT_USER");
-                if (m_agentEnabled) {
-                    m_genDictReviewSystemPrompt = readPromptString("GENDICT_REVIEW_SYSTEM");
-                    m_genDictReviewUserPrompt = readPromptString("GENDICT_REVIEW_USER");
-                }
             }
             else {
                 std::string systemPromptKey;
@@ -620,12 +604,12 @@ void NormalJsonTranslator::normalJsonInit()
                     userPromptKey = "FORGALJSON_USER";
                     break;
                 case TransEngine::ForGalTsv:
-                    systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_USER" : "FORGALTSV_USER";
+                    systemPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORGALTSV_AGENT_ADVANCED_SYSTEM" : "FORGALTSV_AGENT_SYSTEM") : "FORGALTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORGALTSV_AGENT_ADVANCED_USER" : "FORGALTSV_AGENT_USER") : "FORGALTSV_USER";
                     break;
                 case TransEngine::ForNovelTsv:
-                    systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_USER" : "FORNOVELTSV_USER";
+                    systemPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORNOVELTSV_AGENT_ADVANCED_SYSTEM" : "FORNOVELTSV_AGENT_SYSTEM") : "FORNOVELTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORNOVELTSV_AGENT_ADVANCED_USER" : "FORNOVELTSV_AGENT_USER") : "FORNOVELTSV_USER";
                     break;
                 case TransEngine::Sakura:
                     systemPromptKey = "SAKURA_SYSTEM";

@@ -304,16 +304,8 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             preProcessFunc, m_onPerformApi, m_onDictProcessed,
             m_systemPrompt, m_userPrompt, m_apiStrategy, m_targetLang,
             m_threadsNum, m_inputBlockMaxLines, m_maxRequestCount, m_apiTimeOutMs, m_checkQuota, m_enhanceJailbreak,
-            m_agentEnabled,
-            m_projectDir,
             m_inputJsonMap,
-            relJsonPaths,
-            m_agentProjectNotePath,
-            m_genDictReviewSystemPrompt,
-            m_genDictReviewUserPrompt,
-            m_agentMaxTurnsPerChunk,
-            m_agentSearchResultLimit,
-            m_agentContextLinesLimit
+            relJsonPaths
         );
         return;
     }
@@ -518,6 +510,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 this->preProcess(se);
             }
         );
+        m_transAgent->configureAdvanced(m_agentAdvancedEnabled, m_threadsNum);
     }
 
     m_currentRunRelFilePaths = std::move(relFilePaths);

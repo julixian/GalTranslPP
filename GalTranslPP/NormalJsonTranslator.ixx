@@ -54,14 +54,11 @@ export
         std::string m_userPrompt;
         std::string m_agentSystemPrompt;
         std::string m_agentUserPrompt;
-        std::string m_genDictReviewSystemPrompt;
-        std::string m_genDictReviewUserPrompt;
         std::string m_targetLang;
 
         int m_threadsNum{};
         int m_nameTransBatchSize{};
         int m_batchSize{};
-        int m_contextHistorySize{};
         int m_inputBlockMaxLines{};
         int m_problemMaxLines{};
         int m_glossaryMaxLines{};
@@ -80,6 +77,7 @@ export
         bool m_outputWithSrc{};
         bool m_outputWithRefInfo{};
         bool m_agentEnabled{};
+        bool m_agentAdvancedEnabled{};
         bool m_reuseRepeatedBlocks{};
 
         std::string m_apiStrategy;

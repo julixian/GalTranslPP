@@ -78,7 +78,23 @@ export
         // 把提交阶段记录的跨文件 Agent 建议写入翻译缓存的 problems 字段。
         void applyAgentSuggestions();
 
+        void configureAdvanced(bool enabled, int workerCount);
+
     private:
+        struct TransAgentWorker {
+            std::optional<ApiAgentSession> session;
+            std::string rollingContext;
+        };
+
+        bool m_advancedEnabled = false;
+        std::vector<TransAgentWorker> m_workers;
+        json m_nativeTools = json::array();
+
+        bool translateAdvancedBatch(const fs::path& relInputPath, std::span<Sentence*> batch,
+            std::string& rollingContext, int threadId, int batchIndex);
+        // 原生和文本工具调用共用名称、参数与返回格式。
+        json runReadTool(const fs::path& relInputPath, const std::string& name, const json& arguments);
+
         struct TransAgentTurnResult {
             enum class Action {
                 ContinueTurn,
@@ -115,18 +131,18 @@ export
         std::string m_agentUserPrompt;
         std::string m_targetLang;
         std::string m_apiStrategy;
-        int m_maxRequestCount = 5;
-        int m_apiTimeOutMs = 120000;
-        int m_agentMaxTurnsPerChunk = 6;
-        int m_agentCompactContextThresholdBytes = 0;
-        int m_agentSearchResultLimit = 80;
-        int m_agentContextLinesLimit = 20;
-        int m_inputBlockMaxLines = 10;
-        int m_problemMaxLines = 3;
-        int m_glossaryMaxLines = 5;
-        bool m_smartRetry = true;
-        bool m_checkQuota = true;
-        bool m_enhanceJailbreak = false;
+        int m_maxRequestCount;
+        int m_apiTimeOutMs;
+        int m_agentMaxTurnsPerChunk;
+        int m_agentCompactContextThresholdBytes;
+        int m_agentSearchResultLimit;
+        int m_agentContextLinesLimit;
+        int m_inputBlockMaxLines;
+        int m_problemMaxLines;
+        int m_glossaryMaxLines;
+        bool m_smartRetry;
+        bool m_checkQuota;
+        bool m_enhanceJailbreak;
         std::shared_mutex& m_transCacheMutex;
         absl::flat_hash_map<fs::path, json>& m_savedTranslCacheMap;
         std::mutex m_stateMutex;
@@ -193,21 +209,6 @@ export
 
         // 读取目标文件的翻译缓存，以源句 id 为键供工具展示译文预览。
         absl::flat_hash_map<int, json> loadCacheDstMap(const fs::path& targetRelPath) const;
-
-        // 执行 read_lines，只读取当前运行前建立的源文件视图和翻译缓存。
-        json runReadLinesTool(const fs::path& relInputPath, const json& arguments);
-
-        // 执行 search_text，在当前文件、指定文件或全部已知文件里搜索源文。
-        json runSearchTextTool(const fs::path& relInputPath, const json& arguments) const;
-
-        // 执行 search_term，在翻译 Agent 的术语账本里搜索已记录术语。
-        json runSearchTermTool(const json& arguments);
-
-        // 执行 search_dictionary，在配置的 GPT 字典里搜索候选术语。
-        json runSearchDictionaryTool(const json& arguments);
-
-        // 执行 get_file_note，读取目标文件的 Agent 笔记。
-        json runGetFileNoteTool(const fs::path& relInputPath, const json& arguments);
 
         // 分发本轮模型请求的工具调用，并合并回填 JSON、摘要和调试明细。
         TransAgentToolCallResult executeToolCalls(

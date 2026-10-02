@@ -27,6 +27,7 @@ export
 
         std::optional<TranslationApi> getApi(const std::string& apiStrategy);
         std::optional<TranslationApi> getFirstApi();
+        bool containsApi(const TranslationApi& api);
 
         // 成功 resort 后返回将要使用的第一个 apikey
         std::optional<std::string> resortTokens();

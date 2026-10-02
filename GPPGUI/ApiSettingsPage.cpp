@@ -183,7 +183,6 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     const std::string model = toml::find_or(api, "modelName", "");
     const std::string protocol = toml::find_or(api, "protocol", "openai");
     const std::string thinkingLevel = toml::find_or(api, "thinkingLevel", "off");
-    const bool stream = toml::find_or(api, "stream", false);
     const bool useSystemProxy = toml::find_or(api, "useSystemProxy", true);
     const bool enable = toml::find_or(api, "enable", true);
     const bool extraHeadersEnable = toml::find_or(api, "extraHeadersEnable", false);
@@ -415,14 +414,6 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     thinkingConfigLayout->addWidget(thinkingComboBox);
     basicLayout->addWidget(thinkingConfigArea);
 
-    auto [streamConfigArea, streamConfigLayout] = createFormRow(basicPage);
-    streamConfigLayout->addWidget(new ElaText(tr("流式输出"), 16, streamConfigArea));
-    streamConfigLayout->addStretch();
-    ElaToggleSwitch* streamConfigSwitch = new ElaToggleSwitch(streamConfigArea);
-    streamConfigSwitch->setIsToggled(stream);
-    streamConfigLayout->addWidget(streamConfigSwitch);
-    basicLayout->addWidget(streamConfigArea);
-
     auto [systemProxyArea, systemProxyLayout] = createFormRow(basicPage);
     systemProxyLayout->addWidget(new ElaText(tr("使用系统代理"), 16, systemProxyArea));
     systemProxyLayout->addStretch();
@@ -433,6 +424,55 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     basicLayout->addStretch();
     tabWidget->addTab(basicTabPage.page, tr("基础设置"));
+
+    const ScrollableTabPage agentTabPage = createScrollablePage(tabWidget);
+    std::map<std::string, ElaToggleSwitch*> agentSwitches;
+    std::map<std::string, QWidget*> agentAreas;
+    const auto addAgentSwitch = [&](const std::string& key, const QString& title, const QString& description, bool defaultValue)
+        {
+            auto [area, layout] = createFormRow(agentTabPage.content);
+            layout->addWidget(new ElaDoubleText(title, 16, description, 10, "", area));
+            layout->addStretch();
+            ElaToggleSwitch* toggle = new ElaToggleSwitch(area);
+            toggle->setIsToggled(toml::find_or(api, key, defaultValue));
+            layout->addWidget(toggle);
+            agentTabPage.layout->addWidget(area);
+            agentSwitches[key] = toggle;
+            agentAreas[key] = area;
+        };
+    agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 14, agentTabPage.content));
+    addAgentSwitch("agentStrictTools", tr("严格工具参数"), tr("为 OpenAI 和 Claude 启用严格工具参数 schema"), true);
+    addAgentSwitch("agentStateful", tr("服务端会话续接"), tr("使用 previous_response_id 或 previous_interaction_id，启用服务端存储"), true);
+    addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"), tr("Responses 使用原生自动压缩；Claude 使用 compact beta 接口，模型和中转需支持"), false);
+    auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
+    agentCompactTokensLayout->addWidget(new ElaDoubleText(tr("原生自动压缩 token 阈值"), 16,
+        tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10, "", agentCompactTokensArea));
+    agentCompactTokensLayout->addStretch();
+    ElaSpinBox* agentCompactTokensSpinBox = new ElaSpinBox(agentCompactTokensArea);
+    agentCompactTokensSpinBox->setRange(0, 1000000000);
+    agentCompactTokensSpinBox->setFixedWidth(180);
+    agentCompactTokensSpinBox->setValue(toml::find_or(api, "agentCompactThresholdTokens", 0));
+    agentCompactTokensLayout->addWidget(agentCompactTokensSpinBox);
+    agentTabPage.layout->addWidget(agentCompactTokensArea);
+    addAgentSwitch("agentGeminiInteractions", tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), true);
+    const auto updateAgentAreas = [=]()
+        {
+            const QString currentProtocol = protocolComboBox->currentText();
+            const bool gemini = currentProtocol == "gemini";
+            const bool responses = currentProtocol == "openaires";
+            agentAreas.at("agentStrictTools")->setVisible(!gemini);
+            agentAreas.at("agentGeminiInteractions")->setVisible(gemini);
+            agentAreas.at("agentStateful")->setVisible(responses || (gemini && agentSwitches.at("agentGeminiInteractions")->getIsToggled()));
+            agentAreas.at("agentNativeAutoCompaction")->setVisible(responses || currentProtocol == "claude");
+            agentCompactTokensArea->setVisible(responses || currentProtocol == "claude");
+            agentCompactTokensSpinBox->setEnabled(agentSwitches.at("agentNativeAutoCompaction")->getIsToggled());
+        };
+    connect(protocolComboBox, &QComboBox::currentTextChanged, configWidget, [=](const QString&) { updateAgentAreas(); });
+    connect(agentSwitches.at("agentGeminiInteractions"), &ElaToggleSwitch::toggled, configWidget, [=](bool) { updateAgentAreas(); });
+    connect(agentSwitches.at("agentNativeAutoCompaction"), &ElaToggleSwitch::toggled, configWidget, [=](bool) { updateAgentAreas(); });
+    updateAgentAreas();
+    agentTabPage.layout->addStretch();
+    tabWidget->addTab(agentTabPage.page, tr("高级 Agent"));
 
     const ScrollableTabPage advancedTabPage = createScrollablePage(tabWidget);
     QWidget* advancedPage = advancedTabPage.content;
@@ -688,7 +728,6 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             api_.apiurl = cvt2StdApiUrl(url_.toStdString(), api_.protocol);
             api_.modelName = modelName.toStdString();
             api_.thinkingLevel = thinkingComboBox->currentData().toString().toStdString();
-            api_.stream = streamConfigSwitch->getIsToggled();
             api_.useSystemProxy = systemProxySwitch->getIsToggled();
             if (temperatureCheckBox->isChecked()) {
                 api_.temperature = temperatureSlider->value();
@@ -867,10 +906,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             apiTable.insert({ "apikeys", apiKeysArray });
             apiTable.insert({ "apiurl", urlEdit->text().toStdString() });
             apiTable.insert({ "modelName", modelEdit->text().toStdString() });
-            apiTable.insert({ "stream", streamConfigSwitch->getIsToggled() });
             apiTable.insert({ "useSystemProxy", systemProxySwitch->getIsToggled() });
             apiTable.insert({ "enable", enableCheckBox->isChecked() });
             apiTable.insert({ "thinkingLevel", thinkingComboBox->currentData().toString().toStdString() });
+            for (const auto& [key, toggle] : agentSwitches) apiTable.insert({key, toggle->getIsToggled()});
+            apiTable.insert({"agentCompactThresholdTokens", agentCompactTokensSpinBox->value()});
             if (temperatureCheckBox->isChecked()) {
                 apiTable.insert({ "temperature", temperatureSlider->value() });
             }

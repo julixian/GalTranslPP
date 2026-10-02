@@ -208,7 +208,7 @@ void CommonSettingsPage::setupUi()
 	agentSettingsDrawerArea->setDrawerHeader(agentEnabledArea);
 	QHBoxLayout* agentEnabledLayout = new QHBoxLayout(agentEnabledArea);
 	ElaDoubleText* agentEnabledText = new ElaDoubleText(tr("Agent 模式"), 16,
-		tr("当前仅 ForGalTsv、ForNovelTsv、GenDict 会实际启用"), 10,
+		tr("当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项"), 10,
 		tr("让模型可以调用一定的工具以获取更多上下文"), agentEnabledArea);
 	agentEnabledLayout->addWidget(agentEnabledText);
 	agentEnabledLayout->addStretch();
@@ -216,6 +216,17 @@ void CommonSettingsPage::setupUi()
 	agentEnabledToggle->setIsToggled(agentEnabled);
 	agentEnabledLayout->addWidget(agentEnabledToggle);
 	mainLayout->addWidget(agentSettingsDrawerArea);
+
+	ElaScrollPageArea* agentAdvancedArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentAdvancedLayout = new QHBoxLayout(agentAdvancedArea);
+	agentAdvancedLayout->addWidget(new ElaDoubleText(tr("高级 Agent"), 16,
+		tr("为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议"), 10,
+		tr("各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错"), agentAdvancedArea));
+	agentAdvancedLayout->addStretch();
+	ElaToggleSwitch* agentAdvancedToggle = new ElaToggleSwitch(agentAdvancedArea);
+	agentAdvancedToggle->setIsToggled(toml::find_or(m_projectConfig, "common", "agent", "advancedEnabled", false));
+	agentAdvancedLayout->addWidget(agentAdvancedToggle);
+	agentSettingsDrawerArea->addDrawer(agentAdvancedArea);
 
 	const int agentMaxTurnsPerChunk = toml::find_or(m_projectConfig, "common", "agent", "maxTurnsPerChunk", 20);
 	ElaScrollPageArea* agentMaxTurnsArea = new ElaScrollPageArea(agentSettingsDrawerArea);
@@ -234,7 +245,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* agentCompactThresholdArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
 	ElaDoubleText* agentCompactThresholdText = new ElaDoubleText(tr("压缩上下文阈值"), 16,
-		tr("Agent 消息上下文超过该字节数后触发压缩"), 10, tr("单位为字节"), agentCompactThresholdArea);
+		tr("未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话"), 10, tr("单位为字节"), agentCompactThresholdArea);
 	agentCompactThresholdLayout->addWidget(agentCompactThresholdText);
 	agentCompactThresholdLayout->addStretch();
 	ElaSpinBox* agentCompactThresholdSpinBox = new ElaSpinBox(agentCompactThresholdArea);
@@ -274,7 +285,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* agentProjectNotePathArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentProjectNotePathLayout = new QHBoxLayout(agentProjectNotePathArea);
 	ElaDoubleText* agentProjectNotePathText = new ElaDoubleText(tr("ProjectNote 路径"), 16,
-		tr("Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词"), 10,
+		tr("Agent 可选读取的项目说明文件，需自己加 `read_project_note()` 的工具提示词"), 10,
 		"", agentProjectNotePathArea);
 	agentProjectNotePathLayout->addWidget(agentProjectNotePathText);
 	agentProjectNotePathLayout->addStretch();
@@ -316,20 +327,6 @@ void CommonSettingsPage::setupUi()
 	requestSpinBox->setValue(maxRequestCount);
 	maxRequestLayout->addWidget(requestSpinBox);
 	mainLayout->addWidget(maxRequestArea);
-
-	// 携带上文数量
-	int contextNum = toml::find_or(m_projectConfig, "common", "contextHistorySize", 0);
-	ElaScrollPageArea* contextNumArea = new ElaScrollPageArea(mainWidget);
-	QHBoxLayout* contextNumLayout = new QHBoxLayout(contextNumArea);
-	ElaDoubleText* contextNumText = new ElaDoubleText(tr("携带上文数量"), 16,
-		tr("对现代模型而言意义不大了，推荐值 ≤ 10"), 10, "", contextNumArea);
-	contextNumLayout->addWidget(contextNumText);
-	contextNumLayout->addStretch();
-	ElaSpinBox* contextNumSpinBox = new ElaSpinBox(contextNumArea);
-	contextNumSpinBox->setRange(0, 9999);
-	contextNumSpinBox->setValue(contextNum);
-	contextNumLayout->addWidget(contextNumSpinBox);
-	mainLayout->addWidget(contextNumArea);
 
 	// 智能重试
 	bool useSmartRetry = toml::find_or(m_projectConfig, "common", "smartRetry", false);
@@ -377,7 +374,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* retransAllWhenFailArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* retransAllWhenFailLayout = new QHBoxLayout(retransAllWhenFailArea);
 	ElaDoubleText* retransAllWhenFailText = new ElaDoubleText(tr("解析不完整时重翻整段"), 16,
-		tr("不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错"), 10,
+		tr("不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错，在 Agent 模式下无效"), 10,
 		tr("默认关闭以节省token/防止因模型截断造成无限循环"), retransAllWhenFailArea);
 	retransAllWhenFailLayout->addWidget(retransAllWhenFailText);
 	retransAllWhenFailLayout->addStretch();
@@ -665,6 +662,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.repeatedBlock.minSize", repeatedBlockMinSizeSpinBox->value());
 			insertToml(m_projectConfig, "GUIConfig.commonRepeatedBlockExpanded", repeatedBlockDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.agent.enabled", agentEnabledToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.agent.advancedEnabled", agentAdvancedToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.maxTurnsPerChunk", agentMaxTurnsSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.compactContextThresholdBytes", agentCompactThresholdSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.searchResultLimit", agentSearchResultLimitSpinBox->value());
@@ -673,7 +671,6 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "GUIConfig.commonAgentSettingsExpanded", agentSettingsDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.saveCacheInterval", cacheSaveIntervalSpinBox->value());
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
-			insertToml(m_projectConfig, "common.contextHistorySize", contextNumSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());

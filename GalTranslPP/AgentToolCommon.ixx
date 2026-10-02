@@ -40,13 +40,7 @@ export
     // 把工具返回数量限制夹到有效范围内，且不超过配置上限。
     int sanitizeAgentCommonToolLimit(int requested, int maxLimit);
 
-    // 把上下文行数限制夹到配置上限内；配置为 0 时允许返回 0。
-    int sanitizeAgentCommonContextLines(int requested, int maxLimit);
-
-    // 从工具参数中收集 query 或 queries 字段。
-    std::vector<std::string> collectAgentCommonToolQueries(const json& arguments);
-
-    // 执行翻译和审校 Agent 共用的 list_files 工具。
+    // 执行 TransAgent 的 list_files 工具。
     json runAgentCommonListFilesTool(
         const std::vector<fs::path>& relFiles,
         const std::function<std::optional<int>(const fs::path&)>& getFileLineCount,
@@ -54,22 +48,11 @@ export
         const json& arguments
     );
 
-    // 执行翻译和审校 Agent 共用的 get_project_note 工具。
+    // 读取 TransAgent 配置的项目备注。
     json runAgentCommonGetProjectNoteTool(
         const fs::path& projectDir,
         const std::optional<fs::path>& projectNotePath,
         const json& arguments
     );
 
-    // 执行翻译和审校 Agent 共用的 search_text 搜索原语。
-    json runAgentCommonSourceSearchTextTool(
-        const fs::path& currentFile,
-        const std::vector<fs::path>& relFiles,
-        const std::function<const AgentCommonSourceFileView*(const fs::path&)>& findSourceFile,
-        int searchResultLimit,
-        int contextLinesLimit,
-        bool requireQuery,
-        const std::string& invalidScopeErrorMessage,
-        const json& arguments
-    );
 }

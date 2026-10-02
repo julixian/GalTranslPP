@@ -251,7 +251,7 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
     // 提示词转化
     if (api.protocol == ApiProtocol::Claude) {
         // 3.5 系列的输出上限为 8192；其余模型默认给 16384，仍可由 extraBody 覆盖。
-        payload["max_tokens"] = claude35 ? 8192 : 16384;
+        if (!payload.contains("max_tokens")) payload["max_tokens"] = claude35 ? 8192 : 16384;
         json systemBlocks = json::array();
         auto& messages = payload.at("messages");
         for (auto message = messages.begin(); message != messages.end();) {
@@ -273,12 +273,27 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
             payload["system"] = std::move(systemBlocks);
         }
     }
-    else if (api.protocol == ApiProtocol::OpenAIRes) {
+    
+    if (api.protocol == ApiProtocol::OpenAIRes && payload.contains("messages")) {
         payload["input"] = std::move(payload.at("messages"));
         payload.erase("messages");
         payload["store"] = false;
     }
 
+    if (api.protocol == ApiProtocol::Gemini && payload.contains("messages")) {
+        payload["contents"] = json::array();
+        for (const auto& message : payload.at("messages")) {
+            if (message.at("role") == "system") {
+                payload["systemInstruction"] = {{"parts", json::array({{{"text", message.at("content")}}})}};
+            }
+            else {
+                payload["contents"].push_back({{"role", message.at("role") == "assistant" ? "model" : "user"},
+                    {"parts", json::array({{{"text", message.at("content")}}})}});
+            }
+        }
+        payload.erase("messages");
+    }
+    
     payload["model"] = api.modelName;
     if (api.temperature.has_value()) {
         payload["temperature"] = api.temperature.value();
@@ -291,9 +306,6 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
     }
     if (api.protocol != ApiProtocol::OpenAIRes && api.presencePenalty.has_value()) {
         payload["presence_penalty"] = api.presencePenalty.value();
-    }
-    if (api.stream) {
-        payload["stream"] = true;
     }
 
     // off 或空字符串表示不传递思考参数，使用接口默认行为；none 则请求关闭或最低强度。
@@ -432,6 +444,18 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         }
     }
 
+    if (api.protocol == ApiProtocol::Gemini) {
+        payload.erase("model");
+        const std::array<std::pair<std::string, std::string>, 4> keys = {{{"temperature", "temperature"},
+            {"top_p", "topP"}, {"frequency_penalty", "frequencyPenalty"}, {"presence_penalty", "presencePenalty"}}};
+        for (const auto& [key, nativeKey] : keys) {
+            if (payload.contains(key)) {
+                payload["generationConfig"][nativeKey] = std::move(payload.at(key));
+                payload.erase(key);
+            }
+        }
+    }
+
     // extraBody 覆盖
     if (api.extraBody.is_object()) {
         for (auto it = api.extraBody.cbegin(); it != api.extraBody.cend(); ++it) {
@@ -480,29 +504,17 @@ cpr::Proxies makeSystemProxies(const std::shared_ptr<spdlog::logger>& logger = n
     return cpr::Proxies{};
 }
 
-std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol protocol, bool stream = false)
+std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol protocol)
 {
     switch (protocol)
     {
     case ApiProtocol::OpenAIRes:
     {
-        const std::string type = parsed.value("type", "");
         const std::string status = parsed.value("status", "");
         if ((parsed.contains("error") && !parsed["error"].is_null()) ||
-            type == "error" || type == "response.failed" || type == "response.incomplete" ||
             status == "failed" || status == "incomplete")
         {
             return std::nullopt;
-        }
-        if (stream) {
-            // 流没有 text 输出可能只是在输出其它东西
-            if (type == "response.completed") {
-                return parseApiContent(parsed.at("response"), protocol);
-            }
-            if (type == "response.output_text.delta") {
-                return parsed.at("delta").get<std::string>();
-            }
-            return std::string{};
         }
         std::optional<std::string> content;
         for (const auto& item : parsed.at("output")) {
@@ -525,14 +537,6 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
 
     case ApiProtocol::Claude:
     {
-        if (stream) {
-            const std::string type = parsed.value("type", "");
-            if (type == "content_block_delta" && parsed.at("delta").value("type", "") == "text_delta")
-            {
-                return parsed.at("delta").at("text").get<std::string>();
-            }
-            return std::string{};
-        }
         std::optional<std::string> content;
         for (const auto& block : parsed.at("content")) {
             if (block.contains("text")) {
@@ -549,15 +553,10 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
 
     case ApiProtocol::Gemini:
     {
-        if (stream && (!parsed.contains("candidates") || parsed["candidates"].empty() ||
-            !parsed["candidates"].at(0).contains("content")))
-        {
-            return std::string{};
-        }
         std::optional<std::string> content;
         for (const auto& part : parsed.at("candidates").at(0).at("content").at("parts"))
         {
-            if (part.contains("text")) {
+            if (part.contains("text") && !part.value("thought", false)) {
                 if (content.has_value()) {
                     content.value() += part.at("text").get<std::string>();
                 }
@@ -571,17 +570,6 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
 
     case ApiProtocol::OpenAI:
     default:
-        if (stream) {
-            const auto& choices = parsed.at("choices");
-            if (choices.empty()) {
-                return std::string{};
-            }
-            const auto& delta = choices.at(0).at("delta");
-            if (!delta.contains("content") || delta["content"].is_null()) {
-                return std::string{};
-            }
-            return delta.at("content").get<std::string>();
-        }
         return parsed.at("choices").at(0).at("message").at("content").get<std::string>();
     }
 }
@@ -644,128 +632,31 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
 
 
 
+// 所有协议共用非流式传输；插件返回的最终请求体直接发送，不再二次检查。
+ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationApi& api, const std::string& requestUrl,
+    const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs)
+{
+    const cpr::Response response = cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, makeApiHeaders(api),
+        cpr::Timeout{ apiTimeOutMs }, api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{},
+        cpr::ProgressCallback{ [controller](cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, intptr_t)
+            { return !controller || !controller->shouldStop(); } });
+    if (response.status_code != 200 || response.error.code != cpr::ErrorCode::OK || response.text.empty()) {
+        return { std::unexpected(response.text.empty() ? response.error.message : response.text), response.status_code };
+    }
+    return { response.text, response.status_code };
+}
+
 ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& api,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
     int apiTimeOutMs, bool onlyReturnParsedContent)
 {
-    const std::string requestUrl = cvt2RequestApiUrl(api);
-    const cpr::Header headers = makeApiHeaders(api);
-    const cpr::Proxies proxies = api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{};
-
-    std::expected<std::string, std::string> content = std::string{};
-
-    std::string rawBody;
-    std::string sseBuffer;
-    std::string eventData;
-
-    auto consumeEventFunc = [&]()
-        {
-            if (eventData.empty()) {
-                return;
-            }
-            if (content.has_value() && eventData != "[DONE]") {
-                try {
-                    const json chunk = json::parse(eventData);
-                    std::optional<std::string> parsed = parseApiContent(chunk, api.protocol, true);
-                    if (!parsed) {
-                        content = std::unexpected(rawBody);
-                    }
-                    else if (api.protocol == ApiProtocol::OpenAIRes && chunk.value("type", "") == "response.completed") {
-                        content = std::move(parsed.value());
-                    }
-                    else {
-                        content.value() += parsed.value();
-                    }
-                }
-                catch (...) {
-                    content = std::unexpected(rawBody);
-                }
-            }
-            eventData.clear();
-        };
-    auto consumeLineFunc = [&](std::string_view line)
-        {
-            if (line.ends_with('\r')) {
-                line.remove_suffix(1);
-            }
-            if (line.empty()) {
-                consumeEventFunc();
-            }
-            else if (line.starts_with("data:")) {
-                line.remove_prefix(5);
-                if (line.starts_with(' ')) {
-                    line.remove_prefix(1);
-                }
-                if (!eventData.empty()) {
-                    eventData += '\n';
-                }
-                eventData.append(line);
-            }
-        };
-    auto callbackFunc = [&](std::string_view data, intptr_t)
-        {
-            // 流式消息一般每个 data 返回 data: { "xxx": xxx, ... } \n\n
-            // 结束返回 [Done]
-            rawBody.append(data);
-            sseBuffer.append(data);
-            size_t pos;
-            while ((pos = sseBuffer.find('\n')) != std::string::npos) {
-                consumeLineFunc(std::string_view(sseBuffer).substr(0, pos));
-                sseBuffer.erase(0, pos + 1);
-            }
-            return !controller || !controller->shouldStop();
-        };
-
-    const cpr::Response response = api.stream
-        ? cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, headers,
-            cpr::Timeout{ apiTimeOutMs }, cpr::WriteCallback{ callbackFunc }, proxies)
-        : cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, headers,
-            cpr::Timeout{ apiTimeOutMs }, proxies);
-
-    // status_code != 200，error.code != cpr::ErrorCode::OK，空流/空response.text 都视为一种错误
-    if (response.status_code != 200) {
-        return { std::unexpected(rawBody.empty()
-            ? (response.text.empty() ? response.error.message : response.text) : rawBody), response.status_code };
+    ApiResponse response = sendApiHttpRequest(payloadStr, api, cvt2RequestApiUrl(api), controller, logger, apiTimeOutMs);
+    if (!response.content) return response;
+    auto content = extractApiResponseContent(*response.content, api.protocol);
+    if (content && !onlyReturnParsedContent) {
+        content = *response.content + "\n\n" + gppTr("sendApiRequest", "最终解析出的回复为:").toStdString() + "\n" + *content;
     }
-    if (response.error.code != cpr::ErrorCode::OK) {
-        return { std::unexpected(response.error.message), response.status_code };
-    }
-    if (api.stream) {
-        consumeLineFunc(sseBuffer);
-        consumeEventFunc();
-        if (content.has_value()) {
-            if (!content.value().empty()) {
-                if (!onlyReturnParsedContent) {
-                    content = rawBody + "\n\n" + gppTr("sendApiRequest", "最终解析出的回复为:").toStdString()
-                        + "\n" + content.value();
-                }
-            }
-            else {
-                content = std::unexpected(gppTr("sendApiRequest", "响应为空").toStdString());
-            }
-        }
-    }
-    else {
-        if (!response.text.empty()) {
-            if (onlyReturnParsedContent) {
-                content = extractApiResponseContent(response.text, api.protocol);
-            }
-            else {
-                std::expected<std::string, std::string> extracted = extractApiResponseContent(response.text, api.protocol);
-                if (extracted) {
-                    content = response.text + "\n\n" + gppTr("sendApiRequest", "最终解析出的回复为:").toStdString()
-                        + "\n" + extracted.value();
-                }
-                else {
-                    content = std::move(extracted);
-                }
-            }
-        }
-        else {
-            content = std::unexpected(gppTr("sendApiRequest", "响应为空").toStdString());
-        }
-    }
-    return { std::move(content), response.status_code };
+    return { std::move(content), response.statusCode };
 }
 
 ApiResponse performApiRequest(json& payload, const TranslationApi& api, const std::function<std::string(std::string_view)>& onPerformApi,

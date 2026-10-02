@@ -11,15 +11,10 @@ AgentCommonSourceFileView buildAgentCommonSourceFileViewFromSentences(const std:
     fileView.lines.reserve(sentences.size());
     for (const Sentence& se : sentences) {
         const std::string speaker = getNameString(se);
-        const std::string sourceTextLower = str2Lower(se.preproc);
         fileView.lines.push_back({
             .id = se.index,
             .speaker = speaker,
-            .sourceText = se.preproc,
-            .sourceTextLower = sourceTextLower,
-            .sourceTextWithSpeakerLower = speaker.empty()
-                ? sourceTextLower
-                : str2Lower(speaker + "\n" + se.preproc)
+            .sourceText = se.preproc
         });
     }
     return fileView;
@@ -54,21 +49,4 @@ AgentCommonSourceFileView buildAgentCommonSourceFileViewFromJson(
         preProcessFunc(&se);
     }
     return buildAgentCommonSourceFileViewFromSentences(sentences);
-}
-
-json buildAgentCommonSourceNearbyLines(const std::vector<AgentCommonSourceLineView>& lines, int matchIndex, int contextLines) {
-    json nearbyLines = json::array();
-    const int start = std::max(0, matchIndex - contextLines);
-    const int end = std::min((int)lines.size() - 1, matchIndex + contextLines);
-    for (int i = start; i <= end; ++i) {
-        if (i != matchIndex) {
-            const auto& line = lines[i];
-            nearbyLines.push_back(json{
-            {"id", line.id},
-            {"speaker", line.speaker},
-            {"message", line.sourceText},
-            });
-        }
-    }
-    return nearbyLines;
 }

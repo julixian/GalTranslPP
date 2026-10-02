@@ -106,7 +106,6 @@ export
     std::string generateCacheKey(const Sentence& s);
     std::string generateCacheKey(const json& jsonArr, size_t i);
 
-    std::string buildContextHistory(std::span<Sentence*> batch, TransEngine transEngine, int contextHistorySize, int maxChars);
     std::string limitLogLines(std::string_view text, int maxLines, std::string_view tail = ".........");
     void fillBlockAndMap(
         std::span<Sentence*> batchToTransThisRound,

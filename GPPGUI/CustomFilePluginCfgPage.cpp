@@ -13,6 +13,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
 	: BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {

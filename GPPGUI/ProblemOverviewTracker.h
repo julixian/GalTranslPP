@@ -1,5 +1,4 @@
-#ifndef PROBLEMOVERVIEWTRACKER_H
-#define PROBLEMOVERVIEWTRACKER_H
+#pragma once
 
 #include <QDateTime>
 #include <QFileInfo>
@@ -73,5 +72,3 @@ namespace ProblemOverviewTracker
         return fs::equivalent(path, overviewPath(projectDir, projectConfig), error) && !error;
     }
 }
-
-#endif

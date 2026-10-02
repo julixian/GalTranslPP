@@ -22,6 +22,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 CommonSettingsPage::CommonSettingsPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("一般设置"));

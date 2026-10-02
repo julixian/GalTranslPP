@@ -19,6 +19,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
     BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig)
 {

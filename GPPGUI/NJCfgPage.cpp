@@ -9,6 +9,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("NormalJson 输出配置"));

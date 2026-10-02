@@ -6,6 +6,8 @@ module AgentCommonSourceView;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 AgentCommonSourceFileView buildAgentCommonSourceFileViewFromSentences(const std::vector<Sentence>& sentences) {
     AgentCommonSourceFileView fileView;
     fileView.lines.reserve(sentences.size());
@@ -50,3 +52,5 @@ AgentCommonSourceFileView buildAgentCommonSourceFileViewFromJson(
     }
     return buildAgentCommonSourceFileViewFromSentences(sentences);
 }
+
+NAMESPACE_END(gpp)

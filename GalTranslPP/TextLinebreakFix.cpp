@@ -7,6 +7,8 @@ module TextLinebreakFix;
 import NLPTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 static absl::btree_set<std::string_view> excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" };;
@@ -40,7 +42,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				}
 				return ret;
 			}();
-		const auto pluginConfig = toml::uparse(pluginConfigPath);
+		const auto pluginConfig = gpp::uparse(pluginConfigPath);
 
 		const std::string linebreakMode = parseToml<std::string>(projectConfig, pluginConfig,
 			"plugins.TextLinebreakFix.linebreakMode", reversePriority);
@@ -175,14 +177,14 @@ std::vector<std::string_view> TextLinebreakFix::splitIntoTokenViews(std::string_
 	{
 		std::shared_lock<std::shared_mutex> lock(m_tokenizeCacheMapMutex);
 		if (const auto it = m_tokenizeCacheMap.find(str); it != m_tokenizeCacheMap.end()) {
-			return ::splitIntoTokenViews(it->second, str);
+			return gpp::splitIntoTokenViews(it->second, str);
 		}
 	}
 
 	NLPResult result = m_tokenizeTargetLangFunc(str);
 	WordPosVec& wordPosVec = std::get<0>(result);
 
-	std::vector<std::string_view> ret = ::splitIntoTokenViews(wordPosVec, str);
+	std::vector<std::string_view> ret = gpp::splitIntoTokenViews(wordPosVec, str);
 	{
 		std::lock_guard<std::shared_mutex> lock(m_tokenizeCacheMapMutex);
 		m_tokenizeCacheMap.insert({ std::string(str), std::move(wordPosVec) });
@@ -521,3 +523,5 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 	    .arg(newLinebreakCount + 1)
 	    .toStdString());
 }
+
+NAMESPACE_END(gpp)

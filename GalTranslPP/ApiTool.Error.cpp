@@ -6,6 +6,8 @@ module ApiTool;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 ApiError makeApiError(ApiErrorType type, std::string detail, std::string rawResponse, long statusCode)
 {
     // 只对已失败的请求推断服务端错误；明确的拒答、截断和解析错误不再按正文关键词分类。
@@ -124,3 +126,5 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
         return std::unexpected(makeApiError(ApiErrorType::ResponseParse, e.what(), rawResponse));
     }
 }
+
+NAMESPACE_END(gpp)

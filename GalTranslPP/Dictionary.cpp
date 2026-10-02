@@ -7,6 +7,8 @@ module Dictionary;
 import ConditionTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 // GPT
@@ -127,7 +129,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
     int count = 0;
 
     try {
-        const auto dictData = toml::uparse(filePath);
+        const auto dictData = gpp::uparse(filePath);
         if (!dictData.contains("gptDict")) {
             return;
         }
@@ -286,7 +288,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
     int count = 0;
     try {
-        const auto dictData = toml::uparse(filePath);
+        const auto dictData = gpp::uparse(filePath);
         if (!dictData.contains("normalDict")) {
             return;
         }
@@ -393,3 +395,5 @@ std::string NormalDictionary::doReplace(Sentence* sentence, CachePart targetToMo
 
     return textToModify;
 }
+
+NAMESPACE_END(gpp)

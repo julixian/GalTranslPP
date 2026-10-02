@@ -1,5 +1,4 @@
-#ifndef DICTSETTINGSPAGE_H
-#define DICTSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "GptDictModel.h"
@@ -33,5 +32,3 @@ private:
     QList<GuiNormalDictEntry> m_withdrawPreList;
     QList<GuiNormalDictEntry> m_withdrawPostList;
 };
-
-#endif

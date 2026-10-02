@@ -18,6 +18,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("Epub 输出配置"));

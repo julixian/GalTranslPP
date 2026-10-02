@@ -1,5 +1,4 @@
-#ifndef TREESITTERHIGHLIGHTER_H
-#define TREESITTERHIGHLIGHTER_H
+#pragma once
 
 #include <QHash>
 #include <QSyntaxHighlighter>
@@ -62,5 +61,3 @@ private:
 };
 
 void installTreeSitterHighlighter(QTextDocument* document, SyntaxLanguage language);
-
-#endif

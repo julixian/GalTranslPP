@@ -17,6 +17,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectConfig(projectConfig), m_projectDir(projectDir)
 {
@@ -25,7 +27,7 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 
 	if (fs::exists(m_projectDir / L"Prompt.toml")) {
 		try {
-			m_promptConfig = toml::uoparse(m_projectDir / L"Prompt.toml");
+			m_promptConfig = gpp::uoparse(m_projectDir / L"Prompt.toml");
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"),
@@ -35,7 +37,7 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 	}
 	else if (fs::exists(defaultPromptPath)) {
 		try {
-			m_promptConfig = toml::uoparse(defaultPromptPath);
+			m_promptConfig = gpp::uoparse(defaultPromptPath);
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词文件不符合 toml 规范"), 3000);

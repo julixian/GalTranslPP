@@ -1,5 +1,4 @@
-#ifndef TRANSLATORWORKER_H
-#define TRANSLATORWORKER_H
+#pragma once
 
 #include <QObject>
 #include <QStringList>
@@ -72,5 +71,3 @@ private:
     fs::path m_projectDir;
     bool m_shouldStop = false;
 };
-
-#endif

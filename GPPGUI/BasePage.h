@@ -1,5 +1,4 @@
-#ifndef BASEPAGE_H
-#define BASEPAGE_H
+#pragma once
 
 #include "ElaScrollPage.h"
 #include <functional>
@@ -17,5 +16,3 @@ public Q_SLOTS:
 protected:
     std::function<void()> m_applyFunc;
 };
-
-#endif

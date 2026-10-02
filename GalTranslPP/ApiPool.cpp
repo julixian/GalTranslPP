@@ -7,12 +7,14 @@ module ApiPool;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-ApiPool::ApiPool(const std::shared_ptr<spdlog::logger>& logger) 
-    : m_logger(logger),  m_gen(std::make_unique<std::mt19937>(std::random_device{}())) 
+ApiPool::ApiPool(const std::shared_ptr<spdlog::logger>& logger)
+    : m_logger(logger),  m_gen(std::make_unique<std::mt19937>(std::random_device{}()))
 {
-	
+
 }
 
 void ApiPool::loadApis(const std::vector<TranslationApi>& apis) {
@@ -160,3 +162,5 @@ void handleApiError(const ApiError& error, const std::unique_ptr<ApiPool>& apiPo
     }
     if (!controller->shouldStop()) std::this_thread::sleep_for(std::chrono::seconds(sleepSeconds));
 }
+
+NAMESPACE_END(gpp)

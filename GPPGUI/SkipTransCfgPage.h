@@ -1,5 +1,4 @@
-#ifndef SKIPTRANSCFGPAGE_H
-#define SKIPTRANSCFGPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -18,5 +17,3 @@ private:
     toml::ordered_value& m_projectConfig;
 	ElaWidget* m_hKeysWidget = nullptr;
 };
-
-#endif

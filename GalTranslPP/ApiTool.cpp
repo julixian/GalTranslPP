@@ -11,6 +11,8 @@ module ApiTool;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 ApiProtocol parseApiProtocol(std::string_view protocol)
 {
     std::string normalized(protocol);
@@ -273,7 +275,7 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
             payload["system"] = std::move(systemBlocks);
         }
     }
-    
+
     if (api.protocol == ApiProtocol::OpenAIRes && payload.contains("messages")) {
         payload["input"] = std::move(payload.at("messages"));
         payload.erase("messages");
@@ -293,7 +295,7 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         }
         payload.erase("messages");
     }
-    
+
     payload["model"] = api.modelName;
     if (api.temperature.has_value()) {
         payload["temperature"] = api.temperature.value();
@@ -716,3 +718,5 @@ ApiTestResponse testApiConnection(const TranslationApi& api, int apiTimeOutMs)
     result.content = response.content;
     return result;
 }
+
+NAMESPACE_END(gpp)

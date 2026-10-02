@@ -24,8 +24,9 @@ import boost;
 import ITranslator;
 import utf8cpp;
 
-namespace fs = std::filesystem;
+NAMESPACE_BEGIN(gpp)
 
+namespace fs = std::filesystem;
 
 #ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
@@ -1009,17 +1010,14 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 
 
 
-namespace toml
-{
-    ::toml::value uparse(const fs::path& path) {
-        std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse(ifs, wide2Ascii(path));
-    }
+::toml::value uparse(const fs::path& path) {
+    std::ifstream ifs(path, std::ios::binary);
+    return ::toml::parse(ifs, wide2Ascii(path));
+}
 
-    ::toml::ordered_value uoparse(const fs::path& path) {
-        std::ifstream ifs(path, std::ios::binary);
-        return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
-    }
+::toml::ordered_value uoparse(const fs::path& path) {
+    std::ifstream ifs(path, std::ios::binary);
+    return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
 }
 
 
@@ -1157,3 +1155,5 @@ int compareVersion(std::string_view latestVer, std::string_view currentVer)
     }
     return 0;
 }
+
+NAMESPACE_END(gpp)

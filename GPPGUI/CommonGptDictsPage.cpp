@@ -26,6 +26,8 @@
 #include "TreeSitterHighlighter.h"
 
 import Tool;
+
+using namespace gpp;
 namespace fs = std::filesystem;
 
 CommonGptDictsPage::CommonGptDictsPage(toml::ordered_value& globalConfig, QWidget* parent) :

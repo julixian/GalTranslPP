@@ -1,5 +1,4 @@
-#ifndef DICTEXSETTINGSPAGE_H
-#define DICTEXSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -22,5 +21,3 @@ private:
 
     std::function<void()> m_refreshCommonDictsListFunc;
 };
-
-#endif

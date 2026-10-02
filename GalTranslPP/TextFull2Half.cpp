@@ -9,6 +9,8 @@ module TextFull2Half;
 import Tool;
 import utf8cpp;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
@@ -28,7 +30,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
                 }
                 return ret;
             }();
-        const auto pluginConfig = toml::uparse(pluginConfigPath);
+        const auto pluginConfig = gpp::uparse(pluginConfigPath);
 
         m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.replacePunctuation", reversePriority);
         m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.reverseConversion", reversePriority);
@@ -45,7 +47,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
             }
         }
 
-        const auto notConvertRegStrs = 
+        const auto notConvertRegStrs =
             parseToml<std::vector<std::string>>(projectConfig, pluginConfig, "plugins.TextFull2Half.notConvertRegs", reversePriority);
         for (const auto& regStr : notConvertRegStrs) {
             jpc::Regex reg(regStr, defaultRegCompileModifier);
@@ -90,7 +92,7 @@ void TextFull2Half::createConversionMap() {
         m_conversionMap[U'Ａ' + i] = U'A' + i;
     }
 
-    // 小写字母 
+    // 小写字母
     for (char32_t i = 0; i < 26; ++i) {
         m_conversionMap[U'ａ' + i] = U'a' + i;
     }
@@ -189,8 +191,8 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
                 }
             }
         }
-        const std::string notConvertedChars = std::views::iota(0uz, notConvertFlags.size()) 
-    	        | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;}) 
+        const std::string notConvertedChars = std::views::iota(0uz, notConvertFlags.size())
+                | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;})
     	        | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
         if (!notConvertedChars.empty()) {
             se->otherinfo[m_notConvertedCharsKey] = notConvertedChars;
@@ -273,3 +275,5 @@ void TextFull2Half::dPostRun(Sentence* se) {
     }
     se->transview = convertText(se->transview, se, false);
 }
+
+NAMESPACE_END(gpp)

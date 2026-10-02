@@ -8,6 +8,8 @@ import ctpl_stl;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 NameTranslator::NameTranslator(
@@ -219,7 +221,7 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     // 1. 读取 TOML
     toml::ordered_value nameTableData;
     try {
-        nameTableData = toml::uoparse(nameTablePath);
+        nameTableData = gpp::uoparse(nameTablePath);
     }
     catch (const toml::exception& e) {
         m_logger->error(gppTr("NameTranslator.run", "NameTrans: 解析人名表失败: %1")
@@ -301,3 +303,5 @@ void NameTranslator::run(const fs::path& nameTablePath) {
         .arg(wide2Ascii(nameTablePath))
         .toStdString());
 }
+
+NAMESPACE_END(gpp)

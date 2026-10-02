@@ -13,180 +13,186 @@ import ITranslator;
 import NLPTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-namespace
+py::object jsonToPython(const json& value)
 {
-    py::object jsonToPython(const json& value)
-    {
-        if (value.is_null()) {
-            return py::none();
-        }
-        if (value.is_boolean()) {
-            return py::bool_(value.get<bool>());
-        }
-        if (value.is_number_unsigned()) {
-            return py::int_(value.get<json::number_unsigned_t>());
-        }
-        if (value.is_number_integer()) {
-            return py::int_(value.get<json::number_integer_t>());
-        }
-        if (value.is_number_float()) {
-            return py::float_(value.get<json::number_float_t>());
-        }
-        if (value.is_string()) {
-            return py::str(value.get_ref<const std::string&>());
-        }
-        if (value.is_array()) {
-            py::list result(value.size());
-            for (size_t i = 0; i < value.size(); ++i) {
-                result[i] = jsonToPython(value[i]);
-            }
-            return result;
-        }
-
-        py::dict result;
-        for (auto it = value.cbegin(); it != value.cend(); ++it) {
-            result[py::str(it.key())] = jsonToPython(it.value());
+    if (value.is_null()) {
+        return py::none();
+    }
+    if (value.is_boolean()) {
+        return py::bool_(value.get<bool>());
+    }
+    if (value.is_number_unsigned()) {
+        return py::int_(value.get<json::number_unsigned_t>());
+    }
+    if (value.is_number_integer()) {
+        return py::int_(value.get<json::number_integer_t>());
+    }
+    if (value.is_number_float()) {
+        return py::float_(value.get<json::number_float_t>());
+    }
+    if (value.is_string()) {
+        return py::str(value.get_ref<const std::string&>());
+    }
+    if (value.is_array()) {
+        py::list result(value.size());
+        for (size_t i = 0; i < value.size(); ++i) {
+            result[i] = jsonToPython(value[i]);
         }
         return result;
     }
 
-    json pythonToJson(const py::handle& value, std::set<const PyObject*>& references)
-    {
-        if (!value || value.is_none()) {
-            return nullptr;
-        }
-        if (py::isinstance<py::bool_>(value)) {
-            return value.cast<bool>();
-        }
-        if (py::isinstance<py::int_>(value)) {
-            try {
-                const auto signedValue = value.cast<json::number_integer_t>();
-                if (py::int_(signedValue).equal(value)) {
-                    return signedValue;
-                }
-            }
-            catch (...) { }
-            try {
-                const auto unsignedValue = value.cast<json::number_unsigned_t>();
-                if (py::int_(unsignedValue).equal(value)) {
-                    return unsignedValue;
-                }
-            }
-            catch (...) { }
-            throw std::runtime_error("Python integer is outside the nlohmann::json integer range");
-        }
-        if (py::isinstance<py::float_>(value)) {
-            return value.cast<json::number_float_t>();
-        }
-        if (py::isinstance<py::bytes>(value)) {
-            return py::module_::import("base64")
-                .attr("b64encode")(value)
-                .attr("decode")("utf-8")
-                .cast<std::string>();
-        }
-        if (py::isinstance<py::str>(value)) {
-            return value.cast<std::string>();
-        }
-        if (py::isinstance<py::tuple>(value) || py::isinstance<py::list>(value)) {
-            const auto [referenceIt, inserted] = references.insert(value.ptr());
-            if (!inserted) {
-                throw std::runtime_error("Circular reference detected while converting Python value to JSON");
-            }
-            json result = json::array();
-            for (const py::handle item : value) {
-                result.push_back(pythonToJson(item, references));
-            }
-            references.erase(referenceIt);
-            return result;
-        }
-        if (py::isinstance<py::dict>(value)) {
-            const auto [referenceIt, inserted] = references.insert(value.ptr());
-            if (!inserted) {
-                throw std::runtime_error("Circular reference detected while converting Python value to JSON");
-            }
-            const py::dict dictionary = py::reinterpret_borrow<py::dict>(value);
-            json result = json::object();
-            for (const auto& [key, item] : dictionary) {
-                result[py::str(key).cast<std::string>()] = pythonToJson(item, references);
-            }
-            references.erase(referenceIt);
-            return result;
-        }
-        throw std::runtime_error("Unsupported Python value while converting to JSON: "
-            + py::repr(value).cast<std::string>());
+    py::dict result;
+    for (auto it = value.cbegin(); it != value.cend(); ++it) {
+        result[py::str(it.key())] = jsonToPython(it.value());
     }
-
-    json pythonToJson(const py::handle& value)
-    {
-        std::set<const PyObject*> references;
-        return pythonToJson(value, references);
-    }
+    return result;
 }
 
-namespace pybind11::detail
+json pythonToJson(const py::handle& value, std::set<const PyObject*>& references)
 {
-    template <typename Key, typename Value, typename Hash, typename Equal, typename Alloc>
-    struct type_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>>
-        : map_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>, Key, Value> {};
-
-    template <typename Key, typename Hash, typename Equal, typename Alloc>
-    struct type_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>>
-        : set_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>, Key> {};
-
-    template <typename Key, typename Value, typename Compare, typename Alloc>
-    struct type_caster<absl::btree_map<Key, Value, Compare, Alloc>>
-        : map_caster<absl::btree_map<Key, Value, Compare, Alloc>, Key, Value> {};
-
-    template <typename Key, typename Compare, typename Alloc>
-    struct type_caster<absl::btree_set<Key, Compare, Alloc>>
-        : set_caster<absl::btree_set<Key, Compare, Alloc>, Key> {};
-
-    template <>
-    struct type_caster<json>
-    {
-        PYBIND11_TYPE_CASTER(json, _("json"));
-
-        bool load(handle src, bool)
-        {
-            try {
-                value = pythonToJson(src);
-                return true;
-            }
-            catch (...) {
-                return false;
+    if (!value || value.is_none()) {
+        return nullptr;
+    }
+    if (py::isinstance<py::bool_>(value)) {
+        return value.cast<bool>();
+    }
+    if (py::isinstance<py::int_>(value)) {
+        try {
+            const auto signedValue = value.cast<json::number_integer_t>();
+            if (py::int_(signedValue).equal(value)) {
+                return signedValue;
             }
         }
-
-        static handle cast(json src, return_value_policy, handle)
-        {
-            return jsonToPython(src).release();
-        }
-    };
-
-    template <>
-    struct type_caster<ordered_json>
-    {
-        PYBIND11_TYPE_CASTER(ordered_json, _("json"));
-
-        bool load(handle src, bool convert)
-        {
-            type_caster<json> jsonCaster;
-            if (!jsonCaster.load(src, convert)) {
-                return false;
+        catch (...) { }
+        try {
+            const auto unsignedValue = value.cast<json::number_unsigned_t>();
+            if (py::int_(unsignedValue).equal(value)) {
+                return unsignedValue;
             }
-            value = ordered_json(cast_op<json&&>(std::move(jsonCaster)));
+        }
+        catch (...) { }
+        throw std::runtime_error("Python integer is outside the nlohmann::json integer range");
+    }
+    if (py::isinstance<py::float_>(value)) {
+        return value.cast<json::number_float_t>();
+    }
+    if (py::isinstance<py::bytes>(value)) {
+        return py::module_::import("base64")
+            .attr("b64encode")(value)
+            .attr("decode")("utf-8")
+            .cast<std::string>();
+    }
+    if (py::isinstance<py::str>(value)) {
+        return value.cast<std::string>();
+    }
+    if (py::isinstance<py::tuple>(value) || py::isinstance<py::list>(value)) {
+        const auto [referenceIt, inserted] = references.insert(value.ptr());
+        if (!inserted) {
+            throw std::runtime_error("Circular reference detected while converting Python value to JSON");
+        }
+        json result = json::array();
+        for (const py::handle item : value) {
+            result.push_back(pythonToJson(item, references));
+        }
+        references.erase(referenceIt);
+        return result;
+    }
+    if (py::isinstance<py::dict>(value)) {
+        const auto [referenceIt, inserted] = references.insert(value.ptr());
+        if (!inserted) {
+            throw std::runtime_error("Circular reference detected while converting Python value to JSON");
+        }
+        const py::dict dictionary = py::reinterpret_borrow<py::dict>(value);
+        json result = json::object();
+        for (const auto& [key, item] : dictionary) {
+            result[py::str(key).cast<std::string>()] = pythonToJson(item, references);
+        }
+        references.erase(referenceIt);
+        return result;
+    }
+    throw std::runtime_error("Unsupported Python value while converting to JSON: "
+        + py::repr(value).cast<std::string>());
+}
+
+json pythonToJson(const py::handle& value)
+{
+    std::set<const PyObject*> references;
+    return pythonToJson(value, references);
+}
+
+NAMESPACE_END(gpp)
+
+NAMESPACE_BEGIN(pybind11::detail)
+
+using namespace gpp;
+
+template <typename Key, typename Value, typename Hash, typename Equal, typename Alloc>
+struct type_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>>
+    : map_caster<absl::flat_hash_map<Key, Value, Hash, Equal, Alloc>, Key, Value> {};
+
+template <typename Key, typename Hash, typename Equal, typename Alloc>
+struct type_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>>
+    : set_caster<absl::flat_hash_set<Key, Hash, Equal, Alloc>, Key> {};
+
+template <typename Key, typename Value, typename Compare, typename Alloc>
+struct type_caster<absl::btree_map<Key, Value, Compare, Alloc>>
+    : map_caster<absl::btree_map<Key, Value, Compare, Alloc>, Key, Value> {};
+
+template <typename Key, typename Compare, typename Alloc>
+struct type_caster<absl::btree_set<Key, Compare, Alloc>>
+    : set_caster<absl::btree_set<Key, Compare, Alloc>, Key> {};
+
+template <>
+struct type_caster<json>
+{
+    PYBIND11_TYPE_CASTER(json, _("json"));
+
+    bool load(handle src, bool)
+    {
+        try {
+            value = pythonToJson(src);
             return true;
         }
-
-        static handle cast(ordered_json src, return_value_policy policy, handle parent)
-        {
-            return type_caster<json>::cast(json(std::move(src)), policy, parent);
+        catch (...) {
+            return false;
         }
-    };
-}
+    }
+
+    static handle cast(json src, return_value_policy, handle)
+    {
+        return jsonToPython(src).release();
+    }
+};
+
+template <>
+struct type_caster<ordered_json>
+{
+    PYBIND11_TYPE_CASTER(ordered_json, _("json"));
+
+    bool load(handle src, bool convert)
+    {
+        type_caster<json> jsonCaster;
+        if (!jsonCaster.load(src, convert)) {
+            return false;
+        }
+        value = ordered_json(cast_op<json&&>(std::move(jsonCaster)));
+        return true;
+    }
+
+    static handle cast(ordered_json src, return_value_policy policy, handle parent)
+    {
+        return type_caster<json>::cast(json(std::move(src)), policy, parent);
+    }
+};
+
+NAMESPACE_END(pybind11::detail)
+
+NAMESPACE_BEGIN(gpp)
 
 static fs::path s_pythonExePath;
 
@@ -1032,23 +1038,23 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def_readwrite("m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed)
         .def_readwrite("m_onPerformApi", &NormalJsonTranslator::m_onPerformApi)
         .def_readwrite("m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed)
-        .def_property("m_threadPool", [](NormalJsonTranslator& self) -> ctpl::thread_pool& 
+        .def_property("m_threadPool", [](NormalJsonTranslator& self) -> ctpl::thread_pool&
             { return self.m_threadPool; }, nullptr, py::return_value_policy::reference_internal)
         .def_property_readonly("m_apiPool", [](NormalJsonTranslator& self) -> ApiPool*
             { return self.m_apiPool.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_gptDictionary", [](NormalJsonTranslator& self) -> GptDictionary* 
+        .def_property_readonly("m_gptDictionary", [](NormalJsonTranslator& self) -> GptDictionary*
             { return self.m_gptDictionary.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_preDictionary", [](NormalJsonTranslator& self) -> NormalDictionary* 
+        .def_property_readonly("m_preDictionary", [](NormalJsonTranslator& self) -> NormalDictionary*
             { return self.m_preDictionary.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_postDictionary", [](NormalJsonTranslator& self) -> NormalDictionary* 
+        .def_property_readonly("m_postDictionary", [](NormalJsonTranslator& self) -> NormalDictionary*
             { return self.m_postDictionary.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_problemAnalyzer", [](NormalJsonTranslator& self) -> ProblemAnalyzer* 
+        .def_property_readonly("m_problemAnalyzer", [](NormalJsonTranslator& self) -> ProblemAnalyzer*
             { return self.m_problemAnalyzer.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_nameTranslator", [](NormalJsonTranslator& self) -> NameTranslator* 
+        .def_property_readonly("m_nameTranslator", [](NormalJsonTranslator& self) -> NameTranslator*
             { return self.m_nameTranslator.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_dictionaryGenerator", [](NormalJsonTranslator& self) -> DictionaryGenerator* 
+        .def_property_readonly("m_dictionaryGenerator", [](NormalJsonTranslator& self) -> DictionaryGenerator*
             { return self.m_dictionaryGenerator.get(); }, py::return_value_policy::reference_internal)
-        .def_property_readonly("m_transAgent", [](NormalJsonTranslator& self) -> NormalJsonTranslatorTransAgent* 
+        .def_property_readonly("m_transAgent", [](NormalJsonTranslator& self) -> NormalJsonTranslatorTransAgent*
             { return self.m_transAgent.get(); }, py::return_value_policy::reference_internal)
         .def("preProcess", &NormalJsonTranslator::preProcess)
         .def("postProcess", &NormalJsonTranslator::postProcess)
@@ -1100,3 +1106,5 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def("pdfRun", [](PDFTranslator& self) { self.PDFTranslator::run(); });
 
 }
+
+NAMESPACE_END(gpp)

@@ -18,6 +18,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
@@ -43,7 +45,7 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 	}
 
 	try {
-		const toml::ordered_value tbl = toml::uoparse(nameTablePath);
+		const toml::ordered_value tbl = gpp::uoparse(nameTablePath);
 		for (const auto& [key, value] : tbl.as_table()) {
 			if (!value.is_array() || value.size() < 2 || !value[0].is_string() || !value[1].is_integer()) {
 				continue;

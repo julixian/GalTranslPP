@@ -1,5 +1,4 @@
-#ifndef ELADOUBLETEXT_H
-#define ELADOUBLETEXT_H
+#pragma once
 
 #include "ElaText.h"
 #include "ElaToolTip.h"
@@ -21,5 +20,3 @@ private:
     ElaText* m_secondLine = nullptr;
     ElaToolTip* m_toolTip = nullptr;
 };
-
-#endif

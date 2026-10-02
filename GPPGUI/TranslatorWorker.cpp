@@ -6,6 +6,7 @@
 import ITranslator;
 import Tool;
 
+using namespace gpp;
 
 class GUIController : public IController
 {

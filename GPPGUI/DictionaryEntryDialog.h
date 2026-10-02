@@ -1,5 +1,4 @@
-#ifndef DICTIONARYENTRYDIALOG_H
-#define DICTIONARYENTRYDIALOG_H
+#pragma once
 
 #include "ElaContentDialog.h"
 #include "ElaDialog.h"
@@ -36,5 +35,3 @@ class DictionaryEntryDeleteDialog final : public ElaContentDialog
 public:
     explicit DictionaryEntryDeleteDialog(int selectedCount, QWidget* parent = nullptr);
 };
-
-#endif

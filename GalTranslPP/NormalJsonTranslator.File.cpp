@@ -10,6 +10,8 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -456,3 +458,5 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         m_onFileProcessed(relInputPath);
     }
 }
+
+NAMESPACE_END(gpp)

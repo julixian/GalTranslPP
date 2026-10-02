@@ -1,5 +1,4 @@
-#ifndef TLFCFGPAGE_H
-#define TLFCFGPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -15,5 +14,3 @@ private:
     toml::ordered_value& m_projectConfig;
 
 };
-
-#endif

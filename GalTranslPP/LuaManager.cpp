@@ -13,346 +13,350 @@ import ITranslator;
 import NLPTool;
 import Tool;
 
+NAMESPACE_BEGIN(luabridge)
+
+template <typename K, typename V, typename Hash, typename Eq, typename Allocator>
+struct Stack<absl::flat_hash_map<K, V, Hash, Eq, Allocator>>
+{
+	using Type = absl::flat_hash_map<K, V, Hash, Eq, Allocator>;
+
+	static Result push(lua_State* lua, const Type& value)
+	{
+		const std::unordered_map<K, V> converted(value.begin(), value.end());
+		return Stack<std::unordered_map<K, V>>::push(lua, converted);
+	}
+
+	static TypeResult<Type> get(lua_State* lua, int index)
+	{
+		auto converted = Stack<std::unordered_map<K, V>>::get(lua, index);
+		if (!converted) {
+			return converted.error();
+		}
+		return Type(converted->begin(), converted->end());
+	}
+
+	static bool isInstance(lua_State* lua, int index)
+	{
+		return Stack<std::unordered_map<K, V>>::isInstance(lua, index);
+	}
+};
+
+template <typename K, typename Hash, typename Eq, typename Allocator>
+struct Stack<absl::flat_hash_set<K, Hash, Eq, Allocator>>
+{
+	using Type = absl::flat_hash_set<K, Hash, Eq, Allocator>;
+
+	static Result push(lua_State* lua, const Type& value)
+	{
+		const std::unordered_set<K> converted(value.begin(), value.end());
+		return Stack<std::unordered_set<K>>::push(lua, converted);
+	}
+
+	static TypeResult<Type> get(lua_State* lua, int index)
+	{
+		auto converted = Stack<std::unordered_set<K>>::get(lua, index);
+		if (!converted) {
+			return converted.error();
+		}
+		return Type(converted->begin(), converted->end());
+	}
+
+	static bool isInstance(lua_State* lua, int index)
+	{
+		return Stack<std::unordered_set<K>>::isInstance(lua, index);
+	}
+};
+
+template <typename K, typename V, typename Compare, typename Allocator>
+struct Stack<absl::btree_map<K, V, Compare, Allocator>>
+{
+	using Type = absl::btree_map<K, V, Compare, Allocator>;
+	using ConvertedType = std::map<K, V, Compare>;
+
+	static Result push(lua_State* lua, const Type& value)
+	{
+		const ConvertedType converted(value.begin(), value.end());
+		return Stack<ConvertedType>::push(lua, converted);
+	}
+
+	static TypeResult<Type> get(lua_State* lua, int index)
+	{
+		auto converted = Stack<ConvertedType>::get(lua, index);
+		if (!converted) {
+			return converted.error();
+		}
+		return Type(converted->begin(), converted->end());
+	}
+
+	static bool isInstance(lua_State* lua, int index)
+	{
+		return Stack<ConvertedType>::isInstance(lua, index);
+	}
+};
+
+template <typename K, typename Compare, typename Allocator>
+struct Stack<absl::btree_set<K, Compare, Allocator>>
+{
+	using Type = absl::btree_set<K, Compare, Allocator>;
+	using ConvertedType = std::set<K, Compare>;
+
+	static Result push(lua_State* lua, const Type& value)
+	{
+		const ConvertedType converted(value.begin(), value.end());
+		return Stack<ConvertedType>::push(lua, converted);
+	}
+
+	static TypeResult<Type> get(lua_State* lua, int index)
+	{
+		auto converted = Stack<ConvertedType>::get(lua, index);
+		if (!converted) {
+			return converted.error();
+		}
+		return Type(converted->begin(), converted->end());
+	}
+
+	static bool isInstance(lua_State* lua, int index)
+	{
+		return Stack<ConvertedType>::isInstance(lua, index);
+	}
+};
+
+NAMESPACE_END(luabridge)
+
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace luabridge
+NAMESPACE_BEGIN(lua_binding)
+
+struct NoConstructor {};
+struct BaseClasses {};
+inline constexpr NoConstructor noConstructor;
+inline constexpr BaseClasses baseClasses;
+
+template<typename... Signatures>
+struct Constructors {};
+
+template<typename... Bases>
+struct BasesList {};
+
+template<typename... Bases>
+BasesList<Bases...> bases()
 {
-	template <typename K, typename V, typename Hash, typename Eq, typename Allocator>
-	struct Stack<absl::flat_hash_map<K, V, Hash, Eq, Allocator>>
-	{
-		using Type = absl::flat_hash_map<K, V, Hash, Eq, Allocator>;
-
-		static Result push(lua_State* lua, const Type& value)
-		{
-			const std::unordered_map<K, V> converted(value.begin(), value.end());
-			return Stack<std::unordered_map<K, V>>::push(lua, converted);
-		}
-
-		static TypeResult<Type> get(lua_State* lua, int index)
-		{
-			auto converted = Stack<std::unordered_map<K, V>>::get(lua, index);
-			if (!converted) {
-				return converted.error();
-			}
-			return Type(converted->begin(), converted->end());
-		}
-
-		static bool isInstance(lua_State* lua, int index)
-		{
-			return Stack<std::unordered_map<K, V>>::isInstance(lua, index);
-		}
-	};
-
-	template <typename K, typename Hash, typename Eq, typename Allocator>
-	struct Stack<absl::flat_hash_set<K, Hash, Eq, Allocator>>
-	{
-		using Type = absl::flat_hash_set<K, Hash, Eq, Allocator>;
-
-		static Result push(lua_State* lua, const Type& value)
-		{
-			const std::unordered_set<K> converted(value.begin(), value.end());
-			return Stack<std::unordered_set<K>>::push(lua, converted);
-		}
-
-		static TypeResult<Type> get(lua_State* lua, int index)
-		{
-			auto converted = Stack<std::unordered_set<K>>::get(lua, index);
-			if (!converted) {
-				return converted.error();
-			}
-			return Type(converted->begin(), converted->end());
-		}
-
-		static bool isInstance(lua_State* lua, int index)
-		{
-			return Stack<std::unordered_set<K>>::isInstance(lua, index);
-		}
-	};
-
-	template <typename K, typename V, typename Compare, typename Allocator>
-	struct Stack<absl::btree_map<K, V, Compare, Allocator>>
-	{
-		using Type = absl::btree_map<K, V, Compare, Allocator>;
-		using ConvertedType = std::map<K, V, Compare>;
-
-		static Result push(lua_State* lua, const Type& value)
-		{
-			const ConvertedType converted(value.begin(), value.end());
-			return Stack<ConvertedType>::push(lua, converted);
-		}
-
-		static TypeResult<Type> get(lua_State* lua, int index)
-		{
-			auto converted = Stack<ConvertedType>::get(lua, index);
-			if (!converted) {
-				return converted.error();
-			}
-			return Type(converted->begin(), converted->end());
-		}
-
-		static bool isInstance(lua_State* lua, int index)
-		{
-			return Stack<ConvertedType>::isInstance(lua, index);
-		}
-	};
-
-	template <typename K, typename Compare, typename Allocator>
-	struct Stack<absl::btree_set<K, Compare, Allocator>>
-	{
-		using Type = absl::btree_set<K, Compare, Allocator>;
-		using ConvertedType = std::set<K, Compare>;
-
-		static Result push(lua_State* lua, const Type& value)
-		{
-			const ConvertedType converted(value.begin(), value.end());
-			return Stack<ConvertedType>::push(lua, converted);
-		}
-
-		static TypeResult<Type> get(lua_State* lua, int index)
-		{
-			auto converted = Stack<ConvertedType>::get(lua, index);
-			if (!converted) {
-				return converted.error();
-			}
-			return Type(converted->begin(), converted->end());
-		}
-
-		static bool isInstance(lua_State* lua, int index)
-		{
-			return Stack<ConvertedType>::isInstance(lua, index);
-		}
-	};
+	return {};
 }
 
-namespace lua_binding
+template<typename Signature>
+struct ConstructorPointer;
+
+template<typename Result, typename... Args>
+struct ConstructorPointer<Result(Args...)>
 {
-	struct NoConstructor {};
-	struct BaseClasses {};
-	inline constexpr NoConstructor noConstructor;
-	inline constexpr BaseClasses baseClasses;
+	using type = void(*)(Args...);
+};
 
-	template<typename... Signatures>
-	struct Constructors {};
-
-	template<typename... Bases>
-	struct BasesList {};
-
-	template<typename... Bases>
-	BasesList<Bases...> bases()
-	{
-		return {};
-	}
-
-	template<typename Signature>
-	struct ConstructorPointer;
-
-	template<typename Result, typename... Args>
-	struct ConstructorPointer<Result(Args...)>
-	{
-		using type = void(*)(Args...);
-	};
-
-	template<typename Getter>
-	struct ReadOnlyProperty
-	{
-		Getter getter;
-
-		template<typename Registration>
-		void addTo(Registration& registration, const char* name)
-		{
-			registration.addProperty(name, std::move(getter));
-		}
-	};
-
-	template<typename Getter, typename Setter>
-	struct ReadWriteProperty
-	{
-		Getter getter;
-		Setter setter;
-
-		template<typename Registration>
-		void addTo(Registration& registration, const char* name)
-		{
-			registration.addProperty(name, std::move(getter), std::move(setter));
-		}
-	};
-
-	template<typename Getter>
-	ReadOnlyProperty<Getter> property(Getter getter)
-	{
-		return { std::move(getter) };
-	}
-
-	template<typename Getter, typename Setter>
-	ReadWriteProperty<Getter, Setter> property(Getter getter, Setter setter)
-	{
-		return { std::move(getter), std::move(setter) };
-	}
-
-	template<typename... Functions>
-	struct Overload
-	{
-		std::tuple<Functions...> functions;
-	};
-
-	template<typename... Functions>
-	Overload<Functions...> overload(Functions... functions)
-	{
-		return { std::tuple<Functions...>{ std::move(functions)... } };
-	}
-
-	template<typename T>
-	struct IsProperty : std::false_type {};
-
-	template<typename Getter>
-	struct IsProperty<ReadOnlyProperty<Getter>> : std::true_type {};
-
-	template<typename Getter, typename Setter>
-	struct IsProperty<ReadWriteProperty<Getter, Setter>> : std::true_type {};
-
-	template<typename T>
-	struct IsOverload : std::false_type {};
-
-	template<typename... Functions>
-	struct IsOverload<Overload<Functions...>> : std::true_type {};
+template<typename Getter>
+struct ReadOnlyProperty
+{
+	Getter getter;
 
 	template<typename Registration>
-	void addMembers(Registration&)
-	{ }
-
-	template<typename Registration, typename Value, typename... Rest>
-	void addMembers(Registration& registration, const char* name, Value value, Rest&&... rest);
-
-	template<typename Registration, typename... Rest>
-	void addMembers(Registration& registration, NoConstructor, Rest&&... rest)
+	void addTo(Registration& registration, const char* name)
 	{
-		addMembers(registration, std::forward<Rest>(rest)...);
+		registration.addProperty(name, std::move(getter));
 	}
+};
 
-	template<typename Registration, typename... Signatures, typename... Rest>
-	void addMembers(Registration& registration, Constructors<Signatures...>, Rest&&... rest)
+template<typename Getter, typename Setter>
+struct ReadWriteProperty
+{
+	Getter getter;
+	Setter setter;
+
+	template<typename Registration>
+	void addTo(Registration& registration, const char* name)
 	{
-		registration.template addConstructor<typename ConstructorPointer<Signatures>::type...>();
-		addMembers(registration, std::forward<Rest>(rest)...);
+		registration.addProperty(name, std::move(getter), std::move(setter));
 	}
+};
 
-	template<typename Registration, typename Value, typename... Rest>
-	void addMembers(Registration& registration, const char* name, Value value, Rest&&... rest)
-	{
-		if constexpr (IsProperty<Value>::value) {
-			value.addTo(registration, name);
-		}
-		else if constexpr (IsOverload<Value>::value) {
-			std::apply([&](auto... functions)
-				{
-					registration.addFunction(name, std::move(functions)...);
-				}, std::move(value.functions));
-		}
-		else if constexpr (std::is_member_object_pointer_v<Value>) {
-			registration.addPropertyReadWrite(name, value);
-		}
-		else {
-			registration.addFunction(name, std::move(value));
-		}
-		addMembers(registration, std::forward<Rest>(rest)...);
+template<typename Getter>
+ReadOnlyProperty<Getter> property(Getter getter)
+{
+	return { std::move(getter) };
+}
+
+template<typename Getter, typename Setter>
+ReadWriteProperty<Getter, Setter> property(Getter getter, Setter setter)
+{
+	return { std::move(getter), std::move(setter) };
+}
+
+template<typename... Functions>
+struct Overload
+{
+	std::tuple<Functions...> functions;
+};
+
+template<typename... Functions>
+Overload<Functions...> overload(Functions... functions)
+{
+	return { std::tuple<Functions...>{ std::move(functions)... } };
+}
+
+template<typename T>
+struct IsProperty : std::false_type {};
+
+template<typename Getter>
+struct IsProperty<ReadOnlyProperty<Getter>> : std::true_type {};
+
+template<typename Getter, typename Setter>
+struct IsProperty<ReadWriteProperty<Getter, Setter>> : std::true_type {};
+
+template<typename T>
+struct IsOverload : std::false_type {};
+
+template<typename... Functions>
+struct IsOverload<Overload<Functions...>> : std::true_type {};
+
+template<typename Registration>
+void addMembers(Registration&)
+{ }
+
+template<typename Registration, typename Value, typename... Rest>
+void addMembers(Registration& registration, const char* name, Value value, Rest&&... rest);
+
+template<typename Registration, typename... Rest>
+void addMembers(Registration& registration, NoConstructor, Rest&&... rest)
+{
+	addMembers(registration, std::forward<Rest>(rest)...);
+}
+
+template<typename Registration, typename... Signatures, typename... Rest>
+void addMembers(Registration& registration, Constructors<Signatures...>, Rest&&... rest)
+{
+	registration.template addConstructor<typename ConstructorPointer<Signatures>::type...>();
+	addMembers(registration, std::forward<Rest>(rest)...);
+}
+
+template<typename Registration, typename Value, typename... Rest>
+void addMembers(Registration& registration, const char* name, Value value, Rest&&... rest)
+{
+	if constexpr (IsProperty<Value>::value) {
+		value.addTo(registration, name);
 	}
+	else if constexpr (IsOverload<Value>::value) {
+		std::apply([&](auto... functions)
+			{
+				registration.addFunction(name, std::move(functions)...);
+			}, std::move(value.functions));
+	}
+	else if constexpr (std::is_member_object_pointer_v<Value>) {
+		registration.addPropertyReadWrite(name, value);
+	}
+	else {
+		registration.addFunction(name, std::move(value));
+	}
+	addMembers(registration, std::forward<Rest>(rest)...);
+}
 
-	class Table
+class Table
+{
+public:
+	class Item
 	{
 	public:
-		class Item
-		{
-		public:
-			Item(luabridge::LuaRef table, std::string key)
-				: m_table(std::move(table)), m_key(std::move(key))
-			{}
+		Item(luabridge::LuaRef table, std::string key)
+			: m_table(std::move(table)), m_key(std::move(key))
+		{}
 
-			template<typename Value>
-			Item& operator=(Value value)
-			{
-				if constexpr (luabridge::detail::is_callable<Value>::value) {
-					m_table[m_key] = luabridge::LuaRef::newFunction(m_table.state(), std::move(value));
-				}
-				else {
-					m_table[m_key] = std::move(value);
-				}
-				return *this;
+		template<typename Value>
+		Item& operator=(Value value)
+		{
+			if constexpr (luabridge::detail::is_callable<Value>::value) {
+				m_table[m_key] = luabridge::LuaRef::newFunction(m_table.state(), std::move(value));
 			}
-
-		private:
-			luabridge::LuaRef m_table;
-			std::string m_key;
-		};
-
-		explicit Table(luabridge::LuaRef table) : m_table(std::move(table)) {}
-
-		Item operator[](const std::string& key)
-		{
-			return Item(m_table, key);
+			else {
+				m_table[m_key] = std::move(value);
+			}
+			return *this;
 		}
 
 	private:
 		luabridge::LuaRef m_table;
+		std::string m_key;
 	};
 
-	class Registry
+	explicit Table(luabridge::LuaRef table) : m_table(std::move(table)) {}
+
+	Item operator[](const std::string& key)
 	{
-	public:
-		explicit Registry(lua_State* lua) : m_lua(lua) {}
+		return Item(m_table, key);
+	}
 
-		template<typename... Args>
-		void newEnum(const char* name, Args&&... args)
-		{
-			auto table = luabridge::getGlobalNamespace(m_lua).beginNamespace(name);
-			addEnumValues(table, std::forward<Args>(args)...);
-			table.endNamespace();
+private:
+	luabridge::LuaRef m_table;
+};
+
+class Registry
+{
+public:
+	explicit Registry(lua_State* lua) : m_lua(lua) {}
+
+	template<typename... Args>
+	void newEnum(const char* name, Args&&... args)
+	{
+		auto table = luabridge::getGlobalNamespace(m_lua).beginNamespace(name);
+		addEnumValues(table, std::forward<Args>(args)...);
+		table.endNamespace();
+	}
+
+	template<typename T, typename... Args>
+	void newUsertype(const char* name, Args&&... args)
+	{
+		auto registration = luabridge::getGlobalNamespace(m_lua).beginClass<T>(name);
+		addMembers(registration, std::forward<Args>(args)...);
+		registration.endClass();
+	}
+
+	template<typename T, typename... Bases, typename... Args>
+	void newUsertype(const char* name, BaseClasses, BasesList<Bases...>, Args&&... args)
+	{
+		auto registration = luabridge::getGlobalNamespace(m_lua).deriveClass<T, Bases...>(name);
+		addMembers(registration, std::forward<Args>(args)...);
+		registration.endClass();
+	}
+
+	Table createNamedTable(const char* name)
+	{
+		luabridge::LuaRef table = luabridge::LuaRef::newTable(m_lua);
+		if (!luabridge::setGlobal(m_lua, table, name)) {
+			throw std::runtime_error(std::string("创建 Lua table 失败: ") + name);
 		}
+		return Table(std::move(table));
+	}
 
-		template<typename T, typename... Args>
-		void newUsertype(const char* name, Args&&... args)
-		{
-			auto registration = luabridge::getGlobalNamespace(m_lua).beginClass<T>(name);
-			addMembers(registration, std::forward<Args>(args)...);
-			registration.endClass();
-		}
+	luabridge::LuaRef getGlobal(const std::string& name) const
+	{
+		return luabridge::getGlobal(m_lua, name.c_str());
+	}
 
-		template<typename T, typename... Bases, typename... Args>
-		void newUsertype(const char* name, BaseClasses, BasesList<Bases...>, Args&&... args)
-		{
-			auto registration = luabridge::getGlobalNamespace(m_lua).deriveClass<T, Bases...>(name);
-			addMembers(registration, std::forward<Args>(args)...);
-			registration.endClass();
-		}
+private:
+	template<typename Registration>
+	void addEnumValues(Registration&)
+	{ }
 
-		Table createNamedTable(const char* name)
-		{
-			luabridge::LuaRef table = luabridge::LuaRef::newTable(m_lua);
-			if (!luabridge::setGlobal(m_lua, table, name)) {
-				throw std::runtime_error(std::string("创建 Lua table 失败: ") + name);
-			}
-			return Table(std::move(table));
-		}
+	template<typename Registration, typename Value, typename... Rest>
+	void addEnumValues(Registration& registration, const char* name, Value value, Rest&&... rest)
+	{
+		registration.addVariable(name, value);
+		addEnumValues(registration, std::forward<Rest>(rest)...);
+	}
 
-		luabridge::LuaRef getGlobal(const std::string& name) const
-		{
-			return luabridge::getGlobal(m_lua, name.c_str());
-		}
+	lua_State* m_lua;
+};
 
-	private:
-		template<typename Registration>
-		void addEnumValues(Registration&)
-		{ }
-
-		template<typename Registration, typename Value, typename... Rest>
-		void addEnumValues(Registration& registration, const char* name, Value value, Rest&&... rest)
-		{
-			registration.addVariable(name, value);
-			addEnumValues(registration, std::forward<Rest>(rest)...);
-		}
-
-		lua_State* m_lua;
-	};
-}
+NAMESPACE_END(lua_binding)
 
 LuaStateInstance::LuaStateInstance()
 	: m_daemonThread(&LuaStateInstance::daemonThreadFunc, this)
@@ -798,7 +802,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	luaTomlTable["parse"] = [](const fs::path& path, lua_State* lua) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
 		{
 			try {
-				return { LuaToml::tomlValue2LuaRef(toml::uparse(path), lua), std::nullopt };
+				return { LuaToml::tomlValue2LuaRef(gpp::uparse(path), lua), std::nullopt };
 			}
 			catch (const std::exception& e) {
 				return { luabridge::LuaRef(lua), std::string(e.what()) };
@@ -1178,7 +1182,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 
 	lua_binding::Table utilsTable = lua.createNamedTable("utils");
 	utilsTable["splitString"] = [](std::string_view str, std::string_view delimiter) { return splitString(str, delimiter); };
-	utilsTable["splitIntoTokens"] = &::splitIntoTokens;
+	utilsTable["splitIntoTokens"] = &gpp::splitIntoTokens;
 	utilsTable["splitIntoGraphemes"] = &splitIntoGraphemes;
 	utilsTable["countGraphemes"] = &countGraphemes;
 	utilsTable["countSubstring"] = &countSubstring;
@@ -1342,3 +1346,5 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	supplyTokenizerFunc("sourceLang");
 	supplyTokenizerFunc("targetLang");
 }
+
+NAMESPACE_END(gpp)

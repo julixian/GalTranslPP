@@ -9,6 +9,8 @@ import CodePageChecker;
 import NNetLanguageIdentifierWrapper;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 static thread_local std::unique_ptr<NNetLanguageIdentifierWrapper> langIdentifier;
@@ -345,3 +347,5 @@ void ProblemAnalyzer::setProblemRule(const std::string& problemKey, bool enabled
     obj->base = chooseCachePart(base);
     obj->check = chooseCachePart(check);
 }
+
+NAMESPACE_END(gpp)

@@ -32,7 +32,7 @@
 <context>
     <name>ApiSettingsPage</name>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="+38"/>
+        <location filename="ApiSettingsPage.cpp" line="+40"/>
         <location line="+38"/>
         <source>Api 设置</source>
         <translation>Api settings</translation>
@@ -459,7 +459,7 @@ sk-...</translation>
 <context>
     <name>AppSettingsPage</name>
     <message>
-        <location filename="AppSettingsPage.cpp" line="+27"/>
+        <location filename="AppSettingsPage.cpp" line="+29"/>
         <location line="+10"/>
         <source>应用设置</source>
         <translation>App Settings</translation>
@@ -644,7 +644,7 @@ sk-...</translation>
 <context>
     <name>CommonGptDictsPage</name>
     <message>
-        <location filename="CommonGptDictsPage.cpp" line="+34"/>
+        <location filename="CommonGptDictsPage.cpp" line="+36"/>
         <source>默认GPT字典设置</source>
         <translation>Default gptDict settings</translation>
     </message>
@@ -898,7 +898,7 @@ sk-...</translation>
 <context>
     <name>CommonNormalDictsPage</name>
     <message>
-        <location filename="CommonNormalDictsPage.cpp" line="+34"/>
+        <location filename="CommonNormalDictsPage.cpp" line="+36"/>
         <source>默认译前字典设置</source>
         <translation>Common preDicts settings</translation>
     </message>
@@ -1171,7 +1171,7 @@ sk-...</translation>
 <context>
     <name>CommonSettingsPage</name>
     <message>
-        <location filename="CommonSettingsPage.cpp" line="+27"/>
+        <location filename="CommonSettingsPage.cpp" line="+29"/>
         <source>一般设置</source>
         <translation>Common settings</translation>
     </message>
@@ -1608,7 +1608,7 @@ sk-...</translation>
 <context>
     <name>CustomFilePluginCfgPage</name>
     <message>
-        <location filename="CustomFilePluginCfgPage.cpp" line="+19"/>
+        <location filename="CustomFilePluginCfgPage.cpp" line="+21"/>
         <location line="+63"/>
         <source>自定义文件处理插件配置</source>
         <translation>Custom file plugin settings</translation>
@@ -1637,7 +1637,7 @@ sk-...</translation>
 <context>
     <name>DefaultPromptsPage</name>
     <message>
-        <location filename="DefaultPromptsPage.cpp" line="+23"/>
+        <location filename="DefaultPromptsPage.cpp" line="+25"/>
         <source>默认提示词管理</source>
         <translation>Default prompts</translation>
     </message>
@@ -1711,7 +1711,7 @@ sk-...</translation>
 <context>
     <name>DictExSettingsPage</name>
     <message>
-        <location filename="DictExSettingsPage.cpp" line="+16"/>
+        <location filename="DictExSettingsPage.cpp" line="+18"/>
         <source>项目字典设置</source>
         <translation>Project dict settings</translation>
     </message>
@@ -1779,7 +1779,7 @@ sk-...</translation>
 <context>
     <name>DictSettingsPage</name>
     <message>
-        <location filename="DictSettingsPage.cpp" line="+30"/>
+        <location filename="DictSettingsPage.cpp" line="+32"/>
         <source>项目字典设置</source>
         <translation>Project dicts settings</translation>
     </message>
@@ -2051,7 +2051,7 @@ sk-...</translation>
 <context>
     <name>DictionaryReader</name>
     <message>
-        <location filename="DictionaryReader.cpp" line="+45"/>
+        <location filename="DictionaryReader.cpp" line="+46"/>
         <location line="+9"/>
         <location line="+17"/>
         <location line="+29"/>
@@ -2142,7 +2142,7 @@ sk-...</translation>
 <context>
     <name>EpubCfgPage</name>
     <message>
-        <location filename="EpubCfgPage.cpp" line="+23"/>
+        <location filename="EpubCfgPage.cpp" line="+25"/>
         <location line="+158"/>
         <source>Epub 输出配置</source>
         <translation>Epub output settings</translation>
@@ -2212,7 +2212,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+148"/>
+        <location filename="GPPGUI.cpp" line="+150"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -2257,7 +2257,7 @@ sk-...</translation>
 <context>
     <name>GUIController.writeLog</name>
     <message>
-        <location filename="TranslatorWorker.cpp" line="+16"/>
+        <location filename="TranslatorWorker.cpp" line="+17"/>
         <source>```
 问题概览:</source>
         <translation>```
@@ -2299,7 +2299,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+48"/>
+        <location filename="Mainwindow.cpp" line="+50"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2685,7 +2685,7 @@ Issue summary:</translation>
 <context>
     <name>NJCfgPage</name>
     <message>
-        <location filename="NJCfgPage.cpp" line="+14"/>
+        <location filename="NJCfgPage.cpp" line="+16"/>
         <location line="+42"/>
         <source>NormalJson 输出配置</source>
         <translation>NormalJson output settings</translation>
@@ -2722,7 +2722,7 @@ Issue summary:</translation>
 <context>
     <name>NameTableSettingsPage</name>
     <message>
-        <location filename="NameTableSettingsPage.cpp" line="+275"/>
+        <location filename="NameTableSettingsPage.cpp" line="+277"/>
         <source>人名替换表</source>
         <translation>NameTable</translation>
     </message>
@@ -2828,7 +2828,7 @@ Issue summary:</translation>
 <context>
     <name>OtherSettingsPage</name>
     <message>
-        <location filename="OtherSettingsPage.cpp" line="+25"/>
+        <location filename="OtherSettingsPage.cpp" line="+27"/>
         <source>其它设置</source>
         <translation>Other settings</translation>
     </message>
@@ -3143,7 +3143,7 @@ Cache: %4</translation>
 <context>
     <name>PASettingsPage</name>
     <message>
-        <location filename="PASettingsPage.cpp" line="+29"/>
+        <location filename="PASettingsPage.cpp" line="+31"/>
         <source>问题分析</source>
         <translation>Problem analyze</translation>
     </message>
@@ -3312,7 +3312,7 @@ Cache: %4</translation>
 <context>
     <name>PDFCfgPage</name>
     <message>
-        <location filename="PDFCfgPage.cpp" line="+17"/>
+        <location filename="PDFCfgPage.cpp" line="+19"/>
         <location line="+42"/>
         <source>PDF 输出配置</source>
         <translation>PDF output settings</translation>
@@ -3357,7 +3357,7 @@ Cache: %4</translation>
 <context>
     <name>PluginSettingsPage</name>
     <message>
-        <location filename="PluginSettingsPage.cpp" line="+25"/>
+        <location filename="PluginSettingsPage.cpp" line="+27"/>
         <source>插件设置</source>
         <translation>Plugin settings</translation>
     </message>
@@ -3645,7 +3645,7 @@ Cache: %4</translation>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="+134"/>
+        <location filename="ProjectCachePageFiles.cpp" line="+136"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -3865,7 +3865,7 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+35"/>
+        <location filename="ProjectSettingsPage.cpp" line="+37"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
@@ -4002,7 +4002,7 @@ Cache: %4</translation>
 <context>
     <name>PromptSettingsPage</name>
     <message>
-        <location filename="PromptSettingsPage.cpp" line="+23"/>
+        <location filename="PromptSettingsPage.cpp" line="+25"/>
         <source>项目提示词设置</source>
         <translation>Project prompt settings</translation>
     </message>
@@ -4150,7 +4150,7 @@ Cache: %4</translation>
 <context>
     <name>SkipTransCfgPage</name>
     <message>
-        <location filename="SkipTransCfgPage.cpp" line="+122"/>
+        <location filename="SkipTransCfgPage.cpp" line="+124"/>
         <location line="+99"/>
         <source>跳过翻译设置</source>
         <translation>SkipTrans settings</translation>
@@ -4204,7 +4204,7 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+373"/>
+        <location filename="StartSettingsPage.cpp" line="+375"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
@@ -4422,7 +4422,7 @@ Issue summary:</translation>
 <context>
     <name>TF2HCfgPage</name>
     <message>
-        <location filename="TF2HCfgPage.cpp" line="+20"/>
+        <location filename="TF2HCfgPage.cpp" line="+22"/>
         <location line="+90"/>
         <source>全角半角转换设置</source>
         <translation>Convert settings</translation>
@@ -4461,7 +4461,7 @@ Issue summary:</translation>
 <context>
     <name>TLFCfgPage</name>
     <message>
-        <location filename="TLFCfgPage.cpp" line="+24"/>
+        <location filename="TLFCfgPage.cpp" line="+26"/>
         <location line="+220"/>
         <source>换行修复设置</source>
         <translation>Linebreak fix settings</translation>
@@ -4727,7 +4727,7 @@ Issue summary:</translation>
 <context>
     <name>UpdateChecker</name>
     <message>
-        <location filename="UpdateChecker.cpp" line="+439"/>
+        <location filename="UpdateChecker.cpp" line="+441"/>
         <location line="+2"/>
         <source>更新检测失败</source>
         <translation>Failed to check update</translation>

@@ -1,5 +1,4 @@
-#ifndef COMMONSETTINGSPAGE_H
-#define COMMONSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -15,5 +14,3 @@ private:
     void setupUi();
     toml::ordered_value& m_projectConfig;
 };
-
-#endif

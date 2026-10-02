@@ -1,5 +1,4 @@
-#ifndef EPUBCFGPAGE_H
-#define EPUBCFGPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -14,5 +13,3 @@ public:
 private:
     toml::ordered_value& m_projectConfig;
 };
-
-#endif

@@ -19,6 +19,8 @@
 #include "ElaWindow.h"
 
 import Tool;
+
+using namespace gpp;
 namespace fs = std::filesystem;
 
 AppSettingsPage::AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent)

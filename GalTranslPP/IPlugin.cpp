@@ -11,6 +11,8 @@ import LuaTextPlugin;
 import PythonTextPlugin;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 void registerPlugins(std::vector<pro::proxy<PPlugin>>& plugins, const std::vector<std::string>& pluginNames, const fs::path& projectDir, const fs::path& otherCacheDir,
@@ -65,3 +67,5 @@ void registerPlugins(std::vector<pro::proxy<PPlugin>>& plugins, const std::vecto
         }
     }
 }
+
+NAMESPACE_END(gpp)

@@ -1,5 +1,4 @@
-#ifndef ETAESTIMATOR_HPP
-#define ETAESTIMATOR_HPP
+#pragma once
 
 #include <chrono>
 #include <deque>
@@ -59,5 +58,3 @@ public:
         m_progressEvents.clear();
     }
 };
-
-#endif

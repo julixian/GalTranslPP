@@ -1,5 +1,4 @@
-#ifndef PROJECTSETTINGSPAGE_H
-#define PROJECTSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <filesystem>
@@ -72,5 +71,3 @@ private Q_SLOTS:
     void onFinishTranslating(const QString& transEngine, int exitCode);
     void onRefreshProjectConfig();
 };
-
-#endif

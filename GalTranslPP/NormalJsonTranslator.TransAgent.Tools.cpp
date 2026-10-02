@@ -7,22 +7,20 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace
+json projectAgentRow(const json& row, const json& fields)
 {
-    json projectAgentRow(const json& row, const json& fields)
-    {
-        // file/id 始终返回；fields 只控制数据列，不影响搜索使用的 match_fields。
-        json projected = {{"file", row.value("file", "")}, {"id", row.at("id")}};
-        if (fields.empty()) return row;
-        for (const auto& field : fields) {
-            const std::string key = field;
-            if (row.contains(key)) projected[key] = row.at(key);
-        }
-        return projected;
+    // file/id 始终返回；fields 只控制数据列，不影响搜索使用的 match_fields。
+    json projected = {{"file", row.value("file", "")}, {"id", row.at("id")}};
+    if (fields.empty()) return row;
+    for (const auto& field : fields) {
+        const std::string key = field;
+        if (row.contains(key)) projected[key] = row.at(key);
     }
-
+    return projected;
 }
 
 // 两种 Agent 路径共用读、搜索和备注工具，协议层只负责回填消息的形式。
@@ -129,3 +127,4 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
     return {{"offset", offset}, {"limit", limit}, {"total", total}, {"rows", std::move(results)}};
 }
 
+NAMESPACE_END(gpp)

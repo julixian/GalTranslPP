@@ -1,5 +1,4 @@
-#ifndef PLUGINITEMWIDGET_H
-#define PLUGINITEMWIDGET_H
+#pragma once
 
 #include "ElaScrollPageArea.h"
 
@@ -39,5 +38,3 @@ private:
     ElaIconButton* m_moveDownButton = nullptr;
     ElaIconButton* m_settingsButton = nullptr;
 };
-
-#endif

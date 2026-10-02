@@ -2,45 +2,44 @@ module;
 
 #include "GPPMacros.hpp"
 #include <zip.h>
-#pragma  warning(push) 
-#pragma  warning(disable: 4005) 
+#pragma  warning(push)
+#pragma  warning(disable: 4005)
 #include <gumbo.h>
-#pragma  warning(pop) 
+#pragma  warning(pop)
 
 module EpubTranslator;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace
-{
-    // 递归遍历 Gumbo 树以提取文本节点
-    void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
-        if (node->type == GUMBO_NODE_TEXT) {
-            const std::string_view textView = node->v.text.text;
-            if (textView.empty() || textView.find_first_not_of(" \t\n\r") == std::string_view::npos) {
-                return;
-            }
-            EpubTextNodeInfo info;
-            info.offset = node->v.text.start_pos.offset;
-            info.length = textView.length();
-            sentences.push_back({ std::string(textView), info });
+// 递归遍历 Gumbo 树以提取文本节点
+void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, EpubTextNodeInfo>>& sentences) {
+    if (node->type == GUMBO_NODE_TEXT) {
+        const std::string_view textView = node->v.text.text;
+        if (textView.empty() || textView.find_first_not_of(" \t\n\r") == std::string_view::npos) {
             return;
         }
+        EpubTextNodeInfo info;
+        info.offset = node->v.text.start_pos.offset;
+        info.length = textView.length();
+        sentences.push_back({ std::string(textView), info });
+        return;
+    }
 
-        if (node->type != GUMBO_NODE_ELEMENT || node->v.element.tag == GUMBO_TAG_SCRIPT || node->v.element.tag == GUMBO_TAG_STYLE) {
-            return;
-        }
+    if (node->type != GUMBO_NODE_ELEMENT || node->v.element.tag == GUMBO_TAG_SCRIPT || node->v.element.tag == GUMBO_TAG_STYLE) {
+        return;
+    }
 
-        const GumboVector* children = &node->v.element.children;
-        for (unsigned int i = 0; i < children->length; ++i) {
-            extractTextNodes((GumboNode*)children->data[i], sentences);
-        }
+    const GumboVector* children = &node->v.element.children;
+    for (unsigned int i = 0; i < children->length; ++i) {
+        extractTextNodes((GumboNode*)children->data[i], sentences);
     }
 }
 
-EpubTranslator::~EpubTranslator() 
+EpubTranslator::~EpubTranslator()
 {
     m_logger->info(gppTr("EpubTranslator.~EpubTranslator", "所有任务已完成！EpubTranslator 结束")
         .toStdString());
@@ -65,8 +64,8 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
 void EpubTranslator::epubInit()
 {
     try {
-        const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
-        const auto pluginConfig = toml::uparse(filePluginConfigPath / L"Epub.toml");
+        const auto projectConfig = gpp::uparse(m_projectDir / L"Config.toml");
+        const auto pluginConfig = gpp::uparse(filePluginConfigPath / L"Epub.toml");
 
         m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.bilingualOutput");
         m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.originalTextColor");
@@ -224,7 +223,7 @@ void EpubTranslator::epubBeforeRun()
 	                {
                         return isSameExtension(htmlEntry.path(), ext);
 	                })
-                ) 
+                )
             {
                 std::ifstream ifs(htmlEntry.path(), std::ios::binary);
                 std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
@@ -469,3 +468,5 @@ void EpubTranslator::run() {
     NormalJsonTranslator::normalJsonProcess();
     NormalJsonTranslator::normalJsonAfterRun();
 }
+
+NAMESPACE_END(gpp)

@@ -1,5 +1,4 @@
-#ifndef NORMALDICTMODEL_H
-#define NORMALDICTMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 #include <QList>
@@ -65,5 +64,3 @@ private:
     QList<GuiNormalDictEntry> m_entries;
     QStringList m_headerLabels;
 };
-
-#endif

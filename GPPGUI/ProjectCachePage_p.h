@@ -1,5 +1,4 @@
-#ifndef PROJECTCACHEPAGE_P_H
-#define PROJECTCACHEPAGE_P_H
+#pragma once
 
 #include <QColor>
 #include <QString>
@@ -59,5 +58,3 @@ namespace ProjectCachePagePrivate
     QStyledItemDelegate* createCacheEntryDelegate(QObject* parent);
     QStyledItemDelegate* createCacheSearchDelegate(QObject* parent);
 }
-
-#endif

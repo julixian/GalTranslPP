@@ -28,6 +28,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 CommonNormalDictsPage::CommonNormalDictsPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent) :
 	BasePage(parent), m_globalConfig(globalConfig)
 {

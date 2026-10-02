@@ -4,6 +4,8 @@ export import Tool;
 export import ProgressBar;
 export import ITranslator;
 
+using namespace gpp;
+
 export
 {
     class TerminalController : public IController {

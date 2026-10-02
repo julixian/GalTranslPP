@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include "ElaWindow.h"
 
@@ -75,5 +74,3 @@ private:
 
     toml::ordered_value m_globalConfig;
 };
-
-#endif

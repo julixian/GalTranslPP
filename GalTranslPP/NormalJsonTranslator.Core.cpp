@@ -8,207 +8,206 @@ import ConditionTool;
 import NLPTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace
-{
 #define GPP_REQUIRE_CONFIG(CONDITION, KEY, VALUE, REQUIREMENT) \
-    do { \
-        if (!(CONDITION)) { \
-            const std::string gppConfigValue = std::format("{}", VALUE); \
-            const std::string gppRequirement = std::format("{}", REQUIREMENT); \
-            throw std::invalid_argument(gppTr( \
-                    "validateNormalJsonCoreConfig", \
-                    "配置项 %1 无效: 当前值 %2，要求%3") \
-                .arg(KEY) \
-                .arg(gppConfigValue) \
-                .arg(gppRequirement) \
-                .toStdString()); \
-        } \
-    } while (false)
+do { \
+    if (!(CONDITION)) { \
+        const std::string gppConfigValue = std::format("{}", VALUE); \
+        const std::string gppRequirement = std::format("{}", REQUIREMENT); \
+        throw std::invalid_argument(gppTr( \
+                "validateNormalJsonCoreConfig", \
+                "配置项 %1 无效: 当前值 %2，要求%3") \
+            .arg(KEY) \
+            .arg(gppConfigValue) \
+            .arg(gppRequirement) \
+            .toStdString()); \
+    } \
+} while (false)
 
-    struct NormalJsonCoreConfig {
-        std::string_view sortMethod;
-        std::string_view splitFileMethod;
-        std::string_view problemOverviewFormat;
-        bool agentEnabled{};
-        int batchSize{};
-        int threadsNum{};
-        int nameTransBatchSize{};
-        int splitFileNum{};
-        int repeatedBlockMinSize{};
-        int cacheSearchDistance{};
-        int saveCacheInterval{};
-        int maxRequestCount{};
-        int inputBlockMaxLines{};
-        int problemMaxLines{};
-        int glossaryMaxLines{};
-        int agentMaxTurnsPerChunk{};
-        int agentCompactContextThresholdBytes{};
-        int agentSearchResultLimit{};
-        int agentContextLinesLimit{};
-    };
+struct NormalJsonCoreConfig {
+    std::string_view sortMethod;
+    std::string_view splitFileMethod;
+    std::string_view problemOverviewFormat;
+    bool agentEnabled{};
+    int batchSize{};
+    int threadsNum{};
+    int nameTransBatchSize{};
+    int splitFileNum{};
+    int repeatedBlockMinSize{};
+    int cacheSearchDistance{};
+    int saveCacheInterval{};
+    int maxRequestCount{};
+    int inputBlockMaxLines{};
+    int problemMaxLines{};
+    int glossaryMaxLines{};
+    int agentMaxTurnsPerChunk{};
+    int agentCompactContextThresholdBytes{};
+    int agentSearchResultLimit{};
+    int agentContextLinesLimit{};
+};
 
-    void validateNormalJsonCoreConfig(const NormalJsonCoreConfig& config)
-    {
-    	auto isOneOf = [](std::string_view value, std::initializer_list<std::string_view> candidates)
-            {
-                return std::ranges::find(candidates, value) != candidates.end();
-            };
+void validateNormalJsonCoreConfig(const NormalJsonCoreConfig& config)
+{
+	auto isOneOf = [](std::string_view value, std::initializer_list<std::string_view> candidates)
+        {
+            return std::ranges::find(candidates, value) != candidates.end();
+        };
 
-        GPP_REQUIRE_CONFIG(
-            config.batchSize > 0,
-            "common.numPerRequestTranslate",
-            config.batchSize,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.threadsNum > 0,
-            "common.threadsNum",
-            config.threadsNum,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.nameTransBatchSize > 0,
-            "common.numPerRequestNameTranslate",
-            config.nameTransBatchSize,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            isOneOf(config.sortMethod, { "name", "size" }),
-            "common.sortMethod",
-            config.sortMethod,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "为 name 或 size")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            isOneOf(config.splitFileMethod, { "No", "Num", "Equal" }),
-            "common.split.method",
-            config.splitFileMethod,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "为 No、Num 或 Equal")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            isOneOf(config.problemOverviewFormat, { "toml", "json" }),
-            "common.problemOverviewFormat",
-            config.problemOverviewFormat,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "为 toml 或 json")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.splitFileNum > 0,
-            "common.split.num",
-            config.splitFileNum,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.repeatedBlockMinSize >= 2,
-            "common.repeatedBlock.minSize",
-            config.repeatedBlockMinSize,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于等于 2")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.cacheSearchDistance >= 0,
-            "common.split.cacheSearchDistance",
-            config.cacheSearchDistance,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于等于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.saveCacheInterval > 0,
-            "common.saveCacheInterval",
-            config.saveCacheInterval,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.maxRequestCount > 0,
-            "common.maxRequestCount",
-            config.maxRequestCount,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.inputBlockMaxLines > 0,
-            "common.log.inputBlockMaxLines",
-            config.inputBlockMaxLines,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.problemMaxLines > 0,
-            "common.log.problemMaxLines",
-            config.problemMaxLines,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.glossaryMaxLines > 0,
-            "common.log.glossaryMaxLines",
-            config.glossaryMaxLines,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.batchSize > 0,
+        "common.numPerRequestTranslate",
+        config.batchSize,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.threadsNum > 0,
+        "common.threadsNum",
+        config.threadsNum,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.nameTransBatchSize > 0,
+        "common.numPerRequestNameTranslate",
+        config.nameTransBatchSize,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        isOneOf(config.sortMethod, { "name", "size" }),
+        "common.sortMethod",
+        config.sortMethod,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "为 name 或 size")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        isOneOf(config.splitFileMethod, { "No", "Num", "Equal" }),
+        "common.split.method",
+        config.splitFileMethod,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "为 No、Num 或 Equal")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        isOneOf(config.problemOverviewFormat, { "toml", "json" }),
+        "common.problemOverviewFormat",
+        config.problemOverviewFormat,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "为 toml 或 json")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.splitFileNum > 0,
+        "common.split.num",
+        config.splitFileNum,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.repeatedBlockMinSize >= 2,
+        "common.repeatedBlock.minSize",
+        config.repeatedBlockMinSize,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于等于 2")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.cacheSearchDistance >= 0,
+        "common.split.cacheSearchDistance",
+        config.cacheSearchDistance,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于等于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.saveCacheInterval > 0,
+        "common.saveCacheInterval",
+        config.saveCacheInterval,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.maxRequestCount > 0,
+        "common.maxRequestCount",
+        config.maxRequestCount,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.inputBlockMaxLines > 0,
+        "common.log.inputBlockMaxLines",
+        config.inputBlockMaxLines,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.problemMaxLines > 0,
+        "common.log.problemMaxLines",
+        config.problemMaxLines,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.glossaryMaxLines > 0,
+        "common.log.glossaryMaxLines",
+        config.glossaryMaxLines,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
 
-        if (!config.agentEnabled) {
-            return;
-        }
-
-        GPP_REQUIRE_CONFIG(
-            config.agentMaxTurnsPerChunk > 0,
-            "common.agent.maxTurnsPerChunk",
-            config.agentMaxTurnsPerChunk,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.agentSearchResultLimit >= 1,
-            "common.agent.searchResultLimit",
-            config.agentSearchResultLimit,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于等于 1")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.agentContextLinesLimit >= 0,
-            "common.agent.contextLinesLimit",
-            config.agentContextLinesLimit,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于等于 0")
-                .toStdString());
-        GPP_REQUIRE_CONFIG(
-            config.agentCompactContextThresholdBytes > 0,
-            "common.agent.compactContextThresholdBytes",
-            config.agentCompactContextThresholdBytes,
-            gppTr(
-                "validateNormalJsonCoreConfig",
-                "大于 0")
-                .toStdString());
+    if (!config.agentEnabled) {
+        return;
     }
 
-#undef GPP_REQUIRE_CONFIG
+    GPP_REQUIRE_CONFIG(
+        config.agentMaxTurnsPerChunk > 0,
+        "common.agent.maxTurnsPerChunk",
+        config.agentMaxTurnsPerChunk,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.agentSearchResultLimit >= 1,
+        "common.agent.searchResultLimit",
+        config.agentSearchResultLimit,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于等于 1")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.agentContextLinesLimit >= 0,
+        "common.agent.contextLinesLimit",
+        config.agentContextLinesLimit,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于等于 0")
+            .toStdString());
+    GPP_REQUIRE_CONFIG(
+        config.agentCompactContextThresholdBytes > 0,
+        "common.agent.compactContextThresholdBytes",
+        config.agentCompactContextThresholdBytes,
+        gppTr(
+            "validateNormalJsonCoreConfig",
+            "大于 0")
+            .toStdString());
 }
+
+#undef GPP_REQUIRE_CONFIG
 
 NormalJsonTranslator::~NormalJsonTranslator()
 {
@@ -269,7 +268,7 @@ void NormalJsonTranslator::normalJsonInit()
 {
     const fs::path configPath = m_projectDir / L"Config.toml";
     try {
-        const auto configData = toml::uparse(configPath);
+        const auto configData = gpp::uparse(configPath);
 
         const std::string& transEngineStr = configData.at("plugins").at("transEngine").as_string();
         if (const auto it = names2TransEngine.find(transEngineStr); it != names2TransEngine.end()) {
@@ -283,7 +282,7 @@ void NormalJsonTranslator::normalJsonInit()
                 .toStdString());
         }
 
-        const auto pluginConfigData = toml::uparse(filePluginConfigPath / L"NormalJson.toml");
+        const auto pluginConfigData = gpp::uparse(filePluginConfigPath / L"NormalJson.toml");
         m_outputWithSrc = parseToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithSrc");
         m_outputWithRefInfo = parseToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithRefInfo");
 
@@ -571,8 +570,8 @@ void NormalJsonTranslator::normalJsonInit()
                     .toStdString());
             }
 
-            const auto projectPromptData = hasProjectPrompt ? toml::uparse(projectPromptPath) : toml::value{};
-            const auto defaultPromptData = hasDefaultPrompt ? toml::uparse(defaultPromptPath) : toml::value{};
+            const auto projectPromptData = hasProjectPrompt ? gpp::uparse(projectPromptPath) : toml::value{};
+            const auto defaultPromptData = hasDefaultPrompt ? gpp::uparse(defaultPromptPath) : toml::value{};
 
             const auto readPromptString = [&](const std::string& key) -> std::string
                 {
@@ -1016,3 +1015,5 @@ void NormalJsonTranslator::postProcess(Sentence* se)
                 });
         });
 }
+
+NAMESPACE_END(gpp)

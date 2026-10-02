@@ -1,5 +1,4 @@
-#ifndef TREE_SITTER_PARSER_H_
-#define TREE_SITTER_PARSER_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -219,5 +218,3 @@ struct TSLanguage {
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // TREE_SITTER_PARSER_H_

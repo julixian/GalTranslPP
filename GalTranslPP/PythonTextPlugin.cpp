@@ -4,6 +4,8 @@ module;
 
 module PythonTextPlugin;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -154,3 +156,5 @@ void PythonTextPlugin::dPostRun(Sentence* se) {
             }
         }).get();
 }
+
+NAMESPACE_END(gpp)

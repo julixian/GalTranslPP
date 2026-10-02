@@ -1,5 +1,4 @@
-#ifndef PROMPTSSETTINGSPAGE_H
-#define PROMPTSSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "NormalDictModel.h"
@@ -23,5 +22,3 @@ private:
     fs::path& m_projectDir;
 
 };
-
-#endif

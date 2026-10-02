@@ -1,5 +1,4 @@
-#ifndef CUSTOMFILEPLUGINCFGPAGE_H
-#define CUSTOMFILEPLUGINCFGPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -19,5 +18,3 @@ private:
     toml::ordered_value& m_globalConfig;
     toml::ordered_value& m_projectConfig;
 };
-
-#endif

@@ -10,6 +10,8 @@ module AgentToolCommon;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 std::optional<int> parseAgentCommonJsonInt(const json& object) {
@@ -206,3 +208,5 @@ json runAgentCommonGetProjectNoteTool(
         {"content", content},
     };
 }
+
+NAMESPACE_END(gpp)

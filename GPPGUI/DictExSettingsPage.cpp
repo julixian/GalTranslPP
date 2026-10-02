@@ -10,6 +10,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 DictExSettingsPage::DictExSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectConfig(projectConfig), m_globalConfig(globalConfig)
 {

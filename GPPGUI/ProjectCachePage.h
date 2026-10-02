@@ -1,5 +1,4 @@
-#ifndef PROJECTCACHEPAGE_H
-#define PROJECTCACHEPAGE_H
+#pragma once
 
 
 #include "BasePage.h"
@@ -207,5 +206,3 @@ private:
     ElaToolButton* m_replaceToggleButton = nullptr;
     ElaToolButton* m_replaceExecuteButton = nullptr;
 };
-
-#endif

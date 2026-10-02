@@ -11,6 +11,8 @@ import ctpl_stl;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 DictionaryGenerator::~DictionaryGenerator() {
@@ -169,7 +171,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
     }
 
     const std::string& text = m_segments[segmentIndex];
-    std::string hint = m_nameSet | std::views::filter([&](const auto& name) { return text.contains(name); }) 
+    std::string hint = m_nameSet | std::views::filter([&](const auto& name) { return text.contains(name); })
 	    | std::views::join_with('\n') | std::ranges::to<std::string>();
     if (!hint.empty()) {
         hint = "The real names in this list should always be added into glossary:\n" + hint;
@@ -445,3 +447,5 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
         .arg(wide2Ascii(outputFilePath))
         .toStdString());
 }
+
+NAMESPACE_END(gpp)

@@ -1,25 +1,30 @@
+module;
+
+#include "GPPMacros.hpp"
+
 export module NNetLanguageIdentifierWrapper;
 
 export import std;
 
-export
-{
-    // 仅暴露问题分析实际需要的结果，避免 CLD3、Protobuf 和 Abseil 类型进入其它模块。
-    struct NNetLanguageResult {
-        std::string language;
-        float probability{};
-        bool isUnknown{};
-    };
+export NAMESPACE_BEGIN(gpp)
 
-    class NNetLanguageIdentifierWrapper {
-    private:
-        class Impl;
-        std::unique_ptr<Impl> m_impl;
+// 仅暴露问题分析实际需要的结果，避免 CLD3、Protobuf 和 Abseil 类型进入其它模块。
+struct NNetLanguageResult {
+    std::string language;
+    float probability{};
+    bool isUnknown{};
+};
 
-    public:
-        NNetLanguageIdentifierWrapper(int minNumBytes, int maxNumBytes);
-        ~NNetLanguageIdentifierWrapper();
+class NNetLanguageIdentifierWrapper {
+private:
+    class Impl;
+    std::unique_ptr<Impl> m_impl;
 
-        std::vector<NNetLanguageResult> findTopNMostFreqLangs(const std::string& text, int numLangs);
-    };
-}
+public:
+    NNetLanguageIdentifierWrapper(int minNumBytes, int maxNumBytes);
+    ~NNetLanguageIdentifierWrapper();
+
+    std::vector<NNetLanguageResult> findTopNMostFreqLangs(const std::string& text, int numLangs);
+};
+
+NAMESPACE_END(gpp)

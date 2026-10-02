@@ -1,5 +1,4 @@
-#ifndef ELAINPUTDIALOG_H
-#define ELAINPUTDIALOG_H
+#pragma once
 
 #include "ElaContentDialog.h"
 
@@ -21,5 +20,3 @@ private:
     ElaLineEdit* m_lineEdit = nullptr;
 
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef NAMETABLESETTINGSPAGE_H
-#define NAMETABLESETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "NameTableModel.h"
@@ -30,5 +29,3 @@ private:
 
     QList<NameTableEntry> m_withdrawList;
 };
-
-#endif

@@ -7,6 +7,8 @@ module PDFTool;
 import PythonManager;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -44,3 +46,5 @@ std::tuple<bool, std::string> reinjectPDF(const fs::path& orgPDFPath, const fs::
 void checkPDFDependency(const std::shared_ptr<spdlog::logger>& logger) {
     checkPythonDependencies({ "babeldoc" }, logger);
 }
+
+NAMESPACE_END(gpp)

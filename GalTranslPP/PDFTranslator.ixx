@@ -6,39 +6,40 @@ export module PDFTranslator;
 
 export import NormalJsonTranslator;
 
+export NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-export
-{
-    class PDFTranslator : public NormalJsonTranslator {
+class PDFTranslator : public NormalJsonTranslator {
 
-        friend class PythonMainInterpreterManager;
-        friend class LuaManager;
+    friend class PythonMainInterpreterManager;
+    friend class LuaManager;
 
-    protected:
-        fs::path m_pdfInputDir;
-        fs::path m_pdfOutputDir;
+protected:
+    fs::path m_pdfInputDir;
+    fs::path m_pdfOutputDir;
 
-        // PDF 处理相关的配置
-        bool m_bilingualOutput{};
-        std::string m_babeldocLangOut;
+    // PDF 处理相关的配置
+    bool m_bilingualOutput{};
+    std::string m_babeldocLangOut;
 
-        // 存储json文件相对路径到其所属PDF完整路径的映射
-        absl::flat_hash_map<fs::path, fs::path> m_jsonToPDFPathMap;
+    // 存储json文件相对路径到其所属PDF完整路径的映射
+    absl::flat_hash_map<fs::path, fs::path> m_jsonToPDFPathMap;
 
-        std::mutex m_onFileProcessedMutex;
+    std::mutex m_onFileProcessedMutex;
 
-    public:
+public:
 
-        PDFTranslator(const fs::path& projectDir,
-            const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
+    PDFTranslator(const fs::path& projectDir,
+        const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger);
 
-        	~PDFTranslator() override;
+        ~PDFTranslator() override;
 
 
-        void pdfInit();
-        void pdfBeforeRun();
+    void pdfInit();
+    void pdfBeforeRun();
 
-    	    void run() override;
-    };
-}
+	    void run() override;
+};
+
+NAMESPACE_END(gpp)

@@ -7,6 +7,8 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
@@ -114,7 +116,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             .arg(batchToTransThisRound.size())
             .arg(logBlock)
             .toStdString());
-        
+
 
         std::string systemPrompt = m_systemPrompt;
         std::string promptReq = m_userPrompt;
@@ -176,7 +178,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             continue;
         }
 
-        
+
         if (m_logger->should_log(spdlog::level::trace)) {
             m_logger->trace(gppTr(
                 "NormalJsonTranslator.translateBatch",
@@ -266,3 +268,5 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
     );
     return false;
 }
+
+NAMESPACE_END(gpp)

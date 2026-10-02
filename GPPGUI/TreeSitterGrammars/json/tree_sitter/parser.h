@@ -1,5 +1,4 @@
-#ifndef TREE_SITTER_PARSER_H_
-#define TREE_SITTER_PARSER_H_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -262,5 +261,3 @@ static inline bool set_contains(TSCharacterRange *ranges, uint32_t len, int32_t 
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // TREE_SITTER_PARSER_H_

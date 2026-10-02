@@ -1,5 +1,4 @@
-#ifndef GPTDICTMODEL_H
-#define GPTDICTMODEL_H
+#pragma once
 
 #include <QAbstractTableModel>
 #include <QList>
@@ -51,5 +50,3 @@ private:
     QList<GuiGptDictEntry> m_entries; // 存储所有字典条目的列表
     QStringList m_headerLabels;       // 存储表头标题
 };
-
-#endif

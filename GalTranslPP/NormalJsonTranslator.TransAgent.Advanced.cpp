@@ -7,21 +7,20 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace
+json agentObjectSchema(json properties)
 {
-    json agentObjectSchema(json properties)
-    {
-        json required = json::array();
-        for (const auto& item : properties.items()) required.push_back(item.key());
-        return {{"type", "object"}, {"properties", std::move(properties)}, {"required", std::move(required)}, {"additionalProperties", false}};
-    }
+    json required = json::array();
+    for (const auto& item : properties.items()) required.push_back(item.key());
+    return {{"type", "object"}, {"properties", std::move(properties)}, {"required", std::move(required)}, {"additionalProperties", false}};
+}
 
-    json agentArraySchema(const json& items)
-    {
-        return {{"type", "array"}, {"items", items}};
-    }
+json agentArraySchema(const json& items)
+{
+    return {{"type", "array"}, {"items", items}};
 }
 
 void NormalJsonTranslatorTransAgent::configureAdvanced(bool enabled, int workerCount)
@@ -333,3 +332,5 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
     }
     return false;
 }
+
+NAMESPACE_END(gpp)

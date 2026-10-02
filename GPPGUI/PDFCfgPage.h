@@ -1,5 +1,4 @@
-#ifndef PDFCFGPAGE_H
-#define PDFCFGPAGE_H
+#pragma once
 
 #include <toml.hpp>
 #include "BasePage.h"
@@ -14,5 +13,3 @@ public:
 private:
     toml::ordered_value& m_projectConfig;
 };
-
-#endif

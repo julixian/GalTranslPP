@@ -1,5 +1,4 @@
-#ifndef TRANSLATIONWORKBENCHPAGE_H
-#define TRANSLATIONWORKBENCHPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "TranslatorWorker.h"
@@ -64,5 +63,3 @@ private:
     QButtonGroup* m_sideTabGroup = nullptr;
     QStackedWidget* m_sideStack = nullptr;
 };
-
-#endif

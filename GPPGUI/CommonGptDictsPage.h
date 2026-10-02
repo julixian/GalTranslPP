@@ -1,5 +1,4 @@
-#ifndef COMMONGPTDICTSPAGE_H
-#define COMMONGPTDICTSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "GptDictModel.h"
@@ -44,5 +43,3 @@ private:
 
     QList<QSharedPointer<GptTabEntry>> m_gptTabEntries;
 };
-
-#endif

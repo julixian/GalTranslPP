@@ -1,5 +1,7 @@
 module;
 
+#include "GPPMacros.hpp"
+
 // CLD3 会经由 Protobuf 引入 Abseil，因此只能在这个不导入项目模块的实现单元中出现。
 #pragma warning(push)
 #pragma warning(disable: 4244)
@@ -9,6 +11,8 @@ module;
 #pragma warning(pop)
 
 module NNetLanguageIdentifierWrapper;
+
+NAMESPACE_BEGIN(gpp)
 
 class NNetLanguageIdentifierWrapper::Impl {
 public:
@@ -47,3 +51,5 @@ std::vector<NNetLanguageResult> NNetLanguageIdentifierWrapper::findTopNMostFreqL
     }
     return results;
 }
+
+NAMESPACE_END(gpp)

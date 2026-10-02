@@ -4,6 +4,8 @@ module;
 
 module LuaTextPlugin;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 LuaTextPlugin::LuaTextPlugin(const fs::path& projectDir, const std::string& scriptPath,
@@ -151,3 +153,5 @@ void LuaTextPlugin::dPostRun(Sentence* se) {
 			}
 		}).get();
 }
+
+NAMESPACE_END(gpp)

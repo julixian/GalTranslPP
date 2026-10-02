@@ -36,12 +36,14 @@ import GPPVersion;
 import Tool;
 import PythonManager;
 
+using namespace gpp;
+
 MainWindow::MainWindow(QWidget* parent)
     : ElaWindow(parent)
 {
     if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
-            m_globalConfig = toml::uoparse(fs::path(L"BaseConfig/GlobalConfig.toml"));
+            m_globalConfig = gpp::uoparse(fs::path(L"BaseConfig/GlobalConfig.toml"));
         }
         catch (...) {
 #ifdef Q_OS_WIN
@@ -451,7 +453,7 @@ void MainWindow::onNewProjectTriggered()
             fs::copy(L"BaseConfig/Prompt.toml", newProjectDir / L"Prompt.toml", fs::copy_options::overwrite_existing);
         }
 
-        toml::ordered_value configData = toml::uoparse(newProjectDir / L"Config.toml");
+        toml::ordered_value configData = gpp::uoparse(newProjectDir / L"Config.toml");
 
         auto addCommonDictsToProjectConfig = [&](const std::string& projectDictStdName, const std::string& globalConfigKey, const std::string& projectConfigKey)
             {

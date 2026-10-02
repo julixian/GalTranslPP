@@ -29,6 +29,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent)
     : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig)
 {
@@ -36,7 +38,7 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     setTitleVisible(false);
 
     try {
-        m_projectConfig = toml::uoparse(m_projectDir / L"Config.toml");
+        m_projectConfig = gpp::uoparse(m_projectDir / L"Config.toml");
     }
     catch (...) {
         m_projectConfig = toml::ordered_table{};
@@ -313,7 +315,7 @@ void ProjectSettingsPage::onRefreshProjectConfig()
         return;
     }
     try {
-        m_projectConfig = toml::uoparse(m_projectDir / L"Config.toml");
+        m_projectConfig = gpp::uoparse(m_projectDir / L"Config.toml");
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft,

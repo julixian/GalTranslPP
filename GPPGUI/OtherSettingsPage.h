@@ -1,5 +1,4 @@
-#ifndef OTHERSETTINGSPAGE_H
-#define OTHERSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <filesystem>
@@ -27,5 +26,3 @@ private:
     toml::ordered_value& m_globalConfig;
     toml::ordered_value& m_projectConfig;
 };
-
-#endif

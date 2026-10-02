@@ -1,4 +1,10 @@
+module;
+
+#include "GPPMacros.hpp"
+
 module GPPDefines;
+
+NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
@@ -17,3 +23,5 @@ const std::wstring otherCacheDirName = L"other_cache";
 
 const std::string defaultRegCompileModifier = "mnS"; // m: 多行, n: unicode 支持, s: DotAll, S: jit编译
 const std::string defaultRegReplaceModifier = "gxE"; // g: gloabl, x: ${n:-replace}/${n:+trueText:falseText} 语法支持, E: 未匹配的引用返回空字符串代替
+
+NAMESPACE_END(gpp)

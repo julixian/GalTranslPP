@@ -13,6 +13,8 @@
 import GPPVersion;
 import Tool;
 
+using namespace gpp;
+
 namespace
 {
     constexpr int kCheckTimeoutMs = 10000;

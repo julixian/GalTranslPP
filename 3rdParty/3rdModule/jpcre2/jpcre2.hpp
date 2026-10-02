@@ -44,8 +44,7 @@
  * @author [Md Jahidul Hamid](https://github.com/neurobin)
  */
 
-#ifndef JPCRE2_HPP
-#define JPCRE2_HPP
+#pragma once
 
 #ifndef PCRE2_CODE_UNIT_WIDTH
 
@@ -5268,8 +5267,5 @@ jpcre2::SIZE_T jpcre2::select<Char_T>::RegexMatch::match() {
 ///
 ///Using the standard `NDEBUG` macro will have the same effect,
 ///but it is recommended that you use `JPCRE2_NDEBUG` to strip out debug codes specifically for this library.
-
-#endif
-
 
 #endif

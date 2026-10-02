@@ -8,28 +8,27 @@ module CodePageChecker;
 import Tool;
 import utf8cpp;
 
-namespace
+NAMESPACE_BEGIN(gpp)
+
+void U_CALLCONV codePageFromUCallback(
+    const void* context,
+    UConverterFromUnicodeArgs* fromUArgs,
+    const UChar*,
+    int32_t,
+    UChar32 codePoint,
+    UConverterCallbackReason reason,
+    UErrorCode* pErrorCode)
 {
-    void U_CALLCONV codePageFromUCallback(
-        const void* context,
-        UConverterFromUnicodeArgs* fromUArgs,
-        const UChar*,
-        int32_t,
-        UChar32 codePoint,
-        UConverterCallbackReason reason,
-        UErrorCode* pErrorCode)
-    {
-        if (reason != UCNV_UNASSIGNED) {
-            return;
-        }
-
-        auto* unmappableCharsSet = (absl::btree_set<UChar32>*)context;
-        unmappableCharsSet->insert(codePoint);
-
-        // UCNV_UNASSIGNED 在这里是预期结果，写入替代字符后继续扫描后续输入。
-        *pErrorCode = U_ZERO_ERROR;
-        ucnv_cbFromUWriteSub(fromUArgs, 0, pErrorCode);
+    if (reason != UCNV_UNASSIGNED) {
+        return;
     }
+
+    auto* unmappableCharsSet = (absl::btree_set<UChar32>*)context;
+    unmappableCharsSet->insert(codePoint);
+
+    // UCNV_UNASSIGNED 在这里是预期结果，写入替代字符后继续扫描后续输入。
+    *pErrorCode = U_ZERO_ERROR;
+    ucnv_cbFromUWriteSub(fromUArgs, 0, pErrorCode);
 }
 
 void CodePageChecker::UConverterDeleter::operator()(UConverter* converter) const
@@ -106,3 +105,5 @@ const std::string& CodePageChecker::findUnmappableChars(const std::string& trans
 
     return m_unmappableCharsResult;
 }
+
+NAMESPACE_END(gpp)

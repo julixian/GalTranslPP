@@ -1,5 +1,4 @@
-#ifndef DEFAULTPROMPTSPAGE_H
-#define DEFAULTPROMPTSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -17,5 +16,3 @@ private:
 
     void setupUi();
 };
-
-#endif

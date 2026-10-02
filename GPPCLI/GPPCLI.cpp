@@ -12,6 +12,8 @@ import TerminalController;
 import toml11;
 import Tool;
 
+using namespace gpp;
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -32,7 +34,7 @@ int main(int argc, char* argv[])
     std::unique_ptr<py::gil_scoped_release> release;
 
     try {
-        const auto globalConfig = toml::uparse(globalConfigPath);
+        const auto globalConfig = gpp::uparse(globalConfigPath);
         const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
         if (language == "zh_CN") {
             if (baseTranslator.load("qt_zh_CN.qm", "translations")) {

@@ -10,6 +10,8 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 // 保存本轮翻译 Agent 的运行依赖，并构建工具要读取的源文件视图。
@@ -220,7 +222,7 @@ std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAge
 std::vector<NormalJsonTranslatorTransAgent::LoadedDictionaryEntry> NormalJsonTranslatorTransAgent::loadDictionaryEntries() const {
     std::vector<LoadedDictionaryEntry> entries;
     for (const fs::path& dictPath : m_gptDictionaryPaths) {
-        const auto dictData = toml::uparse(dictPath);
+        const auto dictData = gpp::uparse(dictPath);
         if (!dictData.contains("gptDict")) {
             continue;
         }
@@ -680,7 +682,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
             .dst = dst
         });
     }
-    
+
     for (const auto& patch : sentencePatches) {
         commitResultLog += std::format("{}\t{}\t{}\n",
             patch.sentence->nameType != NameType::None ? getNameString(*patch.sentence) : "null",
@@ -1160,3 +1162,5 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
             .toStdString());
     }
 }
+
+NAMESPACE_END(gpp)

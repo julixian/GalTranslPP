@@ -1,5 +1,4 @@
-#ifndef UPDATECHECKER_H
-#define UPDATECHECKER_H
+#pragma once
 
 #include <QNetworkReply>
 #include <QUrl>
@@ -92,5 +91,3 @@ private:
     const QString m_packagePath = "GUICORE.7z";
     const QString m_tempPackagePath = "GUICORE.7z.download";
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef APISETTINGSPAGE_H
-#define APISETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <QList>
@@ -48,5 +47,3 @@ private:
     // 创建一个新的 Api 输入行（现在返回一个ElaScrollPageArea*）
     ElaScrollPageArea* createApiInputRowWidget(const toml::value& apiTblValue = toml::table{});
 };
-
-#endif

@@ -24,6 +24,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 PASettingsPage::PASettingsPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("问题分析"));

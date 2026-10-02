@@ -1,5 +1,4 @@
-#ifndef STARTSETTINGSPAGE_H
-#define STARTSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "EtaEstimator.hpp"
@@ -110,5 +109,3 @@ private:
     // 翻译详情页
     TranslationWorkbenchPage* m_translationWorkbenchPage = nullptr;
 };
-
-#endif

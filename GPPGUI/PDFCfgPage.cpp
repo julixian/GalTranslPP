@@ -12,6 +12,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("PDF 输出配置"));

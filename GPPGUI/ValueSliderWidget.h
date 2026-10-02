@@ -1,5 +1,4 @@
-#ifndef VALUESLIDERWIDGET_H
-#define VALUESLIDERWIDGET_H
+#pragma once
 
 #include <QWidget>
 
@@ -33,5 +32,3 @@ private:
     double m_maxValue;
     double m_minValue;
 };
-
-#endif

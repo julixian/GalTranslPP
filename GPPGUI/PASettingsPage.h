@@ -1,5 +1,4 @@
-#ifndef PASETTINGSPAGE_H
-#define PASETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <toml.hpp>
@@ -20,5 +19,3 @@ private:
     toml::ordered_value& m_projectConfig;
     ElaWidget* m_compareConfigWidget = nullptr;
 };
-
-#endif

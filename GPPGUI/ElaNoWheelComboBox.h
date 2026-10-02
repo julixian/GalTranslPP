@@ -1,5 +1,4 @@
-#ifndef ELANOWHEELCOMBOBOX_H
-#define ELANOWHEELCOMBOBOX_H
+#pragma once
 
 #include "ElaComboBox.h"
 #include <QWheelEvent>
@@ -18,5 +17,3 @@ protected:
 		event->ignore();
 	}
 };
-
-#endif

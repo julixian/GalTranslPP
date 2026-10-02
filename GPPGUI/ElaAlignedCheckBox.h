@@ -1,5 +1,4 @@
-#ifndef ELAALIGNEDCHECKBOX_H
-#define ELAALIGNEDCHECKBOX_H
+#pragma once
 
 #include "ElaCheckBox.h"
 
@@ -19,5 +18,3 @@ protected:
 private:
     static constexpr int kIndicatorTopOffset = 8;
 };
-
-#endif

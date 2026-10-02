@@ -6,174 +6,173 @@ module NormalJsonTranslatorHelperTool;
 
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-namespace
-{
-    struct RepeatedBlockOccurrence {
-        int start = 0;
-        int length = 0;
+struct RepeatedBlockOccurrence {
+    int start = 0;
+    int length = 0;
+};
+
+template <typename JsonT>
+std::string buildRepeatedBlockSpeakerKey(const JsonT& item) {
+    if (auto it = item.find("name"); it != item.end()) {
+        return "name:" + it->template get<std::string>();
+    }
+    if (auto it = item.find("names"); it != item.end()) {
+        return "names:" + it->dump();
+    }
+    return "none:";
+}
+
+template <typename JsonT>
+std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
+    return buildRepeatedBlockSpeakerKey(item) + "\nmessage:" + item.value("message", "");
+}
+
+template <typename JsonT>
+JsonT sentencePositionToJson(const SentencePosition& target) {
+    return JsonT{
+        {"file", target.file},
+        {"index", target.index}
     };
+}
 
-    template <typename JsonT>
-    std::string buildRepeatedBlockSpeakerKey(const JsonT& item) {
-        if (auto it = item.find("name"); it != item.end()) {
-            return "name:" + it->template get<std::string>();
-        }
-        if (auto it = item.find("names"); it != item.end()) {
-            return "names:" + it->dump();
-        }
-        return "none:";
-    }
-
-    template <typename JsonT>
-    std::string buildRepeatedBlockSentenceKey(const JsonT& item) {
-        return buildRepeatedBlockSpeakerKey(item) + "\nmessage:" + item.value("message", "");
-    }
-
-    template <typename JsonT>
-    JsonT sentencePositionToJson(const SentencePosition& target) {
-        return JsonT{
-            {"file", target.file},
-            {"index", target.index}
-        };
-    }
-
-    std::vector<int> buildSuffixArray(const std::vector<int>& tokens) {
-        const int n = (int)tokens.size();
-        std::vector<int> suffixArray(n);
-        std::iota(suffixArray.begin(), suffixArray.end(), 0);
-        if (n <= 1) {
-            return suffixArray;
-        }
-
-        std::vector<int> rank = tokens;
-        std::vector<int> nextRank(n);
-        for (int k = 1;; k <<= 1) {
-            std::ranges::sort(suffixArray, [&](int lhs, int rhs)
-                {
-                    if (rank[lhs] != rank[rhs]) {
-                        return rank[lhs] < rank[rhs];
-                    }
-                    const int lhsNext = lhs + k < n ? rank[lhs + k] : -1;
-                    const int rhsNext = rhs + k < n ? rank[rhs + k] : -1;
-                    return lhsNext < rhsNext;
-                });
-
-            nextRank[suffixArray.front()] = 0;
-            for (int i = 1; i < n; ++i) {
-                const int prev = suffixArray[i - 1];
-                const int current = suffixArray[i];
-                const bool different =
-                    rank[prev] != rank[current] ||
-                    (prev + k < n ? rank[prev + k] : -1) != (current + k < n ? rank[current + k] : -1);
-                nextRank[current] = nextRank[prev] + (different ? 1 : 0);
-            }
-            rank.swap(nextRank);
-            if (rank[suffixArray.back()] == n - 1) {
-                break;
-            }
-        }
+std::vector<int> buildSuffixArray(const std::vector<int>& tokens) {
+    const int n = (int)tokens.size();
+    std::vector<int> suffixArray(n);
+    std::iota(suffixArray.begin(), suffixArray.end(), 0);
+    if (n <= 1) {
         return suffixArray;
     }
 
-    std::vector<int> buildLcpArray(const std::vector<int>& tokens, const std::vector<int>& suffixArray) {
-        const int n = (int)tokens.size();
-        std::vector<int> rank(n);
-        for (int i = 0; i < n; ++i) {
-            rank[suffixArray[i]] = i;
-        }
+    std::vector<int> rank = tokens;
+    std::vector<int> nextRank(n);
+    for (int k = 1;; k <<= 1) {
+        std::ranges::sort(suffixArray, [&](int lhs, int rhs)
+            {
+                if (rank[lhs] != rank[rhs]) {
+                    return rank[lhs] < rank[rhs];
+                }
+                const int lhsNext = lhs + k < n ? rank[lhs + k] : -1;
+                const int rhsNext = rhs + k < n ? rank[rhs + k] : -1;
+                return lhsNext < rhsNext;
+            });
 
-        std::vector<int> lcp(std::max(0, n - 1));
-        int h = 0;
-        for (int i = 0; i < n; ++i) {
-            const int r = rank[i];
-            if (r == 0) {
-                continue;
-            }
-            const int j = suffixArray[r - 1];
-            while (i + h < n && j + h < n && tokens[i + h] == tokens[j + h]) {
-                ++h;
-            }
-            lcp[r - 1] = h;
-            if (h > 0) {
-                --h;
-            }
+        nextRank[suffixArray.front()] = 0;
+        for (int i = 1; i < n; ++i) {
+            const int prev = suffixArray[i - 1];
+            const int current = suffixArray[i];
+            const bool different =
+                rank[prev] != rank[current] ||
+                (prev + k < n ? rank[prev + k] : -1) != (current + k < n ? rank[current + k] : -1);
+            nextRank[current] = nextRank[prev] + (different ? 1 : 0);
         }
-        return lcp;
+        rank.swap(nextRank);
+        if (rank[suffixArray.back()] == n - 1) {
+            break;
+        }
+    }
+    return suffixArray;
+}
+
+std::vector<int> buildLcpArray(const std::vector<int>& tokens, const std::vector<int>& suffixArray) {
+    const int n = (int)tokens.size();
+    std::vector<int> rank(n);
+    for (int i = 0; i < n; ++i) {
+        rank[suffixArray[i]] = i;
     }
 
-    std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::vector<int>& tokens, int minBlockSize) {
-        std::vector<RepeatedBlockOccurrence> occurrences;
-        if ((int)tokens.size() < minBlockSize * 2) {
-            return occurrences;
+    std::vector<int> lcp(std::max(0, n - 1));
+    int h = 0;
+    for (int i = 0; i < n; ++i) {
+        const int r = rank[i];
+        if (r == 0) {
+            continue;
         }
-
-        const std::vector<int> suffixArray = buildSuffixArray(tokens);
-        const std::vector<int> lcp = buildLcpArray(tokens, suffixArray);
-
-        absl::flat_hash_set<int> starts;
-        for (const auto& [i, commonLength] : lcp | std::views::enumerate) {
-            if (commonLength < minBlockSize) {
-                continue;
-            }
-            const size_t suffixIndex = (size_t)i;
-            const int lhs = suffixArray[suffixIndex];
-            const int rhs = suffixArray[suffixIndex + 1];
-            const int length = std::min(commonLength, std::abs(lhs - rhs));
-            if (length < minBlockSize) {
-                continue;
-            }
-            if (starts.insert(lhs).second) {
-                occurrences.push_back({ lhs, length });
-            }
-            if (starts.insert(rhs).second) {
-                occurrences.push_back({ rhs, length });
-            }
+        const int j = suffixArray[r - 1];
+        while (i + h < n && j + h < n && tokens[i + h] == tokens[j + h]) {
+            ++h;
         }
+        lcp[r - 1] = h;
+        if (h > 0) {
+            --h;
+        }
+    }
+    return lcp;
+}
 
-        std::ranges::sort(occurrences, [](const RepeatedBlockOccurrence& a, const RepeatedBlockOccurrence& b)
-            {
-                if (a.start != b.start) {
-                    return a.start < b.start;
-                }
-                return a.length > b.length;
-            });
+std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::vector<int>& tokens, int minBlockSize) {
+    std::vector<RepeatedBlockOccurrence> occurrences;
+    if ((int)tokens.size() < minBlockSize * 2) {
         return occurrences;
     }
 
-    void normalizeRepeatedBlockReferences(RepeatedBlockReferenceMap& references) {
-        std::vector<SentencePosition> selfReferences;
-        for (auto& [target, source] : references.targetToSourceMap) {
-            absl::flat_hash_set<SentencePosition> visited;
-            SentencePosition root = source;
-            while (true) {
-                if (!visited.insert(root).second) {
-                    break;
-                }
-                const auto it = references.targetToSourceMap.find(root);
-                if (it == references.targetToSourceMap.end()) {
-                    break;
-                }
-                root = it->second;
-            }
-            source = root;
-            if (target == source) {
-                selfReferences.push_back(target);
-            }
-        }
-        for (const SentencePosition& target : selfReferences) {
-            references.targetToSourceMap.erase(target);
-        }
+    const std::vector<int> suffixArray = buildSuffixArray(tokens);
+    const std::vector<int> lcp = buildLcpArray(tokens, suffixArray);
 
-        references.sourceToTargetsMap.clear();
-        for (const auto& [target, source] : references.targetToSourceMap) {
-            if (target == source) {
-                continue;
-            }
-            std::vector<SentencePosition>& targets = references.sourceToTargetsMap[source];
-            targets.push_back(target);
+    absl::flat_hash_set<int> starts;
+    for (const auto& [i, commonLength] : lcp | std::views::enumerate) {
+        if (commonLength < minBlockSize) {
+            continue;
         }
+        const size_t suffixIndex = (size_t)i;
+        const int lhs = suffixArray[suffixIndex];
+        const int rhs = suffixArray[suffixIndex + 1];
+        const int length = std::min(commonLength, std::abs(lhs - rhs));
+        if (length < minBlockSize) {
+            continue;
+        }
+        if (starts.insert(lhs).second) {
+            occurrences.push_back({ lhs, length });
+        }
+        if (starts.insert(rhs).second) {
+            occurrences.push_back({ rhs, length });
+        }
+    }
+
+    std::ranges::sort(occurrences, [](const RepeatedBlockOccurrence& a, const RepeatedBlockOccurrence& b)
+        {
+            if (a.start != b.start) {
+                return a.start < b.start;
+            }
+            return a.length > b.length;
+        });
+    return occurrences;
+}
+
+void normalizeRepeatedBlockReferences(RepeatedBlockReferenceMap& references) {
+    std::vector<SentencePosition> selfReferences;
+    for (auto& [target, source] : references.targetToSourceMap) {
+        absl::flat_hash_set<SentencePosition> visited;
+        SentencePosition root = source;
+        while (true) {
+            if (!visited.insert(root).second) {
+                break;
+            }
+            const auto it = references.targetToSourceMap.find(root);
+            if (it == references.targetToSourceMap.end()) {
+                break;
+            }
+            root = it->second;
+        }
+        source = root;
+        if (target == source) {
+            selfReferences.push_back(target);
+        }
+    }
+    for (const SentencePosition& target : selfReferences) {
+        references.targetToSourceMap.erase(target);
+    }
+
+    references.sourceToTargetsMap.clear();
+    for (const auto& [target, source] : references.targetToSourceMap) {
+        if (target == source) {
+            continue;
+        }
+        std::vector<SentencePosition>& targets = references.sourceToTargetsMap[source];
+        targets.push_back(target);
     }
 }
 
@@ -805,3 +804,5 @@ std::vector<ordered_json> splitJsonArrayEqual(ordered_json originalData, int num
 int calculateCachePartIndexDiff(const std::wstring& path1, const std::wstring& path2) {
     return getSplittedFileIndex(path1) - getSplittedFileIndex(path2);
 }
+
+NAMESPACE_END(gpp)

@@ -17,6 +17,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 constexpr auto hKeysBase64Default =
 "M1AKQVblpbPlhKoKR+OCueODneODg+ODiApOVFIKU0VYClNNClNPRApU44OQ44OD44KvCuOBhOOChOOCieOBl+"
 "OBhArjgYjjgaPjgaEK44GK44Gh44KT44Gh44KTCuOBiuOBo8+ACuOBiuOBo+OBseOBhArjgYrjgarjgavjg7wK"

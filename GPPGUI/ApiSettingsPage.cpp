@@ -30,6 +30,8 @@
 import Tool;
 import ApiTool;
 
+using namespace gpp;
+
 QSize ApiSettingsPage::s_configWidgetSize(980, 820);
 
 ApiSettingsPage::ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent)

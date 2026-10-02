@@ -1,5 +1,4 @@
-#ifndef NORMALTABENTRY_H
-#define NORMALTABENTRY_H
+#pragma once
 
 #include "NormalDictModel.h"
 #include <QList>
@@ -21,5 +20,3 @@ struct NormalTabEntry {
     std::function<bool(bool)> saveFunc;
     QList<GuiNormalDictEntry> withdrawList;
 };
-
-#endif

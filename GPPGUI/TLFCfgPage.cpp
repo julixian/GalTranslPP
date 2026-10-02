@@ -19,6 +19,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("换行修复设置"));

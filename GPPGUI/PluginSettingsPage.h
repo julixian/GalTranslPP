@@ -1,5 +1,4 @@
-#ifndef PLUGINSETTINGSPAGE_H
-#define PLUGINSETTINGSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include <QList>
@@ -40,5 +39,3 @@ private:
     TLFCfgPage* m_tlfCfgPage = nullptr;
     SkipTransCfgPage* m_skipTransCfgPage = nullptr;
 };
-
-#endif

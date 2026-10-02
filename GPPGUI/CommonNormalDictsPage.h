@@ -1,5 +1,4 @@
-#ifndef COMMONNORMALDICTSPAGE_H
-#define COMMONNORMALDICTSPAGE_H
+#pragma once
 
 #include "BasePage.h"
 #include "NormalTabEntry.h"
@@ -30,5 +29,3 @@ private:
     std::string m_modeConfigKey;
     fs::path m_modeDictDir;
 };
-
-#endif

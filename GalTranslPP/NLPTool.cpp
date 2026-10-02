@@ -8,34 +8,33 @@ module NLPTool;
 import PythonManager;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
-namespace
-{
-    struct LazyTokenizeState {
-        std::once_flag initOnce;
-        NLPTokenizeFunc tokenizeFunc;
-    };
+struct LazyTokenizeState {
+    std::once_flag initOnce;
+    NLPTokenizeFunc tokenizeFunc;
+};
 
-    template <typename InitFunc>
-    NLPResult runLazyTokenizer(const std::shared_ptr<LazyTokenizeState>& state, std::string_view text, InitFunc&& initFunc)
-    {
-        std::call_once(state->initOnce, [&]()
-            {
-                try {
-                    state->tokenizeFunc = initFunc();
-                }
-                catch (...) {
-                    std::exception_ptr exception = std::current_exception();
-                    state->tokenizeFunc = [=](std::string_view) -> NLPResult
-                        {
-                            std::rethrow_exception(exception);
-                        };
-                }
-            });
-        return state->tokenizeFunc(text);
-    }
+template <typename InitFunc>
+NLPResult runLazyTokenizer(const std::shared_ptr<LazyTokenizeState>& state, std::string_view text, InitFunc&& initFunc)
+{
+    std::call_once(state->initOnce, [&]()
+        {
+            try {
+                state->tokenizeFunc = initFunc();
+            }
+            catch (...) {
+                std::exception_ptr exception = std::current_exception();
+                state->tokenizeFunc = [=](std::string_view) -> NLPResult
+                    {
+                        std::rethrow_exception(exception);
+                    };
+            }
+        });
+    return state->tokenizeFunc(text);
 }
 
 NLPTokenizeFunc getMeCabTokenizeFunc(const std::string& mecabDictDir, const std::shared_ptr<spdlog::logger>& logger)
@@ -186,3 +185,5 @@ std::vector<std::string> splitIntoTokens(const WordPosVec& wordPosVec, std::stri
     }
     return tokens;
 }
+
+NAMESPACE_END(gpp)

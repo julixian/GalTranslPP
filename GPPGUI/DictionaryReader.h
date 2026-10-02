@@ -1,5 +1,4 @@
-#ifndef DICTIONARYREADER_H
-#define DICTIONARYREADER_H
+#pragma once
 
 #include "NormalDictModel.h"
 #include "GptDictModel.h"
@@ -24,5 +23,3 @@ public:
 	static QString readGptDictsStr(const std::vector<fs::path>& dictPaths);
 	static QString readDictStr(const fs::path& dictPath);
 };
-
-#endif

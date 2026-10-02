@@ -8,6 +8,8 @@ module SkipTrans;
 import ConditionTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
 SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfig,
@@ -35,7 +37,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                 }
                 return ret;
             }();
-        const auto pluginConfig = toml::uparse(pluginConfigPath);
+        const auto pluginConfig = gpp::uparse(pluginConfigPath);
 
         m_skipH = parseToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH", reversePriority);
         if (m_skipH) {
@@ -133,3 +135,5 @@ void SkipTrans::preRun(Sentence* se) {
     }
     skipImpl(se);
 }
+
+NAMESPACE_END(gpp)

@@ -2,6 +2,8 @@
 
 export import Tool;
 
+using namespace gpp;
+
 export
 {
     class ProgressBar {

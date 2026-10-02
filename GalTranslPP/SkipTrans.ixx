@@ -8,29 +8,30 @@ export import GPPDefines;
 export import LuaManager;
 export import PythonManager;
 
+export NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-export
-{
-    class SkipTrans {
-    private:
-        std::vector<std::string> m_hKeys;
-        std::vector<CheckSeCondNormalFunc> m_skipKeys;
-        std::shared_ptr<spdlog::logger> m_logger;
-        bool m_skipH;
+class SkipTrans {
+private:
+    std::vector<std::string> m_hKeys;
+    std::vector<CheckSeCondNormalFunc> m_skipKeys;
+    std::shared_ptr<spdlog::logger> m_logger;
+    bool m_skipH;
 
-        PluginRunTime m_runTime;
+    PluginRunTime m_runTime;
 
-        static void processSkippedSentence(Sentence* se, const std::string& info);
-        void skipImpl(Sentence* se);
+    static void processSkippedSentence(Sentence* se, const std::string& info);
+    void skipImpl(Sentence* se);
 
-    public:
-        SkipTrans(const fs::path& projectDir, const toml::value& projectConfig, 
-            const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
-            const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
-        ~SkipTrans() = default;
+public:
+    SkipTrans(const fs::path& projectDir, const toml::value& projectConfig,
+        const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
+        const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
+    ~SkipTrans() = default;
 
-        void dPreRun(Sentence* se);
-        void preRun(Sentence* se);
-    };
-}
+    void dPreRun(Sentence* se);
+    void preRun(Sentence* se);
+};
+
+NAMESPACE_END(gpp)

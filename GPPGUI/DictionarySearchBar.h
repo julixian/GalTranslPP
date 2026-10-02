@@ -1,5 +1,4 @@
-#ifndef DICTIONARYSEARCHBAR_H
-#define DICTIONARYSEARCHBAR_H
+#pragma once
 
 #include <QWidget>
 
@@ -32,5 +31,3 @@ private:
     int m_field = 0;
     bool m_regexEnabled = false;
 };
-
-#endif

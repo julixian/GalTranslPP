@@ -7,9 +7,11 @@ module PDFTranslator;
 import PDFTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 
-PDFTranslator::~PDFTranslator() 
+PDFTranslator::~PDFTranslator()
 {
     m_logger->info(gppTr("PDFTranslator.~PDFTranslator", "所有任务已完成！PDFTranslator 结束").toStdString());
 }
@@ -31,8 +33,8 @@ PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<I
 void PDFTranslator::pdfInit()
 {
     try {
-        const auto projectConfig = toml::uparse(m_projectDir / L"Config.toml");
-        const auto pluginConfig = toml::uparse(filePluginConfigPath / L"PDF.toml");
+        const auto projectConfig = gpp::uparse(m_projectDir / L"Config.toml");
+        const auto pluginConfig = gpp::uparse(filePluginConfigPath / L"PDF.toml");
 
         m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.PDF.bilingualOutput");
         m_babeldocLangOut = parseToml<std::string>(projectConfig, pluginConfig, "plugins.PDF.babeldocLangOut");
@@ -149,3 +151,5 @@ void PDFTranslator::run() {
     NormalJsonTranslator::normalJsonProcess();
     NormalJsonTranslator::normalJsonAfterRun();
 }
+
+NAMESPACE_END(gpp)

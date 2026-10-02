@@ -1,5 +1,4 @@
-#ifndef REORDERABLETABLEVIEW_H
-#define REORDERABLETABLEVIEW_H
+#pragma once
 
 #include "ElaTableView.h"
 
@@ -49,5 +48,3 @@ private:
     int m_dropRow = -1;
     bool m_dragArmed = false;
 };
-
-#endif

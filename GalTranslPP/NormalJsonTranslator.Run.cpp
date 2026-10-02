@@ -10,6 +10,8 @@ module NormalJsonTranslator;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
+NAMESPACE_BEGIN(gpp)
+
 namespace fs = std::filesystem;
 namespace py = pybind11;
 
@@ -242,7 +244,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         toml::value orgNameTable = toml::table{};
         try {
             if (fs::exists(m_nameTablePath)) {
-                orgNameTable = toml::uparse(m_nameTablePath);
+                orgNameTable = gpp::uparse(m_nameTablePath);
             }
         }
         catch (...) {
@@ -904,3 +906,5 @@ void NormalJsonTranslator::run()
     NormalJsonTranslator::normalJsonProcess();
     NormalJsonTranslator::normalJsonAfterRun();
 }
+
+NAMESPACE_END(gpp)

@@ -14,6 +14,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 using namespace ProjectCachePagePrivate;
 
 void ProjectCachePage::loadCacheFiles(bool discardDirty)

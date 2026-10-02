@@ -14,6 +14,8 @@
 
 import Tool;
 
+using namespace gpp;
+
 TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     : BasePage(parent), m_projectConfig(projectConfig)
 {

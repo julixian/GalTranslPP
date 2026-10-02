@@ -1,5 +1,4 @@
-﻿#ifndef UPDATEWIDGET_H
-#define UPDATEWIDGET_H
+﻿#pragma once
 
 #include <QWidget>
 
@@ -9,5 +8,3 @@ class UpdateWidget : public QWidget
 public:
     explicit UpdateWidget(QWidget* parent = nullptr);
 };
-
-#endif

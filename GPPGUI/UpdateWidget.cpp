@@ -21,7 +21,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "3. 为 fallback 切换下一个 apikey 添加 10s 的时间阈值",
         "4. GUI 模型测试成功时会附带完整 json 返回体了",
         "5. 删除设置『携带上文数量』",
-        "6. Agent 模式删除 字典审校 Agent，让开发集中在优化 TransAgent 上。新增『高级 Agent』模式及相关配置，以期适配各协议各模型最先进的 Api 功能，连带新增了只在此模式下生效的相关 Api 设置",
+        "6. 优化报错信息",
+        "7. Agent 模式删除 字典审校 Agent，让开发集中在优化 TransAgent 上。新增『高级 Agent』模式及相关配置，以期适配各协议各模型最先进的 Api 功能，连带新增了只在此模式下生效的相关 Api 设置",
     };
 
     mainLayout->addWidget(updateTitle);

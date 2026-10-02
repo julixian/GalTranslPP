@@ -16,11 +16,11 @@
 
 | API 字段 | 控制的行为 |
 | --- | --- |
-| `agentStrictTools` | OpenAI/Claude 工具参数 schema 的 strict 模式；Gemini 固定使用 any/ANY |
-| `agentStateful` | Responses/Interactions 使用服务端 id 续接；关闭时回传客户端历史 |
+| `agentStrictTools` | off 不严格、all 全部严格（默认）、commit 仅 commit_translations 严格；Gemini 固定使用 any/ANY |
+| `agentStateful` | 默认关闭；Responses/Interactions 开启时使用服务端 id 续接，关闭时回传客户端历史 |
 | `agentNativeAutoCompaction` | Responses/Claude 在普通请求中启用服务端自动压缩 |
 | `agentCompactThresholdTokens` | 原生自动压缩的 token 阈值；0 使用现有默认行为 |
-| `agentGeminiInteractions` | Gemini 选择 Interactions 或 generateContent |
+| `agentGeminiInteractions` | 默认关闭，Gemini 使用 generateContent；开启时使用 Interactions |
 
 自动压缩字段已从 `agentNativeCompaction` 改为 `agentNativeAutoCompaction`，配置加载和 GUI 保存都使用新名字，旧名字不作为别名读取。
 
@@ -153,7 +153,7 @@ parseProtocolResponse
 每轮请求前先检查压缩：
 
 - 开启 `agentNativeAutoCompaction` 且协议为 Responses/Claude：请求附带原生自动压缩参数，服务端根据 tokens 判断阈值，客户端保存并继续使用返回的原生压缩内容，不单独调用 `/responses/compact`。响应解析成功后，Responses 在 compaction 项包含非空 `encrypted_content` 时只保留最新有效项及后续内容；Claude 在 compaction 块包含非空摘要时只保留该块及后续内容。无效压缩项不会清除旧历史。Responses 的最新续接 id 保留，`sentCount` 按裁剪后的历史更新，服务端会话链不修改。
-- 其他情况：检查 `history.dump().size()` 是否超过 `compactContextThresholdBytes`，专门发送只有 `compact_context` 工具的请求，摘要必须通过该工具返回。
+- 其他情况：检查 `history.dump().size()` 是否超过 `compactContextThresholdBytes`（默认 400000 字节），专门发送只有 `compact_context` 工具的请求，摘要必须通过该工具返回。
 - 摘要成功：用新 rolling_context 重建会话，再追加当前未提交批次。
 - 摘要无效或压缩请求重试耗尽：沿用上次有效滚动记忆重建，不继续保留越来越长的历史重试摘要。
 

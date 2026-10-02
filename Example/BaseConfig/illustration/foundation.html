@@ -109,8 +109,8 @@
 </head>
 <body>
 <h1>GalTransl++</h1>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI" />
-<img src="https://github.com/julixian/GalTranslPP/blob/master/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En" /></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/main/images/GalTranslPP.png?raw=true" alt="GalTransl++ GUI" />
+<img src="https://github.com/julixian/GalTranslPP/blob/main/images/GalTranslPP_en.png?raw=true" alt="GalTransl++ GUI En" /></p>
 <p><strong>GalTransl++</strong> 是继承了 <a href="https://github.com/GalTransl/GalTransl">GalTransl</a>  <code>以项目为本</code>的主要理念及架构，凝练其两年间积累的精华部分，同时吸收了大量 Gal 补丁作者经验而进行优化的，轻量 (好吧其实略有点重) 透明的、拥有高度且方便的扩展能力的翻译核心。</p>
 <p><strong>GalTransl++ GUI</strong> 是包装了 GalTransl++ 核心的，以 <code>在GUI下尽可能保持高度自定义</code> 为目标的，Fluent UI 风格的交互界面，也是本项目的重点开发对象。</p>
 <h2>✨ 特性</h2>
@@ -120,8 +120,7 @@
 <li>连续重复块引用复用，减少重复文本反复请求</li>
 <li>可选正则形式的，高度自定义的译前译后字典和明确的优先级</li>
 <li>高度自定义的 Epub 提取</li>
-<li>基于 BabelDOC 的 PDF 提取和回注</li>
-<li>OpenAI / Claude / Gemini 风格接口协议在同一 Api 池中管理</li>
+<li>OpenAI Chat Completions / OpenAI Responses / Claude / Gemini 风格接口协议在同一 Api 池中管理</li>
 <li>多 Api key、模型查询、模型测试、自定义 HTTP Header/Body 等 GUI 配置</li>
 <li>Agent 翻译，支持工具搜索、术语账本、文件笔记和滚动上下文</li>
 <li>有效的 Api 额度耗尽检测</li>
@@ -135,9 +134,9 @@
 <li>更清晰的字典使用设定</li>
 <li>重翻时附带已知问题</li>
 <li>可按问题分别设置启用状态和比较对象</li>
-<li>对 条件判断/文本处理/文件格式处理 的自定义 Lua/Python 语言支持</li>
+<li>对 条件判断/文本处理/文件格式处理 的自定义 Lua/Python 脚本语言的便捷支持</li>
 </ul>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/notification.png?raw=true" alt="notification" /></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/main/images/notification.png?raw=true" alt="notification" /></p>
 <h2>📖 流程说明</h2>
 <h3>GalTransl++ 翻译流程与替换型字典介绍</h3>
 <p>对于熟悉 GalTransl 的人来说，过渡到 GalTransl++ CLI 版本可谓易如反掌，所以接下来主要讲 GUI。</p>
@@ -244,12 +243,12 @@ conditions = [
 <p>优先级越高的词条越先执行。</p>
 <h2 id="⚙️处理与翻译顺序">⚙️ 处理与翻译顺序</h2>
 <p>1、  可选: 执行 dprerun 阶段的插件。<br />
-2、  可选: 对 <code>name</code> 执行译前字典替换 (实际上在最开始收集人名表的时候也会执行一次以收集替换后的 <code>name</code>)，只不过使用的是临时的句子结构体，无缓存信息<br />
+2、  可选: 对 <code>name</code> 执行译前字典替换 (实际上在最开始收集人名表的时候也会执行一次以收集替换后的 <code>name</code>，只不过使用的是临时的句子结构体，无缓存信息)。<br />
 3、  将 <code>message</code> 中的换行统一替换为 <code>&lt;br&gt;</code>。<br />
 4、  将 <code>message</code> 中的制表符统一替换为 <code>&lt;tab&gt;</code>。<br />
 5、  可选: 对 <code>message</code> 执行译前字典替换。<br />
 6、  可选: 执行 prerun 阶段的插件。<br />
-7、  <strong>AI翻译</strong>。<br />
+7、  <strong>AI 翻译</strong>。<br />
 8、  解析 <strong>翻译失败 (Failed to translate)</strong> 和 <strong>GPPCProblem</strong>，如果翻译失败则不分析其它问题。<br />
 9、  可选: 执行 postrun 阶段的插件。<br />
 10、  可选: 对 <code>message</code> 执行译后字典替换。<br />
@@ -284,7 +283,7 @@ retranslKeys = [
   #&quot;本无&quot;,
   &quot;引入繁体字&quot;,
   &quot;残留日文&quot;,
-  &quot;翻译失败&quot;, # 等效于 [{conditionTarget='problems', conditionReg ='翻译失败'},]
+  &quot;翻译失败&quot;, # 等效于 [{conditionTarget='problems', conditionReg ='翻译失败'},],
 ]
 </code></pre>
 <p>skipProblems 语法示例</p>
@@ -453,7 +452,7 @@ start /b 要运行文件的文件名
 <h3>可在新窗口打开的标签页</h3>
 </summary>
 <p>GUI 界面所有的以标签页形式呈现的字典、人名表、提示词等均可以拖出来在新窗口中打开，如下图所示:</p>
-<p><img src="https://github.com/julixian/GalTranslPP/blob/master/images/tabView.png?raw=true" alt="tabView" /></p>
+<p><img src="https://github.com/julixian/GalTranslPP/blob/main/images/tabView.png?raw=true" alt="tabView" /></p>
 </details>
 <details>
 <summary>
@@ -462,7 +461,7 @@ start /b 要运行文件的文件名
 <p>可以使用快捷键 (默认为 Ctrl+L) 清除当前日志页面的输出。</p>
 </details>
 <h2>⚙️ 编译指南</h2>
-<p>详见 <a href="https://github.com/julixian/GalTranslPP/blob/master/how-to-build.md" target="_blank">how-to-build.md</a></p>
+<p>详见 <a href="https://github.com/julixian/GalTranslPP/blob/main/how-to-build.md" target="_blank">how-to-build.md</a></p>
 <h2>🤝 贡献指南</h2>
 <p>GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排除有其它优化的思路或需要修改的 bug，如果有疑问或建议，欢迎提出 issue 或 PR。接下来主要说一下如何添加 文件处理器/插件。</p>
 <h3>添加文件处理器 (Translator)</h3>
@@ -483,12 +482,7 @@ start /b 要运行文件的文件名
 <p>具体示例可见 <code>TextLinebreakFix</code> 和 <code>TextFull2Half</code>。</p>
 <p>需要注册的工厂函数为 <code>registerPlugins</code>。</p>
 <h3>其它注意事项</h3>
-<p>由于我的开发环境（特别是构建）基本绑定 Windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 WinApi 数量很少也很好替换，</p>
+<p>由于我自己的开发和构建环境基本绑定 Windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 WinApi 数量很少也很好替换，</p>
 <p>跨平台的事我自己也是不会主动考虑的。</p>
-<p>另外由于我所使用的环境较新，也可能会有一些比较罕见的问题。</p>
-<ul>
-<li><del>目前已知项目依赖 <code>mecab:x64-windows</code> 在VS2026(工具集 v145)下不过编，但是VS2022(工具集 v143)能过，安装依赖可能需要切回VS2022。</del>(此问题已修复)</li>
-<li>由于 MSVC 的 <a href="https://developercommunity.visualstudio.com/t/C-20-Modules-unable-to-import-std-usin/11075026?ref=native&amp;refTime=1777570126918&amp;refUserId=7c1b7679-4205-6f72-b1be-bbf96d663676">bug1</a> 和 <a href="https://developercommunity.visualstudio.com/t/MSVC-1452-regression:-C2079-in-std::get/11092704">bug2</a>，目前本项目无法使用 v14.51/v14.52 工具集构建。</li>
-</ul>
 </body>
 </html>

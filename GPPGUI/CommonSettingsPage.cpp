@@ -241,7 +241,7 @@ void CommonSettingsPage::setupUi()
 	agentMaxTurnsLayout->addWidget(agentMaxTurnsSpinBox);
 	agentSettingsDrawerArea->addDrawer(agentMaxTurnsArea);
 
-	const int agentCompactContextThresholdBytes = toml::find_or(m_projectConfig, "common", "agent", "compactContextThresholdBytes", 150000);
+	const int agentCompactContextThresholdBytes = toml::find_or(m_projectConfig, "common", "agent", "compactContextThresholdBytes", 400000);
 	ElaScrollPageArea* agentCompactThresholdArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
 	ElaDoubleText* agentCompactThresholdText = new ElaDoubleText(tr("压缩上下文阈值"), 16,

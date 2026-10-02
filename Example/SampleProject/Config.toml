@@ -19,12 +19,12 @@ apiTimeout = 300 # 请求超时时间，单位秒
   # extraHeaders = { "HTTP-Referer" = "https://example.com" }
   # extraBody = { "reasoning_effort" = "low" }
   # 以下选项只影响高级 TransAgent；中转或模型不支持时可单独关闭
-  agentStrictTools = true
-  agentStateful = true    # Responses/Interactions 续接服务端会话，会启用服务端存储
+  agentStrictTools = "all" # off 不严格，all 全部工具严格，commit 仅 commit_translations 严格；Gemini 不使用此挡位
+  agentStateful = false   # 仅 Responses/Interactions 可续接服务端会话，开启时启用服务端存储
   agentNativeAutoCompaction = false # Responses/Claude 原生自动压缩，需模型和接口支持
   # 不支持的模型或中转开启后可能报错，或忽略压缩参数并最终超出上下文上限；开启后不会使用本地摘要压缩兜底
   agentCompactThresholdTokens = 0 # 仅在启用原生自动压缩时生效；0 表示 Responses 用 100000、Claude 用服务端默认值
-  agentGeminiInteractions = true # Gemini 使用 Interactions；false 使用 generateContent
+  agentGeminiInteractions = false # Gemini 默认使用 generateContent；true 使用 Interactions
 
 [plugins]
 filePlugin = "NormalJson" # 用于支持更多格式: NormalJson, Epub, PDF...
@@ -186,7 +186,7 @@ stanzaLang = "ja"
 enabled = false
 advancedEnabled = false # 启用原生工具调用，并按 worker 保留跨文件会话；关闭时使用原有文本协议
 maxTurnsPerChunk = 50
-compactContextThresholdBytes = 150000 # 请求模型总结完整历史并重建会话；高级 Agent 在 Responses/Claude 启用原生自动压缩时无效
+compactContextThresholdBytes = 400000 # 请求模型总结完整历史并重建会话；高级 Agent 在 Responses/Claude 启用原生自动压缩时无效
 searchResultLimit = 80
 contextLinesLimit = 20
 # 可选，Agent 可选择性读取。默认以项目路径作为基础路径

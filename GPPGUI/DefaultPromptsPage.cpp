@@ -4,6 +4,8 @@
 #include <QVBoxLayout>
 #include <QButtonGroup>
 #include <QStackedWidget>
+#include <utility>
+#include <vector>
 
 #include "ElaToolButton.h"
 #include "ElaFlowLayout.h"
@@ -46,43 +48,65 @@ void DefaultPromptsPage::setupUi()
 
 	auto createPromptWidgetFunc =
 		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
-			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt) -> std::function<void()>
+			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt,
+			const std::optional<std::string>& advancedUserPromptKey = std::nullopt, const std::optional<std::string>& advancedSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
-			const bool hasAgentPrompt = agentUserPromptKey.has_value() && agentSystemPromptKey.has_value();
 			QWidget* promptWidget = new QWidget(mainWidget);
 			QVBoxLayout* promptLayout = new QVBoxLayout(promptWidget);
 			promptLayout->setContentsMargins(0, 0, 0, 0);
+			ElaFlowLayout* promptButtonLayout = new ElaFlowLayout(0, 6, 6);
+			QStackedWidget* promptStackedWidget = new QStackedWidget(promptWidget);
+			QButtonGroup* promptButtonGroup = new QButtonGroup(promptWidget);
+			std::vector<std::pair<std::string, ElaPlainTextEdit*>> promptEdits;
 
-			QHBoxLayout* promptButtonLayout = new QHBoxLayout(promptWidget);
-			ElaToolButton* promptUserModeButtom = new ElaToolButton(promptWidget);
-			promptUserModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-			promptUserModeButtom->setElaIcon(ElaIconType::User);
-			promptUserModeButtom->setText(tr("用户提示词"));
-			promptUserModeButtom->setEnabled(false);
-			ElaToolButton* promptSystemModeButtom = new ElaToolButton(promptWidget);
-			promptSystemModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-			promptSystemModeButtom->setElaIcon(ElaIconType::Gear);
-			promptSystemModeButtom->setText(tr("系统提示词"));
-			promptSystemModeButtom->setEnabled(true);
-			promptButtonLayout->addWidget(promptUserModeButtom);
-			promptButtonLayout->addWidget(promptSystemModeButtom);
-			ElaToolButton* agentPromptUserModeButtom = nullptr;
-			ElaToolButton* agentPromptSystemModeButtom = nullptr;
-			if (hasAgentPrompt) {
-				agentPromptUserModeButtom = new ElaToolButton(promptWidget);
-				agentPromptUserModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-				agentPromptUserModeButtom->setElaIcon(ElaIconType::UserRobot);
-				agentPromptUserModeButtom->setText(tr("agent用户"));
-				agentPromptUserModeButtom->setEnabled(true);
-				agentPromptSystemModeButtom = new ElaToolButton(promptWidget);
-				agentPromptSystemModeButtom->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-				agentPromptSystemModeButtom->setElaIcon(ElaIconType::Robot);
-				agentPromptSystemModeButtom->setText(tr("agent系统"));
-				agentPromptSystemModeButtom->setEnabled(true);
-				promptButtonLayout->addWidget(agentPromptUserModeButtom);
-				promptButtonLayout->addWidget(agentPromptSystemModeButtom);
+			// 按同一顺序登记按钮、编辑器和配置键，保存时统一写回对应提示词。
+			auto addPromptEditFunc = [&](const QString& title, auto icon, const std::string& key)
+				{
+					ElaToolButton* promptButton = new ElaToolButton(promptWidget);
+					promptButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+					promptButton->setElaIcon(icon);
+					promptButton->setText(title);
+					promptButton->setEnabled(!promptEdits.empty());
+					promptButtonGroup->addButton(promptButton, static_cast<int>(promptEdits.size()));
+					promptButtonLayout->addWidget(promptButton);
+
+					ElaPlainTextEdit* promptTextEdit = new ElaPlainTextEdit(promptStackedWidget);
+					QFont plainTextFont = promptTextEdit->font();
+					plainTextFont.setPixelSize(15);
+					promptTextEdit->setFont(plainTextFont);
+					promptTextEdit->setPlainText(QString::fromStdString(toml::find_or(m_promptConfig, key, "")));
+					promptStackedWidget->addWidget(promptTextEdit);
+					promptEdits.emplace_back(key, promptTextEdit);
+				};
+			addPromptEditFunc(tr("用户提示词"), ElaIconType::User, userPromptKey);
+			addPromptEditFunc(tr("系统提示词"), ElaIconType::Gear, systemPromptKey);
+			if (agentUserPromptKey.has_value() && agentSystemPromptKey.has_value()) {
+				addPromptEditFunc(tr("Agent 用户"), ElaIconType::UserRobot, agentUserPromptKey.value());
+				addPromptEditFunc(tr("Agent 系统"), ElaIconType::Robot, agentSystemPromptKey.value());
 			}
-			promptButtonLayout->addStretch();
+			if (advancedUserPromptKey.has_value() && advancedSystemPromptKey.has_value()) {
+				addPromptEditFunc(tr("高级 Agent 用户"), ElaIconType::UserRobot, advancedUserPromptKey.value());
+				addPromptEditFunc(tr("高级 Agent 系统"), ElaIconType::Robot, advancedSystemPromptKey.value());
+			}
+			connect(promptButtonGroup, &QButtonGroup::buttonClicked, this, [=](QAbstractButton* button)
+				{
+					for (const auto& b : promptButtonGroup->buttons()) {
+						b->setEnabled(true);
+					}
+					button->setEnabled(false);
+					promptStackedWidget->setCurrentIndex(promptButtonGroup->id(button));
+				});
+			promptStackedWidget->setCurrentIndex(0);
+
+			auto resultApply2ConfigFunc = [=]()
+				{
+					for (const auto& [key, edit] : promptEdits) {
+						toml::ordered_value promptVal = edit->toPlainText().toStdString();
+						promptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
+						insertToml(m_promptConfig, key, promptVal);
+					}
+				};
+
 			ElaToolButton* promptSaveAllButton = new ElaToolButton(promptWidget);
 			promptSaveAllButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 			promptSaveAllButton->setElaIcon(ElaIconType::CheckDouble);
@@ -93,75 +117,11 @@ void DefaultPromptsPage::setupUi()
 			promptSaveButton->setText(tr("保存"));
 			promptButtonLayout->addWidget(promptSaveAllButton);
 			promptButtonLayout->addWidget(promptSaveButton);
-			promptLayout->addLayout(promptButtonLayout);
-
-			QStackedWidget* promptStackedWidget = new QStackedWidget(promptWidget);
-			auto addPlainTextEditFunc = [=](const std::string& key)
-				{
-					ElaPlainTextEdit* promptTextEdit = new ElaPlainTextEdit(promptStackedWidget);
-					QFont plainTextFont = promptTextEdit->font();
-					plainTextFont.setPixelSize(15);
-					promptTextEdit->setFont(plainTextFont);
-					promptTextEdit->setPlainText(
-						QString::fromStdString(toml::find_or(m_promptConfig, key, ""))
-					);
-					promptStackedWidget->addWidget(promptTextEdit);
-					return promptTextEdit;
-				};
-			ElaPlainTextEdit* promptUserModeEdit = addPlainTextEditFunc(userPromptKey);
-			ElaPlainTextEdit* promptSystemModeEdit = addPlainTextEditFunc(systemPromptKey);
-			ElaPlainTextEdit* agentPromptUserModeEdit = nullptr;
-			ElaPlainTextEdit* agentPromptSystemModeEdit = nullptr;
-			if (hasAgentPrompt) {
-				agentPromptUserModeEdit = addPlainTextEditFunc(agentUserPromptKey.value());
-				agentPromptSystemModeEdit = addPlainTextEditFunc(agentSystemPromptKey.value());
-			}
-
-			QButtonGroup* promptButtomGroup = new QButtonGroup(promptWidget);
-			promptButtomGroup->addButton(promptUserModeButtom, 0);
-			promptButtomGroup->addButton(promptSystemModeButtom, 1);
-			if (hasAgentPrompt) {
-				promptButtomGroup->addButton(agentPromptUserModeButtom, 2);
-				promptButtomGroup->addButton(agentPromptSystemModeButtom, 3);
-			}
-			connect(promptButtomGroup, &QButtonGroup::buttonClicked, this, [=](QAbstractButton* button)
-				{
-					for (const auto& b : promptButtomGroup->buttons()) {
-						b->setEnabled(true);
-					}
-					button->setEnabled(false);
-					promptStackedWidget->setCurrentIndex(promptButtomGroup->id(button));
-				});
-
-			promptStackedWidget->setCurrentIndex(0);
-			promptLayout->addWidget(promptStackedWidget);
-			tabWidget->addTab(promptWidget, promptName);
-
-
 			connect(promptSaveAllButton, &ElaToolButton::clicked, this, [=]()
 				{
 					this->apply2Config();
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("所有默认提示词配置已保存。"), 3000);
 				});
-
-			auto resultApply2ConfigFunc = [=]()
-				{
-					toml::ordered_value userPromptVal = promptUserModeEdit->toPlainText().toStdString();
-					toml::ordered_value systemPromptVal = promptSystemModeEdit->toPlainText().toStdString();
-					userPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-					systemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-					insertToml(m_promptConfig, userPromptKey, userPromptVal);
-					insertToml(m_promptConfig, systemPromptKey, systemPromptVal);
-					if (hasAgentPrompt) {
-						toml::ordered_value agentUserPromptVal = agentPromptUserModeEdit->toPlainText().toStdString();
-						toml::ordered_value agentSystemPromptVal = agentPromptSystemModeEdit->toPlainText().toStdString();
-						agentUserPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						agentSystemPromptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						insertToml(m_promptConfig, agentUserPromptKey.value(), agentUserPromptVal);
-						insertToml(m_promptConfig, agentSystemPromptKey.value(), agentSystemPromptVal);
-					}
-				};
-
 			connect(promptSaveButton, &ElaToolButton::clicked, this, [=]()
 				{
 					resultApply2ConfigFunc();
@@ -169,16 +129,20 @@ void DefaultPromptsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
 						tr("默认 %1 提示词配置已保存。").arg(promptName), 3000);
 				});
-			tabWidget->addTab(promptWidget, promptName);
 
+			promptLayout->addLayout(promptButtonLayout);
+			promptLayout->addWidget(promptStackedWidget);
+			tabWidget->addTab(promptWidget, promptName);
 			return resultApply2ConfigFunc;
 		};
 
 
 		auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_USER", "FORGALTSV_SYSTEM",
-			"FORGALTSV_AGENT_USER", "FORGALTSV_AGENT_SYSTEM");
+			"FORGALTSV_AGENT_USER", "FORGALTSV_AGENT_SYSTEM",
+			"FORGALTSV_AGENT_ADVANCED_USER", "FORGALTSV_AGENT_ADVANCED_SYSTEM");
 		auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_USER", "FORNOVELTSV_SYSTEM",
-			"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM");
+			"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM",
+			"FORNOVELTSV_AGENT_ADVANCED_USER", "FORNOVELTSV_AGENT_ADVANCED_SYSTEM");
 		auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_USER", "FORGALJSON_SYSTEM");
 		auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_USER", "SAKURA_SYSTEM");
 		auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM");

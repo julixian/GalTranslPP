@@ -17,14 +17,14 @@ advancedEnabled = true
 使用 `ForGalTsv` 或 `ForNovelTsv`。API 行内的高级选项默认如下：
 
 ```toml
-agentStrictTools = true
-agentStateful = true
+agentStrictTools = "all"
+agentStateful = false
 agentNativeAutoCompaction = false
 agentCompactThresholdTokens = 0
-agentGeminiInteractions = true
+agentGeminiInteractions = false
 ```
 
-中转或模型不支持某项能力时，在「Api 设置 → 高级 Agent」中关闭对应选项。程序不发探测请求，也不静默更换协议。
+「Api 设置 → 高级 Agent」中的选项始终显示，说明文字标注适用协议，切换协议不改变选项的位置。中转或模型不支持某项能力时，关闭对应选项。程序不发探测请求，也不静默更换协议。
 
 ## 协议能力
 
@@ -38,9 +38,9 @@ agentGeminiInteractions = true
 
 高级模式只接受 `commit_translations` 工具提交译文，压缩摘要只接受 `compact_context` 工具。回复正文保留在历史和日志中，不再作为提交入口，也不发送正文 JSON schema。正常轮次允许查询或提交，不会强制每一轮都提交；只返回正文时提醒模型调用工具并继续下一轮，连续未调用工具达到 `maxRequestCount` 后结束当前批次，任意工具调用都会清零该计数。
 
-`agentStrictTools` 控制 OpenAI/Claude 的工具参数 strict 约束；Gemini 固定使用要求函数调用并约束参数结构的 any/ANY 模式。工具参数 schema 不替代提交时检查当前句子是否全部有译文。Claude 的手动思考和部分新模型不支持强制工具调用，因此保留 auto，通过提示词和业务反馈要求工具提交。
+`agentStrictTools` 控制 OpenAI/Claude 的工具参数 strict 约束，可选 `"off"`（不严格）、`"all"`（完全严格，默认）和 `"commit"`（仅 `commit_translations` 严格）。仅提交严格时，查询、搜索和 `compact_context` 工具不启用 strict，可减少编译严格工具 schema 的复杂度。OpenAI 的非严格工具显式发送 `strict=false`；Claude 的非严格工具不附带 strict。配置只使用字符串挡位，不兼容旧的布尔值。Gemini 不使用该挡位，固定使用要求函数调用并约束参数结构的 any/ANY 模式。工具参数 schema 不替代提交时检查当前句子是否全部有译文。Claude 的手动思考和部分新模型不支持强制工具调用，因此保留 auto，通过提示词和业务反馈要求工具提交。
 
-`agentStateful` 仅用于 Responses 和 Gemini Interactions，会启用服务端存储；关闭后发送客户端保存的完整历史。API、模型、凭据或请求选项改变时重建会话，不迁移服务端 id 或签名。
+`agentStateful` 默认关闭，仅用于 Responses 和 Gemini Interactions，开启时会启用服务端存储；关闭后发送客户端保存的完整历史。已有配置显式写 true 时仍保持开启。API、模型、凭据或请求选项改变时重建会话，不迁移服务端 id 或签名。
 
 原生会话历史和推理始终保留，跨批次和跨文件继续使用同一 worker 的会话；仅在 API 身份改变或压缩重建时清空，不裁剪签名块。
 
@@ -54,15 +54,19 @@ Claude 返回有效 compaction 块后，客户端会删除它之前的历史，�
 
 API 属性 `agentCompactThresholdTokens` 只控制原生自动压缩，单位为 tokens。设为 0 时，Responses 沿用本项目的默认阈值 100000；Claude 省略 trigger，采用服务端默认的 150000。正数对 Claude 同样生效，会写入 `trigger = {type: "input_tokens", value: ...}`；Claude 官方要求至少 50000。可通过 `extraBody` 覆盖原生参数。
 
-没有启用原生压缩的高级会话以及原有文本流程，都使用 `compactContextThresholdBytes`。高级模式在每轮请求前检查客户端原生历史的 JSON 字节数；超过阈值后，专门请求模型通过 `compact_context` 总结完整历史。成功收到非空 `rolling_context` 后，清除旧消息、服务端会话 id 和推理签名，用新摘要、文件备注、术语和当前未提交批次重建会话。摘要无效时直接重建，沿用上次成功提交的滚动记忆；请求错误先经过统一重试与轮转，压缩请求重试耗尽后也按此方式重建。重建不会删除已经保存的译文、术语和备注。压缩占用一个 Agent 轮次；刚重建的批次在历史增加前不会反复触发压缩。
+没有启用原生压缩的高级会话以及原有文本流程，都使用 `compactContextThresholdBytes`，默认 400000 字节。高级模式在每轮请求前检查客户端原生历史的 JSON 字节数；超过阈值后，专门请求模型通过 `compact_context` 总结完整历史。成功收到非空 `rolling_context` 后，清除旧消息、服务端会话 id 和推理签名，用新摘要、文件备注、术语和当前未提交批次重建会话。摘要无效时直接重建，沿用上次成功提交的滚动记忆；请求错误先经过统一重试与轮转，压缩请求重试耗尽后也按此方式重建。重建不会删除已经保存的译文、术语和备注。压缩占用一个 Agent 轮次；刚重建的批次在历史增加前不会反复触发压缩。
 
 ID 续接与原生压缩是独立功能。Responses 和 Gemini Interactions 即使使用服务端 id，客户端仍保存已发送输入、工具结果及返回内容；收到有效原生压缩项时，Responses 才裁掉已经被压缩替代的本地内容。没有原生压缩时，字节阈值检查这份本地历史，而非当次发送的新增消息。它只是本地估算，不等于包含隐藏推理在内的服务端 token 数。开启原生压缩的 Responses、Claude 则由服务端按有效上下文 tokens 判断阈值，客户端不使用字节数触发摘要重建。
+
+日志中的「本地上下文 N 字节」来自 `history.dump().size()`，包含 JSON 结构、转义后的工具结果、Claude 的 thinking/signature 和 Responses 的加密内容，但不包含单独发送的 system/instructions 和工具声明。JSON 长度和模型有效 token 数没有固定换算关系。Claude 的 signature 是完整推理的加密副本，不能把它的字符数当作模型输入 token 数；不同模型的分词和推理表示也不同。因此同为 100000 tokens，Claude 在 830000 字节时尚未压缩而 Responses 在约 400000 字节时压缩，并不能单凭这些数字认定压缩失效。需结合服务端 token 用量、请求中的 trigger 和返回的 compaction 块判断，中转忽略压缩参数仍是另一种可能。[Claude 思考与签名](https://platform.claude.com/docs/en/build-with-claude/thinking)、[Claude 阈值压缩](https://platform.claude.com/docs/en/build-with-claude/compaction-threshold)、[OpenAI 压缩](https://developers.openai.com/api/docs/guides/compaction)。
+
+Claude 的普通单次消息输入用量需合计 `input_tokens + cache_read_input_tokens + cache_creation_input_tokens`，命中缓存的 token 仍然占上下文。启用原生压缩时，`usage.iterations` 中的 compaction 项可以确认此次确实进行了压缩；压缩后的 message 用量可能已回落到阈值以下。不能把多轮调用的累计消耗当作当前上下文，也不能把服务端工具多次采样累计用量当作一次输入大小。[Claude 缓存计数](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)。
 
 Chat Completions、Gemini generateContent 和普通模型的 Interactions 当前没有这里所用的原生压缩参数，使用上述摘要流程。Interactions 的服务端会话续接和上下文缓存不等于自动摘要压缩。
 
 原生压缩的生效判断目前只看开关和 Responses/Claude 协议，不检查模型或渠道能力，也不自动降级。对不支持的模型或渠道开启后，可能报参数错误；如果渠道忽略压缩参数，本地字节摘要仍被禁用，历史可能增长到上下文上限。Gemini 和 Chat 即使开启该开关，也仍使用字节阈值摘要。
 
-Gemini 的 `agentGeminiInteractions = false` 使用 generateContent；2.5 等采用 thinkingBudget 的旧模型应选择该路径。思考等级继续沿用已有模型规则。Interactions v1 的 generation_config 不使用温度、top_p 或惩罚参数，这条路径不传递 GUI 中对应的采样选项；自定义请求字段仍可通过 extraBody 配置。
+Gemini 的 `agentGeminiInteractions` 默认关闭，使用 generateContent；设为 true 时使用 Interactions。2.5 等采用 thinkingBudget 的旧模型应选择 generateContent。思考等级继续沿用已有模型规则。Interactions v1 的 generation_config 不使用温度、top_p 或惩罚参数，这条路径不传递 GUI 中对应的采样选项；自定义请求字段仍可通过 extraBody 配置。
 
 ## worker 和 API 选择
 

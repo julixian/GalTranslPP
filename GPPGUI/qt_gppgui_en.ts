@@ -159,29 +159,49 @@ sk-...</translation>
         <translation>Basic settings</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+16"/>
         <source>以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效</source>
         <translation>These options apply only when Agent mode and Advanced Agent are enabled.</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>严格工具参数</source>
         <translation>Strict tool arguments</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>为 OpenAI 和 Claude 启用严格工具参数 schema</source>
-        <translation>Enable strict tool parameter schemas for OpenAI and Claude.</translation>
+        <location line="+1"/>
+        <source>OpenAI/Claude 可选严格范围；Gemini 固定使用原生工具参数约束</source>
+        <translation>Select the strict scope for OpenAI/Claude; Gemini uses native tool parameter constraints.</translation>
     </message>
     <message>
         <location line="+1"/>
+        <source>仅 commit 严格只约束译文提交工具，查询、搜索和压缩工具不启用 strict；可减少严格工具 schema 的复杂度。</source>
+        <translation>Commit-only strict mode constrains only the translation submission tool. Read, search and compaction tools do not enable strict, reducing strict tool schema complexity.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>不严格</source>
+        <translation>Non-strict</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>完全严格</source>
+        <translation>Fully strict</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>仅 commit 严格</source>
+        <translation>Commit only</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>服务端会话续接</source>
         <translation>Server-side conversation continuation</translation>
     </message>
     <message>
-        <location line="+0"/>
-        <source>使用 previous_response_id 或 previous_interaction_id，启用服务端存储</source>
-        <translation>Continue using previous_response_id or previous_interaction_id and enable server-side storage.</translation>
+        <location line="+1"/>
+        <source>仅 Responses/Gemini Interactions 生效；开启后使用会话 ID 并启用服务端存储</source>
+        <translation>Applies only to Responses/Gemini Interactions. Use a conversation ID and enable server-side storage.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -190,7 +210,7 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Responses/Claude 原生自动压缩；不支持时可能报错或超出上下文上限</source>
+        <source>Responses/Claude 原生自动压缩；模型不支持时可能报错或超出上下文上限</source>
         <translation>Native compaction for Responses/Claude; unsupported models or endpoints may fail or exceed the context limit</translation>
     </message>
     <message>
@@ -210,8 +230,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>仅在启用原生自动压缩时生效</source>
-        <translation>Only applies when native automatic compaction is enabled</translation>
+        <source>仅 Responses/Claude 启用原生自动压缩时生效；按服务端 token 数触发，与本地历史字节数不等价</source>
+        <translation>Applies only to native compaction in Responses/Claude. Uses server token counts, which differ from local history byte counts.</translation>
     </message>
     <message>
         <location line="+8"/>
@@ -224,7 +244,7 @@ sk-...</translation>
         <translation>Use Gemini Interactions. When disabled, use native tools with generateContent.</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+6"/>
         <source>高级 Agent</source>
         <translation>Advanced Agent</translation>
     </message>
@@ -1617,7 +1637,7 @@ sk-...</translation>
 <context>
     <name>DefaultPromptsPage</name>
     <message>
-        <location filename="DefaultPromptsPage.cpp" line="+21"/>
+        <location filename="DefaultPromptsPage.cpp" line="+23"/>
         <source>默认提示词管理</source>
         <translation>Default prompts</translation>
     </message>
@@ -1632,27 +1652,27 @@ sk-...</translation>
         <translation>Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+50"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+1"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>agent用户</source>
-        <translation>User-agent</translation>
+        <location line="+2"/>
+        <source>Agent 用户</source>
+        <translation>Agent user</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>agent系统</source>
-        <translation>Sys-agent</translation>
+        <location line="+1"/>
+        <source>Agent 系统</source>
+        <translation>Agent system</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+28"/>
         <source>全部保存</source>
         <translation>Save all</translation>
     </message>
@@ -1662,20 +1682,30 @@ sk-...</translation>
         <translation>Save</translation>
     </message>
     <message>
-        <location line="+51"/>
-        <location line="+25"/>
+        <location line="+6"/>
+        <location line="+6"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-25"/>
+        <location line="-6"/>
         <source>所有默认提示词配置已保存。</source>
         <translation>All default prompts settings are saved.</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+7"/>
         <source>默认 %1 提示词配置已保存。</source>
         <translation>Default %1 prompt saved.</translation>
+    </message>
+    <message>
+        <location line="-42"/>
+        <source>高级 Agent 用户</source>
+        <translation>Advanced Agent user</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>高级 Agent 系统</source>
+        <translation>Advanced Agent system</translation>
     </message>
 </context>
 <context>
@@ -3972,7 +4002,7 @@ Cache: %4</translation>
 <context>
     <name>PromptSettingsPage</name>
     <message>
-        <location filename="PromptSettingsPage.cpp" line="+20"/>
+        <location filename="PromptSettingsPage.cpp" line="+23"/>
         <source>项目提示词设置</source>
         <translation>Project prompt settings</translation>
     </message>
@@ -4000,24 +4030,34 @@ Cache: %4</translation>
         <translation>Prompt file not found</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location line="+50"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+1"/>
         <source>系统提示词</source>
         <translation>System prompt</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>agent用户</source>
-        <translation>User-agent</translation>
+        <location line="+2"/>
+        <source>Agent 用户</source>
+        <translation>Agent user</translation>
     </message>
     <message>
-        <location line="+5"/>
-        <source>agent系统</source>
-        <translation>Sys-agent</translation>
+        <location line="+1"/>
+        <source>Agent 系统</source>
+        <translation>Agent system</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>高级 Agent 用户</source>
+        <translation>Advanced Agent user</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>高级 Agent 系统</source>
+        <translation>Advanced Agent system</translation>
     </message>
 </context>
 <context>

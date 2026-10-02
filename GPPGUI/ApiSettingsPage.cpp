@@ -427,7 +427,6 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     const ScrollableTabPage agentTabPage = createScrollablePage(tabWidget);
     std::map<std::string, ElaToggleSwitch*> agentSwitches;
-    std::map<std::string, QWidget*> agentAreas;
     const auto addAgentSwitch = [&](const std::string& key, const QString& title, const QString& description, bool defaultValue, const QString& toolTip = {})
         {
             auto [area, layout] = createFormRow(agentTabPage.content);
@@ -438,19 +437,32 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             layout->addWidget(toggle);
             agentTabPage.layout->addWidget(area);
             agentSwitches[key] = toggle;
-            agentAreas[key] = area;
         };
     agentTabPage.layout->addSpacing(8);
     agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 18, agentTabPage.content));
-    addAgentSwitch("agentStrictTools", tr("严格工具参数"), tr("为 OpenAI 和 Claude 启用严格工具参数 schema"), true);
-    addAgentSwitch("agentStateful", tr("服务端会话续接"), tr("使用 previous_response_id 或 previous_interaction_id，启用服务端存储"), true);
+    auto [agentStrictToolsArea, agentStrictToolsLayout] = createFormRow(agentTabPage.content);
+    agentStrictToolsLayout->addWidget(new ElaDoubleText(tr("严格工具参数"), 16,
+        tr("OpenAI/Claude 可选严格范围；Gemini 固定使用原生工具参数约束"), 10,
+        tr("仅 commit 严格只约束译文提交工具，查询、搜索和压缩工具不启用 strict；可减少严格工具 schema 的复杂度。"), agentStrictToolsArea));
+    agentStrictToolsLayout->addStretch();
+    ElaNoWheelComboBox* agentStrictToolsComboBox = new ElaNoWheelComboBox(agentStrictToolsArea);
+    agentStrictToolsComboBox->setFixedWidth(180);
+    agentStrictToolsComboBox->addItem(tr("不严格"), "off");
+    agentStrictToolsComboBox->addItem(tr("完全严格"), "all");
+    agentStrictToolsComboBox->addItem(tr("仅 commit 严格"), "commit");
+    const std::string strictTools = toml::find_or(api, "agentStrictTools", "all");
+    agentStrictToolsComboBox->setCurrentIndex(agentStrictToolsComboBox->findData(QString::fromStdString(strictTools)));
+    agentStrictToolsLayout->addWidget(agentStrictToolsComboBox);
+    agentTabPage.layout->addWidget(agentStrictToolsArea);
+    addAgentSwitch("agentStateful", tr("服务端会话续接"),
+        tr("仅 Responses/Gemini Interactions 生效；开启后使用会话 ID 并启用服务端存储"), false);
     addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"),
-        tr("Responses/Claude 原生自动压缩；不支持时可能报错或超出上下文上限"), false,
+        tr("Responses/Claude 原生自动压缩；模型不支持时可能报错或超出上下文上限"), false,
         tr("需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
     auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
     agentCompactTokensLayout->addWidget(new ElaDoubleText(tr("原生自动压缩 token 阈值"), 16,
         tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10,
-        tr("仅在启用原生自动压缩时生效"), agentCompactTokensArea));
+        tr("仅 Responses/Claude 启用原生自动压缩时生效；按服务端 token 数触发，与本地历史字节数不等价"), agentCompactTokensArea));
     agentCompactTokensLayout->addStretch();
     ElaSpinBox* agentCompactTokensSpinBox = new ElaSpinBox(agentCompactTokensArea);
     agentCompactTokensSpinBox->setRange(0, 1000000000);
@@ -458,23 +470,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     agentCompactTokensSpinBox->setValue(toml::find_or(api, "agentCompactThresholdTokens", 0));
     agentCompactTokensLayout->addWidget(agentCompactTokensSpinBox);
     agentTabPage.layout->addWidget(agentCompactTokensArea);
-    addAgentSwitch("agentGeminiInteractions", tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), true);
-    const auto updateAgentAreas = [=]()
-        {
-            const QString currentProtocol = protocolComboBox->currentText();
-            const bool gemini = currentProtocol == "gemini";
-            const bool responses = currentProtocol == "openaires";
-            agentAreas.at("agentStrictTools")->setVisible(!gemini);
-            agentAreas.at("agentGeminiInteractions")->setVisible(gemini);
-            agentAreas.at("agentStateful")->setVisible(responses || (gemini && agentSwitches.at("agentGeminiInteractions")->getIsToggled()));
-            agentAreas.at("agentNativeAutoCompaction")->setVisible(responses || currentProtocol == "claude");
-            agentCompactTokensArea->setVisible(responses || currentProtocol == "claude");
-            agentCompactTokensSpinBox->setEnabled(agentSwitches.at("agentNativeAutoCompaction")->getIsToggled());
-        };
-    connect(protocolComboBox, &QComboBox::currentTextChanged, configWidget, [=](const QString&) { updateAgentAreas(); });
-    connect(agentSwitches.at("agentGeminiInteractions"), &ElaToggleSwitch::toggled, configWidget, [=](bool) { updateAgentAreas(); });
-    connect(agentSwitches.at("agentNativeAutoCompaction"), &ElaToggleSwitch::toggled, configWidget, [=](bool) { updateAgentAreas(); });
-    updateAgentAreas();
+    addAgentSwitch("agentGeminiInteractions", tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), false);
+    // 选项位置保持固定，适用协议由说明文字提示，不随协议切换隐藏。
+    agentCompactTokensSpinBox->setEnabled(agentSwitches.at("agentNativeAutoCompaction")->getIsToggled());
+    connect(agentSwitches.at("agentNativeAutoCompaction"), &ElaToggleSwitch::toggled,
+        agentCompactTokensSpinBox, &QWidget::setEnabled);
     agentTabPage.layout->addStretch();
     tabWidget->addTab(agentTabPage.page, tr("高级 Agent"));
 
@@ -914,6 +914,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             apiTable.insert({ "enable", enableCheckBox->isChecked() });
             apiTable.insert({ "thinkingLevel", thinkingComboBox->currentData().toString().toStdString() });
             for (const auto& [key, toggle] : agentSwitches) apiTable.insert({key, toggle->getIsToggled()});
+            apiTable.insert({"agentStrictTools", agentStrictToolsComboBox->currentData().toString().toStdString()});
             apiTable.insert({"agentCompactThresholdTokens", agentCompactTokensSpinBox->value()});
             if (temperatureCheckBox->isChecked()) {
                 apiTable.insert({ "temperature", temperatureSlider->value() });

@@ -117,10 +117,13 @@
                 <code>conditionTarget</code> 可使用 <code>index</code>, <code>filename</code>, <code>name</code>, <code>names</code>, <code>nametrans</code>, <code>namestrans</code>, <code>orig</code>, <code>preproc</code>, <code>problems</code>, <code>otherinfo</code>, <code>transby</code>, <code>transraw</code>, <code>transview</code>。
             </p>
             <pre><code class="language-toml"><span class="code-key">retranslKeys</span> = [
-  <span class="code-comment">#[{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua',conditionFunc='funcName'},</span>
-  <span class="code-comment">#{ conditionScript='%PROJECT_DIR%/SampleTextPlugin.py',conditionFunc='funcName'}],</span>
+  <span class="code-comment">#[{conditionScript='%PROJECT_DIR%/SampleTextPlugin.lua', conditionFunc='funcName'},</span>
+  <span class="code-comment"># {conditionScript='%PROJECT_DIR%/SampleTextPlugin.py', conditionFunc='funcName'},],</span>
+  <span class="code-comment">#"本有",</span>
+  <span class="code-comment">#"本无",</span>
+  <span class="code-string">"引入繁体字"</span>,
   <span class="code-string">"残留日文"</span>,
-  <span class="code-string">"翻译失败"</span>, <span class="code-comment"># 等效于 [{ conditionTarget = 'problems', conditionReg = '翻译失败' }]</span>
+  <span class="code-string">"翻译失败"</span>, <span class="code-comment"># 等效于 [{conditionTarget='problems', conditionReg ='翻译失败'},],</span>
 ]</code></pre>
         </section>
 
@@ -132,11 +135,15 @@
             <p>
                 如果想忽略指定原文/译文的特定问题，请通过内联表(数组)来定义条件。表数组的第一项是要忽略的 <code>problem</code> (同样也是正则表达式)。
             </p>
+            <p>
+                也可以指定 <code>conditionScript</code> 和 <code>conditionFunc</code> 来外接 lua/py 脚本 (<code>conditionFunc</code> 接收 Sentence 和 problem，返回 bool)。
+            </p>
             <pre><code class="language-toml"><span class="code-key">skipProblems</span> = [
-  <span class="code-comment"># "^引入拉丁字母: Live$"  # 不加任何条件</span>
+  <span class="code-comment">#"^引入拉丁字母: Live$"  # 不加任何条件</span>
   <span class="code-comment"># 如果 原文中包含'モチモチ'且译文中包含'Q弹'，则忽略此句子中所有能被 '引入拉丁字母' search 通过的 problem</span>
-  [ <span class="code-string">'引入拉丁字母'</span>, { <span class="code-key">conditionTarget</span> = <span class="code-string">'preproc'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'モチモチ'</span>},
-    { <span class="code-key">conditionTarget</span> = <span class="code-string">'transview'</span>, <span class="code-key">conditionReg</span> = <span class="code-string">'Q弹'</span>}],
+  <span class="code-comment">#['引入拉丁字母', {conditionTarget='preproc', conditionReg ='モチモチ'},</span>
+  <span class="code-comment"># {conditionTarget='transview', conditionReg ='Q弹'},],</span>
+  <span class="code-string">"^$"</span>,
 ]</code></pre>
         </section>
 
@@ -145,10 +152,14 @@
             <p>
                 <code>ProblemName</code> 使用英文，GUI 只翻译按钮显示名。<code>enable = false</code> 时可以只保留开关字段。
             </p>
+            <p>
+                <code>enable = true</code> 以启用问题检查。例如 <code>StrictlyLongerThanSource = { enable = false, base = "orig", check = "transview" }</code>，开启后会在 translated_view_text 比 original_text 严格长时，在 problem 中留下对应的问题。
+            </p>
             <pre><code class="language-toml">[<span class="code-key">problemAnalyze</span>]
 <span class="code-key">HighFrequency</span> = { <span class="code-key">enable</span> = <span class="code-bool">false</span> }
 <span class="code-key">PunctuationMismatch</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"orig"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }
-<span class="code-key">LatinIntroduced</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"preproc"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }</code></pre>
+<span class="code-key">LinebreakLost</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"orig"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }
+<span class="code-key">LinebreakAdded</span> = { <span class="code-key">enable</span> = <span class="code-bool">true</span>, <span class="code-key">base</span> = <span class="code-string">"orig"</span>, <span class="code-key">check</span> = <span class="code-string">"transview"</span> }</code></pre>
             <p>
                 <code>base</code> 和 <code>check</code> 可使用 <code>orig</code>, <code>preproc</code>, <code>transraw</code>, <code>transview</code>。
             </p>

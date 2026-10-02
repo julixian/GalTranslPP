@@ -311,7 +311,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
         m_agentAdvancedEnabled = toml::find_or(configData, "common", "agent", "advancedEnabled", false);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
-        m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 150000);
+        m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 400000);
         m_agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);
         m_agentContextLinesLimit = toml::find_or(configData, "common", "agent", "contextLinesLimit", 20);
         const std::string projectNotePathStr = toml::find_or(configData, "common", "agent", "projectNotePath", "ProjectNote.md");
@@ -489,11 +489,11 @@ void NormalJsonTranslator::normalJsonInit()
                         "backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略").arg(apiIndex).toStdString());
                     continue;
                 }
-                api.agentStrictTools = !apiTbl.contains("agentStrictTools") || apiTbl.at("agentStrictTools").as_boolean();
-                api.agentStateful = !apiTbl.contains("agentStateful") || apiTbl.at("agentStateful").as_boolean();
+                if (apiTbl.contains("agentStrictTools")) api.agentStrictTools = apiTbl.at("agentStrictTools").as_string();
+                api.agentStateful = apiTbl.contains("agentStateful") && apiTbl.at("agentStateful").as_boolean();
                 api.agentNativeAutoCompaction = apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").as_boolean();
                 if (apiTbl.contains("agentCompactThresholdTokens")) api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
-                api.agentGeminiInteractions = !apiTbl.contains("agentGeminiInteractions") || apiTbl.at("agentGeminiInteractions").as_boolean();
+                api.agentGeminiInteractions = apiTbl.contains("agentGeminiInteractions") && apiTbl.at("agentGeminiInteractions").as_boolean();
                 api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
                 api.thinkingLevel = "off";
                 if (apiTbl.contains("thinkingLevel")) {

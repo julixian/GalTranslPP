@@ -8,7 +8,6 @@ import NormalJsonTranslatorHelperTool;
 import Tool;
 
 namespace fs = std::filesystem;
-namespace py = pybind11;
 
 bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
     int& recursionIndex, int& recursionCount, int threadId, int batchIndex)

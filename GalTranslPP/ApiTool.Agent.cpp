@@ -100,6 +100,11 @@ namespace
         const auto& api = session.api;
         json payload;
         json nativeTools = json::array();
+        const auto isStrictTool = [&](const json& tool)
+            {
+                return api.agentStrictTools == "all" ||
+                    (api.agentStrictTools == "commit" && tool.at("name") == "commit_translations");
+            };
 
         switch (api.protocol)
         {
@@ -109,7 +114,7 @@ namespace
             payload["messages"].insert(payload["messages"].begin(), json{{"role", "system"}, {"content", session.systemPrompt}});
             for (const auto& tool : tools) {
                 json function = tool;
-                function["strict"] = api.agentStrictTools;
+                function["strict"] = isStrictTool(tool);
                 nativeTools.push_back({{"type", "function"}, {"function", std::move(function)}});
             }
             break;
@@ -122,7 +127,7 @@ namespace
             for (const auto& tool : tools) {
                 json function = tool;
                 function["type"] = "function";
-                function["strict"] = api.agentStrictTools;
+                function["strict"] = isStrictTool(tool);
                 nativeTools.push_back(std::move(function));
             }
             if (api.agentNativeAutoCompaction) {
@@ -139,7 +144,7 @@ namespace
             for (const auto& tool : tools) {
                 json function = {{"name", tool.at("name")}, {"description", tool.at("description")},
                     {"input_schema", tool.at("parameters")}};
-                if (api.agentStrictTools) function["strict"] = true;
+                if (isStrictTool(tool)) function["strict"] = true;
                 nativeTools.push_back(std::move(function));
             }
             if (api.agentNativeAutoCompaction) {

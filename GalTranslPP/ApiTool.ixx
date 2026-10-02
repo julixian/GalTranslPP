@@ -31,13 +31,14 @@ export
         std::chrono::steady_clock::time_point lastReportTime = std::chrono::steady_clock::time_point::min();
         int reportCount = 0;
         bool useSystemProxy = true;
-        bool agentStrictTools = true;
-        bool agentStateful = true;
+        // off 不严格，all 全部严格，commit 仅严格约束 commit_translations。
+        std::string agentStrictTools = "all";
+        bool agentStateful = false;
         // 在普通请求中启用服务端按 token 阈值自动压缩，需要模型和接口支持。
         bool agentNativeAutoCompaction = false;
         // 0 不指定阈值；需要显式阈值的 Responses 路径沿用默认 100000 tokens。
         int agentCompactThresholdTokens = 0;
-        bool agentGeminiInteractions = true;
+        bool agentGeminiInteractions = false;
     };
 
     enum class ApiErrorType {

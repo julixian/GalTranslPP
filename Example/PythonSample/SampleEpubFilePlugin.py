@@ -1,6 +1,7 @@
 import gpp_plugin_api as gpp
 
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Callable, cast
 
@@ -32,12 +33,12 @@ def run() -> None:
 
     pythonTranslator.normalJsonBeforeRun()
     try:
-        processCurrentFilesWithPythonThreads()
+        processCurrentFilesWithThreadPool()
     finally:
         pythonTranslator.normalJsonAfterRun()
 
 
-def processCurrentFilesWithPythonThreads() -> None:
+def processCurrentFilesWithThreadPool() -> None:
     controller = pythonTranslator.m_controller
 
     if pythonTranslator.m_transEngine == gpp.TransEngine.DumpName:
@@ -59,45 +60,38 @@ def processCurrentFilesWithPythonThreads() -> None:
         return
 
     relFilePaths = pythonTranslator.m_currentRunRelFilePaths
-    if relFilePaths is None:
+    if not relFilePaths:
         return
 
     maxWorkers = min(pythonTranslator.m_threadsNum, len(relFilePaths))
 
-    nextFileIndex = 0
-    nextFileIndexLock = threading.Lock()
+    workerState = threading.local()
+    nextThreadId = 1
+    threadIdLock = threading.Lock()
     stopEvent = threading.Event()
-    errors: list[BaseException] = []
-    errorsLock = threading.Lock()
 
-    def worker(threadId: int) -> None:
-        nonlocal nextFileIndex
-        while not stopEvent.is_set() and not controller.shouldStop():
-            with nextFileIndexLock:
-                if nextFileIndex >= len(relFilePaths):
-                    return
-                relFilePath = Path(relFilePaths[nextFileIndex])
-                nextFileIndex += 1
+    def initWorker() -> None:
+        nonlocal nextThreadId
+        # 每个工作线程固定使用一个从 1 开始的编号，换文件时保留对应 Agent 的上下文。
+        with threadIdLock:
+            workerState.threadId = nextThreadId
+            nextThreadId += 1
 
-            try:
-                processOneFile(relFilePath, threadId)
-            except BaseException as e:
-                with errorsLock:
-                    errors.append(e)
-                stopEvent.set()
-                return
+    def worker(relFilePath: Path) -> None:
+        if stopEvent.is_set():
+            return
+        try:
+            processOneFile(relFilePath, workerState.threadId)
+        except BaseException:
+            stopEvent.set()
+            raise
 
-    threads = [
-        threading.Thread(target=worker, args=(threadId,), name=f"gppPyEpub{threadId}")
-        for threadId in range(maxWorkers)
-    ]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    if errors:
-        raise errors[0]
+    with ThreadPoolExecutor(max_workers=maxWorkers, thread_name_prefix="gppPyEpub",
+                            initializer=initWorker) as executor:
+        futures = [executor.submit(worker, Path(relFilePath)) for relFilePath in relFilePaths]
+        for future in as_completed(futures):
+            # 传播文件处理异常；退出作用域时等待正在执行的任务结束并关闭线程池。
+            future.result()
 
     if (pythonTranslator.m_reuseRepeatedBlocks
             and pythonTranslator.m_transEngine != gpp.TransEngine.ShowNormal):

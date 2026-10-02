@@ -237,7 +237,8 @@ void pythonNLPFunctionDeleter(PythonNLPFunction* ptr) {
 
 // 最理想的情况当然是把 NLP 函数也放在子解释器里运行，但这些 NLP 模块都很娇气，不是在主解释里的导入就会崩溃。。。
 std::shared_ptr<PythonNLPFunction> PythonMainInterpreterManager::registerNLPFunction
-(const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger) {
+    (const std::string& moduleName, const std::string& modelName, const std::shared_ptr<spdlog::logger>& logger)
+{
     std::shared_ptr<PythonNLPFunction> pythonNLPModuleFunc;
 
     logger->info(gppTr("PythonMainInterpreterManager.registerNLPFunction", "正在加载模块 [%1] 的模型 %2")
@@ -303,7 +304,12 @@ void PythonMainInterpreterManager::daemonThreadFunc() {
             .toStdString());
     }
     while (true) {
-        const auto taskOpt = m_taskQueue.pop();
+        const auto taskOpt = [&]()
+            {
+                // 等待 C++ 任务时释放 GIL，避免阻塞其他线程临时切换到主解释器。
+                py::gil_scoped_release release;
+                return m_taskQueue.pop();
+            }();
         if (!taskOpt) {
             break;
         }
@@ -398,7 +404,12 @@ void PythonInterpreterInstance::daemonThreadFunc() {
             .toStdString());
     }
     while (true) {
-        const auto taskOpt = m_taskQueue.pop();
+        const auto taskOpt = [&]
+            {
+                // 等待 C++ 任务时释放当前子解释器的 GIL，取到任务后自动恢复。
+                py::gil_scoped_release release;
+                return m_taskQueue.pop();
+            }();
         if (!taskOpt) {
             break;
         }
@@ -429,8 +440,8 @@ void PythonInterpreterInstance::daemonThreadFunc() {
 
 // PythonManager
 std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registerFunction
-(const std::string& modulePath, const std::string& functionName) {
-
+    (const std::string& modulePath, const std::string& functionName)
+{
     const fs::path stdModulePath = fs::weakly_canonical(ascii2Wide(modulePath));
     if (!fs::exists(stdModulePath)) {
         m_logger->error(gppTr("PythonManager.registerFunction", "脚本 [%1] 不存在")
@@ -675,7 +686,7 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
         if (!envZipPath.empty()) {
             const fs::path pythonEnvCanonicalPath = fs::canonical(pythonEnvPath);
             s_pythonExePath = fs::canonical(pythonEnvCanonicalPath / L"python.exe");
-            PyConfig config{};
+            PyConfig config;
             PyConfig_InitIsolatedConfig(&config);
             config.site_import = 0;
             config.module_search_paths_set = 1;

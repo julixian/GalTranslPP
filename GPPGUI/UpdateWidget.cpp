@@ -16,6 +16,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+        "1. 修复了等待任务时不释放 主/子解释器 GIL 导致 Python 脚本中无法使用 ThreadPoolExecutor 等功能的 bug",
+        "v3.2.0 更新",
 		"1. claude 协议现在默认会在请求体中加一个 max_tokens = 8192(claude-3-5-)/16384(其它) 并自动将 system 提示词上提到请求体中",
         "2. 完善思考设置，新增更多等级及模型判断逻辑等",
         "3. 为 fallback 切换下一个 apikey 添加 10s 的时间阈值",

@@ -3,6 +3,7 @@
 ###############################################################################
 * text=auto
 GPPGUI/TreeSitterGrammars/**/* linguist-vendored
+vcpkg-scripts/** linguist-vendored
 
 ###############################################################################
 # Set default behavior for command prompt diff.

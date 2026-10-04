@@ -301,7 +301,10 @@ struct release_publisher {
 
 template<class Function>
 int run_build_script(Function configure) {
-    try { return configure(); }
+    try {
+        if (is_release_profile()) mcpp::define("NDEBUG");
+        return configure();
+    }
     catch (const std::exception& error) {
         std::cerr << "GPP build: " << error.what() << '\n';
         return 1;

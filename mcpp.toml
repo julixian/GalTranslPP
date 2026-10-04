@@ -4,7 +4,7 @@ members = ["GalTranslPP", "GPPVersion", "GPPCLI", "GPPGUI", "Updater"]
 [workspace.package]
 version = "3.2.1"
 standard = "c++23"
-license = "Apache-2.0"
+license = "LicenseRef-GalTranslPP"
 
 [toolchain]
 windows = "llvm@22.1.8"

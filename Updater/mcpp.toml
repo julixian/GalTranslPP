@@ -34,7 +34,10 @@ module_extensions = [".ixx"]
 include_dirs = ["."]
 
 [target.windows.build]
-defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
+defines = ["UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS",
+  "WIN32_LEAN_AND_MEAN", "NOMINMAX",
+  "_RANGES_",
+  "SPDLOG_WCHAR_FILENAMES"]
 ldflags = ["-luser32", "-loleaut32"]
 
 [targets.Updater]

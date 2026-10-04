@@ -23,7 +23,10 @@ sources = [
 module_extensions = [".ixx"]
 
 [target.windows.build]
-defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
+defines = ["UNICODE", "_UNICODE", "_LIB", "_CRT_SECURE_NO_WARNINGS",
+  "WIN32_LEAN_AND_MEAN", "NOMINMAX",
+  "_RANGES_",
+  "SPDLOG_WCHAR_FILENAMES"]
 
 [targets.GPPVersion]
 kind = "lib"

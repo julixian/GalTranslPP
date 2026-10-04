@@ -105,8 +105,7 @@ inline std::string default_triplet(std::string_view crt = {}) {
     return {};
 }
 
-// The `overlay-triplets` a `vcpkg-configuration.json` beside the manifest
-// names, resolved against the file's directory as vcpkg resolves them.
+// 解析配置中的 overlay-ports / overlay-triplets；相对路径按配置文件所在目录解析。
 inline std::vector<std::filesystem::path> manifest_overlays(const std::filesystem::path& manifest_root,
                                                             std::string_view key) {
     std::vector<std::filesystem::path> out;
@@ -513,6 +512,8 @@ inline prefix use(const options& opt = {}) {
     // ── the installation, as an edge ──
     const fs::path manifestFile = manifestRoot / "vcpkg.json";
     const fs::path configFile   = manifestRoot / "vcpkg-configuration.json";
+    // 配置内容或文件存在性改变时重新规划，更新依赖、overlay 和安装 action。
+    mcpp::rerun_if_changed(mcpp::deps::generic(manifestFile).c_str());
     mcpp::rerun_if_changed(mcpp::deps::generic(configFile).c_str());
     if (!fs::is_regular_file(exe, ec))
         throw std::runtime_error("vcpkg 可执行文件不存在：" + exe.generic_string());
@@ -580,16 +581,18 @@ inline prefix use(const options& opt = {}) {
         a.input(exeS.c_str());
         a.input(mcpp::deps::generic(manifestFile).c_str());
         if (fs::is_regular_file(configFile, ec)) a.input(mcpp::deps::generic(configFile).c_str());
-        // An overlay's files are inputs: a changed patch or triplet is a
-        // different installation.
-        for (auto const& d : overlayTriplets) {
-            for (auto const& f : mcpp::deps::files_under(d)) a.input(f.c_str());
-            mcpp::deps::watch_tree(d);
-        }
-        for (auto const& d : overlayPorts) {
-            for (auto const& f : mcpp::deps::files_under(d)) a.input(f.c_str());
-            mcpp::deps::watch_tree(d);
-        }
+        // 按配置中的实际 overlay 路径监视文件集合；已有文件的内容另行参与重跑和安装检测。
+        const auto watch_overlay = [&](const fs::path& directory) {
+            const auto relative = directory.lexically_relative(fs::path(mcpp::manifest_dir()));
+            const auto pattern = ((relative.empty() ? directory : relative) / "**").generic_string();
+            mcpp::rerun_if_changed_glob(pattern.c_str());
+            for (auto const& f : mcpp::deps::files_under(directory)) {
+                mcpp::rerun_if_changed(f.c_str());
+                a.input(f.c_str());
+            }
+        };
+        for (auto const& directory : overlayTriplets) watch_overlay(directory);
+        for (auto const& directory : overlayPorts) watch_overlay(directory);
         a.output(stamp.c_str());
         a.output_dir(p.root.c_str());
         a.submit();

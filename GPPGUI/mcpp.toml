@@ -40,7 +40,10 @@ include_dirs = [
 
 [target.windows.build]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES", "_RANGES_"]
+defines = ["UNICODE", "_UNICODE",
+  "WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS",
+  "_RANGES_",
+  "SPDLOG_WCHAR_FILENAMES"]
 ldflags = ["-ldbghelp"]
 
 [targets.GalTranslPP_GUI]

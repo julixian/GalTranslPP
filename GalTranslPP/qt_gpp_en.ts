@@ -29,62 +29,51 @@
 <context>
     <name>ApiTool.formatApiError</name>
     <message>
-        <location filename="ApiTool.Error.cpp" line="46"/>
         <source>[GPP.响应为空]</source>
-        <translation>[GPP.Empty response]</translation>
+        <translation type="vanished">[GPP.Empty response]</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="45"/>
         <source>原始响应:</source>
-        <translation>Raw response:</translation>
+        <translation type="vanished">Raw response:</translation>
     </message>
 </context>
 <context>
     <name>ApiTool.makeApiError</name>
     <message>
-        <location filename="ApiTool.Error.cpp" line="27"/>
         <source>Api 网络请求失败</source>
-        <translation>API network request failed</translation>
+        <translation type="vanished">API network request failed</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="28"/>
         <source>Api key 疑似无效或额度用尽</source>
-        <translation>The API key may be invalid or its quota exhausted</translation>
+        <translation type="vanished">The API key may be invalid or its quota exhausted</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="29"/>
         <source>Api 没有可用模型或没有模型访问权限</source>
-        <translation>No available model or no model access permission</translation>
+        <translation type="vanished">No available model or no model access permission</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="30"/>
         <source>Api 频率限制或暂时不可用</source>
-        <translation>API rate limit or temporary unavailability</translation>
+        <translation type="vanished">API rate limit or temporary unavailability</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="31"/>
         <source>Api 拒答或内容被拦截</source>
-        <translation>API refusal or blocked content</translation>
+        <translation type="vanished">API refusal or blocked content</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="32"/>
         <source>Api 响应 JSON 解析失败</source>
-        <translation>Failed to parse the API response JSON</translation>
+        <translation type="vanished">Failed to parse the API response JSON</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="33"/>
         <source>Api 响应字段解析失败</source>
-        <translation>Failed to parse API response fields</translation>
+        <translation type="vanished">Failed to parse API response fields</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="34"/>
         <source>Api 回复未完成或已截断</source>
-        <translation>The API response is incomplete or truncated</translation>
+        <translation type="vanished">The API response is incomplete or truncated</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="35"/>
         <source>未知 Api 错误</source>
-        <translation>Unknown API error</translation>
+        <translation type="vanished">Unknown API error</translation>
     </message>
 </context>
 <context>
@@ -106,9 +95,8 @@
 <context>
     <name>ApiTool.parseAgentReply</name>
     <message>
-        <location filename="ApiTool.Agent.cpp" line="298"/>
         <source>响应中没有文本内容或工具调用</source>
-        <translation>The response contains no text or tool calls</translation>
+        <translation type="vanished">The response contains no text or tool calls</translation>
     </message>
 </context>
 <context>
@@ -1296,7 +1284,6 @@ Problem overview:
         <translation type="vanished">Unknown tool: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="299"/>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="453"/>
         <source>工具返回结果:
 %1</source>
@@ -1336,7 +1323,6 @@ Problem overview:
         <translation>Context compressed; next turn</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="264"/>
         <location filename="NormalJsonTranslator.TransAgent.cpp" line="530"/>
         <source>该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:
 %4</source>
@@ -1377,108 +1363,90 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateAdvancedBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="192"/>
         <source>[GPP.正文为空]</source>
-        <translation>[GPP.Empty response text]</translation>
+        <translation type="vanished">[GPP.Empty response text]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="83"/>
         <source>[线程 %1] [文件 %2] [批次 %3] 高级 Agent</source>
-        <translation>[Thread %1] [File %2] [Batch %3] Advanced Agent</translation>
+        <translation type="vanished">[Thread %1] [File %2] [Batch %3] Advanced Agent</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="85"/>
         <source>%1 开始翻译，最多 %2 轮，共 %3 句:
 %4</source>
-        <translation>%1 Starts translation, max %2 turns, %3 sentences total:
+        <translation type="vanished">%1 Starts translation, max %2 turns, %3 sentences total:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="91"/>
         <source>%1 创建会话: %2 / %3</source>
-        <translation>%1 Created conversation: %2 / %3</translation>
+        <translation type="vanished">%1 Created conversation: %2 / %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="98"/>
         <source>没有可用的 Api key 了</source>
-        <translation>No API keys are available.</translation>
+        <translation type="vanished">No API keys are available.</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="142"/>
         <source>%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文</source>
-        <translation>%1 [Turn %2] Context exceeds the byte threshold; asking the model to summarize first</translation>
+        <translation type="vanished">%1 [Turn %2] Context exceeds the byte threshold; asking the model to summarize first</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="155"/>
         <source>%1 [轮次 %2] [请求 %3]</source>
-        <translation>%1 [Turn %2] [Request %3]</translation>
+        <translation type="vanished">%1 [Turn %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="157"/>
         <source>%1 开始请求，剩余 %2 句，本地上下文 %3 字节</source>
-        <translation>%1 Starting request, %2 sentences remaining, %3 bytes of local context</translation>
+        <translation type="vanished">%1 Starting request, %2 sentences remaining, %3 bytes of local context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="190"/>
         <source>%1 成功响应，回复正文:
 %2
 工具调用:
 %3</source>
-        <translation>%1 Response received, response text:
+        <translation type="vanished">%1 Response received, response text:
 %2
 Tool calls:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="198"/>
         <source>%1 工具调用 %2 个，调用概览:
 %3</source>
-        <translation>%1 Received %2 tool calls, call overview:
+        <translation type="vanished">%1 Received %2 tool calls, call overview:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="205"/>
         <source>%1 未调用工具，连续 %2 / %3 轮未调用工具</source>
-        <translation>%1 No tool calls, %2 / %3 consecutive turns without tool calls</translation>
+        <translation type="vanished">%1 No tool calls, %2 / %3 consecutive turns without tool calls</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="262"/>
         <source>%1 响应处理成功，处理结果:
 %2</source>
-        <translation>%1 Response processed successfully, result:
+        <translation type="vanished">%1 Response processed successfully, result:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="283"/>
         <source>工具 %1 执行失败: %2</source>
-        <translation>Tool %1 failed: %2</translation>
+        <translation type="vanished">Tool %1 failed: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="297"/>
         <source>%1 工具调用明细:
 %2</source>
-        <translation>%1 Tool call details:
+        <translation type="vanished">%1 Tool call details:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="304"/>
         <source>%1 已回填 %2 个工具结果，进入下一轮</source>
-        <translation>%1 Added %2 tool results to the conversation; proceeding to the next turn</translation>
+        <translation type="vanished">%1 Added %2 tool results to the conversation; proceeding to the next turn</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="322"/>
         <source>%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句</source>
-        <translation>%1 [Turn %2] Failed after %3 requests; translated (%4 / %5) sentences</translation>
+        <translation type="vanished">%1 [Turn %2] Failed after %3 requests; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="326"/>
         <source>%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句</source>
-        <translation>%1 [Turn %2] Failed after %3 consecutive turns without tool calls; translated (%4 / %5) sentences</translation>
+        <translation type="vanished">%1 [Turn %2] Failed after %3 consecutive turns without tool calls; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="330"/>
         <source>%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句</source>
-        <translation>%1 Failed after reaching the maximum turn count (%2 turns); translated (%3 / %4) sentences</translation>
+        <translation type="vanished">%1 Failed after reaching the maximum turn count (%2 turns); translated (%3 / %4) sentences</translation>
     </message>
     <message>
         <source>%1 上下文超过字节阈值，要求模型先压缩上下文</source>
@@ -1489,9 +1457,8 @@ Tool calls:
         <translation type="vanished">%1 [Turn %2] [Request %3] Starting request, %4 sentences remaining</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="179"/>
         <source>%1 压缩请求重试耗尽，清空会话历史后继续当前批次: %2</source>
-        <translation>%1 Compaction request retries exhausted; clearing session history and continuing the current batch: %2</translation>
+        <translation type="vanished">%1 Compaction request retries exhausted; clearing session history and continuing the current batch: %2</translation>
     </message>
     <message>
         <source>%1 [轮次 %2] 回复正文:
@@ -1500,21 +1467,18 @@ Tool calls:
 %3; tool calls: %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="220"/>
         <source>%1 摘要无效，清空会话历史后继续当前批次: %2</source>
-        <translation>%1 Invalid summary; clearing session history and continuing the current batch: %2</translation>
+        <translation type="vanished">%1 Invalid summary; clearing session history and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="228"/>
         <source>%1 压缩后的滚动上下文:
 %2</source>
-        <translation>%1 Rolling context after compaction:
+        <translation type="vanished">%1 Rolling context after compaction:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="232"/>
         <source>%1 已完成上下文压缩，继续当前批次</source>
-        <translation>%1 Context compaction completed; continuing the current batch</translation>
+        <translation type="vanished">%1 Context compaction completed; continuing the current batch</translation>
     </message>
     <message>
         <source>%1 已提交 %2 句:
@@ -1523,9 +1487,8 @@ Tool calls:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="278"/>
         <source>%1 工具 %2 执行失败: %3</source>
-        <translation>%1 Tool %2 failed: %3</translation>
+        <translation type="vanished">%1 Tool %2 failed: %3</translation>
     </message>
     <message>
         <source>%1 已达到请求或轮次上限，%2 句翻译失败</source>

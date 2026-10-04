@@ -45,9 +45,12 @@ include_dirs = [
 
 [target.windows.build]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-defines = ["WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS", "SPDLOG_WCHAR_FILENAMES",
+
+defines = ["UNICODE", "_UNICODE", "_LIB", "_CRT_SECURE_NO_WARNINGS",
+  "WIN32_LEAN_AND_MEAN", "NOMINMAX",
   # 详见 https://github.com/microsoft/STL/issues/6121，https://developercommunity.visualstudio.com/t/11148844
-  "_RANGES_"]
+  "_RANGES_",
+  "SPDLOG_WCHAR_FILENAMES"]
 ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi"]
 
 [targets.GalTranslPP]

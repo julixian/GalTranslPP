@@ -1,0 +1,9 @@
+import std;
+import mcpp;
+
+int main() {
+    // 与其它成员一致，Release 和快速 Release 都关闭普通 assert。
+    const std::string_view profile = mcpp::profile();
+    if (profile == "release" || profile == "fast-release") mcpp::define("NDEBUG");
+    return 0;
+}

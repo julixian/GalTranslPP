@@ -3,7 +3,7 @@ namespace = "gpp"
 name = "runtime-stage"
 version = "1.0.0"
 standard = "c++23"
-license = "Apache-2.0"
+license = "LicenseRef-GalTranslPP"
 
 [build]
 sources = []

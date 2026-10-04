@@ -57,6 +57,10 @@ struct options {
     // refused by name). `detected` lets vcpkg find its own toolset, as 0.16.0
     // did, until 2027-03-28. See docs/deps.md.
     mcpp::plugins::toolset::choice toolset;
+    // Windows 优先使用当前 mcpp 编译器旁的 clang-cl；不存在时沿用 MSVC 工具集。
+    bool prefer_clang_cl = false;
+    // 仅 clang-cl 开启依赖的 Release LTO；MSVC 回退时忽略，避免生成无法由 Clang 链接的 /GL 产物。
+    bool lto = false;
     // The C runtime linkage of the ports on the MSVC ABI, "static" or
     // "dynamic". Empty follows the program's C++ runtime contract
     // (`mcpp::msvc_crt_linkage()`): a `self-contained` program links it
@@ -206,7 +210,7 @@ inline std::string_view vcpkg_system_toolchain() {
 // so vcpkg's ABI hash sees the toolset's identity and its compilers and never
 // where they are. A Windows path goes through `file(TO_CMAKE_PATH)`, since a
 // backslash in a CMake string is an escape.
-inline std::string chain_toolchain_text() {
+inline std::string chain_toolchain_text(bool clang_cl) {
     std::string t =
         "# Written by gpp.deps.vcpkg: the tools mcpp resolved, read from the\n"
         "# environment of the installation, then vcpkg's own toolchain for the\n"
@@ -214,6 +218,9 @@ inline std::string chain_toolchain_text() {
     for (auto const& [var, env] : { std::pair<std::string_view, std::string_view>
                                         {"CMAKE_C_COMPILER",   "MCPP_VCPKG_CC"},
                                         {"CMAKE_CXX_COMPILER", "MCPP_VCPKG_CXX"},
+                                        {"CMAKE_LINKER",       "MCPP_VCPKG_LD"},
+                                        {"CMAKE_AR",           "MCPP_VCPKG_AR"},
+                                        {"CMAKE_ASM_MASM_COMPILER", "MCPP_VCPKG_ASM_MASM"},
                                         {"CMAKE_RC_COMPILER",  "MCPP_VCPKG_RC"},
                                         {"CMAKE_MT",           "MCPP_VCPKG_MT"} }) {
         t += std::format("if(DEFINED ENV{{{0}}} AND NOT \"$ENV{{{0}}}\" STREQUAL \"\")\n"
@@ -230,6 +237,10 @@ inline std::string chain_toolchain_text() {
          "file(TO_CMAKE_PATH \"$ENV{MCPP_VCPKG_ROOT}\" z_mcpp_vcpkg_root)\n";
     t += std::format("include(\"${{z_mcpp_vcpkg_root}}/scripts/toolchains/{}.cmake\")\n",
                      vcpkg_system_toolchain());
+    if (clang_cl) {
+        // CMake 的 LLVM RC 预处理步骤只识别大写 /C，避免把代码页参数转交给 clang-cl。
+        t += "string(REPLACE \"/c65001\" \"/C65001\" CMAKE_RC_FLAGS \"${CMAKE_RC_FLAGS}\")\n";
+    }
     return t;
 }
 
@@ -287,7 +298,31 @@ inline prefix use(const options& opt = {}) {
     }
 
     // THE TOOLSET, and how it reaches vcpkg (mcpp.plugins.toolset).
-    const auto tools = ts::resolve(opt.toolset);
+    auto tools = ts::resolve(opt.toolset);
+    bool clang_cl = false;
+    if (opt.prefer_clang_cl && ts::msvc_abi() && std::string_view(mcpp::compiler()) == "clang") {
+        // 只取 mcpp 当前选中的 LLVM，不从 PATH 混入另一版本的 clang-cl。
+        const fs::path llvm_bin = fs::path(mcpp::tool("cxx")).parent_path();
+        const auto compiler = llvm_bin / "clang-cl.exe";
+        mcpp::rerun_if_changed(compiler.generic_string().c_str());
+        if (fs::is_regular_file(compiler, ec)) {
+            tools = ts::resolve({ts::source::resolved, ts::compiler::row});
+            if (tools) {
+                tools->cc = tools->cxx = compiler.generic_string();
+                tools->ld = (llvm_bin / "lld-link.exe").generic_string();
+                tools->ar = (llvm_bin / "llvm-lib.exe").generic_string();
+                // LLVM RC 接受 /fo 等 Windows 参数，并支持 CMake 的 Clang 资源依赖扫描。
+                tools->rc = (llvm_bin / "llvm-rc.exe").generic_string();
+                tools->mt = mcpp::abi_tool("mt");
+                // MASM、nmake 等辅助工具仍来自同一 MSVC 工具集，C/C++ 编译器保持 clang-cl。
+                const auto native_bin = fs::path(mcpp::abi_tool("cxx")).parent_path().generic_string();
+                if (!native_bin.empty()) tools->path_dirs.push_back(native_bin);
+                // 驱动所在目录也参与 triplet 身份，切换 LLVM 时隔离安装和缓存。
+                tools->identity += "; clang-cl " + compiler.generic_string();
+                clang_cl = true;
+            }
+        }
+    }
     if (!tools) {
         std::cerr << std::format("{}: {}\n", who, tools.error());
         return {};
@@ -372,6 +407,7 @@ inline prefix use(const options& opt = {}) {
     // tools, and is used as it stands.
     const bool projectChains = !top_level_setting(baseText, "VCPKG_CHAINLOAD_TOOLCHAIN_FILE").empty();
     const bool chain = tools->how == ts::mechanism::chain && !projectChains;
+    const bool use_lto = opt.lto && clang_cl;
     const bool pinVersion = tools->how == ts::mechanism::instance && !tools->toolset_version.empty()
                          && !tools->instance_default.empty()
                          && tools->toolset_version != tools->instance_default;
@@ -379,7 +415,7 @@ inline prefix use(const options& opt = {}) {
     fs::path generated;
     std::vector<std::pair<std::string, std::string>> actionEnv;
     std::vector<std::string> untracked;
-    if (chain || pinVersion) {
+    if (chain || pinVersion || use_lto) {
         generated = fs::path(mcpp::out_dir()) / "deps-vcpkg" / "triplets";
         std::string text = std::format(
             "# Written by gpp.deps.vcpkg: the triplet '{}', then the toolset mcpp resolved.\n"
@@ -390,9 +426,14 @@ inline prefix use(const options& opt = {}) {
         if (tools->msvc_abi && !crt.empty()) text += std::format("set(VCPKG_CRT_LINKAGE {})\n", crt);
         if (pinVersion)
             text += std::format("set(VCPKG_PLATFORM_TOOLSET_VERSION {})\n", tools->toolset_version);
+        if (use_lto) {
+            // clang-cl 生成 LLVM bitcode；Make 等直接调用编译器链接的流程也需明确选择 LLD。
+            text += "string(APPEND VCPKG_C_FLAGS_RELEASE \" -flto=full -fuse-ld=lld\")\n"
+                    "string(APPEND VCPKG_CXX_FLAGS_RELEASE \" -flto=full -fuse-ld=lld\")\n";
+        }
         if (chain) {
             const std::string chainFile = std::format("mcpp-chain-{}.cmake", vcpkg_system_toolchain());
-            mcpp::plugins::fs::write_if_changed(generated / chainFile, chain_toolchain_text());
+            mcpp::plugins::fs::write_if_changed(generated / chainFile, chain_toolchain_text(clang_cl));
             text += std::format("set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE \"${{CMAKE_CURRENT_LIST_DIR}}/{}\")\n", chainFile);
             auto put = [&](std::string name, const std::string& value) {
                 if (value.empty()) return;
@@ -406,6 +447,9 @@ inline prefix use(const options& opt = {}) {
             };
             put("MCPP_VCPKG_CC",   native(tools->cc));
             put("MCPP_VCPKG_CXX",  native(tools->cxx));
+            put("MCPP_VCPKG_LD",   native(tools->ld));
+            put("MCPP_VCPKG_AR",   native(tools->ar));
+            if (clang_cl) put("MCPP_VCPKG_ASM_MASM", native(mcpp::abi_tool("as")));
             put("MCPP_VCPKG_RC",   native(tools->rc));
             put("MCPP_VCPKG_MT",   native(tools->mt));
             put("MCPP_VCPKG_ROOT", native(vcpkgRoot));
@@ -526,6 +570,13 @@ inline prefix use(const options& opt = {}) {
         }
         for (auto const& x : opt.install_args) a.arg(x.c_str());
         for (auto const& [k, v] : actionEnv) a.env(k.c_str(), v.c_str());
+        // 工具更新也需要重跑安装 action，由 vcpkg 的编译器 ABI 跟踪决定是否重建。
+        if (clang_cl) {
+            for (const auto* tool : {&tools->cxx, &tools->ld, &tools->ar}) {
+                mcpp::rerun_if_changed(tool->c_str());
+                a.input(tool->c_str());
+            }
+        }
         a.input(exeS.c_str());
         a.input(mcpp::deps::generic(manifestFile).c_str());
         if (fs::is_regular_file(configFile, ec)) a.input(mcpp::deps::generic(configFile).c_str());

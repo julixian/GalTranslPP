@@ -4,7 +4,7 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="AboutDialog.cpp" line="+21"/>
+        <location filename="AboutDialog.cpp" line="+23"/>
         <source>关于</source>
         <translation>About</translation>
     </message>

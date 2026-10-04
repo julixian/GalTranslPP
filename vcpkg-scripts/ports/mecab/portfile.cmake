@@ -19,7 +19,6 @@ file(COPY "${SOURCE_PATH}/mecab/COPYING" DESTINATION "${SOURCE_PATH}/mecab/src")
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}/mecab/src"
-	WINDOWS_USE_MSBUILD
 	OPTIONS
         -DCMAKE_CXX_STANDARD=11 # 17 does not allow 'register'
 )

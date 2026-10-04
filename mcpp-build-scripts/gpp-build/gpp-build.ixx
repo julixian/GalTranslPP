@@ -78,6 +78,11 @@ gpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries
             std::string_view(mcpp::target_env()) != "msvc")
             throw std::runtime_error("GPP 自定义 triplet 当前只配置了 Windows x64 / MSVC ABI");
         options.triplet = windows_triplet;
+        options.prefer_clang_cl = true;
+        // 空标记文件控制 clang-cl 依赖的 LTO；MSVC 忽略它，创建或删除文件都会重新配置依赖。
+        const auto lto_marker = workspace_directory() / "vcpkg-scripts" / ".vcpkg-use-lto";
+        mcpp::rerun_if_changed(lto_marker.generic_string().c_str());
+        options.lto = fs::is_regular_file(lto_marker);
     }
     options.manifest_root = workspace_directory().generic_string();
     options.install_root = (workspace_directory() / "vcpkg_installed").generic_string();

@@ -16,6 +16,8 @@ import boost;
 import GPPVersion;
 import toml11;
 
+using namespace gpp;
+
 namespace fs = std::filesystem;
 
 QString gppTr(const char* context, const char* source) {

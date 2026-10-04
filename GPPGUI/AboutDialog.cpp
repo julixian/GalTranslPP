@@ -15,6 +15,8 @@
 
 import GPPVersion;
 
+using namespace gpp;
+
 AboutDialog::AboutDialog(QWidget* parent)
     : ElaDialog(parent)
 {

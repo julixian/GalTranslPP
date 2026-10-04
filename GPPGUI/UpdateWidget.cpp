@@ -5,6 +5,8 @@
 
 import GPPVersion;
 
+using namespace gpp;
+
 UpdateWidget::UpdateWidget(QWidget* parent)
     : QWidget(parent)
 {

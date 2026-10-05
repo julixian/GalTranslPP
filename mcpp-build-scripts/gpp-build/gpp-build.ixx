@@ -73,7 +73,7 @@ void configure_executable_link_options() {
 
 constexpr const char* windows_triplet = "gpp-x64-windows-release";
 
-gpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries = {}) {
+gpp::deps::vcpkg::prefix configure_vcpkg(const char* link_target = nullptr) {
     gpp::deps::vcpkg::options options;
     options.vcpkg_root = vcpkg_root.generic_string();
     if (is_windows_target()) {
@@ -89,16 +89,28 @@ gpp::deps::vcpkg::prefix configure_vcpkg(std::vector<std::string> link_libraries
     }
     options.manifest_root = workspace_directory().generic_string();
     options.install_root = (workspace_directory() / "vcpkg_installed").generic_string();
-    options.libraries = std::move(link_libraries);
     const auto dependencies = gpp::deps::vcpkg::use(options);
     if (!dependencies) throw std::runtime_error("vcpkg 依赖配置失败");
+    if (link_target && is_windows_target()) {
+        // 安装完成后收集所有库，不再维护库名列表；只加入最终程序的链接输入。
+        const fs::path collector = mcpp::dep_bin("gpp.vcpkg-link-libs", "vcpkg_link_libs");
+        const auto librarian = std::string_view(mcpp::compiler()) == "msvc"
+            ? fs::path(mcpp::abi_tool("ar"))
+            : fs::path(mcpp::tool("cxx")).parent_path() / "llvm-lib.exe";
+        const auto output = fs::path(mcpp::out_dir()) / "vcpkg-libs.lib";
+        mcpp::action action;
+        action.id = "vcpkg-link-libs";
+        action.role = mcpp::roles::object;
+        action.target(link_target);
+        action.arg(collector.generic_string().c_str())
+            .arg("--librarian").arg(librarian.generic_string().c_str())
+            .arg("--lib-dir").arg(dependencies.lib.c_str())
+            .arg("--output").arg(output.generic_string().c_str())
+            .input(collector.generic_string().c_str()).input(librarian.generic_string().c_str())
+            .input(dependencies.install_stamp.c_str())
+            .output(output.generic_string().c_str()).submit();
+    }
     return dependencies;
-}
-
-std::vector<std::string> core_link_libraries() {
-    return {"7zip", "bit7z64", "abseil_dll", "cld3", "cpr", "gumbo",
-            "icuio", "icuin", "icuuc", "icudt", "libprotobuf-lite", "fmt",
-            "lua", "mecab", "opencc", "pcre2-8", "spdlog", "tree-sitter", "zip", "z"};
 }
 
 void link_python_libraries() {

@@ -376,7 +376,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>错误信息:</source>
-        <translation type="unfinished"></translation>
+        <translation>Error details:</translation>
     </message>
     <message>
         <source>(空)</source>

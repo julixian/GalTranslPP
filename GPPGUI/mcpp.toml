@@ -11,6 +11,7 @@ name = "gui"
 "gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
 
 [target.windows.build-dependencies]
+"gpp.vcpkg-link-libs" = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg_link_libs"] }
 "gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime_stage"] }
 
 [profile.release]

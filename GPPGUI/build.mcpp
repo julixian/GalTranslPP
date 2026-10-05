@@ -6,7 +6,7 @@ import gpp.build;
 int main() {
     return gpp::run_build_script([] {
         gpp::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::configure_vcpkg();
+        const auto vcpkg_directory = gpp::configure_vcpkg("GalTranslPP_GUI");
 
         auto qt_options = gpp::make_qt_options({"Core", "Gui", "Network", "Widgets"});
         qt_options.resources = {"GPPGUI.qrc"};

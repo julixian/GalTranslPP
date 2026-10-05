@@ -5,7 +5,7 @@ import gpp.build;
 
 int main() {
     return gpp::run_build_script([] {
-        gpp::configure_vcpkg(gpp::core_link_libraries());
+        gpp::configure_vcpkg();
         gpp::link_python_libraries();
         auto qt_options = gpp::make_qt_options({"Core"});
         gpp::configure_translation(qt_options, "qt_gpp_en.ts");

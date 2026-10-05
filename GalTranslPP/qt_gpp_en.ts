@@ -1314,7 +1314,7 @@ Problem overview:
 %2</source>
         <oldsource>执行工具调用 %1 个，进入下一轮。调用参数:
 %2</oldsource>
-        <translation type="unfinished">Executed %1 tool calls; entering the next turn. Call arguments:
+        <translation>Executed %1 tool calls; entering the next turn. Call overview:
 %2</translation>
     </message>
     <message>

@@ -1,0 +1,13 @@
+[package]
+namespace = "gpp"
+name = "vcpkg-link-libs"
+version = "1.0.0"
+standard = "c++23"
+license = "LicenseRef-GalTranslPP"
+
+[build]
+sources = []
+
+[targets.vcpkg_link_libs]
+kind = "bin"
+main = "main.cpp"

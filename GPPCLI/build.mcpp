@@ -6,7 +6,7 @@ import gpp.build;
 int main() {
     return gpp::run_build_script([] {
         gpp::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::configure_vcpkg();
+        const auto vcpkg_directory = gpp::configure_vcpkg("GalTranslPP_CLI");
         auto qt_options = gpp::make_qt_options({"Core"});
         const auto translation_file = gpp::configure_translation(qt_options, "qt_gppcli_en.ts");
         if (!gpp::rules::qt::compile(qt_options)) return 1;

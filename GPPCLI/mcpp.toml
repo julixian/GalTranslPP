@@ -28,17 +28,11 @@ sources = [
   "ProgressBar.ixx",
   "TerminalController.ixx",
   "!x64/**",
-  "!x86/**",
-  "!ARM64/**"
+  "!x86/**"
 ]
 module_extensions = [".ixx"]
-include_dirs = [
-  ".",
-  "../3rdParty/pybind11/include"
-]
 
 [target.windows.build]
-include_dirs = ["../3rdParty/pybind11/Python/include"]
 defines = ["UNICODE", "_UNICODE", "_CONSOLE", "_CRT_SECURE_NO_WARNINGS",
   "WIN32_LEAN_AND_MEAN", "NOMINMAX",
   "_RANGES_",

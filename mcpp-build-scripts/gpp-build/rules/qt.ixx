@@ -340,6 +340,24 @@ inline bool compile(options opt = {}) {
     std::error_code ec;
     fs::create_directories(gen, ec);
 
+    // 对齐 Qt MSBuild 从 qmake 取得的使用宏；调试符号不决定 Qt 是否启用断言。
+    std::vector<std::string> qt_defines;
+    const auto define_qt = [&](std::string definition) {
+        mcpp::define(definition.c_str());
+        qt_defines.push_back(std::move(definition));
+    };
+    const std::string_view profile = mcpp::profile();
+    if (profile != "dev" && profile != "debug") define_qt("QT_NO_DEBUG");
+    if (detail::is_windows()) {
+        define_qt("UNICODE");
+        define_qt("_UNICODE");
+        define_qt("WIN32");
+        if (std::string_view(mcpp::target_arch()) == "x86_64") define_qt("WIN64");
+        // Qt 的 MSVC / clang-cl mkspec 要求采用修正后的 std::aligned_storage 行为。
+        if (std::string_view(mcpp::target_env()) == "msvc")
+            define_qt("_ENABLE_EXTENDED_ALIGNED_STORAGE");
+    }
+
     // ── the modules ──
     std::vector<std::string> modules;
     for (auto const& m : opt.modules) {
@@ -373,7 +391,7 @@ inline bool compile(options opt = {}) {
             mcpp::include_dir(generic(headers).c_str());
             mcpp::link_flag(generic(lib).c_str());
             const std::string def = "QT_" + detail::upper(m) + "_LIB";
-            mcpp::define(def.c_str());
+            define_qt(def);
             found = true;
             break;
         }
@@ -473,8 +491,10 @@ inline bool compile(options opt = {}) {
         a.description = desc.c_str();
         a.depfile = dep.c_str();
         a.arg(moc.c_str()).arg(src.c_str()).arg("-o").arg(out.c_str())
-         .arg("--output-dep-file").arg("--dep-file-path").arg(dep.c_str())
-         .input(src.c_str()).output(out.c_str()).submit();
+         .arg("--output-dep-file").arg("--dep-file-path").arg(dep.c_str());
+        // moc 与编译器使用相同的 Qt 宏，避免条件编译下生成不同的元对象代码。
+        for (const auto& definition : qt_defines) a.arg(("-D" + definition).c_str());
+        a.input(src.c_str()).output(out.c_str()).submit();
         return true;
     };
     for (auto const& h : headers)

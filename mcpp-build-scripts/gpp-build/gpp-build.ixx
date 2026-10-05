@@ -25,7 +25,10 @@ const fs::path cmake_executable = R"()";
 const fs::path qt_root = R"(D:\Qt\6.11.1\msvc2022_64)";
 // ===== 配置结束 =====
 
-fs::path workspace_directory() { return fs::path(mcpp::manifest_dir()).parent_path(); }
+fs::path workspace_directory() {
+    // 通过宿主模块的位置定位工作区，不依赖调用它的项目目录。
+    return fs::path(__FILE__).parent_path().parent_path().parent_path();
+}
 bool is_windows_target() { return std::string_view(mcpp::target_os()) == "windows"; }
 bool is_release_profile() {
     const std::string_view profile = mcpp::profile();

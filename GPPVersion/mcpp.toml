@@ -17,8 +17,7 @@ default-profile = "release"
 sources = [
   "GPPVersion.ixx",
   "!x64/**",
-  "!x86/**",
-  "!ARM64/**"
+  "!x86/**"
 ]
 module_extensions = [".ixx"]
 

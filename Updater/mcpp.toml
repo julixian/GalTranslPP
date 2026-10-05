@@ -27,11 +27,9 @@ sources = [
   "../3rdParty/3rdModule/boost.ixx",
   "../3rdParty/3rdModule/toml.ixx",
   "!x64/**",
-  "!x86/**",
-  "!ARM64/**"
+  "!x86/**"
 ]
 module_extensions = [".ixx"]
-include_dirs = ["."]
 
 [target.windows.build]
 defines = ["UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS",

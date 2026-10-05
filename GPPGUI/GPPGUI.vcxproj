@@ -104,7 +104,7 @@
       </Command>
     </PostBuildEvent>
     <QtTranslation>
-      <BuildAction>lupdate_lrelease</BuildAction>
+      <BuildAction>false</BuildAction>
       <QmOutputDir>$(TargetDir)translations\</QmOutputDir>
       <FunctionAliases>translate+=gppTr</FunctionAliases>
     </QtTranslation>

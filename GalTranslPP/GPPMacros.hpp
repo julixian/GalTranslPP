@@ -1,11 +1,11 @@
 ﻿#pragma once
 
 #ifdef PYBIND11_HEADERS
-#include "../3rdParty/3rdModule/pybind11_headers.hpp"
+#include "pybind11_headers.hpp"
 #endif
 
 #ifdef LUABRIDGE3_HEADERS
-#include "../3rdParty/3rdModule/luabridge_headers.hpp"
+#include "luabridge_headers.hpp"
 #endif
 
 #define GPP_EMPTY_DEFINE

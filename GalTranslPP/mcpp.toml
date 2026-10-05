@@ -33,12 +33,10 @@ sources = [
   "../3rdParty/3rdModule/spdlog.ixx",
   "../3rdParty/3rdModule/utf8cpp.ixx",
   "!x64/**",
-  "!x86/**",
-  "!ARM64/**"
+  "!x86/**"
 ]
 module_extensions = [".ixx"]
 include_dirs = [
-  ".",
   "../3rdParty/3rdModule",
   "../3rdParty/pybind11/include"
 ]

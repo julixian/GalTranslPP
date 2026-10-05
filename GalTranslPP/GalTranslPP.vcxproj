@@ -193,7 +193,7 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <QtTranslation>
-      <BuildAction>lupdate_lrelease</BuildAction>
+      <BuildAction>false</BuildAction>
       <FunctionAliases>translate+=gppTr</FunctionAliases>
       <QmOutputDir>$(TargetDir)</QmOutputDir>
     </QtTranslation>

@@ -16,6 +16,9 @@ cxxflags = [
   "-fexec-charset=UTF-8"
 ]
 defines = [
+  "ABSL_CONSUME_DLL",
   "SPDLOG_COMPILED_LIB",
+  "SPDLOG_SHARED_LIB",
+  "FMT_SHARED",
   "PROJECT_NO_ANSI",
 ]

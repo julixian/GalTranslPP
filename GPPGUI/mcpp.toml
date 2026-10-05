@@ -30,16 +30,10 @@ sources = [
   "TreeSitterGrammars/**/*.c",
   "!GPPGUI.cpp",
   "!x64/**",
-  "!x86/**",
-  "!ARM64/**"
-]
-include_dirs = [
-  ".",
-  "../3rdParty/pybind11/include"
+  "!x86/**"
 ]
 
 [target.windows.build]
-include_dirs = ["../3rdParty/pybind11/Python/include"]
 defines = ["UNICODE", "_UNICODE",
   "WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS",
   "_RANGES_",

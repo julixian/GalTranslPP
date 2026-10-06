@@ -15,8 +15,8 @@ stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
 windowHeight = 675
-windowPosX = 40
-windowPosY = 51
+windowPosX = 71
+windowPosY = 49
 windowWidth = 1366
 
 [commonGptDicts]
@@ -124,7 +124,7 @@ openMode = 1
 5 = 60
 
 [showDockWidget]
-321 = true
+322 = true
 
 [[popularCards]]
 cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'

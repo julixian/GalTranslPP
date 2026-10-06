@@ -995,8 +995,8 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(requestCount + 1)
                     .toStdString();
                 handleApiError(
-                    response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
-                    requestCount, m_checkQuota);
+                    response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath,
+                    m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
                 continue;
             }
             if (m_logger->should_log(spdlog::level::trace)) {
@@ -1050,9 +1050,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(turn + 1)
                     .arg(requestCount + 1)
                     .arg(turnResult.error())
-                    .arg(response.content.value().empty()
-                        ? gppTr("NormalJsonTranslatorTransAgent.translateBatch", "内容为空").toStdString()
-                        : limitLogLines(response.content.value(), m_inputBlockMaxLines))
+                    .arg(limitLogLines(response.content.value(), m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",

@@ -13,6 +13,23 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
+bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
+{
+    // 健康计数不属于会话身份；端点、凭据、模型或协议选项改变时不能沿用服务端 id 和签名。
+    return lhs.protocol == rhs.protocol && lhs.apikey == rhs.apikey && lhs.apiurl == rhs.apiurl
+        && lhs.modelName == rhs.modelName && lhs.thinkingLevel == rhs.thinkingLevel
+        && lhs.extraHeaders == rhs.extraHeaders && lhs.extraBody == rhs.extraBody
+        && lhs.temperature == rhs.temperature && lhs.topP == rhs.topP
+        && lhs.frequencyPenalty == rhs.frequencyPenalty && lhs.presencePenalty == rhs.presencePenalty
+        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.agentStrictTools == rhs.agentStrictTools
+        && lhs.agentStateful == rhs.agentStateful && lhs.agentNativeAutoCompaction == rhs.agentNativeAutoCompaction
+        && lhs.agentCompactThresholdTokens == rhs.agentCompactThresholdTokens
+        && lhs.agentGeminiInteractions == rhs.agentGeminiInteractions;
+}
+
+// 普通 sendApiRequest 使用的文本解析入口，定义在 ApiTool.Response.cpp；成功返回非空文本，失败返回 ApiError。
+std::expected<std::string, ApiError> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol);
+
 ApiProtocol parseApiProtocol(std::string_view protocol)
 {
     std::string normalized(protocol);
@@ -506,85 +523,6 @@ cpr::Proxies makeSystemProxies(const std::shared_ptr<spdlog::logger>& logger = n
     return cpr::Proxies{};
 }
 
-std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol protocol)
-{
-    switch (protocol)
-    {
-    case ApiProtocol::OpenAIRes:
-    {
-        std::optional<std::string> content;
-        for (const auto& item : parsed.at("output")) {
-            if (item.value("type", "") != "message" || item.value("phase", "") == "commentary") {
-                continue;
-            }
-            for (const auto& block : item.at("content")) {
-                if (block.value("type", "") == "output_text") {
-                    if (content.has_value()) {
-                        content.value() += block.at("text").get<std::string>();
-                    }
-                    else {
-                        content = block.at("text").get<std::string>();
-                    }
-                }
-            }
-        }
-        return content;
-    }
-
-    case ApiProtocol::Claude:
-    {
-        std::optional<std::string> content;
-        for (const auto& block : parsed.at("content")) {
-            if (block.contains("text")) {
-                if (content.has_value()) {
-                    content.value() += block.at("text").get<std::string>();
-                }
-                else {
-                    content = block.at("text").get<std::string>();
-                }
-            }
-        }
-        return content;
-    }
-
-    case ApiProtocol::Gemini:
-    {
-        std::optional<std::string> content;
-        for (const auto& part : parsed.at("candidates").at(0).at("content").at("parts"))
-        {
-            if (part.contains("text") && !part.value("thought", false)) {
-                if (content.has_value()) {
-                    content.value() += part.at("text").get<std::string>();
-                }
-                else {
-                    content = part.at("text").get<std::string>();
-                }
-            }
-        }
-        return content;
-    }
-
-    case ApiProtocol::OpenAI:
-    default:
-        return parsed.at("choices").at(0).at("message").at("content").get<std::string>();
-    }
-}
-
-std::expected<std::string, ApiError> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol)
-{
-    auto parsed = parseApiResponse(responseContent, protocol);
-    if (!parsed) return std::unexpected(std::move(parsed.error()));
-    try {
-        auto content = parseApiContent(*parsed, protocol);
-        if (content) return std::move(*content);
-        return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-            gppTr("ApiTool.extractApiResponseContent", "响应中没有文本内容").toStdString(), responseContent));
-    }
-    catch (const std::exception& e) {
-        return std::unexpected(makeApiError(ApiErrorType::ResponseParse, e.what(), responseContent));
-    }
-}
-
 std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol protocol)
 {
     std::vector<std::string> models;
@@ -645,10 +583,12 @@ ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationA
         return {std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code))};
     if (response.text.empty())
         return {std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-            gppTr("ApiTool.sendApiHttpRequest", "响应为空").toStdString(), {}, response.status_code))};
+            gppTr("ApiTool.sendApiHttpRequest", "[GPP.响应为空]").toStdString(), {}, response.status_code))};
     return {response.text};
 }
 
+// performApiRequest 和 testApiConnection 的内部桥接：HTTP 原始响应 -> extractApiResponseContent -> 非空模型文本。
+// onlyReturnParsedContent=false 时额外拼接原始响应供 GUI 展示；解析错误标记 HTTP 200，不在这里处理业务重试。
 ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& api,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,
     int apiTimeOutMs, bool onlyReturnParsedContent)

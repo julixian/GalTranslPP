@@ -38,6 +38,9 @@ public:
     size_t size();
 };
 
+// 普通翻译和两种 Agent 请求失败后调用；按 API 层已分类的错误记录日志/运行时错误、更新 API 健康与重试计数。
+// 模型不可用或启用 checkQuota 后的无效 key/额度错误报告到池中，不增加 requestCount；限流随机等待且不计数。
+// 其它错误增加 requestCount，允许 fallback 调整顺序并等待；本函数不重新解析响应，也不直接发起重试。
 void handleApiError(const ApiError& error, const std::unique_ptr<ApiPool>& apiPool, const TranslationApi& currentApi,
     const std::string& logPrefix, const fs::path& relFilePath, const std::string& apiStrategy,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger,

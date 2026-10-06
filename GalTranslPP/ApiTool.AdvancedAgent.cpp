@@ -8,21 +8,7 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
-bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
-{
-    // 健康计数不属于会话身份；端点、凭据、模型或协议选项改变时不能沿用服务端 id 和签名。
-    return lhs.protocol == rhs.protocol && lhs.apikey == rhs.apikey && lhs.apiurl == rhs.apiurl
-        && lhs.modelName == rhs.modelName && lhs.thinkingLevel == rhs.thinkingLevel
-        && lhs.extraHeaders == rhs.extraHeaders && lhs.extraBody == rhs.extraBody
-        && lhs.temperature == rhs.temperature && lhs.topP == rhs.topP
-        && lhs.frequencyPenalty == rhs.frequencyPenalty && lhs.presencePenalty == rhs.presencePenalty
-        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.agentStrictTools == rhs.agentStrictTools
-        && lhs.agentStateful == rhs.agentStateful && lhs.agentNativeAutoCompaction == rhs.agentNativeAutoCompaction
-        && lhs.agentCompactThresholdTokens == rhs.agentCompactThresholdTokens
-        && lhs.agentGeminiInteractions == rhs.agentGeminiInteractions;
-}
-
-void appendAgentUserMessage(ApiAgentSession& session, const std::string& text)
+void appendAdvancedAgentUserMessage(AdvancedAgentApiSession& session, const std::string& text)
 {
     switch (session.api.protocol)
     {
@@ -40,7 +26,7 @@ void appendAgentUserMessage(ApiAgentSession& session, const std::string& text)
     }
 }
 
-void appendAgentToolResults(ApiAgentSession& session, const json& results)
+void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json& results)
 {
     json blocks = json::array();
     for (const auto& result : results) {
@@ -79,13 +65,15 @@ void appendAgentToolResults(ApiAgentSession& session, const json& results)
     }
 }
 
-json pendingAgentInput(const ApiAgentSession& session)
+// buildAdvancedAgentPayload 用于 Responses/Interactions：有 previousId 时仅发送 sentCount 之后的新增输入，否则发送完整历史。
+// sentCount 由成功的 parseAdvancedAgentReply 更新，须与本地 history 保持一致；此处不额外校验会话位置。
+json pendingAdvancedAgentInput(const AdvancedAgentApiSession& session)
 {
     if (session.previousId.empty()) return session.history;
     return json(session.history.begin() + session.sentCount, session.history.end());
 }
 
-std::string interactionApiUrl(const TranslationApi& api)
+std::string advancedAgentInteractionApiUrl(const TranslationApi& api)
 {
     std::string url = api.apiurl;
     while (url.ends_with('/')) url.pop_back();
@@ -95,7 +83,10 @@ std::string interactionApiUrl(const TranslationApi& api)
     return url.ends_with("/v1") ? url + "/interactions" : url + "/v1/interactions";
 }
 
-json buildAgentPayload(const ApiAgentSession& session, const json& tools)
+// performAdvancedAgentApiRequest 将统一工具 schema、system 和历史转为各协议请求，应用严格工具档位与原生压缩声明。
+// Responses/Interactions 可按 previousId 续接；其它路径发完整历史。不发送请求或修改会话。
+// tools 由 configureAdvanced 生成，直接按内部约定的字段转换。
+json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const json& tools)
 {
     const auto& api = session.api;
     json payload;
@@ -121,7 +112,7 @@ json buildAgentPayload(const ApiAgentSession& session, const json& tools)
 
     case ApiProtocol::OpenAIRes:
         // Responses 的 output 原样接回 input；有 previous_response_id 时只发送新增输入。
-        payload = {{"input", pendingAgentInput(session)}, {"instructions", session.systemPrompt},
+        payload = {{"input", pendingAdvancedAgentInput(session)}, {"instructions", session.systemPrompt},
             {"store", api.agentStateful}, {"tool_choice", "required"}};
         if (!session.previousId.empty()) payload["previous_response_id"] = session.previousId;
         for (const auto& tool : tools) {
@@ -160,7 +151,7 @@ json buildAgentPayload(const ApiAgentSession& session, const json& tools)
     case ApiProtocol::Gemini:
         if (api.agentGeminiInteractions) {
             // Interactions 使用独立的步骤历史、function_result 和服务端会话 id。
-            payload = {{"input", pendingAgentInput(session)}, {"system_instruction", session.systemPrompt},
+            payload = {{"input", pendingAdvancedAgentInput(session)}, {"system_instruction", session.systemPrompt},
                 {"store", api.agentStateful}};
             if (!session.previousId.empty()) payload["previous_interaction_id"] = session.previousId;
             for (const auto& tool : tools) {
@@ -190,9 +181,13 @@ json buildAgentPayload(const ApiAgentSession& session, const json& tools)
     return payload;
 }
 
-ApiAgentReply parseAgentReply(const json& parsed, ApiAgentSession& session)
+// performAdvancedAgentApiRequest 在 parseApiResponse 检查通过后调用，提取正文/原生工具调用，保留推理块与签名供后续请求。
+// 工具 arguments 保持原始 JSON 或字符串，具体参数解析/提交检查留给 translateAdvancedBatch 的逐工具 catch。
+// 允许纯工具回复无正文；正文和调用都为空或响应字段异常时抛出，由请求入口转成带原始响应的 ResponseParse。
+// 完成响应提取后才更新 history、previousId 和 sentCount；Responses/Claude 有效压缩块会替换其之前的本地历史。
+AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentApiSession& session)
 {
-    ApiAgentReply reply;
+    AdvancedAgentApiReply reply;
     json additions = json::array();
     bool compacted = false;
     std::string previousId;
@@ -295,7 +290,7 @@ ApiAgentReply parseAgentReply(const json& parsed, ApiAgentSession& session)
     }
 
     if (reply.text.empty() && reply.calls.empty())
-        throw std::runtime_error(gppTr("ApiTool.parseAgentReply", "响应中没有文本内容或工具调用").toStdString());
+        throw std::runtime_error(gppTr("ApiTool.parseAdvancedAgentReply", "响应中没有文本内容或工具调用").toStdString());
     // 整个响应解析成功后才更新会话，失败重试不会留下半截工具调用。
     if (compacted) session.history = std::move(additions);
     else session.history.insert(session.history.end(), additions.begin(), additions.end());
@@ -304,7 +299,7 @@ ApiAgentReply parseAgentReply(const json& parsed, ApiAgentSession& session)
     return reply;
 }
 
-ApiAgentResponse performAgentApiRequest(ApiAgentSession& session, const json& tools,
+AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession& session, const json& tools,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs)
 {
@@ -312,7 +307,7 @@ ApiAgentResponse performAgentApiRequest(ApiAgentSession& session, const json& to
     std::string responseBody;
     try {
         auto api = session.api;
-        json payload = buildAgentPayload(session, tools);
+        json payload = buildAdvancedAgentPayload(session, tools);
         // 保留已有模型档位规则，再把 generateContent 参数映射成 Interactions 的新规范。
         const json extraBody = api.extraBody;
         api.extraBody = json::object();
@@ -341,7 +336,7 @@ ApiAgentResponse performAgentApiRequest(ApiAgentSession& session, const json& to
         }
         const std::string body = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
         ApiResponse response = sendApiHttpRequest(body, api,
-            api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions ? interactionApiUrl(api) : cvt2RequestApiUrl(api),
+            api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions ? advancedAgentInteractionApiUrl(api) : cvt2RequestApiUrl(api),
             controller, logger, apiTimeOutMs);
         if (!response.content) return {std::unexpected(std::move(response.content.error()))};
         statusCode = 200;
@@ -351,7 +346,7 @@ ApiAgentResponse performAgentApiRequest(ApiAgentSession& session, const json& to
             parsed.error().statusCode = statusCode;
             return {std::unexpected(std::move(parsed.error()))};
         }
-        return {parseAgentReply(*parsed, session)};
+        return {parseAdvancedAgentReply(*parsed, session)};
     }
     catch (const std::exception& e) {
         return {std::unexpected(makeApiError(statusCode == 200 ? ApiErrorType::ResponseParse : ApiErrorType::Unknown,

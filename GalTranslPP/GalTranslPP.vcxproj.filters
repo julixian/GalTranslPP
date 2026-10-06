@@ -199,6 +199,15 @@
     <ClCompile Include="ApiTool.cpp">
       <Filter>Tools\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="ApiTool.AdvancedAgent.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiTool.Error.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiTool.Response.cpp">
+      <Filter>Tools\Utils</Filter>
+    </ClCompile>
     <ClCompile Include="ApiTool.ixx">
       <Filter>Tools\Utils</Filter>
     </ClCompile>

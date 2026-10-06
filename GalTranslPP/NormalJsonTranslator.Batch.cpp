@@ -173,8 +173,8 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                 .arg(requestCount + 1)
                 .toStdString();
             handleApiError(
-                response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath, m_apiStrategy, m_controller, m_logger,
-                requestCount, m_checkQuota);
+                response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath,
+                m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
             continue;
         }
 
@@ -227,7 +227,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                     .arg(parsedCount)
                     .arg(batchToTransThisRound.size())
                     .arg(response.content.value().empty()
-                        ? gppTr("NormalJsonTranslator.translateBatch", "内容为空").toStdString()
+                        ? gppTr("NormalJsonTranslator.translateBatch", "[GPP.内容不为空但输出翻译为空]").toStdString()
                         : limitLogLines(response.content.value(), m_inputBlockMaxLines))
                     .toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{

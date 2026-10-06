@@ -31,6 +31,9 @@ struct TransAgentProtocolResponse {
 // 3. translateBatch() 为当前批次构造消息，驱动“模型请求 -> 工具调用/上下文压缩/提交”的多轮循环。
 // 4. applyCommit() 校验并写入句子译文、术语账本、文件备注和 Agent 建议。
 // 5. applyAgentSuggestions() 在文件处理结束后把跨文件 Agent 建议写回翻译缓存。
+// 普通路径：performApiRequest -> parseAndApplyTurnResponse -> parseProtocolResponse -> executeToolCalls / applyCommit。
+// 高级路径：translateAdvancedBatch -> performAdvancedAgentApiRequest -> 逐个解析原生工具参数 -> runReadTool / applyCommit。
+// 两条路径共用查询工具和提交校验；API 失败在请求循环重试，单个查询工具失败回填给模型。
 //
 class NormalJsonTranslatorTransAgent {
 public:
@@ -71,28 +74,40 @@ public:
         const std::function<void(Sentence*)>& preProcessFunc
     );
 
-    // 翻译一个 NormalJsonTranslator 批次，内部完成工具调用、压缩上下文和提交校验。
+    // NormalJsonTranslator::processFile 的批次入口；高级模式转给 translateAdvancedBatch，否则运行文本动作协议。
+    // 普通路径分别限制轮次和每轮请求次数：ApiError 交给 handleApiError，动作解析/提交错误记录后重试当前轮。
+    // 完成返回 true；停止或耗尽限制返回 false，耗尽时给剩余句子写失败标记。
+    // 没有可用 API 时抛 runtime_error，经 processFile 传给上层文件任务错误处理。
     bool translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
         int& recursionIndex, int& recursionCount, int threadId, int batchIndex);
 
     // 把提交阶段记录的跨文件 Agent 建议写入翻译缓存的 problems 字段。
     void applyAgentSuggestions();
 
+    // normalJsonBeforeRun 在构造 Agent 后调用，按 worker 数建立会话槽并生成原生工具声明。
+    // 此处不发请求、不解析响应；初选不到 API 的会话槽保持为空，实际翻译时再选择。
     void configureAdvanced(bool enabled, int workerCount);
 
 private:
-    struct TransAgentWorker {
-        std::optional<ApiAgentSession> session;
+    struct TransAdvancedAgentWorker {
+        std::optional<AdvancedAgentApiSession> session;
         std::string rollingContext;
     };
 
     bool m_advancedEnabled = false;
-    std::vector<TransAgentWorker> m_workers;
+    std::vector<TransAdvancedAgentWorker> m_workers;
     json m_nativeTools = json::array();
 
+    // translateBatch 的高级分支；按从 1 开始的 threadId 复用 worker 会话，选择 API、处理压缩并驱动原生工具轮次。
+    // API 失败经 handleApiError 重试；工具参数 JSON、查询和提交的 std::exception 按调用 id 回填 error，进入下一轮。
+    // 手动摘要无效或压缩请求耗尽时清空旧历史，用已有滚动记忆重建；有效摘要则先替换滚动记忆。
+    // 成功提交返回 true；停止、重试/轮次/连续无工具调用次数耗尽返回 false，耗尽时标记剩余句子失败。
+    // 没有可用 API 时抛 runtime_error，沿 translateBatch、processFile 传给上层文件任务错误处理。
     bool translateAdvancedBatch(const fs::path& relInputPath, std::span<Sentence*> batch,
         std::string& rollingContext, int threadId, int batchIndex);
-    // 原生和文本工具调用共用名称、参数与返回格式。
+    // 普通 executeToolCalls 和高级工具循环共用的查询分发，读取/搜索原文、缓存、字典、术语及备注。
+    // 检查工具域和原文/缓存目标文件，限制分页数量与上下文行数，按 fields 投影返回数据；不提交译文。
+    // 未知工具/文件、参数类型或读取失败可抛异常，不在这里捕获；两个调用方各自将 std::exception 回填为工具 error。
     json runReadTool(const fs::path& relInputPath, const std::string& name, const json& arguments);
 
     struct TransAgentTurnResult {
@@ -163,7 +178,10 @@ private:
     // 读取指定文件备注，优先使用内存缓存，首次访问时从磁盘加载。
     json loadFileNote(const fs::path& targetRelPath);
 
-    // 解析并校验翻译 Agent 文本协议，得到动作、工具调用和提交字段。
+    // 普通 parseAndApplyTurnResponse 解析模型正文；高级 commit_translations 先补 action=commit，再复用本函数。
+    // 提取 JSON 对象，检查 action 存在且为 tool_calls/compact_context/commit，tool_calls 必须有调用；归一化提交字段。
+    // 不检查每句译文是否齐全，由 applyCommit 负责；非法协议抛 runtime_error，字段类型错误也可抛 JSON 异常。
+    // 普通路径由 parseAndApplyTurnResponse 转成错误字符串重试；高级路径由工具循环捕获并回填 error。
     TransAgentProtocolResponse parseProtocolResponse(const std::string& content) const;
 
     // 把 Agent 建议目标解析为相对文件和句子 id。
@@ -210,14 +228,17 @@ private:
     // 读取目标文件的翻译缓存，以源句 id 为键供工具展示译文预览。
     absl::flat_hash_map<int, json> loadCacheDstMap(const fs::path& targetRelPath) const;
 
-    // 分发本轮模型请求的工具调用，并合并回填 JSON、摘要和调试明细。
+    // 普通 parseAndApplyTurnResponse 的 tool_calls 分支调用，分发查询并汇总回填 JSON、摘要和调试明细。
+    // 每个 runReadTool 的 std::exception 单独转成 result.error，其它工具继续执行，该轮仍可正常进入下一轮。
     TransAgentToolCallResult executeToolCalls(
         const fs::path& relInputPath,
         const std::vector<AgentCommonToolCallRequest>& calls,
         bool collectDetail
     );
 
-    // 解析一轮 Agent 响应，并执行工具调用、压缩上下文或提交译文。
+    // 仅普通 translateBatch 在 API 成功后调用：parseProtocolResponse -> 查询工具/重建压缩消息/applyCommit。
+    // 成功返回 ContinueTurn 或 CompleteBatch；捕获整个动作处理中的 std::exception，返回 unexpected<string>。
+    // 外层据此记录业务错误、增加请求次数并重试当前轮；单个查询工具的 error 回填不算整轮解析失败。
     std::expected<TransAgentTurnResult, std::string> parseAndApplyTurnResponse(
         const fs::path& relInputPath,
         std::span<Sentence*> pending,
@@ -234,10 +255,15 @@ private:
     // 构造本批次开始前写入日志的可读摘要。
     std::string buildLogBlock(const fs::path& relInputPath, std::span<Sentence*> pending, const std::string& rollingContext);
 
-    // 构造当前批次发送给模型的消息，包括术语、文件备注、滚动上下文和工具说明。
+    // 普通批次初始化/压缩时构造 system 与 user 消息，并替换术语、备注、滚动上下文等占位符。
+    // 高级路径只取这里的 user 批次数据追加到持久会话；system 由 AdvancedAgentApiSession 单独保存。
+    // 调用方先收集待翻译句子，保证 pending 非空。
     json buildBaseMessages(const fs::path& relInputPath, std::span<Sentence*> pending, const std::string& rollingContext);
 
-    // 校验并应用提交响应，写入译文、术语账本、文件备注和 Agent 建议。
+    // 普通 commit 动作与高级 commit_translations 共用；先按 id 收集译文，检查每个 pending 句子均有非空 dst，再写入。
+    // 缺句、空译文或字段类型错误抛异常；普通路径转成整轮业务错误重试，高级工具循环回填 error 让模型修正提交。
+    // 译文写入后再更新滚动记忆、术语账本、备注和建议；账本/建议及备注处理的 std::exception 在内部记录警告，
+    // 保留已经提交的译文，不因此重试整批；返回实际提交句数，并通过输出参数提供日志及术语/建议计数。
     int applyCommit(const fs::path& relInputPath, std::span<Sentence*> pending, std::string& rollingContext,
         int threadId, const TransAgentProtocolResponse& protocol, const std::string& modelName,
         const std::string& batchIndexLog, int turn, int requestCount,

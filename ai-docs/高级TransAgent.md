@@ -131,7 +131,7 @@ read/search 的参数统一为 `file`、`ids`、`fields`、`offset`、`limit`。
 
 原有文本 Agent 的读、搜索、备注工具与高级模式共用 `runReadTool()`：名称和参数全部对齐，旧 `read_lines/search_text/search_term/get_file_note/get_project_note` 不作为别名保留。自定义文本提示词需要更新工具声明和调用示例；文本 `action=tool_calls|commit|compact_context` 协议保持现有形式。
 
-原生 Agent 请求和内容提取在 `GalTranslPP/ApiTool.Agent.cpp`；共用错误分类及协议错误判断在 `GalTranslPP/ApiTool.Error.cpp`；worker 会话、工具声明和执行在 `GalTranslPP/NormalJsonTranslator.TransAgent.Advanced.cpp`。旧批次流程继续在 `NormalJsonTranslator.TransAgent.cpp`。HTTP 发送共用 `sendApiHttpRequest`，失败统一交给 `handleApiError`。插件返回的最终请求 JSON 直接发送，不做二次校验。
+高级 Agent 原生请求和工具响应解析在 `GalTranslPP/ApiTool.AdvancedAgent.cpp`；共用协议响应检查和普通文本提取在 `GalTranslPP/ApiTool.Response.cpp`；错误分类和展示格式化在 `GalTranslPP/ApiTool.Error.cpp`；worker 会话、工具声明和执行在 `GalTranslPP/NormalJsonTranslator.TransAgent.Advanced.cpp`。旧批次流程继续在 `NormalJsonTranslator.TransAgent.cpp`。HTTP 发送共用 `sendApiHttpRequest`，失败统一交给 `handleApiError`。插件返回的最终请求 JSON 直接发送，不做二次校验。
 
 ## 协议依据
 

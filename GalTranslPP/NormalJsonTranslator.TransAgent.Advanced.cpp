@@ -11,14 +11,14 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-json agentObjectSchema(json properties)
+json advancedAgentObjectSchema(json properties)
 {
     json required = json::array();
     for (const auto& item : properties.items()) required.push_back(item.key());
     return {{"type", "object"}, {"properties", std::move(properties)}, {"required", std::move(required)}, {"additionalProperties", false}};
 }
 
-json agentArraySchema(const json& items)
+json advancedAgentArraySchema(const json& items)
 {
     return {{"type", "array"}, {"items", items}};
 }
@@ -30,44 +30,54 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(bool enabled, int workerC
     // 调度前分配固定 worker 状态；运行中各线程只访问自己的槽，不需要全局会话锁。
     m_workers.resize(std::max(1, workerCount));
     for (auto& worker : m_workers) {
-        if (auto api = m_apiPool->getApi(m_apiStrategy)) worker.session = ApiAgentSession{.api = *api, .systemPrompt = m_agentSystemPrompt};
+        if (auto api = m_apiPool->getApi(m_apiStrategy))
+            worker.session = AdvancedAgentApiSession{.api = *api, .systemPrompt = m_agentSystemPrompt};
     }
     const json stringSchema = {{"type", "string"}};
     const json intSchema = {{"type", "integer"}};
-    const json stringsSchema = agentArraySchema(stringSchema);
-    const json idsSchema = agentArraySchema(intSchema);
-    const json translationSchema = agentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
-    const json suggestionSchema = agentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
-    const json termSchema = agentObjectSchema({{"src", stringSchema}, {"dst", stringSchema}, {"category", stringSchema},
-        {"note", stringSchema}, {"status", {{"type", "string"}, {"enum", json::array({"tentative", "confirmed"})}}}, {"line_ids", idsSchema}});
-    const json noteSchema = agentObjectSchema({{"summary", stringSchema}, {"scene_state", stringSchema},
+    const json stringsSchema = advancedAgentArraySchema(stringSchema);
+    const json idsSchema = advancedAgentArraySchema(intSchema);
+    const json translationSchema = advancedAgentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
+    const json suggestionSchema = advancedAgentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
+    const json termSchema = advancedAgentObjectSchema({{"src", stringSchema}, {"dst", stringSchema}, {"category", stringSchema},
+        {"note", stringSchema}, {"status", {{"type", "string"}, {"enum", json::array({"tentative", "confirmed"})}}},
+        {"line_ids", idsSchema}});
+    const json noteSchema = advancedAgentObjectSchema({{"summary", stringSchema}, {"scene_state", stringSchema},
         {"unresolved_clues", stringSchema}, {"relationship_updates", stringSchema}, {"term_hints", stringSchema}});
-    const json commitSchema = agentObjectSchema({{"translations", agentArraySchema(translationSchema)},
-        {"term_updates", agentArraySchema(termSchema)}, {"agent_suggest", agentArraySchema(suggestionSchema)},
+    const json commitSchema = advancedAgentObjectSchema({{"translations", advancedAgentArraySchema(translationSchema)},
+        {"term_updates", advancedAgentArraySchema(termSchema)}, {"agent_suggest", advancedAgentArraySchema(suggestionSchema)},
         {"file_note_patch", noteSchema}, {"rolling_context", stringSchema}});
     const auto addTool = [&](const std::string& name, const std::string& description, const json& schema)
         { m_nativeTools.push_back({{"name", name}, {"description", description}, {"parameters", schema}}); };
     const json pageProperties = {{"offset", intSchema}, {"limit", intSchema}};
-    addTool("list_files", "List source files. offset is the number of result records to skip; offset=0 starts from the first result. limit=0 uses the configured limit.", agentObjectSchema(pageProperties));
+    addTool("list_files", "List source files. offset is the number of result records to skip; offset=0 starts from the first result."
+        " limit=0 uses the configured limit.", advancedAgentObjectSchema(pageProperties));
     for (const auto& domain : {"source", "cache", "dictionary", "terms"}) {
         json properties = pageProperties;
         properties["file"] = stringSchema;
         properties["ids"] = idsSchema;
         properties["fields"] = stringsSchema;
         addTool(std::string("read_") + domain,
-            std::format("Read {} records. file='' selects the current file (ignored for dictionary/terms). ids=[] selects all. fields=[] returns all available columns. offset is the number of result records to skip, not a page number or sentence id.", domain),
-            agentObjectSchema(properties));
+            std::format("Read {} records. file='' selects the current file (ignored for dictionary/terms)."
+                " ids=[] selects all. fields=[] returns all available columns. offset is the number of result records to skip, not a page number or sentence id.",
+                domain),
+            advancedAgentObjectSchema(properties));
         properties["query"] = stringSchema;
         properties["match_fields"] = stringsSchema;
         properties["context_before"] = intSchema;
         properties["context_after"] = intSchema;
         addTool(std::string("search_") + domain,
-            std::format("Search {} by case-insensitive substring. file='*' searches all files. query='' matches all. match_fields=[] searches all data columns; fields selects returned columns. context_before/after apply to source/cache rows.", domain),
-            agentObjectSchema(properties));
+            std::format("Search {} by case-insensitive substring. file='*' searches all files. query='' matches all."
+                " match_fields=[] searches all data columns; fields selects returned columns. context_before/after apply to source/cache rows.",
+                domain),
+            advancedAgentObjectSchema(properties));
     }
-    addTool("read_file_note", "Read durable notes for a source file; file='' selects the current file.", agentObjectSchema({{"file", stringSchema}}));
-    addTool("read_project_note", "Read the configured project note.", agentObjectSchema(json::object()));
-    addTool("commit_translations", "Submit every current sentence id, durable memory and sentence-level suggestions. Empty note strings leave existing notes unchanged. Use [] for no term updates or suggestions.", commitSchema);
+    addTool("read_file_note", "Read durable notes for a source file; file='' selects the current file.",
+        advancedAgentObjectSchema({{"file", stringSchema}}));
+    addTool("read_project_note", "Read the configured project note.", advancedAgentObjectSchema(json::object()));
+    addTool("commit_translations", "Submit every current sentence id, durable memory and sentence-level suggestions."
+        " Empty note strings leave existing notes unchanged. Use [] for no term updates or suggestions.",
+        commitSchema);
 }
 
 bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relInputPath, std::span<Sentence*> batch,
@@ -87,7 +97,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         .arg(buildLogBlock(relInputPath, pending, rollingContext)).toStdString());
     const auto rebuildSession = [&](const TranslationApi& api)
         {
-            worker.session = ApiAgentSession{.api = api, .systemPrompt = m_agentSystemPrompt};
+            worker.session = AdvancedAgentApiSession{.api = api, .systemPrompt = m_agentSystemPrompt};
             m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 创建会话: %2 / %3")
                 .arg(logPrefix).arg(apiProtocolToString(api.protocol)).arg(api.modelName).toStdString());
         };
@@ -103,12 +113,14 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
     const auto appendBatch = [&]()
         {
             const json messages = buildBaseMessages(relInputPath, pending, rollingContext);
-            appendAgentUserMessage(*worker.session, messages.at(1).at("content"));
+            appendAdvancedAgentUserMessage(*worker.session, messages.at(1).at("content"));
         };
     appendBatch();
-    const json compactSchema = agentObjectSchema({{"rolling_context", {{"type", "string"}}}});
+    const json compactSchema = advancedAgentObjectSchema({{"rolling_context", {{"type", "string"}}}});
     const json compactTools = json::array({{{"name", "compact_context"},
-        {"description", "Summarize the conversation for the next session. Preserve translation decisions, character relationships, unresolved clues and current progress. Do not translate or commit."},
+        {"description",
+            "Summarize the conversation for the next session. Preserve translation decisions, character relationships, unresolved clues and current progress."
+            " Do not translate or commit."},
         {"parameters", compactSchema}}});
     bool compacting = false;
     size_t compactedMessageCount = 0;
@@ -135,7 +147,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         if (!compacting && !nativeAutoCompaction && currentSession.history.size() > compactedMessageCount &&
             currentSession.history.dump().size() > (size_t)m_agentCompactContextThresholdBytes) {
             compacting = true;
-            appendAgentUserMessage(*worker.session,
+            appendAdvancedAgentUserMessage(*worker.session,
                 "Context exceeded the compact context threshold. Summarize the full conversation into rolling_context using compact_context, "
                 "preserving translation decisions, character relationships, "
                 "unresolved clues and current progress. Do not call other tools or commit in this turn.");
@@ -143,7 +155,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 .arg(logPrefix).arg(turn + 1).toStdString());
         }
         requestCount = 0;
-        ApiAgentResponse response;
+        AdvancedAgentApiResponse response;
         while (requestCount < m_maxRequestCount) {
             if (m_controller->shouldStop()) return false;
             if (!m_apiPool->containsApi(worker.session->api)) {
@@ -156,7 +168,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
             m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始请求，剩余 %2 句，本地上下文 %3 字节")
                 .arg(requestLogPrefix).arg(pending.size()).arg(worker.session->history.dump().size()).toStdString());
-            response = performAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
+            response = performAdvancedAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
                 m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) break;
             if (m_controller->shouldStop()) return false;
@@ -186,7 +198,8 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         if (m_logger->should_log(spdlog::level::trace)) {
             // 原生工具参数也属于响应内容，不能只记录可能为空的正文。
             json calls = json::array();
-            for (const auto& call : reply.calls) calls.push_back({{"id", call.id}, {"name", call.name}, {"arguments", call.arguments}});
+            for (const auto& call : reply.calls)
+                calls.push_back({{"id", call.id}, {"name", call.name}, {"arguments", call.arguments}});
             m_logger->trace(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 成功响应，回复正文:\n%2\n工具调用:\n%3")
                 .arg(requestLogPrefix)
                 .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "[GPP.正文为空]").toStdString() : reply.text)
@@ -202,8 +215,10 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         // 连续没有工具调用时沿用请求重试次数作为上限，任意工具调用都会清零。
         noToolCallCount = reply.calls.empty() ? noToolCallCount + 1 : 0;
         if (noToolCallCount > 0) {
-            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 未调用工具，连续 %2 / %3 轮未调用工具")
-                .arg(requestLogPrefix).arg(noToolCallCount).arg(m_maxRequestCount).toStdString());
+            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 未调用工具，连续 %2 / %3 轮未调用工具，回复正文:\n%4")
+                .arg(requestLogPrefix).arg(noToolCallCount).arg(m_maxRequestCount)
+                .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "[GPP.正文为空]").toStdString()
+                    : limitLogLines(reply.text, m_inputBlockMaxLines)).toStdString());
         }
         if (noToolCallCount >= m_maxRequestCount) break;
         if (compacting) {
@@ -255,7 +270,8 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 const auto protocol = parseProtocolResponse(arguments.dump());
                 std::string commitLog;
                 int termCount = 0, suggestionCount = 0;
-                const int count = applyCommit(relInputPath, pending, rollingContext, threadId, protocol, makeTransby(session.api.apikey, session.api.modelName),
+                const int count = applyCommit(relInputPath, pending, rollingContext, threadId, protocol,
+                    makeTransby(session.api.apikey, session.api.modelName),
                     std::to_string(batchIndex), turn, requestCount, commitLog, termCount, suggestionCount);
                 worker.rollingContext = rollingContext;
                 committed = true;
@@ -299,19 +315,19 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                     .arg(gppTr("NormalJsonTranslatorTransAgent.executeToolCalls", "工具返回结果:\n%1").arg(results.dump(2)))
                     .toStdString());
             }
-            appendAgentToolResults(session, results);
+            appendAdvancedAgentToolResults(session, results);
             if (!committed) {
                 m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已回填 %2 个工具结果，进入下一轮")
                     .arg(requestLogPrefix).arg(results.size()).toStdString());
             }
         }
         else {
-            appendAgentUserMessage(session, "Text responses do not submit translations. Call a read/search tool if needed, "
+            appendAdvancedAgentUserMessage(session, "Text responses do not submit translations. Call a read/search tool if needed, "
                 "or call commit_translations to submit every sentence in the current batch.");
         }
         if (committed) return true;
     }
-    appendAgentUserMessage(*worker.session, "The current batch was abandoned after reaching the request/turn limit. Do not commit it later.");
+    appendAdvancedAgentUserMessage(*worker.session, "The current batch was abandoned after reaching the request/turn limit. Do not commit it later.");
     for (Sentence* se : pending) {
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;

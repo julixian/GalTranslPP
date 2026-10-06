@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "galtranslpp",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "dependencies": [
     "abseil",
     "bit7z",
@@ -26,5 +26,5 @@
     "utfcpp",
     "vit-vit-ctpl"
   ],
-  "builtin-baseline": "3aea538b2bb21a586502c67b00eb474fdd2e3098"
+  "builtin-baseline": "434307da09bc05b2c86996dccc8b2351fc0d5d37"
 }

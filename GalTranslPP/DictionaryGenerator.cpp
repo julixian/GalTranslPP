@@ -242,9 +242,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
             .arg(threadId)
             .arg(batchIndex)
             .arg(requestCount + 1)
-            .arg(response.content.value().empty()
-                ? gppTr("DictionaryGenerator.callLLMToGenerate", "内容为空").toStdString()
-                : limitLogLines(response.content.value(), m_inputBlockMaxLines))
+            .arg(limitLogLines(response.content.value(), m_inputBlockMaxLines))
             .toStdString());
         const auto lines = splitStringView(response.content.value(), '\n');
         for (const auto& line : lines) {

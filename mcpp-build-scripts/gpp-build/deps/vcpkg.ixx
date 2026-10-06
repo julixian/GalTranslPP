@@ -52,7 +52,7 @@ struct options {
     // toolset mcpp builds the program with: a Visual Studio instance is
     // selected with `VCPKG_VISUAL_STUDIO_PATH` (every port kind builds, and
     // with the instance vcpkg would choose anyway nothing is rebuilt); any
-    // other toolset is named in a derived triplet `<base>-mcpp-<hash>`
+    // other toolset is named in a derived triplet `<base>-mcpp`
     // (CMake and make ports build; an MSBuild port needs Visual Studio and is
     // refused by name). `detected` lets vcpkg find its own toolset, as 0.16.0
     // did, until 2027-03-28. See docs/deps.md.
@@ -316,7 +316,7 @@ inline prefix use(const options& opt = {}) {
                 // MASM、nmake 等辅助工具仍来自同一 MSVC 工具集，C/C++ 编译器保持 clang-cl。
                 const auto native_bin = fs::path(mcpp::abi_tool("cxx")).parent_path().generic_string();
                 if (!native_bin.empty()) tools->path_dirs.push_back(native_bin);
-                // 驱动所在目录也参与 triplet 身份，切换 LLVM 时隔离安装和缓存。
+                // 驱动所在目录也参与 triplet 内容，切换 LLVM 时让 vcpkg 重新判断编译器 ABI。
                 tools->identity += "; clang-cl " + compiler.generic_string();
                 clang_cl = true;
             }
@@ -399,9 +399,9 @@ inline prefix use(const options& opt = {}) {
     //
     // `detected`, and `instance` with the instance's own toolset version, use
     // the base triplet as it stands. `chain`, and `instance` with another
-    // version, use a DERIVED triplet `<base>-mcpp-<hash>`: the base inlined
+    // version, use a DERIVED triplet `<base>-mcpp`: the base inlined
     // (vcpkg hashes a triplet file's content, not a file it includes), then
-    // the resolved toolset. Its name changes exactly when its content does.
+    // 工具链变化仍由 triplet 内容和 vcpkg 编译器 ABI 判断，不通过改目录名强制重装。
     // A project triplet that chain-loads its own toolchain has decided the
     // tools, and is used as it stands.
     const bool projectChains = !top_level_setting(baseText, "VCPKG_CHAINLOAD_TOOLCHAIN_FILE").empty();
@@ -474,7 +474,7 @@ inline prefix use(const options& opt = {}) {
                 text += msbuild_refusal_text(tools->identity);
             }
         }
-        triplet = std::format("{}-mcpp-{}", base, mcpp::deps::short_name(text));
+        triplet = base + "-mcpp";
         mcpp::plugins::fs::write_if_changed(generated / (triplet + ".cmake"), text);
     }
     if (tools->how == ts::mechanism::instance) {

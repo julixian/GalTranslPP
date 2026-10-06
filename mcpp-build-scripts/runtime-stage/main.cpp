@@ -225,11 +225,13 @@ void stage(const runtime_stage_options& command_options) {
     if (!manifest) throw std::runtime_error("cannot finish runtime manifest");
 
     // 首次构建时 vcpkg/Ela 的 DLL 可能尚不存在，build.mcpp 无法提前枚举。
-    // 执行时记录实际读取的文件，让后续仅 DLL 更新时也能触发发布。
+    // 执行时记录源文件和已部署文件，让源 DLL 更新或目标 DLL 缺失时重新发布。
     if (!command_options.depfile.empty()) {
         std::vector<fs::path> inputs{command_options.exe};
-        for (const auto& [name, source] : selected_libraries)
+        for (const auto& [name, source] : selected_libraries) {
             inputs.push_back(source);
+            inputs.push_back(command_options.destination / source.filename());
+        }
         write_depfile(command_options.depfile, command_options.manifest, inputs);
     }
 }
@@ -262,6 +264,7 @@ void copy_tree(const tree_stage_options& options) {
     if (!fs::is_directory(options.source))
         throw std::runtime_error("source directory does not exist: " + options.source.string());
 
+    fs::create_directories(options.destination);
     std::vector<fs::path> directories{options.source};
     std::vector<fs::path> files;
     for (const auto& entry : fs::recursive_directory_iterator(options.source)) {
@@ -297,9 +300,16 @@ void copy_tree(const tree_stage_options& options) {
     if (!manifest) throw std::runtime_error("cannot write tree manifest");
     manifest.write(manifest_text.data(), static_cast<std::streamsize>(manifest_text.size()));
     if (!manifest) throw std::runtime_error("cannot finish tree manifest");
+    manifest.close();
+    if (!manifest) throw std::runtime_error("cannot close tree manifest");
+    // 目录也是声明的输出；更新其时间戳，避免未变化的文件使复制动作反复执行。
+    fs::last_write_time(options.destination, fs::last_write_time(options.manifest));
 
-    // 目录追踪新增/删除的文件，文件追踪内容变化；安装目录首次由 prepare action 创建。
+    // 记录源目录和文件依赖；文件集合变化另由构建脚本的 glob 监视。
     directories.insert(directories.end(), files.begin(), files.end());
+    // 目标文件作为存在性依赖，删除其中任何文件都重新复制，包括运行时才发现的新文件。
+    for (const auto& file : files)
+        directories.push_back(options.destination / file.lexically_relative(options.source));
     write_depfile(options.depfile, options.manifest, directories);
 }
 

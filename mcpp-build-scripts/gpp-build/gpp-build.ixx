@@ -256,6 +256,8 @@ struct release_publisher {
         if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
         const fs::path source_directory = vcpkg_installation_directory / "share" / "opencc";
         const fs::path destination_directory = release_destination_directory / "BaseConfig" / "opencc";
+        // Windows 下 Ninja 不根据目录时间戳检测新文件，由构建脚本监视文件集合。
+        mcpp::rerun_if_changed_glob((source_directory / "**/*").generic_string().c_str());
         std::string manifest_name = "OpenCC-" + std::string(member);
         if (destination_name != member) manifest_name += "-" + std::string(destination_name);
         const fs::path manifest_file = release_directory / ".mcpp-runtime" / (manifest_name + ".txt");
@@ -275,7 +277,17 @@ struct release_publisher {
             .input(executable_file.c_str())
             .input(vcpkg_install_stamp.generic_string().c_str())
             .input(runtime_stage_executable.c_str())
-            .output(manifest_path.c_str()).submit();
+            .output(manifest_path.c_str())
+            .output(destination_directory.generic_string().c_str());
+        // 新增文件在重新配置后直接成为输入，内容更新和目标文件缺失另由 depfile 追踪。
+        if (fs::is_directory(source_directory)) {
+            std::vector<fs::path> files;
+            for (const auto& entry : fs::recursive_directory_iterator(source_directory))
+                if (entry.is_regular_file()) files.push_back(entry.path());
+            std::ranges::sort(files);
+            for (const auto& file : files) copy_action.input(file.generic_string().c_str());
+        }
+        copy_action.submit();
     }
 
     void publish_release(std::string_view member, const fs::path& translation_file) {

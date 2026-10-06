@@ -112,10 +112,11 @@ void appendAdvancedAgentUserMessage(AdvancedAgentApiSession& session, const std:
 void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json& results);
 // 高级 Agent 的单次请求入口，由 translateAdvancedBatch 调用：构造原生工具请求 -> 应用 API 选项/插件
 // -> sendApiHttpRequest -> parseApiResponse -> parseAdvancedAgentReply；响应解析成功后更新会话历史和续接位置。
+// enhanceJailbreak 开启时，在本次请求末尾原样追加 assistant 自然语言预填充，不写入会话、不检查协议兼容性。
 // 允许纯工具响应正文为空，不在这里解析工具参数或提交译文。std::exception 转为 ApiError：
 // 拿到 HTTP 200 原始响应后归为 ResponseParse，此前归为 Unknown；已有传输/协议错误直接返回。
 // 本函数不重试，调用方通过 handleApiError 处理失败并决定下一次请求。
-AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession& session, const json& tools,
+AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession& session, const json& tools, bool enhanceJailbreak,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs);
 

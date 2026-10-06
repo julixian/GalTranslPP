@@ -169,7 +169,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始请求，剩余 %2 句，本地上下文 %3 字节")
                 .arg(requestLogPrefix).arg(pending.size()).arg(worker.session->history.dump().size()).toStdString());
             response = performAdvancedAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
-                m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
+                m_enhanceJailbreak, m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) break;
             if (m_controller->shouldStop()) return false;
             handleApiError(response.content.error(), m_apiPool, worker.session->api,

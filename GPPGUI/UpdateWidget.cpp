@@ -19,6 +19,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. 进一步优化报错信息",
+        "2. 高级 Agent 模式也能使用改善拒答了",
     };
 
     mainLayout->addWidget(updateTitle);

@@ -111,7 +111,7 @@
 <context>
     <name>ApiTool.parseAdvancedAgentReply</name>
     <message>
-        <location filename="ApiTool.AdvancedAgent.cpp" line="293"/>
+        <location filename="ApiTool.AdvancedAgent.cpp" line="299"/>
         <source>响应中没有文本内容或工具调用</source>
         <translation>The response contains no text or tool calls</translation>
     </message>

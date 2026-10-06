@@ -350,8 +350,8 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* enhanceJailbreakArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
 	ElaDoubleText* enhanceJailbreakText = new ElaDoubleText(tr("改善拒答（回复预填充）"), 16,
-		tr("以 assistant 回复头开始续写，降低拒答并稳定输出格式，在高级 Agent 模式下无效"), 10,
-		tr("部分模型或 API 不支持末尾 assistant 消息，遇到请求错误时请关闭"), enhanceJailbreakArea);
+		tr("仅少量模型支持，误启用会导致请求失效"), 10,
+		tr("以 assistant 回复头开始续写；高级 Agent 使用自然语言预填充"), enhanceJailbreakArea);
 	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
 	enhanceJailbreakLayout->addStretch();
 	ElaToggleSwitch* enhanceJailbreakToggle = new ElaToggleSwitch(enhanceJailbreakArea);

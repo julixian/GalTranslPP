@@ -1342,13 +1342,13 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>以 assistant 回复头开始续写，降低拒答并稳定输出格式，在高级 Agent 模式下无效</source>
-        <translation>Continue from an assistant prefix to reduce refusals and stabilize output formatting; ignored in advanced Agent mode</translation>
+        <source>仅少量模型支持，误启用会导致请求失效</source>
+        <translation>Only a few models support this; enabling it for an unsupported model will cause requests to fail</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>部分模型或 API 不支持末尾 assistant 消息，遇到请求错误时请关闭</source>
-        <translation>Some models or APIs reject a trailing assistant message; disable this option if requests fail</translation>
+        <source>以 assistant 回复头开始续写；高级 Agent 使用自然语言预填充</source>
+        <translation>Continue from an assistant prefix; advanced Agent uses a natural-language prefill</translation>
     </message>
     <message>
         <location line="+12"/>

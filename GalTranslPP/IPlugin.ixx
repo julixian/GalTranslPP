@@ -2,6 +2,9 @@
 
 #include "GPPMacros.hpp"
 #include <proxy/proxy_macros.h>
+#ifdef RESHARPER_HIGHLIGHT
+#include <proxy/proxy.h>
+#endif
 
 export module IPlugin;
 

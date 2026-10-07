@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
         }
     }
     
+    // ReSharper disable once CppTooWideScope
     std::unique_ptr<py::gil_scoped_release> release;
     try {
         // 依赖配置的初始化

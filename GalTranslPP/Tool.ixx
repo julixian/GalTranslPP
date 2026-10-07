@@ -7,6 +7,7 @@ module;
 
 export module Tool;
 
+export import std;
 export import ctpl_stl;
 export import GPPDefines;
 export import ITranslator;

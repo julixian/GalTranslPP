@@ -1,6 +1,9 @@
 module;
 
 #include "GPPMacros.hpp"
+#ifdef RESHARPER_HIGHLIGHT
+#include <proxy/proxy.h>
+#endif
 
 module NormalJsonTranslator;
 

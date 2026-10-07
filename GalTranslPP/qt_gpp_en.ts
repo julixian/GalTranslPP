@@ -797,17 +797,17 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.NormalJsonTranslator</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="234"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="237"/>
         <source>GalTransl++ NormalJsonTranslator 启动...</source>
         <translation>GalTransl++ NormalJsonTranslator started...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="255"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="258"/>
         <source>未找到 rolling context 缓存文件 [%1]</source>
         <translation>rolling context cache file [%1] not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="261"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="264"/>
         <source>读取 rolling context 缓存文件 [%1] 失败</source>
         <translation>Failed to read rolling context cache file [%1]</translation>
     </message>
@@ -954,113 +954,113 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonInit</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="278"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="281"/>
         <source>无效的 TransEngine: %1</source>
         <translation>Invalid TransEngine: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="323"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="326"/>
         <source>ProjectNote 路径已注册: [%1]</source>
         <translation>ProjectNote path registered: [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="335"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="338"/>
         <source>Agent 模式在 TransEngine %1 下已自动关闭</source>
         <translation>Agent mode has been disabled automatically for TransEngine %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="342"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="345"/>
         <source>Agent 模式已启用</source>
         <translation>Agent mode enabled</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="395"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="411"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="398"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="414"/>
         <source>未找到字典文件 [%1]，已忽略</source>
         <translation>Dictionary file [%1] not found; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="446"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="449"/>
         <source>apiStrategy 必须为 random 或 fallback</source>
         <translation>apiStrategy must be random or fallback</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="469"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="472"/>
         <source>backend.apis[%1] 未找到 Api 协议字段，默认使用 OpenAI 协议</source>
         <translation>backend.apis[%1] has no Api protocol field; defaulting to OpenAI protocol</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="476"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="479"/>
         <source>backend.apis[%1] apiurl 为空，已忽略</source>
         <translation>backend.apis[%1] apiurl is empty; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="487"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="490"/>
         <source>backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略</source>
         <translation>backend.apis[%1] modelName is empty and TransEngine is not Sakura; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="553"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="556"/>
         <source>找不到可用的 Api key</source>
         <translation>No available Api key found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="567"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="570"/>
         <source>找不到 Prompt.toml 文件</source>
         <translation>Prompt.toml not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="586"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="589"/>
         <source>Prompt.toml 中缺少 %1 键</source>
         <translation>Prompt.toml missing key %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="629"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="632"/>
         <source>内部错误: 未知的 TransEngine</source>
         <translation>Internal error: unknown TransEngine</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="652"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="655"/>
         <source>已配置 MeCab 分词器，首次使用时加载</source>
         <translation>MeCab tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="661"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="664"/>
         <source>已配置 spaCy 分词器，首次使用时加载</source>
         <translation>spaCy tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="670"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="673"/>
         <source>已配置 Stanza 分词器，首次使用时加载</source>
         <translation>Stanza tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="678"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="681"/>
         <source>无效的 tokenizerBackend: %1</source>
         <translation>Invalid tokenizerBackend: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="765"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="768"/>
         <source>retranslKeys 正则表达式 `%1` 编译失败</source>
         <translation>retranslKeys regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="783"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="786"/>
         <source>retranslKeys 的元素必须是字符串、表或表数组</source>
         <translation>retranslKeys items must be string/table/table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="800"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="803"/>
         <source>skipProblems 的内联表数组第一个元素必须是字符串</source>
         <translation>First item in skipProblems inline table array must be string</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="816"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="819"/>
         <source>skipProblems 的元素必须是字符串或表数组</source>
         <translation>skipProblems items must be string or table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="827"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="830"/>
         <source>项目配置文件解析失败: %1</source>
         <translation>Project config parse failed: %1</translation>
     </message>
@@ -1076,13 +1076,13 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.postProcess</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="839"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="940"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="842"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="943"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="950"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="953"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -1248,7 +1248,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.~NormalJsonTranslator</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="214"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="217"/>
         <source>所有任务已完成！NormalJsonTranslator 结束，总耗时 %1 秒</source>
         <translation>All tasks completed! NormalJsonTranslator finished, total time %1 seconds</translation>
     </message>
@@ -2412,7 +2412,7 @@ Tool calls:
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="389"/>
+        <location filename="Tool.ixx" line="390"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2449,12 +2449,12 @@ Tool calls:
 <context>
     <name>parseToml</name>
     <message>
-        <location filename="Tool.ixx" line="263"/>
+        <location filename="Tool.ixx" line="264"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="281"/>
+        <location filename="Tool.ixx" line="282"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2524,7 +2524,7 @@ Tool calls:
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="349"/>
+        <location filename="Tool.ixx" line="350"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>
@@ -2532,53 +2532,53 @@ Tool calls:
 <context>
     <name>validateNormalJsonCoreConfig</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="20"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="23"/>
         <source>配置项 %1 无效: 当前值 %2，要求%3</source>
         <translation>Invalid config item %1: current value %2, required %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="63"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="71"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="79"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="111"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="135"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="143"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="151"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="159"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="167"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="180"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="204"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="66"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="74"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="82"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="114"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="138"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="146"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="154"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="162"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="170"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="183"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="207"/>
         <source>大于 0</source>
         <translation>greater than 0</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="87"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="90"/>
         <source>为 name 或 size</source>
         <translation>be name or size</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="95"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="98"/>
         <source>为 No、Num 或 Equal</source>
         <translation>be No, Num or Equal</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="103"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="106"/>
         <source>为 toml 或 json</source>
         <translation>toml or json</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="119"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="122"/>
         <source>大于等于 2</source>
         <translation>at least 2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="127"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="196"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="130"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="199"/>
         <source>大于等于 0</source>
         <translation>at least 0</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="188"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="191"/>
         <source>大于等于 1</source>
         <translation>greater than or equal to 1</translation>
     </message>

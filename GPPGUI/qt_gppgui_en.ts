@@ -2217,7 +2217,7 @@ sk-...</translation>
         <translation>Updater error</translation>
     </message>
     <message>
-        <location line="+58"/>
+        <location line="+59"/>
         <source>无法创建共享内存段，程序即将退出。</source>
         <translation>Cannot create shared memory. Exiting.</translation>
     </message>

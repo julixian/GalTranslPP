@@ -83,6 +83,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;SPDLOG_COMPILED_LIB;PROJECT_NO_ANSI;WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;SPDLOG_WCHAR_FILENAMES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UseStandardPreprocessor>false</UseStandardPreprocessor>
+      <AdditionalIncludeDirectories>..\vcpkg_installed\gpp-x64-windows-release-mcpp\gpp-x64-windows-release-mcpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <PostBuildEvent>
       <Command>

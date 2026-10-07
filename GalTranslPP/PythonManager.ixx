@@ -4,6 +4,7 @@
 
 export module PythonManager;
 
+export import std;
 export import GPPDefines;
 export import pybind11;
 export import SafeQueue;

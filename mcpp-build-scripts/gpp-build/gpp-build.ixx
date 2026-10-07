@@ -60,11 +60,12 @@ void configure_executable_link_options() {
     auto add_linker_option = [uses_msvc_driver](const char* option) {
         mcpp::link_flag((uses_msvc_driver ? std::string(option) : "-Wl," + std::string(option)).c_str());
     };
+    // 禁用增量模式，避免未变更的导入库保留旧时间戳，导致 Ninja 每次重新链接。
+    add_linker_option("/INCREMENTAL:NO");
     if (is_release_profile()) add_linker_option("/DEBUG");
     if (std::string_view(mcpp::profile()) == "release") {
         add_linker_option("/OPT:REF");
         add_linker_option("/OPT:ICF");
-        add_linker_option("/INCREMENTAL:NO");
     }
 }
 

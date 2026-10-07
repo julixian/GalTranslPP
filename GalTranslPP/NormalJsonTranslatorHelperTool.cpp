@@ -124,10 +124,10 @@ std::vector<RepeatedBlockOccurrence> collectRepeatedBlockOccurrences(const std::
         if (length < minBlockSize) {
             continue;
         }
-        if (starts.insert(lhs).second) {
+        if (starts.emplace(lhs).second) {
             occurrences.push_back({ lhs, length });
         }
-        if (starts.insert(rhs).second) {
+        if (starts.emplace(rhs).second) {
             occurrences.push_back({ rhs, length });
         }
     }
@@ -148,7 +148,7 @@ void normalizeRepeatedBlockReferences(RepeatedBlockReferenceMap& references) {
         absl::flat_hash_set<SentencePosition> visited;
         SentencePosition root = source;
         while (true) {
-            if (!visited.insert(root).second) {
+            if (!visited.emplace(root).second) {
                 break;
             }
             const auto it = references.targetToSourceMap.find(root);
@@ -192,7 +192,7 @@ RepeatedBlockReferenceMap buildRepeatedBlockReferenceMap(
         const std::string relFileName = wide2Ascii(relFilePath);
         for (const auto& [index, item] : *data | std::views::enumerate) {
             const std::string sentenceKey = buildRepeatedBlockSentenceKey(item);
-            const auto [it, inserted] = tokenIds.emplace(sentenceKey, nextTokenId);
+            const auto [it, inserted] = tokenIds.try_emplace(sentenceKey, nextTokenId);
             if (inserted) {
                 ++nextTokenId;
             }
@@ -583,7 +583,7 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                         }
                     }();
                 const int id = item["id"];
-                const std::string dst = item["dst"].get<std::string>();
+                const std::string& dst = item["dst"].get_ref<const std::string&>();
                 if (const auto it = id2SentenceMap.find(id);
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {

@@ -261,7 +261,7 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
             WordPosVec& wordPosVec = std::get<0>(tokens);
             checkTokenFunc(wordPosVec);
             std::lock_guard<std::shared_mutex> lock(m_tokenizeCacheMapMutex);
-            m_tokenizeCacheMap.insert({ origText, std::move(wordPosVec) });
+            m_tokenizeCacheMap.try_emplace(origText, std::move(wordPosVec));
         }
 
         if (found) {

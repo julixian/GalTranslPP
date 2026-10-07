@@ -15,7 +15,7 @@
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #include <DbgHelp.h>
-#include <Strsafe.h>
+#include <strsafe.h>
 #endif
 
 #include <toml.hpp>
@@ -310,6 +310,16 @@ int main(int argc, char* argv[])
 #endif
         }
         return result;
+    }
+    catch (const json::exception& e) {
+#ifdef Q_OS_WIN
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.GPPGUI", "JSON 错误").toStdWString().c_str(),
+            MB_ICONERROR);
+#endif
+        return 1;
     }
     catch (const toml::exception& e) {
 #ifdef Q_OS_WIN

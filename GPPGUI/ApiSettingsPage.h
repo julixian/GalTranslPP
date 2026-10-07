@@ -17,7 +17,6 @@ class ApiSettingsPage : public BasePage
 public:
     explicit ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
 	~ApiSettingsPage() override;
-	void apply2Config() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private Q_SLOTS:
@@ -45,5 +44,5 @@ private:
     void moveApiRow(ElaScrollPageArea* container, int offset);
     void updateMoveButtonStates();
     // 创建一个新的 Api 输入行（现在返回一个ElaScrollPageArea*）
-    ElaScrollPageArea* createApiInputRowWidget(const toml::value& apiTblValue = toml::table{});
+    ElaScrollPageArea* createApiInputRowWidget(const toml::ordered_value& apiTblValue = toml::ordered_table{});
 };

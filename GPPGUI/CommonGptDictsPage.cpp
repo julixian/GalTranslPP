@@ -238,9 +238,9 @@ void CommonGptDictsPage::setupUi()
 									toml::ordered_value dictsArr = toml::array{};
 									for (const auto& entry : dictEntries) {
 										toml::ordered_table dictTable;
-										dictTable.insert({ "org", entry.original.toStdString() });
-										dictTable.insert({ "rep", entry.translation.toStdString() });
-										dictTable.insert({ "note", entry.description.toStdString() });
+										dictTable.emplace("org", entry.original.toStdString());
+										dictTable.emplace("rep", entry.translation.toStdString());
+										dictTable.emplace("note", entry.description.toStdString());
 										dictsArr.push_back(dictTable);
 									}
 									dictsArr.as_array_fmt().fmt = toml::array_format::multiline;

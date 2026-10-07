@@ -60,18 +60,6 @@ bool ApiSettingsPage::eventFilter(QObject* watched, QEvent* event)
     return BasePage::eventFilter(watched, event);
 }
 
-void ApiSettingsPage::apply2Config()
-{
-    toml::ordered_array apiArray;
-    for (const auto& apiRow : m_apiRows) {
-        apiRow.applyFunc(apiArray);
-    }
-    insertToml(m_projectConfig, "backend.apis", apiArray);
-    if (m_applyFunc) {
-        m_applyFunc();
-    }
-}
-
 void ApiSettingsPage::setupUi()
 {
     QWidget* centerWidget = new QWidget(this);
@@ -80,7 +68,7 @@ void ApiSettingsPage::setupUi()
     m_mainLayout->setContentsMargins(20, 15, 15, 0);
     m_mainLayout->setSpacing(5);
 
-    const auto apis = toml::find_or_default<toml::array>(m_projectConfig, "backend", "apis");
+    const auto apis = toml::find_or_default<toml::ordered_array>(m_projectConfig, "backend", "apis");
     for (const auto& api : apis) {
         if (!api.is_table()) {
             continue;
@@ -144,6 +132,14 @@ void ApiSettingsPage::setupUi()
             apiStrategyGroup->button(0)->isChecked() ? insertToml(m_projectConfig, "backend.apiStrategy", "random")
                 : insertToml(m_projectConfig, "backend.apiStrategy", "fallback");
             insertToml(m_projectConfig, "backend.apiTimeout", apiTimeoutSpinBox->value());
+
+            toml::ordered_array apiArray;
+            for (const auto& apiRow : m_apiRows) {
+                if (apiRow.applyFunc) {
+                    apiRow.applyFunc(apiArray);
+                }
+            }
+            insertToml(m_projectConfig, "backend.apis", apiArray);
         };
 
     // 将按钮添加到布局中
@@ -165,7 +161,7 @@ void ApiSettingsPage::addApiInputRow()
     updateMoveButtonStates();
 }
 
-ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& api)
+ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_value& api)
 {
     constexpr int keyEditWidth = 560;
     constexpr int editWidth = 340;
@@ -173,7 +169,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     std::vector<std::string> apiKeys;
     if (api.contains("apikeys")) {
-        for (const toml::value& keyValue : api.at("apikeys").as_array()) {
+        for (const toml::ordered_value& keyValue : api.at("apikeys").as_array()) {
             const std::string& keyValueString = keyValue.as_string();
             if (!keyValueString.empty()) {
                 apiKeys.push_back(keyValueString);
@@ -402,7 +398,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
 
     auto [thinkingConfigArea, thinkingConfigLayout] = createFormRow(basicPage);
     thinkingConfigLayout->addWidget(new ElaDoubleText(tr("思考等级"), 16,
-        tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度"), 10, "", thinkingConfigArea));
+        tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度"), 10,
+        "", thinkingConfigArea));
     thinkingConfigLayout->addStretch();
     ElaNoWheelComboBox* thinkingComboBox = new ElaNoWheelComboBox(thinkingConfigArea);
     thinkingComboBox->setFixedWidth(130);
@@ -428,17 +425,16 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     tabWidget->addTab(basicTabPage.page, tr("基础设置"));
 
     const ScrollableTabPage agentTabPage = createScrollablePage(tabWidget);
-    std::map<std::string, ElaToggleSwitch*> agentSwitches;
-    const auto addAgentSwitch = [&](const std::string& key, const QString& title, const QString& description, bool defaultValue, const QString& toolTip = {})
+    const auto addAgentSwitch = [&](const std::string& key_, const QString& title, const QString& description, bool defaultValue, const QString& toolTip = {})
         {
             auto [area, layout] = createFormRow(agentTabPage.content);
             layout->addWidget(new ElaDoubleText(title, 16, description, 10, toolTip, area));
             layout->addStretch();
             ElaToggleSwitch* toggle = new ElaToggleSwitch(area);
-            toggle->setIsToggled(toml::find_or(api, key, defaultValue));
+            toggle->setIsToggled(toml::find_or(api, key_, defaultValue));
             layout->addWidget(toggle);
             agentTabPage.layout->addWidget(area);
-            agentSwitches[key] = toggle;
+            return toggle;
         };
     agentTabPage.layout->addSpacing(8);
     agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 18, agentTabPage.content));
@@ -456,9 +452,9 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     agentStrictToolsComboBox->setCurrentIndex(agentStrictToolsComboBox->findData(QString::fromStdString(strictTools)));
     agentStrictToolsLayout->addWidget(agentStrictToolsComboBox);
     agentTabPage.layout->addWidget(agentStrictToolsArea);
-    addAgentSwitch("agentStateful", tr("服务端会话续接"),
+    ElaToggleSwitch* agentStatefulSwitch = addAgentSwitch("agentStateful", tr("服务端会话续接"),
         tr("仅 Responses/Gemini Interactions 生效；开启后使用会话 ID 并启用服务端存储"), false);
-    addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"),
+    ElaToggleSwitch* agentNativeAutoCompactionSwitch = addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"),
         tr("Responses/Claude 原生自动压缩；模型不支持时可能报错或超出上下文上限"), false,
         tr("需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
     auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
@@ -472,10 +468,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     agentCompactTokensSpinBox->setValue(toml::find_or(api, "agentCompactThresholdTokens", 0));
     agentCompactTokensLayout->addWidget(agentCompactTokensSpinBox);
     agentTabPage.layout->addWidget(agentCompactTokensArea);
-    addAgentSwitch("agentGeminiInteractions", tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), false);
+    ElaToggleSwitch* agentGeminiInteractionsSwitch = addAgentSwitch("agentGeminiInteractions",
+    	tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), false);
     // 选项位置保持固定，适用协议由说明文字提示，不随协议切换隐藏。
-    agentCompactTokensSpinBox->setEnabled(agentSwitches.at("agentNativeAutoCompaction")->getIsToggled());
-    connect(agentSwitches.at("agentNativeAutoCompaction"), &ElaToggleSwitch::toggled,
+    agentCompactTokensSpinBox->setEnabled(agentNativeAutoCompactionSwitch->getIsToggled());
+    connect(agentNativeAutoCompactionSwitch, &ElaToggleSwitch::toggled,
         agentCompactTokensSpinBox, &QWidget::setEnabled);
     agentTabPage.layout->addStretch();
     tabWidget->addTab(agentTabPage.page, tr("高级 Agent"));
@@ -540,12 +537,12 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
     presencePenaltyConfigLayout->addWidget(presencePenaltyCheckBox);
     advancedLayout->addWidget(presencePenaltyConfigArea);
 
-    const auto formatJsonObjectText = [&api](const std::string& key) -> QString
+    const auto formatJsonObjectText = [&api](const std::string& key_) -> QString
         {
-            if (!api.contains(key)) {
+            if (!api.contains(key_)) {
                 return {};
             }
-            const toml::value& value = api.at(key);
+            const toml::ordered_value& value = api.at(key_);
             if (value.is_string()) {
                 return QString::fromStdString(value.as_string());
             }
@@ -671,15 +668,15 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             return lines.join('\n');
         };
 
-    auto parseJsonObjectForRequest = [](const ElaPlainTextEdit* edit, const QString& title, json& value)
+    auto parseJsonObjectForRequest = [](const ElaPlainTextEdit* edit, const QString& title, ordered_json& value)
         {
-            value = json::object();
+            value = ordered_json::object();
             const QString text = edit->toPlainText().trimmed();
             if (text.isEmpty()) {
                 return true;
             }
             try {
-                value = json::parse(text.toStdString());
+                value = ordered_json::parse(text.toStdString());
                 if (!value.is_object()) {
                     ElaMessageBar::warning(ElaMessageBarType::TopRight, QObject::tr("解析失败"),
                         QObject::tr("%1 必须是 JSON 对象").arg(title), 3000);
@@ -749,7 +746,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
             }
 
             if (extraHeadersCheckBox->isChecked()) {
-                json extraHeaders = json::object();
+                ordered_json extraHeaders = ordered_json::object();
                 if (!parseJsonObjectForRequest(extraHeadersEdit, "extraHeaders", extraHeaders)) {
                     return false;
                 }
@@ -760,9 +757,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                 }
             }
             if (extraBodyCheckBox->isChecked()) {
-                if (!parseJsonObjectForRequest(extraBodyEdit, "extraBody", api_.extraBody)) {
+                ordered_json extraBody;
+                if (!parseJsonObjectForRequest(extraBodyEdit, "extraBody", extraBody)) {
                     return false;
                 }
+                api_.extraBody = std::move(extraBody);
             }
             return true;
         };
@@ -896,7 +895,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                 return;
             }
             toml::ordered_table apiTable;
-            apiTable.insert({ "protocol", protocolComboBox->currentText().toStdString() });
+            apiTable.emplace("protocol", protocolComboBox->currentText().toStdString());
             toml::ordered_array apiKeysArray;
             const std::string primaryKey = keyEdit->text().toStdString();
             if (!primaryKey.empty()) {
@@ -909,39 +908,41 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::value& a
                     apiKeysArray.push_back(extraKeyLine);
                 }
             }
-            apiTable.insert({ "apikeys", apiKeysArray });
-            apiTable.insert({ "apiurl", urlEdit->text().toStdString() });
-            apiTable.insert({ "modelName", modelEdit->text().toStdString() });
-            apiTable.insert({ "useSystemProxy", systemProxySwitch->getIsToggled() });
-            apiTable.insert({ "enable", enableCheckBox->isChecked() });
-            apiTable.insert({ "thinkingLevel", thinkingComboBox->currentData().toString().toStdString() });
-            for (const auto& [key, toggle] : agentSwitches) apiTable.insert({key, toggle->getIsToggled()});
-            apiTable.insert({"agentStrictTools", agentStrictToolsComboBox->currentData().toString().toStdString()});
-            apiTable.insert({"agentCompactThresholdTokens", agentCompactTokensSpinBox->value()});
+            apiTable.emplace("apikeys", apiKeysArray);
+            apiTable.emplace("apiurl", urlEdit->text().toStdString());
+            apiTable.emplace("modelName", modelEdit->text().toStdString());
+            apiTable.emplace("useSystemProxy", systemProxySwitch->getIsToggled());
+            apiTable.emplace("enable", enableCheckBox->isChecked());
+            apiTable.emplace("thinkingLevel", thinkingComboBox->currentData().toString().toStdString());
+            apiTable.emplace("agentStateful", agentStatefulSwitch->getIsToggled());
+            apiTable.emplace("agentNativeAutoCompaction", agentNativeAutoCompactionSwitch->getIsToggled());
+            apiTable.emplace("agentGeminiInteractions", agentGeminiInteractionsSwitch->getIsToggled());
+            apiTable.emplace("agentStrictTools", agentStrictToolsComboBox->currentData().toString().toStdString());
+            apiTable.emplace("agentCompactThresholdTokens", agentCompactTokensSpinBox->value());
             if (temperatureCheckBox->isChecked()) {
-                apiTable.insert({ "temperature", temperatureSlider->value() });
+                apiTable.emplace("temperature", temperatureSlider->value());
             }
             if (topPCheckBox->isChecked()) {
-                apiTable.insert({ "topP", topPSlider->value() });
+                apiTable.emplace("topP", topPSlider->value());
             }
             if (frequencyPenaltyCheckBox->isChecked()) {
-                apiTable.insert({ "frequencyPenalty", frequencyPenaltySlider->value() });
+                apiTable.emplace("frequencyPenalty", frequencyPenaltySlider->value());
             }
             if (presencePenaltyCheckBox->isChecked()) {
-                apiTable.insert({ "presencePenalty", presencePenaltySlider->value() });
+                apiTable.emplace("presencePenalty", presencePenaltySlider->value());
             }
-            apiTable.insert({ "extraHeadersEnable", extraHeadersCheckBox->isChecked() });
-            apiTable.insert({ "extraBodyEnable", extraBodyCheckBox->isChecked() });
+            apiTable.emplace("extraHeadersEnable", extraHeadersCheckBox->isChecked());
+            apiTable.emplace("extraBodyEnable", extraBodyCheckBox->isChecked());
             if (!extraHeadersEdit->toPlainText().trimmed().isEmpty()) {
-                json extraHeaders;
+                ordered_json extraHeaders;
                 if (parseJsonObjectForRequest(extraHeadersEdit, "extraHeaders", extraHeaders)) {
-                    apiTable.insert({ "extraHeaders", json2Toml(extraHeaders) });
+                    apiTable.emplace("extraHeaders", json2Toml(extraHeaders));
                 }
             }
             if (!extraBodyEdit->toPlainText().trimmed().isEmpty()) {
-                json extraBody;
+                ordered_json extraBody;
                 if (parseJsonObjectForRequest(extraBodyEdit, "extraBody", extraBody)) {
-                    apiTable.insert({ "extraBody", json2Toml(extraBody) });
+                    apiTable.emplace("extraBody", json2Toml(extraBody));
                 }
             }
             apiArray.push_back(std::move(apiTable));

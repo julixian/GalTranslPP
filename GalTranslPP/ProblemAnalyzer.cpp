@@ -238,7 +238,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
         size_t transTextLen = transTextToCheck.length();
 
         if (origTextLen > 6 || transTextLen > 6) {
-            std::set<std::string> langSet;
+            absl::btree_set<std::string> langSet;
             if (!langIdentifier) {
                 langIdentifier = std::make_unique<NNetLanguageIdentifierWrapper>(3, 300);
             }
@@ -251,7 +251,7 @@ void ProblemAnalyzer::analyze(Sentence* sentence) {
                     if (result.probability < m_probabilityThreshold) {
                         continue;
                     }
-                    langSet.insert(result.language);
+                    langSet.emplace(result.language);
                 }
             }
             if (transTextLen > 6) {

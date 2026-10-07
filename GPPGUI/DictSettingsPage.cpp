@@ -199,9 +199,9 @@ void DictSettingsPage::setupUi()
 						const QList<EntryType>& dictEntries = model->getEntriesRef();
 						for (const auto& dictEntry : dictEntries) {
 							toml::ordered_table dictTable;
-							dictTable.insert({ "org", dictEntry.original.toStdString() });
-							dictTable.insert({ "rep", dictEntry.translation.toStdString() });
-							dictTable.insert({ "note", dictEntry.description.toStdString() });
+							dictTable.emplace("org", dictEntry.original.toStdString());
+							dictTable.emplace("rep", dictEntry.translation.toStdString());
+							dictTable.emplace("note", dictEntry.description.toStdString());
 							dictsArr.push_back(std::move(dictTable));
 						}
 						dictsArr.as_array_fmt().fmt = toml::array_format::multiline;
@@ -222,20 +222,20 @@ void DictSettingsPage::setupUi()
 						toml::ordered_value dictsArr = toml::array{};
 						for (const GuiNormalDictEntry& dictEntry : model->getEntriesRef()) {
 							toml::ordered_table dictTable;
-							dictTable.insert({ "org", dictEntry.original.toStdString() });
-							dictTable.insert({ "rep", dictEntry.translation.toStdString() });
+							dictTable.emplace("org", dictEntry.original.toStdString());
+							dictTable.emplace("rep", dictEntry.translation.toStdString());
 							if (!dictEntry.conditions.isEmpty()) {
 								toml::ordered_value conditions = toml::array{};
 								for (const NormalCondition& condition : dictEntry.conditions) {
 									toml::ordered_table conditionTable;
-									conditionTable.insert({ "conditionReg", condition.pattern.toStdString() });
-									conditionTable.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
+									conditionTable.emplace("conditionReg", condition.pattern.toStdString());
+									conditionTable.emplace("conditionTarget", serializeNormalConditionTarget(condition).toStdString());
 									conditions.push_back(std::move(conditionTable));
 								}
-								dictTable.insert({ "conditions", std::move(conditions) });
+								dictTable.emplace("conditions", std::move(conditions));
 							}
-							dictTable.insert({ "isReg", dictEntry.isReg });
-							dictTable.insert({ "priority", dictEntry.priority });
+							dictTable.emplace("isReg", dictEntry.isReg);
+							dictTable.emplace("priority", dictEntry.priority);
 							dictsArr.push_back(std::move(dictTable));
 						}
 						atomicOutputFile(dictPath,

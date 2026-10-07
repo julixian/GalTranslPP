@@ -231,7 +231,7 @@ void OtherSettingsPage::setupUi()
 						throw std::runtime_error("未知的文件类型");
 					}
 					for (const auto& overviewItem : overviewData) {
-						overviewFileMap[overviewItem["filename"].get<std::string>()].push_back(overviewItem);
+						overviewFileMap[overviewItem["filename"].get_ref<const std::string&>()].push_back(overviewItem);
 					}
 				}
 
@@ -249,7 +249,7 @@ void OtherSettingsPage::setupUi()
 					try {
 						cacheData = parseJson(cachePath, ifs);
 						for (auto& cacheItem : cacheData) {
-							cacheIndexMap.insert({ cacheItem["index"].get<int>(), cacheItem });
+							cacheIndexMap.try_emplace(cacheItem["index"].get<int>(), cacheItem);
 						}
 					}
 					catch (...) {
@@ -268,8 +268,8 @@ void OtherSettingsPage::setupUi()
 							continue;
 						}
 						auto& cacheItem = it->second.get();
-						const std::string overviewItemOrigText = overviewItem["original_text"].get<std::string>();
-						const std::string cacheItemOrigText = cacheItem["original_text"].get<std::string>();
+						const std::string& overviewItemOrigText = overviewItem["original_text"].get_ref<const std::string&>();
+						const std::string& cacheItemOrigText = cacheItem["original_text"].get_ref<const std::string&>();
 						if (overviewItemOrigText != cacheItemOrigText) {
 							problems.push_back(tr("[文件 %1] 句子(index %2) 与 cache 中原文不匹配，可能产生意外结果，\n概览原文: %3\n缓存原文: %4")
 								.arg(QString::fromStdString(cacheFileName))

@@ -361,10 +361,10 @@ auto json2Toml(const JsonType& value)
         typename RetTomlType::table_type table;
         for (auto it = value.cbegin(); it != value.cend(); ++it) {
             if (!it.value().is_null()) {
-                table.insert({ it.key(), json2Toml(it.value()) });
+                table.emplace(it.key(), json2Toml(it.value()));
             }
         }
-        return RetTomlType{ table };
+        return RetTomlType{ std::move(table) };
     }
     else if (value.is_array()) {
         typename RetTomlType::array_type array;
@@ -373,7 +373,7 @@ auto json2Toml(const JsonType& value)
                 array.push_back(json2Toml(child));
             }
         }
-        return RetTomlType{ array };
+        return RetTomlType{ std::move(array) };
     }
     else if (value.is_boolean()) {
         return value.template get<bool>();

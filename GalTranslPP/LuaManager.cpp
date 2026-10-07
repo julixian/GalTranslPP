@@ -553,7 +553,7 @@ public:
 					throw std::runtime_error(gppTr("LuaToml.luaRef2TomlValue", "LuaToml: key 必须是字符串")
 						.toStdString());
 				}
-				tbl.insert({ key.cast<std::string>().value(), luaRef2TomlValue(value) });
+				tbl.try_emplace(key.cast<std::string>().value(), luaRef2TomlValue(value));
 			}
 			return tbl;
 		}
@@ -648,7 +648,7 @@ std::optional<std::shared_ptr<LuaStateInstance>> LuaManager::registerFunction(co
 					return;
 				}
 				auto pFunc = std::make_unique<LuaFunction>(std::move(function));
-				luaState->m_functions.insert({ functionName, std::move(pFunc) });
+				luaState->m_functions.try_emplace(functionName, std::move(pFunc));
 				success = true;
 			}).get();
 		if (!success) {
@@ -799,13 +799,13 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	);
 
 	lua_binding::Table luaTomlTable = lua.createNamedTable("toml");
-	luaTomlTable["parse"] = [](const fs::path& path, lua_State* lua) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
+	luaTomlTable["parse"] = [](const fs::path& path, lua_State* lua_) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
 		{
 			try {
-				return { LuaToml::tomlValue2LuaRef(gpp::uparse(path), lua), std::nullopt };
+				return { LuaToml::tomlValue2LuaRef(gpp::uparse(path), lua_), std::nullopt };
 			}
 			catch (const std::exception& e) {
-				return { luabridge::LuaRef(lua), std::string(e.what()) };
+				return { luabridge::LuaRef(lua_), std::string(e.what()) };
 			}
 		};
 	luaTomlTable["str"] = [](const luabridge::LuaRef& obj) -> std::tuple<std::optional<std::string>, std::optional<std::string>>
@@ -829,13 +829,13 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		};
 
 	lua_binding::Table luaJsonTable = lua.createNamedTable("json");
-	luaJsonTable["parse"] = [](const fs::path& path, lua_State* lua) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
+	luaJsonTable["parse"] = [](const fs::path& path, lua_State* lua_) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
 		{
 			try {
-				return { LuaJson::jsonValue2LuaRef(parseJson(path), lua), std::nullopt };
+				return { LuaJson::jsonValue2LuaRef(parseJson(path), lua_), std::nullopt };
 			}
 			catch (const std::exception& e) {
-				return { luabridge::LuaRef(lua), std::string(e.what()) };
+				return { luabridge::LuaRef(lua_), std::string(e.what()) };
 			}
 		};
 	luaJsonTable["save"] = [](const fs::path& path, const luabridge::LuaRef& obj, std::optional<int> indent) -> std::tuple<bool, std::optional<std::string>>

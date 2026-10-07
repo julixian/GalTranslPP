@@ -187,7 +187,7 @@ std::vector<std::string_view> TextLinebreakFix::splitIntoTokenViews(std::string_
 	std::vector<std::string_view> ret = gpp::splitIntoTokenViews(wordPosVec, str);
 	{
 		std::lock_guard<std::shared_mutex> lock(m_tokenizeCacheMapMutex);
-		m_tokenizeCacheMap.insert({ std::string(str), std::move(wordPosVec) });
+		m_tokenizeCacheMap.try_emplace(str, std::move(wordPosVec));
 	}
 	return ret;
 }
@@ -245,12 +245,12 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 			transViewToModify += se->linebreak;
 		}
 		se->transview = std::move(transViewToModify);
-		se->otherinfo.insert({ gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
-		    .toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
-		        .arg(origLinebreakCount + 1)
-		        .arg(transLinebreakCount + 1)
-		        .arg(transLinebreakCount + 1)
-		        .toStdString() });
+		se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
+			.toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
+			.arg(origLinebreakCount + 1)
+			.arg(transLinebreakCount + 1)
+			.arg(transLinebreakCount + 1)
+			.toStdString());
 		m_logger->debug(gppTr("TextLinebreakFix.fixLinebreak", "译文[%1](%2行) -> 修正后译文[%3](%4行)")
 		    .arg(origTransView)
 		    .arg(origLinebreakCount + 1)
@@ -494,8 +494,8 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 				{
 					return acc + "[" + token + "]";
 				});
-			se->otherinfo.insert({ gppTr("TextLinebreakFix.fixLinebreak", "译文分词结果")
-			    .toStdString(), std::move(tokensStr) });
+			se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "译文分词结果")
+				.toStdString(), std::move(tokensStr));
 		}
 	}
 	break;
@@ -510,12 +510,12 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 	checkLineCharCountFunc(se->transview);
 
 	const int newLinebreakCount = countSubstring(se->transview, se->linebreak);
-	se->otherinfo.insert({ gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
-	    .toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
-	        .arg(origLinebreakCount + 1)
-	        .arg(transLinebreakCount + 1)
-	        .arg(newLinebreakCount + 1)
-	        .toStdString() });
+	se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
+		.toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
+		.arg(origLinebreakCount + 1)
+		.arg(transLinebreakCount + 1)
+		.arg(newLinebreakCount + 1)
+		.toStdString());
 	m_logger->debug(gppTr("TextLinebreakFix.fixLinebreak", "句子[%1](%2行) -> 修正后译文[%3](%4行)")
 	    .arg(origTransView)
 	    .arg(transLinebreakCount + 1)

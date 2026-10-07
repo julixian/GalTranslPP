@@ -260,20 +260,20 @@ void CommonNormalDictsPage::setupUi()
 						toml::ordered_value dictsArr = toml::array{};
 						for (const GuiNormalDictEntry& entry : model->getEntriesRef()) {
 							toml::ordered_table dictTable;
-							dictTable.insert({ "org", entry.original.toStdString() });
-							dictTable.insert({ "rep", entry.translation.toStdString() });
+							dictTable.emplace("org", entry.original.toStdString());
+							dictTable.emplace("rep", entry.translation.toStdString());
 							if (!entry.conditions.isEmpty()) {
 								toml::ordered_value conditions = toml::array{};
 								for (const NormalCondition& condition : entry.conditions) {
 									toml::ordered_table conditionTable;
-									conditionTable.insert({ "conditionReg", condition.pattern.toStdString() });
-									conditionTable.insert({ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() });
+									conditionTable.emplace("conditionReg", condition.pattern.toStdString());
+									conditionTable.emplace("conditionTarget", serializeNormalConditionTarget(condition).toStdString());
 									conditions.push_back(std::move(conditionTable));
 								}
-								dictTable.insert({ "conditions", std::move(conditions) });
+								dictTable.emplace("conditions", std::move(conditions));
 							}
-							dictTable.insert({ "isReg", entry.isReg });
-							dictTable.insert({ "priority", entry.priority });
+							dictTable.emplace("isReg", entry.isReg);
+							dictTable.emplace("priority", entry.priority);
 							dictsArr.push_back(std::move(dictTable));
 						}
 						atomicOutputFile(currentNormalTabEntry->dictPath,

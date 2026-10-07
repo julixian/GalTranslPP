@@ -118,7 +118,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                         continue;
                     }
                     std::string cacheKey = generateCacheKey(jsonArr, index);
-                    cacheMap.insert({ std::move(cacheKey), item });
+                    cacheMap.try_emplace(std::move(cacheKey), item);
                 }
             };
 
@@ -409,7 +409,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
     // 连续重复块引用模式启用时，延后 onFileProcessed/分割文件合并/文件输出
     if (m_reuseRepeatedBlocks) {
         std::lock_guard<std::mutex> lock(m_outputMutex);
-        m_repeatedBlockCompletedRelFilePaths.insert(relInputPath);
+        m_repeatedBlockCompletedRelFilePaths.emplace(relInputPath);
         return;
     }
 

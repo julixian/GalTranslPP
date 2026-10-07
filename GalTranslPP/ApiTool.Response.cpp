@@ -12,8 +12,9 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
 {
     try {
         json parsed = json::parse(rawResponse);
-        if (parsed.contains("error") && !parsed.at("error").is_null())
+        if (parsed.contains("error") && !parsed.at("error").is_null()){
             throw makeApiError(ApiErrorType::Unknown);
+        }
 
         // 普通 batch 与原生 Agent 共用协议错误判断，各自只负责提取文本或工具调用。
         switch (protocol)
@@ -23,19 +24,28 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
             const auto& choice = parsed.at("choices").at(0);
             const auto reason = choice.value("finish_reason", "");
             const auto& message = choice.at("message");
-            if (message.contains("refusal") && !message.at("refusal").is_null())
+            if (message.contains("refusal") && !message.at("refusal").is_null()){
                 throw makeApiError(ApiErrorType::Refusal);
-            if (reason == "content_filter") throw makeApiError(ApiErrorType::Refusal, reason);
-            if (reason == "length") throw makeApiError(ApiErrorType::Incomplete, reason);
-            break;
+            }
+            if (reason == "content_filter") {
+                throw makeApiError(ApiErrorType::Refusal, reason);
+            }
+            if (reason == "length") {
+                throw makeApiError(ApiErrorType::Incomplete, reason);
+            }
         }
+        break;
+
         case ApiProtocol::OpenAIRes:
         {
             for (const auto& item : parsed.at("output")) {
-                if (item.value("type", "") != "message") continue;
+                if (item.value("type", "") != "message") {
+                    continue;
+                }
                 for (const auto& block : item.at("content")) {
-                    if (block.value("type", "") == "refusal")
+                    if (block.value("type", "") == "refusal"){
                         throw makeApiError(ApiErrorType::Refusal);
+                    }
                 }
             }
             const auto status = parsed.value("status", "completed");
@@ -44,27 +54,35 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
                 const auto reason = details != parsed.end() && details->is_object() ? details->value("reason", status) : status;
                 throw makeApiError(reason == "content_filter" ? ApiErrorType::Refusal : ApiErrorType::Incomplete, reason);
             }
-            break;
         }
+        break;
+
         case ApiProtocol::Claude:
         {
             const auto reason = parsed.value("stop_reason", "");
-            if (reason == "refusal") throw makeApiError(ApiErrorType::Refusal, reason);
-            if (reason == "max_tokens") throw makeApiError(ApiErrorType::Incomplete, reason);
-            break;
+            if (reason == "refusal") {
+                throw makeApiError(ApiErrorType::Refusal, reason);
+            }
+            if (reason == "max_tokens") {
+                throw makeApiError(ApiErrorType::Incomplete, reason);
+            }
         }
+        break;
+
         case ApiProtocol::Gemini:
             if (geminiInteractions) {
                 // Interactions 没有专门的拒答字段，失败状态不能直接当作拒答；正文拒答由 Agent 的无工具调用次数处理。
                 const auto status = parsed.value("status", "");
-                if (status != "completed" && status != "requires_action")
+                if (status != "completed" && status != "requires_action") {
                     throw makeApiError(ApiErrorType::Incomplete, status);
+                }
             }
             else {
                 if (const auto feedback = parsed.find("promptFeedback"); feedback != parsed.end()) {
                     const auto reason = feedback->value("blockReason", "");
-                    if (!reason.empty() && reason != "BLOCK_REASON_UNSPECIFIED")
+                    if (!reason.empty() && reason != "BLOCK_REASON_UNSPECIFIED"){
                         throw makeApiError(ApiErrorType::Refusal, reason);
+                    }
                 }
                 const auto reason = parsed.at("candidates").at(0).value("finishReason", "STOP");
                 if (reason != "STOP") {
@@ -72,8 +90,9 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
                     throw makeApiError(blocked ? ApiErrorType::Refusal : ApiErrorType::Incomplete, reason);
                 }
             }
-            break;
+        	break;
         }
+
         return parsed;
     }
     catch (ApiError& error) {
@@ -104,10 +123,10 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
             for (const auto& block : item.at("content")) {
                 if (block.value("type", "") == "output_text") {
                     if (content.has_value()) {
-                        content.value() += block.at("text").get<std::string>();
+                        content.value() += block.at("text").get_ref<const std::string&>();
                     }
                     else {
-                        content = block.at("text").get<std::string>();
+                        content = block.at("text").get_ref<const std::string&>();
                     }
                 }
             }
@@ -121,10 +140,10 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
         for (const auto& block : parsed.at("content")) {
             if (block.contains("text")) {
                 if (content.has_value()) {
-                    content.value() += block.at("text").get<std::string>();
+                    content.value() += block.at("text").get_ref<const std::string&>();
                 }
                 else {
-                    content = block.at("text").get<std::string>();
+                    content = block.at("text").get_ref<const std::string&>();
                 }
             }
         }
@@ -138,10 +157,10 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
         {
             if (part.contains("text") && !part.value("thought", false)) {
                 if (content.has_value()) {
-                    content.value() += part.at("text").get<std::string>();
+                    content.value() += part.at("text").get_ref<const std::string&>();
                 }
                 else {
-                    content = part.at("text").get<std::string>();
+                    content = part.at("text").get_ref<const std::string&>();
                 }
             }
         }
@@ -160,14 +179,20 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
 std::expected<std::string, ApiError> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol)
 {
     auto parsed = parseApiResponse(responseContent, protocol);
-    if (!parsed) return std::unexpected(std::move(parsed.error()));
+    if (!parsed) {
+        return std::unexpected(std::move(parsed.error()));
+    }
     try {
         auto content = parseApiContent(*parsed, protocol);
-        if (!content) return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-            gppTr("ApiTool.extractApiResponseContent", "响应中没有文本内容").toStdString(), responseContent));
+        if (!content) {
+            return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
+                gppTr("ApiTool.extractApiResponseContent", "响应中没有文本内容").toStdString(), responseContent));
+        }
         // 普通请求的调用方都要求文本内容；高级 Agent 的工具调用使用独立解析路径。
-        if (content->empty()) return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-            gppTr("ApiTool.extractApiResponseContent", "[GPP.内容为空]").toStdString(), responseContent));
+        if (content->empty()) {
+            return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
+                gppTr("ApiTool.extractApiResponseContent", "[GPP.内容为空]").toStdString(), responseContent));
+        }
         return std::move(*content);
     }
     catch (const std::exception& e) {

@@ -212,7 +212,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 }
 
                 relJsonPaths.push_back(relInputPath);
-                m_inputJsonMap.emplace(relInputPath, std::move(data));
+                m_inputJsonMap.try_emplace(relInputPath, std::move(data));
             }
             catch (const std::exception& e) {
                 throw std::runtime_error(gppTr(
@@ -273,7 +273,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             catch (...) { }
             newNameTable[key] = toml::array{ transName, nameTableFromInputJson[key] };
             if (!transName.empty()) {
-                m_nameMap.insert({ key, std::move(transName) });
+                m_nameMap.try_emplace(key, std::move(transName));
             }
         }
         atomicOutputFile(ofs, m_nameTablePath, toml::format(newNameTable));
@@ -338,10 +338,10 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                             if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
                                 runtimeFileTotals[wide2Ascii(relPartPath)] = (int)part.size();
                             }
-                            m_jsonToSplitFileParts[relJsonPath].insert({ relPartPath, false });
+                            m_jsonToSplitFileParts[relJsonPath].try_emplace(relPartPath, false);
                             const fs::path partPath = m_inputCacheDir / relPartPath;
                             atomicOutputFile(ofs, partPath, part.dump(2));
-                            m_inputJsonMap.emplace(relPartPath, std::move(part));
+                            m_inputJsonMap.try_emplace(relPartPath, std::move(part));
                         }
                         m_logger->debug(gppTr(
                             "NormalJsonTranslator.normalJsonBeforeRun",
@@ -571,7 +571,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
 #else
                 auto& fileNames = problemMap[problem];
 #endif
-                fileNames.insert(filename);
+                fileNames.emplace(filename);
             }
         }
 
@@ -726,7 +726,7 @@ void NormalJsonTranslator::resolveRepeatedBlockReferences()
     absl::flat_hash_map<fs::path, FileBundle> fileBundles;
     fileBundles.reserve(m_savedTranslCacheMap.size());
     for (auto& [relFilePath, cache] : m_savedTranslCacheMap) {
-        fileBundles.emplace(relFilePath, FileBundle{
+        fileBundles.try_emplace(relFilePath, FileBundle{
             .input = &m_inputJsonMap.at(relFilePath),
             .cache = &cache
         });

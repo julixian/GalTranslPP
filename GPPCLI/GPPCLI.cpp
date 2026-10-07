@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
                 .toStdString());
 
             {
-                std::unique_ptr<ITranslator> translator = createTranslator(currentProjectPath, std::make_shared<TerminalController>());
+                const std::unique_ptr<ITranslator> translator = createTranslator(currentProjectPath, std::make_shared<TerminalController>());
                 if (!translator) {
                     spdlog::error(gppTr("GPPCLI.GPPCLI", "创建翻译器实例失败，请检查项目配置")
                         .toStdString());

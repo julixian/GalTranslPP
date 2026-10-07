@@ -53,7 +53,7 @@ py::object jsonToPython(const json& value)
     return result;
 }
 
-json pythonToJson(const py::handle& value, std::set<const PyObject*>& references)
+json pythonToJson(const py::handle& value, absl::btree_set<const PyObject*>& references)
 {
     if (!value || value.is_none()) {
         return nullptr;
@@ -91,7 +91,7 @@ json pythonToJson(const py::handle& value, std::set<const PyObject*>& references
         return value.cast<std::string>();
     }
     if (py::isinstance<py::tuple>(value) || py::isinstance<py::list>(value)) {
-        const auto [referenceIt, inserted] = references.insert(value.ptr());
+        const auto [referenceIt, inserted] = references.emplace(value.ptr());
         if (!inserted) {
             throw std::runtime_error("Circular reference detected while converting Python value to JSON");
         }
@@ -103,7 +103,7 @@ json pythonToJson(const py::handle& value, std::set<const PyObject*>& references
         return result;
     }
     if (py::isinstance<py::dict>(value)) {
-        const auto [referenceIt, inserted] = references.insert(value.ptr());
+        const auto [referenceIt, inserted] = references.emplace(value.ptr());
         if (!inserted) {
             throw std::runtime_error("Circular reference detected while converting Python value to JSON");
         }
@@ -121,7 +121,7 @@ json pythonToJson(const py::handle& value, std::set<const PyObject*>& references
 
 json pythonToJson(const py::handle& value)
 {
-    std::set<const PyObject*> references;
+    absl::btree_set<const PyObject*> references;
     return pythonToJson(value, references);
 }
 
@@ -483,7 +483,7 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
                         .toStdString());
                 }
             }).get();
-        const auto [retIt, inserted] = m_interpreters.insert({ stdModulePath, pythonInterpreter });
+        const auto [retIt, inserted] = m_interpreters.try_emplace(stdModulePath, pythonInterpreter);
         if (inserted) {
             it = retIt;
         }
@@ -516,7 +516,7 @@ std::optional<std::shared_ptr<PythonInterpreterInstance>> PythonManager::registe
                             .toStdString());
                         return;
                     }
-                    pythonInterpreter->functions.insert({ functionName, std::move(pFunc) });
+                    pythonInterpreter->functions.try_emplace(functionName, std::move(pFunc));
                     success = true;
                 }
                 catch (const py::error_already_set& e) {

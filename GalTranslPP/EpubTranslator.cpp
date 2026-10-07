@@ -119,7 +119,7 @@ void EpubTranslator::epubInit()
                                     .toStdString());
                             }
                             callbackPattern.rep->setReplaceWith(callbackRep);
-                            regexPattern.callbackPatterns.insert({ group, std::move(callbackPattern) });
+                            regexPattern.callbackPatterns.emplace(group, std::move(callbackPattern));
                         }
                     }
                     else {
@@ -252,7 +252,7 @@ void EpubTranslator::epubBeforeRun()
                 info.epubPath = epubPath;
                 info.normalPostPath = showNormalPostHtmlPath;
                 info.content = std::move(content);
-                m_epubToJsonsMap[epubPath].insert({ relJsonPath, false });
+                m_epubToJsonsMap[epubPath].try_emplace(relJsonPath, false);
 
                 // 存储元数据
                 std::ranges::sort(sentences, [](const auto& a, const auto& b)
@@ -329,7 +329,7 @@ void EpubTranslator::epubBeforeRun()
 
                 for (auto [metadata, translatedData] : std::views::zip(metadatas, translatedDatas)) {
                     newContent.append(originalContent.c_str() + lastPos, metadata.offset - lastPos);
-                    const std::string translatedMessage = translatedData["message"].get<std::string>();
+                    const std::string& translatedMessage = translatedData["message"].get_ref<const std::string&>();
                     if (m_bilingualOutput) {
                         const std::string formattedBilingualText = std::format("{}<br/><span style=\"color:{}; font-size:{}em;\">{}</span>",
                             translatedMessage, m_originalTextColor, m_originalTextScale,

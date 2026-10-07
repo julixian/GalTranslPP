@@ -252,7 +252,7 @@ QString ProjectCachePage::jsonString(const json& object, const char* key)
     }
     const auto& value = object[key];
     if (value.is_string()) {
-        return QString::fromStdString(value.get<std::string>());
+        return QString::fromStdString(value.get_ref<const std::string&>());
     }
     if (value.is_null()) {
         return {};
@@ -275,7 +275,7 @@ QString ProjectCachePage::speakerString(const json& object)
         QStringList names;
         for (const auto& name : object["names"]) {
             if (name.is_string()) {
-                names.push_back(QString::fromStdString(name.get<std::string>()));
+                names.push_back(QString::fromStdString(name.get_ref<const std::string&>()));
             }
         }
         return names.join("/");
@@ -291,7 +291,7 @@ QString ProjectCachePage::problemString(const json& object, const QString& separ
     QStringList problems;
     for (const auto& problem : object["problems"]) {
         if (problem.is_string()) {
-            const QString text = QString::fromStdString(problem.get<std::string>());
+            const QString text = QString::fromStdString(problem.get_ref<const std::string&>());
             if (!text.isEmpty() && !problems.contains(text)) {
                 problems.push_back(text);
             }

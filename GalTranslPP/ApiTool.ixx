@@ -64,7 +64,7 @@ struct ApiError {
 
 // API 层统一构造错误，分别保存本地说明、原始响应和 HTTP 状态；仅 Unknown 按状态码和错误文本推断类型。
 // 本函数只返回错误对象；parseApiResponse 可在内部抛出该对象，但会在自己的 catch 中转成 unexpected。
-ApiError makeApiError(ApiErrorType type, std::string detail = {}, std::string rawResponse = {}, long statusCode = 0);
+ApiError makeApiError(ApiErrorType type, const std::string& detail = {}, std::string rawResponse = {}, long statusCode = 0);
 // handleApiError 和 GUI 展示时拼接错误说明、后续动作与原始响应；空原始响应显示 [GPP.响应为空]。
 // 不推断错误类型，也不记录日志或决定重试。
 std::string formatApiError(const ApiError& error, const std::string& actionMessage = {});

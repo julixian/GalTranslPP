@@ -526,13 +526,13 @@ cpr::Proxies makeSystemProxies(const std::shared_ptr<spdlog::logger>& logger = n
 std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol protocol)
 {
     std::vector<std::string> models;
-    std::unordered_set<std::string> seen;
+    absl::btree_set<std::string> seen;
     auto pushModelFunc = [&](std::string model)
         {
             if (model.starts_with("models/")) {
                 model = model.substr(std::string_view("models/").size());
             }
-            if (!model.empty() && seen.insert(model).second) {
+            if (!model.empty() && seen.emplace(model).second) {
                 models.push_back(std::move(model));
             }
         };

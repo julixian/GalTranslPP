@@ -72,7 +72,7 @@ GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) 
         };
     if (conditionPatterns.is_array()) {
         for (const auto& condition : conditionPatterns.as_array()
-            | std::views::filter([](const auto& condition) { return condition.is_table(); }))
+            | std::views::filter([](const auto& condition_) { return condition_.is_table(); }))
         {
             appendPatternFunc(condition);
         }
@@ -239,7 +239,7 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
 
     if (condElem.is_array()) {
         for (const auto& condition : condElem.as_array()
-            | std::views::filter([](const auto& condition) { return condition.is_table(); }))
+            | std::views::filter([](const auto& condition_) { return condition_.is_table(); }))
         {
             appendFunctionFunc(condition);
         }

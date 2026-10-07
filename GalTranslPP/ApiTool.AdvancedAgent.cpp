@@ -52,7 +52,9 @@ void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json
             }
             else {
                 json response = {{"name", name}, {"response", content}};
-                if (!id.empty()) response["id"] = id;
+                if (!id.empty()) {
+                    response["id"] = id;
+                }
                 blocks.push_back({{"functionResponse", std::move(response)}});
             }
             break;
@@ -69,17 +71,27 @@ void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json
 // sentCount 由成功的 parseAdvancedAgentReply 更新，须与本地 history 保持一致；此处不额外校验会话位置。
 json pendingAdvancedAgentInput(const AdvancedAgentApiSession& session, json history)
 {
-    if (session.previousId.empty()) return history;
+    if (session.previousId.empty()) {
+        return history;
+    }
     return json(history.begin() + session.sentCount, history.end());
 }
 
 std::string advancedAgentInteractionApiUrl(const TranslationApi& api)
 {
     std::string url = api.apiurl;
-    while (url.ends_with('/')) url.pop_back();
-    if (url.ends_with("/interactions")) return url;
-    if (const auto pos = url.find("/models"); pos != std::string::npos) url.erase(pos);
-    if (url.ends_with("/v1beta") || url.ends_with("/v1alpha")) url.erase(url.rfind('/'));
+    while (url.ends_with('/')) {
+        url.pop_back();
+    }
+    if (url.ends_with("/interactions")) {
+        return url;
+    }
+    if (const auto pos = url.find("/models"); pos != std::string::npos) {
+        url.erase(pos);
+    }
+    if (url.ends_with("/v1beta") || url.ends_with("/v1alpha")) {
+        url.erase(url.rfind('/'));
+    }
     return url.ends_with("/v1") ? url + "/interactions" : url + "/v1/interactions";
 }
 
@@ -120,7 +132,9 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
         // Responses 的 output 原样接回 input；有 previous_response_id 时只发送新增输入。
         payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"instructions", session.systemPrompt},
             {"store", api.agentStateful}, {"tool_choice", "required"}};
-        if (!session.previousId.empty()) payload["previous_response_id"] = session.previousId;
+        if (!session.previousId.empty()) {
+            payload["previous_response_id"] = session.previousId;
+        }
         for (const auto& tool : tools) {
             json function = tool;
             function["type"] = "function";
@@ -141,7 +155,9 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
         for (const auto& tool : tools) {
             json function = {{"name", tool.at("name")}, {"description", tool.at("description")},
                 {"input_schema", tool.at("parameters")}};
-            if (isStrictTool(tool)) function["strict"] = true;
+            if (isStrictTool(tool)) {
+                function["strict"] = true;
+            }
             nativeTools.push_back(std::move(function));
         }
         if (api.agentNativeAutoCompaction) {
@@ -159,7 +175,9 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
             // Interactions 使用独立的步骤历史、function_result 和服务端会话 id。
             payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"system_instruction", session.systemPrompt},
                 {"store", api.agentStateful}};
-            if (!session.previousId.empty()) payload["previous_interaction_id"] = session.previousId;
+            if (!session.previousId.empty()) {
+                payload["previous_interaction_id"] = session.previousId;
+            }
             for (const auto& tool : tools) {
                 json function = tool;
                 function["type"] = "function";
@@ -234,14 +252,16 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
                 for (const auto& block : item.at("content")) {
                     if (block.value("type", "") == "output_text" && item.value("phase", "") != "commentary")
                     {
-                        reply.text += block.at("text").get<std::string>();
+                        reply.text += block.at("text").get_ref<const std::string&>();
                     }
                 }
             }
             // 推理、加密推理、压缩项和 phase 均由服务端定义，不在这里重构。
             additions.push_back(item);
         }
-        if (session.api.agentStateful) previousId = parsed.at("id");
+        if (session.api.agentStateful) {
+            previousId = parsed.at("id");
+        }
         break;
     }
 
@@ -260,8 +280,12 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
         }
         for (auto it = retainedBegin; it != content.end(); ++it) {
             const auto& block = *it;
-            if (block.value("type", "") == "tool_use") reply.calls.push_back({block.at("id"), block.at("name"), block.at("input")});
-            else if (block.value("type", "") == "text") reply.text += block.at("text").get<std::string>();
+            if (block.value("type", "") == "tool_use") {
+                reply.calls.push_back({ block.at("id"), block.at("name"), block.at("input") });
+            }
+            else if (block.value("type", "") == "text") {
+                reply.text += block.at("text").get_ref<const std::string&>();
+            }
         }
         additions.push_back({{"role", "assistant"}, {"content", json(retainedBegin, content.end())}});
         break;
@@ -270,15 +294,21 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
     case ApiProtocol::Gemini:
         if (session.api.agentGeminiInteractions) {
             for (const auto& step : parsed.at("steps")) {
-                if (step.value("type", "") == "function_call") reply.calls.push_back({step.at("id"), step.at("name"), step.at("arguments")});
+                if (step.value("type", "") == "function_call") {
+                    reply.calls.push_back({ step.at("id"), step.at("name"), step.at("arguments") });
+                }
                 else if (step.value("type", "") == "model_output") {
                     for (const auto& block : step.at("content")) {
-                        if (block.value("type", "") == "text") reply.text += block.at("text").get<std::string>();
+                        if (block.value("type", "") == "text") {
+                            reply.text += block.at("text").get_ref<const std::string&>();
+                        }
                     }
                 }
                 additions.push_back(step);
             }
-            if (session.api.agentStateful) previousId = parsed.at("id");
+            if (session.api.agentStateful) {
+                previousId = parsed.at("id");
+            }
         }
         else {
             const auto& candidate = parsed.at("candidates").at(0);
@@ -288,18 +318,25 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
                     const auto& call = part.at("functionCall");
                     reply.calls.push_back({call.value("id", ""), call.at("name"), call.at("args")});
                 }
-                else if (part.contains("text") && !part.value("thought", false)) reply.text += part.at("text").get<std::string>();
+                else if (part.contains("text") && !part.value("thought", false)) {
+                    reply.text += part.at("text").get_ref<const std::string&>();
+                }
             }
             additions.push_back(content);
         }
         break;
     }
 
-    if (reply.text.empty() && reply.calls.empty())
+    if (reply.text.empty() && reply.calls.empty()) {
         throw std::runtime_error(gppTr("ApiTool.parseAdvancedAgentReply", "响应中没有文本内容或工具调用").toStdString());
+    }
     // 整个响应解析成功后才更新会话，失败重试不会留下半截工具调用。
-    if (compacted) session.history = std::move(additions);
-    else session.history.insert(session.history.end(), additions.begin(), additions.end());
+    if (compacted) {
+        session.history = std::move(additions);
+    }
+    else {
+        session.history.insert(session.history.end(), additions.begin(), additions.end());
+    }
     session.previousId = std::move(previousId);
     session.sentCount = session.history.size();
     return reply;
@@ -318,6 +355,7 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
         const json extraBody = api.extraBody;
         api.extraBody = json::object();
         applyApiPayloadOptions(payload, api);
+
         if (api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions) {
             payload["model"] = api.modelName;
             if (payload.contains("generationConfig")) {
@@ -325,7 +363,9 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
                 if (config.contains("thinkingConfig")) {
                     const auto& thinking = config.at("thinkingConfig");
                     // Interactions 不使用旧的 thinkingBudget，2.5 等旧型号应选择 generateContent。
-                    if (thinking.contains("thinkingLevel")) payload["generation_config"]["thinking_level"] = str2Lower(thinking.at("thinkingLevel").get<std::string>());
+                    if (thinking.contains("thinkingLevel")) {
+                        payload["generation_config"]["thinking_level"] = str2Lower(thinking.at("thinkingLevel").get_ref<const std::string&>());
+                    }
                 }
                 payload.erase("generationConfig");
             }
@@ -338,20 +378,28 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
             beta += "compact-2026-01-12";
         }
         if (extraBody.is_object()) {
-            for (auto it = extraBody.begin(); it != extraBody.end(); ++it) payload[it.key()] = it.value();
+            for (auto it = extraBody.begin(); it != extraBody.end(); ++it) {
+                payload[it.key()] = it.value();
+            }
         }
+
         const std::string body = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
         ApiResponse response = sendApiHttpRequest(body, api,
             api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions ? advancedAgentInteractionApiUrl(api) : cvt2RequestApiUrl(api),
             controller, logger, apiTimeOutMs);
-        if (!response.content) return {std::unexpected(std::move(response.content.error()))};
+        if (!response.content) {
+            return { std::unexpected(std::move(response.content.error())) };
+        }
+
         statusCode = 200;
         responseBody = std::move(*response.content);
+
         auto parsed = parseApiResponse(responseBody, api.protocol, api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions);
         if (!parsed) {
             parsed.error().statusCode = statusCode;
             return {std::unexpected(std::move(parsed.error()))};
         }
+
         return {parseAdvancedAgentReply(*parsed, session)};
     }
     catch (const std::exception& e) {

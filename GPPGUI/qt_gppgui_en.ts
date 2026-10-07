@@ -33,7 +33,7 @@
     <name>ApiSettingsPage</name>
     <message>
         <location filename="ApiSettingsPage.cpp" line="+40"/>
-        <location line="+38"/>
+        <location line="+26"/>
         <source>Api 设置</source>
         <translation>Api settings</translation>
     </message>
@@ -63,7 +63,7 @@
         <translation>Add new Api</translation>
     </message>
     <message>
-        <location line="+84"/>
+        <location line="+92"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -140,7 +140,7 @@ sk-...</translation>
         <translation>Omit uses the API default. Other levels are mapped by protocol and model to the closest available level; models that cannot disable thinking use the lowest effort.</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>不传递</source>
         <translation>Omit</translation>
     </message>
@@ -159,7 +159,7 @@ sk-...</translation>
         <translation>Basic settings</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+15"/>
         <source>以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效</source>
         <translation>These options apply only when Agent mode and Advanced Agent are enabled.</translation>
     </message>
@@ -234,7 +234,7 @@ sk-...</translation>
         <translation>Applies only to native compaction in Responses/Claude. Uses server token counts, which differ from local history byte counts.</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>为 TransAgent 启用 Interactions API</source>
         <translation>Enable Interactions API for TransAgent</translation>
     </message>
@@ -400,7 +400,7 @@ sk-...</translation>
         <translation>Model name cannot be empty</translation>
     </message>
     <message>
-        <location line="+69"/>
+        <location line="+71"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
@@ -2224,12 +2224,12 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <location line="+75"/>
-        <location line="+54"/>
+        <location line="+64"/>
         <source>错误</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-65"/>
         <source>无法启动本地服务，程序即将退出。</source>
         <translation>Cannot start local service. Exiting.</translation>
     </message>
@@ -2240,6 +2240,11 @@ sk-...</translation>
     </message>
     <message>
         <location line="+11"/>
+        <source>JSON 错误</source>
+        <translation>JSON error</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>TOML 错误</source>
         <translation>TOML error</translation>
     </message>
@@ -4131,7 +4136,7 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="-175"/>
+        <location filename="ApiSettingsPage.cpp" line="-177"/>
         <location line="+7"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>

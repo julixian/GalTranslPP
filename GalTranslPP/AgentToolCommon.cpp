@@ -23,7 +23,7 @@ std::optional<int> parseAgentCommonJsonInt(const json& object) {
         return std::nullopt;
     }
     if (object.is_string()) {
-        const std::string value = object.get<std::string>();
+        const std::string& value = object.get_ref<const std::string&>();
         int parsed = 0;
         const auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), parsed);
         if (ec == std::errc{} && ptr == value.data() + value.size()) {

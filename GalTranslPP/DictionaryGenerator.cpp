@@ -82,12 +82,12 @@ void DictionaryGenerator::preprocessAndTokenize() {
             replaceStrInplace(se.preproc, "<tab>", "");
 
             if (se.nameType == NameType::Single && !se.name.empty()) {
-                m_nameSet.insert(se.name);
+                m_nameSet.emplace(se.name);
                 m_wordCounter[se.name] += 2;
             }
             else if (se.nameType == NameType::Multiple) {
                 for (const auto& name : se.names | std::views::filter([](const std::string& name_) { return !name_.empty(); })) {
-                    m_nameSet.insert(name);
+                    m_nameSet.emplace(name);
                     m_wordCounter[name] += 2;
                 }
             }
@@ -128,7 +128,7 @@ void DictionaryGenerator::preprocessAndTokenize() {
     auto procEntityVecFunc = [&](const EntityVec& entityVec, const std::string& segment)
         {
             for (const auto& entity : entityVec) {
-                wordsInSegment.insert(entity.front());
+                wordsInSegment.emplace(entity.front());
                 ++m_wordCounter[entity.front()];
             }
         };
@@ -153,7 +153,7 @@ void DictionaryGenerator::preprocessAndTokenize() {
                     return hasPunctuation(entity[0]);
                 });
             procEntityVecFunc(entityVec, segment);
-            m_tokenizeCacheMap.insert({ segment, std::move(entityVec) });
+            m_tokenizeCacheMap.try_emplace(segment, std::move(entityVec));
         }
         m_segmentWords.push_back(std::move(wordsInSegment));
         wordsInSegment.clear();
@@ -297,7 +297,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
     allWords.reserve(m_wordCounter.size());
     for (const auto& [word, count] : m_wordCounter) {
         if (count >= 2 || m_nameSet.contains(word)) {
-            allWords.insert(word);
+            allWords.emplace(word);
         }
     }
 
@@ -307,7 +307,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
         absl::flat_hash_set<std::string> filteredSet;
         for (const auto& word : segment) {
             if (allWords.contains(word)) {
-                filteredSet.insert(word);
+                filteredSet.emplace(word);
             }
         }
         filteredSegmentWords.push_back(std::move(filteredSet));
@@ -345,7 +345,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
             usedIndices[bestIndex] = 1;
             selectedIndices.push_back(bestIndex);
             for (const auto& word : filteredSegmentWords[bestIndex]) {
-                coveredWords.insert(word);
+                coveredWords.emplace(word);
             }
             m_controller->updateBar();
         }
@@ -426,7 +426,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
                     }
                     return true;
                 }
-                seen.insert({ orgWord, note });
+                seen.try_emplace(orgWord, note);
                 return false;
             });
     }

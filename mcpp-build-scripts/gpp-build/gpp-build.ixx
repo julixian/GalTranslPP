@@ -5,8 +5,8 @@ export module gpp.build;
 import std;
 import mcpp;
 import mcpp.deps;
+import mcpp.plugins.fs;
 import gpp.deps.vcpkg;
-import gpp.deps.cmake;
 import gpp.rules.qt;
 
 export namespace gpp {
@@ -18,9 +18,6 @@ namespace fs = std::filesystem;
 // vcpkg：填写安装根目录（包含 vcpkg.exe 和 scripts），留空则从 PATH 查找。
 // 示例：R"(D:\vcpkg)"
 const fs::path vcpkg_root = R"()";
-// CMake：填写可执行文件路径，留空则从 PATH 查找。
-// 示例：R"(C:\Program Files\CMake\bin\cmake.exe)"
-const fs::path cmake_executable = R"()";
 // Qt：填写 SDK 根目录（包含 include、lib、bin），不可留空。
 const fs::path qt_root = R"(D:\Qt\6.11.1\msvc2022_64)";
 // ===== 配置结束 =====
@@ -123,6 +120,8 @@ void link_python_libraries() {
 gpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
     gpp::rules::qt::options qt_options;
     qt_options.root = qt_directory().generic_string();
+    // 各 profile 的 Ninja 依赖记录独立，生成文件也必须独立，避免相互覆盖时间戳。
+    qt_options.out_dir = (fs::path(mcpp::out_dir()) / mcpp::profile()).generic_string();
     qt_options.modules = std::move(modules);
     qt_options.i18n.qt_languages = {}; // 不生成 Qt 自带的 qt_zh_CN.qm 等翻译。
     return qt_options;
@@ -138,23 +137,46 @@ fs::path configure_translation(gpp::rules::qt::options& qt_options, const char* 
     return project_directory / (fs::path(translation_source_filename).stem().string() + ".qm");
 }
 
-gpp::deps::cmake::prefix use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
-    gpp::deps::cmake::options options;
-    options.cmake = cmake_executable.generic_string();
-    options.source = (workspace_directory() / "3rdParty" / "ElaWidgetTools").generic_string();
-    options.name = "ElaWidgetTools";
-    // target 被源码扫描和 rerun glob 排除；build-* 也符合 Ela 的 Git 忽略规则。
-    options.cache = (fs::path(options.source) / "target" / "build-deps-cmake").generic_string();
-    options.cache_args = {"-DQT_SDK_DIR=" + qt_options.root,
-                          "-DELAWIDGETTOOLS_BUILD_EXAMPLE=OFF",
-                          "-DELAWIDGETTOOLS_BUILD_STATIC_LIB=OFF"};
-    options.dirs = {.include = "ElaWidgetTools/include", .lib = "ElaWidgetTools/lib",
-                    .bin = "ElaWidgetTools/bin"};
-    options.libraries = {"ElaWidgetTools"};
-    options.shared = true;
-    const auto dependencies = gpp::deps::cmake::use(options);
-    if (!dependencies) throw std::runtime_error("ElaWidgetTools 构建配置失败");
-    return dependencies;
+fs::path use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
+    const auto source = workspace_directory() / "3rdParty" / "ElaWidgetTools";
+    const auto install = source / "target" / "mcpp-install" / mcpp::target() / mcpp::profile();
+    const auto source_directory = source.generic_string();
+    const auto install_directory = install.generic_string();
+    const auto stamp = (fs::path(mcpp::out_dir()) / mcpp::profile() / "ela-build.stamp").generic_string();
+    // Ela 独立于 GPP 的依赖图，在自己的目录下构建；Qt、编译器和 profile 沿用本次 GPP 构建。
+    mcpp::action build;
+    build.id = "ela-mcpp-build";
+    build.role = mcpp::roles::prepare;
+    build.description = "mcpp build ElaWidgetTools";
+    build.arg("${mcpp.self}").arg("build")
+        .arg("-p").arg("ElaWidgetTools")
+        .arg("--toolchain").arg(("path:" + std::string(mcpp::toolchain_dir())).c_str())
+        .arg("--profile").arg(mcpp::profile())
+        .cwd(source_directory.c_str()).env("QT_ROOT_DIR", qt_options.root.c_str())
+        .env("ELAWIDGETTOOLS_INSTALL_DIR", install_directory.c_str())
+        .output(stamp.c_str()).output_dir(install_directory.c_str());
+    mcpp::deps::watch_tree(source / "ElaWidgetTools");
+    for (const auto& file : mcpp::deps::files_under(source / "ElaWidgetTools")) build.input(file.c_str());
+    for (const char* file : {"mcpp.toml", "mcpp-qt.hpp"}) {
+        const auto path = (source / file).generic_string();
+        mcpp::rerun_if_changed(path.c_str());
+        if (fs::is_regular_file(path)) build.input(path.c_str());
+    }
+    // 子构建会重写 mcpp.lock，不能直接作为 Ninja 输入，否则动作会反复失效。
+    // 监视原锁文件，只在内容变化时更新快照，让依赖变更仍能触发 Ela 构建。
+    const auto lock = source / "mcpp.lock";
+    mcpp::rerun_if_changed(lock.generic_string().c_str());
+    std::ifstream lock_input(lock, std::ios::binary);
+    const std::string lock_content{std::istreambuf_iterator<char>(lock_input), {}};
+    const auto lock_snapshot = fs::path(mcpp::out_dir()) / mcpp::profile() / "ela-dependencies.lock";
+    fs::create_directories(lock_snapshot.parent_path());
+    mcpp::plugins::fs::write_if_changed(lock_snapshot, lock_content);
+    build.input(lock_snapshot.generic_string().c_str());
+    build.submit();
+    mcpp::include_dir((source / "ElaWidgetTools").generic_string().c_str());
+    const std::vector<std::string> libraries = {"ElaWidgetTools"};
+    mcpp::deps::link_libraries(install, libraries, true);
+    return install;
 }
 
 // 自定义 Release 发布不读取可能尚未部署完成的 bin 目录。
@@ -203,7 +225,10 @@ struct release_publisher {
             .arg(source_file.c_str())
             .input(executable_file.c_str());
         if (track_source) copy_action.input(source_file.c_str());
-        copy_action.output(output_file.c_str()).submit();
+        // Release 由多个 profile 共用；每次检查内容，不能依赖目标文件的新旧判断当前配置。
+        // 此输出有意不生成，让 Ninja 调度发布检查；stage 在内容相同时不重写实际产物。
+        const auto check = (fs::path(mcpp::out_dir()) / mcpp::profile() / (action_id + ".check")).generic_string();
+        copy_action.output(output_file.c_str()).output(check.c_str()).submit();
     }
 
     void copy_runtime_libraries(std::string_view member, const fs::path& destination_directory,
@@ -247,7 +272,9 @@ struct release_publisher {
             copy_action.arg("--include-dll").arg("python3.dll");
             copy_action.arg("--include-dll").arg("python312.dll");
         }
-        copy_action.submit();
+        // 运行库同样可能被其他 profile 覆盖，发布时重新核对，内容相同则不复制。
+        const auto check = (fs::path(mcpp::out_dir()) / mcpp::profile() / (action_id + ".check")).generic_string();
+        copy_action.output(check.c_str()).submit();
     }
 
     void copy_opencc_share(std::string_view member, std::string_view destination_name,

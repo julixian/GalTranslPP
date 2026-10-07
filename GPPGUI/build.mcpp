@@ -23,7 +23,7 @@ int main() {
         const auto ela_widget_tools = gpp::use_ela_widget_tools(qt_options);
 
         gpp::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);
-        publisher.additional_runtime_directories.emplace_back(ela_widget_tools.bin);
+        publisher.additional_runtime_directories.emplace_back(ela_widget_tools);
         publisher.publish_release("GPPGUI", translation_file);
         return 0;
     });

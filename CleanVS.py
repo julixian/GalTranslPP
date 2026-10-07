@@ -1,10 +1,3 @@
-"""清理本项目七个固定目录的 target 构建缓存，仅使用 Python 标准库。
-
-清理：python CleanTargets.py
-预览：python CleanTargets.py --dry-run
-始终以脚本所在目录为项目根目录，不清理 mcpp 全局缓存或 x64/x86 目录。
-"""
-
 import argparse
 from pathlib import Path
 import shutil
@@ -13,14 +6,18 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parent
-# 根目录必须排在首位，先清 Ninja 记录，再清成员的生成目录。
 TARGET_DIRS = (
-    "target",
-    "GalTranslPP/target",
-    "GPPCLI/target",
-    "GPPGUI/target",
-    "GPPVersion/target",
-    "Updater/target",
+    # ".vs",
+    "GalTranslPP/x86",
+    "GalTranslPP/x64",
+    "GPPCLI/x86",
+    "GPPCLI/x64",
+    "GPPGUI/x86",
+    "GPPGUI/x64",
+    "GPPVersion/x86",
+    "GPPVersion/x64",
+    "Updater/x86",
+    "Updater/x64"
 )
 
 
@@ -35,19 +32,19 @@ def is_link(path: Path) -> bool:
 
 def validate_target(root: Path, path: Path) -> None:
     resolved = path.resolve(strict=True)
-    if path.name != "target" or is_link(path) or not resolved.is_relative_to(root) or resolved == root:
-        raise ValueError(f"拒绝清理不属于项目的 target 目录：{path}")
+    if not path.is_dir() or is_link(path) or not resolved.is_relative_to(root) or resolved == root:
+        raise ValueError(f"拒绝清理不属于项目的 VS 生成目录：{path}")
 
 
-def clean_targets(root: Path, dry_run: bool = False) -> int:
+def clean_vs(root: Path, dry_run: bool = False) -> int:
     root = root.resolve(strict=True)
     targets = [root / relative for relative in TARGET_DIRS if (root / relative).exists()]
     if not targets:
-        print("没有找到 target 构建缓存。")
+        print("没有找到 VS 生成目录。")
         return 0
 
     for path in targets:
-        # 实际删除前再次核对路径；删除失败立即停止，避免继续清理成员缓存。
+        # 仅清理清单内的目录，删除前核对其实际位置。
         validate_target(root, path)
         relative = path.relative_to(root)
         if dry_run:
@@ -56,16 +53,16 @@ def clean_targets(root: Path, dry_run: bool = False) -> int:
             print(f"正在清理：{relative}", flush=True)
             shutil.rmtree(path)
 
-    print(f"{'预览' if dry_run else '清理'}完成，共 {len(targets)} 个 target 目录。")
+    print(f"{'预览' if dry_run else '清理'}完成，共 {len(targets)} 个 VS 生成目录。")
     return len(targets)
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="清理本项目内的 target 构建缓存。")
+    parser = argparse.ArgumentParser(description="清理本项目的 .vs 及各成员的 x86、x64 生成目录。")
     parser.add_argument("--dry-run", action="store_true", help="只列出待清理目录，不删除文件")
     args = parser.parse_args()
     try:
-        clean_targets(ROOT, args.dry_run)
+        clean_vs(ROOT, args.dry_run)
     except (OSError, ValueError) as error:
         print(f"清理失败：{error}", file=sys.stderr)
         return 1

@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     std::unique_ptr<py::gil_scoped_release> release;
 
     try {
-        const auto globalConfig = gpp::uparse(globalConfigPath);
+        const auto globalConfig = gpp::uparseToml(globalConfigPath);
         const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
         if (language == "zh_CN") {
             if (baseTranslator.load("qt_zh_CN.qm", "translations")) {

@@ -224,7 +224,7 @@ void OtherSettingsPage::setupUi()
 						overviewData = parseJson(fs::path(importOverviewPathQStr.toStdWString()));
 					}
 					else if (importOverviewPathQStr.endsWith(".toml", Qt::CaseInsensitive)) {
-						const auto tomlData = gpp::uparse(fs::path(importOverviewPathQStr.toStdWString()));
+						const auto tomlData = gpp::uparseToml(fs::path(importOverviewPathQStr.toStdWString()));
 						overviewData = toml2Json(tomlData.at("problemOverview"));
 					}
 					else {

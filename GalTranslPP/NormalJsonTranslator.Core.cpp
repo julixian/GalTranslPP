@@ -271,7 +271,7 @@ void NormalJsonTranslator::normalJsonInit()
 {
     const fs::path configPath = m_projectDir / L"Config.toml";
     try {
-        const auto configData = gpp::uparse(configPath);
+        const auto configData = gpp::uparseToml(configPath);
 
         const std::string& transEngineStr = configData.at("plugins").at("transEngine").as_string();
         if (const auto it = names2TransEngine.find(transEngineStr); it != names2TransEngine.end()) {
@@ -285,9 +285,9 @@ void NormalJsonTranslator::normalJsonInit()
                 .toStdString());
         }
 
-        const auto pluginConfigData = gpp::uparse(filePluginConfigPath / L"NormalJson.toml");
-        m_outputWithSrc = parseToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithSrc");
-        m_outputWithRefInfo = parseToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithRefInfo");
+        const auto pluginConfigData = gpp::uparseToml(filePluginConfigPath / L"NormalJson.toml");
+        m_outputWithSrc = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithSrc");
+        m_outputWithRefInfo = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithRefInfo");
 
         m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
         m_threadsNum = toml::find_or(configData, "common", "threadsNum", 5);
@@ -573,8 +573,8 @@ void NormalJsonTranslator::normalJsonInit()
                     .toStdString());
             }
 
-            const auto projectPromptData = hasProjectPrompt ? gpp::uparse(projectPromptPath) : toml::value{};
-            const auto defaultPromptData = hasDefaultPrompt ? gpp::uparse(defaultPromptPath) : toml::value{};
+            const auto projectPromptData = hasProjectPrompt ? gpp::uparseToml(projectPromptPath) : toml::value{};
+            const auto defaultPromptData = hasDefaultPrompt ? gpp::uparseToml(defaultPromptPath) : toml::value{};
 
             const auto readPromptString = [&](const std::string& key) -> std::string
                 {
@@ -796,7 +796,7 @@ void NormalJsonTranslator::normalJsonInit()
             if (skipProblemsOpt.has_value()) {
                 for (const auto& elem : skipProblemsOpt.value()) {
                     if (elem.is_string()) {
-                        m_skipProblems.push_back({ jpc::Regex(elem.as_string(), defaultRegCompileModifier), std::nullopt });
+                        m_skipProblems.emplace_back(jpc::Regex(elem.as_string(), defaultRegCompileModifier), std::nullopt);
                     }
                     else if (elem.is_array() && elem.size() > 0) {
                         if (!elem[0].is_string()) {

@@ -219,7 +219,7 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     // 1. 读取 TOML
     toml::ordered_value nameTableData;
     try {
-        nameTableData = gpp::uoparse(nameTablePath);
+        nameTableData = gpp::uoparseToml(nameTablePath);
     }
     catch (const toml::exception& e) {
         m_logger->error(gppTr("NameTranslator.run", "NameTrans: 解析人名表失败: %1")

@@ -2447,7 +2447,7 @@ Tool calls:
     </message>
 </context>
 <context>
-    <name>parseToml</name>
+    <name>parsePluginToml</name>
     <message>
         <location filename="Tool.ixx" line="264"/>
         <source>无效的 TOML 路径: %1</source>

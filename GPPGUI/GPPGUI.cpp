@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
         QLocalServer server;  // 创建 QLocalServer，用于接收来自新实例的消息
 
         try {
-            const toml::value globalConfig = gpp::uparse(globalConfigPath);
+            const toml::value globalConfig = gpp::uparseToml(globalConfigPath);
             checkUpdate = toml::find_or(globalConfig, "autoCheckUpdate", true);
             const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
             if (language == "zh_CN") {

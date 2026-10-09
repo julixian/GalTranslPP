@@ -43,15 +43,15 @@ GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) 
             }
 
             GppConditionPattern pattern;
-            std::string conditionTargetStr = conditionTbl.at("conditionTarget").as_string();
+            std::string_view conditionTargetStr = conditionTbl.at("conditionTarget").as_string();
             while (true) {
                 if (conditionTargetStr.starts_with("prev_")) {
                     --pattern.sentenceOffset;
-                    conditionTargetStr.erase(0, 5);
+                    conditionTargetStr.remove_prefix(5);
                 }
                 else if (conditionTargetStr.starts_with("next_")) {
                     ++pattern.sentenceOffset;
-                    conditionTargetStr.erase(0, 5);
+                    conditionTargetStr.remove_prefix(5);
                 }
                 else {
                     break;
@@ -59,7 +59,7 @@ GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) 
             }
 
             pattern.conditionTarget = chooseCachePart(conditionTargetStr);
-            const std::string conditionRegStr = conditionTbl.at("conditionReg").as_string();
+            const std::string& conditionRegStr = conditionTbl.at("conditionReg").as_string();
             if (conditionRegStr.empty()) {
                 return;
             }
@@ -68,7 +68,7 @@ GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) 
             if (!pattern.conditionReg) {
                 return;
             }
-            patterns.push_back(std::move(pattern));
+            patterns.emplace_back(std::move(pattern));
         };
     if (conditionPatterns.is_array()) {
         for (const auto& condition : conditionPatterns.as_array()
@@ -132,7 +132,7 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
                     {
                         return checkGppCondition(condR, se);
                     };
-                funcs.push_back(std::move(checkFunc));
+                funcs.emplace_back(std::move(checkFunc));
             }
             break;
 
@@ -165,7 +165,7 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
                             }
                             return result;
                         };
-                    funcs.push_back(std::move(checkFunc));
+                    funcs.emplace_back(std::move(checkFunc));
                     logger->info(gppTr(
                         "ConditionTool.getCheckSeCondFunc",
                         "注册 Lua 脚本 [%1] 中的条件函数 %2 成功")
@@ -213,7 +213,7 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
                                 }).get();
                             return result;
                         };
-                    funcs.push_back(std::move(checkFunc));
+                    funcs.emplace_back(std::move(checkFunc));
                     logger->info(gppTr(
                         "ConditionTool.getCheckSeCondFunc",
                         "注册 Python 脚本 [%1] 中的条件函数 %2 成功")

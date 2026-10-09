@@ -11,7 +11,7 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-static absl::btree_set<std::string_view> excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" };;
+static absl::btree_set<std::string_view> excludePuncts = { "『", "「", "“", "‘", "'", "《", "〈", "（", "【", "〔", "〖", "≪" };
 
 TextLinebreakFix::~TextLinebreakFix() {
 	if (m_useTokenizer) {
@@ -42,9 +42,9 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				}
 				return ret;
 			}();
-		const auto pluginConfig = gpp::uparse(pluginConfigPath);
+		const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
 
-		const std::string linebreakMode = parseToml<std::string>(projectConfig, pluginConfig,
+		const std::string linebreakMode = parsePluginToml<std::string>(projectConfig, pluginConfig,
 			"plugins.TextLinebreakFix.linebreakMode", reversePriority);
 		if (linebreakMode == "average") {
 			m_mode = LinebreakFixMode::Average;
@@ -69,19 +69,19 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			    .arg(linebreakMode)
 			    .toStdString());
 		}
-		m_priorityThreshold = parseToml<double>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.priorityThreshold", reversePriority);
-		m_segmentThreshold = parseToml<int>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.segmentThreshold", reversePriority);
-		m_forceFix = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.forceFix", reversePriority);
-		m_errorThreshold = parseToml<int>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.errorThreshold", reversePriority);
-		m_useTokenizer = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.useTokenizer", reversePriority);
+		m_priorityThreshold = parsePluginToml<double>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.priorityThreshold", reversePriority);
+		m_segmentThreshold = parsePluginToml<int>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.segmentThreshold", reversePriority);
+		m_forceFix = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.forceFix", reversePriority);
+		m_errorThreshold = parsePluginToml<int>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.errorThreshold", reversePriority);
+		m_useTokenizer = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextLinebreakFix.useTokenizer", reversePriority);
 
 
 		if (m_useTokenizer) {
 			loadTokenizeCache(m_tokenizeCacheMap, m_tokenizeCachePath, m_logger);
-			const std::string tokenizerBackend = parseToml<std::string>(projectConfig, pluginConfig,
+			const std::string tokenizerBackend = parsePluginToml<std::string>(projectConfig, pluginConfig,
 				"plugins.TextLinebreakFix.tokenizerBackend", reversePriority);
 			if (tokenizerBackend == "MeCab") {
-				const std::string mecabDictDir = parseToml<std::string>(projectConfig, pluginConfig,
+				const std::string mecabDictDir = parsePluginToml<std::string>(projectConfig, pluginConfig,
 					"plugins.TextLinebreakFix.mecabDictDir", reversePriority);
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
@@ -91,7 +91,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				m_tokenizeTargetLangFunc = getMeCabTokenizeFunc(mecabDictDir, m_logger);
 			}
 			else if (tokenizerBackend == "spaCy") {
-				const std::string spaCyModelName = parseToml<std::string>(projectConfig, pluginConfig,
+				const std::string spaCyModelName = parsePluginToml<std::string>(projectConfig, pluginConfig,
 					"plugins.TextLinebreakFix.spaCyModelName", reversePriority);
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",
@@ -102,7 +102,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 					spaCyModelName, m_logger);
 			}
 			else if (tokenizerBackend == "Stanza") {
-				const std::string stanzaLang = parseToml<std::string>(projectConfig, pluginConfig,
+				const std::string stanzaLang = parsePluginToml<std::string>(projectConfig, pluginConfig,
 					"plugins.TextLinebreakFix.stanzaLang", reversePriority);
 				m_logger->info(gppTr(
 				    "TextLinebreakFix.TextLinebreakFix",

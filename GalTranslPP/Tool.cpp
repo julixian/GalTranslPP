@@ -1010,12 +1010,12 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 
 
 
-::toml::value uparse(const fs::path& path) {
+::toml::value uparseToml(const fs::path& path) {
     std::ifstream ifs(path, std::ios::binary);
     return ::toml::parse(ifs, wide2Ascii(path));
 }
 
-::toml::ordered_value uoparse(const fs::path& path) {
+::toml::ordered_value uoparseToml(const fs::path& path) {
     std::ifstream ifs(path, std::ios::binary);
     return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
 }

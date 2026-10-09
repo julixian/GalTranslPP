@@ -144,7 +144,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         throw std::runtime_error(gppTr("createTranslator", "找不到配置文件 [%1]")
             .arg(wide2Ascii(configFilePath)).toStdString());
     }
-    const auto configData = gpp::uparse(configFilePath);
+    const auto configData = gpp::uparseToml(configFilePath);
 
     const std::string filePluginStr = toml::find_or(configData, "plugins", "filePlugin", "NormalJson");
     const std::string transEngineStr = toml::find_or(configData, "plugins", "transEngine", "ForGalTsv");

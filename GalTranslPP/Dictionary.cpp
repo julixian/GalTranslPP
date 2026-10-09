@@ -129,7 +129,7 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
     int count = 0;
 
     try {
-        const auto dictData = gpp::uparse(filePath);
+        const auto dictData = gpp::uparseToml(filePath);
         if (!dictData.contains("gptDict")) {
             return;
         }
@@ -288,7 +288,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
     int count = 0;
     try {
-        const auto dictData = gpp::uparse(filePath);
+        const auto dictData = gpp::uparseToml(filePath);
         if (!dictData.contains("normalDict")) {
             return;
         }
@@ -302,7 +302,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                 continue;
             }
 
-            const std::string str = elem.at("org").as_string();
+            const std::string& str = elem.at("org").as_string();
             if (str.empty()) {
                 continue;
             }

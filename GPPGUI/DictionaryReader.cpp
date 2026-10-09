@@ -25,7 +25,7 @@ QList<GuiGptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 
 	if (isSameExtension(dictPath, L".toml")) {
 		try {
-			const toml::ordered_value tbl = gpp::uoparse(dictPath);
+			const toml::ordered_value tbl = gpp::uoparseToml(dictPath);
 			if (!tbl.contains("gptDict") || !tbl.at("gptDict").is_array()) {
 				return result;
 			}
@@ -123,7 +123,7 @@ QString DictionaryReader::readGptDictsStr(const std::vector<fs::path>& dictPaths
 			continue;
 		}
 		try {
-			toml::ordered_value tbl = gpp::uoparse(dictPath);
+			toml::ordered_value tbl = gpp::uoparseToml(dictPath);
 			if (!tbl.contains("gptDict") || !tbl.at("gptDict").is_array()) {
 				continue;
 			}
@@ -152,7 +152,7 @@ QList<GuiNormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictP
 
 	if (isSameExtension(dictPath, L".toml")) {
 		try {
-			toml::ordered_value tbl = gpp::uoparse(dictPath);
+			toml::ordered_value tbl = gpp::uoparseToml(dictPath);
 			if (!tbl["normalDict"].is_array()) {
 				return result;
 			}

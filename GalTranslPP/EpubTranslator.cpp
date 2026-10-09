@@ -25,7 +25,7 @@ void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, 
         EpubTextNodeInfo info;
         info.offset = node->v.text.start_pos.offset;
         info.length = textView.length();
-        sentences.push_back({ std::string(textView), info });
+        sentences.emplace_back(textView, info);
         return;
     }
 
@@ -34,7 +34,7 @@ void extractTextNodes(const GumboNode* node, std::vector<std::pair<std::string, 
     }
 
     const GumboVector* children = &node->v.element.children;
-    for (unsigned int i = 0; i < children->length; ++i) {
+    for (unsigned int i = 0; i < children->length; ++i){
         extractTextNodes((GumboNode*)children->data[i], sentences);
     }
 }
@@ -64,12 +64,12 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
 void EpubTranslator::epubInit()
 {
     try {
-        const auto projectConfig = gpp::uparse(m_projectDir / L"Config.toml");
-        const auto pluginConfig = gpp::uparse(filePluginConfigPath / L"Epub.toml");
+        const auto projectConfig = gpp::uparseToml(m_projectDir / L"Config.toml");
+        const auto pluginConfig = gpp::uparseToml(filePluginConfigPath / L"Epub.toml");
 
-        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.Epub.bilingualOutput");
-        m_originalTextColor = parseToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.originalTextColor");
-        m_originalTextScale = std::to_string(parseToml<double>(projectConfig, pluginConfig, "plugins.Epub.originalTextScale"));
+        m_bilingualOutput = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.Epub.bilingualOutput");
+        m_originalTextColor = parsePluginToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.originalTextColor");
+        m_originalTextScale = std::to_string(parsePluginToml<double>(projectConfig, pluginConfig, "plugins.Epub.originalTextScale"));
 
         auto readRegexArr = [](const toml::array& regexArr, std::vector<RegexPattern>& patterns)
             {
@@ -123,7 +123,7 @@ void EpubTranslator::epubInit()
                         }
                     }
                     else {
-                        const std::string& regexRep = toml::find_or(regexTbl, "rep", "");
+                        const std::string regexRep = toml::find_or(regexTbl, "rep", "");
                         regexPattern.rep->setReplaceWith(regexRep);
                     }
 
@@ -131,9 +131,9 @@ void EpubTranslator::epubInit()
                 }
             };
 
-        const auto& preRegexArr = parseToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.preprocRegex");
+        const auto& preRegexArr = parsePluginToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.preprocRegex");
         readRegexArr(preRegexArr, m_preRegexPatterns);
-        const auto& postRegexArr = parseToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.postprocRegex");
+        const auto& postRegexArr = parsePluginToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.postprocRegex");
         readRegexArr(postRegexArr, m_postRegexPatterns);
     }
     catch (const toml::exception& e) {
@@ -181,7 +181,7 @@ void EpubTranslator::epubBeforeRun()
                     content = reg.rep->nreplace(jpc::MatchEvaluator([&](const jpc::NumSub& m1, void*, void*)
                         {
                             std::string result;
-                            for (size_t i = 1; i < m1.size(); i++) {
+                            for (size_t i = 1; i < m1.size(); ++i) {
                                 std::string groupStr = m1[i];
                                 const auto [first, last] = reg.callbackPatterns.equal_range((int)i);
                                 for (auto it = first; it != last; ++it) {
@@ -219,7 +219,7 @@ void EpubTranslator::epubBeforeRun()
         static constexpr std::array<std::wstring_view, 4> extensionsToProcess{ L".html", L".xhtml", L".htm", L".xhtm" };
         for (const auto& htmlEntry : fs::recursive_directory_iterator(bookUnpackPath)) {
             if (htmlEntry.is_regular_file() &&
-                std::ranges::any_of(extensionsToProcess, [&](const auto& ext)
+                std::ranges::any_of(extensionsToProcess, [&](const std::wstring_view ext)
 	                {
                         return isSameExtension(htmlEntry.path(), ext);
 	                })

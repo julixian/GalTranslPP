@@ -802,7 +802,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	luaTomlTable["parse"] = [](const fs::path& path, lua_State* lua_) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
 		{
 			try {
-				return { LuaToml::tomlValue2LuaRef(gpp::uparse(path), lua_), std::nullopt };
+				return { LuaToml::tomlValue2LuaRef(gpp::uparseToml(path), lua_), std::nullopt };
 			}
 			catch (const std::exception& e) {
 				return { luabridge::LuaRef(lua_), std::string(e.what()) };

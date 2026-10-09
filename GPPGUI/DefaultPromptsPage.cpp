@@ -27,7 +27,7 @@ DefaultPromptsPage::DefaultPromptsPage(QWidget* parent)
 
 	if (fs::exists(defaultPromptPath)) {
 		try {
-			m_promptConfig = gpp::uoparse(defaultPromptPath);
+			m_promptConfig = gpp::uoparseToml(defaultPromptPath);
 		}
 		catch (...) {
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词配置文件不符合 toml 规范"), 3000);

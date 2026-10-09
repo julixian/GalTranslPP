@@ -222,7 +222,7 @@ std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAge
 std::vector<NormalJsonTranslatorTransAgent::LoadedDictionaryEntry> NormalJsonTranslatorTransAgent::loadDictionaryEntries() const {
     std::vector<LoadedDictionaryEntry> entries;
     for (const fs::path& dictPath : m_gptDictionaryPaths) {
-        const auto dictData = gpp::uparse(dictPath);
+        const auto dictData = gpp::uparseToml(dictPath);
         if (!dictData.contains("gptDict")) {
             continue;
         }
@@ -231,8 +231,8 @@ std::vector<NormalJsonTranslatorTransAgent::LoadedDictionaryEntry> NormalJsonTra
             if (!el.contains("org") || !el.contains("rep")) {
                 continue;
             }
-            const std::string sourceTerm = el.at("org").as_string();
-            const std::string targetTerm = el.at("rep").as_string();
+            const std::string& sourceTerm = el.at("org").as_string();
+            const std::string& targetTerm = el.at("rep").as_string();
             const std::string note = toml::find_or(el, "note", "");
             if (sourceTerm.empty() && targetTerm.empty() && note.empty()) {
                 continue;

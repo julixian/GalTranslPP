@@ -37,17 +37,17 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                 }
                 return ret;
             }();
-        const auto pluginConfig = gpp::uparse(pluginConfigPath);
+        const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
 
-        m_skipH = parseToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH", reversePriority);
+        m_skipH = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH", reversePriority);
         if (m_skipH) {
-            const auto& hKeysBase64 = parseToml<std::string>(projectConfig, pluginConfig,
+            const auto& hKeysBase64 = parsePluginToml<std::string>(projectConfig, pluginConfig,
                 "plugins.SkipTrans.hKeys", reversePriority);
             const std::string hKeysStr = base64_decode(hKeysBase64);
             m_hKeys = splitString(hKeysStr, '\n');
         }
 
-        const auto& skipKeys = parseToml<toml::array>(projectConfig, pluginConfig,
+        const auto& skipKeys = parsePluginToml<toml::array>(projectConfig, pluginConfig,
             "plugins.SkipTrans.skipKeys", reversePriority);
         for (const auto& elem : skipKeys) {
             if (elem.is_string()) {

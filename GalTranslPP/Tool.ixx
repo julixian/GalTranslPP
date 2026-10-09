@@ -187,8 +187,8 @@ void extractFilesFromZip(const fs::path& zipPath, const fs::path& outputDir, con
 void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& includePrefixes);
 void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes);
 
-::toml::value uparse(const fs::path& path);
-::toml::ordered_value uoparse(const fs::path& path);
+::toml::value uparseToml(const fs::path& path);
+::toml::ordered_value uoparseToml(const fs::path& path);
 
 json parseJson(const fs::path& path, std::ifstream& ifs);
 json parseJson(const fs::path& path);
@@ -252,16 +252,16 @@ const toml::basic_value<TC>* findValueByPath(const toml::basic_value<TC>& table,
 }
 
 template<typename T, typename TC, typename TC2>
-auto parseToml(const toml::basic_value<TC>& config, const toml::basic_value<TC2>& backup, std::string_view path,
+auto parsePluginToml(const toml::basic_value<TC>& config, const toml::basic_value<TC2>& backup, std::string_view path,
     bool reversePriority = false) -> decltype(auto)
 {
     const std::vector<std::string_view> keyViews = splitStringView(path, '.');
     if (
         keyViews.empty() ||
-        std::ranges::any_of(keyViews, [](const auto& keyView) { return keyView.empty(); })
+        std::ranges::any_of(keyViews, [](const std::string_view keyView) { return keyView.empty(); })
         )
     {
-        throw std::runtime_error(gppTr("parseToml", "无效的 TOML 路径: %1").arg(path).toStdString());
+        throw std::runtime_error(gppTr("parsePluginToml", "无效的 TOML 路径: %1").arg(path).toStdString());
     }
     if (!reversePriority) {
         if (auto pValue = findValueByPath(config, keyViews)) {
@@ -279,7 +279,7 @@ auto parseToml(const toml::basic_value<TC>& config, const toml::basic_value<TC2>
             return toml::get<T>(*pValue);
         }
     }
-    throw std::runtime_error(gppTr("parseToml", "无法在 TOML 中找到值: %1").arg(path).toStdString());
+    throw std::runtime_error(gppTr("parsePluginToml", "无法在 TOML 中找到值: %1").arg(path).toStdString());
 }
 
 template<typename TC, typename T>
@@ -287,7 +287,7 @@ toml::basic_value<TC>& insertToml(toml::basic_value<TC>& table, std::span<const 
 {
     if (
         keyViews.empty() ||
-        std::ranges::any_of(keyViews, [](const auto& keyView) { return keyView.empty(); }) ||
+        std::ranges::any_of(keyViews, [](const std::string_view keyView) { return keyView.empty(); }) ||
         !table.is_table()
         )
     {

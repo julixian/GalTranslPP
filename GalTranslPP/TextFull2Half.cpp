@@ -30,14 +30,14 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
                 }
                 return ret;
             }();
-        const auto pluginConfig = gpp::uparse(pluginConfigPath);
+        const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
 
-        m_replacePunctuation = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.replacePunctuation", reversePriority);
-        m_reverseConversion = parseToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.reverseConversion", reversePriority);
+        m_replacePunctuation = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.replacePunctuation", reversePriority);
+        m_reverseConversion = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.reverseConversion", reversePriority);
 
         createConversionMap();
 
-        const std::string excludeChars = parseToml<std::string>(projectConfig, pluginConfig,
+        const std::string excludeChars = parsePluginToml<std::string>(projectConfig, pluginConfig,
             "plugins.TextFull2Half.excludeChars", reversePriority);
         {
             auto begin = excludeChars.begin();
@@ -48,7 +48,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
         }
 
         const auto notConvertRegStrs =
-            parseToml<std::vector<std::string>>(projectConfig, pluginConfig, "plugins.TextFull2Half.notConvertRegs", reversePriority);
+            parsePluginToml<std::vector<std::string>>(projectConfig, pluginConfig, "plugins.TextFull2Half.notConvertRegs", reversePriority);
         for (const auto& regStr : notConvertRegStrs) {
             jpc::Regex reg(regStr, defaultRegCompileModifier);
             if (!reg) {
@@ -192,8 +192,8 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
             }
         }
         const std::string notConvertedChars = std::views::iota(0uz, notConvertFlags.size())
-                | std::views::filter([&](const auto& index){ return notConvertFlags[index] != 0;})
-    	        | std::views::transform([&](const auto& index) { return text[index]; }) | std::ranges::to<std::string>();
+                | std::views::filter([&](const auto index){ return notConvertFlags[index] != 0;})
+    	        | std::views::transform([&](const auto index) { return text[index]; }) | std::ranges::to<std::string>();
         if (!notConvertedChars.empty()) {
             se->otherinfo[m_notConvertedCharsKey] = notConvertedChars;
         }
@@ -201,8 +201,12 @@ std::string TextFull2Half::convertText(const std::string& text, Sentence* se, bo
 
     while (i < length) {
 
-        if (jumpTag && (text[i] == '<' || text[i] == '(')) {
-            std::string_view sv = std::string_view(text).substr(i);
+        if (jumpTag &&
+            (text[i] == '<' || (i == 0 && text[i] == '('))
+            )
+        {
+            std::string_view sv = text;
+            sv.remove_prefix(i);
             if (sv.starts_with("<tab>")) {
                 result.append("<tab>");
                 i += 5;

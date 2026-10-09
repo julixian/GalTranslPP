@@ -33,11 +33,11 @@ PDFTranslator::PDFTranslator(const fs::path& projectDir, const std::shared_ptr<I
 void PDFTranslator::pdfInit()
 {
     try {
-        const auto projectConfig = gpp::uparse(m_projectDir / L"Config.toml");
-        const auto pluginConfig = gpp::uparse(filePluginConfigPath / L"PDF.toml");
+        const auto projectConfig = gpp::uparseToml(m_projectDir / L"Config.toml");
+        const auto pluginConfig = gpp::uparseToml(filePluginConfigPath / L"PDF.toml");
 
-        m_bilingualOutput = parseToml<bool>(projectConfig, pluginConfig, "plugins.PDF.bilingualOutput");
-        m_babeldocLangOut = parseToml<std::string>(projectConfig, pluginConfig, "plugins.PDF.babeldocLangOut");
+        m_bilingualOutput = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.PDF.bilingualOutput");
+        m_babeldocLangOut = parsePluginToml<std::string>(projectConfig, pluginConfig, "plugins.PDF.babeldocLangOut");
 
         checkPDFDependency(m_logger);
     }

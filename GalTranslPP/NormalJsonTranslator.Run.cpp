@@ -244,7 +244,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         toml::value orgNameTable = toml::table{};
         try {
             if (fs::exists(m_nameTablePath)) {
-                orgNameTable = gpp::uparse(m_nameTablePath);
+                orgNameTable = gpp::uparseToml(m_nameTablePath);
             }
         }
         catch (...) {

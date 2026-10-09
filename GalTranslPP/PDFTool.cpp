@@ -23,7 +23,7 @@ std::tuple<bool, std::string> extractPDF(const fs::path& pdfPath, const fs::path
                 (wide2Ascii(pdfPath), wide2Ascii(jsonPath), babeldocLangOut, showProgress).cast<std::tuple<bool, std::string>>();
         };
     PythonMainInterpreterManager::getInstance().submitTask(std::move(extractTaskFunc)).get();
-    return std::make_tuple(success, message);
+    return std::make_tuple(success, std::move(message));
 }
 
 
@@ -40,7 +40,7 @@ std::tuple<bool, std::string> reinjectPDF(const fs::path& orgPDFPath, const fs::
                     babeldocLangOut, bilingualOutput, showProgress).cast<std::tuple<bool, std::string>>();
         };
     PythonMainInterpreterManager::getInstance().submitTask(std::move(reinjectTaskFunc)).get();
-    return std::make_tuple(success, message);
+    return std::make_tuple(success, std::move(message));
 }
 
 void checkPDFDependency(const std::shared_ptr<spdlog::logger>& logger) {

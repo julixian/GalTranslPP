@@ -38,7 +38,7 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::order
     setTitleVisible(false);
 
     try {
-        m_projectConfig = gpp::uoparse(m_projectDir / L"Config.toml");
+        m_projectConfig = gpp::uoparseToml(m_projectDir / L"Config.toml");
     }
     catch (...) {
         m_projectConfig = toml::ordered_table{};
@@ -315,7 +315,7 @@ void ProjectSettingsPage::onRefreshProjectConfig()
         return;
     }
     try {
-        m_projectConfig = gpp::uoparse(m_projectDir / L"Config.toml");
+        m_projectConfig = gpp::uoparseToml(m_projectDir / L"Config.toml");
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft,

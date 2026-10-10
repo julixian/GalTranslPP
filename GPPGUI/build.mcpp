@@ -5,24 +5,16 @@ import gpp.build;
 
 int main() {
     return gpp::run_build_script([] {
-        gpp::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::configure_vcpkg("GalTranslPP_GUI");
+        gpp::win::configure_executable_link_options();
+        const auto vcpkg_directory = gpp::win::configure_vcpkg("GalTranslPP_GUI");
 
-        auto qt_options = gpp::make_qt_options({"Core", "Gui", "Network", "Widgets"});
+        auto qt_options = gpp::win::make_qt_options({"Core", "Gui", "Network", "Widgets"});
         qt_options.resources = {"GPPGUI.qrc"};
-        const auto translation_file = gpp::configure_translation(qt_options, "qt_gppgui_en.ts");
-        // 只扫描手写源码，避免把 VS 的 x64/Release/qt 生成文件交给 lupdate。
-        for (const char* glob : {"*.cpp", "*.h", "*.hpp"}) mcpp::rerun_if_changed_glob(glob);
-        for (const auto& entry : std::filesystem::directory_iterator(mcpp::manifest_dir())) {
-            const auto extension = entry.path().extension();
-            if (entry.is_regular_file() && (extension == ".cpp" || extension == ".h" || extension == ".hpp"))
-                qt_options.i18n.sources.push_back(entry.path().generic_string());
-        }
-        std::ranges::sort(qt_options.i18n.sources);
-        if (!gpp::rules::qt::compile(qt_options)) return 1;
-        const auto ela_widget_tools = gpp::use_ela_widget_tools(qt_options);
+        const auto translation_file = gpp::win::configure_translation(qt_options, "qt_gppgui_en.ts");
+        gpp::rules::qt::use(qt_options);
+        const auto ela_widget_tools = gpp::win::use_ela_widget_tools(qt_options);
 
-        gpp::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);
+        gpp::win::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);
         publisher.additional_runtime_directories.emplace_back(ela_widget_tools);
         publisher.publish_release("GPPGUI", translation_file);
         return 0;

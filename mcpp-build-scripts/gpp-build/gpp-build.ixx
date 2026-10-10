@@ -1,5 +1,3 @@
-// gpp.build：供各项目的 build.mcpp 导入，配置依赖、Qt 代码生成与 Release 布局。
-// Qt 插件负责编译及项目翻译生成；发布动作将 QM 复制到 Release。
 export module gpp.build;
 
 import std;
@@ -12,6 +10,7 @@ import gpp.rules.qt;
 export namespace gpp {
 
 namespace fs = std::filesystem;
+namespace win {
 
 // ===== 本机工具路径配置 =====
 // 在 R"(...)" 的括号内填写绝对路径，Windows 反斜杠无需转义。
@@ -26,7 +25,6 @@ fs::path workspace_directory() {
     // 通过宿主模块的位置定位工作区，不依赖调用它的项目目录。
     return fs::path(__FILE__).parent_path().parent_path().parent_path();
 }
-bool is_windows_target() { return std::string_view(mcpp::target_os()) == "windows"; }
 bool is_release_profile() {
     const std::string_view profile = mcpp::profile();
     return profile == "release" || profile == "fast-release";
@@ -43,19 +41,8 @@ std::string read_first_line(const fs::path& file) {
     return text.substr(first, text.find_last_not_of(" \t\r\n") - first + 1);
 }
 
-fs::path qt_directory() {
-    if (qt_root.empty() || !qt_root.is_absolute())
-        throw std::runtime_error("请在 gpp-build.ixx 顶部的 qt_root 中填写 Qt SDK 的绝对路径");
-    const auto directory = qt_root.lexically_normal();
-    if (!fs::is_directory(directory / "include") || !fs::is_directory(directory / "lib"))
-        throw std::runtime_error("Qt SDK 路径无效：" + directory.generic_string());
-    return directory;
-}
-
-// Windows 系统库由各成员的 target.windows.build 声明。
-// 这里处理按 profile 变化的 PE 链接选项，不把 /DEBUG 等传到 ELF/Mach-O 链接器。
+// Windows 系统库在 mcpp.toml 中声明；这里只处理随 profile 变化的链接选项。
 void configure_executable_link_options() {
-    if (!is_windows_target() || std::string_view(mcpp::target_env()) != "msvc") return;
     const bool uses_msvc_driver = std::string_view(mcpp::compiler()) == "msvc";
     auto add_linker_option = [uses_msvc_driver](const char* option) {
         mcpp::link_flag((uses_msvc_driver ? std::string(option) : "-Wl," + std::string(option)).c_str());
@@ -73,28 +60,19 @@ constexpr const char* windows_triplet = "gpp-x64-windows-release";
 
 gpp::deps::vcpkg::prefix configure_vcpkg(const char* link_target = nullptr) {
     gpp::deps::vcpkg::options options;
-    options.vcpkg_root = vcpkg_root.generic_string();
-    if (is_windows_target()) {
-        if (std::string_view(mcpp::target_arch()) != "x86_64" ||
-            std::string_view(mcpp::target_env()) != "msvc")
-            throw std::runtime_error("GPP 自定义 triplet 当前只配置了 Windows x64 / MSVC ABI");
-        options.triplet = windows_triplet;
-        options.prefer_clang_cl = true;
-        // 空标记文件控制 clang-cl 依赖的 LTO；MSVC 忽略它，创建或删除文件都会重新配置依赖。
-        const auto lto_marker = workspace_directory() / "vcpkg-scripts" / ".vcpkg-use-lto";
-        mcpp::rerun_if_changed(lto_marker.generic_string().c_str());
-        options.lto = fs::is_regular_file(lto_marker);
-    }
-    options.manifest_root = workspace_directory().generic_string();
-    options.install_root = (workspace_directory() / "vcpkg_installed").generic_string();
+    options.vcpkg_root = vcpkg_root;
+    options.triplet = windows_triplet;
+    // 空标记文件只控制 clang-cl 依赖的 LTO。
+    const auto lto_marker = workspace_directory() / "vcpkg-scripts" / ".vcpkg-use-lto";
+    mcpp::rerun_if_changed(lto_marker.generic_string().c_str());
+    options.lto = fs::is_regular_file(lto_marker);
+    options.manifest_root = workspace_directory();
     const auto dependencies = gpp::deps::vcpkg::use(options);
-    if (!dependencies) throw std::runtime_error("vcpkg 依赖配置失败");
-    if (link_target && is_windows_target()) {
+    mcpp::include_dir(dependencies.include.c_str());
+    if (link_target) {
         // 安装完成后收集所有库，不再维护库名列表；只加入最终程序的链接输入。
-        const fs::path collector = mcpp::dep_bin("gpp.vcpkg-link-libs", "vcpkg_link_libs");
-        const auto librarian = std::string_view(mcpp::compiler()) == "msvc"
-            ? fs::path(mcpp::abi_tool("ar"))
-            : fs::path(mcpp::tool("cxx")).parent_path() / "llvm-lib.exe";
+        const fs::path collector = mcpp::dep_bin("gpp.vcpkg-link-libs", "vcpkg-link-libs");
+        const fs::path librarian = dependencies.librarian;
         const auto output = fs::path(mcpp::out_dir()) / "vcpkg-libs.lib";
         mcpp::action action;
         action.id = "vcpkg-link-libs";
@@ -112,7 +90,6 @@ gpp::deps::vcpkg::prefix configure_vcpkg(const char* link_target = nullptr) {
 }
 
 void link_python_libraries() {
-    if (!is_windows_target()) return; // 仓库自带的是 Windows Python 导入库。
     const auto python_library_directory = workspace_directory() / "3rdParty" / "pybind11" / "bin";
     for (const char* library_name : {"python3", "python312"})
         mcpp::link_flag((python_library_directory / (std::string(library_name) + ".lib")).generic_string().c_str());
@@ -120,21 +97,18 @@ void link_python_libraries() {
 
 gpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
     gpp::rules::qt::options qt_options;
-    qt_options.root = qt_directory().generic_string();
-    // 各 profile 的 Ninja 依赖记录独立，生成文件也必须独立，避免相互覆盖时间戳。
-    qt_options.out_dir = (fs::path(mcpp::out_dir()) / mcpp::profile()).generic_string();
+    qt_options.root = qt_root;
     qt_options.modules = std::move(modules);
-    qt_options.i18n.qt_languages = {}; // 不生成 Qt 自带的 qt_zh_CN.qm 等翻译。
     return qt_options;
 }
 
-// 在 compile(qt_options) 前配置；插件负责 lupdate/lrelease，返回供 Release 发布使用的 QM 路径。
+// 在 qt::use(qt_options) 前配置；插件负责 lupdate/lrelease，返回供 Release 发布使用的 QM 路径。
 fs::path configure_translation(gpp::rules::qt::options& qt_options, const char* translation_source_filename) {
     const fs::path project_directory = mcpp::manifest_dir();
     qt_options.i18n.ts = {translation_source_filename};
     qt_options.i18n.update_sources = true;
     qt_options.i18n.tr_function_alias = {"translate+=gppTr"};
-    qt_options.i18n.out_dir = project_directory.generic_string();
+    qt_options.i18n.out_dir = project_directory;
     return project_directory / (fs::path(translation_source_filename).stem().string() + ".qm");
 }
 
@@ -143,7 +117,7 @@ fs::path use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
     const auto install = source / "target" / "mcpp-install" / mcpp::target() / mcpp::profile();
     const auto source_directory = source.generic_string();
     const auto install_directory = install.generic_string();
-    const auto stamp = (fs::path(mcpp::out_dir()) / mcpp::profile() / "ela-build.stamp").generic_string();
+    const auto stamp = (fs::path(mcpp::out_dir()) / "ela-build.stamp").generic_string();
     // Ela 独立于 GPP 的依赖图，在自己的目录下构建；Qt、编译器和 profile 沿用本次 GPP 构建。
     mcpp::action build;
     build.id = "ela-mcpp-build";
@@ -153,7 +127,7 @@ fs::path use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
         .arg("-p").arg("ElaWidgetTools")
         .arg("--toolchain").arg(("path:" + std::string(mcpp::toolchain_dir())).c_str())
         .arg("--profile").arg(mcpp::profile())
-        .cwd(source_directory.c_str()).env("QT_ROOT_DIR", qt_options.root.c_str())
+        .cwd(source_directory.c_str()).env("QT_ROOT_DIR", qt_options.root.generic_string().c_str())
         .env("ELAWIDGETTOOLS_INSTALL_DIR", install_directory.c_str())
         .output(stamp.c_str()).output_dir(install_directory.c_str());
     mcpp::deps::watch_tree(source / "ElaWidgetTools");
@@ -169,7 +143,7 @@ fs::path use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
     mcpp::rerun_if_changed(lock.generic_string().c_str());
     std::ifstream lock_input(lock, std::ios::binary);
     const std::string lock_content{std::istreambuf_iterator<char>(lock_input), {}};
-    const auto lock_snapshot = fs::path(mcpp::out_dir()) / mcpp::profile() / "ela-dependencies.lock";
+    const auto lock_snapshot = fs::path(mcpp::out_dir()) / "ela-dependencies.lock";
     fs::create_directories(lock_snapshot.parent_path());
     mcpp::plugins::fs::write_if_changed(lock_snapshot, lock_content);
     build.input(lock_snapshot.generic_string().c_str());
@@ -181,7 +155,7 @@ fs::path use_ela_widget_tools(const gpp::rules::qt::options& qt_options) {
 }
 
 // 自定义 Release 发布不读取可能尚未部署完成的 bin 目录。
-// runtime_stage 从 vcpkg/Python/Ela 源目录收集非 Qt DLL；Qt 由用户另外部署。
+// runtime-stage 从 vcpkg/Python/Ela 源目录收集非 Qt DLL；Qt 由用户另外部署。
 struct release_publisher {
     fs::path release_directory = workspace_directory() / "Release";
     fs::path vcpkg_installation_directory;
@@ -228,14 +202,14 @@ struct release_publisher {
         if (track_source) copy_action.input(source_file.c_str());
         // Release 由多个 profile 共用；每次检查内容，不能依赖目标文件的新旧判断当前配置。
         // 此输出有意不生成，让 Ninja 调度发布检查；stage 在内容相同时不重写实际产物。
-        const auto check = (fs::path(mcpp::out_dir()) / mcpp::profile() / (action_id + ".check")).generic_string();
+        const auto check = (fs::path(mcpp::out_dir()) / (action_id + ".check")).generic_string();
         copy_action.output(output_file.c_str()).output(check.c_str()).submit();
     }
 
     void copy_runtime_libraries(std::string_view member, const fs::path& destination_directory,
                                 std::string_view destination_name) {
-        const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
-        if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
+        const std::string runtimeStageExecutable = mcpp::dep_bin("gpp.runtime-stage", "runtime-stage");
+        if (runtimeStageExecutable.empty()) throw std::runtime_error("未声明 runtime-stage 宿主工具");
         const auto manifest_file = (release_directory / ".mcpp-runtime" /
             (std::string(member) + "-" + std::string(destination_name) + ".txt")).generic_string();
         const auto dependency_file = manifest_file + ".d";
@@ -244,13 +218,13 @@ struct release_publisher {
         copy_action.id = action_id.c_str();
         copy_action.role = mcpp::roles::artifact;
         copy_action.depfile = dependency_file.c_str();
-        copy_action.arg(runtime_stage_executable.c_str())
+        copy_action.arg(runtimeStageExecutable.c_str())
             .arg("--exe").arg(executable_file.c_str())
             .arg("--dest").arg(destination_directory.generic_string().c_str())
             .arg("--manifest").arg(manifest_file.c_str())
             .arg("--depfile").arg(dependency_file.c_str())
             .input(executable_file.c_str())
-            .input(runtime_stage_executable.c_str())
+            .input(runtimeStageExecutable.c_str())
             .output(manifest_file.c_str());
         std::vector<fs::path> runtime_search_directories = {
             vcpkg_installation_directory / "bin",
@@ -274,14 +248,14 @@ struct release_publisher {
             copy_action.arg("--include-dll").arg("python312.dll");
         }
         // 运行库同样可能被其他 profile 覆盖，发布时重新核对，内容相同则不复制。
-        const auto check = (fs::path(mcpp::out_dir()) / mcpp::profile() / (action_id + ".check")).generic_string();
+        const auto check = (fs::path(mcpp::out_dir()) / (action_id + ".check")).generic_string();
         copy_action.output(check.c_str()).submit();
     }
 
     void copy_opencc_share(std::string_view member, std::string_view destination_name,
                            const fs::path& release_destination_directory) {
-        const std::string runtime_stage_executable = mcpp::dep_bin("gpp.runtime-stage", "runtime_stage");
-        if (runtime_stage_executable.empty()) throw std::runtime_error("未声明 runtime_stage 宿主工具");
+        const std::string runtimeStageExecutable = mcpp::dep_bin("gpp.runtime-stage", "runtime-stage");
+        if (runtimeStageExecutable.empty()) throw std::runtime_error("未声明 runtime-stage 宿主工具");
         const fs::path source_directory = vcpkg_installation_directory / "share" / "opencc";
         const fs::path destination_directory = release_destination_directory / "BaseConfig" / "opencc";
         // Windows 下 Ninja 不根据目录时间戳检测新文件，由构建脚本监视文件集合。
@@ -297,14 +271,14 @@ struct release_publisher {
         copy_action.id = action_id.c_str();
         copy_action.role = mcpp::roles::artifact;
         copy_action.depfile = dependency_path.c_str();
-        copy_action.arg(runtime_stage_executable.c_str()).arg("--copy-tree")
+        copy_action.arg(runtimeStageExecutable.c_str()).arg("--copy-tree")
             .arg("--source").arg(source_directory.generic_string().c_str())
             .arg("--dest").arg(destination_directory.generic_string().c_str())
             .arg("--manifest").arg(manifest_path.c_str())
             .arg("--depfile").arg(dependency_path.c_str())
             .input(executable_file.c_str())
             .input(vcpkg_install_stamp.generic_string().c_str())
-            .input(runtime_stage_executable.c_str())
+            .input(runtimeStageExecutable.c_str())
             .output(manifest_path.c_str())
             .output(destination_directory.generic_string().c_str());
         // 新增文件在重新配置后直接成为输入，内容更新和目标文件缺失另由 depfile 追踪。
@@ -319,7 +293,7 @@ struct release_publisher {
     }
 
     void publish_release(std::string_view member, const fs::path& translation_file) {
-        if (!is_windows_target() || !is_release_profile()) return;
+        if (!is_release_profile()) return;
         const bool is_cli = member == "GPPCLI";
         const bool is_gui = member == "GPPGUI";
         const auto package_release_directory = release_directory / (is_cli ? "GPPCLI" : "GPPGUI");
@@ -356,14 +330,25 @@ struct release_publisher {
 
 template<class Function>
 int run_build_script(Function configure) {
+    if (is_release_profile()) mcpp::define("NDEBUG");
+    return configure();
+}
+} // namespace win
+
+// 只在入口选择平台；win 内部可以直接使用 Windows 路径、库和发布规则。
+template<class Function>
+int run_build_script(Function configure) {
     try {
-        if (is_release_profile()) mcpp::define("NDEBUG");
-        return configure();
+        if (std::string_view(mcpp::host()).contains("windows") &&
+            std::string_view(mcpp::target_os()) == "windows" &&
+            std::string_view(mcpp::target_env()) == "msvc" &&
+            std::string_view(mcpp::target_arch()) == "x86_64")
+            return win::run_build_script(std::move(configure));
+        throw std::runtime_error("当前项目只配置了 Windows 本机构建");
     }
     catch (const std::exception& error) {
-        std::cerr << "GPP build: " << error.what() << '\n';
+        std::cerr << "GalTranslPP build: " << error.what() << '\n';
         return 1;
     }
 }
-
 } // namespace gpp

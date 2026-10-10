@@ -6,16 +6,6 @@ description = "GalTransl++ core library"
 [build-dependencies]
 "gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
 
-[profile.release]
-opt = 3
-debug = true
-lto = true
-
-[profile.fast-release]
-opt = 0
-debug = true
-lto = false
-
 [build]
 default-profile = "release"
 sources = [
@@ -42,13 +32,8 @@ include_dirs = [
 ]
 
 [target.windows.build]
+defines = ["_LIB"]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-
-defines = ["UNICODE", "_UNICODE", "_LIB", "_CRT_SECURE_NO_WARNINGS",
-  "WIN32_LEAN_AND_MEAN", "NOMINMAX",
-  # 详见 https://github.com/microsoft/STL/issues/6121，https://developercommunity.visualstudio.com/t/11148844
-  "_RANGES_",
-  "SPDLOG_WCHAR_FILENAMES"]
 ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi"]
 
 [targets.GalTranslPP]

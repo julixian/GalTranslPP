@@ -8,6 +8,6 @@ license = "LicenseRef-GalTranslPP"
 [build]
 sources = []
 
-[targets.vcpkg_link_libs]
+[targets.vcpkg-link-libs]
 kind = "bin"
 main = "main.cpp"

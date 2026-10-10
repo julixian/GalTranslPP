@@ -2,16 +2,6 @@
 namespace = "gpp"
 name = "version"
 
-[profile.release]
-opt = 3
-debug = true
-lto = true
-
-[profile.fast-release]
-opt = 0
-debug = true
-lto = false
-
 [build]
 default-profile = "release"
 sources = [
@@ -22,10 +12,7 @@ sources = [
 module_extensions = [".ixx"]
 
 [target.windows.build]
-defines = ["UNICODE", "_UNICODE", "_LIB", "_CRT_SECURE_NO_WARNINGS",
-  "WIN32_LEAN_AND_MEAN", "NOMINMAX",
-  "_RANGES_",
-  "SPDLOG_WCHAR_FILENAMES"]
+defines = ["_LIB"]
 
 [targets.GPPVersion]
 kind = "lib"

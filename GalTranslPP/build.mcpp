@@ -5,11 +5,11 @@ import gpp.build;
 
 int main() {
     return gpp::run_build_script([] {
-        gpp::configure_vcpkg();
-        gpp::link_python_libraries();
-        auto qt_options = gpp::make_qt_options({"Core"});
-        gpp::configure_translation(qt_options, "qt_gpp_en.ts");
-        if (!gpp::rules::qt::compile(qt_options)) return 1;
+        gpp::win::configure_vcpkg();
+        gpp::win::link_python_libraries();
+        auto qt_options = gpp::win::make_qt_options({"Core"});
+        gpp::win::configure_translation(qt_options, "qt_gpp_en.ts");
+        gpp::rules::qt::use(qt_options);
         return 0;
     });
 }

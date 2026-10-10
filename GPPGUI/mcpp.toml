@@ -11,18 +11,8 @@ name = "gui"
 "gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
 
 [target.windows.build-dependencies]
-"gpp.vcpkg-link-libs" = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg_link_libs"] }
-"gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime_stage"] }
-
-[profile.release]
-opt = 3
-debug = true
-lto = true
-
-[profile.fast-release]
-opt = 0
-debug = true
-lto = false
+"gpp.vcpkg-link-libs" = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
+"gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
 
 [build]
 default-profile = "release"
@@ -35,17 +25,12 @@ sources = [
 ]
 
 [target.windows.build]
-defines = ["UNICODE", "_UNICODE",
-  "WIN32_LEAN_AND_MEAN", "NOMINMAX", "_CRT_SECURE_NO_WARNINGS",
-  "_RANGES_",
-  "SPDLOG_WCHAR_FILENAMES"]
 ldflags = ["-ldbghelp"]
+
+[resources]
+files = ["GPPGUI.rc"]
 
 [targets.GalTranslPP_GUI]
 kind = "bin"
 main = "GPPGUI.cpp"
 windows_subsystem = "windows"
-
-[resources]
-files = ["GPPGUI.rc"]
-extra-inputs = ["GPPGUI.manifest", "Resource/images/julixian_s.ico"]

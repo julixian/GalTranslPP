@@ -230,6 +230,17 @@ void CommonSettingsPage::setupUi()
 	agentAdvancedLayout->addWidget(agentAdvancedToggle);
 	agentSettingsDrawerArea->addDrawer(agentAdvancedArea);
 
+	ElaScrollPageArea* agentPythonArea = new ElaScrollPageArea(agentSettingsDrawerArea);
+	QHBoxLayout* agentPythonLayout = new QHBoxLayout(agentPythonArea);
+	agentPythonLayout->addWidget(new GppDoubleText(tr("允许运行 Python 代码"), 16,
+		tr("仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！"), 10,
+		tr("只读要求由工具提示约束，不限制进程写入；每次最多运行 120 秒，每路输出最多返回 64 KiB"), agentPythonArea));
+	agentPythonLayout->addStretch();
+	ElaToggleSwitch* agentPythonToggle = new ElaToggleSwitch(agentPythonArea);
+	agentPythonToggle->setIsToggled(toml::find_or(m_projectConfig, "common", "agent", "allowPython", false));
+	agentPythonLayout->addWidget(agentPythonToggle);
+	agentSettingsDrawerArea->addDrawer(agentPythonArea);
+
 	const int agentMaxTurnsPerChunk = toml::find_or(m_projectConfig, "common", "agent", "maxTurnsPerChunk", 20);
 	ElaScrollPageArea* agentMaxTurnsArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentMaxTurnsLayout = new QHBoxLayout(agentMaxTurnsArea);
@@ -666,6 +677,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "GUIConfig.commonRepeatedBlockExpanded", repeatedBlockDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.agent.enabled", agentEnabledToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.advancedEnabled", agentAdvancedToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.agent.allowPython", agentPythonToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.maxTurnsPerChunk", agentMaxTurnsSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.compactContextThresholdBytes", agentCompactThresholdSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.searchResultLimit", agentSearchResultLimitSpinBox->value());

@@ -249,6 +249,8 @@
     <ClCompile Include="NNetLanguageIdentifierWrapper.ixx" />
     <ClCompile Include="NormalJsonTranslator.TransAgent.Advanced.cpp" />
     <ClCompile Include="NormalJsonTranslator.TransAgent.Tools.cpp" />
+    <ClCompile Include="AgentPythonExecutor.cpp" />
+    <ClCompile Include="AgentPythonExecutor.ixx" />
     <ClCompile Include="NormalJsonTranslatorHelperTool.cpp" />
     <ClCompile Include="NornalJsonTranslatorHelperTool.ixx" />
     <ClCompile Include="NLPTool.cpp" />

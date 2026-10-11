@@ -38,7 +38,7 @@
         <translation>Api settings</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+65"/>
         <source>Api 使用策略</source>
         <translation>Api strategy</translation>
     </message>
@@ -58,7 +58,7 @@
         <translation>in seconds</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-79"/>
         <source>增加新 Api</source>
         <translation>Add new Api</translation>
     </message>
@@ -73,7 +73,7 @@
         <translation>List layout</translation>
     </message>
     <message>
-        <location line="+149"/>
+        <location line="+164"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -98,13 +98,13 @@
         <translation>Protocol</translation>
     </message>
     <message>
-        <location line="+47"/>
-        <location line="+613"/>
+        <location line="+50"/>
+        <location line="+616"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="-606"/>
+        <location line="-609"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -121,13 +121,13 @@
     <message>
         <location line="+4"/>
         <location line="+1"/>
-        <location line="+549"/>
-        <location line="+21"/>
+        <location line="+560"/>
+        <location line="+23"/>
         <source>自定义 Api</source>
         <translation>Custom API</translation>
     </message>
     <message>
-        <location line="-552"/>
+        <location line="-565"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -329,7 +329,7 @@ sk-...</translation>
         <translation>Advanced settings</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+34"/>
         <source>请求类型: 获取模型列表</source>
         <translation>Request type: fetch model list</translation>
     </message>
@@ -403,7 +403,7 @@ sk-...</translation>
         <translation>Error details:</translation>
     </message>
     <message>
-        <location line="+219"/>
+        <location line="+220"/>
         <source>拖动排序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -418,17 +418,17 @@ sk-...</translation>
         <translation>Duplicate</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+6"/>
         <source>删除模型</source>
         <translation>Delete model</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+14"/>
         <source>Api 详细配置 — %1</source>
         <translation>API Settings — %1</translation>
     </message>
     <message>
-        <location line="+142"/>
+        <location line="+164"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -449,7 +449,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+5"/>
-        <source>确定删除“%1”吗？</source>
+        <source>确定删除『%1』吗？</source>
+        <oldsource>确定删除“%1”吗？</oldsource>
         <translation>Delete “%1”?</translation>
     </message>
     <message>
@@ -461,7 +462,7 @@ sk-...</translation>
         <translation type="vanished">Delete</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+32"/>
         <source>%1（副本）</source>
         <translation>%1 (copy)</translation>
     </message>
@@ -470,7 +471,7 @@ sk-...</translation>
         <translation type="vanished">(empty)</translation>
     </message>
     <message>
-        <location line="-370"/>
+        <location line="-408"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
@@ -602,7 +603,7 @@ sk-...</translation>
         <location line="+1"/>
         <source>增加启动速度，但第一次进入某个项目时会卡一下初始化</source>
         <oldsource>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</oldsource>
-        <translation type="unfinished">Faster startup; first project open may pause briefly</translation>
+        <translation>Faster startup; initializing each project for the first time may cause a brief pause</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -1343,7 +1344,7 @@ sk-...</translation>
         <location line="+1"/>
         <source>仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
         <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</oldsource>
-        <translation type="unfinished">Currently applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
+        <translation>Applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1359,13 +1360,29 @@ sk-...</translation>
         <location line="+1"/>
         <source>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议；单 worker 正常情况下不会轮询 Api</source>
         <oldsource>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议</oldsource>
-        <translation type="unfinished">Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol.</translation>
+        <translation>Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol. Each worker normally keeps using the same API.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错</source>
         <oldsource>仅 ForGalTsv、ForNovelTsv 生效，各协议能力在 Api 设置中配置</oldsource>
         <translation>Configure protocol capabilities in API settings. Check model and endpoint support to avoid request errors.</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>允许运行 Python 代码</source>
+        <translation>Allow running Python code</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！</source>
+        <oldsource>仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据</oldsource>
+        <translation>Only applies to advanced Agent. Uses the current Python environment to read files, search and analyze data; less capable models might eat your computer!</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>只读要求由工具提示约束，不限制进程写入；每次最多运行 120 秒，每路输出最多返回 64 KiB</source>
+        <translation>Read-only behavior is requested by the tool instructions; file writes are not restricted. Each run lasts at most 120 seconds and returns at most 64 KiB per output stream.</translation>
     </message>
     <message>
         <location line="+10"/>
@@ -1470,7 +1487,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-510"/>
+        <location line="-521"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1501,7 +1518,7 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+174"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
     </message>
@@ -1521,7 +1538,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-353"/>
+        <location line="-364"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1552,7 +1569,7 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+185"/>
+        <location line="+196"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1677,12 +1694,12 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+110"/>
+        <location line="+111"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-149"/>
+        <location line="-150"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1704,7 +1721,7 @@ sk-...</translation>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+76"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

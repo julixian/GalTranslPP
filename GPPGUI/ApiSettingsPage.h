@@ -19,7 +19,7 @@ class ApiSettingsPage : public BasePage
 
 public:
     explicit ApiSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
-	~ApiSettingsPage() override;
+    ~ApiSettingsPage() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private Q_SLOTS:

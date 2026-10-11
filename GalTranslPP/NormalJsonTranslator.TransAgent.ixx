@@ -86,7 +86,9 @@ public:
 
     // normalJsonBeforeRun 在构造 Agent 后调用，按 worker 数建立会话槽并生成原生工具声明。
     // 此处不发请求、不解析响应；初选不到 API 的会话槽保持为空，实际翻译时再选择。
-    void configureAdvanced(bool enabled, int workerCount);
+    void configureAdvanced(
+        bool enabled, int workerCount, bool allowPython,
+        const fs::path& inputDir, const fs::path& outputDir);
 
 private:
     struct TransAdvancedAgentWorker {
@@ -97,6 +99,7 @@ private:
     bool m_advancedEnabled = false;
     std::vector<TransAdvancedAgentWorker> m_workers;
     json m_nativeTools = json::array();
+    json m_pythonPaths;
 
     // translateBatch 的高级分支；按从 1 开始的 threadId 复用 worker 会话，选择 API、处理压缩并驱动原生工具轮次。
     // API 失败经 handleApiError 重试；工具参数 JSON、查询和提交的 std::exception 按调用 id 回填 error，进入下一轮。

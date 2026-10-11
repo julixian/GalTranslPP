@@ -166,6 +166,12 @@
     <ClCompile Include="NormalJsonTranslator.TransAgent.Tools.cpp">
       <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
+    <ClCompile Include="AgentPythonExecutor.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="AgentPythonExecutor.ixx">
+      <Filter>Tools</Filter>
+    </ClCompile>
     <ClCompile Include="..\3rdParty\3rdModule\proxy.ixx">
       <Filter>Tools\3rdParty</Filter>
     </ClCompile>

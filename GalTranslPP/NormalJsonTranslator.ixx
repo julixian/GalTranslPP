@@ -81,6 +81,7 @@ protected:
     bool m_outputWithRefInfo{};
     bool m_agentEnabled{};
     bool m_agentAdvancedEnabled{};
+    bool m_agentAllowPython{};
     bool m_reuseRepeatedBlocks{};
 
     std::string m_apiStrategy;

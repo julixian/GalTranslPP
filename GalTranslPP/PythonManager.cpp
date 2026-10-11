@@ -196,6 +196,11 @@ NAMESPACE_BEGIN(gpp)
 
 static fs::path gs_pythonExePath;
 
+const fs::path& pythonExecutablePath()
+{
+    return gs_pythonExePath;
+}
+
 // PythonMainInterpreterManager
 PythonMainInterpreterManager::PythonMainInterpreterManager() {
     if (Py_IsInitialized()) {
@@ -1022,6 +1027,7 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def_readwrite("m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc)
         .def_readwrite("m_agentEnabled", &NormalJsonTranslator::m_agentEnabled)
         .def_readwrite("m_agentAdvancedEnabled", &NormalJsonTranslator::m_agentAdvancedEnabled)
+        .def_readwrite("m_agentAllowPython", &NormalJsonTranslator::m_agentAllowPython)
         .def_readwrite("m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks)
         .def_readwrite("m_apiStrategy", &NormalJsonTranslator::m_apiStrategy)
         .def_readwrite("m_sortMethod", &NormalJsonTranslator::m_sortMethod)

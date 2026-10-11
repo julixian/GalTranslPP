@@ -6,6 +6,7 @@ module NormalJsonTranslator;
 
 import NormalJsonTranslatorHelperTool;
 import Tool;
+import AgentPythonExecutor;
 
 NAMESPACE_BEGIN(gpp)
 
@@ -17,7 +18,12 @@ json advancedAgentObjectSchema(json properties)
     for (const auto& item : properties.items()) {
         required.push_back(item.key());
     }
-    return {{"type", "object"}, {"properties", std::move(properties)}, {"required", std::move(required)}, {"additionalProperties", false}};
+    return {
+        {"type", "object"},
+        {"properties", std::move(properties)},
+        {"required", std::move(required)},
+        {"additionalProperties", false}
+    };
 }
 
 json advancedAgentArraySchema(const json& items)
@@ -25,15 +31,20 @@ json advancedAgentArraySchema(const json& items)
     return {{"type", "array"}, {"items", items}};
 }
 
-void NormalJsonTranslatorTransAgent::configureAdvanced(bool enabled, int workerCount)
+void NormalJsonTranslatorTransAgent::configureAdvanced(
+    bool enabled, int workerCount, bool allowPython,
+    const fs::path& inputDir, const fs::path& outputDir)
 {
     m_advancedEnabled = enabled;
-    if (!enabled) return;
+    if (!enabled) {
+        return;
+    }
     // 调度前分配固定 worker 状态；运行中各线程只访问自己的槽，不需要全局会话锁。
     m_workers.resize(std::max(1, workerCount));
     for (auto& worker : m_workers) {
-        if (auto api = m_apiPool->getApi(m_apiStrategy))
+        if (auto api = m_apiPool->getApi(m_apiStrategy)) {
             worker.session = AdvancedAgentApiSession{.api = *api, .systemPrompt = m_agentSystemPrompt};
+        }
     }
     const json stringSchema = {{"type", "string"}};
     const json intSchema = {{"type", "integer"}};
@@ -43,21 +54,39 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(bool enabled, int workerC
     const json translationSchema = advancedAgentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
     const json suggestionSchema = advancedAgentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
 
-    const json termSchema = advancedAgentObjectSchema({{"src", stringSchema}, {"dst", stringSchema}, {"category", stringSchema},
-        {"note", stringSchema}, {"status", {{"type", "string"}, {"enum", json::array({"tentative", "confirmed"})}}},
-        {"line_ids", idsSchema}});
+    const json termSchema = advancedAgentObjectSchema({
+        {"src", stringSchema},
+        {"dst", stringSchema},
+        {"category", stringSchema},
+        {"note", stringSchema},
+        {"status", {{"type", "string"}, {"enum", json::array({"tentative", "confirmed"})}}},
+        {"line_ids", idsSchema}
+    });
 
-    const json noteSchema = advancedAgentObjectSchema({{"summary", stringSchema}, {"scene_state", stringSchema},
-        {"unresolved_clues", stringSchema}, {"relationship_updates", stringSchema}, {"term_hints", stringSchema}});
+    const json noteSchema = advancedAgentObjectSchema({
+        {"summary", stringSchema},
+        {"scene_state", stringSchema},
+        {"unresolved_clues", stringSchema},
+        {"relationship_updates", stringSchema},
+        {"term_hints", stringSchema}
+    });
 
-    const json commitSchema = advancedAgentObjectSchema({{"translations", advancedAgentArraySchema(translationSchema)},
-        {"term_updates", advancedAgentArraySchema(termSchema)}, {"agent_suggest", advancedAgentArraySchema(suggestionSchema)},
-        {"file_note_patch", noteSchema}, {"rolling_context", stringSchema}});
+    const json commitSchema = advancedAgentObjectSchema({
+        {"translations", advancedAgentArraySchema(translationSchema)},
+        {"term_updates", advancedAgentArraySchema(termSchema)},
+        {"agent_suggest", advancedAgentArraySchema(suggestionSchema)},
+        {"file_note_patch", noteSchema},
+        {"rolling_context", stringSchema}
+    });
 
     const auto addTool = [&](const std::string& name, const std::string& description, const json& schema)
-	    {
-		    m_nativeTools.push_back({{"name", name}, {"description", description}, {"parameters", schema}});
-	    };
+        {
+            m_nativeTools.push_back({
+                {"name", name},
+                {"description", description},
+                {"parameters", schema}
+            });
+        };
     const json pageProperties = {{"offset", intSchema}, {"limit", intSchema}};
     addTool("list_files", "List source files. offset is the number of result records to skip; offset=0 starts from the first result."
         " limit=0 uses the configured limit.", advancedAgentObjectSchema(pageProperties));
@@ -85,6 +114,57 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(bool enabled, int workerC
     addTool("read_file_note", "Read durable notes for a source file; file='' selects the current file.",
         advancedAgentObjectSchema({{"file", stringSchema}}));
     addTool("read_project_note", "Read the configured project note.", advancedAgentObjectSchema(json::object()));
+    if (allowPython) {
+        const auto absolutePath = [](const fs::path& path)
+            {
+                return wide2Ascii(fs::absolute(path).lexically_normal());
+            };
+        json dictionaryFiles = json::array();
+        for (const auto& path : m_gptDictionaryPaths) {
+            dictionaryFiles.push_back(absolutePath(path));
+        }
+        m_pythonPaths = {
+            {"project_dir", absolutePath(m_projectDir)},
+            {"input_dir", absolutePath(inputDir)},
+            {"cache_dir", absolutePath(m_transCacheDir)},
+            {"output_dir", absolutePath(outputDir)},
+            {"dictionary_files", std::move(dictionaryFiles)},
+            {"name_table", absolutePath(m_projectDir / L"NameTable.toml")},
+            {"project_note", m_agentProjectNotePath ? json(absolutePath(*m_agentProjectNotePath)) : json(nullptr)},
+            {"term_ledger", absolutePath(m_agentTermLedgerPath)},
+            {"file_notes_dir", absolutePath(m_agentFileNotesDir)}
+        };
+        // 路径直接取实际运行配置，EPUB/PDF 等转换流程的输入目录不能写死为 gt_input。
+        addTool(
+            "run_python",
+            "Run Python code in a fresh process using the application's Python environment."
+            " Use it only to read files, search and analyze translation data; do not modify/delete files, install packages,"
+            " access the network or launch other processes. Print only useful results."
+            " Variables do not persist between calls. cwd is the project directory. Execution lasts at most 120 seconds;"
+            " stdout and stderr each return at most 64 KiB, with truncation flags."
+            " The paths dictionary contains absolute paths: project_dir, input_dir (actual translation input),"
+            " cache_dir (translation cache), output_dir, current_file, dictionary_files (active GPT dictionary TOML files),"
+            " name_table, project_note (None if absent), term_ledger, file_notes_dir. Inspect directories with pathlib."
+            " Some files/directories may not exist yet. Read UTF-8 files with encoding='utf-8-sig'."
+            // 原文与缓存的字段不同，明确原文数组结构，避免模型拿缓存字段读取输入文件。
+            " Source JSON files under input_dir contain arrays of objects with a required string message (source text),"
+            " an optional string name (single speaker) or string array names (multiple speakers)."
+            " A row without name/names is narration or monologue. Array positions are zero-based sentence indices."
+            " Source JSON example: [{\"name\":\"Alice\",\"message\":\"Hello.\"},"
+            "{\"message\":\"The door opened.\"},{\"names\":[\"Alice\",\"Bob\"],\"message\":\"Good morning.\"}]."
+            " Cache JSON arrays use index, original_text, pre_processed_text, translated_raw_text;"
+            " GPT dictionary TOML uses [[gptDict]] entries with org, rep and note. Use json and tomllib to read them."
+            " Files contain the last saved state, which may lag in-memory preprocessing and translation;"
+            " use the current batch supplied in the conversation as authoritative."
+            " Source search example: import json; from pathlib import Path; "
+            "rows = json.loads(Path(paths['current_file']).read_text(encoding='utf-8-sig')); "
+            "print(json.dumps([dict(r, id=i) for i, r in enumerate(rows) if '兄' in r['message']], ensure_ascii=False))."
+            " Cache search example: import json; from pathlib import Path; "
+            "file = Path(paths['current_file']).relative_to(paths['input_dir']); "
+            "rows = json.loads((Path(paths['cache_dir']) / file).read_text(encoding='utf-8-sig')); "
+            "print([r.get('translated_raw_text', '') for r in rows if '兄' in r.get('original_text', '')])",
+            advancedAgentObjectSchema({{"code", stringSchema}}));
+    }
     addTool("commit_translations", "Submit every current sentence id, durable memory and sentence-level suggestions."
         " Empty note strings leave existing notes unchanged. Use [] for no term updates or suggestions.",
         commitSchema);
@@ -143,11 +223,15 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
     appendBatch();
 
     const json compactSchema = advancedAgentObjectSchema({{"rolling_context", {{"type", "string"}}}});
-    const json compactTools = json::array({{{"name", "compact_context"},
-        {"description",
-            "Summarize the conversation for the next session. Preserve translation decisions, character relationships, unresolved clues and current progress."
-            " Do not translate or commit."},
-        {"parameters", compactSchema}}});
+    const json compactTools = json::array({
+        {
+            {"name", "compact_context"},
+            {"description",
+                "Summarize the conversation for the next session. Preserve translation decisions, character relationships, unresolved clues and current progress."
+                " Do not translate or commit."},
+            {"parameters", compactSchema}
+        }
+    });
 
     bool compacting = false;
     size_t compactedMessageCount = 0;
@@ -244,13 +328,19 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 .arg(calls.dump(2)).toStdString());
         }
         if (!reply.calls.empty() && m_logger->should_log(spdlog::level::info)) {
-            std::vector<AgentCommonToolCallRequest> calls;
-            for (const auto& call : reply.calls) {
-                calls.push_back({ call.id, call.name, call.arguments });
+            std::string overview;
+            for (const auto& [index, call] : reply.calls | std::views::enumerate) {
+                const auto callOverview = std::format(
+                    "[{}] {}({})\n",
+                    index + 1,
+                    call.name.empty() ? "<unknown>" : call.name,
+                    call.arguments.dump(2)
+                );
+                overview += limitLogLines(callOverview, m_inputBlockMaxLines);
             }
             m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 工具调用 %2 个，调用概览:\n%3")
-                .arg(requestLogPrefix).arg(calls.size())
-                .arg(limitLogLines(formatAgentCommonToolCallDetails(calls), m_inputBlockMaxLines)).toStdString());
+                .arg(requestLogPrefix).arg(reply.calls.size())
+                .arg(overview).toStdString());
         }
 
         // 连续没有工具调用时沿用请求重试次数作为上限，任意工具调用都会清零。
@@ -272,7 +362,9 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                     throw std::runtime_error("Call compact_context only in this turn.");
                 }
                 const auto& arguments = reply.calls.front().arguments;
-                const json summary = arguments.is_string() ? json::parse(arguments.get_ref<const std::string&>()) : arguments;
+                const json summary = arguments.is_string()
+                    ? json::parse(arguments.get_ref<const std::string&>())
+                    : arguments;
                 memory = summary.at("rolling_context").get<std::string>();
                 if (memory.empty()) {
                     throw std::runtime_error("rolling_context must contain the conversation summary.");
@@ -300,19 +392,27 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         json results = json::array();
         const auto commit = [&](json arguments)
             {
-                if (committed) throw std::runtime_error("This batch has already been committed.");
+                if (committed) {
+                    throw std::runtime_error("This batch has already been committed.");
+                }
                 arguments["action"] = "commit";
                 // 严格 schema 的空备注字段代表不修改，不能覆盖已有记忆。
                 if (arguments.contains("file_note_patch")) {
                     auto& patch = arguments["file_note_patch"];
                     for (auto it = patch.begin(); it != patch.end();) {
-                        if (it->is_string() && it->get_ref<const std::string&>().empty()) it = patch.erase(it);
-                        else ++it;
+                        if (it->is_string() && it->get_ref<const std::string&>().empty()) {
+                            it = patch.erase(it);
+                        }
+                        else {
+                            ++it;
+                        }
                     }
                 }
                 if (auto updates = arguments.find("term_updates"); updates != arguments.end()) {
                     for (auto& update : *updates) {
-                        if (update.contains("line_ids") && update["line_ids"].empty()) update.erase("line_ids");
+                        if (update.contains("line_ids") && update["line_ids"].empty()) {
+                            update.erase("line_ids");
+                        }
                     }
                 }
                 const auto protocol = parseProtocolResponse(arguments.dump());
@@ -332,10 +432,26 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 return json{{"committed", count}};
             };
         for (const auto& call : reply.calls) {
+            if (m_controller->shouldStop()) {
+                return false;
+            }
             json result;
             try {
-                const json arguments = call.arguments.is_string() ? json::parse(call.arguments.get_ref<const std::string&>()) : call.arguments;
-                result = call.name == "commit_translations" ? commit(arguments) : runReadTool(relInputPath, call.name, arguments);
+                const json arguments = call.arguments.is_string()
+                    ? json::parse(call.arguments.get_ref<const std::string&>())
+                    : call.arguments;
+                if (call.name == "commit_translations") {
+                    result = commit(arguments);
+                }
+                else if (call.name == "run_python" && !m_pythonPaths.is_null()) {
+                    json paths = m_pythonPaths;
+                    paths["current_file"] = wide2Ascii(
+                        fs::path(ascii2Wide(paths.at("input_dir").get<std::string>())) / relInputPath);
+                    result = runAgentPython(arguments.at("code").get_ref<const std::string&>(), paths, m_controller);
+                }
+                else {
+                    result = runReadTool(relInputPath, call.name, arguments);
+                }
             }
             catch (const std::exception& e) {
                 result = {{"error", e.what()}};
@@ -364,6 +480,40 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                     .toStdString());
             }
             appendAdvancedAgentToolResults(session, results);
+            if (m_logger->should_log(spdlog::level::info)) {
+                std::string overview;
+                for (const auto& [index, item] : results | std::views::enumerate) {
+                    if (item.at("name") == "commit_translations") {
+                        continue;
+                    }
+                    std::string resultOverview;
+                    if (item.at("name") == "run_python") {
+                        // 输出正文保留换行，避免 JSON 转义让多行运行结果挤在一行。
+                        json result = item.at("result");
+                        const auto stdoutText = result.value("stdout", std::string{});
+                        const auto stderrText = result.value("stderr", std::string{});
+                        result.erase("stdout");
+                        result.erase("stderr");
+                        resultOverview += result.dump() + "\n";
+                        if (!stdoutText.empty()) {
+                            resultOverview += "stdout:\n" + stdoutText + "\n";
+                        }
+                        if (!stderrText.empty()) {
+                            resultOverview += "stderr:\n" + stderrText + "\n";
+                        }
+                    }
+                    else {
+                        resultOverview += item.at("result").dump(2) + "\n";
+                    }
+                    overview += std::format("[{}] {}:\n", index + 1, item.at("name").get<std::string>())
+                        + limitLogLines(resultOverview, m_inputBlockMaxLines);
+                }
+                if (!overview.empty()) {
+                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已回填 %2 个工具结果，回填概览:\n%3")
+                        .arg(requestLogPrefix).arg(results.size())
+                        .arg(overview).toStdString());
+                }
+            }
             if (!committed) {
                 m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已回填 %2 个工具结果，进入下一轮")
                     .arg(requestLogPrefix).arg(results.size()).toStdString());

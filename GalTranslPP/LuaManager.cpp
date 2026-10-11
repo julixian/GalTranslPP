@@ -1040,6 +1040,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_outputWithSrc", &NormalJsonTranslator::m_outputWithSrc,
 		"m_agentEnabled", &NormalJsonTranslator::m_agentEnabled,
 		"m_agentAdvancedEnabled", &NormalJsonTranslator::m_agentAdvancedEnabled,
+		"m_agentAllowPython", &NormalJsonTranslator::m_agentAllowPython,
 		"m_reuseRepeatedBlocks", &NormalJsonTranslator::m_reuseRepeatedBlocks,
 		"m_apiStrategy", &NormalJsonTranslator::m_apiStrategy,
 		"m_sortMethod", &NormalJsonTranslator::m_sortMethod,

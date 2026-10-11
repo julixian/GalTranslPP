@@ -20,7 +20,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     QStringList updateList = {
         "1. 增加长路径支持",
 		"2. 新增 Api name 和 GUI 流式布局，默认行为可在应用设置中改回",
-		"3. 各种妙妙优化",
+		"3. 高级 Agent 新增选项『允许运行 Python 代码』",
+		"4. 其它各种妙妙优化",
     };
 
     mainLayout->addWidget(updateTitle);

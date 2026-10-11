@@ -186,6 +186,7 @@ stanzaLang = "ja"
 [common.agent]
 enabled = false
 advancedEnabled = false # 启用原生工具调用，并按 worker 保留跨文件会话；关闭时使用原有文本协议
+allowPython = false # 仅高级 Agent：允许运行 Python 代码；只读由工具提示约束，不会限制进程的文件权限
 maxTurnsPerChunk = 50
 compactContextThresholdBytes = 400000 # 请求模型总结完整历史并重建会话；高级 Agent 在 Responses/Claude 启用原生自动压缩时无效
 searchResultLimit = 80

@@ -16,7 +16,10 @@ GppApiCard::GppApiCard(QWidget* parent) : QToolButton(parent)
     m_dragHandle = new QWidget(this);
     m_dragHandle->setAttribute(Qt::WA_NoMousePropagation);
     m_dragHandle->setGeometry(0, 0, 34, height());
-    connect(eTheme, &ElaTheme::themeModeChanged, this, [this]() { update(); });
+    connect(eTheme, &ElaTheme::themeModeChanged, this, [this]()
+        {
+            update();
+        });
 }
 
 void GppApiCard::setApiName(const QString& name)
@@ -37,8 +40,14 @@ void GppApiCard::setMenu(ElaMenu* menu)
     // 交给 QToolButton 管理菜单，并阻止关闭菜单的鼠标点击重新触发弹出。
     menu->setAttribute(Qt::WA_NoMouseReplay);
     QToolButton::setMenu(menu);
-    connect(menu, &QMenu::aboutToShow, this, [this]() { update(); });
-    connect(menu, &QMenu::aboutToHide, this, [this]() { update(); });
+    connect(menu, &QMenu::aboutToShow, this, [this]()
+        {
+            update();
+        });
+    connect(menu, &QMenu::aboutToHide, this, [this]()
+        {
+            update();
+        });
 }
 
 QWidget* GppApiCard::dragHandle() const
@@ -52,8 +61,9 @@ void GppApiCard::paintEvent(QPaintEvent*)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setPen(ElaThemeColor(theme, BasicBorder));
-    const auto background = isDown() ? ElaThemeType::BasicPress :
-        underMouse() ? ElaThemeType::BasicHover : ElaThemeType::BasicBase;
+    const auto background = isDown()
+        ? ElaThemeType::BasicPress
+        : underMouse() ? ElaThemeType::BasicHover : ElaThemeType::BasicBase;
     painter.setBrush(eTheme->getThemeColor(theme, background));
     painter.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 4, 4);
 

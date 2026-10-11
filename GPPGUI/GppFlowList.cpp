@@ -54,7 +54,9 @@ bool GppFlowList::eventFilter(QObject* watched, QEvent* event)
     }
     else if (event->type() == QEvent::MouseButtonRelease) {
         auto* mouse = static_cast<QMouseEvent*>(event);
-        if (mouse->button() == Qt::LeftButton) m_dragPressed = false;
+        if (mouse->button() == Qt::LeftButton) {
+            m_dragPressed = false;
+        }
         mouse->accept();
         return true;
     }
@@ -65,7 +67,9 @@ bool GppFlowList::eventFilter(QObject* watched, QEvent* event)
             QWidget* card = watched->property("flowCard").value<QWidget*>();
             const int index = m_cards.indexOf(card);
             m_dragPressed = false;
-            if (index < 0) return true;
+            if (index < 0) {
+                return true;
+            }
             QDrag drag(this);
             auto* mime = new QMimeData();
             mime->setData("application/x-gpp-flow-card", QByteArray::number(index));
@@ -105,7 +109,9 @@ int GppFlowList::insertionIndex(const QPoint& position) const
 
 void GppFlowList::dragMoveEvent(QDragMoveEvent* event)
 {
-    if (event->source() != this) return;
+    if (event->source() != this) {
+        return;
+    }
     m_dropIndex = insertionIndex(event->position().toPoint());
     update();
     event->acceptProposedAction();
@@ -120,20 +126,28 @@ void GppFlowList::dragLeaveEvent(QDragLeaveEvent* event)
 
 void GppFlowList::dropEvent(QDropEvent* event)
 {
-    if (event->source() != this) return;
+    if (event->source() != this) {
+        return;
+    }
     const int from = event->mimeData()->data("application/x-gpp-flow-card").toInt();
     int to = insertionIndex(event->position().toPoint());
-    if (to > from) --to;
+    if (to > from) {
+        --to;
+    }
     m_dropIndex = -1;
     update();
     event->acceptProposedAction();
-    if (from != to) Q_EMIT cardMoved(from, to);
+    if (from != to) {
+        Q_EMIT cardMoved(from, to);
+    }
 }
 
 void GppFlowList::paintEvent(QPaintEvent* event)
 {
     QWidget::paintEvent(event);
-    if (m_dropIndex < 0 || m_cards.empty()) return;
+    if (m_dropIndex < 0 || m_cards.empty()) {
+        return;
+    }
     const bool atEnd = m_dropIndex == m_cards.size();
     const QRect rect = (atEnd ? m_cards.back() : m_cards.at(m_dropIndex))->geometry();
     const int x = atEnd ? rect.right() + 4 : rect.left() - 4;

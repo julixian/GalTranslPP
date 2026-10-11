@@ -312,6 +312,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
         m_agentAdvancedEnabled = toml::find_or(configData, "common", "agent", "advancedEnabled", false);
+        m_agentAllowPython = toml::find_or(configData, "common", "agent", "allowPython", false);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
         m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 400000);
         m_agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);

@@ -32,13 +32,13 @@
 <context>
     <name>ApiSettingsPage</name>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="+40"/>
+        <location filename="ApiSettingsPage.cpp" line="+45"/>
         <location line="+26"/>
         <source>Api 设置</source>
         <translation>Api settings</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+54"/>
         <source>Api 使用策略</source>
         <translation>Api strategy</translation>
     </message>
@@ -58,12 +58,22 @@
         <translation>in seconds</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="-68"/>
         <source>增加新 Api</source>
         <translation>Add new Api</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location line="+10"/>
+        <source>流式布局</source>
+        <translation>Flow layout</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>列表布局</source>
+        <translation>List layout</translation>
+    </message>
+    <message>
+        <location line="+149"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -88,12 +98,13 @@
         <translation>Protocol</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+47"/>
+        <location line="+613"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="-606"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -103,7 +114,20 @@
         <translation>Api details</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+60"/>
+        <source>名称</source>
+        <translation>Name</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+1"/>
+        <location line="+549"/>
+        <location line="+21"/>
+        <source>自定义 Api</source>
+        <translation>Custom API</translation>
+    </message>
+    <message>
+        <location line="-552"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -305,7 +329,7 @@ sk-...</translation>
         <translation>Advanced settings</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+32"/>
         <source>请求类型: 获取模型列表</source>
         <translation>Request type: fetch model list</translation>
     </message>
@@ -379,11 +403,74 @@ sk-...</translation>
         <translation>Error details:</translation>
     </message>
     <message>
+        <location line="+219"/>
+        <source>拖动排序</source>
+        <translation>Drag to reorder</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>详细设置</source>
+        <translation>Detailed settings</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>生成副本</source>
+        <translation>Duplicate</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>删除模型</source>
+        <translation>Delete model</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Api 详细配置 — %1</source>
+        <translation>API Settings — %1</translation>
+    </message>
+    <message>
+        <location line="+142"/>
+        <source>否</source>
+        <translation>No</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>思考人生</source>
+        <translation>Think about life</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>是</source>
+        <translation>Yes</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>删除 Api</source>
+        <translation>Delete API</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>确定删除“%1”吗？</source>
+        <translation>Delete “%1”?</translation>
+    </message>
+    <message>
+        <source>取消</source>
+        <translation type="vanished">Cancel</translation>
+    </message>
+    <message>
+        <source>删除</source>
+        <translation type="vanished">Delete</translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>%1（副本）</source>
+        <translation>%1 (copy)</translation>
+    </message>
+    <message>
         <source>(空)</source>
         <translation type="vanished">(empty)</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="-370"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
@@ -513,8 +600,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</source>
-        <translation>Faster startup; first project open may pause briefly</translation>
+        <source>增加启动速度，但第一次进入某个项目时会卡一下初始化</source>
+        <oldsource>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</oldsource>
+        <translation type="unfinished">Faster startup; first project open may pause briefly</translation>
     </message>
     <message>
         <location line="+16"/>
@@ -575,7 +663,22 @@ sk-...</translation>
         <translation>Default dictionary view mode for new projects</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+28"/>
+        <source>新项目 Api 默认布局模式</source>
+        <translation>Default API layout for new projects</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>流式布局</source>
+        <translation>Flow layout</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>列表布局</source>
+        <translation>List layout</translation>
+    </message>
+    <message>
+        <location line="+15"/>
         <source>允许在项目仍在运行的情况下关闭程序</source>
         <translation>Allow exiting the app while a project is still running</translation>
     </message>

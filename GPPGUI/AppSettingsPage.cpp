@@ -211,7 +211,7 @@ void AppSettingsPage::setupUi()
     QHBoxLayout* lazyProjectInitializationLayout = new QHBoxLayout(lazyProjectInitializationArea);
     GppDoubleText* lazyProjectInitializationText = new GppDoubleText(
         tr("延迟项目初始化"), 16,
-        tr("增加启动速度，但第一次进入某个项目时会增加卡一下初始化"),
+        tr("增加启动速度，但第一次进入某个项目时会卡一下初始化"),
         10, "", lazyProjectInitializationArea);
     lazyProjectInitializationLayout->addWidget(lazyProjectInitializationText);
     lazyProjectInitializationLayout->addStretch();
@@ -339,6 +339,25 @@ void AppSettingsPage::setupUi()
     dictOpenModeLayout->addWidget(dictOpenModeTextButton);
     dictOpenModeLayout->addWidget(dictOpenModeTableButton);
     centerLayout->addWidget(dictOpenModeArea);
+
+    ElaScrollPageArea* apiLayoutModeArea = new ElaScrollPageArea(centralWidget);
+    QHBoxLayout* apiLayoutModeLayout = new QHBoxLayout(apiLayoutModeArea);
+    ElaText* apiLayoutModeText = new ElaText(tr("新项目 Api 默认布局模式"), 16, apiLayoutModeArea);
+    apiLayoutModeText->setWordWrap(false);
+    apiLayoutModeLayout->addWidget(apiLayoutModeText);
+    apiLayoutModeLayout->addStretch();
+    GppRadioButton* apiFlowModeButton = new GppRadioButton(tr("流式布局"), apiLayoutModeArea);
+    GppRadioButton* apiListModeButton = new GppRadioButton(tr("列表布局"), apiLayoutModeArea);
+    QButtonGroup* apiLayoutModeGroup = new QButtonGroup(apiLayoutModeArea);
+    apiLayoutModeGroup->addButton(apiFlowModeButton, 0);
+    apiLayoutModeGroup->addButton(apiListModeButton, 1);
+    apiLayoutModeGroup->button(toml::find_or(m_globalConfig, "defaultApiLayoutMode", 0) == 1 ? 1 : 0)->setChecked(true);
+    apiLayoutModeLayout->addWidget(apiFlowModeButton);
+    apiLayoutModeLayout->addWidget(apiListModeButton);
+    connect(apiLayoutModeGroup, &QButtonGroup::idClicked, this, [=](int mode) {
+        insertToml(m_globalConfig, "defaultApiLayoutMode", mode);
+    });
+    centerLayout->addWidget(apiLayoutModeArea);
 
     // 允许在项目仍在运行的情况下关闭程序(危险)
     ElaScrollPageArea* allowCloseWhenRunningArea = new ElaScrollPageArea(centralWidget);
@@ -470,6 +489,7 @@ void AppSettingsPage::setupUi()
             insertToml(m_globalConfig, "lazyProjectInitialization", lazyProjectInitializationSwitch->getIsToggled());
             insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(nameTableOpenModeGroup->checkedButton()));
             insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(dictOpenModeGroup->checkedButton()));
+            insertToml(m_globalConfig, "defaultApiLayoutMode", apiLayoutModeGroup->checkedId());
             insertToml(m_globalConfig, "allowCloseWhenRunning", allowCloseWhenRunningSwitch->getIsToggled());
             insertToml(m_globalConfig, "allowMultiInstance", allowMultiInstanceSwitch->getIsToggled());
             insertToml(m_globalConfig, "autoDownloadUpdate", autoDownloadSwitch->getIsToggled());

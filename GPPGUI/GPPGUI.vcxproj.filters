@@ -111,6 +111,12 @@
     <ClCompile Include="NameTableModel.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
+    <ClCompile Include="GppFlowList.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="GppApiCard.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
     <ClCompile Include="GppInputDialog.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
@@ -251,6 +257,9 @@
     <QtMoc Include="NameTableModel.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
+    <QtMoc Include="GppFlowList.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </QtMoc>
     <QtMoc Include="GppInputDialog.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
@@ -363,6 +372,9 @@
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <ClInclude Include="GppPushButton.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="GppApiCard.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <ClInclude Include="GppRadioButton.h">

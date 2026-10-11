@@ -158,6 +158,8 @@
     <ClCompile Include="GptDictModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
     <ClCompile Include="GppInputDialog.cpp" />
+    <ClCompile Include="GppFlowList.cpp" />
+    <ClCompile Include="GppApiCard.cpp" />
     <ClCompile Include="EpubCfgPage.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="Mainwindow.cpp" />
@@ -253,6 +255,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="GppInputDialog.h" />
+    <QtMoc Include="GppFlowList.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
@@ -317,6 +320,7 @@
     <QtMoc Include="CommonGptDictsPage.h" />
     <QtMoc Include="DictExSettingsPage.h" />
     <ClInclude Include="GppPushButton.h" />
+    <ClInclude Include="GppApiCard.h" />
     <ClInclude Include="GppComboBox.h" />
     <ClInclude Include="GppMultiSelectComboBox.h" />
     <ClInclude Include="GppRadioButton.h" />

@@ -19,7 +19,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. 增加长路径支持",
-		"2. 各种妙妙优化",
+		"2. 新增 Api name 和 GUI 流式布局，默认行为可在应用设置中改回",
+		"3. 各种妙妙优化",
     };
 
     mainLayout->addWidget(updateTitle);

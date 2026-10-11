@@ -242,7 +242,7 @@ void ProjectSettingsPage::setupUi()
 void ProjectSettingsPage::createPages()
 {
     if (!m_apiSettingsPage) {
-        m_apiSettingsPage = new ApiSettingsPage(m_projectConfig, m_stackedWidget);
+        m_apiSettingsPage = new ApiSettingsPage(m_globalConfig, m_projectConfig, m_stackedWidget);
     }
     if (!m_commonSettingsPage) {
         m_commonSettingsPage = new CommonSettingsPage(m_projectConfig, m_stackedWidget);

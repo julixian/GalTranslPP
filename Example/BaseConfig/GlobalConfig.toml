@@ -4,6 +4,7 @@ autoCheckUpdate = true
 autoDownloadUpdate = true
 autoRefreshAfterTranslate = true
 clearLogShortcut = "Ctrl+L"
+defaultApiLayoutMode = 0 # 新项目 Api 默认布局：0 流式，1 列表
 defaultDictOpenMode = 1
 defaultNameTableOpenMode = 1
 language = "zh_CN"

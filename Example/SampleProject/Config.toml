@@ -3,10 +3,11 @@ apiStrategy = "random" # 令牌策略，random 随机轮询，fallback 优先第
 apiTimeout = 300 # 请求超时时间，单位秒
 
   [[backend.apis]]
+  name = "自定义 Api"     # 仅用于 GUI 展示，便于区分渠道，不参与翻译请求
   enable = true
   apikeys = []            # [ "sk-example-key1", "sk-example-key2" ] | filePlugin 为 sakura 时可不填
   apiurl = ""             # https://openai-example.com | 请求地址，加不加/v1都行
-  modelName = ""          # modelName | filePlugin为sakura时可不填
+  modelName = ""          # modelName | filePlugin 为 sakura 时可不填
   protocol = "openai"     # openai/claude/gemini/openaires（OpenAI Responses）
   thinkingLevel = "off"   # off（不传递）/none/minimal/low/medium/high/xhigh/max；按模型映射到可用档位
   useSystemProxy = true   # 使用系统代理
@@ -250,12 +251,12 @@ langProbability = 0.94 # 语言不通检测的语言置信度，设置越高则�
 # 如果出现同名字典文件，则只读取项目文件夹中的
 # 否则读取 defaultDictFolder 中对应 pre/gpt/post 文件夹下的字典
 defaultDictFolder = "BaseConfig/Dicts" 
-usePreDictInName = false   # 将译前字典用在name字段，可用于翻译name字段，会发送给翻译引擎替换后的name[true/false]
-usePostDictInName = false  # 将译后字典用在name字段，可用于翻译name字段[true/false]
-usePreDictInMsg = true   # 将译前字典用在message字段，可用于翻译message字段，会发送给翻译引擎替换后的message[true/false]
-usePostDictInMsg = true  # 将译后字典用在message字段，可用于翻译message字段[true/false]
+usePreDictInName = false   # 将译前字典用在 name 字段，可用于翻译 name 字段，会发送给翻译引擎替换后的 name [true/false]
+usePostDictInName = false  # 将译后字典用在 name 字段，可用于翻译 name 字段 [true/false]
+usePreDictInMsg = true   # 将译前字典用在 message 字段，可用于翻译 message 字段，会发送给翻译引擎替换后的 message [true/false]
+usePostDictInMsg = true  # 将译后字典用在 message 字段，可用于翻译 message 字段 [true/false]
 
-useGPTDictToReplaceName = false   # 将GPT字典用在name字段，可用于翻译name字段(直接搜索替换)[true/false]
+useGPTDictToReplaceName = false   # 将 GPT字典 用在 name 字段，可用于翻译 name 字段(直接搜索替换) [true/false]
 
 preDicts = [
   "PreHUnify.toml",

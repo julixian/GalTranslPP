@@ -6,6 +6,11 @@
 #include <QEvent>
 #include <QPointer>
 
+#include "GppApiCard.h"
+#include "GppFlowList.h"
+#include "ElaContentDialog.h"
+#include "ElaMenu.h"
+
 #include "ElaText.h"
 #include "ElaLineEdit.h"
 #include "ElaPlainTextEdit.h"
@@ -34,8 +39,8 @@ using namespace gpp;
 
 QSize ApiSettingsPage::s_configWidgetSize(980, 820);
 
-ApiSettingsPage::ApiSettingsPage(toml::ordered_value& projectConfig, QWidget* parent)
-    : BasePage(parent), m_projectConfig(projectConfig)
+ApiSettingsPage::ApiSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
+    : BasePage(parent), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("Api 设置"));
     setTitleVisible(false);
@@ -64,22 +69,52 @@ void ApiSettingsPage::setupUi()
 {
     QWidget* centerWidget = new QWidget(this);
     centerWidget->setWindowTitle(tr("Api 设置"));
-    m_mainLayout = new QVBoxLayout(centerWidget);
-    m_mainLayout->setContentsMargins(20, 15, 15, 0);
-    m_mainLayout->setSpacing(5);
+    QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
+    mainLayout->setContentsMargins(20, 15, 15, 0);
+    mainLayout->setSpacing(8);
 
+    QHBoxLayout* toolbar = new QHBoxLayout();
+    ElaToolButton* addApiButton = new ElaToolButton(centerWidget);
+    addApiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    addApiButton->setElaIcon(ElaIconType::Plus);
+    addApiButton->setText(tr("增加新 Api"));
+    addApiButton->setFixedWidth(120);
+    connect(addApiButton, &ElaToolButton::clicked, this, &ApiSettingsPage::addApiInputRow);
+    toolbar->addWidget(addApiButton);
+    toolbar->addStretch();
+    m_layoutMode = toml::find_or(m_projectConfig, "GUIConfig", "apiLayoutMode",
+        toml::find_or(m_globalConfig, "defaultApiLayoutMode", 0)) == 1 ? 1 : 0;
+    m_flowModeButton = new ElaToolButton(centerWidget);
+    m_flowModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_flowModeButton->setElaIcon(ElaIconType::Grid2);
+    m_flowModeButton->setText(tr("流式布局"));
+    m_listModeButton = new ElaToolButton(centerWidget);
+    m_listModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    m_listModeButton->setElaIcon(ElaIconType::List);
+    m_listModeButton->setText(tr("列表布局"));
+    toolbar->addWidget(m_flowModeButton);
+    toolbar->addWidget(m_listModeButton);
+    connect(m_flowModeButton, &ElaToolButton::clicked, this, [this]() { switchLayout(0); });
+    connect(m_listModeButton, &ElaToolButton::clicked, this, [this]() { switchLayout(1); });
+    mainLayout->addLayout(toolbar);
+
+    m_flowList = new GppFlowList(centerWidget);
+    mainLayout->addWidget(m_flowList);
+    m_listWidget = new QWidget(centerWidget);
+    m_listLayout = new QVBoxLayout(m_listWidget);
+    m_listLayout->setContentsMargins(0, 0, 0, 0);
+    m_listLayout->setSpacing(5);
+    mainLayout->addWidget(m_listWidget);
+    connect(m_flowList, &GppFlowList::cardMoved, this, [this](int from, int to) {
+        m_apiRows.move(from, to);
+        refreshApiLayout();
+    });
     const auto apis = toml::find_or_default<toml::ordered_array>(m_projectConfig, "backend", "apis");
     for (const auto& api : apis) {
-        if (!api.is_table()) {
-            continue;
-        }
-        ElaScrollPageArea* newRowWidget = createApiInputRowWidget(api);
-        m_mainLayout->addWidget(newRowWidget);
+        if (api.is_table()) createApiInputRowWidget(api);
     }
-    if (apis.size() == 0) {
-        addApiInputRow();
-    }
-    updateMoveButtonStates();
+    if (m_apiRows.empty()) createApiInputRowWidget();
+    refreshApiLayout();
 
     // Api 使用策略
     const std::string strategy = toml::find_or(m_projectConfig, "backend", "apiStrategy", "random");
@@ -119,46 +154,28 @@ void ApiSettingsPage::setupUi()
     apiTimeoutSpinBox->setValue(timeout);
     apiTimeoutLayout->addWidget(apiTimeoutSpinBox);
 
-    // “增加新 Api”按钮
-    ElaToolButton* addApiButton = new ElaToolButton(this);
-    addApiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    addApiButton->setElaIcon(ElaIconType::Plus);
-    addApiButton->setText(tr("增加新 Api"));
-    addApiButton->setFixedWidth(120);
-    connect(addApiButton, &ElaToolButton::clicked, this, &ApiSettingsPage::addApiInputRow);
-
     m_applyFunc = [=]()
         {
+            toml::ordered_array apiArray;
+            if (!serializeApis(apiArray)) return;
             apiStrategyGroup->button(0)->isChecked() ? insertToml(m_projectConfig, "backend.apiStrategy", "random")
                 : insertToml(m_projectConfig, "backend.apiStrategy", "fallback");
             insertToml(m_projectConfig, "backend.apiTimeout", apiTimeoutSpinBox->value());
-
-            toml::ordered_array apiArray;
-            for (const auto& apiRow : m_apiRows) {
-                if (apiRow.applyFunc) {
-                    apiRow.applyFunc(apiArray);
-                }
-            }
+            insertToml(m_projectConfig, "GUIConfig.apiLayoutMode", m_layoutMode);
             insertToml(m_projectConfig, "backend.apis", apiArray);
         };
 
-    // 将按钮添加到布局中
-    m_mainLayout->addWidget(apiStrategyArea);
-    m_mainLayout->addWidget(apiTimeoutArea);
-    m_mainLayout->addWidget(addApiButton);
-    m_mainLayout->addStretch();
+    mainLayout->addWidget(apiStrategyArea);
+    mainLayout->addWidget(apiTimeoutArea);
+    mainLayout->addStretch();
     addCentralWidget(centerWidget, true, false, 0);
 }
 
 void ApiSettingsPage::addApiInputRow()
 {
-    ElaScrollPageArea* newRowWidget = createApiInputRowWidget();
-
-    // 获取当前布局中的项目数量
-    int count = m_mainLayout->count();
-    // count - 4 是因为最后是 stretch, addApiButton, apiStrategyArea, apiTimeoutArea
-    m_mainLayout->insertWidget(count - 4, newRowWidget);
-    updateMoveButtonStates();
+    createApiInputRowWidget();
+    if (m_layoutMode == 1) m_apiRows.move(m_apiRows.size() - 1, 0);
+    refreshApiLayout();
 }
 
 ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_value& api)
@@ -204,9 +221,17 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     }
 
     ElaScrollPageArea* container = new ElaScrollPageArea(this);
-    container->setFixedHeight(150);
+    container->setFixedHeight(180);
 
     QHBoxLayout* containerLayout = new QHBoxLayout(container);
+    QVBoxLayout* fieldsLayout = new QVBoxLayout();
+    ElaText* nameLabel = new ElaText(container);
+    nameLabel->setTextPixelSize(16);
+    nameLabel->setWordWrap(false);
+    nameLabel->setIndent(8);
+    fieldsLayout->addSpacing(8);
+    fieldsLayout->addWidget(nameLabel);
+    containerLayout->addLayout(fieldsLayout, 1);
 
     QWidget* formWidget = new QWidget(container);
     QGridLayout* formLayout = new QGridLayout(formWidget);
@@ -288,9 +313,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     rightLayout->addStretch();
 
     ElaIconButton* deleteButton = new ElaIconButton(ElaIconType::Trash, rightWidget);
-    deleteButton->setProperty("containerWidget", QVariant::fromValue<QWidget*>(container));
     rightLayout->addWidget(deleteButton);
-    connect(deleteButton, &ElaIconButton::clicked, this, &ApiSettingsPage::onDeleteApiRow);
+    connect(deleteButton, &ElaIconButton::clicked, this, [=]() { deleteApiRow(container); });
 
     ElaCheckBox* enableCheckBox = new ElaCheckBox(tr("启用"), rightWidget);
     enableCheckBox->setChecked(enable);
@@ -362,6 +386,24 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     const ScrollableTabPage basicTabPage = createScrollablePage(tabWidget);
     QWidget* basicPage = basicTabPage.content;
     QVBoxLayout* basicLayout = basicTabPage.layout;
+
+    auto [nameArea, nameLayout] = createFormRow(basicPage);
+    nameLayout->addWidget(new ElaText(tr("名称"), 16, nameArea));
+    nameLayout->addStretch();
+    ElaLineEdit* nameEdit = new ElaLineEdit(nameArea);
+    nameEdit->setMinimumWidth(340);
+    nameEdit->setPlaceholderText(tr("自定义 Api"));
+    nameEdit->setText(QString::fromStdString(toml::find_or(api, "name", tr("自定义 Api").toStdString())));
+    nameLayout->addWidget(nameEdit);
+    basicLayout->addWidget(nameArea);
+    if (m_layoutMode == 0) {
+        basicLayout->addWidget(formWidget);
+        moveUpButton->hide();
+        moveDownButton->hide();
+    }
+    else {
+        fieldsLayout->addWidget(formWidget);
+    }
 
     ElaScrollPageArea* extraKeysArea = new ElaScrollPageArea(basicPage);
     extraKeysArea->setFixedHeight(230);
@@ -601,8 +643,10 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     advancedLayout->addStretch();
     tabWidget->addTab(advancedTabPage.page, tr("高级设置"));
 
-    auto showApiResultWindow = [=](const QString& title, const QString& content)
+    auto showApiResultWindow = [=, configGuard = QPointer<ElaWidget>(configWidget)](const QString& title, const QString& content)
         {
+            // 切换布局会重建配置窗口，旧请求完成后不再打开结果窗口。
+            if (!configGuard) return;
             ElaDialog* resultDialog = new ElaDialog(configWidget);
             resultDialog->setAttribute(Qt::WA_DeleteOnClose);
             resultDialog->setWindowTitle(title);
@@ -872,29 +916,54 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
         });
 
     configWidget->hide();
-    connect(configButton, &ElaToolButton::clicked, this, [=]()
-        {
-            configWidget->move(window()->frameGeometry().center()
-                - configWidget->rect().center());
-            configWidget->show();
-            configWidget->raise();
-            configWidget->activateWindow();
-        });
-
-    containerLayout->addWidget(formWidget, 1);
+    const auto showConfig = [=]() {
+        configWidget->move(window()->frameGeometry().center() - configWidget->rect().center());
+        configWidget->show();
+        configWidget->raise();
+        configWidget->activateWindow();
+    };
+    connect(configButton, &ElaToolButton::clicked, this, showConfig);
     containerLayout->addWidget(rightWidget);
+
+    GppApiCard* flowCard = new GppApiCard(m_flowList);
+    flowCard->dragHandle()->setToolTip(tr("拖动排序"));
+    m_flowList->setDragHandle(flowCard, flowCard->dragHandle());
+    ElaMenu* menu = new ElaMenu(flowCard);
+    QAction* enableAction = menu->addAction(tr("启用"));
+    enableAction->setCheckable(true);
+    enableAction->setChecked(enable);
+    connect(enableAction, &QAction::toggled, enableCheckBox, &QCheckBox::setChecked);
+    connect(enableCheckBox, &QCheckBox::toggled, enableAction, &QAction::setChecked);
+    connect(menu->addElaIconAction(ElaIconType::Sliders, tr("详细设置")), &QAction::triggered, this, showConfig);
+    connect(menu->addElaIconAction(ElaIconType::Copy, tr("生成副本")), &QAction::triggered,
+        this, [=]() { duplicateApiRow(container); });
+    menu->addSeparator();
+    connect(menu->addElaIconAction(ElaIconType::Trash, tr("删除模型")), &QAction::triggered,
+        this, [=]() { deleteApiRow(container); });
+    flowCard->setMenu(menu);
+    const auto updateName = [=]() {
+        const QString name = nameEdit->text().trimmed().isEmpty() ? tr("自定义 Api") : nameEdit->text().trimmed();
+        nameLabel->setText(name);
+        flowCard->setApiName(name);
+        m_flowList->layout()->invalidate();
+        configWidget->setWindowTitle(tr("Api 详细配置 — %1").arg(name));
+    };
+    connect(nameEdit, &QLineEdit::textChanged, this, updateName);
+    // 停用后保留菜单入口，用文字颜色区分状态。
+    connect(enableCheckBox, &QCheckBox::toggled, flowCard, &GppApiCard::setApiEnabled);
+    flowCard->setApiEnabled(enable);
+    updateName();
 
     ApiRowControls newRowControls;
     newRowControls.container = container;
     newRowControls.configWidget = configWidget;
+    newRowControls.flowCard = flowCard;
     newRowControls.moveUpButton = moveUpButton;
     newRowControls.moveDownButton = moveDownButton;
-    newRowControls.applyFunc = [=](toml::ordered_array& apiArray)
+    newRowControls.serializeFunc = [=](toml::ordered_array& apiArray)
         {
-            if (urlEdit->text().isEmpty()) {
-                return;
-            }
             toml::ordered_table apiTable;
+            apiTable.emplace("name", (nameEdit->text().trimmed().isEmpty() ? tr("自定义 Api") : nameEdit->text().trimmed()).toStdString());
             apiTable.emplace("protocol", protocolComboBox->currentText().toStdString());
             toml::ordered_array apiKeysArray;
             const std::string primaryKey = keyEdit->text().toStdString();
@@ -935,48 +1004,75 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             apiTable.emplace("extraBodyEnable", extraBodyCheckBox->isChecked());
             if (!extraHeadersEdit->toPlainText().trimmed().isEmpty()) {
                 ordered_json extraHeaders;
-                if (parseJsonObjectForRequest(extraHeadersEdit, "extraHeaders", extraHeaders)) {
-                    apiTable.emplace("extraHeaders", json2Toml(extraHeaders));
-                }
+                if (!parseJsonObjectForRequest(extraHeadersEdit, "extraHeaders", extraHeaders)) return false;
+                apiTable.emplace("extraHeaders", json2Toml(extraHeaders));
             }
             if (!extraBodyEdit->toPlainText().trimmed().isEmpty()) {
                 ordered_json extraBody;
-                if (parseJsonObjectForRequest(extraBodyEdit, "extraBody", extraBody)) {
-                    apiTable.emplace("extraBody", json2Toml(extraBody));
-                }
+                if (!parseJsonObjectForRequest(extraBodyEdit, "extraBody", extraBody)) return false;
+                apiTable.emplace("extraBody", json2Toml(extraBody));
             }
             apiArray.push_back(std::move(apiTable));
+            return true;
         };
     m_apiRows.append(newRowControls);
 
     return container;
 }
 
+bool ApiSettingsPage::serializeApis(toml::ordered_array& apis) const
+{
+    for (const auto& row : m_apiRows) {
+        if (!row.serializeFunc(apis)) return false;
+    }
+    return true;
+}
+
+void ApiSettingsPage::switchLayout(int mode)
+{
+    if (mode == m_layoutMode) return;
+    toml::ordered_array apis;
+    // 先读取当前控件和排序，成功后才销毁旧布局；无效 JSON 不会因切换而丢失。
+    if (!serializeApis(apis)) return;
+    m_flowList->setCards({});
+    for (const auto& row : m_apiRows) {
+        delete row.configWidget;
+        delete row.container;
+        delete row.flowCard;
+    }
+    m_apiRows.clear();
+    m_layoutMode = mode;
+    for (const auto& api : apis) createApiInputRowWidget(api);
+    refreshApiLayout();
+    insertToml(m_projectConfig, "GUIConfig.apiLayoutMode", mode);
+}
+
+void ApiSettingsPage::refreshApiLayout()
+{
+    while (auto* item = m_listLayout->takeAt(0)) delete item;
+    QList<QWidget*> cards;
+    for (const auto& row : m_apiRows) {
+        m_listLayout->addWidget(row.container);
+        cards.append(row.flowCard);
+    }
+    m_flowList->setCards(cards);
+    m_flowList->setVisible(m_layoutMode == 0);
+    m_listWidget->setVisible(m_layoutMode == 1);
+    m_flowModeButton->setEnabled(m_layoutMode != 0);
+    m_listModeButton->setEnabled(m_layoutMode != 1);
+    updateMoveButtonStates();
+}
+
 void ApiSettingsPage::moveApiRow(ElaScrollPageArea* container, int offset)
 {
-    const int rowIndex = [&]()
-        {
-            for (int i = 0; i < m_apiRows.size(); ++i) {
-                if (m_apiRows.at(i).container == container) {
-                    return i;
-                }
-            }
-            return -1;
-        }();
-    const int targetIndex = rowIndex + offset;
-    if (rowIndex < 0 || targetIndex < 0 || targetIndex >= m_apiRows.size()) {
+    for (int i = 0; i < m_apiRows.size(); ++i) {
+        if (m_apiRows.at(i).container != container) continue;
+        const int target = i + offset;
+        if (target < 0 || target >= m_apiRows.size()) return;
+        m_apiRows.move(i, target);
+        refreshApiLayout();
         return;
     }
-
-    const int layoutIndex = m_mainLayout->indexOf(container);
-    if (layoutIndex < 0) {
-        return;
-    }
-
-    m_mainLayout->removeWidget(container);
-    m_mainLayout->insertWidget(layoutIndex + offset, container);
-    m_apiRows.move(rowIndex, targetIndex);
-    updateMoveButtonStates();
 }
 
 void ApiSettingsPage::updateMoveButtonStates()
@@ -987,27 +1083,52 @@ void ApiSettingsPage::updateMoveButtonStates()
     }
 }
 
-void ApiSettingsPage::onDeleteApiRow()
+void ApiSettingsPage::deleteApiRow(ElaScrollPageArea* container)
 {
-    ElaIconButton* deleteButton = qobject_cast<ElaIconButton*>(sender());
-    if (!deleteButton) {
-        return;
-    }
-
-    QWidget* containerWidget = deleteButton->property("containerWidget").value<QWidget*>();
-    if (!containerWidget) {
-        return;
-    }
-
     for (int i = 0; i < m_apiRows.size(); ++i) {
-        if (m_apiRows.at(i).container == containerWidget) {
-            m_apiRows.at(i).configWidget->deleteLater();
-            m_apiRows.removeAt(i);
-            break;
-        }
+        if (m_apiRows.at(i).container != container) continue;
+        ElaContentDialog dialog(window());
+        dialog.setLeftButtonText(tr("否"));
+        dialog.setMiddleButtonText(tr("思考人生"));
+        dialog.setRightButtonText(tr("是"));
+        QWidget* widget = new QWidget(&dialog);
+        QVBoxLayout* layout = new QVBoxLayout(widget);
+        layout->setContentsMargins(15, 25, 15, 10);
+        ElaText* title = new ElaText(tr("删除 Api"), widget);
+        title->setTextStyle(ElaTextType::Title);
+        title->setWordWrap(false);
+        layout->addWidget(title);
+        layout->addSpacing(2);
+        ElaText* message = new ElaText(tr("确定删除『%1』吗？").arg(m_apiRows.at(i).flowCard->text()), 16, widget);
+        message->setTextStyle(ElaTextType::Body);
+        message->setWordWrap(true);
+        layout->addWidget(message);
+        layout->addStretch();
+        dialog.setCentralWidget(widget);
+        if (dialog.exec() != QDialog::Accepted) return;
+        const auto row = m_apiRows.takeAt(i);
+        m_listLayout->removeWidget(row.container);
+        row.container->hide();
+        row.flowCard->hide();
+        row.configWidget->deleteLater();
+        row.container->deleteLater();
+        row.flowCard->deleteLater();
+        refreshApiLayout();
+        return;
     }
+}
 
-    m_mainLayout->removeWidget(containerWidget);
-    containerWidget->deleteLater();
-    updateMoveButtonStates();
+void ApiSettingsPage::duplicateApiRow(ElaScrollPageArea* container)
+{
+    for (int i = 0; i < m_apiRows.size(); ++i) {
+        if (m_apiRows.at(i).container != container) continue;
+        toml::ordered_array apis;
+        if (!m_apiRows.at(i).serializeFunc(apis)) return;
+        auto& api = apis.front();
+        api["name"] = tr("%1（副本）").arg(QString::fromStdString(api.at("name").as_string())).toStdString();
+        createApiInputRowWidget(api);
+        m_apiRows.move(m_apiRows.size() - 1, i + 1);
+        refreshApiLayout();
+        return;
+    }
 }

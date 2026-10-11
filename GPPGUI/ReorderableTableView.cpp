@@ -18,7 +18,7 @@
 #include <QStyleOptionViewItem>
 #include <QStyledItemDelegate>
 
-#include "ElaDef.h"
+#include "ElaWidgetToolsDef.h"
 #include "ElaTheme.h"
 
 namespace

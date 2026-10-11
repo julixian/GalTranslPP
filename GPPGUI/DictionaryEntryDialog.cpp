@@ -18,7 +18,7 @@
 #include <QVBoxLayout>
 
 #include "ElaAlignedCheckBox.h"
-#include "ElaDef.h"
+#include "ElaWidgetToolsDef.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaMessageBar.h"

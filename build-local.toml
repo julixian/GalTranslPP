@@ -1,0 +1,9 @@
+# 本机构建工具路径，按宿主系统名称选择表。
+# 路径使用 TOML 单引号字符串，Windows 反斜杠无需转义。
+[windows]
+# vcpkg 安装根目录（包含 vcpkg.exe 和 scripts）；留空则从 PATH 查找。
+# 示例：vcpkg_root = 'D:\vcpkg'
+vcpkg_root = ''
+
+# Qt SDK 根目录（包含 include、lib、bin），不可留空。
+qt_root = 'D:\Qt\6.12.0\msvc2022_64'

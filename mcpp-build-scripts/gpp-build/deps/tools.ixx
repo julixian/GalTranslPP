@@ -1,7 +1,7 @@
 export module gpp.deps.tools;
 
 import std;
-import mcpp;
+import mcpp.core;
 
 export namespace gpp::deps::tools::win {
 

@@ -1,7 +1,7 @@
 export module gpp.deps.vcpkg;
 
 import std;
-import mcpp;
+import mcpp.core;
 import mcpp.plugins;
 import mcpp.deps;
 import mcpp.plugins.fs;

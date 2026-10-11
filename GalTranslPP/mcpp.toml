@@ -4,7 +4,7 @@ name = "core"
 description = "GalTransl++ core library"
 
 [build-dependencies]
-"gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
+"gpp.build" = { path = "../mcpp-build-scripts/gpp-build" }
 
 [build]
 default-profile = "release"

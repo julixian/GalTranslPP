@@ -44,7 +44,7 @@ cd vcpkg
 
 - 1、  访问 [Qt 官方网站](https://www.qt.io/download-qt-installer-oss) 下载并运行 Qt 社区开源版本的在线安装器 (需要注册 Qt 账户)。
 - 2、  在安装器的组件选择页面，确保勾选以下组件:
-  - `Qt` → `Qt 6.11.1 (或更高，但不保证兼容性)` → `MSVC 2022 64-bit`
+  - `Qt` → `Qt 6.12.0 (或相近版本，但不保证兼容性)` → `MSVC 2022 64-bit`
 
 ## 3. 拉取项目源码
 
@@ -57,7 +57,7 @@ cd GalTranslPP
 
 ## 4. 为构建脚本配置本机工具路径
 
-请完成 `mcpp-build-scripts\gpp-build\gpp-build.ixx` 头部的 `本机工具路径配置`。
+请完成 `build-local.toml` 的 `本机工具路径配置`。
 
 ## 5. 编译项目
 
@@ -83,7 +83,7 @@ mcpp build -p GPPGUI --profile fast-release
 
 - 0、 先将项目根目录的 `Example\BaseConfig` 文件夹内的 `Python-3.12.10-embed-amd64.zip` 文件解压到同一文件夹下
 - 1、 运行项目根目录下的 `Release.py`
-- 2、 打开 Qt 专属控制台，如 Qt 6.11.1 (MSVC 2022 64-bit)，输入命令 
+- 2、 打开 Qt 专属控制台，如 Qt 6.12.0 (MSVC 2022 64-bit)，输入命令 
 
 ```cmd
 windeployqt path/to/GalTranslPP_CLI.exe

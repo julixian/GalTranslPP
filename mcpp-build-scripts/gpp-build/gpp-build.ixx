@@ -1,7 +1,8 @@
 export module gpp.build;
 
 import std;
-import mcpp;
+import mcpp.core;
+import tomlplusplus;
 import mcpp.deps;
 import mcpp.plugins.fs;
 import gpp.deps.vcpkg;
@@ -12,19 +13,24 @@ export namespace gpp {
 namespace fs = std::filesystem;
 namespace win {
 
-// ===== 本机工具路径配置 =====
-// 在 R"(...)" 的括号内填写绝对路径，Windows 反斜杠无需转义。
-// vcpkg：填写安装根目录（包含 vcpkg.exe 和 scripts），留空则从 PATH 查找。
-// 示例：R"(D:\vcpkg)"
-const fs::path vcpkg_root = R"()";
-// Qt：填写 SDK 根目录（包含 include、lib、bin），不可留空。
-const fs::path qt_root = R"(D:\Qt\6.11.1\msvc2022_64)";
-// ===== 配置结束 =====
-
 fs::path workspace_directory() {
     // 通过宿主模块的位置定位工作区，不依赖调用它的项目目录。
     return fs::path(__FILE__).parent_path().parent_path().parent_path();
 }
+
+// 本机工具配置按宿主系统分表，修改后重新执行构建脚本。
+const toml::table& local_tools() {
+    const auto file = workspace_directory() / "build-local.toml";
+    mcpp::rerun_if_changed(file.generic_string().c_str());
+    static const auto config = toml::parse_file(file.string());
+    return config;
+}
+
+fs::path local_tool_path(std::string_view key) {
+    // 当前为 Windows 宿主入口；mcpp::host() 返回完整 triple，不能直接作为系统表名。
+    return local_tools()["windows"][key].value_or(std::string{});
+}
+
 bool is_release_profile() {
     const std::string_view profile = mcpp::profile();
     return profile == "release" || profile == "fast-release";
@@ -60,7 +66,7 @@ constexpr const char* windows_triplet = "gpp-x64-windows-release";
 
 gpp::deps::vcpkg::prefix configure_vcpkg(const char* link_target = nullptr) {
     gpp::deps::vcpkg::options options;
-    options.vcpkg_root = vcpkg_root;
+    options.vcpkg_root = local_tool_path("vcpkg_root");
     options.triplet = windows_triplet;
     // 空标记文件只控制 clang-cl 依赖的 LTO。
     const auto lto_marker = workspace_directory() / "vcpkg-scripts" / ".vcpkg-use-lto";
@@ -97,7 +103,7 @@ void link_python_libraries() {
 
 gpp::rules::qt::options make_qt_options(std::vector<std::string> modules) {
     gpp::rules::qt::options qt_options;
-    qt_options.root = qt_root;
+    qt_options.root = local_tool_path("qt_root");
     qt_options.modules = std::move(modules);
     return qt_options;
 }

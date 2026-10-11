@@ -4,7 +4,7 @@ module;
 export module gpp.rules.qt;
 
 import std;
-import mcpp;
+import mcpp.core;
 import mcpp.plugins;
 
 export namespace gpp::rules::qt {

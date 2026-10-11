@@ -4,7 +4,7 @@
 #include <QString>
 #include <Qt>
 
-#include "ElaDef.h"
+#include "ElaWidgetToolsDef.h"
 #include "ElaTheme.h"
 
 #include <nlohmann/json.hpp>

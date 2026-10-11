@@ -5,12 +5,10 @@ version = "1.0.0"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"
 
-[lib]
-path = "gpp-build.ixx"
-
-[build]
-sources = ["gpp-build.ixx", "deps/*.ixx"]
-module_extensions = [".ixx"]
+[dependencies]
+# 将插件依赖重新导出给使用 gpp.build 的构建脚本，各成员无需重复声明。
+mcpp.plugins = { version = "0.18.1", features = ["deps"], reexport = true }
+marzer.tomlplusplus = "3.4.0"
 
 [features]
 default = ["rules-qt"]
@@ -20,6 +18,9 @@ sources = ["rules/qt.ixx"]
 rule_module = "gpp.rules.qt"
 device_extensions = [".ui", ".qrc", ".ts"]
 
-[build-dependencies]
-# 将插件的宿主模块提供给使用 gpp.build 的构建脚本，各成员无需重复声明。
-mcpp.plugins = { version = "0.18.1", features = ["deps"], host-module = true, reexport = true }
+[lib]
+path = "gpp-build.ixx"
+
+[build]
+sources = ["gpp-build.ixx", "deps/*.ixx"]
+module_extensions = [".ixx"]

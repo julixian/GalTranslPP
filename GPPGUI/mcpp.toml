@@ -8,7 +8,7 @@ name = "gui"
 "gpp.updater" = { path = "../Updater", artifacts = ["Updater"] }
 
 [build-dependencies]
-"gpp.build" = { path = "../mcpp-build-scripts/gpp-build", host-module = true }
+"gpp.build" = { path = "../mcpp-build-scripts/gpp-build" }
 
 [target.windows.build-dependencies]
 "gpp.vcpkg-link-libs" = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }

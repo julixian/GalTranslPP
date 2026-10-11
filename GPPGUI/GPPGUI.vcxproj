@@ -155,7 +155,6 @@
     <ClCompile Include="DictionarySearchBar.cpp" />
     <ClCompile Include="DictExSettingsPage.cpp" />
     <ClCompile Include="ElaDoubleText.cpp" />
-    <ClCompile Include="ElaAlignedCheckBox.cpp" />
     <ClCompile Include="GptDictModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
     <ClCompile Include="ElaInputDialog.cpp" />
@@ -311,7 +310,6 @@
     <ClInclude Include="EtaEstimator.hpp" />
     <QtMoc Include="ElaNoWheelComboBox.h" />
     <QtMoc Include="DictionarySearchBar.h" />
-    <QtMoc Include="ElaAlignedCheckBox.h" />
     <QtMoc Include="DictionaryEntryDialog.h" />
     <QtMoc Include="SkipTransCfgPage.h" />
     <QtMoc Include="DictionaryReader.h" />

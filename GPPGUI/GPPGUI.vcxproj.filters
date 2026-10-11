@@ -183,9 +183,6 @@
     <ClCompile Include="ElaDoubleText.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="ElaAlignedCheckBox.cpp">
-      <Filter>Source Files\ToolWidgetsImpl</Filter>
-    </ClCompile>
     <ClCompile Include="TreeSitterHighlighter.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
@@ -315,9 +312,6 @@
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="ElaDoubleText.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
-    </QtMoc>
-    <QtMoc Include="ElaAlignedCheckBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="ReorderableTableView.h">

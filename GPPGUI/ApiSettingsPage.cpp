@@ -16,7 +16,7 @@
 #include "ElaSpinBox.h"
 #include "ElaToggleSwitch.h"
 #include "ElaDoubleText.h"
-#include "ElaAlignedCheckBox.h"
+#include "ElaCheckBox.h"
 #include "ElaNoWheelComboBox.h"
 #include "ElaTabWidget.h"
 #include "ElaScrollArea.h"
@@ -292,7 +292,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     rightLayout->addWidget(deleteButton);
     connect(deleteButton, &ElaIconButton::clicked, this, &ApiSettingsPage::onDeleteApiRow);
 
-    ElaAlignedCheckBox* enableCheckBox = new ElaAlignedCheckBox(tr("启用"), rightWidget);
+    ElaCheckBox* enableCheckBox = new ElaCheckBox(tr("启用"), rightWidget);
     enableCheckBox->setChecked(enable);
     rightLayout->addWidget(enableCheckBox, 0, Qt::AlignHCenter);
 
@@ -490,7 +490,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     temperatureSlider->setDecimals(2);
     temperatureSlider->setValue(temperature.value_or(1.0));
     temperatureConfigLayout->addWidget(temperatureSlider);
-    ElaAlignedCheckBox* temperatureCheckBox = new ElaAlignedCheckBox(temperatureConfigArea);
+    ElaCheckBox* temperatureCheckBox = new ElaCheckBox(temperatureConfigArea);
     temperatureCheckBox->setChecked(temperature.has_value());
     temperatureConfigLayout->addWidget(temperatureCheckBox);
     advancedLayout->addWidget(temperatureConfigArea);
@@ -504,7 +504,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     topPSlider->setDecimals(2);
     topPSlider->setValue(topP.value_or(1.0));
     topPConfigLayout->addWidget(topPSlider);
-    ElaAlignedCheckBox* topPCheckBox = new ElaAlignedCheckBox(topPConfigArea);
+    ElaCheckBox* topPCheckBox = new ElaCheckBox(topPConfigArea);
     topPCheckBox->setChecked(topP.has_value());
     topPConfigLayout->addWidget(topPCheckBox);
     advancedLayout->addWidget(topPConfigArea);
@@ -518,7 +518,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     frequencyPenaltySlider->setDecimals(2);
     frequencyPenaltySlider->setValue(frequencyPenalty.value_or(0.0));
     frequencyPenaltyConfigLayout->addWidget(frequencyPenaltySlider);
-    ElaAlignedCheckBox* frequencyPenaltyCheckBox = new ElaAlignedCheckBox(frequencyPenaltyConfigArea);
+    ElaCheckBox* frequencyPenaltyCheckBox = new ElaCheckBox(frequencyPenaltyConfigArea);
     frequencyPenaltyCheckBox->setChecked(frequencyPenalty.has_value());
     frequencyPenaltyConfigLayout->addWidget(frequencyPenaltyCheckBox);
     advancedLayout->addWidget(frequencyPenaltyConfigArea);
@@ -532,7 +532,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     presencePenaltySlider->setDecimals(2);
     presencePenaltySlider->setValue(presencePenalty.value_or(0.0));
     presencePenaltyConfigLayout->addWidget(presencePenaltySlider);
-    ElaAlignedCheckBox* presencePenaltyCheckBox = new ElaAlignedCheckBox(presencePenaltyConfigArea);
+    ElaCheckBox* presencePenaltyCheckBox = new ElaCheckBox(presencePenaltyConfigArea);
     presencePenaltyCheckBox->setChecked(presencePenalty.has_value());
     presencePenaltyConfigLayout->addWidget(presencePenaltyCheckBox);
     advancedLayout->addWidget(presencePenaltyConfigArea);
@@ -563,7 +563,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     extraHeadersTitleLayout->addWidget(new ElaDoubleText("extraHeaders", 16,
         tr("JSON 对象，用于追加自定义 HTTP header"), 10, "", extraHeadersArea));
     extraHeadersTitleLayout->addStretch();
-    ElaAlignedCheckBox* extraHeadersCheckBox = new ElaAlignedCheckBox(extraHeadersArea);
+    ElaCheckBox* extraHeadersCheckBox = new ElaCheckBox(extraHeadersArea);
     extraHeadersCheckBox->setChecked(extraHeadersEnable);
     extraHeadersTitleLayout->addWidget(extraHeadersCheckBox);
     extraHeadersLayout->addLayout(extraHeadersTitleLayout);
@@ -587,7 +587,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
         tr("JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递"),
         10, "", extraBodyArea));
     extraBodyTitleLayout->addStretch();
-    ElaAlignedCheckBox* extraBodyCheckBox = new ElaAlignedCheckBox(extraBodyArea);
+    ElaCheckBox* extraBodyCheckBox = new ElaCheckBox(extraBodyArea);
     extraBodyCheckBox->setChecked(extraBodyEnable);
     extraBodyTitleLayout->addWidget(extraBodyCheckBox);
     extraBodyLayout->addLayout(extraBodyTitleLayout);

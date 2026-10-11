@@ -17,7 +17,7 @@
 #include <QStyledItemDelegate>
 #include <QVBoxLayout>
 
-#include "ElaAlignedCheckBox.h"
+#include "ElaCheckBox.h"
 #include "ElaWidgetToolsDef.h"
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
@@ -470,7 +470,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     settingsLayout->setHorizontalSpacing(8);
     settingsLayout->setVerticalSpacing(6);
 
-    ElaAlignedCheckBox* isRegCheckBox = new ElaAlignedCheckBox(tr("启用正则（isReg）"), this);
+    ElaCheckBox* isRegCheckBox = new ElaCheckBox(tr("启用正则（isReg）"), this);
     isRegCheckBox->setChecked(entry.isReg);
     settingsLayout->addWidget(isRegCheckBox, 0, 0, 1, 2);
 

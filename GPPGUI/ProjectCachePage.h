@@ -13,7 +13,7 @@
 
 class ElaPlainTextEdit;
 class ElaIconButton;
-class ElaPushButton;
+class GppPushButton;
 class ElaToolButton;
 class ElaText;
 class ElaListView;
@@ -163,9 +163,9 @@ private:
 
     QButtonGroup* m_sidebarButtonGroup = nullptr;
     QStackedWidget* m_sidebarStack = nullptr;
-    ElaPushButton* m_filesNavButton = nullptr;
-    ElaPushButton* m_searchNavButton = nullptr;
-    ElaPushButton* m_problemsNavButton = nullptr;
+    GppPushButton* m_filesNavButton = nullptr;
+    GppPushButton* m_searchNavButton = nullptr;
+    GppPushButton* m_problemsNavButton = nullptr;
     ElaListView* m_fileList = nullptr;
     ElaListView* m_searchResultList = nullptr;
     ElaListView* m_problemList = nullptr;

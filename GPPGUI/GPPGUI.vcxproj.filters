@@ -111,7 +111,7 @@
     <ClCompile Include="NameTableModel.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="ElaInputDialog.cpp">
+    <ClCompile Include="GppInputDialog.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
     <ClCompile Include="CommonSettingsPage.cpp">
@@ -180,7 +180,7 @@
     <ClCompile Include="CustomFilePluginCfgPage.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
-    <ClCompile Include="ElaDoubleText.cpp">
+    <ClCompile Include="GppDoubleText.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
     <ClCompile Include="TreeSitterHighlighter.cpp">
@@ -251,7 +251,7 @@
     <QtMoc Include="NameTableModel.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="ElaInputDialog.h">
+    <QtMoc Include="GppInputDialog.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="CommonSettingsPage.h">
@@ -311,7 +311,7 @@
     <QtMoc Include="CustomFilePluginCfgPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="ElaDoubleText.h">
+    <QtMoc Include="GppDoubleText.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <QtMoc Include="ReorderableTableView.h">
@@ -323,7 +323,7 @@
     <QtMoc Include="TranslationWorkbenchPage.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <QtMoc Include="ElaNoWheelComboBox.h">
+    <QtMoc Include="GppNoWheelComboBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
   </ItemGroup>
@@ -354,6 +354,18 @@
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
     <ClInclude Include="ProblemOverviewTracker.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="GppComboBox.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="GppMultiSelectComboBox.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="GppPushButton.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="GppRadioButton.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
   </ItemGroup>

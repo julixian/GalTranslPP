@@ -7,7 +7,7 @@
 #include "ElaText.h"
 #include "ElaLineEdit.h"
 #include "ElaScrollPageArea.h"
-#include "ElaDoubleText.h"
+#include "GppDoubleText.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaMessageBar.h"
 #include "TreeSitterHighlighter.h"
@@ -44,7 +44,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     bool reverseConvert = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "reverseConversion", false);
     ElaScrollPageArea* reverseArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* reverseLayout = new QHBoxLayout(reverseArea);
-    ElaDoubleText* reverseText = new ElaDoubleText(tr("反向替换"), 16,
+    GppDoubleText* reverseText = new GppDoubleText(tr("反向替换"), 16,
         tr("关闭为全转半，开启为半转全"), 10, "", reverseArea);
     reverseLayout->addWidget(reverseText);
     reverseLayout->addStretch();

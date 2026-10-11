@@ -2,10 +2,10 @@
 
 #include "ElaScrollPageArea.h"
 
-class ElaDoubleText;
+class GppDoubleText;
 class ElaToggleSwitch;
 class ElaIconButton;
-class ElaNoWheelComboBox;
+class GppNoWheelComboBox;
 
 class PluginItemWidget : public ElaScrollPageArea
 {
@@ -31,8 +31,8 @@ Q_SIGNALS:
 
 private:
     // 内部控件
-    ElaNoWheelComboBox* m_pluginRunTimeBox = nullptr;
-    ElaDoubleText* m_pluginNameLabel = nullptr;
+    GppNoWheelComboBox* m_pluginRunTimeBox = nullptr;
+    GppDoubleText* m_pluginNameLabel = nullptr;
     ElaToggleSwitch* m_enableSwitch = nullptr;
     ElaIconButton* m_moveUpButton = nullptr;
     ElaIconButton* m_moveDownButton = nullptr;

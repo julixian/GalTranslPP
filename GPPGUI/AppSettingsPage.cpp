@@ -8,9 +8,9 @@
 
 #include "ElaApplication.h"
 #include "ElaMessageBar.h"
-#include "ElaNoWheelComboBox.h"
-#include "ElaDoubleText.h"
-#include "ElaRadioButton.h"
+#include "GppNoWheelComboBox.h"
+#include "GppDoubleText.h"
+#include "GppRadioButton.h"
 #include "ElaScrollPageArea.h"
 #include "ElaTheme.h"
 #include "ElaLineEdit.h"
@@ -54,12 +54,12 @@ void AppSettingsPage::setupUi()
     themeSwitchText->setTextPixelSize(16);
     themeSwitchLayout->addWidget(themeSwitchText);
     themeSwitchLayout->addStretch();
-    ElaNoWheelComboBox* themeComboBox = new ElaNoWheelComboBox(themeSwitchArea);
+    GppNoWheelComboBox* themeComboBox = new GppNoWheelComboBox(themeSwitchArea);
     themeComboBox->addItem(tr("日间模式"));
     themeComboBox->addItem(tr("夜间模式"));
     themeComboBox->setCurrentIndex((int)eTheme->getThemeMode());
     themeSwitchLayout->addWidget(themeComboBox);
-    connect(themeComboBox, QOverload<int>::of(&ElaNoWheelComboBox::currentIndexChanged), this, [=](int index)
+    connect(themeComboBox, QOverload<int>::of(&GppNoWheelComboBox::currentIndexChanged), this, [=](int index)
         {
             if (index == 0) {
                 eTheme->setThemeMode(ElaThemeType::Light);
@@ -89,12 +89,12 @@ void AppSettingsPage::setupUi()
     micaSwitchText->setTextPixelSize(16);
     windowModeSwitchLayout->addWidget(micaSwitchText);
     windowModeSwitchLayout->addStretch();
-    ElaRadioButton* normalButton = new ElaRadioButton("Normal", windowModeSwitchArea);
-    ElaRadioButton* elaMicaButton = new ElaRadioButton("ElaMica", windowModeSwitchArea);
-    ElaRadioButton* micaButton = new ElaRadioButton("Mica", windowModeSwitchArea);
-    ElaRadioButton* micaAltButton = new ElaRadioButton("Mica-Alt", windowModeSwitchArea);
-    ElaRadioButton* acrylicButton = new ElaRadioButton("Acrylic", windowModeSwitchArea);
-    ElaRadioButton* dwmBlurnormalButton = new ElaRadioButton("Dwm-Blur", windowModeSwitchArea);
+    ElaRadioButton* normalButton = new GppRadioButton("Normal", windowModeSwitchArea);
+    ElaRadioButton* elaMicaButton = new GppRadioButton("ElaMica", windowModeSwitchArea);
+    ElaRadioButton* micaButton = new GppRadioButton("Mica", windowModeSwitchArea);
+    ElaRadioButton* micaAltButton = new GppRadioButton("Mica-Alt", windowModeSwitchArea);
+    ElaRadioButton* acrylicButton = new GppRadioButton("Acrylic", windowModeSwitchArea);
+    ElaRadioButton* dwmBlurnormalButton = new GppRadioButton("Dwm-Blur", windowModeSwitchArea);
     QButtonGroup* windowModeButtonGroup = new QButtonGroup(windowModeSwitchArea);
     windowModeButtonGroup->addButton(normalButton, 0);
     windowModeButtonGroup->addButton(elaMicaButton, 1);
@@ -136,10 +136,10 @@ void AppSettingsPage::setupUi()
     guideBarModeText->setTextPixelSize(16);
     guideBarModeLayout->addWidget(guideBarModeText);
     guideBarModeLayout->addStretch();
-    ElaRadioButton* minimumButton = new ElaRadioButton("Minimum", guideBarModeArea);
-    ElaRadioButton* compactButton = new ElaRadioButton("Compact", guideBarModeArea);
-    ElaRadioButton* maximumButton = new ElaRadioButton("Maximum", guideBarModeArea);
-    ElaRadioButton* autoButton = new ElaRadioButton("Auto", guideBarModeArea);
+    ElaRadioButton* minimumButton = new GppRadioButton("Minimum", guideBarModeArea);
+    ElaRadioButton* compactButton = new GppRadioButton("Compact", guideBarModeArea);
+    ElaRadioButton* maximumButton = new GppRadioButton("Maximum", guideBarModeArea);
+    ElaRadioButton* autoButton = new GppRadioButton("Auto", guideBarModeArea);
     QButtonGroup* navigationGroup = new QButtonGroup(guideBarModeArea);
     navigationGroup->addButton(autoButton, 0);
     navigationGroup->addButton(minimumButton, 1);
@@ -170,11 +170,11 @@ void AppSettingsPage::setupUi()
     stackSwitchModeText->setTextPixelSize(16);
     stackSwitchModeLayout->addWidget(stackSwitchModeText);
     stackSwitchModeLayout->addStretch();
-    ElaRadioButton* noneButton = new ElaRadioButton("None", stackSwitchModeArea);
-    ElaRadioButton* popupButton = new ElaRadioButton("Popup", stackSwitchModeArea);
-    ElaRadioButton* scaleButton = new ElaRadioButton("Scale", stackSwitchModeArea);
-    ElaRadioButton* flipButton = new ElaRadioButton("Flip", stackSwitchModeArea);
-    ElaRadioButton* blurButton = new ElaRadioButton("Blur", stackSwitchModeArea);
+    ElaRadioButton* noneButton = new GppRadioButton("None", stackSwitchModeArea);
+    ElaRadioButton* popupButton = new GppRadioButton("Popup", stackSwitchModeArea);
+    ElaRadioButton* scaleButton = new GppRadioButton("Scale", stackSwitchModeArea);
+    ElaRadioButton* flipButton = new GppRadioButton("Flip", stackSwitchModeArea);
+    ElaRadioButton* blurButton = new GppRadioButton("Blur", stackSwitchModeArea);
     QButtonGroup* stackSwitchGroup = new QButtonGroup(stackSwitchModeArea);
     stackSwitchGroup->addButton(noneButton, 0);
     stackSwitchGroup->addButton(popupButton, 1);
@@ -209,7 +209,7 @@ void AppSettingsPage::setupUi()
     // 延迟项目初始化
     ElaScrollPageArea* lazyProjectInitializationArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* lazyProjectInitializationLayout = new QHBoxLayout(lazyProjectInitializationArea);
-    ElaDoubleText* lazyProjectInitializationText = new ElaDoubleText(
+    GppDoubleText* lazyProjectInitializationText = new GppDoubleText(
         tr("延迟项目初始化"), 16,
         tr("增加启动速度，但第一次进入某个项目时会增加卡一下初始化"),
         10, "", lazyProjectInitializationArea);
@@ -290,8 +290,8 @@ void AppSettingsPage::setupUi()
     nameTableOpenModeText->setTextPixelSize(16);
     nameTableOpenModeLayout->addWidget(nameTableOpenModeText);
     nameTableOpenModeLayout->addStretch();
-    ElaRadioButton* nameTableOpenModeTextButton = new ElaRadioButton(tr("纯文本模式"), nameTableOpenModeArea);
-    ElaRadioButton* nameTableOpenModeTableButton = new ElaRadioButton(tr("表格模式"), nameTableOpenModeArea);
+    ElaRadioButton* nameTableOpenModeTextButton = new GppRadioButton(tr("纯文本模式"), nameTableOpenModeArea);
+    ElaRadioButton* nameTableOpenModeTableButton = new GppRadioButton(tr("表格模式"), nameTableOpenModeArea);
     QButtonGroup* nameTableOpenModeGroup = new QButtonGroup(nameTableOpenModeArea);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTextButton, 0);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTableButton, 1);
@@ -319,8 +319,8 @@ void AppSettingsPage::setupUi()
     dictOpenModeText->setTextPixelSize(16);
     dictOpenModeLayout->addWidget(dictOpenModeText);
     dictOpenModeLayout->addStretch();
-    ElaRadioButton* dictOpenModeTextButton = new ElaRadioButton(tr("纯文本模式"), dictOpenModeArea);
-    ElaRadioButton* dictOpenModeTableButton = new ElaRadioButton(tr("表格模式"), dictOpenModeArea);
+    ElaRadioButton* dictOpenModeTextButton = new GppRadioButton(tr("纯文本模式"), dictOpenModeArea);
+    ElaRadioButton* dictOpenModeTableButton = new GppRadioButton(tr("表格模式"), dictOpenModeArea);
     QButtonGroup* dictOpenModeGroup = new QButtonGroup(dictOpenModeArea);
     dictOpenModeGroup->addButton(dictOpenModeTextButton, 0);
     dictOpenModeGroup->addButton(dictOpenModeTableButton, 1);
@@ -343,7 +343,7 @@ void AppSettingsPage::setupUi()
     // 允许在项目仍在运行的情况下关闭程序(危险)
     ElaScrollPageArea* allowCloseWhenRunningArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* allowCloseWhenRunningLayout = new QHBoxLayout(allowCloseWhenRunningArea);
-    ElaDoubleText* allowCloseWhenRunningText = new ElaDoubleText(tr("允许在项目仍在运行的情况下关闭程序"), 16,
+    GppDoubleText* allowCloseWhenRunningText = new GppDoubleText(tr("允许在项目仍在运行的情况下关闭程序"), 16,
         tr("危险！"), 10, "", allowCloseWhenRunningArea);
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningText);
     allowCloseWhenRunningLayout->addStretch();
@@ -359,7 +359,7 @@ void AppSettingsPage::setupUi()
     // 允许应用进程多开
     ElaScrollPageArea* allowMultiInstanceArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* allowMultiInstanceLayout = new QHBoxLayout(allowMultiInstanceArea);
-    ElaDoubleText* allowMultiInstanceText = new ElaDoubleText(tr("允许应用进程多开"), 16,
+    GppDoubleText* allowMultiInstanceText = new GppDoubleText(tr("允许应用进程多开"), 16,
         tr("通常建议由一个进程管理多个项目而不是多开进程"), 10, "", allowMultiInstanceArea);
     allowMultiInstanceLayout->addWidget(allowMultiInstanceText);
     allowMultiInstanceLayout->addStretch();
@@ -401,11 +401,11 @@ void AppSettingsPage::setupUi()
     // 语言设置
     ElaScrollPageArea* languageArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* languageLayout = new QHBoxLayout(languageArea);
-    ElaDoubleText* languageText = new ElaDoubleText(tr("语言设置"), 16,
+    GppDoubleText* languageText = new GppDoubleText(tr("语言设置"), 16,
         tr("重启生效"), 10, "", languageArea);
     languageLayout->addWidget(languageText);
     languageLayout->addStretch();
-    ElaNoWheelComboBox* languageComboBox = new ElaNoWheelComboBox(languageArea);
+    GppNoWheelComboBox* languageComboBox = new GppNoWheelComboBox(languageArea);
     languageComboBox->addItem("zh_CN");
     languageComboBox->addItem("en");
     if (int languageIndex = languageComboBox->findText(QString::fromStdString(toml::find_or(m_globalConfig, "language", "zh_CN")));
@@ -419,7 +419,7 @@ void AppSettingsPage::setupUi()
     // pythonEnvPath(重启生效)
     ElaScrollPageArea* pythonEnvPathArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* pythonEnvPathLayout = new QHBoxLayout(pythonEnvPathArea);
-    ElaDoubleText* pythonEnvPathText = new ElaDoubleText(tr("Python环境路径"), 16,
+    GppDoubleText* pythonEnvPathText = new GppDoubleText(tr("Python环境路径"), 16,
         tr("重启生效"), 10, "", pythonEnvPathArea);
     pythonEnvPathLayout->addWidget(pythonEnvPathText);
     pythonEnvPathLayout->addStretch();

@@ -6,8 +6,8 @@
 #include "ElaText.h"
 #include "ElaToggleSwitch.h"
 #include "ElaIconButton.h"
-#include "ElaDoubleText.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppDoubleText.h"
+#include "GppNoWheelComboBox.h"
 
 PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& runTimeStr, QWidget* parent)
     : ElaScrollPageArea(parent)
@@ -28,9 +28,9 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
     QHBoxLayout* mainLayout = new QHBoxLayout(this);
 
     // 插件名称
-    m_pluginNameLabel = new ElaDoubleText(pluginName, 16, toolTipMap[pluginName], 10, "", this);
+    m_pluginNameLabel = new GppDoubleText(pluginName, 16, toolTipMap[pluginName], 10, "", this);
 
-    m_pluginRunTimeBox = new ElaNoWheelComboBox(this);
+    m_pluginRunTimeBox = new GppNoWheelComboBox(this);
     m_pluginRunTimeBox->setFixedWidth(150);
     m_pluginRunTimeBox->addItems(boxItemMap[pluginName]);
     m_pluginRunTimeBox->setCurrentText(runTimeStr);

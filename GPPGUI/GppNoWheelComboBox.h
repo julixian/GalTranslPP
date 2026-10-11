@@ -1,13 +1,13 @@
 #pragma once
 
-#include "ElaComboBox.h"
+#include "GppComboBox.h"
 #include <QWheelEvent>
 
-class ElaNoWheelComboBox : public ElaComboBox
+class GppNoWheelComboBox : public GppComboBox
 {
 	Q_OBJECT
 public:
-	explicit ElaNoWheelComboBox(QWidget* parent = nullptr) : ElaComboBox(parent) { }
+	explicit GppNoWheelComboBox(QWidget* parent = nullptr) : GppComboBox(parent) { }
 
 protected:
 	// 重写滚轮事件

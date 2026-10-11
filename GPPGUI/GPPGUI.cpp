@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QTranslator>
 
+#include "ElaActionCommander.h"
 #include "ElaApplication.h"
 #include "Mainwindow.h"
 
@@ -222,6 +223,8 @@ int main(int argc, char* argv[])
         
 
         eApp->init();
+        ElaActionCommander::getInstance()->setIsMessageDisplayEnable(false);
+
         const int fontId = QFontDatabase::addApplicationFont(":/GPPGUI/Resource/fonts/MonaspaceNeon-Regular.otf");
         QFont uiFont = app.font();
         if (fontId >= 0) {
@@ -236,6 +239,7 @@ int main(int argc, char* argv[])
             }
         }
         app.setFont(uiFont);
+
         MainWindow w;
         w.show();
         if (checkUpdate) {

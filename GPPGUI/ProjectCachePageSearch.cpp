@@ -16,7 +16,7 @@
 #include "ElaContentDialog.h"
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaSpinBox.h"
 #include "ElaText.h"
 #include "ElaToolButton.h"

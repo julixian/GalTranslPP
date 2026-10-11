@@ -11,13 +11,13 @@
 #include "ElaPlainTextEdit.h"
 #include "ElaScrollPageArea.h"
 #include "ElaToolButton.h"
-#include "ElaRadioButton.h"
+#include "GppRadioButton.h"
 #include "ElaIconButton.h"
 #include "ElaSpinBox.h"
 #include "ElaToggleSwitch.h"
-#include "ElaDoubleText.h"
+#include "GppDoubleText.h"
 #include "ElaCheckBox.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppNoWheelComboBox.h"
 #include "ElaTabWidget.h"
 #include "ElaScrollArea.h"
 #include "TreeSitterHighlighter.h"
@@ -87,14 +87,14 @@ void ApiSettingsPage::setupUi()
     ElaScrollPageArea* apiStrategyArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* apiStrategyLayout = new QHBoxLayout(apiStrategyArea);
     apiStrategyLayout->setSpacing(8);
-    ElaDoubleText* apiStrategyTitle = new ElaDoubleText(tr("Api 使用策略"), 16,
+    GppDoubleText* apiStrategyTitle = new GppDoubleText(tr("Api 使用策略"), 16,
         tr("令牌策略，random随机轮询，fallback优先第一个，出现非额度/频率错误时使用下一个"), 10,
         "", apiStrategyArea);
     apiStrategyLayout->addWidget(apiStrategyTitle);
     apiStrategyLayout->addStretch();
 
-    ElaRadioButton* apiStrategyRandom = new ElaRadioButton("random", apiStrategyArea);
-    ElaRadioButton* apiStrategyFallback = new ElaRadioButton("fallback", apiStrategyArea);
+    ElaRadioButton* apiStrategyRandom = new GppRadioButton("random", apiStrategyArea);
+    ElaRadioButton* apiStrategyFallback = new GppRadioButton("fallback", apiStrategyArea);
     apiStrategyRandom->setChecked(isRandom);
     apiStrategyFallback->setChecked(!isRandom);
     apiStrategyLayout->addWidget(apiStrategyRandom);
@@ -109,7 +109,7 @@ void ApiSettingsPage::setupUi()
     ElaScrollPageArea* apiTimeoutArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* apiTimeoutLayout = new QHBoxLayout(apiTimeoutArea);
     apiTimeoutLayout->setSpacing(8);
-    ElaDoubleText* apiTimeoutTitle = new ElaDoubleText(tr("Api 超时时间"), 16,
+    GppDoubleText* apiTimeoutTitle = new GppDoubleText(tr("Api 超时时间"), 16,
         tr("Api 请求超时时间，单位为秒"), 10, "", apiTimeoutArea);
     apiTimeoutLayout->addWidget(apiTimeoutTitle);
     apiTimeoutLayout->addStretch();
@@ -248,7 +248,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     protocolLabel->setWordWrap(false);
     protocolLabel->setFixedWidth(protocolWidth);
     protocolLabel->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    ElaNoWheelComboBox* protocolComboBox = new ElaNoWheelComboBox(formWidget);
+    GppNoWheelComboBox* protocolComboBox = new GppNoWheelComboBox(formWidget);
     protocolComboBox->setFixedWidth(protocolWidth);
     protocolComboBox->addItems(QStringList{ "openai", "claude", "gemini", "openaires" });
     if (const int protocolIndex = protocolComboBox->findText(QString::fromStdString(protocol)); protocolIndex >= 0) {
@@ -368,7 +368,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QVBoxLayout* extraKeysLayout = new QVBoxLayout(extraKeysArea);
     extraKeysLayout->setContentsMargins(12, 6, 12, 8);
     extraKeysLayout->setSpacing(6);
-    extraKeysLayout->addWidget(new ElaDoubleText("ExtraKeys", 16, "", 0,
+    extraKeysLayout->addWidget(new GppDoubleText("ExtraKeys", 16, "", 0,
         tr("一行一个 key，保存时会接在首个 Api key 后面"), extraKeysArea));
     ElaPlainTextEdit* extraKeysEdit = new ElaPlainTextEdit(extraKeysArea);
     extraKeysEdit->setFixedHeight(165);
@@ -397,11 +397,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     basicLayout->addWidget(modelActionArea);
 
     auto [thinkingConfigArea, thinkingConfigLayout] = createFormRow(basicPage);
-    thinkingConfigLayout->addWidget(new ElaDoubleText(tr("思考等级"), 16,
+    thinkingConfigLayout->addWidget(new GppDoubleText(tr("思考等级"), 16,
         tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度"), 10,
         "", thinkingConfigArea));
     thinkingConfigLayout->addStretch();
-    ElaNoWheelComboBox* thinkingComboBox = new ElaNoWheelComboBox(thinkingConfigArea);
+    GppNoWheelComboBox* thinkingComboBox = new GppNoWheelComboBox(thinkingConfigArea);
     thinkingComboBox->setFixedWidth(130);
     thinkingComboBox->addItem(tr("不传递"), "off");
     for (const auto& level : QStringList{ "none", "minimal", "low", "medium", "high", "xhigh", "max" }) {
@@ -428,7 +428,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     const auto addAgentSwitch = [&](const std::string& key_, const QString& title, const QString& description, bool defaultValue, const QString& toolTip = {})
         {
             auto [area, layout] = createFormRow(agentTabPage.content);
-            layout->addWidget(new ElaDoubleText(title, 16, description, 10, toolTip, area));
+            layout->addWidget(new GppDoubleText(title, 16, description, 10, toolTip, area));
             layout->addStretch();
             ElaToggleSwitch* toggle = new ElaToggleSwitch(area);
             toggle->setIsToggled(toml::find_or(api, key_, defaultValue));
@@ -439,11 +439,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     agentTabPage.layout->addSpacing(8);
     agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 18, agentTabPage.content));
     auto [agentStrictToolsArea, agentStrictToolsLayout] = createFormRow(agentTabPage.content);
-    agentStrictToolsLayout->addWidget(new ElaDoubleText(tr("严格工具参数"), 16,
+    agentStrictToolsLayout->addWidget(new GppDoubleText(tr("严格工具参数"), 16,
         tr("OpenAI/Claude 可选严格范围；Gemini 固定使用原生工具参数约束"), 10,
         tr("仅 commit 严格只约束译文提交工具，查询、搜索和压缩工具不启用 strict；可减少严格工具 schema 的复杂度。"), agentStrictToolsArea));
     agentStrictToolsLayout->addStretch();
-    ElaNoWheelComboBox* agentStrictToolsComboBox = new ElaNoWheelComboBox(agentStrictToolsArea);
+    GppNoWheelComboBox* agentStrictToolsComboBox = new GppNoWheelComboBox(agentStrictToolsArea);
     agentStrictToolsComboBox->setFixedWidth(180);
     agentStrictToolsComboBox->addItem(tr("不严格"), "off");
     agentStrictToolsComboBox->addItem(tr("完全严格"), "all");
@@ -458,7 +458,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
         tr("Responses/Claude 原生自动压缩；模型不支持时可能报错或超出上下文上限"), false,
         tr("需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
     auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
-    agentCompactTokensLayout->addWidget(new ElaDoubleText(tr("原生自动压缩 token 阈值"), 16,
+    agentCompactTokensLayout->addWidget(new GppDoubleText(tr("原生自动压缩 token 阈值"), 16,
         tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10,
         tr("仅 Responses/Claude 启用原生自动压缩时生效；按服务端 token 数触发，与本地历史字节数不等价"), agentCompactTokensArea));
     agentCompactTokensLayout->addStretch();
@@ -482,7 +482,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QVBoxLayout* advancedLayout = advancedTabPage.layout;
 
     auto [temperatureConfigArea, temperatureConfigLayout] = createFormRow(advancedPage);
-    temperatureConfigLayout->addWidget(new ElaDoubleText(tr("温度"), 16,
+    temperatureConfigLayout->addWidget(new GppDoubleText(tr("温度"), 16,
         tr("勾选选框则使用自定义温度，否则使用供应商默认温度"), 10, "", temperatureConfigArea));
     temperatureConfigLayout->addStretch();
     ValueSliderWidget* temperatureSlider = new ValueSliderWidget(0.0, 2.0, temperatureConfigArea);
@@ -496,7 +496,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     advancedLayout->addWidget(temperatureConfigArea);
 
     auto [topPConfigArea, topPConfigLayout] = createFormRow(advancedPage);
-    topPConfigLayout->addWidget(new ElaDoubleText(tr("top_p"), 16,
+    topPConfigLayout->addWidget(new GppDoubleText(tr("top_p"), 16,
         tr("核采样(也是控制随机性的)"), 10, "", topPConfigArea));
     topPConfigLayout->addStretch();
     ValueSliderWidget* topPSlider = new ValueSliderWidget(0.0, 1.0, topPConfigArea);
@@ -510,7 +510,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     advancedLayout->addWidget(topPConfigArea);
 
     auto [frequencyPenaltyConfigArea, frequencyPenaltyConfigLayout] = createFormRow(advancedPage);
-    frequencyPenaltyConfigLayout->addWidget(new ElaDoubleText(tr("frequency_penalty"), 16,
+    frequencyPenaltyConfigLayout->addWidget(new GppDoubleText(tr("frequency_penalty"), 16,
         tr("频率惩罚"), 10, "", frequencyPenaltyConfigArea));
     frequencyPenaltyConfigLayout->addStretch();
     ValueSliderWidget* frequencyPenaltySlider = new ValueSliderWidget(-2.0, 2.0, frequencyPenaltyConfigArea);
@@ -524,7 +524,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     advancedLayout->addWidget(frequencyPenaltyConfigArea);
 
     auto [presencePenaltyConfigArea, presencePenaltyConfigLayout] = createFormRow(advancedPage);
-    presencePenaltyConfigLayout->addWidget(new ElaDoubleText(tr("presence_penalty"), 16,
+    presencePenaltyConfigLayout->addWidget(new GppDoubleText(tr("presence_penalty"), 16,
         tr("存在惩罚"), 10, "", presencePenaltyConfigArea));
     presencePenaltyConfigLayout->addStretch();
     ValueSliderWidget* presencePenaltySlider = new ValueSliderWidget(-2.0, 2.0, presencePenaltyConfigArea);
@@ -560,7 +560,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QHBoxLayout* extraHeadersTitleLayout = new QHBoxLayout();
     extraHeadersTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraHeadersTitleLayout->setSpacing(8);
-    extraHeadersTitleLayout->addWidget(new ElaDoubleText("extraHeaders", 16,
+    extraHeadersTitleLayout->addWidget(new GppDoubleText("extraHeaders", 16,
         tr("JSON 对象，用于追加自定义 HTTP header"), 10, "", extraHeadersArea));
     extraHeadersTitleLayout->addStretch();
     ElaCheckBox* extraHeadersCheckBox = new ElaCheckBox(extraHeadersArea);
@@ -583,7 +583,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QHBoxLayout* extraBodyTitleLayout = new QHBoxLayout();
     extraBodyTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraBodyTitleLayout->setSpacing(8);
-    extraBodyTitleLayout->addWidget(new ElaDoubleText("extraBody", 16,
+    extraBodyTitleLayout->addWidget(new GppDoubleText("extraBody", 16,
         tr("JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递"),
         10, "", extraBodyArea));
     extraBodyTitleLayout->addStretch();

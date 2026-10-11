@@ -5,12 +5,12 @@
 
 class ElaLineEdit;
 
-class ElaDoubleText : public QWidget
+class GppDoubleText : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ElaDoubleText(const QString& firstLine, int firstLinePixelSize,
+    explicit GppDoubleText(const QString& firstLine, int firstLinePixelSize,
         const QString& secondLine, int secondLinePixelSize, const QString& toolTip, QWidget* parent = nullptr);
 
     [[nodiscard]] QString getFirstLineText() const;

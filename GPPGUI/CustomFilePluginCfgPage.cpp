@@ -6,7 +6,7 @@
 #include <QDesktopServices>
 
 #include "ElaScrollPageArea.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppNoWheelComboBox.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
 #include "ElaToolButton.h"
@@ -59,7 +59,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	QHBoxLayout* inheritLayout = new QHBoxLayout(inheritArea);
 	ElaText* inheritText = new ElaText(tr("基类继承"), 16, inheritArea);
 	inheritLayout->addWidget(inheritText);
-	ElaNoWheelComboBox* inheritCombo = new ElaNoWheelComboBox(inheritArea);
+	GppNoWheelComboBox* inheritCombo = new GppNoWheelComboBox(inheritArea);
 	inheritCombo->setFixedWidth(150);
 	inheritCombo->addItem("NormalJson");
 	inheritCombo->addItem("Epub");

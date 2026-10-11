@@ -12,7 +12,7 @@
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaPlainTextEdit.h"
@@ -304,8 +304,8 @@ void DictSettingsPage::setupUi()
 				withdrawButton->setEnabled(!withdrawList.empty());
 				searchBar->show();
 			});
-		connect(refreshButton, &ElaPushButton::clicked, this, refreshFunc);
-		connect(saveButton, &ElaPushButton::clicked, this, [=]()
+		connect(refreshButton, &GppPushButton::clicked, this, refreshFunc);
+		connect(saveButton, &GppPushButton::clicked, this, [=]()
 			{
 				saveFunc(false);
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
@@ -338,7 +338,7 @@ void DictSettingsPage::setupUi()
 				}
 			};
 
-		connect(addDictButton, &ElaPushButton::clicked, this, [=]()
+		connect(addDictButton, &GppPushButton::clicked, this, [=]()
 			{
 				EntryType newEntry;
 				if (!openEntryDialog(EntryType{}, newEntry)) {
@@ -372,7 +372,7 @@ void DictSettingsPage::setupUi()
 				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 					&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 			});
-		connect(removeDictButton, &ElaPushButton::clicked, this, [=, &withdrawList]()
+		connect(removeDictButton, &GppPushButton::clicked, this, [=, &withdrawList]()
 			{
 				QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 				if (selectedRows.isEmpty()) {
@@ -400,7 +400,7 @@ void DictSettingsPage::setupUi()
 					withdrawButton->setEnabled(true);
 				}
 			});
-		connect(withdrawButton, &ElaPushButton::clicked, this, [=, &withdrawList]()
+		connect(withdrawButton, &GppPushButton::clicked, this, [=, &withdrawList]()
 			{
 				if (withdrawList.empty()) {
 					return;

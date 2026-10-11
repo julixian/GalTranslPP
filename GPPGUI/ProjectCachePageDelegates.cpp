@@ -8,7 +8,7 @@
 
 #include "ElaIconButton.h"
 #include "ElaPlainTextEdit.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaTheme.h"
 #include "ElaToolTip.h"
 
@@ -81,7 +81,7 @@ namespace ProjectCachePagePrivate
         edit->setFont(font);
     }
 
-    void tuneNavButton(ElaPushButton* button, bool active)
+    void tuneNavButton(GppPushButton* button, bool active)
     {
         if (!button) {
             return;

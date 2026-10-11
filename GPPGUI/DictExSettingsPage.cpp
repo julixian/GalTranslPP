@@ -5,7 +5,7 @@
 
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
-#include "ElaMultiSelectComboBox.h"
+#include "GppMultiSelectComboBox.h"
 #include "ElaToggleSwitch.h"
 
 import Tool;
@@ -36,7 +36,7 @@ void DictExSettingsPage::setupUi()
 
 	auto createDictSelectAreaFunc =
 		    [=](const QString& tipText, const QString& projectDictShowName, const std::string& projectDictStdFileName,
-			    const std::string& globalConfigKey, const std::string& projectConfigKey) -> ElaMultiSelectComboBox*
+			    const std::string& globalConfigKey, const std::string& projectConfigKey) -> GppMultiSelectComboBox*
 		{
 			ElaScrollPageArea* dictSelectArea = new ElaScrollPageArea(mainWidget);
 			QHBoxLayout* dictSelectLayout = new QHBoxLayout(dictSelectArea);
@@ -46,7 +46,7 @@ void DictExSettingsPage::setupUi()
 			dictSelectText->setTextPixelSize(16);
 			dictSelectLayout->addWidget(dictSelectText);
 			dictSelectLayout->addStretch();
-			ElaMultiSelectComboBox* dictNamesComboBox = new ElaMultiSelectComboBox(dictSelectArea);
+			GppMultiSelectComboBox* dictNamesComboBox = new GppMultiSelectComboBox(dictSelectArea);
 			dictNamesComboBox->setFixedWidth(500);
 			const auto globalConfigDictNames = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 				for (const auto& globalConfigDictName : globalConfigDictNames) {
@@ -83,11 +83,11 @@ void DictExSettingsPage::setupUi()
 	const std::string projectPreDictStdFileName = "ProjPreDict.toml";
 	const std::string projectGptDictStdFileName = "ProjGptDict.toml";
 	const std::string projectPostDictStdFileName = "ProjPostDict.toml";
-	ElaMultiSelectComboBox* preDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), projectPreDictShowName,
+	GppMultiSelectComboBox* preDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译前字典"), projectPreDictShowName,
 		projectPreDictStdFileName, "commonPreDicts", "preDicts");
-	ElaMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), projectGptDictShowName,
+	GppMultiSelectComboBox* gptDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的GPT字典"), projectGptDictShowName,
 		projectGptDictStdFileName, "commonGptDicts", "gptDicts");
-	ElaMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), projectPostDictShowName,
+	GppMultiSelectComboBox* postDictNamesComboBox = createDictSelectAreaFunc(tr("选择要启用的译后字典"), projectPostDictShowName,
 		projectPostDictStdFileName, "commonPostDicts", "postDicts");
 
 
@@ -165,7 +165,7 @@ void DictExSettingsPage::setupUi()
 	m_refreshCommonDictsListFunc = [=]()
 		{
 			auto refreshCommonDictsListFunc =
-				    [=](const QString& projectDictShowName, const std::string& globalConfigKey, ElaMultiSelectComboBox* dictNamesComboBox)
+				    [=](const QString& projectDictShowName, const std::string& globalConfigKey, GppMultiSelectComboBox* dictNamesComboBox)
 				{
 					const toml::array commonDictNamesArr = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 					QList<int> dictIndexesToRemove;
@@ -212,7 +212,7 @@ void DictExSettingsPage::setupUi()
 
 	m_applyFunc = [=]()
 		{
-			auto appendDictNamesFunc = [](toml::array& dictNamesArr, const ElaMultiSelectComboBox* dictNamesComboBox,
+			auto appendDictNamesFunc = [](toml::array& dictNamesArr, const GppMultiSelectComboBox* dictNamesComboBox,
 				const QString& projectDictShowName, const std::string& projectDictStdFileName)
 				{
 					for (const auto& selectedDictName : dictNamesComboBox->getCurrentSelection()) {

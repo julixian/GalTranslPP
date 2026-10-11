@@ -12,12 +12,12 @@
 #include "ElaScrollPageArea.h"
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaMessageBar.h"
 #include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaTabWidget.h"
-#include "ElaInputDialog.h"
+#include "GppInputDialog.h"
 #include "ElaContentDialog.h"
 #include "DictionaryEntryDialog.h"
 #include "DictionaryReader.h"
@@ -292,7 +292,7 @@ void CommonGptDictsPage::setupUi()
 				};
 			gptTabEntry->saveFunc = saveFunc;
 
-			connect(saveButton, &ElaPushButton::clicked, this, [=]()
+			connect(saveButton, &GppPushButton::clicked, this, [=]()
 				{
 					if (gptTabEntry->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
@@ -323,7 +323,7 @@ void CommonGptDictsPage::setupUi()
 					}
 				};
 
-			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
+			connect(addDictButton, &GppPushButton::clicked, this, [=]()
 				{
 					GuiGptDictEntry newEntry;
 					if (!openEntryDialog(GuiGptDictEntry{}, newEntry)) {
@@ -358,7 +358,7 @@ void CommonGptDictsPage::setupUi()
 						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
 
-			connect(removeDictButton, &ElaPushButton::clicked, this, [=]()
+			connect(removeDictButton, &GppPushButton::clicked, this, [=]()
 				{
 					QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 					if (selectedRows.isEmpty()) {
@@ -386,7 +386,7 @@ void CommonGptDictsPage::setupUi()
 						withdrawButton->setEnabled(true);
 					}
 				});
-			connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
+			connect(withdrawButton, &GppPushButton::clicked, this, [=]()
 				{
 					if (gptTabEntry->withdrawList.empty()) {
 						return;
@@ -398,7 +398,7 @@ void CommonGptDictsPage::setupUi()
 						withdrawButton->setEnabled(false);
 					}
 				});
-			connect(refreshButton, &ElaPushButton::clicked, this, [=]()
+			connect(refreshButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto it = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -412,7 +412,7 @@ void CommonGptDictsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 						tr("字典 %1 已刷新").arg(QString::fromStdWString((*it)->dictPath.stem().wstring())), 3000);
 				});
-			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
+			connect(renameTabButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto gptTabEntryIt = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -423,7 +423,7 @@ void CommonGptDictsPage::setupUi()
 					}
 
 					QString newDictName;
-					ElaInputDialog inputDialog(tr("请输入新名称"), tr("重命名字典"), newDictName, window());
+					GppInputDialog inputDialog(tr("请输入新名称"), tr("重命名字典"), newDictName, window());
 					if (inputDialog.exec() != QDialog::Accepted) {
 						return;
 					}
@@ -480,7 +480,7 @@ void CommonGptDictsPage::setupUi()
 						return;
 					}
 				});
-			connect(removeTabButton, &ElaPushButton::clicked, this, [=]()
+			connect(removeTabButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto gptTabEntryIt = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -631,7 +631,7 @@ void CommonGptDictsPage::setupUi()
 	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString newDictName;
-			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
+			GppInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}

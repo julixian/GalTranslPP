@@ -1,4 +1,4 @@
-#include "ElaInputDialog.h"
+#include "GppInputDialog.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
@@ -8,7 +8,7 @@
 #include "ElaLineEdit.h"
 
 
-ElaInputDialog::ElaInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent) :
+GppInputDialog::GppInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent) :
 	ElaContentDialog(parent), m_result(result)
 {
 	setWindowTitle("InputDialog");
@@ -36,12 +36,12 @@ ElaInputDialog::ElaInputDialog(const QString& label, const QString& text, QStrin
 	setCentralWidget(centerWidget);
 }
 
-void ElaInputDialog::onRightButtonClicked()
+void GppInputDialog::onRightButtonClicked()
 {
 	m_result = m_lineEdit->text();
 }
 
-void ElaInputDialog::onMiddleButtonClicked()
+void GppInputDialog::onMiddleButtonClicked()
 {
 	m_lineEdit->clear();
 }

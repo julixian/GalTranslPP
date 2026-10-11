@@ -20,7 +20,7 @@
 #include "ElaTheme.h"
 #include "ElaMessageBar.h"
 #include "ElaApplication.h"
-#include "ElaInputDialog.h"
+#include "GppInputDialog.h"
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
 #include "UpdateChecker.h"
@@ -180,8 +180,8 @@ void MainWindow::initWindow()
     setFocusPolicy(Qt::StrongFocus);
     setWindowIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.jpeg"));
 
-    int width = toml::find_or(m_globalConfig, "windowWidth", 1308);
-    int height = toml::find_or(m_globalConfig, "windowHeight", 676);
+    const int width = toml::find_or(m_globalConfig, "windowWidth", 1308);
+    const int height = toml::find_or(m_globalConfig, "windowHeight", 676);
     resize(width, height - 30);
     int x = toml::find_or(m_globalConfig, "windowPosX", 84);
     int y = toml::find_or(m_globalConfig, "windowPosY", 53);
@@ -394,7 +394,7 @@ void MainWindow::onNewProjectTriggered()
     insertToml(m_globalConfig, "lastProjectPath", parentPathQStr.toStdString());
 
     QString projectName;
-    ElaInputDialog inputDialog(tr("请输入项目名称"), tr("新建项目"), projectName, this);
+    GppInputDialog inputDialog(tr("请输入项目名称"), tr("新建项目"), projectName, this);
     if (inputDialog.exec() != QDialog::Accepted || projectName.isEmpty()) {
         return;
     }

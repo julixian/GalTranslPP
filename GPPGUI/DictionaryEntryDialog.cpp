@@ -22,9 +22,9 @@
 #include "ElaIconButton.h"
 #include "ElaLineEdit.h"
 #include "ElaMessageBar.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppNoWheelComboBox.h"
 #include "ElaPlainTextEdit.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaSpinBox.h"
 #include "ElaText.h"
 #include "ElaToolTip.h"
@@ -270,7 +270,7 @@ namespace
                 return spinBox;
             }
             case Target: {
-                ElaNoWheelComboBox* comboBox = new ElaNoWheelComboBox(parent);
+                GppNoWheelComboBox* comboBox = new GppNoWheelComboBox(parent);
                 QPalette editorPalette = comboBox->palette();
                 editorPalette.setColor(QPalette::Window, editorPalette.color(QPalette::Base));
                 comboBox->setPalette(editorPalette);
@@ -389,14 +389,14 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidg
     buttonLayout->setSpacing(8);
     buttonLayout->addStretch();
 
-    ElaPushButton* cancelButton = new ElaPushButton(tr("取消"), this);
+    GppPushButton* cancelButton = new GppPushButton(tr("取消"), this);
     cancelButton->setFixedWidth(90);
-    connect(cancelButton, &ElaPushButton::clicked, this, &QDialog::reject);
+    connect(cancelButton, &GppPushButton::clicked, this, &QDialog::reject);
     buttonLayout->addWidget(cancelButton);
 
-    ElaPushButton* saveButton = new ElaPushButton(tr("保存"), this);
+    GppPushButton* saveButton = new GppPushButton(tr("保存"), this);
     saveButton->setFixedWidth(90);
-    connect(saveButton, &ElaPushButton::clicked, this,
+    connect(saveButton, &GppPushButton::clicked, this,
         [this, originalEdit, translationEdit, descriptionEdit]()
         {
             if (originalEdit->toPlainText().trimmed().isEmpty()) {
@@ -471,14 +471,18 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     settingsLayout->setVerticalSpacing(6);
 
     ElaCheckBox* isRegCheckBox = new ElaCheckBox(tr("启用正则（isReg）"), this);
+    // 文字和随字体高度计算的复选框统一使用 15 像素。
+    auto isRegFont = isRegCheckBox->font();
+    isRegFont.setPixelSize(15);
+    isRegCheckBox->setFont(isRegFont);
     isRegCheckBox->setChecked(entry.isReg);
-    settingsLayout->addWidget(isRegCheckBox, 0, 0, 1, 2);
+    settingsLayout->addWidget(isRegCheckBox, 0, 2, 1, 2, Qt::AlignRight | Qt::AlignVCenter);
 
-    settingsLayout->addWidget(createFieldLabel(tr("优先级（priority）"), this), 0, 2);
+    settingsLayout->addWidget(createFieldLabel(tr("优先级（priority）"), this), 0, 0);
     ElaSpinBox* prioritySpinBox = new ElaSpinBox(this);
     prioritySpinBox->setRange(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
     prioritySpinBox->setValue(entry.priority);
-    settingsLayout->addWidget(prioritySpinBox, 0, 3);
+    settingsLayout->addWidget(prioritySpinBox, 0, 1);
 
     settingsLayout->setColumnStretch(1, 1);
     settingsLayout->setColumnStretch(3, 1);
@@ -575,14 +579,14 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     buttonLayout->setSpacing(8);
     buttonLayout->addStretch();
 
-    ElaPushButton* cancelButton = new ElaPushButton(tr("取消"), this);
+    GppPushButton* cancelButton = new GppPushButton(tr("取消"), this);
     cancelButton->setFixedWidth(90);
-    connect(cancelButton, &ElaPushButton::clicked, this, &QDialog::reject);
+    connect(cancelButton, &GppPushButton::clicked, this, &QDialog::reject);
     buttonLayout->addWidget(cancelButton);
 
-    ElaPushButton* saveButton = new ElaPushButton(tr("保存"), this);
+    GppPushButton* saveButton = new GppPushButton(tr("保存"), this);
     saveButton->setFixedWidth(90);
-    connect(saveButton, &ElaPushButton::clicked, this,
+    connect(saveButton, &GppPushButton::clicked, this,
         [this, originalEdit, translationEdit, isRegCheckBox, prioritySpinBox, tableView, model]()
         {
             tableView->setFocus();

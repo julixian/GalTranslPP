@@ -13,13 +13,13 @@
 #include "ElaToolButton.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaToggleButton.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppNoWheelComboBox.h"
 #include "ElaScrollArea.h"
 #include "ElaScrollBar.h"
 #include "ElaWidget.h"
 #include "ValueSliderWidget.h"
 #include "ElaFlowLayout.h"
-#include "ElaDoubleText.h"
+#include "GppDoubleText.h"
 #include "TreeSitterHighlighter.h"
 
 import Tool;
@@ -56,8 +56,8 @@ void PASettingsPage::setupUi()
 		std::string key;
 		QString label;
 		ElaToggleButton* enableButton = nullptr;
-		ElaNoWheelComboBox* baseComboBox = nullptr;
-		ElaNoWheelComboBox* checkComboBox = nullptr;
+		GppNoWheelComboBox* baseComboBox = nullptr;
+		GppNoWheelComboBox* checkComboBox = nullptr;
 		QString base;
 		QString check;
 	};
@@ -128,7 +128,7 @@ void PASettingsPage::setupUi()
 	QString punctuationSetStr = QString::fromStdString(punctuationSet);
 	ElaScrollPageArea* punctuationListArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* punctuationListLayout = new QHBoxLayout(punctuationListArea);
-	ElaDoubleText* punctuationListTitle = new ElaDoubleText(tr("标点查错"), 16,
+	GppDoubleText* punctuationListTitle = new GppDoubleText(tr("标点查错"), 16,
 		tr("规定标点错漏要查哪些标点"), 10, "", punctuationListArea);
 	punctuationListLayout->addWidget(punctuationListTitle);
 	punctuationListLayout->addStretch();
@@ -141,7 +141,7 @@ void PASettingsPage::setupUi()
 	double languageProbability = toml::find_or(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
 	ElaScrollPageArea* languageProbabilityArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* languageProbabilityLayout = new QHBoxLayout(languageProbabilityArea);
-	ElaDoubleText* languageProbabilityTitle = new ElaDoubleText(tr("语言置信度"), 16,
+	GppDoubleText* languageProbabilityTitle = new GppDoubleText(tr("语言置信度"), 16,
 		tr("语言不通检测的语言置信度(0-1)，设置越高则检测越精准，但可能遗漏，反之亦然"), 10, "", languageProbabilityArea);
 	languageProbabilityLayout->addWidget(languageProbabilityTitle);
 	languageProbabilityLayout->addStretch();
@@ -155,7 +155,7 @@ void PASettingsPage::setupUi()
 	const std::string codePage = toml::find_or(m_projectConfig, "problemAnalyze", "codePage", "gbk");
 	ElaScrollPageArea* codePageArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* codePageLayout = new QHBoxLayout(codePageArea);
-	ElaDoubleText* codePageTitle = new ElaDoubleText(tr("字符集"), 16,
+	GppDoubleText* codePageTitle = new GppDoubleText(tr("字符集"), 16,
 		tr("非法字符要检查的字符集"), 10, "", codePageArea);
 	codePageLayout->addWidget(codePageTitle);
 	codePageLayout->addStretch();
@@ -214,14 +214,14 @@ void PASettingsPage::setupUi()
 		rowLayout->addStretch();
 
 		rowLayout->addWidget(new ElaText("base", 13, rowArea));
-		ElaNoWheelComboBox* baseComboBox = new ElaNoWheelComboBox(rowArea);
+		GppNoWheelComboBox* baseComboBox = new GppNoWheelComboBox(rowArea);
 		baseComboBox->setFixedWidth(150);
 		baseComboBox->addItems(cachePartNames);
 		baseComboBox->setCurrentText(row.base);
 		rowLayout->addWidget(baseComboBox);
 
 		rowLayout->addWidget(new ElaText("check", 13, rowArea));
-		ElaNoWheelComboBox* checkComboBox = new ElaNoWheelComboBox(rowArea);
+		GppNoWheelComboBox* checkComboBox = new GppNoWheelComboBox(rowArea);
 		checkComboBox->setFixedWidth(150);
 		checkComboBox->addItems(cachePartNames);
 		checkComboBox->setCurrentText(row.check);
@@ -238,7 +238,7 @@ void PASettingsPage::setupUi()
 
 	ElaScrollPageArea* compareObjectArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* compareObjectLayout = new QHBoxLayout(compareObjectArea);
-	ElaDoubleText* compareObjectTitle = new ElaDoubleText(tr("比较对象设置"), 16,
+	GppDoubleText* compareObjectTitle = new GppDoubleText(tr("比较对象设置"), 16,
 		tr("设置每个问题分析规则使用的 base/check 字段"), 10, "", compareObjectArea);
 	compareObjectLayout->addWidget(compareObjectTitle);
 	compareObjectLayout->addStretch();
@@ -269,7 +269,7 @@ void PASettingsPage::setupUi()
 			QVBoxLayout* PASettingsLayout = new QVBoxLayout(PASettingsArea);
 			PASettingsLayout->setContentsMargins(12, 6, 12, 8);
 			PASettingsLayout->setSpacing(6);
-			PASettingsLayout->addWidget(new ElaDoubleText(title, 16,
+			PASettingsLayout->addWidget(new GppDoubleText(title, 16,
 				tr("正则表达式数组，具体规则见下方语法示例"), 10, "", PASettingsArea));
 			ElaPlainTextEdit* PASettingsEdit = new ElaPlainTextEdit(PASettingsArea);
 			if (minHeight) {

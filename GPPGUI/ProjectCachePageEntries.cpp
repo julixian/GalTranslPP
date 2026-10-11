@@ -12,7 +12,7 @@
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaPlainTextEdit.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaText.h"
 #include "ElaToolButton.h"
 
@@ -195,13 +195,13 @@ void ProjectCachePage::openEntryEditor(int row)
 
     QHBoxLayout* buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
-    ElaPushButton* closeButton = new ElaPushButton(tr("关闭"), &dialog);
-    connect(closeButton, &ElaPushButton::clicked, &dialog, &ElaDialog::reject);
+    GppPushButton* closeButton = new GppPushButton(tr("关闭"), &dialog);
+    connect(closeButton, &GppPushButton::clicked, &dialog, &ElaDialog::reject);
     buttonLayout->addWidget(closeButton);
 
-    ElaPushButton* saveButton = new ElaPushButton(tr("保存修改"), &dialog);
+    GppPushButton* saveButton = new GppPushButton(tr("保存修改"), &dialog);
     saveButton->setEnabled(writable);
-    connect(saveButton, &ElaPushButton::clicked, this, [=, &dialog]()
+    connect(saveButton, &GppPushButton::clicked, this, [=, &dialog]()
         {
             updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
             updateEntryField(row, "translated_raw_text", dstEdit->toPlainText());

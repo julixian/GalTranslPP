@@ -10,10 +10,10 @@
 
 namespace fs = std::filesystem;
 
-class ElaPushButton;
+class GppPushButton;
 class ElaIconButton;
 class ElaProgressBar;
-class ElaNoWheelComboBox;
+class GppNoWheelComboBox;
 class ElaPlainTextEdit;
 class ElaProgressRing;
 class ElaLCDNumber;
@@ -72,15 +72,15 @@ private:
     QThread* m_workThread = nullptr;
     TranslatorWorker* m_worker = nullptr;
 
-    ElaPushButton* m_startTranslateButton = nullptr;
-    ElaPushButton* m_stopTranslateButton = nullptr;
+    GppPushButton* m_startTranslateButton = nullptr;
+    GppPushButton* m_stopTranslateButton = nullptr;
     ElaIconButton* m_workbenchButton = nullptr;
     ElaProgressBar* m_progressBar = nullptr;
 
     ElaPlainTextEdit* m_logOutput = nullptr;
     QWidget* m_logPausedRow = nullptr;
     ElaText* m_logPausedHint = nullptr;
-    ElaPushButton* m_resumeLogButton = nullptr;
+    GppPushButton* m_resumeLogButton = nullptr;
     int m_secondsToResumeLog = 3;
     bool m_logPaused{};
     bool m_logResumeInProgress{};
@@ -89,7 +89,7 @@ private:
     bool m_pendingOverflowed{};
     bool m_timerStarted{};
 
-    ElaNoWheelComboBox* m_filePluginComboBox = nullptr;
+    GppNoWheelComboBox* m_filePluginComboBox = nullptr;
 
     QString m_workerTransEngine; // 当前工作的线程正在运行什么 transEngine
     ElaProgressRing* m_threadNumRing = nullptr;

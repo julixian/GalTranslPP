@@ -8,8 +8,8 @@
 #include "ElaPlainTextEdit.h"
 #include "ElaToggleSwitch.h"
 #include "ElaColorDialog.h"
-#include "ElaDoubleText.h"
-#include "ElaPushButton.h"
+#include "GppDoubleText.h"
+#include "GppPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ValueSliderWidget.h"
@@ -33,7 +33,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	bool bilingual = toml::find_or(m_projectConfig, "plugins", "Epub", "bilingualOutput", true);
 	ElaScrollPageArea* bilingualOutputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* bilingualOutputLayout = new QHBoxLayout(bilingualOutputArea);
-	ElaDoubleText* bilingualOutputText = new ElaDoubleText(tr("双语显示"), 16,
+	GppDoubleText* bilingualOutputText = new GppDoubleText(tr("双语显示"), 16,
 		tr("在每句译文下以设置的颜色和比例显示原文"), 10, "");
 	bilingualOutputLayout->addWidget(bilingualOutputText);
 	bilingualOutputLayout->addStretch();
@@ -56,7 +56,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	origTextColorDialog->setCurrentColor(origTextColor);
 	ElaText* origTextColorHexNumText = new ElaText(origTextColorDialog->getCurrentColorRGB(), origTextColorArea);
 	origTextColorHexNumText->setTextPixelSize(15);
-	ElaPushButton* origTextColorButton = new ElaPushButton(origTextColorArea);
+	GppPushButton* origTextColorButton = new GppPushButton(origTextColorArea);
 	origTextColorButton->setFixedSize(35, 35);
 	origTextColorButton->setLightDefaultColor(origTextColorDialog->getCurrentColor());
 	origTextColorButton->setLightHoverColor(origTextColorDialog->getCurrentColor());
@@ -64,7 +64,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	origTextColorButton->setDarkDefaultColor(origTextColorDialog->getCurrentColor());
 	origTextColorButton->setDarkHoverColor(origTextColorDialog->getCurrentColor());
 	origTextColorButton->setDarkPressColor(origTextColorDialog->getCurrentColor());
-	connect(origTextColorButton, &ElaPushButton::clicked, this, [=]()
+	connect(origTextColorButton, &GppPushButton::clicked, this, [=]()
 		{
 			origTextColorDialog->exec();
 		});
@@ -105,7 +105,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	preRegexLayout->setContentsMargins(12, 6, 12, 8);
 	preRegexLayout->setSpacing(6);
 	mainLayout->addSpacing(10);
-	preRegexLayout->addWidget(new ElaDoubleText(tr("预处理正则"), 16,
+	preRegexLayout->addWidget(new GppDoubleText(tr("预处理正则"), 16,
 		tr("提取正文后、送入翻译前应用的正则规则"), 10, "", preRegexArea));
 	ElaPlainTextEdit* preRegexEdit = new ElaPlainTextEdit(preRegexArea);
 	preRegexEdit->setMinimumHeight(300);
@@ -122,7 +122,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 	postRegexLayout->setContentsMargins(12, 6, 12, 8);
 	postRegexLayout->setSpacing(6);
 	mainLayout->addSpacing(10);
-	postRegexLayout->addWidget(new ElaDoubleText(tr("后处理正则"), 16,
+	postRegexLayout->addWidget(new GppDoubleText(tr("后处理正则"), 16,
 		tr("翻译完成后、写回 Epub 前应用的正则规则"), 10, "", postRegexArea));
 	ElaPlainTextEdit* postRegexEdit = new ElaPlainTextEdit(postRegexArea);
 	postRegexEdit->setMinimumHeight(300);

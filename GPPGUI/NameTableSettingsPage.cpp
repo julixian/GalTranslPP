@@ -8,7 +8,7 @@
 #include "ElaIconButton.h"
 #include "ElaToolTip.h"
 #include "ElaTableView.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaTabWidget.h"
@@ -186,8 +186,8 @@ void NameTableSettingsPage::setupUi()
 			nameTableModel->loadData(readNameTable());
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"), tr("重新载入了 NameTable.toml"), 3000);
 		};
-	connect(refreshButton, &ElaPushButton::clicked, this, refreshFunc);
-	connect(addNameButton, &ElaPushButton::clicked, this, [=]()
+	connect(refreshButton, &GppPushButton::clicked, this, refreshFunc);
+	connect(addNameButton, &GppPushButton::clicked, this, [=]()
 		{
 			QModelIndexList index = nameTableView->selectionModel()->selectedIndexes();
 			if (index.isEmpty()) {
@@ -197,7 +197,7 @@ void NameTableSettingsPage::setupUi()
 				nameTableModel->insertRow(index.first().row());
 			}
 		});
-	connect(delNameButton, &ElaPushButton::clicked, this, [=]()
+	connect(delNameButton, &GppPushButton::clicked, this, [=]()
 		{
 			QModelIndexList indexList = nameTableView->selectionModel()->selectedRows();
 			const QList<NameTableEntry>& entries = nameTableModel->getEntriesRef();
@@ -218,7 +218,7 @@ void NameTableSettingsPage::setupUi()
 				}
 			}
 		});
-	connect(saveDictButton, &ElaPushButton::clicked, this, [=]()
+	connect(saveDictButton, &GppPushButton::clicked, this, [=]()
 		{
 			// 保存的提示和按钮绑定，因为保存项目配置时用的自己的提示
 			// 但刷新可以直接把提示丢进refreshFunc里，因为一般用到这个函数的时候都要提示(单独保存字典时的重载是静默的)
@@ -227,7 +227,7 @@ void NameTableSettingsPage::setupUi()
 			}
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("已保存 NameTable.toml"), 3000);
 		});
-	connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
+	connect(withdrawButton, &GppPushButton::clicked, this, [=]()
 		{
 			if (m_withdrawList.isEmpty()) {
 				return;

@@ -10,8 +10,8 @@
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaMessageBar.h"
-#include "ElaDoubleText.h"
-#include "ElaPushButton.h"
+#include "GppDoubleText.h"
+#include "GppPushButton.h"
 #include "ElaWidget.h"
 #include "TreeSitterHighlighter.h"
 
@@ -132,14 +132,14 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     bool skipH = toml::find_or(m_projectConfig, "plugins", "SkipTrans", "skipH", false);
     ElaScrollPageArea* skipHArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* skipHLayout = new QHBoxLayout(skipHArea);
-    ElaDoubleText* skipHText = new ElaDoubleText(tr("跳过 H 关键字"), 16,
+    GppDoubleText* skipHText = new GppDoubleText(tr("跳过 H 关键字"), 16,
         tr("关键字列表以 base64 编码形式存储在 SkipTrans.toml 中"), 10, "", skipHArea);
     skipHLayout->addWidget(skipHText);
     skipHLayout->addStretch();
     ElaToggleSwitch* skipHSwitch = new ElaToggleSwitch(skipHArea);
     skipHSwitch->setIsToggled(skipH);
     skipHLayout->addWidget(skipHSwitch);
-    ElaPushButton* editHKeysButton = new ElaPushButton(tr("编辑"), skipHArea);
+    GppPushButton* editHKeysButton = new GppPushButton(tr("编辑"), skipHArea);
     editHKeysButton->setFixedWidth(80);
     skipHLayout->addWidget(editHKeysButton);
     mainLayout->addWidget(skipHArea);
@@ -156,7 +156,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     QVBoxLayout* hKeysLayout = new QVBoxLayout(hKeysWidget);
     hKeysLayout->setContentsMargins(10, 0, 10, 10);
     hKeysLayout->setSpacing(8);
-    ElaDoubleText* hKeysText = new ElaDoubleText(tr("H 关键词"), 16,
+    GppDoubleText* hKeysText = new GppDoubleText(tr("H 关键词"), 16,
         tr("每行一个关键字，保存时会自动写回 base64"), 10, "", hKeysWidget);
     hKeysLayout->addWidget(hKeysText);
     ElaPlainTextEdit* hKeysEdit = new ElaPlainTextEdit(hKeysWidget);
@@ -168,7 +168,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     hKeysEdit->moveCursor(QTextCursor::Start);
     hKeysLayout->addWidget(hKeysEdit);
     hKeysWidget->hide();
-    connect(editHKeysButton, &ElaPushButton::clicked, this, [=]()
+    connect(editHKeysButton, &GppPushButton::clicked, this, [=]()
         {
             hKeysWidget->move(window()->frameGeometry().center()
                 - hKeysWidget->rect().center());

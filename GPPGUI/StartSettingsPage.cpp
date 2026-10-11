@@ -12,12 +12,12 @@
 #include "ElaText.h"
 #include "ElaScrollPageArea.h"
 #include "ElaPlainTextEdit.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaIconButton.h"
 #include "ElaMenu.h"
 #include "ElaToolButton.h"
 #include "ElaProgressRing.h"
-#include "ElaNoWheelComboBox.h"
+#include "GppNoWheelComboBox.h"
 #include "ElaMessageBar.h"
 #include "ElaLCDNumber.h"
 #include "ElaProgressBar.h"
@@ -371,14 +371,14 @@ void StartSettingsPage::setupUi()
 	logPausedRowLayout->addWidget(m_logPausedHint);
 	logPausedRowLayout->addStretch();
 
-	m_resumeLogButton = new ElaPushButton(m_logPausedRow);
+	m_resumeLogButton = new GppPushButton(m_logPausedRow);
 	m_resumeLogButton->setText(tr("回到底部并继续输出"));
 	logPausedRowLayout->addWidget(m_resumeLogButton);
 	m_logPausedRow->setVisible(false);
 	logAreaLayout->addWidget(m_logPausedRow);
 	topLayout->addWidget(logAreaWidget);
 
-	connect(m_resumeLogButton, &ElaPushButton::clicked, this, [=]()
+	connect(m_resumeLogButton, &GppPushButton::clicked, this, [=]()
 		{
 			QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
 			m_logResumeInProgress = true;
@@ -445,7 +445,7 @@ void StartSettingsPage::setupUi()
 	fileFormatLabel->setTextPixelSize(16);
 	fileFormatLabel->setText(tr("文件处理器:"));
 	buttonLayout->addWidget(fileFormatLabel);
-	m_filePluginComboBox = new ElaNoWheelComboBox(buttonArea);
+	m_filePluginComboBox = new GppNoWheelComboBox(buttonArea);
 	m_filePluginComboBox->addItem("NormalJson");
 	m_filePluginComboBox->addItem("Epub");
 	m_filePluginComboBox->addItem("PDF");
@@ -525,7 +525,7 @@ void StartSettingsPage::setupUi()
 	translateModeLabel->setTextPixelSize(16);
 	translateModeLabel->setText(tr("翻译模式:"));
 	buttonLayout->addWidget(translateModeLabel);
-	ElaNoWheelComboBox* transEngineComboBox = new ElaNoWheelComboBox(buttonArea);
+	GppNoWheelComboBox* transEngineComboBox = new GppNoWheelComboBox(buttonArea);
 	transEngineComboBox->addItem("ForGalTsv");
 	transEngineComboBox->addItem("ForNovelTsv");
 	transEngineComboBox->addItem("ForGalJson");
@@ -544,16 +544,16 @@ void StartSettingsPage::setupUi()
 	buttonLayout->addWidget(transEngineComboBox);
 
 	// 开始翻译
-	m_startTranslateButton = new ElaPushButton(buttonArea);
+	m_startTranslateButton = new GppPushButton(buttonArea);
 	m_startTranslateButton->setText(tr("开始翻译"));
-	connect(m_startTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::onStartTranslatingClicked);
+	connect(m_startTranslateButton, &GppPushButton::clicked, this, &StartSettingsPage::onStartTranslatingClicked);
 	buttonLayout->addWidget(m_startTranslateButton);
 
 	// 停止翻译
-	m_stopTranslateButton = new ElaPushButton(buttonArea);
+	m_stopTranslateButton = new GppPushButton(buttonArea);
 	m_stopTranslateButton->setText(tr("停止翻译"));
 	m_stopTranslateButton->setEnabled(false);
-	connect(m_stopTranslateButton, &ElaPushButton::clicked, this, &StartSettingsPage::onStopTranslatingClicked);
+	connect(m_stopTranslateButton, &GppPushButton::clicked, this, &StartSettingsPage::onStopTranslatingClicked);
 	buttonLayout->addWidget(m_stopTranslateButton);
 	topLayout->addWidget(buttonArea);
 
@@ -698,7 +698,7 @@ void StartSettingsPage::workFinished(int exitCode)
 	case -2:
 	{
 		const QString message = tr("项目 %1 的翻译任务失败，请检查日志输出。").arg(projectName);
-		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), message, 3000);
+		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"), message, 5000);
 
 		// 显示通知消息
 		m_trayIcon->showMessage(
@@ -711,12 +711,12 @@ void StartSettingsPage::workFinished(int exitCode)
 	}
 	case -1:
 		ElaMessageBar::error(ElaMessageBarType::BottomRight, tr("翻译失败"),
-			tr("项目 %1 连工厂函数都失败了，玩毛啊").arg(projectName), 3000);
+			tr("项目 %1 连工厂函数都失败了，玩毛啊").arg(projectName), 5000);
 		break;
 	case 0:
 		if (m_workerTransEngine == "DumpName" || m_workerTransEngine == "GenDict") {
 			const QString message = tr("项目 %1 的生成任务已完成。").arg(projectName);
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 3000);
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 5000);
 			m_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
 				message,      // 内容
@@ -726,7 +726,7 @@ void StartSettingsPage::workFinished(int exitCode)
 		}
 		else if (m_workerTransEngine == "ShowNormal") {
 			const QString message = tr("请在 show_normal 文件夹中查收项目 %1 的预处理结果。").arg(projectName);
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 3000);
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("生成完成"), message, 5000);
 			m_trayIcon->showMessage(
 				tr("生成完成"),                  // 标题
 				message,      // 内容
@@ -736,7 +736,7 @@ void StartSettingsPage::workFinished(int exitCode)
 		}
 		else {
 			const QString message = tr("请在 gt_output 文件夹中查收项目 %1 的翻译结果。").arg(projectName);
-			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("翻译完成"), message, 3000);
+			ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("翻译完成"), message, 5000);
 			m_trayIcon->showMessage(
 				tr("翻译完成"),                  // 标题
 				message,      // 内容
@@ -755,7 +755,7 @@ void StartSettingsPage::workFinished(int exitCode)
 			5000                          // 显示时长 (毫秒)
 		);
 		ElaMessageBar::information(ElaMessageBarType::BottomRight, tr("停止成功"),
-			tr("项目 %1 的翻译任务已终止").arg(projectName), 3000);
+			tr("项目 %1 的翻译任务已终止").arg(projectName), 5000);
 		break;
 	}
 	default:

@@ -154,10 +154,10 @@
     <ClCompile Include="DictionaryEntryDialog.cpp" />
     <ClCompile Include="DictionarySearchBar.cpp" />
     <ClCompile Include="DictExSettingsPage.cpp" />
-    <ClCompile Include="ElaDoubleText.cpp" />
+    <ClCompile Include="GppDoubleText.cpp" />
     <ClCompile Include="GptDictModel.cpp" />
     <ClCompile Include="DictSettingsPage.cpp" />
-    <ClCompile Include="ElaInputDialog.cpp" />
+    <ClCompile Include="GppInputDialog.cpp" />
     <ClCompile Include="EpubCfgPage.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="Mainwindow.cpp" />
@@ -252,7 +252,7 @@
     <QtMoc Include="NameTableModel.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="ElaInputDialog.h" />
+    <QtMoc Include="GppInputDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">
@@ -306,9 +306,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="CustomFilePluginCfgPage.h" />
-    <QtMoc Include="ElaDoubleText.h" />
+    <QtMoc Include="GppDoubleText.h" />
     <ClInclude Include="EtaEstimator.hpp" />
-    <QtMoc Include="ElaNoWheelComboBox.h" />
+    <QtMoc Include="GppNoWheelComboBox.h" />
     <QtMoc Include="DictionarySearchBar.h" />
     <QtMoc Include="DictionaryEntryDialog.h" />
     <QtMoc Include="SkipTransCfgPage.h" />
@@ -316,6 +316,10 @@
     <QtMoc Include="PDFCfgPage.h" />
     <QtMoc Include="CommonGptDictsPage.h" />
     <QtMoc Include="DictExSettingsPage.h" />
+    <ClInclude Include="GppPushButton.h" />
+    <ClInclude Include="GppComboBox.h" />
+    <ClInclude Include="GppMultiSelectComboBox.h" />
+    <ClInclude Include="GppRadioButton.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
     <ClInclude Include="ProblemOverviewTracker.h" />

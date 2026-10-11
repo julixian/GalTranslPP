@@ -1,9 +1,9 @@
-#include "ElaDoubleText.h"
+#include "GppDoubleText.h"
 
 #include <QVBoxLayout>
 #include <QFormLayout>
 
-ElaDoubleText::ElaDoubleText(const QString& firstLine, int firstLinePixelSize, const QString& secondLine, int secondLinePixelSize, const QString& toolTip, QWidget* parent)
+GppDoubleText::GppDoubleText(const QString& firstLine, int firstLinePixelSize, const QString& secondLine, int secondLinePixelSize, const QString& toolTip, QWidget* parent)
 	: QWidget(parent)
 {
 	QVBoxLayout* textLayout = new QVBoxLayout(this);
@@ -27,7 +27,7 @@ ElaDoubleText::ElaDoubleText(const QString& firstLine, int firstLinePixelSize, c
 	textLayout->addStretch(1);
 }
 
-QString ElaDoubleText::getFirstLineText() const
+QString GppDoubleText::getFirstLineText() const
 {
 	return m_firstLine->text();
 }

@@ -11,7 +11,7 @@
 
 class ElaIconButton;
 class ElaPlainTextEdit;
-class ElaPushButton;
+class GppPushButton;
 class QObject;
 class QStandardItem;
 class QStyledItemDelegate;
@@ -51,7 +51,7 @@ namespace ProjectCachePagePrivate
     QString splitterStyle();
 
     void tuneTextEdit(ElaPlainTextEdit* edit, bool readOnly, int height);
-    void tuneNavButton(ElaPushButton* button, bool active);
+    void tuneNavButton(GppPushButton* button, bool active);
     void setModelItemFont(QStandardItem* item, int px = kBodyFontPx);
     ElaIconButton* createHeaderIconButton(ElaIconType::IconName icon, const QString& toolTip, QWidget* parent);
 

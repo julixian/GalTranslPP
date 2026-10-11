@@ -12,9 +12,9 @@
 #include "ElaToolButton.h"
 #include "ElaMessageBar.h"
 #include "ElaContentDialog.h"
-#include "ElaInputDialog.h"
-#include "ElaDoubleText.h"
-#include "ElaRadioButton.h"
+#include "GppInputDialog.h"
+#include "GppDoubleText.h"
+#include "GppRadioButton.h"
 #include "ProblemOverviewTracker.h"
 
 import Tool;
@@ -65,12 +65,12 @@ void OtherSettingsPage::setupUi()
 	const std::string problemOverviewFormat = toml::find_or(m_projectConfig, "common", "problemOverviewFormat", "json");
 	ElaScrollPageArea* overviewFormatArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* overviewFormatLayout = new QHBoxLayout(overviewFormatArea);
-	ElaDoubleText* overviewFormatLabel = new ElaDoubleText(tr("问题概览输出格式"), 16,
+	GppDoubleText* overviewFormatLabel = new GppDoubleText(tr("问题概览输出格式"), 16,
 		tr("翻译完成后输出 ProblemOverview 的文件格式"), 10, "", overviewFormatArea);
 	overviewFormatLayout->addWidget(overviewFormatLabel);
 	overviewFormatLayout->addStretch();
-	ElaRadioButton* overviewTomlRadio = new ElaRadioButton("toml", overviewFormatArea);
-	ElaRadioButton* overviewJsonRadio = new ElaRadioButton("json", overviewFormatArea);
+	ElaRadioButton* overviewTomlRadio = new GppRadioButton("toml", overviewFormatArea);
+	ElaRadioButton* overviewJsonRadio = new GppRadioButton("json", overviewFormatArea);
 	QButtonGroup* overviewFormatGroup = new QButtonGroup(overviewFormatArea);
 	overviewFormatGroup->addButton(overviewTomlRadio);
 	overviewFormatGroup->addButton(overviewJsonRadio);
@@ -155,7 +155,7 @@ void OtherSettingsPage::setupUi()
 			}
 
 			QString newProjectName;
-			ElaInputDialog inputDialog(tr("请输入新的项目名称"), tr("新的项目名"), newProjectName, window());
+			GppInputDialog inputDialog(tr("请输入新的项目名称"), tr("新的项目名"), newProjectName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}
@@ -192,7 +192,7 @@ void OtherSettingsPage::setupUi()
 	// 导入翻译问题概览至翻译缓存
 	ElaScrollPageArea* importArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* importLayout = new QHBoxLayout(importArea);
-	ElaDoubleText* importLabel = new ElaDoubleText(tr("导入翻译问题概览至翻译缓存"), 16,
+	GppDoubleText* importLabel = new GppDoubleText(tr("导入翻译问题概览至翻译缓存"), 16,
 		tr("使用 ProblemOverview.json/.toml 中的 Sentence 替换 transl_cache 中的 Sentence"), 10, "", importArea);
 	importLayout->addWidget(importLabel);
 	importLayout->addStretch();
@@ -330,7 +330,7 @@ void OtherSettingsPage::setupUi()
 	// 保存配置
 	ElaScrollPageArea* saveArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* saveLayout = new QHBoxLayout(saveArea);
-	ElaDoubleText* saveLabel = new ElaDoubleText(tr("保存项目配置"), 16,
+	GppDoubleText* saveLabel = new GppDoubleText(tr("保存项目配置"), 16,
 		tr("开始翻译或关闭程序时会自动保存所有项目的配置，一般无需手动保存"), 10, "", saveArea);
 	saveLayout->addWidget(saveLabel);
 	saveLayout->addStretch();
@@ -351,7 +351,7 @@ void OtherSettingsPage::setupUi()
 	// 刷新项目配置
 	ElaScrollPageArea* refreshArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* refreshLayout = new QHBoxLayout(refreshArea);
-	ElaDoubleText* refreshLabel = new ElaDoubleText(tr("刷新项目配置"), 16,
+	GppDoubleText* refreshLabel = new GppDoubleText(tr("刷新项目配置"), 16,
 		tr("刷新现有配置和字典，谨慎使用"), 10, "", refreshArea);
 	refreshLayout->addWidget(refreshLabel);
 	refreshLayout->addStretch();
@@ -396,7 +396,7 @@ void OtherSettingsPage::setupUi()
 	// 删除翻译缓存
 	ElaScrollPageArea* cacheArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* cacheLayout = new QHBoxLayout(cacheArea);
-	ElaDoubleText* cacheLabel = new ElaDoubleText(tr("删除翻译缓存"), 16,
+	GppDoubleText* cacheLabel = new GppDoubleText(tr("删除翻译缓存"), 16,
 		tr("删除项目的翻译缓存，下次翻译将会重新从头开始"), 10, "", cacheArea);
 	cacheLayout->addWidget(cacheLabel);
 	cacheLayout->addStretch();

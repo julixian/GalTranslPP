@@ -4,12 +4,12 @@
 
 class ElaLineEdit;
 
-class ElaInputDialog : public ElaContentDialog
+class GppInputDialog : public ElaContentDialog
 {
     Q_OBJECT
 
 public:
-    explicit ElaInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent = nullptr);
+    explicit GppInputDialog(const QString& label, const QString& text, QString& result, QWidget* parent = nullptr);
 
 public Q_SLOTS:
 	void onRightButtonClicked() override;

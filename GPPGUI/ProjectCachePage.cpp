@@ -20,7 +20,7 @@
 #include "ElaLineEdit.h"
 #include "ElaListView.h"
 #include "ElaMenu.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaToolButton.h"
 #include "ElaText.h"
 
@@ -161,9 +161,8 @@ void ProjectCachePage::setupUi()
     m_sidebarButtonGroup->setExclusive(true);
     auto addNavButton = [&](const QString& text, int index)
         {
-            ElaPushButton* button = new ElaPushButton(text, sidebarWidget);
+            GppPushButton* button = new GppPushButton(text, sidebarWidget);
             button->setCheckable(true);
-            button->setMinimumHeight(30);
             button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             QFont font = button->font();
             font.setPixelSize(kBodyFontPx);

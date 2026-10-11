@@ -1238,9 +1238,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
-        <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用</oldsource>
-        <translation>Currently applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
+        <source>仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
+        <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</oldsource>
+        <translation type="unfinished">Currently applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1254,8 +1254,9 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议</source>
-        <translation>Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol.</translation>
+        <source>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议；单 worker 正常情况下不会轮询 Api</source>
+        <oldsource>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议</oldsource>
+        <translation type="unfinished">Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -1907,7 +1908,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDeleteDialog</name>
     <message>
-        <location filename="DictionaryEntryDialog.cpp" line="+646"/>
+        <location filename="DictionaryEntryDialog.cpp" line="+650"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -1935,7 +1936,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDialog</name>
     <message>
-        <location line="-570"/>
+        <location line="-574"/>
         <source>拖动调整顺序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -1978,32 +1979,32 @@ sk-...</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+186"/>
+        <location line="+190"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="-181"/>
-        <location line="+186"/>
+        <location line="-185"/>
+        <location line="+190"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
     <message>
-        <location line="-179"/>
-        <location line="+187"/>
+        <location line="-183"/>
+        <location line="+191"/>
         <location line="+12"/>
         <location line="+9"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
     <message>
-        <location line="-207"/>
-        <location line="+187"/>
+        <location line="-211"/>
+        <location line="+191"/>
         <source>原文（org）不能为空</source>
         <translation>Original (org) required</translation>
     </message>
     <message>
-        <location line="-166"/>
+        <location line="-170"/>
         <source>编辑 Normal 字典词条</source>
         <translation>Edit Normal entry</translation>
     </message>
@@ -2018,7 +2019,7 @@ sk-...</translation>
         <translation>Regex (isReg)</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+8"/>
         <source>优先级（priority）</source>
         <translation>Priority</translation>
     </message>
@@ -2122,24 +2123,6 @@ sk-...</translation>
     </message>
 </context>
 <context>
-    <name>ElaInputDialog</name>
-    <message>
-        <location filename="ElaInputDialog.cpp" line="+16"/>
-        <source>取消</source>
-        <translation>Cancel</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>重置</source>
-        <translation>Reset</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>确定</source>
-        <translation>OK</translation>
-    </message>
-</context>
-<context>
     <name>EpubCfgPage</name>
     <message>
         <location filename="EpubCfgPage.cpp" line="+25"/>
@@ -2212,7 +2195,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+150"/>
+        <location filename="GPPGUI.cpp" line="+151"/>
         <source>Updater 更新错误</source>
         <translation>Updater error</translation>
     </message>
@@ -2223,7 +2206,7 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+75"/>
+        <location line="+78"/>
         <location line="+64"/>
         <source>错误</source>
         <translation>Error</translation>
@@ -2267,6 +2250,24 @@ sk-...</translation>
 问题概览:</source>
         <translation>```
 Issue summary:</translation>
+    </message>
+</context>
+<context>
+    <name>GppInputDialog</name>
+    <message>
+        <location filename="GppInputDialog.cpp" line="+16"/>
+        <source>取消</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>重置</source>
+        <translation>Reset</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>确定</source>
+        <translation>OK</translation>
     </message>
 </context>
 <context>
@@ -3457,7 +3458,7 @@ Cache: %4</translation>
         <translation>Saved %1 cache files</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+54"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
@@ -3495,12 +3496,12 @@ Cache: %4</translation>
         <translation>Files</translation>
     </message>
     <message>
-        <location line="-99"/>
+        <location line="-98"/>
         <source>刷新</source>
         <translation>Refresh</translation>
     </message>
     <message>
-        <location line="+188"/>
+        <location line="+187"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>

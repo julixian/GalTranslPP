@@ -8,7 +8,7 @@
 #include "ElaToggleSwitch.h"
 #include "ElaText.h"
 #include "ElaLineEdit.h"
-#include "ElaDoubleText.h"
+#include "GppDoubleText.h"
 
 import Tool;
 
@@ -41,7 +41,7 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	const std::string babeldocLangOut = toml::find_or(m_projectConfig, "plugins", "PDF", "babeldocLangOut", "zh-CN");
 	ElaScrollPageArea* babeldocLangOutArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* babeldocLangOutLayout = new QHBoxLayout(babeldocLangOutArea);
-	ElaDoubleText* babeldocLangOutText = new ElaDoubleText(tr("BabelDOC 目标语言码"), 16,
+	GppDoubleText* babeldocLangOutText = new GppDoubleText(tr("BabelDOC 目标语言码"), 16,
 		tr("影响 PDF 字体和排版，如 zh-CN/zh-TW/en/ja/ko"), 10, "", babeldocLangOutArea);
 	babeldocLangOutLayout->addWidget(babeldocLangOutText);
 	babeldocLangOutLayout->addStretch();

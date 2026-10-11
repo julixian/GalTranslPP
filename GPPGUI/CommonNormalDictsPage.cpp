@@ -13,12 +13,12 @@
 #include "ElaIconButton.h"
 #include "ElaToolButton.h"
 #include "ElaTableView.h"
-#include "ElaPushButton.h"
+#include "GppPushButton.h"
 #include "ElaMessageBar.h"
 #include "ElaToggleSwitch.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaTabWidget.h"
-#include "ElaInputDialog.h"
+#include "GppInputDialog.h"
 #include "ElaContentDialog.h"
 #include "DictionaryEntryDialog.h"
 #include "DictionaryReader.h"
@@ -327,7 +327,7 @@ void CommonNormalDictsPage::setupUi()
 				};
 			normalTabEntry->saveFunc = saveFunc;
 
-			connect(saveButton, &ElaPushButton::clicked, this, [=]()
+			connect(saveButton, &GppPushButton::clicked, this, [=]()
 				{
 					if (normalTabEntry->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
@@ -357,7 +357,7 @@ void CommonNormalDictsPage::setupUi()
 					}
 				};
 
-			connect(addDictButton, &ElaPushButton::clicked, this, [=]()
+			connect(addDictButton, &GppPushButton::clicked, this, [=]()
 				{
 					GuiNormalDictEntry newEntry;
 					if (!openEntryDialog(GuiNormalDictEntry{}, newEntry)) {
@@ -391,7 +391,7 @@ void CommonNormalDictsPage::setupUi()
 					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
-			connect(removeDictButton, &ElaPushButton::clicked, this, [=]()
+			connect(removeDictButton, &GppPushButton::clicked, this, [=]()
 				{
 					QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 					if (selectedRows.isEmpty()) {
@@ -419,7 +419,7 @@ void CommonNormalDictsPage::setupUi()
 						withdrawButton->setEnabled(true);
 					}
 				});
-			connect(withdrawButton, &ElaPushButton::clicked, this, [=]()
+			connect(withdrawButton, &GppPushButton::clicked, this, [=]()
 				{
 					if (normalTabEntry->withdrawList.empty()) {
 						return;
@@ -431,7 +431,7 @@ void CommonNormalDictsPage::setupUi()
 						withdrawButton->setEnabled(false);
 					}
 				});
-			connect(refreshButton, &ElaPushButton::clicked, this, [=]()
+			connect(refreshButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -445,7 +445,7 @@ void CommonNormalDictsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 						tr("字典 %1 已刷新").arg(QString::fromStdWString((*it)->dictPath.stem().wstring())), 3000);
 				});
-			connect(renameTabButton, &ElaPushButton::clicked, this, [=]()
+			connect(renameTabButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -456,7 +456,7 @@ void CommonNormalDictsPage::setupUi()
 					}
 
 					QString newDictName;
-					ElaInputDialog inputDialog(tr("请输入新名称"), tr("重命名字典"), newDictName, window());
+					GppInputDialog inputDialog(tr("请输入新名称"), tr("重命名字典"), newDictName, window());
 					if (inputDialog.exec() != QDialog::Accepted) {
 						return;
 					}
@@ -515,7 +515,7 @@ void CommonNormalDictsPage::setupUi()
 						return;
 					}
 				});
-			connect(removeTabButton, &ElaPushButton::clicked, this, [=]()
+			connect(removeTabButton, &GppPushButton::clicked, this, [=]()
 				{
 					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -666,7 +666,7 @@ void CommonNormalDictsPage::setupUi()
 	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
 		{
 			QString newDictName;
-			ElaInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
+			GppInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
 			if (inputDialog.exec() != QDialog::Accepted) {
 				return;
 			}

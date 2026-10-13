@@ -8,7 +8,7 @@ export import std;
 
 export NAMESPACE_BEGIN(gpp)
 
-constexpr std::string_view GPPVERSION = "3.2.4";
+constexpr std::string_view GPPVERSION = "3.2.5";
 constexpr std::string_view PYTHONVERSION = "1.0.0";
 constexpr std::string_view PROMPTVERSION = "2.0.0";
 constexpr std::string_view DICTVERSION = "1.0.3";

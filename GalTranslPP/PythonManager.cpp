@@ -232,6 +232,58 @@ const fs::path& pythonExecutablePath()
     return gs_pythonExePath;
 }
 
+class PythonThreadStateGuard {
+public:
+    explicit PythonThreadStateGuard(PyThreadState* threadState)
+        : m_previousState(PyThreadState_Swap(threadState)) {}
+    ~PythonThreadStateGuard() { PyThreadState_Swap(m_previousState); }
+
+    PythonThreadStateGuard(const PythonThreadStateGuard&) = delete;
+    PythonThreadStateGuard& operator=(const PythonThreadStateGuard&) = delete;
+
+private:
+    PyThreadState* m_previousState;
+};
+
+template<typename Return, typename... Args>
+std::function<Return(Args...)> wrapPythonCallback(std::function<Return(Args...)> callback)
+{
+    if (!callback) {
+        return {};
+    }
+    auto interpreter = std::make_shared<py::subinterpreter>(py::subinterpreter::current());
+    auto* interpreterState = PyThreadState_GetInterpreter(PyThreadState_Get());
+    auto* internals = &py::detail::get_internals();
+    return [interpreter, interpreterState, internals, callbackR = std::move(callback)](Args... args) -> Return
+        {
+            const auto invoke = [&]() -> Return
+                {
+                    try {
+                        return callbackR(std::forward<Args>(args)...);
+                    }
+                    catch (const py::error_already_set& e) {
+                        // 在所属解释器内转换异常，避免 Python 异常对象进入 C++ future。
+                        throw std::runtime_error(e.what());
+                    }
+                };
+            auto* threadState = internals->tstate.get();
+            if (!threadState) {
+                threadState = PyGILState_GetThisThreadState();
+                if (threadState && PyThreadState_GetInterpreter(threadState) != interpreterState) {
+                    threadState = nullptr;
+                }
+            }
+            if (threadState) {
+                // Python 线程保留原有线程状态及 threading.local 数据。
+                const PythonThreadStateGuard guard(threadState);
+                return invoke();
+            }
+            // 没有 Python 线程状态的纯 C++ 工作线程等
+            py::subinterpreter_scoped_activate activate(*interpreter);
+            return invoke();
+        };
+}
+
 // PythonMainInterpreterManager
 PythonMainInterpreterManager::PythonMainInterpreterManager() {
     if (Py_IsInitialized()) {
@@ -1087,9 +1139,18 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def_readwrite("m_savedTranslCacheMap", &NormalJsonTranslator::m_savedTranslCacheMap)
         .def_readwrite("m_repeatedBlockCompletedRelFilePaths", &NormalJsonTranslator::m_repeatedBlockCompletedRelFilePaths)
         .def_readwrite("m_repeatedBlockReferenceCount", &NormalJsonTranslator::m_repeatedBlockReferenceCount)
-        .def_readwrite("m_onFileProcessed", &NormalJsonTranslator::m_onFileProcessed)
-        .def_readwrite("m_onPerformApi", &NormalJsonTranslator::m_onPerformApi)
-        .def_readwrite("m_onDictProcessed", &NormalJsonTranslator::m_onDictProcessed)
+        .def_property("m_onFileProcessed",
+            [](const NormalJsonTranslator& self) { return self.m_onFileProcessed; },
+            [](NormalJsonTranslator& self, std::function<void(const fs::path&)> callback)
+                { self.m_onFileProcessed = wrapPythonCallback(std::move(callback)); })
+        .def_property("m_onPerformApi",
+            [](const NormalJsonTranslator& self) { return self.m_onPerformApi; },
+            [](NormalJsonTranslator& self, std::function<std::string(std::string_view)> callback)
+                { self.m_onPerformApi = wrapPythonCallback(std::move(callback)); })
+        .def_property("m_onDictProcessed",
+            [](const NormalJsonTranslator& self) { return self.m_onDictProcessed; },
+            [](NormalJsonTranslator& self, std::function<DictList(const DictList&)> callback)
+                { self.m_onDictProcessed = wrapPythonCallback(std::move(callback)); })
         .def_property("m_threadPool", [](NormalJsonTranslator& self) -> ctpl::thread_pool&
             { return self.m_threadPool; }, nullptr, py::return_value_policy::reference_internal)
         .def_property_readonly("m_apiPool", [](NormalJsonTranslator& self) -> ApiPool*
@@ -1145,7 +1206,8 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def_readwrite("m_epubToJsonsMap", &EpubTranslator::m_epubToJsonsMap)
         .def("epubInit", &EpubTranslator::epubInit)
         .def("epubBeforeRun", &EpubTranslator::epubBeforeRun)
-        .def("epubRun", [](EpubTranslator& self) { self.EpubTranslator::run(); });
+        .def("epubRun", [](EpubTranslator& self) { self.EpubTranslator::run(); },
+            py::call_guard<py::gil_scoped_release>());
 
     py::class_<PDFTranslator, NormalJsonTranslator>(m, "PDFTranslator")
         .def_readwrite("m_pdfInputDir", &PDFTranslator::m_pdfInputDir)
@@ -1155,7 +1217,8 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
         .def_readwrite("m_jsonToPDFPathMap", &PDFTranslator::m_jsonToPDFPathMap)
         .def("pdfInit", &PDFTranslator::pdfInit)
         .def("pdfBeforeRun", &PDFTranslator::pdfBeforeRun)
-        .def("pdfRun", [](PDFTranslator& self) { self.PDFTranslator::run(); });
+        .def("pdfRun", [](PDFTranslator& self) { self.PDFTranslator::run(); },
+            py::call_guard<py::gil_scoped_release>());
 
 }
 

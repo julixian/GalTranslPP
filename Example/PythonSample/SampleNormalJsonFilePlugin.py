@@ -17,8 +17,8 @@ def init() -> None:
 
 
 def run() -> None:
-    # 默认演示 Python 侧线程池。这样即使你把 m_onFileProcessed 等回调换成 Python 闭包，
-    # 回调也会在 Python 创建的线程里执行，不会交给 C++ 线程池直接调用 Python 闭包。
+    # 默认演示 Python 侧线程池；也可使用 runStandardLifecycle，让 C++ 线程池处理文件。
+    # m_onFileProcessed、m_onPerformApi、m_onDictProcessed 赋值时会自动包装，支持 Python 闭包。
     pythonTranslator.normalJsonInit()
     pythonTranslator.normalJsonBeforeRun()
     try:
@@ -28,7 +28,7 @@ def run() -> None:
 
 
 def runStandardLifecycle() -> None:
-    # 不改 Python 闭包回调时，可以直接使用标准 NormalJson 生命周期。
+    # 标准 NormalJson 生命周期使用 C++ 线程池，也支持上述回调替换成 Python 闭包。
     pythonTranslator.normalJsonInit()
     pythonTranslator.normalJsonBeforeRun()
     pythonTranslator.normalJsonProcess()

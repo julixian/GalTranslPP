@@ -27,7 +27,7 @@ def run() -> None:
         originOnFileProcessed(relFilePath)
 
     # m_onFileProcessed 是 EPUB 判断所有 json 是否完成并回打包的关键回调。
-    # 覆盖成 Python 闭包后，需用 Python 线程逐文件调用 processFile，避免 C++ 线程池直接调用 Python 闭包。
+    # 赋值时会自动包装 Python 闭包，可用 Python 线程池，也可调用 normalJsonProcess 使用 C++ 线程池。
     # 另，调用可能同时发生，如有需要请在 onFileProcessed 内上锁 (originOnFileProcessed 内部是线程安全的)
     pythonTranslator.m_onFileProcessed = onFileProcessed
 

@@ -656,6 +656,9 @@ void NormalJsonTranslator::normalJsonProcessFiles(const std::vector<fs::path>& r
     for (const auto& relFilePath : relFilePaths) {
         results.emplace_back(m_threadPool.push([this, relFilePath](const int id)
             {
+                if (m_controller->shouldStop()) {
+                    return;
+                }
                 ActiveWorkerGuard workerGuard(m_controller);
                 try {
                     this->processFile(relFilePath, id + 1);

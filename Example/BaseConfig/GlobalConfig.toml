@@ -4,7 +4,7 @@ autoCheckUpdate = true
 autoDownloadUpdate = true
 autoRefreshAfterTranslate = true
 clearLogShortcut = "Ctrl+L"
-defaultApiLayoutMode = 0 # 新项目 Api 默认布局：0 流式，1 列表
+defaultApiLayoutMode = 0
 defaultDictOpenMode = 1
 defaultNameTableOpenMode = 1
 language = "zh_CN"
@@ -16,7 +16,7 @@ stackSwitchMode = 1
 themeMode = 0
 windowDisplayMode = 1
 windowHeight = 675
-windowPosX = 71
+windowPosX = 42
 windowPosY = 49
 windowWidth = 1366
 
@@ -125,7 +125,7 @@ openMode = 1
 5 = 60
 
 [showDockWidget]
-323 = true
+324 = true
 
 [[popularCards]]
 cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'

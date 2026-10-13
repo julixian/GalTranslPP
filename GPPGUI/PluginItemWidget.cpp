@@ -37,7 +37,7 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
 
     // 新增设置按钮
     m_settingsButton = new ElaIconButton(ElaIconType::Gear, this);
-    connect(m_settingsButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_settingsButton, &ElaIconButton::clicked, this, [=, this]()
         {
             Q_EMIT settingsRequestedSignal(this);
         });
@@ -48,14 +48,14 @@ PluginItemWidget::PluginItemWidget(const QString& pluginName, const QString& run
 
     // 上移按钮
     m_moveUpButton = new ElaIconButton(ElaIconType::AngleUp, this);
-    connect(m_moveUpButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_moveUpButton, &ElaIconButton::clicked, this, [=, this]()
         {
             Q_EMIT moveUpRequestedSignal(this);
         });
 
     // 下移按钮
     m_moveDownButton = new ElaIconButton(ElaIconType::AngleDown, this);
-    connect(m_moveDownButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_moveDownButton, &ElaIconButton::clicked, this, [=, this]()
         {
             Q_EMIT moveDownRequestedSignal(this);
         });

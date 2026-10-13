@@ -94,7 +94,7 @@ void CommonNormalDictsPage::setupUi()
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
 
-	auto createNormalDictTabFunc = [=](const fs::path& orgDictPath) -> QWidget*
+	auto createNormalDictTabFunc = [=, this](const fs::path& orgDictPath) -> QWidget*
 		{
 			const fs::path initDictPath = m_modeDictDir / orgDictPath.filename().replace_extension(L".toml");
 			const std::string initDictName = wide2Ascii(orgDictPath.stem().wstring());
@@ -236,7 +236,7 @@ void CommonNormalDictsPage::setupUi()
 					searchBar->show();
 				});
 
-			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
+			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool checked)
 				{
 					const std::string currentDictName = wide2Ascii(normalTabEntry->dictPath.stem().wstring());
 					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName
@@ -244,7 +244,7 @@ void CommonNormalDictsPage::setupUi()
 				});
 
 			const QWeakPointer<NormalTabEntry> weakNormalTabEntry = normalTabEntry.toWeakRef();
-			auto saveFunc = [=](bool forceSaveInTableModeToInit) -> bool // param 导入时先强制保存一下来给纯文本模式作初始化
+			auto saveFunc = [=, this](bool forceSaveInTableModeToInit) -> bool // param 导入时先强制保存一下来给纯文本模式作初始化
 				{
 					const QSharedPointer<NormalTabEntry> currentNormalTabEntry = weakNormalTabEntry.toStrongRef();
 					if (!currentNormalTabEntry) {
@@ -327,7 +327,7 @@ void CommonNormalDictsPage::setupUi()
 				};
 			normalTabEntry->saveFunc = saveFunc;
 
-			connect(saveButton, &GppPushButton::clicked, this, [=]()
+			connect(saveButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					if (normalTabEntry->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
@@ -335,7 +335,7 @@ void CommonNormalDictsPage::setupUi()
 							tr("字典 %1 已保存").arg(QString::fromStdWString(normalTabEntry->dictPath.stem().wstring())), 3000);
 					}
 				});
-			auto openEntryDialog = [=](const GuiNormalDictEntry& entry, GuiNormalDictEntry& result) -> bool
+			auto openEntryDialog = [=, this](const GuiNormalDictEntry& entry, GuiNormalDictEntry& result) -> bool
 				{
 					DictionaryEntryDialog dialog(entry, window());
 					if (dialog.exec() != QDialog::Accepted) {
@@ -391,7 +391,7 @@ void CommonNormalDictsPage::setupUi()
 					editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
-			connect(removeDictButton, &GppPushButton::clicked, this, [=]()
+			connect(removeDictButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 					if (selectedRows.isEmpty()) {
@@ -431,7 +431,7 @@ void CommonNormalDictsPage::setupUi()
 						withdrawButton->setEnabled(false);
 					}
 				});
-			connect(refreshButton, &GppPushButton::clicked, this, [=]()
+			connect(refreshButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto it = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -445,7 +445,7 @@ void CommonNormalDictsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 						tr("字典 %1 已刷新").arg(QString::fromStdWString((*it)->dictPath.stem().wstring())), 3000);
 				});
-			connect(renameTabButton, &GppPushButton::clicked, this, [=]()
+			connect(renameTabButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -515,7 +515,7 @@ void CommonNormalDictsPage::setupUi()
 						return;
 					}
 				});
-			connect(removeTabButton, &GppPushButton::clicked, this, [=]()
+			connect(removeTabButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto normalTabEntryIt = std::ranges::find_if(m_normalTabEntries, [=](const QSharedPointer<NormalTabEntry>& entry)
 						{
@@ -621,13 +621,13 @@ void CommonNormalDictsPage::setupUi()
 			saveAllButton->setEnabled(tabWidget->count() > 0);
 		});
 
-	connect(saveAllButton, &ElaToolButton::clicked, this, [=]()
+	connect(saveAllButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			this->apply2Config();
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("所有默认字典配置均已保存"), 3000);
 		});
 
-	connect(importButton, &ElaToolButton::clicked, this, [=]()
+	connect(importButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			const QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonNormalDictPath", "./")),
@@ -663,7 +663,7 @@ void CommonNormalDictsPage::setupUi()
 				tr("字典页 %1 已创建").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 		});
 
-	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
+	connect(addNewTabButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString newDictName;
 			GppInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
@@ -705,7 +705,7 @@ void CommonNormalDictsPage::setupUi()
 		});
 
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			toml::array dictNamesArr;
 			std::vector<std::pair<std::string, QWidget*>> pageWidgets;

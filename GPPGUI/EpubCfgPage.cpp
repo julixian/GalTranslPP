@@ -145,7 +145,7 @@ EpubCfgPage::EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : 
 		});
 	mainLayout->addWidget(tipButtonWidget);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "plugins.Epub.bilingualOutput", bilingualOutputSwitch->getIsToggled());
 			insertToml(m_projectConfig, "plugins.Epub.originalTextColor", origTextColorDialog->getCurrentColorRGB().toStdString());

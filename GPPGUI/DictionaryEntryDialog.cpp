@@ -354,16 +354,17 @@ int DictionaryEntryDialog::s_sentenceOffsetColumnWidth = 100;
 int DictionaryEntryDialog::s_targetColumnWidth = 260;
 
 DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidget* parent)
-    : ElaDialog(parent), m_gptEntry(entry)
+    : ElaDialog(parent), m_windowSize(s_gptDialogSize), m_gptEntry(entry)
 {
     setWindowTitle(tr("编辑 GPT 字典词条"));
     setWindowModality(Qt::ApplicationModal);
     setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
-    resize(s_gptDialogSize);
+    resize(m_windowSize);
     setMinimumSize(640, 420);
     connect(this, &QDialog::finished, this, [this](int)
         {
-            s_gptDialogSize = size();
+            m_windowSize = size();
+            s_gptDialogSize = m_windowSize;
         });
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -421,16 +422,17 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidg
 }
 
 DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QWidget* parent)
-    : ElaDialog(parent), m_normalEntry(entry)
+    : ElaDialog(parent), m_windowSize(s_normalDialogSize), m_normalEntry(entry)
 {
     setWindowTitle(tr("编辑 Normal 字典词条"));
     setWindowModality(Qt::ApplicationModal);
     setWindowButtonFlags(ElaAppBarType::CloseButtonHint);
-    resize(s_normalDialogSize);
+    resize(m_windowSize);
     setMinimumSize(760, 560);
     connect(this, &QDialog::finished, this, [this](int)
         {
-            s_normalDialogSize = size();
+            m_windowSize = size();
+            s_normalDialogSize = m_windowSize;
         });
 
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -632,6 +634,12 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     if (parent) {
         move(parent->frameGeometry().center() - rect().center());
     }
+}
+
+void DictionaryEntryDialog::showEvent(QShowEvent* event)
+{
+    ElaDialog::showEvent(event);
+    resize(m_windowSize);
 }
 
 GuiGptDictEntry DictionaryEntryDialog::getGptEntry() const

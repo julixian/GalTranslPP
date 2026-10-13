@@ -48,7 +48,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	refInfoLayout->addWidget(refInfoSwitch);
 	mainLayout->addWidget(refInfoArea);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "plugins.NormalJson.outputWithSrc", outputSwitch->getIsToggled());
 			insertToml(m_projectConfig, "plugins.NormalJson.outputWithRefInfo", refInfoSwitch->getIsToggled());

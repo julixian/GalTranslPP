@@ -165,7 +165,7 @@ void ApiSettingsPage::setupUi()
     apiTimeoutSpinBox->setValue(timeout);
     apiTimeoutLayout->addWidget(apiTimeoutSpinBox);
 
-    m_applyFunc = [=]()
+    m_applyFunc = [=, this]()
         {
             toml::ordered_array apiArray;
             if (!serializeApis(apiArray)) {
@@ -214,6 +214,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     const std::string protocol = toml::find_or(api, "protocol", "openai");
     const std::string thinkingLevel = toml::find_or(api, "thinkingLevel", "off");
     const bool useSystemProxy = toml::find_or(api, "useSystemProxy", true);
+    const bool stream = toml::find_or(api, "stream", false);
     const bool enable = toml::find_or(api, "enable", true);
     const bool extraHeadersEnable = toml::find_or(api, "extraHeadersEnable", false);
     const bool extraBodyEnable = toml::find_or(api, "extraBodyEnable", false);
@@ -296,12 +297,12 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     }
 
     ElaIconButton* moveUpButton = new ElaIconButton(ElaIconType::AngleUp, formWidget);
-    connect(moveUpButton, &ElaIconButton::clicked, this, [=]()
+    connect(moveUpButton, &ElaIconButton::clicked, this, [=, this]()
         {
             moveApiRow(container, -1);
         });
     ElaIconButton* moveDownButton = new ElaIconButton(ElaIconType::AngleDown, formWidget);
-    connect(moveDownButton, &ElaIconButton::clicked, this, [=]()
+    connect(moveDownButton, &ElaIconButton::clicked, this, [=, this]()
         {
             moveApiRow(container, 1);
         });
@@ -329,7 +330,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
 
     ElaIconButton* deleteButton = new ElaIconButton(ElaIconType::Trash, rightWidget);
     rightLayout->addWidget(deleteButton);
-    connect(deleteButton, &ElaIconButton::clicked, this, [=]()
+    connect(deleteButton, &ElaIconButton::clicked, this, [=, this]()
         {
             deleteApiRow(container);
         });
@@ -480,6 +481,14 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     systemProxySwitch->setIsToggled(useSystemProxy);
     systemProxyLayout->addWidget(systemProxySwitch);
     basicLayout->addWidget(systemProxyArea);
+
+    auto [streamArea, streamLayout] = createFormRow(basicPage);
+    streamLayout->addWidget(new ElaText(tr("流式输出"), 16, streamArea));
+    streamLayout->addStretch();
+    ElaToggleSwitch* streamSwitch = new ElaToggleSwitch(streamArea);
+    streamSwitch->setIsToggled(stream);
+    streamLayout->addWidget(streamSwitch);
+    basicLayout->addWidget(streamArea);
 
     basicLayout->addStretch();
     tabWidget->addTab(basicTabPage.page, tr("基础设置"));
@@ -661,7 +670,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     advancedLayout->addStretch();
     tabWidget->addTab(advancedTabPage.page, tr("高级设置"));
 
-    auto showApiResultWindow = [=, configGuard = QPointer<ElaWidget>(configWidget)](const QString& title, const QString& content)
+    auto showApiResultWindow = [=, this, configGuard = QPointer<ElaWidget>(configWidget)](const QString& title, const QString& content)
         {
             // 切换布局会重建配置窗口，旧请求完成后不再打开结果窗口。
             if (!configGuard) {
@@ -796,6 +805,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             api_.modelName = modelName.toStdString();
             api_.thinkingLevel = thinkingComboBox->currentData().toString().toStdString();
             api_.useSystemProxy = systemProxySwitch->getIsToggled();
+            api_.stream = streamSwitch->getIsToggled();
             if (temperatureCheckBox->isChecked()) {
                 api_.temperature = temperatureSlider->value();
             }
@@ -836,13 +846,13 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             testModelButton->setEnabled(enabled);
         };
 
-    auto apiRequestTimeoutMs = [=]()
+    auto apiRequestTimeoutMs = [=, this]()
         {
             const int timeoutSeconds = toml::find_or(m_projectConfig, "backend", "apiTimeout", 300);
             return std::max(1, timeoutSeconds) * 1000;
         };
 
-    auto runModelRequest = [=](bool queryModels)
+    auto runModelRequest = [=, this](bool queryModels)
         {
             TranslationApi api_;
             if (!buildCurrentApi(!queryModels, api_)) {
@@ -936,10 +946,12 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
         });
 
     configWidget->hide();
-    const auto showConfig = [=]()
+    const auto showConfig = [=, this]()
         {
+            const QSize windowSize = configWidget->size();
             configWidget->move(window()->frameGeometry().center() - configWidget->rect().center());
             configWidget->show();
+            configWidget->resize(windowSize);
             configWidget->raise();
             configWidget->activateWindow();
         };
@@ -957,18 +969,18 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     connect(enableCheckBox, &QCheckBox::toggled, enableAction, &QAction::setChecked);
     connect(menu->addElaIconAction(ElaIconType::Sliders, tr("详细设置")), &QAction::triggered, this, showConfig);
     connect(menu->addElaIconAction(ElaIconType::Copy, tr("生成副本")), &QAction::triggered,
-        this, [=]()
+        this, [=, this]()
         {
             duplicateApiRow(container);
         });
     menu->addSeparator();
     connect(menu->addElaIconAction(ElaIconType::Trash, tr("删除模型")), &QAction::triggered,
-        this, [=]()
+        this, [=, this]()
         {
             deleteApiRow(container);
         });
     flowCard->setMenu(menu);
-    const auto updateName = [=]()
+    const auto updateName = [=, this]()
         {
             const QString name = nameEdit->text().trimmed().isEmpty()
                 ? tr("自定义 Api")
@@ -1013,6 +1025,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             apiTable.emplace("apiurl", urlEdit->text().toStdString());
             apiTable.emplace("modelName", modelEdit->text().toStdString());
             apiTable.emplace("useSystemProxy", systemProxySwitch->getIsToggled());
+            apiTable.emplace("stream", streamSwitch->getIsToggled());
             apiTable.emplace("enable", enableCheckBox->isChecked());
             apiTable.emplace("thinkingLevel", thinkingComboBox->currentData().toString().toStdString());
             apiTable.emplace("agentStateful", agentStatefulSwitch->getIsToggled());

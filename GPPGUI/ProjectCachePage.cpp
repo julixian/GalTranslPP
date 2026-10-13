@@ -67,14 +67,14 @@ void ProjectCachePage::setupUi()
     topLayout->addWidget(m_cacheDirLabel, 1);
 
     ElaIconButton* openCacheButton = createHeaderIconButton(ElaIconType::FolderOpen, tr("打开缓存文件夹"), mainWidget);
-    connect(openCacheButton, &ElaIconButton::clicked, this, [=]()
+    connect(openCacheButton, &ElaIconButton::clicked, this, [=, this]()
         {
             QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(getCacheDir().wstring())));
         });
     topLayout->addWidget(openCacheButton);
 
     ElaIconButton* refreshButton = createHeaderIconButton(ElaIconType::Rotate, tr("刷新"), mainWidget);
-    connect(refreshButton, &ElaIconButton::clicked, this, [=]()
+    connect(refreshButton, &ElaIconButton::clicked, this, [=, this]()
         {
             if (!m_dirtyFiles.isEmpty()
                 && !confirmAction(tr("确认刷新"), tr("刷新会放弃所有未保存的缓存修改，确定要继续吗？"))) {
@@ -85,7 +85,7 @@ void ProjectCachePage::setupUi()
     topLayout->addWidget(refreshButton);
 
     m_saveButton = createHeaderIconButton(ElaIconType::FloppyDisk, tr("保存当前文件"), mainWidget);
-    connect(m_saveButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_saveButton, &ElaIconButton::clicked, this, [=, this]()
         {
             if (!ensureWritableAction(tr("保存缓存"))) {
                 return;
@@ -106,7 +106,7 @@ void ProjectCachePage::setupUi()
     topLayout->addWidget(m_saveButton);
 
     m_saveAllButton = createHeaderIconButton(ElaIconType::FloppyDisks, tr("保存全部"), mainWidget);
-    connect(m_saveAllButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_saveAllButton, &ElaIconButton::clicked, this, [=, this]()
         {
             if (!ensureWritableAction(tr("保存缓存"))) {
                 return;
@@ -174,7 +174,7 @@ void ProjectCachePage::setupUi()
     m_filesNavButton = addNavButton(tr("文件"), 0);
     m_searchNavButton = addNavButton(tr("搜索"), 1);
     m_problemsNavButton = addNavButton(tr("问题"), 2);
-    connect(m_sidebarButtonGroup, &QButtonGroup::idClicked, this, [=](int index)
+    connect(m_sidebarButtonGroup, &QButtonGroup::idClicked, this, [=, this](int index)
         {
             setSidebarPage(index);
         });
@@ -191,7 +191,7 @@ void ProjectCachePage::setupUi()
     m_deleteFilesButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_deleteFilesButton->setElaIcon(ElaIconType::Trash);
     m_deleteFilesButton->setText(tr("删除选中文件"));
-    connect(m_deleteFilesButton, &ElaToolButton::clicked, this, [=]()
+    connect(m_deleteFilesButton, &ElaToolButton::clicked, this, [=, this]()
         {
             if (!ensureWritableAction(tr("删除缓存文件"))) {
                 return;
@@ -232,7 +232,7 @@ void ProjectCachePage::setupUi()
     m_fileList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_fileList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_fileList->setItemHeight(42);
-    connect(m_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    connect(m_fileList, &ElaListView::clicked, this, [=, this](const QModelIndex& index)
         {
             if (!index.isValid()) {
                 return;
@@ -240,7 +240,7 @@ void ProjectCachePage::setupUi()
             loadCacheFile(index.data(Qt::UserRole).toString());
             updateActionStates();
         });
-    connect(m_fileList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
+    connect(m_fileList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=, this]()
         {
             updateActionStates();
         });
@@ -292,7 +292,7 @@ void ProjectCachePage::setupUi()
         globalSearchGroup->addAction(action);
     }
     m_globalSearchField->setMenu(globalSearchMenu);
-    connect(globalSearchGroup, &QActionGroup::triggered, this, [=](QAction* action)
+    connect(globalSearchGroup, &QActionGroup::triggered, this, [=, this](QAction* action)
         {
             m_globalSearchFieldKey = action->data().toString();
             m_globalSearchField->setText(action->text());
@@ -310,7 +310,7 @@ void ProjectCachePage::setupUi()
     searchLayout->addLayout(globalSearchOptionsLayout);
 
     connect(globalSearchTimer, &QTimer::timeout, this, &ProjectCachePage::runGlobalSearch);
-    connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, [=]()
+    connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, [=, this]()
         {
             globalSearchTimer->stop();
             runGlobalSearch();
@@ -329,7 +329,7 @@ void ProjectCachePage::setupUi()
     m_replaceToggleButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_replaceToggleButton->setElaIcon(ElaIconType::AngleDown);
     m_replaceToggleButton->setText(tr("展开批量替换"));
-    connect(m_replaceToggleButton, &ElaToolButton::clicked, this, [=]()
+    connect(m_replaceToggleButton, &ElaToolButton::clicked, this, [=, this]()
         {
             setReplacePanelVisible(!m_replacePanel->isVisible());
         });
@@ -380,7 +380,7 @@ void ProjectCachePage::setupUi()
         replaceGroup->addAction(action);
     }
     m_replaceField->setMenu(replaceMenu);
-    connect(replaceGroup, &QActionGroup::triggered, this, [=](QAction* action)
+    connect(replaceGroup, &QActionGroup::triggered, this, [=, this](QAction* action)
         {
             m_replaceFieldKey = action->data().toString();
             m_replaceField->setText(action->text());
@@ -409,7 +409,7 @@ void ProjectCachePage::setupUi()
     connect(m_replaceExecuteButton, &ElaToolButton::clicked, this, &ProjectCachePage::executeReplace);
     replaceButtonLayout->addWidget(m_replaceExecuteButton);
     replaceLayout->addLayout(replaceButtonLayout);
-    connect(m_replaceRegexButton, &ElaToolButton::toggled, this, [=](bool)
+    connect(m_replaceRegexButton, &ElaToolButton::toggled, this, [=, this](bool)
         {
             setRegexError(m_replaceQueryEdit, m_replaceRegexErrorAction, {});
         });
@@ -429,7 +429,7 @@ void ProjectCachePage::setupUi()
     m_searchResultList->setItemHeight(120);
     m_searchResultList->setItemDelegate(createCacheSearchDelegate(m_searchResultList));
     m_searchResultList->setMinimumHeight(520);
-    connect(m_searchResultList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    connect(m_searchResultList, &ElaListView::clicked, this, [=, this](const QModelIndex& index)
         {
             if (index.isValid()) {
                 jumpToHit(index.data(kHitIndexRole).toInt());
@@ -457,7 +457,7 @@ void ProjectCachePage::setupUi()
     m_problemList->setModel(m_problemModel);
     m_problemList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_problemList->setItemHeight(32);
-    connect(m_problemList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    connect(m_problemList, &ElaListView::clicked, this, [=, this](const QModelIndex& index)
         {
             if (!index.isValid()) {
                 return;
@@ -512,7 +512,7 @@ void ProjectCachePage::setupUi()
     QTimer* localSearchTimer = new QTimer(editorWidget);
     localSearchTimer->setSingleShot(true);
     localSearchTimer->setInterval(200);
-    connect(localSearchTimer, &QTimer::timeout, this, [=]()
+    connect(localSearchTimer, &QTimer::timeout, this, [=, this]()
         {
             renderEntries();
         });
@@ -539,7 +539,7 @@ void ProjectCachePage::setupUi()
     m_filterProblemsCheck->setFixedWidth(36);
     m_filterProblemsCheck->setCheckable(true);
     m_filterProblemsCheck->setToolTip(tr("只看问题句"));
-    connect(m_filterProblemsCheck, &ElaToolButton::toggled, this, [=]()
+    connect(m_filterProblemsCheck, &ElaToolButton::toggled, this, [=, this]()
         {
             renderEntries();
         });
@@ -549,7 +549,7 @@ void ProjectCachePage::setupUi()
     m_editEntryButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_editEntryButton->setElaIcon(ElaIconType::PenToSquare);
     m_editEntryButton->setText(tr("编辑选中条目"));
-    connect(m_editEntryButton, &ElaToolButton::clicked, this, [=]()
+    connect(m_editEntryButton, &ElaToolButton::clicked, this, [=, this]()
         {
             openEntryEditor(currentJsonRow());
         });
@@ -559,7 +559,7 @@ void ProjectCachePage::setupUi()
     m_deleteEntriesButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_deleteEntriesButton->setElaIcon(ElaIconType::Trash);
     m_deleteEntriesButton->setText(tr("删除选中条目"));
-    connect(m_deleteEntriesButton, &ElaToolButton::clicked, this, [=]()
+    connect(m_deleteEntriesButton, &ElaToolButton::clicked, this, [=, this]()
         {
             if (!ensureWritableAction(tr("删除缓存条目"))) {
                 return;
@@ -584,13 +584,13 @@ void ProjectCachePage::setupUi()
     m_entryList->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_entryList->setItemHeight(112);
     m_entryList->setItemDelegate(createCacheEntryDelegate(m_entryList));
-    connect(m_entryList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=]()
+    connect(m_entryList->selectionModel(), &QItemSelectionModel::selectionChanged, this, [=, this]()
         {
             syncSelectedEntryRows();
             updateCurrentSummary();
             updateActionStates();
         });
-    connect(m_entryList, &ElaListView::doubleClicked, this, [=](const QModelIndex& index)
+    connect(m_entryList, &ElaListView::doubleClicked, this, [=, this](const QModelIndex& index)
         {
             if (index.isValid()) {
                 openEntryEditor(index.data(kJsonRowRole).toInt());
@@ -603,7 +603,7 @@ void ProjectCachePage::setupUi()
 
     mainLayout->addWidget(m_mainSplitter, 1);
     addCentralWidget(mainWidget, true, false, 0);
-    connect(eTheme, &ElaTheme::themeModeChanged, this, [=](ElaThemeType::ThemeMode)
+    connect(eTheme, &ElaTheme::themeModeChanged, this, [=, this](ElaThemeType::ThemeMode)
         {
             refreshThemeStyles();
             renderEntries();

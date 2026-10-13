@@ -49,7 +49,7 @@ void DefaultPromptsPage::setupUi()
 
 
 	auto createPromptWidgetFunc =
-		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
+		[=, this](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
 			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt,
 			const std::optional<std::string>& advancedUserPromptKey = std::nullopt, const std::optional<std::string>& advancedSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
@@ -100,7 +100,7 @@ void DefaultPromptsPage::setupUi()
 				});
 			promptStackedWidget->setCurrentIndex(0);
 
-			auto resultApply2ConfigFunc = [=]()
+			auto resultApply2ConfigFunc = [=, this]()
 				{
 					for (const auto& [key, edit] : promptEdits) {
 						toml::ordered_value promptVal = edit->toPlainText().toStdString();
@@ -119,12 +119,12 @@ void DefaultPromptsPage::setupUi()
 			promptSaveButton->setText(tr("保存"));
 			promptButtonLayout->addWidget(promptSaveAllButton);
 			promptButtonLayout->addWidget(promptSaveButton);
-			connect(promptSaveAllButton, &ElaToolButton::clicked, this, [=]()
+			connect(promptSaveAllButton, &ElaToolButton::clicked, this, [=, this]()
 				{
 					this->apply2Config();
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"), tr("所有默认提示词配置已保存。"), 3000);
 				});
-			connect(promptSaveButton, &ElaToolButton::clicked, this, [=]()
+			connect(promptSaveButton, &ElaToolButton::clicked, this, [=, this]()
 				{
 					resultApply2ConfigFunc();
 					atomicOutputFile(defaultPromptPath, toml::format(m_promptConfig));
@@ -151,7 +151,7 @@ void DefaultPromptsPage::setupUi()
 		auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_USER", "NAMETRANS_SYSTEM");
 
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			forgalJsonApplyFunc();
 			forgalTsvApplyFunc();

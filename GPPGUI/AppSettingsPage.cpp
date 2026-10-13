@@ -217,7 +217,7 @@ void AppSettingsPage::setupUi()
     lazyProjectInitializationLayout->addStretch();
     ElaToggleSwitch* lazyProjectInitializationSwitch = new ElaToggleSwitch(lazyProjectInitializationArea);
     lazyProjectInitializationSwitch->setIsToggled(toml::find_or(m_globalConfig, "lazyProjectInitialization", true));
-    connect(lazyProjectInitializationSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+    connect(lazyProjectInitializationSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "lazyProjectInitialization", isChecked);
         });
@@ -234,7 +234,7 @@ void AppSettingsPage::setupUi()
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
     autoRefreshSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoRefreshAfterTranslate", true));
-    connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+    connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "autoRefreshAfterTranslate", isChecked);
         });
@@ -263,7 +263,7 @@ void AppSettingsPage::setupUi()
     confirmClearLogShortcutButton->setText(tr("确认更改"));
     clearLogShortcutLayout->addWidget(confirmClearLogShortcutButton);
     connect(confirmClearLogShortcutButton, &ElaToolButton::clicked, this,
-        [=]()
+        [=, this]()
         {
             const QString shortcut = clearLogShortcutEdit->text().trimmed();
             const QKeySequence keySequence = QKeySequence::fromString(shortcut, QKeySequence::PortableText);
@@ -301,7 +301,7 @@ void AppSettingsPage::setupUi()
         abstractButton->setChecked(true);
     }
     connect(nameTableOpenModeGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this,
-        [=](QAbstractButton* button, bool isToggled)
+        [=, this](QAbstractButton* button, bool isToggled)
         {
             if (isToggled) {
                 insertToml(m_globalConfig, "defaultNameTableOpenMode", nameTableOpenModeGroup->id(button));
@@ -330,7 +330,7 @@ void AppSettingsPage::setupUi()
         abstractButton->setChecked(true);
     }
     connect(dictOpenModeGroup, QOverload<QAbstractButton*, bool>::of(&QButtonGroup::buttonToggled), this,
-        [=](QAbstractButton* button, bool isToggled)
+        [=, this](QAbstractButton* button, bool isToggled)
         {
             if (isToggled) {
                 insertToml(m_globalConfig, "defaultDictOpenMode", dictOpenModeGroup->id(button));
@@ -354,7 +354,7 @@ void AppSettingsPage::setupUi()
     apiLayoutModeGroup->button(toml::find_or(m_globalConfig, "defaultApiLayoutMode", 0) == 1 ? 1 : 0)->setChecked(true);
     apiLayoutModeLayout->addWidget(apiFlowModeButton);
     apiLayoutModeLayout->addWidget(apiListModeButton);
-    connect(apiLayoutModeGroup, &QButtonGroup::idClicked, this, [=](int mode) {
+    connect(apiLayoutModeGroup, &QButtonGroup::idClicked, this, [=, this](int mode) {
         insertToml(m_globalConfig, "defaultApiLayoutMode", mode);
     });
     centerLayout->addWidget(apiLayoutModeArea);
@@ -369,7 +369,7 @@ void AppSettingsPage::setupUi()
     ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
     allowCloseWhenRunningSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false));
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningSwitch);
-    connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+    connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "allowCloseWhenRunning", isChecked);
         });
@@ -411,7 +411,7 @@ void AppSettingsPage::setupUi()
     ElaToggleSwitch* autoDownloadSwitch = new ElaToggleSwitch(autoDownloadArea);
     autoDownloadSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
     autoDownloadLayout->addWidget(autoDownloadSwitch);
-    connect(autoDownloadSwitch, &ElaToggleSwitch::toggled, this, [=](bool isChecked)
+    connect(autoDownloadSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "autoDownloadUpdate", isChecked);
         });
@@ -451,7 +451,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathButton->setElaIcon(ElaIconType::FolderOpen);
     pythonEnvPathButton->setText(tr("浏览"));
     pythonEnvPathLayout->addWidget(pythonEnvPathButton);
-    connect(pythonEnvPathButton, &ElaToolButton::clicked, this, [=]()
+    connect(pythonEnvPathButton, &ElaToolButton::clicked, this, [=, this]()
         {
             const QString pyExePath = QFileDialog::getOpenFileName(this->window(), tr("选择Python.exe"),
                 pythonEnvPathLineEdit->text(), "Python.exe (python.exe)");
@@ -473,11 +473,12 @@ void AppSettingsPage::setupUi()
     centerLayout->addWidget(pythonEnvPathArea);
 
 
-    m_applyFunc = [=]()
+    m_applyFunc = [=, this]()
         {
             const QRect rect = elaWindow->frameGeometry();
-            insertToml(m_globalConfig, "windowWidth", rect.width());
-            insertToml(m_globalConfig, "windowHeight", rect.height());
+            const QSize windowSize = elaWindow->size();
+            insertToml(m_globalConfig, "windowWidth", windowSize.width());
+            insertToml(m_globalConfig, "windowHeight", windowSize.height());
             insertToml(m_globalConfig, "windowPosX", rect.x());
             insertToml(m_globalConfig, "windowPosY", rect.y());
             insertToml(m_globalConfig, "themeMode", (int)eTheme->getThemeMode());

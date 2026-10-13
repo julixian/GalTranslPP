@@ -53,7 +53,7 @@ void OtherSettingsPage::setupUi()
 	openButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	openButton->setElaIcon(ElaIconType::FolderOpen);
 	openButton->setText(tr("打开文件夹"));
-	connect(openButton, &ElaToolButton::clicked, this, [=]()
+	connect(openButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
@@ -76,13 +76,13 @@ void OtherSettingsPage::setupUi()
 	overviewFormatGroup->addButton(overviewJsonRadio);
 	overviewTomlRadio->setChecked(problemOverviewFormat != "json");
 	overviewJsonRadio->setChecked(problemOverviewFormat == "json");
-	connect(overviewTomlRadio, &ElaRadioButton::toggled, this, [=](bool checked)
+	connect(overviewTomlRadio, &ElaRadioButton::toggled, this, [=, this](bool checked)
 		{
 			if (checked) {
 				insertToml(m_projectConfig, "common.problemOverviewFormat", std::string("toml"));
 			}
 		});
-	connect(overviewJsonRadio, &ElaRadioButton::toggled, this, [=](bool checked)
+	connect(overviewJsonRadio, &ElaRadioButton::toggled, this, [=, this](bool checked)
 		{
 			if (checked) {
 				insertToml(m_projectConfig, "common.problemOverviewFormat", std::string("json"));
@@ -90,7 +90,7 @@ void OtherSettingsPage::setupUi()
 		});
 	overviewFormatLayout->addWidget(overviewTomlRadio);
 	overviewFormatLayout->addWidget(overviewJsonRadio);
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "common.problemOverviewFormat", overviewFormatGroup->checkedButton()->text().toStdString());
 		};
@@ -110,7 +110,7 @@ void OtherSettingsPage::setupUi()
 	moveButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	moveButton->setElaIcon(ElaIconType::ArrowsRetweet);
 	moveButton->setText(tr("移动项目"));
-	connect(moveButton, &ElaToolButton::clicked, this, [=]()
+	connect(moveButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移动失败"), tr("项目仍在运行中，无法移动"), 3000);
@@ -147,7 +147,7 @@ void OtherSettingsPage::setupUi()
 	renameButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	renameButton->setElaIcon(ElaIconType::PenToSquare);
 	renameButton->setText(tr("项目更名"));
-	connect(renameButton, &ElaToolButton::clicked, this, [=]()
+	connect(renameButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), tr("项目仍在运行中，无法更名"), 3000);
@@ -200,7 +200,7 @@ void OtherSettingsPage::setupUi()
 	importButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	importButton->setElaIcon(ElaIconType::Upload);
 	importButton->setText(tr("导入"));
-	connect(importButton, &ElaToolButton::clicked, this, [=]()
+	connect(importButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入失败"), tr("项目仍在运行中，无法导入"), 3000);
@@ -338,7 +338,7 @@ void OtherSettingsPage::setupUi()
 	saveButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	saveButton->setElaIcon(ElaIconType::FloppyDisk);
 	saveButton->setText(tr("保存"));
-	connect(saveButton, &ElaToolButton::clicked, this, [=]()
+	connect(saveButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			Q_EMIT saveConfigSignal();
 			ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
@@ -359,7 +359,7 @@ void OtherSettingsPage::setupUi()
 	refreshButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	refreshButton->setElaIcon(ElaIconType::Rotate);
 	refreshButton->setText(tr("刷新"));
-	connect(refreshButton, &ElaToolButton::clicked, this, [=]()
+	connect(refreshButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("刷新失败"), tr("项目仍在运行中，无法刷新"), 3000);
@@ -404,7 +404,7 @@ void OtherSettingsPage::setupUi()
 	cacheButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	cacheButton->setElaIcon(ElaIconType::Trash);
 	cacheButton->setText(tr("删除"));
-	connect(cacheButton, &ElaToolButton::clicked, this, [=]()
+	connect(cacheButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), tr("项目仍在运行中，无法删除缓存"), 3000);

@@ -171,7 +171,7 @@ void NameTableSettingsPage::setupUi()
 			delNameButton->setEnabled(false);
 			withdrawButton->setEnabled(false);
 		});
-	connect(tableModeButton, &ElaToolButton::clicked, this, [=]()
+	connect(tableModeButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			stackedWidget->setCurrentIndex(1);
 			plainTextModeButton->setEnabled(true);
@@ -180,7 +180,7 @@ void NameTableSettingsPage::setupUi()
 			delNameButton->setEnabled(true);
 			withdrawButton->setEnabled(!m_withdrawList.isEmpty());
 		});
-	auto refreshFunc = [=]()
+	auto refreshFunc = [=, this]()
 		{
 			plainTextEdit->setPlainText(readNameTableStr());
 			nameTableModel->loadData(readNameTable());
@@ -197,7 +197,7 @@ void NameTableSettingsPage::setupUi()
 				nameTableModel->insertRow(index.first().row());
 			}
 		});
-	connect(delNameButton, &GppPushButton::clicked, this, [=]()
+	connect(delNameButton, &GppPushButton::clicked, this, [=, this]()
 		{
 			QModelIndexList indexList = nameTableView->selectionModel()->selectedRows();
 			const QList<NameTableEntry>& entries = nameTableModel->getEntriesRef();
@@ -218,7 +218,7 @@ void NameTableSettingsPage::setupUi()
 				}
 			}
 		});
-	connect(saveDictButton, &GppPushButton::clicked, this, [=]()
+	connect(saveDictButton, &GppPushButton::clicked, this, [=, this]()
 		{
 			// 保存的提示和按钮绑定，因为保存项目配置时用的自己的提示
 			// 但刷新可以直接把提示丢进refreshFunc里，因为一般用到这个函数的时候都要提示(单独保存字典时的重载是静默的)
@@ -227,7 +227,7 @@ void NameTableSettingsPage::setupUi()
 			}
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("已保存 NameTable.toml"), 3000);
 		});
-	connect(withdrawButton, &GppPushButton::clicked, this, [=]()
+	connect(withdrawButton, &GppPushButton::clicked, this, [=, this]()
 		{
 			if (m_withdrawList.isEmpty()) {
 				return;
@@ -244,7 +244,7 @@ void NameTableSettingsPage::setupUi()
 	nameTableLayout->addLayout(buttonLayout);
 	nameTableLayout->addWidget(stackedWidget);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			const fs::path nameTablePath = m_projectDir / L"NameTable.toml";
 			std::ofstream ofs;

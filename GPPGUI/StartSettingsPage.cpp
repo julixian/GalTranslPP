@@ -42,7 +42,7 @@ StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::ordered_value& 
 
 	m_trayIcon = new QSystemTrayIcon(this);
 	m_trayIcon->setIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.ico"));
-	connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=]()
+	connect(m_trayIcon, &QSystemTrayIcon::messageClicked, this, [=, this]()
 		{
 			const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(m_projectDir.wstring()));
 			QDesktopServices::openUrl(dirUrl);
@@ -98,7 +98,7 @@ void StartSettingsPage::ensureWorkerThread()
 	connect(m_workThread, &QThread::finished, m_worker, &TranslatorWorker::deleteLater);
 	connect(m_worker, &TranslatorWorker::translationFinishedSignal, this, &StartSettingsPage::workFinished);
 
-	connect(m_worker, &TranslatorWorker::makeBarSignal, this, [=](int totalSentences, int totalThreads)
+	connect(m_worker, &TranslatorWorker::makeBarSignal, this, [=, this](int totalSentences, int totalThreads)
 		{
 			m_progressBar->setRange(0, totalSentences);
 			m_progressBar->setValue(0);
@@ -124,15 +124,15 @@ void StartSettingsPage::ensureWorkerThread()
 			}
 			enqueuePendingLog(log);
 		});
-	connect(m_worker, &TranslatorWorker::addThreadNumSignal, this, [=]()
+	connect(m_worker, &TranslatorWorker::addThreadNumSignal, this, [=, this]()
 		{
 			m_threadNumRing->setValue(m_threadNumRing->getValue() + 1);
 		});
-	connect(m_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=]()
+	connect(m_worker, &TranslatorWorker::reduceThreadNumSignal, this, [=, this]()
 		{
 			m_threadNumRing->setValue(m_threadNumRing->getValue() - 1);
 		});
-	connect(m_worker, &TranslatorWorker::updateBarSignal, this, [=](int ticks)
+	connect(m_worker, &TranslatorWorker::updateBarSignal, this, [=, this](int ticks)
 		{
 			const int previousProgress = m_progressBar->value();
 			m_progressBar->setValue(previousProgress + ticks);
@@ -160,23 +160,23 @@ void StartSettingsPage::ensureWorkerThread()
 				std::format("{:%T}", eta)
 			));
 		});
-	connect(m_worker, &TranslatorWorker::runtimeFilesResetSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+	connect(m_worker, &TranslatorWorker::runtimeFilesResetSignal, this, [=, this](const QVector<GuiRuntimeFileProgress>& files)
 		{
 			m_translationWorkbenchPage->resetRuntimeFiles(files);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=](const QVector<GuiRuntimeFileProgress>& files)
+	connect(m_worker, &TranslatorWorker::runtimeFileProgressBatchSignal, this, [=, this](const QVector<GuiRuntimeFileProgress>& files)
 		{
 			m_translationWorkbenchPage->updateRuntimeFiles(files);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeTransSuccessBatchSignal, this, [=](const QVector<GuiRuntimeTransSuccessEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeTransSuccessBatchSignal, this, [=, this](const QVector<GuiRuntimeTransSuccessEvent>& events)
 		{
 			m_translationWorkbenchPage->appendSuccesses(events);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeTransErrorBatchSignal, this, [=](const QVector<GuiRuntimeTransErrorEvent>& events)
+	connect(m_worker, &TranslatorWorker::runtimeTransErrorBatchSignal, this, [=, this](const QVector<GuiRuntimeTransErrorEvent>& events)
 		{
 			m_translationWorkbenchPage->appendErrors(events);
 		});
-	connect(m_worker, &TranslatorWorker::runtimeStageChangedSignal, this, [=](const QString& stage, const QString& currentFile)
+	connect(m_worker, &TranslatorWorker::runtimeStageChangedSignal, this, [=, this](const QString& stage, const QString& currentFile)
 		{
 			m_translationWorkbenchPage->updateStage(stage, currentFile);
 		});
@@ -378,7 +378,7 @@ void StartSettingsPage::setupUi()
 	logAreaLayout->addWidget(m_logPausedRow);
 	topLayout->addWidget(logAreaWidget);
 
-	connect(m_resumeLogButton, &GppPushButton::clicked, this, [=]()
+	connect(m_resumeLogButton, &GppPushButton::clicked, this, [=, this]()
 		{
 			QScrollBar* scrollBar = m_logOutput->verticalScrollBar();
 			m_logResumeInProgress = true;
@@ -393,7 +393,7 @@ void StartSettingsPage::setupUi()
 		});
 
 	QTimer* timer = new QTimer(this);
-	connect(timer, &QTimer::timeout, this, [=]()
+	connect(timer, &QTimer::timeout, this, [=, this]()
 		{
 			if (!m_logPausedRow->isVisible() || !isLogScrollAtBottom()) {
 				timer->stop();
@@ -411,7 +411,7 @@ void StartSettingsPage::setupUi()
 		});
 	m_logOutput->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 	QScrollBar* logScrollBar = m_logOutput->verticalScrollBar();
-	connect(logScrollBar, &QScrollBar::valueChanged, this, [=](int)
+	connect(logScrollBar, &QScrollBar::valueChanged, this, [=, this](int)
 		{
 			if (m_logResumeInProgress) {
 				return;
@@ -571,7 +571,7 @@ void StartSettingsPage::setupUi()
 	progressLayout->addWidget(m_progressBar, 1);
 	m_workbenchButton = new ElaIconButton(ElaIconType::ChartSimple, 16, 35, 35, progressRow);
 	m_workbenchButton->setToolTip(tr("详情"));
-	connect(m_workbenchButton, &QPushButton::clicked, this, [=]()
+	connect(m_workbenchButton, &QPushButton::clicked, this, [=, this]()
 		{
 			this->navigation(5);
 		});
@@ -583,7 +583,7 @@ void StartSettingsPage::setupUi()
 	// 这个的 isVerticalGrabGesture 保持为 true 主要是方便随便拉一下看进度条而不必非要转鼠标滚轮或者侧边滚动条
 	addCentralWidget(mainWidget, true, true, 0);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			if (m_filePluginComboBox->currentText() != "Custom") {
 				insertToml(m_projectConfig, "plugins.filePlugin", m_filePluginComboBox->currentText().toStdString());

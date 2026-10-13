@@ -72,7 +72,7 @@ void CommonGptDictsPage::setupUi()
 	tabWidget->setTabsClosable(false);
 	tabWidget->setIsTabTransparent(true);
 
-	auto createGptDictTabFunc = [=](const fs::path& orgDictPath) -> QWidget*
+	auto createGptDictTabFunc = [=, this](const fs::path& orgDictPath) -> QWidget*
 		{
 			const fs::path initDictPath = defaultGptDictPath / fs::path(orgDictPath.filename()).replace_extension(".toml");
 			const std::string initDictName = wide2Ascii(orgDictPath.stem().wstring());
@@ -213,7 +213,7 @@ void CommonGptDictsPage::setupUi()
 					searchBar->show();
 				});
 
-			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=](bool checked)
+			connect(defaultOnSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool checked)
 				{
 					const std::string currentDictName = wide2Ascii(gptTabEntry->dictPath.stem().wstring());
 					insertToml(m_globalConfig, "commonGptDicts.spec." + currentDictName
@@ -221,7 +221,7 @@ void CommonGptDictsPage::setupUi()
 				});
 
 			const QWeakPointer<GptTabEntry> weakGptTabEntry = gptTabEntry.toWeakRef();
-			auto saveFunc = [=](bool forceSaveInTableModeToInit) -> bool
+			auto saveFunc = [=, this](bool forceSaveInTableModeToInit) -> bool
 				{
 					const QSharedPointer<GptTabEntry> currentGptTabEntry = weakGptTabEntry.toStrongRef();
 					if (!currentGptTabEntry) {
@@ -292,7 +292,7 @@ void CommonGptDictsPage::setupUi()
 				};
 			gptTabEntry->saveFunc = saveFunc;
 
-			connect(saveButton, &GppPushButton::clicked, this, [=]()
+			connect(saveButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					if (gptTabEntry->saveFunc(false)) {
 						Q_EMIT commonDictsChangedSignal();
@@ -301,7 +301,7 @@ void CommonGptDictsPage::setupUi()
 					}
 				});
 
-			auto openEntryDialog = [=](const GuiGptDictEntry& entry, GuiGptDictEntry& result) -> bool
+			auto openEntryDialog = [=, this](const GuiGptDictEntry& entry, GuiGptDictEntry& result) -> bool
 				{
 					DictionaryEntryDialog dialog(entry, window());
 					if (dialog.exec() != QDialog::Accepted) {
@@ -358,7 +358,7 @@ void CommonGptDictsPage::setupUi()
 						&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 				});
 
-			connect(removeDictButton, &GppPushButton::clicked, this, [=]()
+			connect(removeDictButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 					if (selectedRows.isEmpty()) {
@@ -398,7 +398,7 @@ void CommonGptDictsPage::setupUi()
 						withdrawButton->setEnabled(false);
 					}
 				});
-			connect(refreshButton, &GppPushButton::clicked, this, [=]()
+			connect(refreshButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto it = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -412,7 +412,7 @@ void CommonGptDictsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 						tr("字典 %1 已刷新").arg(QString::fromStdWString((*it)->dictPath.stem().wstring())), 3000);
 				});
-			connect(renameTabButton, &GppPushButton::clicked, this, [=]()
+			connect(renameTabButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto gptTabEntryIt = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -480,7 +480,7 @@ void CommonGptDictsPage::setupUi()
 						return;
 					}
 				});
-			connect(removeTabButton, &GppPushButton::clicked, this, [=]()
+			connect(removeTabButton, &GppPushButton::clicked, this, [=, this]()
 				{
 					const auto gptTabEntryIt = std::ranges::find_if(m_gptTabEntries, [=](const QSharedPointer<GptTabEntry>& entry)
 						{
@@ -586,13 +586,13 @@ void CommonGptDictsPage::setupUi()
 			saveAllButton->setEnabled(tabWidget->count() > 0);
 		});
 
-	connect(saveAllButton, &ElaToolButton::clicked, this, [=]()
+	connect(saveAllButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			this->apply2Config();
 			ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"), tr("所有默认字典配置均已保存"), 3000);
 		});
 
-	connect(importButton, &ElaToolButton::clicked, this, [=]()
+	connect(importButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonGptDictPath", "./")),
@@ -628,7 +628,7 @@ void CommonGptDictsPage::setupUi()
 				tr("字典页 %1 已创建").arg(QString::fromStdWString(importDictPath.stem().wstring())), 3000);
 		});
 
-	connect(addNewTabButton, &ElaToolButton::clicked, this, [=]()
+	connect(addNewTabButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString newDictName;
 			GppInputDialog inputDialog(tr("请输入字典表名称"), tr("新建字典"), newDictName, window());
@@ -670,7 +670,7 @@ void CommonGptDictsPage::setupUi()
 		});
 
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			toml::array dictNamesArr;
 			std::vector<std::pair<std::string, QWidget*>> pageWidgets;

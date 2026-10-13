@@ -708,7 +708,8 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"OpenAI", ApiProtocol::OpenAI,
 		"Claude", ApiProtocol::Claude,
 		"Gemini", ApiProtocol::Gemini,
-		"OpenAIRes", ApiProtocol::OpenAIRes
+		"OpenAIRes", ApiProtocol::OpenAIRes,
+		"GeminiInterAction", ApiProtocol::GeminiInterAction
 	);
 
 	lua.newUsertype<SentencePosition>("SentencePosition",

@@ -369,7 +369,7 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
     std::vector<std::future<void>> results;
 
     for (const auto& [taskIndex, segmentIdx] : selectedIndices | std::views::enumerate) {
-        results.emplace_back(pool.push([=](int threadId)
+        results.emplace_back(pool.push([=, this](int threadId)
             {
                 ActiveWorkerGuard workerGuard(m_controller);
                 this->callLLMToGenerate(segmentIdx, (int)taskIndex + 1, threadId + 1);

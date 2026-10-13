@@ -55,7 +55,7 @@ void DictSettingsPage::setupUi()
 
 
 	auto createDictTabFunc =
-		[=]<typename EntryType>
+		[=, this]<typename EntryType>
 	    (const std::function<QString()>& readPlainTextFunc, const std::function<QList<EntryType>()>& readEntriesFunc,
 	     QList<EntryType>& withdrawList, const std::string& configKey, const QString& tabName, const fs::path& dictPath)
 	     -> std::pair<std::function<void()>, std::function<void(bool)>>
@@ -178,7 +178,7 @@ void DictSettingsPage::setupUi()
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("刷新成功"),
 					tr("重新载入了 %1").arg(tabName), 3000);
 			};
-		auto saveFunc = [=](bool forceSaveInTableModeToInit)
+		auto saveFunc = [=, this](bool forceSaveInTableModeToInit)
 			{
 				if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
 					const fs::path generatedDictPath = m_projectDir / L"ProjGptDict-Gen.toml";
@@ -250,7 +250,7 @@ void DictSettingsPage::setupUi()
 					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableOpenMode", stackedWidget->currentIndex());
 				}
 			};
-		connect(importButton, &ElaIconButton::clicked, this, [=]()
+		connect(importButton, &ElaIconButton::clicked, this, [=, this]()
 			{
 				const QString filter = std::is_same_v<EntryType, GuiGptDictEntry>
 					? "TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)"
@@ -311,7 +311,7 @@ void DictSettingsPage::setupUi()
 				ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("保存成功"),
 					tr("%1 已保存").arg(tabName), 3000);
 			});
-		auto openEntryDialog = [=](const EntryType& entry, EntryType& result) -> bool
+		auto openEntryDialog = [=, this](const EntryType& entry, EntryType& result) -> bool
 			{
 				DictionaryEntryDialog dialog(entry, window());
 				if (dialog.exec() != QDialog::Accepted) {
@@ -372,7 +372,7 @@ void DictSettingsPage::setupUi()
 				editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 					&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
 			});
-		connect(removeDictButton, &GppPushButton::clicked, this, [=, &withdrawList]()
+		connect(removeDictButton, &GppPushButton::clicked, this, [=, this, &withdrawList]()
 			{
 				QModelIndexList selectedRows = tableView->selectionModel()->selectedRows();
 				if (selectedRows.isEmpty()) {

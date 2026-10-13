@@ -473,6 +473,10 @@ void NormalJsonTranslator::normalJsonInit()
                     m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
                         "backend.apis[%1] 未找到 Api 协议字段，默认使用 OpenAI 协议").arg(apiIndex).toStdString());
                 }
+                if (m_agentEnabled && m_agentAdvancedEnabled && api.protocol == ApiProtocol::Gemini &&
+                    apiTbl.contains("agentGeminiInteractions") && apiTbl.at("agentGeminiInteractions").as_boolean()) {
+                    api.protocol = ApiProtocol::GeminiInterAction;
+                }
                 if (apiTbl.contains("apiurl") && !apiTbl.at("apiurl").as_string().empty()) {
                     api.apiurl = cvt2StdApiUrl(apiTbl.at("apiurl").as_string(), api.protocol);
                 }
@@ -496,8 +500,8 @@ void NormalJsonTranslator::normalJsonInit()
                 api.agentStateful = apiTbl.contains("agentStateful") && apiTbl.at("agentStateful").as_boolean();
                 api.agentNativeAutoCompaction = apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").as_boolean();
                 if (apiTbl.contains("agentCompactThresholdTokens")) api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
-                api.agentGeminiInteractions = apiTbl.contains("agentGeminiInteractions") && apiTbl.at("agentGeminiInteractions").as_boolean();
                 api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
+                api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
                 api.thinkingLevel = "off";
                 if (apiTbl.contains("thinkingLevel")) {
                     api.thinkingLevel = apiTbl.at("thinkingLevel").as_string();

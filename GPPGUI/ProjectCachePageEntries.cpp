@@ -201,7 +201,7 @@ void ProjectCachePage::openEntryEditor(int row)
 
     GppPushButton* saveButton = new GppPushButton(tr("保存修改"), &dialog);
     saveButton->setEnabled(writable);
-    connect(saveButton, &GppPushButton::clicked, this, [=, &dialog]()
+    connect(saveButton, &GppPushButton::clicked, this, [=, this, &dialog]()
         {
             updateEntryField(row, "pre_processed_text", sourceEdit->toPlainText());
             updateEntryField(row, "translated_raw_text", dstEdit->toPlainText());

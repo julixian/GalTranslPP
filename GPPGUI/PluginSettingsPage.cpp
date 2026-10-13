@@ -104,7 +104,7 @@ void PluginSettingsPage::setupUi()
     updateMoveButtonStates();
 
     auto createCustomPluginsPlainTextEditFunc =
-        [=](const QString& title, const std::string& configKey, const toml::ordered_array& customPlugins_) -> std::function<void(toml::ordered_array&)>
+        [=, this](const QString& title, const std::string& configKey, const toml::ordered_array& customPlugins_) -> std::function<void(toml::ordered_array&)>
         {
             QHBoxLayout* customPluginsLayout = new QHBoxLayout(mainWidget);
             customPluginsLayout->setContentsMargins(0, 0, 0, 0);
@@ -133,7 +133,7 @@ void PluginSettingsPage::setupUi()
             installTreeSitterHighlighter(customPluginsEdit->document(), SyntaxLanguage::Toml);
             mainLayout->addWidget(customPluginsEdit);
 
-            connect(browserButton, &ElaToolButton::clicked, this, [=]()
+            connect(browserButton, &ElaToolButton::clicked, this, [=, this]()
                 {
                     toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
                     auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];
@@ -188,7 +188,7 @@ void PluginSettingsPage::setupUi()
 
 
 
-    m_applyFunc = [=]()
+    m_applyFunc = [=, this]()
         {
             m_skipTransCfgPage->apply2Config();
             m_tlfCfgPage->apply2Config();

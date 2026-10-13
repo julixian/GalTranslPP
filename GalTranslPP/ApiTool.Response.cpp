@@ -8,7 +8,7 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
-std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, ApiProtocol protocol, bool geminiInteractions)
+std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, ApiProtocol protocol)
 {
     try {
         json parsed = json::parse(rawResponse);
@@ -69,28 +69,31 @@ std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, A
         }
         break;
 
+        case ApiProtocol::GeminiInterAction:
+        {
+            // Interactions 没有专门的拒答字段，失败状态不能直接当作拒答；正文拒答由 Agent 的无工具调用次数处理。
+            const auto status = parsed.value("status", "");
+            if (status != "completed" && status != "requires_action") {
+                throw makeApiError(ApiErrorType::Incomplete, status);
+            }
+        }
+        break;
+
         case ApiProtocol::Gemini:
-            if (geminiInteractions) {
-                // Interactions 没有专门的拒答字段，失败状态不能直接当作拒答；正文拒答由 Agent 的无工具调用次数处理。
-                const auto status = parsed.value("status", "");
-                if (status != "completed" && status != "requires_action") {
-                    throw makeApiError(ApiErrorType::Incomplete, status);
+        {
+            if (const auto feedback = parsed.find("promptFeedback"); feedback != parsed.end()) {
+                const auto reason = feedback->value("blockReason", "");
+                if (!reason.empty() && reason != "BLOCK_REASON_UNSPECIFIED") {
+                    throw makeApiError(ApiErrorType::Refusal, reason);
                 }
             }
-            else {
-                if (const auto feedback = parsed.find("promptFeedback"); feedback != parsed.end()) {
-                    const auto reason = feedback->value("blockReason", "");
-                    if (!reason.empty() && reason != "BLOCK_REASON_UNSPECIFIED"){
-                        throw makeApiError(ApiErrorType::Refusal, reason);
-                    }
-                }
-                const auto reason = parsed.at("candidates").at(0).value("finishReason", "STOP");
-                if (reason != "STOP") {
-                    const bool blocked = reason == "SAFETY" || reason == "RECITATION" || reason == "BLOCKLIST" || reason == "PROHIBITED_CONTENT" || reason == "SPII" || reason == "IMAGE_SAFETY";
-                    throw makeApiError(blocked ? ApiErrorType::Refusal : ApiErrorType::Incomplete, reason);
-                }
+            const auto reason = parsed.at("candidates").at(0).value("finishReason", "STOP");
+            if (reason != "STOP") {
+                const bool blocked = reason == "SAFETY" || reason == "RECITATION" || reason == "BLOCKLIST" || reason == "PROHIBITED_CONTENT" || reason == "SPII" || reason == "IMAGE_SAFETY";
+                throw makeApiError(blocked ? ApiErrorType::Refusal : ApiErrorType::Incomplete, reason);
             }
-        	break;
+        }
+        break;
         }
 
         return parsed;
@@ -167,6 +170,25 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
         return content;
     }
 
+    case ApiProtocol::GeminiInterAction:
+    {
+        std::optional<std::string> content;
+        for (const auto& step : parsed.at("steps")) {
+            if (step.value("type", "") != "model_output") {
+                continue;
+            }
+            for (const auto& block : step.at("content")) {
+                if (block.value("type", "") == "text") {
+                    if (!content.has_value()) {
+                        content = "";
+                    }
+                    content.value() += block.at("text").get_ref<const std::string&>();
+                }
+            }
+        }
+        return content;
+    }
+
     case ApiProtocol::OpenAI:
     default:
         return parsed.at("choices").at(0).at("message").at("content").get<std::string>();
@@ -186,7 +208,7 @@ std::expected<std::string, ApiError> extractApiResponseContent(const std::string
         auto content = parseApiContent(*parsed, protocol);
         if (!content) {
             return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-                gppTr("ApiTool.extractApiResponseContent", "响应中没有文本内容").toStdString(), responseContent));
+                gppTr("ApiTool.extractApiResponseContent", "[GPP.响应中没有文本内容]").toStdString(), responseContent));
         }
         // 普通请求的调用方都要求文本内容；高级 Agent 的工具调用使用独立解析路径。
         if (content->empty()) {

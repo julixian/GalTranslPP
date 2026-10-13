@@ -86,18 +86,18 @@ MainWindow::MainWindow(QWidget* parent)
     layout->addStretch();
     m_closeDialog->setCentralWidget(widget);
 
-    connect(m_closeDialog, &ElaContentDialog::rightButtonClicked, this, [=]()
+    connect(m_closeDialog, &ElaContentDialog::rightButtonClicked, this, [=, this]()
         {
             onCloseWindowClicked(false);
         });
-    connect(m_closeDialog, &ElaContentDialog::middleButtonClicked, this, [=]()
+    connect(m_closeDialog, &ElaContentDialog::middleButtonClicked, this, [=, this]()
         {
             m_closeDialog->close();
             showMinimized();
         });
     this->setIsDefaultClosed(false);
 
-    auto closeCallback = [=](bool closeByMessageCard)
+    auto closeCallback = [=, this](bool closeByMessageCard)
         {
             if (
                 !(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false)) &&
@@ -130,7 +130,7 @@ MainWindow::MainWindow(QWidget* parent)
         {
             closeCallback(true);
         });
-    connect(m_updateChecker, &UpdateChecker::checkCompleteSignal, this, [=](bool hasNewVersion)
+    connect(m_updateChecker, &UpdateChecker::checkCompleteSignal, this, [=, this](bool hasNewVersion)
         {
             m_aboutDialog->setDownloadButtonEnabled(hasNewVersion && m_updateChecker->shouldDownloadButtonEnabled());
         });
@@ -150,7 +150,7 @@ ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& proje
 {
     QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(projectDir, m_globalConfig, this));
     connect(newPage.get(), &ProjectSettingsPage::finishTranslatingSignal, this, &MainWindow::onFinishTranslating);
-    connect(newPage.get(), &ProjectSettingsPage::changeProjectNameSignal, this, [=](const QString& nodeKey, const QString& newProjectName)
+    connect(newPage.get(), &ProjectSettingsPage::changeProjectNameSignal, this, [=, this](const QString& nodeKey, const QString& newProjectName)
         {
             setNavigationNodeTitle(nodeKey, newProjectName);
         });
@@ -174,6 +174,18 @@ MainWindow::~MainWindow()
     delete m_aboutDialog;
 }
 
+void MainWindow::showEvent(QShowEvent* event)
+{
+    ElaWindow::showEvent(event);
+    resize(m_windowSize);
+}
+
+void MainWindow::hideEvent(QHideEvent* event)
+{
+    m_windowSize = size();
+    ElaWindow::hideEvent(event);
+}
+
 void MainWindow::initWindow()
 {
     // 详见 ElaWidgetTool 开源项目的示例
@@ -182,7 +194,8 @@ void MainWindow::initWindow()
 
     const int width = toml::find_or(m_globalConfig, "windowWidth", 1308);
     const int height = toml::find_or(m_globalConfig, "windowHeight", 676);
-    resize(width, height - 30);
+    m_windowSize = QSize(width, height);
+    resize(m_windowSize);
     int x = toml::find_or(m_globalConfig, "windowPosX", 84);
     int y = toml::find_or(m_globalConfig, "windowPosY", 53);
     if (x < 0)x = 0;
@@ -250,7 +263,7 @@ void MainWindow::initEdgeLayout()
     updateDockWidget->setVisible(toml::find_or(m_globalConfig, "showDockWidget", gppversion, true));
     insertToml(m_globalConfig, "showDockWidget", toml::ordered_table{});
     insertToml(m_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
-    connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=](bool visible)
+    connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=, this](bool visible)
         {
             insertToml(m_globalConfig, "showDockWidget", toml::ordered_table{});
             insertToml(m_globalConfig, "showDockWidget." + gppversion, visible);
@@ -265,7 +278,7 @@ void MainWindow::initEdgeLayout()
         {
             updateDockWidget->show();
         });
-    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, tr("应用设置")), &QAction::triggered, this, [=]()
+    connect(appBarMenu->addElaIconAction(ElaIconType::GearComplex, tr("应用设置")), &QAction::triggered, this, [=, this]()
         {
             navigation(m_appSettingsKey);
         });
@@ -273,7 +286,7 @@ void MainWindow::initEdgeLayout()
         {
             eTheme->setThemeMode(eTheme->getThemeMode() == ElaThemeType::Light ? ElaThemeType::Dark : ElaThemeType::Light);
         });
-    connect(appBarMenu->addElaIconAction(ElaIconType::BroomWide, tr("清空当前项目翻译日志")), &QAction::triggered, this, [=]()
+    connect(appBarMenu->addElaIconAction(ElaIconType::BroomWide, tr("清空当前项目翻译日志")), &QAction::triggered, this, [=, this]()
 	    {
             onClearLog(true);
 	    });
@@ -297,7 +310,7 @@ void MainWindow::initContent()
     addPageNode(tr("默认提示词管理"), m_defaultPromptPage, ElaIconType::Text);
 
     addExpanderNode(tr("通用字典管理"), m_commonDictExpanderKey, ElaIconType::FontCase);
-    auto refreshCommonDictsFunc = [=]()
+    auto refreshCommonDictsFunc = [=, this]()
         {
             for (const auto& page : m_projectPages) {
                 page->refreshCommonDicts();
@@ -329,19 +342,19 @@ void MainWindow::initContent()
     m_aboutDialog->hide();
     addFooterNode(tr("应用设置"), m_appSettingsPage, m_appSettingsKey, 0, ElaIconType::GearComplex);
 
-    connect(m_aboutDialog, &AboutDialog::checkUpdateSignal, this, [=]()
+    connect(m_aboutDialog, &AboutDialog::checkUpdateSignal, this, [=, this]()
         {
             ElaMessageBar::information(ElaMessageBarType::TopLeft, tr("请稍候"), tr("正在检查更新..."), 3000);
             m_updateChecker->check();
         });
-    connect(m_aboutDialog, &AboutDialog::downloadUpdateSignal, this, [=]()
+    connect(m_aboutDialog, &AboutDialog::downloadUpdateSignal, this, [=, this]()
         {
             m_aboutDialog->setDownloadButtonEnabled(false);
             ElaMessageBar::information(ElaMessageBarType::TopLeft, tr("请稍候"), tr("正在下载更新..."), 3000);
             m_updateChecker->check(true);
         });
 
-    connect(this, &MainWindow::navigationNodeClicked, this, [=](ElaNavigationType::NavigationNodeType nodeType, const QString& nodeKey)
+    connect(this, &MainWindow::navigationNodeClicked, this, [=, this](ElaNavigationType::NavigationNodeType nodeType, const QString& nodeKey)
         {
             if (m_illustrationKey == nodeKey) {
                 QDesktopServices::openUrl(QUrl::fromLocalFile("BaseConfig/illustration/foundation.html"));
@@ -361,11 +374,11 @@ void MainWindow::initContent()
     {
         m_clearLogShortcut->setKey(keySequence);
     }
-    connect(m_appSettingsPage, &AppSettingsPage::clearLogShortcutChangedSignal, this, [=](const QString& shortcut)
+    connect(m_appSettingsPage, &AppSettingsPage::clearLogShortcutChangedSignal, this, [=, this](const QString& shortcut)
         {
             m_clearLogShortcut->setKey(QKeySequence::fromString(shortcut, QKeySequence::PortableText));
         });
-    connect(m_clearLogShortcut, &QShortcut::activated, this, [=]()
+    connect(m_clearLogShortcut, &QShortcut::activated, this, [=, this]()
 	    {
             onClearLog(false);
 	    });

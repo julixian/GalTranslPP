@@ -784,7 +784,8 @@ void PythonMainInterpreterManager::bindGppPluginApi(py::module_& m)
     py::enum_<ApiProtocol>(m, "ApiProtocol")
         .value("OpenAI", ApiProtocol::OpenAI)
         .value("Claude", ApiProtocol::Claude)
-        .value("Gemini", ApiProtocol::Gemini);
+        .value("Gemini", ApiProtocol::Gemini)
+        .value("GeminiInterAction", ApiProtocol::GeminiInterAction);
 
     py::class_<SentencePosition>(m, "SentencePosition")
         .def(py::init<>())

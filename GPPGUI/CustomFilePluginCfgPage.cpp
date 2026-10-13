@@ -39,7 +39,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	filePluginBtn->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	filePluginBtn->setElaIcon(ElaIconType::FolderOpen);
 	filePluginBtn->setText(tr("浏览"));
-	connect(filePluginBtn, &ElaToolButton::clicked, this, [=]()
+	connect(filePluginBtn, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString path = QFileDialog::getOpenFileName(window(), tr("选择自定义文件处理插件"),
 				QString::fromStdString(toml::find_or(m_globalConfig, "lastPluginPath", "./")),
@@ -74,7 +74,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	inheritLayout->addWidget(inheritCombo);
 	mainLayout->addWidget(inheritArea);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "plugins.customFilePlugin", filePluginEdit->text().toStdString());
 			insertToml(m_projectConfig, "plugins.baseClassName", inheritCombo->currentText().toStdString());

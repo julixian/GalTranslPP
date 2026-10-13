@@ -21,14 +21,15 @@
 <context>
     <name>ApiTool.extractApiResponseContent</name>
     <message>
-        <location filename="ApiTool.Response.cpp" line="194"/>
+        <location filename="ApiTool.Response.cpp" line="216"/>
         <source>[GPP.内容为空]</source>
         <translation>[GPP.Empty content]</translation>
     </message>
     <message>
-        <location filename="ApiTool.Response.cpp" line="189"/>
-        <source>响应中没有文本内容</source>
-        <translation>The response contains no text</translation>
+        <location filename="ApiTool.Response.cpp" line="211"/>
+        <source>[GPP.响应中没有文本内容]</source>
+        <oldsource>响应中没有文本内容</oldsource>
+        <translation>[GPP.No text in response]</translation>
     </message>
 </context>
 <context>
@@ -95,7 +96,7 @@
 <context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
-        <location filename="ApiTool.cpp" line="231"/>
+        <location filename="ApiTool.cpp" line="237"/>
         <source>请用中文完整回复一句话：GPP Api 测试成功。</source>
         <translation>Reply in Chinese: GPP API test succeeded.</translation>
     </message>
@@ -103,7 +104,7 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="517"/>
+        <location filename="ApiTool.cpp" line="552"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -111,7 +112,7 @@
 <context>
     <name>ApiTool.parseAdvancedAgentReply</name>
     <message>
-        <location filename="ApiTool.AdvancedAgent.cpp" line="331"/>
+        <location filename="ApiTool.AdvancedAgent.cpp" line="313"/>
         <source>响应中没有文本内容或工具调用</source>
         <translation>The response contains no text or tool calls</translation>
     </message>
@@ -130,7 +131,7 @@
 <context>
     <name>ApiTool.sendApiHttpRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="586"/>
+        <location filename="ApiTool.cpp" line="623"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
@@ -475,35 +476,35 @@
 <context>
     <name>LuaManager.registerCustomTypes</name>
     <message>
-        <location filename="LuaManager.cpp" line="1277"/>
-        <location filename="LuaManager.cpp" line="1289"/>
-        <location filename="LuaManager.cpp" line="1303"/>
-        <location filename="LuaManager.cpp" line="1318"/>
+        <location filename="LuaManager.cpp" line="1278"/>
+        <location filename="LuaManager.cpp" line="1290"/>
+        <location filename="LuaManager.cpp" line="1304"/>
+        <location filename="LuaManager.cpp" line="1319"/>
         <source>[%1] 未设置 %2</source>
         <translation>[%1] %2 is not set</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1294"/>
+        <location filename="LuaManager.cpp" line="1295"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1308"/>
+        <location filename="LuaManager.cpp" line="1309"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1323"/>
+        <location filename="LuaManager.cpp" line="1324"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1330"/>
+        <location filename="LuaManager.cpp" line="1331"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="LuaManager.cpp" line="1337"/>
+        <location filename="LuaManager.cpp" line="1338"/>
         <source>[%1] 中注册了无效的 tokenizerBackend: %2</source>
         <translation>[%1] registered invalid tokenizerBackend: %2</translation>
     </message>
@@ -990,77 +991,77 @@ Problem overview:
         <translation>backend.apis[%1] has no Api protocol field; defaulting to OpenAI protocol</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="480"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="484"/>
         <source>backend.apis[%1] apiurl 为空，已忽略</source>
         <translation>backend.apis[%1] apiurl is empty; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="491"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="495"/>
         <source>backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略</source>
         <translation>backend.apis[%1] modelName is empty and TransEngine is not Sakura; ignored</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="557"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="561"/>
         <source>找不到可用的 Api key</source>
         <translation>No available Api key found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="571"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="575"/>
         <source>找不到 Prompt.toml 文件</source>
         <translation>Prompt.toml not found</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="590"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="594"/>
         <source>Prompt.toml 中缺少 %1 键</source>
         <translation>Prompt.toml missing key %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="633"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="637"/>
         <source>内部错误: 未知的 TransEngine</source>
         <translation>Internal error: unknown TransEngine</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="656"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="660"/>
         <source>已配置 MeCab 分词器，首次使用时加载</source>
         <translation>MeCab tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="665"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="669"/>
         <source>已配置 spaCy 分词器，首次使用时加载</source>
         <translation>spaCy tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="674"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="678"/>
         <source>已配置 Stanza 分词器，首次使用时加载</source>
         <translation>Stanza tokenizer configured; it will load on first use</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="682"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="686"/>
         <source>无效的 tokenizerBackend: %1</source>
         <translation>Invalid tokenizerBackend: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="769"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="773"/>
         <source>retranslKeys 正则表达式 `%1` 编译失败</source>
         <translation>retranslKeys regex `%1` compile failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="787"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="791"/>
         <source>retranslKeys 的元素必须是字符串、表或表数组</source>
         <translation>retranslKeys items must be string/table/table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="804"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="808"/>
         <source>skipProblems 的内联表数组第一个元素必须是字符串</source>
         <translation>First item in skipProblems inline table array must be string</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="820"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="824"/>
         <source>skipProblems 的元素必须是字符串或表数组</source>
         <translation>skipProblems items must be string or table array</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="831"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="835"/>
         <source>项目配置文件解析失败: %1</source>
         <translation>Project config parse failed: %1</translation>
     </message>
@@ -1076,13 +1077,13 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.postProcess</name>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="843"/>
-        <location filename="NormalJsonTranslator.Core.cpp" line="944"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="847"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="948"/>
         <source>翻译失败</source>
         <translation>Translation failed</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Core.cpp" line="954"/>
+        <location filename="NormalJsonTranslator.Core.cpp" line="958"/>
         <source>错误的 GPPCProblem 格式</source>
         <translation>Bad GPPCProblem format</translation>
     </message>
@@ -2440,7 +2441,7 @@ Tool calls:
 <context>
     <name>parseApiProtocol</name>
     <message>
-        <location filename="ApiTool.cpp" line="49"/>
+        <location filename="ApiTool.cpp" line="48"/>
         <source>无效的 Api 协议: %1 不在 {openai, claude, gemini, openaires} 中</source>
         <translation>Invalid Api protocol: %1 is not in {openai, claude, gemini, openaires}</translation>
     </message>
@@ -2482,7 +2483,7 @@ Tool calls:
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="601"/>
+        <location filename="ApiTool.cpp" line="650"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>

@@ -3,6 +3,7 @@
 #include "ElaWindow.h"
 
 #include <QMainWindow>
+#include <QSize>
 #include <toml.hpp>
 #include <filesystem>
 
@@ -16,6 +17,8 @@ class ProjectSettingsPage;
 class ElaContentDialog;
 class UpdateChecker;
 class QShortcut;
+class QShowEvent;
+class QHideEvent;
 
 namespace fs = std::filesystem;
 
@@ -32,6 +35,8 @@ public Q_SLOTS:
 
 protected:
 	void mouseReleaseEvent(QMouseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
+    void hideEvent(QHideEvent* event) override;
 
 private Q_SLOTS:
     void onNewProjectTriggered();
@@ -72,5 +77,6 @@ private:
     ElaContentDialog* m_closeDialog = nullptr;
     UpdateChecker* m_updateChecker = nullptr;
 
+    QSize m_windowSize;
     toml::ordered_value m_globalConfig;
 };

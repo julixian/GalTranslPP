@@ -167,7 +167,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	browseMecabDictDirButton->setElaIcon(ElaIconType::FolderOpen);
 	browseMecabDictDirButton->setText(tr("浏览"));
 	mecabDictDirLayout->addWidget(browseMecabDictDirButton);
-	connect(browseMecabDictDirButton, &ElaToolButton::clicked, this, [=]()
+	connect(browseMecabDictDirButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString dir = QFileDialog::getExistingDirectory(window(), tr("选择MeCab词典目录"), mecabDictDirLineEdit->text());
 			if (!dir.isEmpty()) {
@@ -227,7 +227,7 @@ TLFCfgPage::TLFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 		tokenizerSettingsDrawerArea->expand();
 	}
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.linebreakMode", fixModes[fixModeComboBox->currentIndex()].toStdString());
 			insertToml(m_projectConfig, "plugins.TextLinebreakFix.priorityThreshold", priorityThresholdSlider->value());

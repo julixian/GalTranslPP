@@ -84,7 +84,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     notConvertRegsEdit->moveCursor(QTextCursor::Start);
     mainLayout->addWidget(notConvertRegsEdit);
 
-    m_applyFunc = [=]
+    m_applyFunc = [=, this]
         {
             insertToml(m_projectConfig, "plugins.TextFull2Half.replacePunctuation", punctuationSwitch->getIsToggled());
             insertToml(m_projectConfig, "plugins.TextFull2Half.reverseConversion", reverseSwitch->getIsToggled());

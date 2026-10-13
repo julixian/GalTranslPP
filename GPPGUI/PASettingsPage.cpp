@@ -248,7 +248,7 @@ void PASettingsPage::setupUi()
 	compareObjectButton->setText(tr("进入设置"));
 	compareObjectButton->setFixedWidth(110);
 	compareObjectLayout->addWidget(compareObjectButton);
-	connect(compareObjectButton, &ElaToolButton::clicked, this, [=]()
+	connect(compareObjectButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			compareConfigWidget->move(window()->frameGeometry().center()
 				- compareConfigWidget->rect().center());
@@ -261,7 +261,7 @@ void PASettingsPage::setupUi()
 	mainLayout->addSpacing(20);
 
 	auto createPAPlainTextEditAreaFunc =
-		[=](const std::string& configKey, const QString& title, std::optional<int> minHeight = std::nullopt)
+		[=, this](const std::string& configKey, const QString& title, std::optional<int> minHeight = std::nullopt)
 		-> std::function<void()>
 		{
 			toml::ordered_array PASettingsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "problemAnalyze", configKey);
@@ -285,7 +285,7 @@ void PASettingsPage::setupUi()
 			PASettingsLayout->addWidget(PASettingsEdit);
 			mainLayout->addWidget(PASettingsArea);
 
-			std::function<void()> saveFunc = [=]()
+			std::function<void()> saveFunc = [=, this]()
 				{
 					try {
 						toml::ordered_value newPASettingsTbl = toml::parse_str<toml::ordered_type_config>(PASettingsEdit->toPlainText().toStdString());
@@ -330,7 +330,7 @@ void PASettingsPage::setupUi()
 
 	mainLayout->addStretch();
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			for (const ProblemRow& row : problemRows) {
 				const bool enabled = row.enableButton->getIsToggled();

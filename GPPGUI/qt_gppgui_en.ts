@@ -73,7 +73,7 @@
         <translation>List layout</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+165"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -99,12 +99,12 @@
     </message>
     <message>
         <location line="+50"/>
-        <location line="+616"/>
+        <location line="+627"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="-609"/>
+        <location line="-620"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -121,13 +121,13 @@
     <message>
         <location line="+4"/>
         <location line="+1"/>
-        <location line="+560"/>
+        <location line="+571"/>
         <location line="+23"/>
         <source>自定义 Api</source>
         <translation>Custom API</translation>
     </message>
     <message>
-        <location line="-565"/>
+        <location line="-576"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -169,16 +169,17 @@ sk-...</translation>
         <translation>Omit</translation>
     </message>
     <message>
+        <location line="+19"/>
         <source>流式输出</source>
-        <translation type="vanished">Stream output</translation>
+        <translation>Stream output</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-8"/>
         <source>使用系统代理</source>
         <translation>Use system proxy</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+16"/>
         <source>基础设置</source>
         <translation>Basic settings</translation>
     </message>
@@ -403,7 +404,7 @@ sk-...</translation>
         <translation>Error details:</translation>
     </message>
     <message>
-        <location line="+220"/>
+        <location line="+223"/>
         <source>拖动排序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -428,7 +429,7 @@ sk-...</translation>
         <translation>API Settings — %1</translation>
     </message>
     <message>
-        <location line="+164"/>
+        <location line="+165"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -471,7 +472,7 @@ sk-...</translation>
         <translation type="vanished">(empty)</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-412"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
@@ -488,7 +489,7 @@ sk-...</translation>
         <translation>Model name cannot be empty</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+72"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
@@ -2028,7 +2029,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDeleteDialog</name>
     <message>
-        <location filename="DictionaryEntryDialog.cpp" line="+650"/>
+        <location filename="DictionaryEntryDialog.cpp" line="+658"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -2056,7 +2057,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDialog</name>
     <message>
-        <location line="-574"/>
+        <location line="-582"/>
         <source>拖动调整顺序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -2081,55 +2082,55 @@ sk-...</translation>
         <translation>Edit GPT entry</translation>
     </message>
     <message>
-        <location line="+24"/>
-        <location line="+64"/>
+        <location line="+25"/>
+        <location line="+65"/>
         <source>原文（org）</source>
         <translation>Original (org)</translation>
     </message>
     <message>
-        <location line="-63"/>
-        <location line="+74"/>
+        <location line="-64"/>
+        <location line="+75"/>
         <source>译文（rep）</source>
         <translation>Replace (rep)</translation>
     </message>
     <message>
-        <location line="-73"/>
+        <location line="-74"/>
         <source>注释（note）</source>
         <translation>Note (note)</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+190"/>
+        <location line="+191"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="-185"/>
-        <location line="+190"/>
+        <location line="-186"/>
+        <location line="+191"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
     <message>
-        <location line="-183"/>
-        <location line="+191"/>
+        <location line="-184"/>
+        <location line="+192"/>
         <location line="+12"/>
         <location line="+9"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
     <message>
-        <location line="-211"/>
-        <location line="+191"/>
+        <location line="-212"/>
+        <location line="+192"/>
         <source>原文（org）不能为空</source>
         <translation>Original (org) required</translation>
     </message>
     <message>
-        <location line="-170"/>
+        <location line="-171"/>
         <source>编辑 Normal 字典词条</source>
         <translation>Edit Normal entry</translation>
     </message>
     <message>
-        <location line="+41"/>
+        <location line="+42"/>
         <source>匹配设置</source>
         <translation>Match</translation>
     </message>
@@ -2501,7 +2502,7 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+92"/>
         <location line="+176"/>
         <source>新建项目</source>
         <translation>New</translation>
@@ -4257,7 +4258,7 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="-177"/>
+        <location filename="ApiSettingsPage.cpp" line="-178"/>
         <location line="+7"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>

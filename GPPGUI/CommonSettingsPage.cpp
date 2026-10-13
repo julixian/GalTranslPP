@@ -569,7 +569,7 @@ void CommonSettingsPage::setupUi()
 	mecabDictDirButton->setElaIcon(ElaIconType::FolderOpen);
 	mecabDictDirButton->setText(tr("浏览"));
 	mecabDictDirLayout->addWidget(mecabDictDirButton);
-	connect(mecabDictDirButton, &ElaToolButton::clicked, this, [=]()
+	connect(mecabDictDirButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString dir = QFileDialog::getExistingDirectory(window(), tr("选择MeCab词典目录"), mecabDictDirLineEdit->text());
 			if (!dir.isEmpty()) {
@@ -653,7 +653,7 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addSpacing(8);
 
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "common.numPerRequestTranslate", numPerRequestTranslateSpinBox->value());
 			insertToml(m_projectConfig, "common.numPerRequestNameTranslate", numPerRequestNameTranslateSpinBox->value());

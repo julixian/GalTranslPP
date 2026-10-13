@@ -35,7 +35,7 @@ void DictExSettingsPage::setupUi()
 	mainLayout->setContentsMargins(20, 15, 15, 0);
 
 	auto createDictSelectAreaFunc =
-		    [=](const QString& tipText, const QString& projectDictShowName, const std::string& projectDictStdFileName,
+		    [=, this](const QString& tipText, const QString& projectDictShowName, const std::string& projectDictStdFileName,
 			    const std::string& globalConfigKey, const std::string& projectConfigKey) -> GppMultiSelectComboBox*
 		{
 			ElaScrollPageArea* dictSelectArea = new ElaScrollPageArea(mainWidget);
@@ -162,10 +162,10 @@ void DictExSettingsPage::setupUi()
 	mainLayout->addWidget(useGPTDictToReplaceNameArea);
 	mainLayout->addStretch();
 
-	m_refreshCommonDictsListFunc = [=]()
+	m_refreshCommonDictsListFunc = [=, this]()
 		{
 			auto refreshCommonDictsListFunc =
-				    [=](const QString& projectDictShowName, const std::string& globalConfigKey, GppMultiSelectComboBox* dictNamesComboBox)
+				    [=, this](const QString& projectDictShowName, const std::string& globalConfigKey, GppMultiSelectComboBox* dictNamesComboBox)
 				{
 					const toml::array commonDictNamesArr = toml::find_or_default<toml::array>(m_globalConfig, globalConfigKey, "dictNames");
 					QList<int> dictIndexesToRemove;
@@ -210,7 +210,7 @@ void DictExSettingsPage::setupUi()
 		};
 
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			auto appendDictNamesFunc = [](toml::array& dictNamesArr, const GppMultiSelectComboBox* dictNamesComboBox,
 				const QString& projectDictShowName, const std::string& projectDictStdFileName)

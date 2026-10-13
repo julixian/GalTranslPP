@@ -1,4 +1,4 @@
-#include "pdfCfgPage.h"
+#include "PDFCfgPage.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -51,7 +51,7 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	babeldocLangOutLayout->addWidget(babeldocLangOutEdit);
 	mainLayout->addWidget(babeldocLangOutArea);
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			insertToml(m_projectConfig, "plugins.PDF.bilingualOutput", outputSwitch->getIsToggled());
 			insertToml(m_projectConfig, "plugins.PDF.babeldocLangOut", babeldocLangOutEdit->text().toStdString());

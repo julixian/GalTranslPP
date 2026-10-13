@@ -62,7 +62,7 @@ auto& str2LowerInplace(std::basic_string<CharT, Traits, Alloc>& str) {
         }
 #endif
         else {
-            static_assert(false, __FUNCTION__ ", line " LITERAL_TO_STR(__LINE__));
+            static_assert(false, "GPP_INVALID_CODE_PATH");
         }
     }
     return str;
@@ -87,7 +87,7 @@ auto str2Lower(T&& str) {
     }
 #endif
     else {
-        static_assert(false, __FUNCTION__ ", line " LITERAL_TO_STR(__LINE__));
+        static_assert(false, "GPP_INVALID_CODE_PATH");
     }
 }
 std::wstring str2Lower(const fs::path& path) {

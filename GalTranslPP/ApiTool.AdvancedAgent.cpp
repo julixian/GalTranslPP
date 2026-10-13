@@ -12,13 +12,11 @@ void appendAdvancedAgentUserMessage(AdvancedAgentApiSession& session, const std:
 {
     switch (session.api.protocol)
     {
+    case ApiProtocol::GeminiInterAction:
+        session.history.push_back({{"type", "user_input"}, {"content", json::array({{{"type", "text"}, {"text", text}}})}});
+        break;
     case ApiProtocol::Gemini:
-        if (session.api.agentGeminiInteractions) {
-            session.history.push_back({{"type", "user_input"}, {"content", json::array({{{"type", "text"}, {"text", text}}})}});
-        }
-        else {
-            session.history.push_back({{"role", "user"}, {"parts", json::array({{{"text", text}}})}});
-        }
+        session.history.push_back({{"role", "user"}, {"parts", json::array({{{"text", text}}})}});
         break;
     default:
         session.history.push_back({{"role", "user"}, {"content", text}});
@@ -45,19 +43,19 @@ void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json
             blocks.push_back({{"type", "tool_result"}, {"tool_use_id", id}, {"content", content.dump()},
                 {"is_error", content.contains("error")}});
             break;
-        case ApiProtocol::Gemini:
-            if (session.api.agentGeminiInteractions) {
-                session.history.push_back({{"type", "function_result"}, {"call_id", id}, {"name", name},
-                    {"result", content}, {"is_error", content.contains("error")}});
-            }
-            else {
-                json response = {{"name", name}, {"response", content}};
-                if (!id.empty()) {
-                    response["id"] = id;
-                }
-                blocks.push_back({{"functionResponse", std::move(response)}});
-            }
+        case ApiProtocol::GeminiInterAction:
+            session.history.push_back({{"type", "function_result"}, {"call_id", id}, {"name", name},
+                {"result", content}, {"is_error", content.contains("error")}});
             break;
+        case ApiProtocol::Gemini:
+        {
+            json response = {{"name", name}, {"response", content}};
+            if (!id.empty()) {
+                response["id"] = id;
+            }
+            blocks.push_back({{"functionResponse", std::move(response)}});
+            break;
+        }
         }
     }
     if (!blocks.empty()) {
@@ -75,24 +73,6 @@ json pendingAdvancedAgentInput(const AdvancedAgentApiSession& session, json hist
         return history;
     }
     return json(history.begin() + session.sentCount, history.end());
-}
-
-std::string advancedAgentInteractionApiUrl(const TranslationApi& api)
-{
-    std::string url = api.apiurl;
-    while (url.ends_with('/')) {
-        url.pop_back();
-    }
-    if (url.ends_with("/interactions")) {
-        return url;
-    }
-    if (const auto pos = url.find("/models"); pos != std::string::npos) {
-        url.erase(pos);
-    }
-    if (url.ends_with("/v1beta") || url.ends_with("/v1alpha")) {
-        url.erase(url.rfind('/'));
-    }
-    return url.ends_with("/v1") ? url + "/interactions" : url + "/v1/interactions";
 }
 
 // performAdvancedAgentApiRequest 将统一工具 schema、system 和历史转为各协议请求，应用严格工具档位与原生压缩声明。
@@ -170,35 +150,36 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
         }
         break;
 
-    case ApiProtocol::Gemini:
-        if (api.agentGeminiInteractions) {
-            // Interactions 使用独立的步骤历史、function_result 和服务端会话 id。
-            payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"system_instruction", session.systemPrompt},
-                {"store", api.agentStateful}};
-            if (!session.previousId.empty()) {
-                payload["previous_interaction_id"] = session.previousId;
-            }
-            for (const auto& tool : tools) {
-                json function = tool;
-                function["type"] = "function";
-                nativeTools.push_back(std::move(function));
-            }
-            // any 要求调用声明的函数并约束参数结构，不接受正文作为翻译提交。
-            payload["generation_config"]["tool_choice"] = "any";
+    case ApiProtocol::GeminiInterAction:
+        // Interactions 使用独立的步骤历史、function_result 和服务端会话 id。
+        payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"system_instruction", session.systemPrompt},
+            {"store", api.agentStateful}};
+        if (!session.previousId.empty()) {
+            payload["previous_interaction_id"] = session.previousId;
         }
-        else {
-            // generateContent 回传全部 model parts，尤其是函数调用携带的 thoughtSignature。
-            payload = {{"contents", std::move(history)},
-                {"systemInstruction", {{"parts", json::array({{{"text", session.systemPrompt}}})}}}};
-            json declarations = tools;
-            for (auto& tool : declarations) {
-                tool["parametersJsonSchema"] = std::move(tool.at("parameters"));
-                tool.erase("parameters");
-            }
-            nativeTools.push_back({{"functionDeclarations", std::move(declarations)}});
-            payload["toolConfig"]["functionCallingConfig"]["mode"] = "ANY";
+        for (const auto& tool : tools) {
+            json function = tool;
+            function["type"] = "function";
+            nativeTools.push_back(std::move(function));
         }
+        // any 要求调用声明的函数并约束参数结构，不接受正文作为翻译提交。
+        payload["generation_config"]["tool_choice"] = "any";
         break;
+
+    case ApiProtocol::Gemini:
+    {
+        // generateContent 回传全部 model parts，尤其是函数调用携带的 thoughtSignature。
+        payload = {{"contents", std::move(history)},
+            {"systemInstruction", {{"parts", json::array({{{"text", session.systemPrompt}}})}}}};
+        json declarations = tools;
+        for (auto& tool : declarations) {
+            tool["parametersJsonSchema"] = std::move(tool.at("parameters"));
+            tool.erase("parameters");
+        }
+        nativeTools.push_back({{"functionDeclarations", std::move(declarations)}});
+        payload["toolConfig"]["functionCallingConfig"]["mode"] = "ANY";
+        break;
+    }
     }
 
     payload["tools"] = std::move(nativeTools);
@@ -291,40 +272,41 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
         break;
     }
 
-    case ApiProtocol::Gemini:
-        if (session.api.agentGeminiInteractions) {
-            for (const auto& step : parsed.at("steps")) {
-                if (step.value("type", "") == "function_call") {
-                    reply.calls.push_back({ step.at("id"), step.at("name"), step.at("arguments") });
-                }
-                else if (step.value("type", "") == "model_output") {
-                    for (const auto& block : step.at("content")) {
-                        if (block.value("type", "") == "text") {
-                            reply.text += block.at("text").get_ref<const std::string&>();
-                        }
+    case ApiProtocol::GeminiInterAction:
+        for (const auto& step : parsed.at("steps")) {
+            if (step.value("type", "") == "function_call") {
+                reply.calls.push_back({ step.at("id"), step.at("name"), step.at("arguments") });
+            }
+            else if (step.value("type", "") == "model_output") {
+                for (const auto& block : step.at("content")) {
+                    if (block.value("type", "") == "text") {
+                        reply.text += block.at("text").get_ref<const std::string&>();
                     }
                 }
-                additions.push_back(step);
             }
-            if (session.api.agentStateful) {
-                previousId = parsed.at("id");
-            }
+            additions.push_back(step);
         }
-        else {
-            const auto& candidate = parsed.at("candidates").at(0);
-            const auto& content = candidate.at("content");
-            for (const auto& part : content.at("parts")) {
-                if (part.contains("functionCall")) {
-                    const auto& call = part.at("functionCall");
-                    reply.calls.push_back({call.value("id", ""), call.at("name"), call.at("args")});
-                }
-                else if (part.contains("text") && !part.value("thought", false)) {
-                    reply.text += part.at("text").get_ref<const std::string&>();
-                }
-            }
-            additions.push_back(content);
+        if (session.api.agentStateful) {
+            previousId = parsed.at("id");
         }
         break;
+
+    case ApiProtocol::Gemini:
+    {
+        const auto& candidate = parsed.at("candidates").at(0);
+        const auto& content = candidate.at("content");
+        for (const auto& part : content.at("parts")) {
+            if (part.contains("functionCall")) {
+                const auto& call = part.at("functionCall");
+                reply.calls.push_back({call.value("id", ""), call.at("name"), call.at("args")});
+            }
+            else if (part.contains("text") && !part.value("thought", false)) {
+                reply.text += part.at("text").get_ref<const std::string&>();
+            }
+        }
+        additions.push_back(content);
+        break;
+    }
     }
 
     if (reply.text.empty() && reply.calls.empty()) {
@@ -351,26 +333,11 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
     try {
         auto api = session.api;
         json payload = buildAdvancedAgentPayload(session, tools, enhanceJailbreak);
-        // 保留已有模型档位规则，再把 generateContent 参数映射成 Interactions 的新规范。
+        // 按实际协议应用选项，extraBody 最后覆盖。
         const json extraBody = api.extraBody;
         api.extraBody = json::object();
         applyApiPayloadOptions(payload, api);
 
-        if (api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions) {
-            payload["model"] = api.modelName;
-            if (payload.contains("generationConfig")) {
-                const auto& config = payload.at("generationConfig");
-                if (config.contains("thinkingConfig")) {
-                    const auto& thinking = config.at("thinkingConfig");
-                    // Interactions 不使用旧的 thinkingBudget，2.5 等旧型号应选择 generateContent。
-                    if (thinking.contains("thinkingLevel")) {
-                        payload["generation_config"]["thinking_level"] = str2Lower(thinking.at("thinkingLevel").get_ref<const std::string&>());
-                    }
-                }
-                payload.erase("generationConfig");
-            }
-            payload["generation_config"]["thinking_summaries"] = "auto";
-        }
         if (api.protocol == ApiProtocol::Claude && api.agentNativeAutoCompaction) {
             // 原生自动压缩目前需要 beta 头，只在用户开启后启用；其它请求不受影响。
             auto& beta = api.extraHeaders["anthropic-beta"];
@@ -384,9 +351,7 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
         }
 
         const std::string body = onPerformApi ? onPerformApi(payload.dump()) : payload.dump();
-        ApiResponse response = sendApiHttpRequest(body, api,
-            api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions ? advancedAgentInteractionApiUrl(api) : cvt2RequestApiUrl(api),
-            controller, logger, apiTimeOutMs);
+        ApiResponse response = sendApiHttpRequest(body, api, cvt2RequestApiUrl(api), controller, logger, apiTimeOutMs);
         if (!response.content) {
             return { std::unexpected(std::move(response.content.error())) };
         }
@@ -394,7 +359,7 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
         statusCode = 200;
         responseBody = std::move(*response.content);
 
-        auto parsed = parseApiResponse(responseBody, api.protocol, api.protocol == ApiProtocol::Gemini && api.agentGeminiInteractions);
+        auto parsed = parseApiResponse(responseBody, api.protocol);
         if (!parsed) {
             parsed.error().statusCode = statusCode;
             return {std::unexpected(std::move(parsed.error()))};

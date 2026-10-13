@@ -162,49 +162,49 @@ void ProjectSettingsPage::setupUi()
 
     createPages();
 
-    auto pageNavigation = [=]()
+    auto pageNavigation = [=, this]()
         {
             if (BasePage* page = qobject_cast<BasePage*>(m_stackedWidget->currentWidget())) {
                 page->navigation(0);
             }
         };
 
-    connect(apiSettingAction, &QAction::triggered, this, [=]()
+    connect(apiSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(0);
             m_settingsTitle->setText(tr("Api设置"));
         });
-    connect(commonSettingAction, &QAction::triggered, this, [=]()
+    connect(commonSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(1);
             m_settingsTitle->setText(tr("一般设置"));
         });
-    connect(paSettingAction, &QAction::triggered, this, [=]()
+    connect(paSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(2);
             m_settingsTitle->setText(tr("问题分析"));
         });
-    connect(nameTableSettingAction, &QAction::triggered, this, [=]()
+    connect(nameTableSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(3);
             m_settingsTitle->setText(tr("人名表"));
         });
-    connect(dictSettingAction, &QAction::triggered, this, [=]()
+    connect(dictSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(4);
             m_settingsTitle->setText(tr("项目字典"));
         });
-    connect(dictExSettingAction, &QAction::triggered, this, [=]()
+    connect(dictExSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(5);
             m_settingsTitle->setText(tr("字典设置"));
         });
-    connect(promptSettingAction, &QAction::triggered, this, [=]()
+    connect(promptSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(6);
             m_settingsTitle->setText(tr("提示词"));
         });
-    connect(pluginSettingAction, &QAction::triggered, this, [=]()
+    connect(pluginSettingAction, &QAction::triggered, this, [=, this]()
         {
             if (m_stackedWidget->currentIndex() == 7) {
                 pageNavigation();
@@ -212,13 +212,13 @@ void ProjectSettingsPage::setupUi()
             m_stackedWidget->setCurrentIndex(7);
             m_settingsTitle->setText(tr("插件管理"));
         });
-    connect(cacheProblemAction, &QAction::triggered, this, [=]()
+    connect(cacheProblemAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(8);
             m_projectCachePage->ensureCacheFilesLoaded();
             m_settingsTitle->setText(tr("缓存管理"));
         });
-    connect(startTransAction, &QAction::triggered, this, [=]()
+    connect(startTransAction, &QAction::triggered, this, [=, this]()
         {
             if (m_stackedWidget->currentIndex() == 9) {
                 pageNavigation();
@@ -226,7 +226,7 @@ void ProjectSettingsPage::setupUi()
             m_stackedWidget->setCurrentIndex(9);
             m_settingsTitle->setText(tr("开始翻译"));
         });
-    connect(otherSettingAction, &QAction::triggered, this, [=]()
+    connect(otherSettingAction, &QAction::triggered, this, [=, this]()
         {
             m_stackedWidget->setCurrentIndex(10);
             m_settingsTitle->setText(tr("其他设置"));
@@ -292,7 +292,7 @@ void ProjectSettingsPage::createPages()
         connect(m_startSettingsPage, &StartSettingsPage::finishTranslatingSignal, this, &ProjectSettingsPage::onFinishTranslating);
         connect(m_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, &ProjectSettingsPage::apply2Config);
         connect(m_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::onRefreshProjectConfig);
-        connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [=](const QString& newProjectName)
+        connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [=, this](const QString& newProjectName)
             {
                 Q_EMIT this->changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
             });

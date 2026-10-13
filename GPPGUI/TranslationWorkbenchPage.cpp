@@ -375,7 +375,7 @@ void TranslationWorkbenchPage::setupUi()
     m_clearFilterButton = new ElaIconButton(ElaIconType::FilterCircleXmark, 16, 32, 32, mainWidget);
     ElaToolTip* clearFilterToolTip = new ElaToolTip(m_clearFilterButton);
     clearFilterToolTip->setToolTip(tr("清除筛选"));
-    connect(m_clearFilterButton, &ElaIconButton::clicked, this, [=]()
+    connect(m_clearFilterButton, &ElaIconButton::clicked, this, [=, this]()
         {
             // 清除文件筛选后重新渲染句流；底层事件仍保留在 m_successes 中。
             m_successFileFilters.clear();
@@ -450,7 +450,7 @@ void TranslationWorkbenchPage::setupUi()
     m_fileList->setUniformItemSizes(true);
     m_fileList->setItemHeight(92);
     m_fileList->setItemDelegate(new FileDelegate(m_fileList));
-    connect(m_fileList, &ElaListView::clicked, this, [=](const QModelIndex& index)
+    connect(m_fileList, &ElaListView::clicked, this, [=, this](const QModelIndex& index)
         {
             // 文件进度项同时也是筛选开关：可快速只看某个文件产生的成功句。
             const auto file = index.data(kFileRole).value<GuiRuntimeFileProgress>();

@@ -63,7 +63,7 @@ void PromptSettingsPage::setupUi()
 
 
 	auto createPromptWidgetFunc =
-		[=](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
+		[=, this](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
 			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt,
 			const std::optional<std::string>& advancedUserPromptKey = std::nullopt, const std::optional<std::string>& advancedSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
@@ -114,7 +114,7 @@ void PromptSettingsPage::setupUi()
 				});
 			promptStackedWidget->setCurrentIndex(0);
 
-			auto resultApply2ConfigFunc = [=]()
+			auto resultApply2ConfigFunc = [=, this]()
 				{
 					for (const auto& [key, edit] : promptEdits) {
 						toml::ordered_value promptVal = edit->toPlainText().toStdString();
@@ -140,7 +140,7 @@ void PromptSettingsPage::setupUi()
 	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_USER", "NAMETRANS_SYSTEM");
 
-	m_applyFunc = [=]()
+	m_applyFunc = [=, this]()
 		{
 			forgalJsonApplyFunc();
 			forgalTsvApplyFunc();

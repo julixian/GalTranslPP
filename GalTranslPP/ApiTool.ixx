@@ -13,7 +13,8 @@ enum class ApiProtocol {
     OpenAI,
     Claude,
     Gemini,
-    OpenAIRes
+    OpenAIRes,
+    GeminiInterAction
 };
 
 struct TranslationApi {
@@ -31,6 +32,7 @@ struct TranslationApi {
     std::chrono::steady_clock::time_point lastReportTime = std::chrono::steady_clock::time_point::min();
     int reportCount = 0;
     bool useSystemProxy = true;
+    bool stream = false;
     // 以下选项仅供高级 Agent 的原生 API 流程使用。
     // off 不严格，all 全部严格，commit 仅严格约束 commit_translations。
     std::string agentStrictTools = "all";
@@ -39,7 +41,6 @@ struct TranslationApi {
     bool agentNativeAutoCompaction = false;
     // 0 不指定阈值；需要显式阈值的 Responses 路径沿用默认 100000 tokens。
     int agentCompactThresholdTokens = 0;
-    bool agentGeminiInteractions = false;
 };
 
 enum class ApiErrorType {
@@ -72,7 +73,7 @@ std::string formatApiError(const ApiError& error, const std::string& actionMessa
 // 不校验译文或工具参数；成功的 JSON 再交给 parseApiContent / parseAdvancedAgentReply 各自提取。
 // 内部 ApiError、JSON 解析异常和其它 std::exception 均转为 unexpected<ApiError>，保留原始响应。
 // 调用方补 HTTP 状态并向上返回；是否重试由翻译流程决定。
-std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, ApiProtocol protocol, bool geminiInteractions = false);
+std::expected<json, ApiError> parseApiResponse(const std::string& rawResponse, ApiProtocol protocol);
 
 struct ApiResponse {
     std::expected<std::string, ApiError> content;
@@ -137,12 +138,14 @@ std::string apiProtocolToString(ApiProtocol protocol);
 std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol);
 
 std::string cvt2RequestApiUrl(const TranslationApi& api);
-// 普通/高级请求入口及连接测试共用：原地转换协议字段，应用模型、采样、思考规则，再合并 extraBody。
+// 普通/高级请求入口及连接测试共用：原地转换协议字段，应用模型、采样、思考和流式选项，再合并 extraBody。
 // 请求结构由调用方构造；不干预预填充，不检查随后插件返回的最终 JSON。
 void applyApiPayloadOptions(json& payload, const TranslationApi& api);
-// 普通 sendApiRequest 与高级请求共用的非流式 HTTP POST；成功的 content 是原始响应体，还未解析 JSON。
+// 流式回复聚合为原协议的完整 JSON，保留工具调用、签名及会话字段；不完整的流返回 Incomplete。
+std::expected<std::string, ApiError> collectApiStreamResponse(const std::string& rawResponse, ApiProtocol protocol);
+// 普通 sendApiRequest 与高级请求共用的 HTTP POST；流式模式收完 SSE 后还原为完整 JSON。
 // 检查传输错误、非 200 状态和空响应体，失败返回 ApiError；进度回调响应 controller 的停止请求。
-// 直接发送最终请求体，不再检查其 JSON 结构。
+// 直接发送选项和插件处理后的最终请求体。
 ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationApi& api, const std::string& requestUrl,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs);
 

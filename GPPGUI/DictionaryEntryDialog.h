@@ -6,6 +6,8 @@
 #include "NormalDictModel.h"
 #include <QSize>
 
+class QShowEvent;
+
 class DictionaryEntryDialog final : public ElaDialog
 {
     Q_OBJECT
@@ -17,6 +19,9 @@ public:
     GuiGptDictEntry getGptEntry() const;
     GuiNormalDictEntry getNormalEntry() const;
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 private:
     static QSize s_gptDialogSize;
     static QSize s_normalDialogSize;
@@ -24,6 +29,7 @@ private:
     static int s_sentenceOffsetColumnWidth;
     static int s_targetColumnWidth;
 
+    QSize m_windowSize;
     GuiGptDictEntry m_gptEntry;
     GuiNormalDictEntry m_normalEntry;
 };

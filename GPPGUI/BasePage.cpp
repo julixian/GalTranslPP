@@ -5,7 +5,7 @@ BasePage::BasePage(QWidget* parent)
     : ElaScrollPage(parent)
 {
     if (!parent) {
-        connect(eTheme, &ElaTheme::themeModeChanged, this, [=]()
+        connect(eTheme, &ElaTheme::themeModeChanged, this, [=, this]()
             {
                 update();
             });

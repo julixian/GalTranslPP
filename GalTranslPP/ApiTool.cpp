@@ -21,10 +21,9 @@ bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
         && lhs.extraHeaders == rhs.extraHeaders && lhs.extraBody == rhs.extraBody
         && lhs.temperature == rhs.temperature && lhs.topP == rhs.topP
         && lhs.frequencyPenalty == rhs.frequencyPenalty && lhs.presencePenalty == rhs.presencePenalty
-        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.agentStrictTools == rhs.agentStrictTools
+        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.stream == rhs.stream && lhs.agentStrictTools == rhs.agentStrictTools
         && lhs.agentStateful == rhs.agentStateful && lhs.agentNativeAutoCompaction == rhs.agentNativeAutoCompaction
-        && lhs.agentCompactThresholdTokens == rhs.agentCompactThresholdTokens
-        && lhs.agentGeminiInteractions == rhs.agentGeminiInteractions;
+        && lhs.agentCompactThresholdTokens == rhs.agentCompactThresholdTokens;
 }
 
 // 普通 sendApiRequest 使用的文本解析入口，定义在 ApiTool.Response.cpp；成功返回非空文本，失败返回 ApiError。
@@ -59,6 +58,8 @@ std::string apiProtocolToString(ApiProtocol protocol)
         return "claude";
     case ApiProtocol::Gemini:
         return "gemini";
+    case ApiProtocol::GeminiInterAction:
+        return "geminiinteraction";
     case ApiProtocol::OpenAIRes:
         return "openaires";
     case ApiProtocol::OpenAI:
@@ -87,6 +88,15 @@ std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol)
 
     case ApiProtocol::Gemini:
         return ret;
+
+    case ApiProtocol::GeminiInterAction:
+        if (ret.ends_with("/interactions")) {
+            return ret;
+        }
+        if (ret.ends_with("/v1beta") || ret.ends_with("/v1alpha")) {
+            ret.erase(ret.rfind('/'));
+        }
+        return ret.ends_with("/v1") ? ret + "/interactions" : ret + "/v1/interactions";
 
     case ApiProtocol::OpenAIRes:
         if (ret.ends_with("/responses")) {
@@ -123,19 +133,15 @@ std::string cvt2RequestApiUrl(const TranslationApi& api)
         ret.pop_back();
     }
 
-    if (ret.contains(":generateContent")) {
-        return ret;
+    const std::string method = api.stream ? ":streamGenerateContent" : ":generateContent";
+    if (!ret.ends_with("/v1") && !ret.ends_with("/v1beta") && !ret.ends_with("/v1alpha")) {
+        ret += "/v1beta";
     }
-    if (ret.contains("/models/")) {
-        return ret + ":generateContent";
+    ret += "/models/" + api.modelName + method;
+    if (api.stream) {
+        ret += "?alt=sse";
     }
-    if (ret.ends_with("/models")) {
-        return ret + "/" + api.modelName + ":generateContent";
-    }
-    if (ret.ends_with("/v1") || ret.ends_with("/v1beta") || ret.ends_with("/v1alpha")) {
-        return ret + "/models/" + api.modelName + ":generateContent";
-    }
-    return ret + "/v1beta/models/" + api.modelName + ":generateContent";
+    return ret;
 }
 
 std::string cvt2ModelListApiUrl(const TranslationApi& api)
@@ -160,16 +166,12 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
         }
         return ret + "/v1/models";
 
+    case ApiProtocol::GeminiInterAction:
+        if (ret.ends_with("/interactions")) {
+            ret.resize(ret.size() - std::string_view("/interactions").size());
+        }
+        [[fallthrough]];
     case ApiProtocol::Gemini:
-        if (const size_t pos = ret.find(":generateContent"); pos != std::string::npos) {
-            ret.erase(pos);
-        }
-        if (const size_t pos = ret.find("/models/"); pos != std::string::npos) {
-            ret.erase(pos + std::string_view("/models").size());
-        }
-        if (ret.ends_with("/models")) {
-            return ret;
-        }
         if (ret.ends_with("/v1") || ret.ends_with("/v1beta") || ret.ends_with("/v1alpha")) {
             return ret + "/models";
         }
@@ -200,7 +202,7 @@ std::string cvt2ModelListApiUrl(const TranslationApi& api)
     }
 }
 
-cpr::Header makeApiHeaders(const TranslationApi& api)
+cpr::Header makeApiHeaders(const TranslationApi& api, bool stream)
 {
     cpr::Header headers{ {"Content-Type", "application/json"} };
     switch (api.protocol)
@@ -211,6 +213,7 @@ cpr::Header makeApiHeaders(const TranslationApi& api)
         break;
 
     case ApiProtocol::Gemini:
+    case ApiProtocol::GeminiInterAction:
         headers["x-goog-api-key"] = api.apikey;
         break;
 
@@ -220,6 +223,9 @@ cpr::Header makeApiHeaders(const TranslationApi& api)
         break;
     }
 
+    if (stream) {
+        headers["Accept"] = "text/event-stream";
+    }
     for (const auto& [key, value] : api.extraHeaders) {
         headers[key] = value;
     }
@@ -232,6 +238,14 @@ json makeApiTestPayload(const TranslationApi& api)
         .toStdString();
     switch (api.protocol)
     {
+    case ApiProtocol::GeminiInterAction:
+        return {
+            {"model", api.modelName},
+            {"input", json::array({
+                {{"type", "user_input"}, {"content", json::array({{{"type", "text"}, {"text", testMessage}}})}}
+            })}
+        };
+
     case ApiProtocol::Gemini:
         return {
             {"contents", json::array({
@@ -299,32 +313,59 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         payload["store"] = false;
     }
 
-    if (api.protocol == ApiProtocol::Gemini && payload.contains("messages")) {
-        payload["contents"] = json::array();
-        for (const auto& message : payload.at("messages")) {
-            if (message.at("role") == "system") {
-                payload["systemInstruction"] = {{"parts", json::array({{{"text", message.at("content")}}})}};
+    switch (api.protocol)
+    {
+    case ApiProtocol::Gemini:
+        if (payload.contains("messages")) {
+            payload["contents"] = json::array();
+            for (const auto& message : payload.at("messages")) {
+                if (message.at("role") == "system") {
+                    payload["systemInstruction"] = {{"parts", json::array({{{"text", message.at("content")}}})}};
+                }
+                else {
+                    payload["contents"].push_back({{"role", message.at("role") == "assistant" ? "model" : "user"},
+                        {"parts", json::array({{{"text", message.at("content")}}})}});
+                }
             }
-            else {
-                payload["contents"].push_back({{"role", message.at("role") == "assistant" ? "model" : "user"},
-                    {"parts", json::array({{{"text", message.at("content")}}})}});
-            }
+            payload.erase("messages");
         }
-        payload.erase("messages");
-    }
+        payload.erase("model");
+        if (api.temperature.has_value()) {
+            payload["generationConfig"]["temperature"] = api.temperature.value();
+        }
+        if (api.topP.has_value()) {
+            payload["generationConfig"]["topP"] = api.topP.value();
+        }
+        if (api.frequencyPenalty.has_value()) {
+            payload["generationConfig"]["frequencyPenalty"] = api.frequencyPenalty.value();
+        }
+        if (api.presencePenalty.has_value()) {
+            payload["generationConfig"]["presencePenalty"] = api.presencePenalty.value();
+        }
+        break;
 
-    payload["model"] = api.modelName;
-    if (api.temperature.has_value()) {
-        payload["temperature"] = api.temperature.value();
-    }
-    if (api.topP.has_value()) {
-        payload["top_p"] = api.topP.value();
-    }
-    if (api.protocol != ApiProtocol::OpenAIRes && api.frequencyPenalty.has_value()) {
-        payload["frequency_penalty"] = api.frequencyPenalty.value();
-    }
-    if (api.protocol != ApiProtocol::OpenAIRes && api.presencePenalty.has_value()) {
-        payload["presence_penalty"] = api.presencePenalty.value();
+    case ApiProtocol::GeminiInterAction:
+        payload["model"] = api.modelName;
+        payload["generation_config"]["thinking_summaries"] = "auto";
+        break;
+
+    case ApiProtocol::OpenAI:
+    case ApiProtocol::OpenAIRes:
+    case ApiProtocol::Claude:
+        payload["model"] = api.modelName;
+        if (api.temperature.has_value()) {
+            payload["temperature"] = api.temperature.value();
+        }
+        if (api.topP.has_value()) {
+            payload["top_p"] = api.topP.value();
+        }
+        if (api.protocol != ApiProtocol::OpenAIRes && api.frequencyPenalty.has_value()) {
+            payload["frequency_penalty"] = api.frequencyPenalty.value();
+        }
+        if (api.protocol != ApiProtocol::OpenAIRes && api.presencePenalty.has_value()) {
+            payload["presence_penalty"] = api.presencePenalty.value();
+        }
+        break;
     }
 
     // off 或空字符串表示不传递思考参数，使用接口默认行为；none 则请求关闭或最低强度。
@@ -340,7 +381,6 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         // 规则按近期官方模型维护；未识别的模型采用最新格式和档位范围。
         // OpenAI: https://developers.openai.com/api/docs/guides/reasoning
         // Claude: https://platform.claude.com/docs/en/build-with-claude/extended-thinking
-        // Gemini: https://ai.google.dev/gemini-api/docs/generate-content/thinking
         switch (api.protocol)
         {
         case ApiProtocol::OpenAI:
@@ -421,57 +461,52 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         break;
 
         case ApiProtocol::Gemini:
+        case ApiProtocol::GeminiInterAction:
         {
-            // generateContent 的思考参数位于 generationConfig.thinkingConfig。
-            // includeThoughts 只用于返回思考摘要；2.5 使用预算，3 系列及未识别型号使用等级。
-            auto& thinkingConfig = payload["generationConfig"]["thinkingConfig"];
-            thinkingConfig = {{"includeThoughts", true}};
-            if (isModel("gemini-2-5-pro") || isModel("gemini-2-5-flash")) {
-                // 2.5 Flash/Lite 的 none=0（关闭），Pro 不能关闭，none/minimal 使用最低预算 128。
-                // Flash/Lite 的 minimal=512；low/medium/high/xhigh 为 2048/4096/8192/16384。
-                // max 使用模型预算上限：Pro=32768，Flash/Lite=24576。
+            if (api.protocol == ApiProtocol::Gemini
+                && (isModel("gemini-2-5-pro") || isModel("gemini-2-5-flash"))) {
+                // generateContent 的 2.5 模型使用 token 预算。
                 const bool pro = isModel("gemini-2-5-pro");
                 const int budgetTokens = thinkingLevel == "none" ? (pro ? 128 : 0)
                     : thinkingLevel == "minimal" ? (pro ? 128 : 512)
                     : thinkingLevel == "low" ? 2048 : thinkingLevel == "medium" ? 4096
                     : thinkingLevel == "high" ? 8192 : thinkingLevel == "xhigh" ? 16384 : (pro ? 32768 : 24576);
-                thinkingConfig["thinkingBudget"] = budgetTokens;
+                payload["generationConfig"]["thinkingConfig"] = {{"includeThoughts", true}, {"thinkingBudget", budgetTokens}};
+                break;
+            }
+
+            const bool supportsMinimal = isModel("gemini-3-flash") || isModel("gemini-3-1-flash-lite")
+                || isModel("gemini-3-5-flash") || isModel("gemini-3-6-flash");
+            if (thinkingLevel == "none" || thinkingLevel == "minimal") {
+                thinkingLevel = supportsMinimal ? "minimal" : "low";
+            }
+            if (thinkingLevel == "xhigh" || thinkingLevel == "max"
+                || (thinkingLevel == "medium" && isModel("gemini-3-pro"))) {
+                thinkingLevel = "high";
+            }
+            if (isModel("gemini-3-1-flash-lite-image") && thinkingLevel != "minimal") {
+                thinkingLevel = "high";
+            }
+
+            if (api.protocol == ApiProtocol::GeminiInterAction) {
+                payload["generation_config"]["thinking_level"] = thinkingLevel;
             }
             else {
-                // 3 Flash、3.1 Flash-Lite、3.5/3.6 Flash 支持 minimal，none/minimal 使用该档。
-                // 其余型号（含未识别型号）最低 low；xhigh/max 统一映射到最高档 high。
-                // 3 Pro 只有 low/high，medium 映射到 high；3.1 Pro 支持 medium。
-                const bool supportsMinimal = isModel("gemini-3-flash") || isModel("gemini-3-1-flash-lite")
-                    || isModel("gemini-3-5-flash") || isModel("gemini-3-6-flash");
-                if (thinkingLevel == "none" || thinkingLevel == "minimal") {
-                    thinkingLevel = supportsMinimal ? "minimal" : "low";
-                }
-                if (thinkingLevel == "xhigh" || thinkingLevel == "max"
-                    || (thinkingLevel == "medium" && isModel("gemini-3-pro")))
-                {
-                    thinkingLevel = "high";
-                }
-                // Flash-Lite Image 只有 minimal/high 两档。
-                if (isModel("gemini-3-1-flash-lite-image") && thinkingLevel != "minimal") thinkingLevel = "high";
                 std::ranges::transform(thinkingLevel, thinkingLevel.begin(),
                     [](unsigned char ch) { return (char)std::toupper(ch); });
-                thinkingConfig["thinkingLevel"] = thinkingLevel;
+                payload["generationConfig"]["thinkingConfig"] = {{"includeThoughts", true}, {"thinkingLevel", thinkingLevel}};
             }
         }
         break;
-
         }
     }
 
-    if (api.protocol == ApiProtocol::Gemini) {
-        payload.erase("model");
-        const std::array<std::pair<std::string, std::string>, 4> keys = {{{"temperature", "temperature"},
-            {"top_p", "topP"}, {"frequency_penalty", "frequencyPenalty"}, {"presence_penalty", "presencePenalty"}}};
-        for (const auto& [key, nativeKey] : keys) {
-            if (payload.contains(key)) {
-                payload["generationConfig"][nativeKey] = std::move(payload.at(key));
-                payload.erase(key);
-            }
+    if (api.stream) {
+        if (api.protocol == ApiProtocol::Gemini) {
+            payload.erase("stream");
+        }
+        else {
+            payload["stream"] = true;
         }
     }
 
@@ -540,6 +575,7 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
     switch (protocol)
 	{
     case ApiProtocol::Gemini:
+    case ApiProtocol::GeminiInterAction:
         for (const auto& item : parsed.at("models")) {
             if (item.contains("name") && item["name"].is_string()) {
                 pushModelFunc(item["name"].get<std::string>());
@@ -567,23 +603,32 @@ std::vector<std::string> extractApiModelNames(const json& parsed, ApiProtocol pr
     return models;
 }
 
-
-
-// 所有协议共用非流式传输；插件返回的最终请求体直接发送，不再二次检查。
+// 所有协议共用同步传输；流式响应在 HTTP 完成后聚合，不向 GUI 推送中间内容。
 ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationApi& api, const std::string& requestUrl,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs)
 {
-    const cpr::Response response = cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, makeApiHeaders(api),
+    const cpr::Response response = cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, makeApiHeaders(api, api.stream),
         cpr::Timeout{ apiTimeOutMs }, api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{},
         cpr::ProgressCallback{ [controller](cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, intptr_t)
             { return !controller || !controller->shouldStop(); } });
-    if (response.error.code != cpr::ErrorCode::OK)
-        return {std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code))};
-    if (response.status_code != 200)
-        return {std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code))};
-    if (response.text.empty())
-        return {std::unexpected(makeApiError(ApiErrorType::ResponseParse,
-            gppTr("ApiTool.sendApiHttpRequest", "[GPP.响应为空]").toStdString(), {}, response.status_code))};
+
+    if (response.error.code != cpr::ErrorCode::OK) {
+        return { std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code)) };
+    }
+    if (response.status_code != 200) {
+        return { std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code)) };
+    }
+    if (response.text.empty()) {
+        return { std::unexpected(makeApiError(ApiErrorType::ResponseParse,
+            gppTr("ApiTool.sendApiHttpRequest", "[GPP.响应为空]").toStdString(), {}, response.status_code)) };
+    }
+    if (api.stream) {
+        auto content = collectApiStreamResponse(response.text, api.protocol);
+        if (!content) {
+            content.error().statusCode = response.status_code;
+        }
+        return {std::move(content)};
+    }
     return {response.text};
 }
 
@@ -594,9 +639,13 @@ ApiResponse sendApiRequest(const std::string& payloadStr, const TranslationApi& 
     int apiTimeOutMs, bool onlyReturnParsedContent)
 {
     ApiResponse response = sendApiHttpRequest(payloadStr, api, cvt2RequestApiUrl(api), controller, logger, apiTimeOutMs);
-    if (!response.content) return response;
+    if (!response.content) {
+        return response;
+    }
     auto content = extractApiResponseContent(*response.content, api.protocol);
-    if (!content) content.error().statusCode = 200;
+    if (!content) {
+        content.error().statusCode = 200;
+    }
     if (content && !onlyReturnParsedContent) {
         content = *response.content + "\n\n" + gppTr("sendApiRequest", "最终解析出的回复为:").toStdString() + "\n" + *content;
     }
@@ -623,14 +672,16 @@ ApiModelListResponse queryApiModels(const TranslationApi& api, int apiTimeOutMs)
     const std::string requestUrl = cvt2ModelListApiUrl(api);
     const cpr::Response response = cpr::Get(
         cpr::Url{ requestUrl },
-        makeApiHeaders(api),
+        makeApiHeaders(api, false),
         cpr::Timeout{ apiTimeOutMs },
         api.useSystemProxy ? makeSystemProxies() : cpr::Proxies{}
     );
-    if (response.error.code != cpr::ErrorCode::OK)
+    if (response.error.code != cpr::ErrorCode::OK) {
         result.models = std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code));
-    else if (response.status_code != 200)
+    }
+    else if (response.status_code != 200) {
         result.models = std::unexpected(makeApiError(ApiErrorType::Unknown, {}, response.text, response.status_code));
+    }
     else {
         try {
             const auto parsed = json::parse(response.text);

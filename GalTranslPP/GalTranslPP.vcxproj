@@ -220,6 +220,7 @@
     <ClCompile Include="ApiTool.AdvancedAgent.cpp" />
     <ClCompile Include="ApiTool.Error.cpp" />
     <ClCompile Include="ApiTool.Response.cpp" />
+    <ClCompile Include="ApiTool.Stream.cpp" />
     <ClCompile Include="ApiTool.ixx" />
     <ClCompile Include="base64.cpp" />
     <ClCompile Include="CodePageChecker.cpp" />

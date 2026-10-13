@@ -168,7 +168,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     hKeysEdit->moveCursor(QTextCursor::Start);
     hKeysLayout->addWidget(hKeysEdit);
     hKeysWidget->hide();
-    connect(editHKeysButton, &GppPushButton::clicked, this, [=]()
+    connect(editHKeysButton, &GppPushButton::clicked, this, [=, this]()
         {
             hKeysWidget->move(window()->frameGeometry().center()
                 - hKeysWidget->rect().center());
@@ -196,7 +196,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	mainLayout->addWidget(skipKeysEdit);
 
 
-    m_applyFunc = [=]
+    m_applyFunc = [=, this]
         {
             insertToml(m_projectConfig, "plugins.SkipTrans.skipH", skipHSwitch->getIsToggled());
             const QByteArray hKeysBase64Data = hKeysEdit->toPlainText().toUtf8().toBase64();

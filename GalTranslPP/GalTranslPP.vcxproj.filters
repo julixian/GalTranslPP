@@ -205,6 +205,9 @@
     <ClCompile Include="ApiTool.Response.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="ApiTool.Stream.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
     <ClCompile Include="CodePageChecker.cpp">
       <Filter>Tools</Filter>
     </ClCompile>

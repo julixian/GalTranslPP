@@ -1781,12 +1781,12 @@ Tool calls:
 <context>
     <name>PythonInterpreterInstance.daemonThreadFunc</name>
     <message>
-        <location filename="PythonManager.cpp" line="405"/>
+        <location filename="PythonManager.cpp" line="436"/>
         <source>PythonInterpreterInstance 导入 gpp_plugin_api 时出现异常: %1</source>
         <translation>Exception importing gpp_plugin_api: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="429"/>
+        <location filename="PythonManager.cpp" line="460"/>
         <source>PythonInterpreterInstance 异常: %1</source>
         <translation>PythonInterpreterInstance exception: %1</translation>
     </message>
@@ -1794,7 +1794,7 @@ Tool calls:
 <context>
     <name>PythonMainInterpreterManager.PythonMainInterpreterManager</name>
     <message>
-        <location filename="PythonManager.cpp" line="210"/>
+        <location filename="PythonManager.cpp" line="241"/>
         <source>Python 环境未初始化</source>
         <translation>Python environment is not initialized</translation>
     </message>
@@ -1802,12 +1802,12 @@ Tool calls:
 <context>
     <name>PythonMainInterpreterManager.daemonThreadFunc</name>
     <message>
-        <location filename="PythonManager.cpp" line="305"/>
+        <location filename="PythonManager.cpp" line="336"/>
         <source>PythonMainInterpreterManager 导入 gpp_plugin_api 时出现异常: %1</source>
         <translation>Exception importing gpp_plugin_api: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="331"/>
+        <location filename="PythonManager.cpp" line="362"/>
         <source>PythonMainInterpreterManager 异常: %1</source>
         <translation>PythonMainInterpreterManager exception: %1</translation>
     </message>
@@ -1815,22 +1815,22 @@ Tool calls:
 <context>
     <name>PythonMainInterpreterManager.registerNLPFunction</name>
     <message>
-        <location filename="PythonManager.cpp" line="249"/>
+        <location filename="PythonManager.cpp" line="280"/>
         <source>正在加载模块 [%1] 的模型 %2</source>
         <translation>Loading module [%1] model %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="259"/>
+        <location filename="PythonManager.cpp" line="290"/>
         <source>模块 [%1] 的模型 %2 不可用</source>
         <translation>Module [%1] model %2 is unavailable</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="275"/>
+        <location filename="PythonManager.cpp" line="306"/>
         <source>加载模块 [%1] 的模型 %2 时出现异常: %3</source>
         <translation>Exception while loading module [%1] model %2: %3</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="285"/>
+        <location filename="PythonManager.cpp" line="316"/>
         <source>模块 [%1] 的模型 %2 已加载</source>
         <translation>Module [%1] model %2 loaded</translation>
     </message>
@@ -1838,27 +1838,27 @@ Tool calls:
 <context>
     <name>PythonManager.registerCustomTypes</name>
     <message>
-        <location filename="PythonManager.cpp" line="554"/>
+        <location filename="PythonManager.cpp" line="585"/>
         <source>[%1] 已配置 MeCab 分词器，首次使用时加载</source>
         <translation>[%1] configured MeCab tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="563"/>
+        <location filename="PythonManager.cpp" line="594"/>
         <source>[%1] 已配置 spaCy 分词器，首次使用时加载</source>
         <translation>[%1] configured spaCy tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="573"/>
+        <location filename="PythonManager.cpp" line="604"/>
         <source>[%1] 已配置 Stanza 分词器，首次使用时加载</source>
         <translation>[%1] configured Stanza tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="582"/>
+        <location filename="PythonManager.cpp" line="613"/>
         <source>[%1] 已配置 pkuseg 分词器，首次使用时加载</source>
         <translation>[%1] configured pkuseg tokenizer; it will load on first use</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="591"/>
+        <location filename="PythonManager.cpp" line="622"/>
         <source>[%1] 中注册了无效的 TokenizerBackend: %2</source>
         <translation>[%1] registered invalid TokenizerBackend: %2</translation>
     </message>
@@ -1866,36 +1866,36 @@ Tool calls:
 <context>
     <name>PythonManager.registerFunction</name>
     <message>
-        <location filename="PythonManager.cpp" line="452"/>
+        <location filename="PythonManager.cpp" line="483"/>
         <source>脚本 [%1] 不存在</source>
         <oldsource>脚本不存在: %1</oldsource>
         <translation>Script [%1] not found</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="464"/>
+        <location filename="PythonManager.cpp" line="495"/>
         <source>加载模块 [%1] 时出现异常，子解释器无法开启</source>
         <oldsource>加载模块 %1 时出现异常，子解释器无法开启</oldsource>
         <translation>Exception loading module [%1]; subinterpreter cannot start</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="483"/>
+        <location filename="PythonManager.cpp" line="514"/>
         <source>为模块 [%1] 加载自定义类型时出现异常: %2</source>
         <oldsource>为模块 %1 加载自定义类型时出现异常: %2</oldsource>
         <translation>Exception loading custom types for module [%1]: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="496"/>
+        <location filename="PythonManager.cpp" line="527"/>
         <source>模块 [%1] 插入失败</source>
         <translation>Failed to insert module %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="510"/>
-        <location filename="PythonManager.cpp" line="518"/>
+        <location filename="PythonManager.cpp" line="541"/>
+        <location filename="PythonManager.cpp" line="549"/>
         <source>从脚本 [%1] 加载函数 %2 失败</source>
         <translation>Failed to load function %2 from script %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="528"/>
+        <location filename="PythonManager.cpp" line="559"/>
         <source>加载模块 [%1] 的函数 %2 时出现异常: %3</source>
         <translation>Exception loading function %2 from module %1: %3</translation>
     </message>
@@ -2175,57 +2175,57 @@ Tool calls:
 <context>
     <name>checkPythonDependencies</name>
     <message>
-        <location filename="PythonManager.cpp" line="611"/>
+        <location filename="PythonManager.cpp" line="642"/>
         <source>正在检查依赖 %1</source>
         <translation>Checking dependency %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="616"/>
+        <location filename="PythonManager.cpp" line="647"/>
         <source>依赖 %1 已安装</source>
         <translation>Dependency %1 installed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="623"/>
+        <location filename="PythonManager.cpp" line="654"/>
         <source>检查依赖 %1 时出现异常: %2</source>
         <translation>Exception checking dependency %1: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="631"/>
+        <location filename="PythonManager.cpp" line="662"/>
         <source>依赖 %1 未安装，正在尝试安装</source>
         <translation>Dependency %1 not installed; trying install</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="635"/>
+        <location filename="PythonManager.cpp" line="666"/>
         <source>将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！</source>
         <translation>Dependency install starts in 3s; do not close the next window!</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="638"/>
+        <location filename="PythonManager.cpp" line="669"/>
         <source>正在执行安装命令: %1</source>
         <translation>Running install command: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="644"/>
+        <location filename="PythonManager.cpp" line="675"/>
         <source>安装依赖 %1 的命令失败</source>
         <translation>Install command for dependency %1 failed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="651"/>
+        <location filename="PythonManager.cpp" line="682"/>
         <source>依赖 %1 安装成功</source>
         <translation>Dependency %1 installed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="656"/>
+        <location filename="PythonManager.cpp" line="687"/>
         <source>依赖 %1 安装验证失败: %2</source>
         <translation>Dependency %1 validation failed: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="666"/>
+        <location filename="PythonManager.cpp" line="697"/>
         <source>依赖 %1 检查完毕</source>
         <translation>Dependency %1 check complete</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="668"/>
+        <location filename="PythonManager.cpp" line="699"/>
         <source>所有依赖均已安装</source>
         <translation>All dependencies installed</translation>
     </message>

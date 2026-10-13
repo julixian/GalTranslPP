@@ -19,7 +19,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. 加回了流式输出选项，支持在所有模式和协议下启用",
-		"2. [GUI] 修复了弹出窗口比记忆高度高及主窗口高度变化的 bug",
+		"2. Python 子进程现在会在主进程结束时自动关闭",
+		"3. [GUI] 修复了弹出窗口比记忆高度高及主窗口高度变化的 bug",
         "v3.2.3 更新",
         "1. 增加长路径支持",
 		"2. 新增 Api name 和 GUI 流式布局，默认行为可在应用设置中改回",

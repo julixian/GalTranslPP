@@ -18,7 +18,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-		"1. 修正了 Python 解释器的一些执行问题，避免潜在的崩溃并允许在 C++ 侧线程池调用 Python 闭包",
+		"1. 修复切换工具链时上游 future 实现问题导致的崩溃",
+		"2. 修正了 Python 解释器的一些执行问题，现在允许在 C++ 侧线程池调用 Python 闭包",
 		"v3.2.4 更新",
         "1. 加回了流式输出选项，支持在所有模式和协议下启用",
 		"2. Python 子进程现在会在主进程结束时自动关闭",

@@ -830,7 +830,9 @@ void waitForTransThreads(const std::shared_ptr<IController>& controller, ctpl::t
         catch (...) {
             if (!firstException) {
                 controller->setShouldStop(true);
-                pool.stop();
+                // 排队任务按停止标志退出并完成 future，避免销毁未执行任务产生 broken_promise。
+                // 当前 Clang + MSVC STL 的 import std 路径会遗漏 future_error 的复制构造信息，导致堆损坏。
+                pool.stop(true);
                 firstException = std::current_exception();
             }
         }

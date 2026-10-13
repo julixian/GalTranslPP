@@ -371,6 +371,9 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
     for (const auto& [taskIndex, segmentIdx] : selectedIndices | std::views::enumerate) {
         results.emplace_back(pool.push([=, this](int threadId)
             {
+                if (m_controller->shouldStop()) {
+                    return;
+                }
                 ActiveWorkerGuard workerGuard(m_controller);
                 this->callLLMToGenerate(segmentIdx, (int)taskIndex + 1, threadId + 1);
                 m_controller->updateBar();

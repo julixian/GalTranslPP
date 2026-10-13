@@ -154,7 +154,7 @@ absl::btree_map<PluginRunTime, std::string_view> pluginRunTime2Names =
     { PluginRunTime::DPost, "dpostrun" },
 };
 
-// TODO: C++26 std::copyable_function std::moveable_function std::function_ref
+// TODO: C++26 std::copyable_function std::move_only_function std::function_ref
 
 using NLPPair = std::array<std::string, 2>;
 using WordPosVec = std::vector<NLPPair>;

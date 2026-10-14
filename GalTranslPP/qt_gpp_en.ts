@@ -1412,8 +1412,8 @@ Problem overview:
     </message>
     <message>
         <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="284"/>
-        <source>%1 开始请求，剩余 %2 句，本地上下文 %3 字节</source>
-        <translation>%1 Starting request, %2 sentences remaining, %3 bytes of local context</translation>
+        <source>%1 开始请求，剩余 %2 句，上下文预估 %3 字节</source>
+        <translation>%1 Starting request, %2 sentences remaining, %3 bytes of estimated context</translation>
     </message>
     <message>
         <location filename="NormalJsonTranslator.TransAgent.Advanced.cpp" line="325"/>

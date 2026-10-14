@@ -281,7 +281,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             }
             requestLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] [请求 %3]")
                 .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始请求，剩余 %2 句，本地上下文 %3 字节")
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始请求，剩余 %2 句，上下文预估 %3 字节")
                 .arg(requestLogPrefix).arg(pending.size()).arg(worker.session->history.dump().size()).toStdString());
             response = performAdvancedAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
                 m_enhanceJailbreak, m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);

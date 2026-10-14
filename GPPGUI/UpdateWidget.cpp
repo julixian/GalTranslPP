@@ -18,6 +18,8 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
+        "1. Log 准确性修正: 本地上下文 -> 上下文预估",
+        "v3.2.5 更新",
 		"1. 修复切换工具链时上游 future 实现问题导致的崩溃",
 		"2. 修正了 Python 解释器的一些执行问题，现在允许在 C++ 侧线程池调用 Python 闭包",
 		"v3.2.4 更新",

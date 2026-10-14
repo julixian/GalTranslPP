@@ -48,7 +48,7 @@ baseClassName = "NormalJson"
 # Rebuild: 即使 problem 或 orig 中包含 retranslKey 也不会重翻，只根据缓存翻译重建结果
 # ShowNormal: 展示预处理后的内容及句子，如Epub格式下可生成预处理后的 html/xhtml 文件以及生成的 json，可用于检查和排错
 # PS: 如果项目文件夹下有 Prompt.toml，会优先使用项目文件夹下的提示词，否则再去 BaseConfig 下寻找
-transEngine = "ForGalTsv"
+transEngine = "ForGalJson"
 
 # "SkipTrans"，有 dprerun 和 prerun 阶段，区别仅在于执行时机不同，默认开启为 prerun 阶段
 # "TextFull2Half"，有 dprerun、prerun、postrun、dpostrun 阶段，区别在于 prerun 和 postrun 会跳过 <br> 和 <tab> 标签，默认开启为 dpostrun 阶段

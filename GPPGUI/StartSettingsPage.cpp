@@ -519,7 +519,7 @@ void StartSettingsPage::setupUi()
 	buttonLayout->addWidget(m_remainTimeLabel);
 
 	// 翻译模式
-	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalTsv");
+	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalJson");
 	QString transEngineStr = QString::fromStdString(transEngine);
 	ElaText* translateModeLabel = new ElaText(buttonArea);
 	translateModeLabel->setTextPixelSize(16);

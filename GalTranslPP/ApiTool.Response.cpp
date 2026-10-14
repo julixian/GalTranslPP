@@ -196,7 +196,7 @@ std::optional<std::string> parseApiContent(const json& parsed, ApiProtocol proto
 }
 
 // sendApiRequest 的普通文本解析入口：parseApiResponse 检查协议错误 -> parseApiContent 提取内容。
-// 无文本块与空字符串分别返回 ResponseParse 错误，成功保证文本非空；不解析译文格式，也不服务于高级工具响应。
+// 无文本块与空字符串分别返回 ResponseParse 错误，成功保证文本非空；不解析译文格式，也不服务于 Agent 工具响应。
 // 文本提取的 std::exception 转成带原始响应的 ApiError；调用方补 HTTP 状态并交给外层请求循环处理。
 std::expected<std::string, ApiError> extractApiResponseContent(const std::string& responseContent, ApiProtocol protocol)
 {
@@ -210,7 +210,7 @@ std::expected<std::string, ApiError> extractApiResponseContent(const std::string
             return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
                 gppTr("ApiTool.extractApiResponseContent", "[GPP.响应中没有文本内容]").toStdString(), responseContent));
         }
-        // 普通请求的调用方都要求文本内容；高级 Agent 的工具调用使用独立解析路径。
+        // 普通请求的调用方都要求文本内容；Agent 的工具调用使用独立解析路径。
         if (content->empty()) {
             return std::unexpected(makeApiError(ApiErrorType::ResponseParse,
                 gppTr("ApiTool.extractApiResponseContent", "[GPP.内容为空]").toStdString(), responseContent));

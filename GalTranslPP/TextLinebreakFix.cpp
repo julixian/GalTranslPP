@@ -245,7 +245,7 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 			transViewToModify += se->linebreak;
 		}
 		se->transview = std::move(transViewToModify);
-		se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
+		se->otherinfo.insert_or_assign(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
 			.toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
 			.arg(origLinebreakCount + 1)
 			.arg(transLinebreakCount + 1)
@@ -494,7 +494,7 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 				{
 					return acc + "[" + token + "]";
 				});
-			se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "译文分词结果")
+			se->otherinfo.insert_or_assign(gppTr("TextLinebreakFix.fixLinebreak", "译文分词结果")
 				.toStdString(), std::move(tokensStr));
 		}
 	}
@@ -510,7 +510,7 @@ void TextLinebreakFix::dPostRun(Sentence* se)
 	checkLineCharCountFunc(se->transview);
 
 	const int newLinebreakCount = countSubstring(se->transview, se->linebreak);
-	se->otherinfo.try_emplace(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
+	se->otherinfo.insert_or_assign(gppTr("TextLinebreakFix.fixLinebreak", "换行修复")
 		.toStdString(), gppTr("TextLinebreakFix.fixLinebreak", "原文 %1 行, 译文 %2 行, 修正后 %3 行")
 		.arg(origLinebreakCount + 1)
 		.arg(transLinebreakCount + 1)

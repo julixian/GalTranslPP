@@ -21,7 +21,8 @@ bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
         && lhs.extraHeaders == rhs.extraHeaders && lhs.extraBody == rhs.extraBody
         && lhs.temperature == rhs.temperature && lhs.topP == rhs.topP
         && lhs.frequencyPenalty == rhs.frequencyPenalty && lhs.presencePenalty == rhs.presencePenalty
-        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.stream == rhs.stream && lhs.agentStrictTools == rhs.agentStrictTools
+        && lhs.useSystemProxy == rhs.useSystemProxy && lhs.stream == rhs.stream && lhs.fastPause == rhs.fastPause
+        && lhs.agentStrictTools == rhs.agentStrictTools
         && lhs.agentStateful == rhs.agentStateful && lhs.agentNativeAutoCompaction == rhs.agentNativeAutoCompaction
         && lhs.agentCompactThresholdTokens == rhs.agentCompactThresholdTokens;
 }
@@ -609,8 +610,8 @@ ApiResponse sendApiHttpRequest(const std::string& payloadStr, const TranslationA
 {
     const cpr::Response response = cpr::Post(cpr::Url{ requestUrl }, cpr::Body{ payloadStr }, makeApiHeaders(api, api.stream),
         cpr::Timeout{ apiTimeOutMs }, api.useSystemProxy ? makeSystemProxies(logger) : cpr::Proxies{},
-        cpr::ProgressCallback{ [controller](cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, intptr_t)
-            { return !controller || !controller->shouldStop(); } });
+        cpr::ProgressCallback{ [controller, fastPause = api.fastPause](cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, cpr::cpr_off_t, intptr_t)
+            { return !fastPause || !controller || !controller->shouldStop(); } });
 
     if (response.error.code != cpr::ErrorCode::OK) {
         return { std::unexpected(makeApiError(ApiErrorType::Transport, response.error.message, response.text, response.status_code)) };

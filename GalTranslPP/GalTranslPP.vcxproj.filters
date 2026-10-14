@@ -160,7 +160,7 @@
     <ClCompile Include="base64.cpp">
       <Filter>Tools\3rdParty</Filter>
     </ClCompile>
-    <ClCompile Include="NormalJsonTranslator.TransAgent.Advanced.cpp">
+    <ClCompile Include="NormalJsonTranslator.TransAgent.Session.cpp">
       <Filter>FilePlugins\NormalJsonTranslator</Filter>
     </ClCompile>
     <ClCompile Include="NormalJsonTranslator.TransAgent.Tools.cpp">
@@ -190,7 +190,7 @@
     <ClCompile Include="AgentToolCommon.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="ApiTool.AdvancedAgent.cpp">
+    <ClCompile Include="ApiTool.Agent.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
     <ClCompile Include="ApiTool.cpp">

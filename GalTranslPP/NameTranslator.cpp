@@ -123,6 +123,9 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
             threadId, m_apiTimeoutMs);
 
         if (!response.content) {
+            if (m_controller->shouldStop()) {
+                return;
+            }
             const std::string errorLogPrefix = gppTr(
                 "NameTranslator.translateBatch",
                 "[线程 %1] [批次 %2] [请求 %3]")

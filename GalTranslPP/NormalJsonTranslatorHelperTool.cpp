@@ -360,6 +360,24 @@ void fillBlockAndMap(
 {
     switch (transEngine)
     {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForNovelJson:
+    {
+        for (Sentence* se : batchToTransThisRound) {
+            json item;
+            item["id"] = se->index;
+            if (transEngine == TransEngine::ForGalJson && se->nameType != NameType::None) {
+                item["name"] = getNameString(*se);
+            }
+            item["src"] = se->preproc;
+            inputBlock += item.dump() + "\n";
+            if (id2SentenceMap != nullptr) {
+                (*id2SentenceMap)[se->index] = se;
+            }
+        }
+    }
+    break;
+
     case TransEngine::ForGalTsv:
     {
         for (Sentence* se : batchToTransThisRound) {
@@ -376,23 +394,6 @@ void fillBlockAndMap(
     {
         for (Sentence* se : batchToTransThisRound) {
             inputBlock += std::format("{}\t{}\n", se->preproc, se->index);
-            if (id2SentenceMap != nullptr) {
-                (*id2SentenceMap)[se->index] = se;
-            }
-        }
-    }
-    break;
-
-    case TransEngine::ForGalJson:
-    {
-        for (Sentence* se : batchToTransThisRound) {
-            json item;
-            item["id"] = se->index;
-            if (se->nameType != NameType::None) {
-                item["name"] = getNameString(*se);
-            }
-            item["src"] = se->preproc;
-            inputBlock += item.dump() + "\n";
             if (id2SentenceMap != nullptr) {
                 (*id2SentenceMap)[se->index] = se;
             }
@@ -487,6 +488,48 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
 
     switch (transEngine)
     {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForNovelJson:
+    {
+        const size_t start = std::min({ content.find("{\"id\""), content.find("{\"dst\""), content.find("{\"name\"") });
+        if (start == std::string::npos) {
+            break;
+        }
+
+        const auto lines = splitStringView(std::string_view(content).substr(start), '\n');
+        for (const auto& line : lines) {
+            if (parsedCount == batchToTransThisRound.size()) {
+                break;
+            }
+            if (line.empty() || !line.starts_with('{')) {
+                continue;
+            }
+            try {
+                json item = [&]()
+                    {
+                        try {
+                            return json::parse(line);
+                        }
+                        catch (...) {
+                            return json::parse(lightRepairJsonText(std::string(line)));
+                        }
+                    }();
+                const int id = item["id"];
+                const std::string& dst = item["dst"].get_ref<const std::string&>();
+                if (const auto it = id2SentenceMap.find(id);
+                    it != id2SentenceMap.end() && !it->second->transCompleted)
+                {
+                    it->second->transraw = dst;
+                    it->second->transby = transby;
+                    it->second->transCompleted = true;
+                    ++parsedCount;
+                }
+            }
+            catch (...) { }
+        }
+    }
+    break;
+
     case TransEngine::ForGalTsv:
     {
         size_t start = content.find("NAME\tDST\tID");
@@ -547,47 +590,6 @@ int parseContent(std::string& content, std::span<Sentence*> batchToTransThisRoun
                     it != id2SentenceMap.end() && !it->second->transCompleted)
                 {
                     it->second->transraw = parts[0];
-                    it->second->transby = transby;
-                    it->second->transCompleted = true;
-                    ++parsedCount;
-                }
-            }
-            catch (...) { }
-        }
-    }
-    break;
-
-    case TransEngine::ForGalJson:
-    {
-        const size_t start = std::min({ content.find("{\"id\""), content.find("{\"dst\""), content.find("{\"name\"") });
-        if (start == std::string::npos) {
-            break;
-        }
-
-        const auto lines = splitStringView(std::string_view(content).substr(start), '\n');
-        for (const auto& line : lines) {
-            if (parsedCount == batchToTransThisRound.size()) {
-                break;
-            }
-            if (line.empty() || !line.starts_with('{')) {
-                continue;
-            }
-            try {
-                json item = [&]()
-	                {
-                        try {
-                            return json::parse(line);
-                        }
-                        catch (...) {
-                            return json::parse(lightRepairJsonText(std::string(line)));
-                        }
-                    }();
-                const int id = item["id"];
-                const std::string& dst = item["dst"].get_ref<const std::string&>();
-                if (const auto it = id2SentenceMap.find(id);
-                    it != id2SentenceMap.end() && !it->second->transCompleted)
-                {
-                    it->second->transraw = dst;
                     it->second->transby = transby;
                     it->second->transCompleted = true;
                     ++parsedCount;

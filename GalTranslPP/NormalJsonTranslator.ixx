@@ -68,6 +68,7 @@ protected:
     int m_maxRequestCount{};
     int m_saveCacheInterval{};
     int m_apiTimeOutMs{};
+    bool m_keepPreviousOtherInfo{};
     bool m_checkQuota{};
     bool m_smartRetry{};
     bool m_enhanceJailbreak{};
@@ -80,7 +81,6 @@ protected:
     bool m_outputWithSrc{};
     bool m_outputWithRefInfo{};
     bool m_agentEnabled{};
-    bool m_agentAdvancedEnabled{};
     bool m_agentAllowPython{};
     bool m_reuseRepeatedBlocks{};
 

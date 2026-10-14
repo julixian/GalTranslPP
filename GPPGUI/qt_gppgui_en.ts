@@ -73,7 +73,7 @@
         <translation>List layout</translation>
     </message>
     <message>
-        <location line="+165"/>
+        <location line="+166"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -99,12 +99,12 @@
     </message>
     <message>
         <location line="+50"/>
-        <location line="+627"/>
+        <location line="+637"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="-620"/>
+        <location line="-630"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -121,13 +121,13 @@
     <message>
         <location line="+4"/>
         <location line="+1"/>
-        <location line="+571"/>
+        <location line="+581"/>
         <location line="+23"/>
         <source>自定义 Api</source>
         <translation>Custom API</translation>
     </message>
     <message>
-        <location line="-576"/>
+        <location line="-586"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -180,13 +180,23 @@ sk-...</translation>
     </message>
     <message>
         <location line="+16"/>
+        <source>快速暂停</source>
+        <translation>Quick pause</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>开启时立即中断请求；关闭时等待当前请求结束后暂停</source>
+        <translation>When enabled, abort requests immediately; when disabled, pause after the current request finishes.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
         <source>基础设置</source>
         <translation>Basic settings</translation>
     </message>
     <message>
         <location line="+15"/>
-        <source>以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效</source>
-        <translation>These options apply only when Agent mode and Advanced Agent are enabled.</translation>
+        <source>以下选项仅在 Agent 模式开启时生效</source>
+        <translation>These options apply only when Agent mode is enabled.</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -270,8 +280,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+6"/>
-        <source>高级 Agent</source>
-        <translation>Advanced Agent</translation>
+        <source>Agent</source>
+        <translation>Agent</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -321,7 +331,6 @@ sk-...</translation>
     <message>
         <location line="+23"/>
         <source>JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递</source>
-        <oldsource>JSON 对象，用于追加或覆盖请求 body 字段</oldsource>
         <translation>Body overrides; set thinking to Omit for model-specific options</translation>
     </message>
     <message>
@@ -404,7 +413,7 @@ sk-...</translation>
         <translation>Error details:</translation>
     </message>
     <message>
-        <location line="+223"/>
+        <location line="+224"/>
         <source>拖动排序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -429,7 +438,7 @@ sk-...</translation>
         <translation>API Settings — %1</translation>
     </message>
     <message>
-        <location line="+165"/>
+        <location line="+166"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -451,16 +460,7 @@ sk-...</translation>
     <message>
         <location line="+5"/>
         <source>确定删除『%1』吗？</source>
-        <oldsource>确定删除“%1”吗？</oldsource>
         <translation>Delete “%1”?</translation>
-    </message>
-    <message>
-        <source>取消</source>
-        <translation type="vanished">Cancel</translation>
-    </message>
-    <message>
-        <source>删除</source>
-        <translation type="vanished">Delete</translation>
     </message>
     <message>
         <location line="+32"/>
@@ -468,11 +468,7 @@ sk-...</translation>
         <translation>%1 (copy)</translation>
     </message>
     <message>
-        <source>(空)</source>
-        <translation type="vanished">(empty)</translation>
-    </message>
-    <message>
-        <location line="-412"/>
+        <location line="-414"/>
         <location line="+5"/>
         <location line="+8"/>
         <source>请求失败</source>
@@ -489,7 +485,7 @@ sk-...</translation>
         <translation>Model name cannot be empty</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+73"/>
         <location line="+35"/>
         <location line="+5"/>
         <source>模型获取</source>
@@ -591,19 +587,16 @@ sk-...</translation>
     <message>
         <location line="+35"/>
         <source>GalTransl++ 设置</source>
-        <oldsource>GalTransl 设置</oldsource>
         <translation>GalTransl settings</translation>
     </message>
     <message>
         <location line="+10"/>
         <source>延迟项目初始化</source>
-        <oldsource>延迟初始化项目设置页</oldsource>
         <translation>Lazy project init</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>增加启动速度，但第一次进入某个项目时会卡一下初始化</source>
-        <oldsource>增加启动速度，但第一次进入某个项目时会增加卡一下初始化</oldsource>
         <translation>Faster startup; initializing each project for the first time may cause a brief pause</translation>
     </message>
     <message>
@@ -629,7 +622,6 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <source>请输入有效的快捷键，例如 Ctrl+L</source>
-        <oldsource>请输入有效的单组快捷键，例如 Ctrl+L</oldsource>
         <translation>Shortcut format: Ctrl+L</translation>
     </message>
     <message>
@@ -872,7 +864,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>重命名字典</source>
-        <translation>Rename dictionaryionary</translation>
+        <translation>Rename dictionary</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -884,7 +876,7 @@ sk-...</translation>
         <location line="-45"/>
         <location line="+208"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
-        <translation>Dict name can not be empty or contain point symbol, slash, backslash!</translation>
+        <translation>Dictionary names cannot be empty or contain dots, slashes, or backslashes!</translation>
     </message>
     <message>
         <location line="-199"/>
@@ -954,7 +946,7 @@ sk-...</translation>
     <message>
         <location line="+51"/>
         <source>所有默认字典配置均已保存</source>
-        <translation>All dicts are saved successfully</translation>
+        <translation>All default dictionary settings have been saved</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1015,7 +1007,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>未知通用字典模式</source>
-        <translation>Unkown common dict mode</translation>
+        <translation>Unknown common dictionary mode</translation>
     </message>
     <message>
         <location line="+18"/>
@@ -1141,7 +1133,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>重命名字典</source>
-        <translation>Rename dictionaryionary</translation>
+        <translation>Rename dictionary</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -1153,7 +1145,7 @@ sk-...</translation>
         <location line="-47"/>
         <location line="+210"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
-        <translation>Dict name can not be empty or contain point symbol, slash, backslash!</translation>
+        <translation>Dictionary names cannot be empty or contain dots, slashes, or backslashes!</translation>
     </message>
     <message>
         <location line="-201"/>
@@ -1223,7 +1215,7 @@ sk-...</translation>
     <message>
         <location line="+51"/>
         <source>所有默认字典配置均已保存</source>
-        <translation>All dicts are saved successfully</translation>
+        <translation>All default dictionary settings have been saved</translation>
     </message>
     <message>
         <location line="+5"/>
@@ -1333,7 +1325,6 @@ sk-...</translation>
     <message>
         <location line="+36"/>
         <source>启用时建议将翻译顺序改为文件名排序</source>
-        <oldsource>会把 onFileProcessed 和 分割文件合并 延迟到翻译结束再执行。启用时建议将翻译顺序改为文件名排序</oldsource>
         <translation>Filename order recommended</translation>
     </message>
     <message>
@@ -1343,50 +1334,26 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</source>
-        <oldsource>当前仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项</oldsource>
-        <translation>Applies only to ForGalTsv and ForNovelTsv. Enable Advanced Agent as well for newer models.</translation>
+        <source>支持 ForGalJson、ForNovelJson、ForGalTsv、ForNovelTsv</source>
+        <translation>Supports ForGalJson, ForNovelJson, ForGalTsv, and ForNovelTsv.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>让模型可以调用一定的工具以获取更多上下文</source>
-        <translation>Allows the model to call tools for more context</translation>
-    </message>
-    <message>
-        <location line="+10"/>
-        <source>高级 Agent</source>
-        <translation>Advanced Agent</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议；单 worker 正常情况下不会轮询 Api</source>
-        <oldsource>为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议</oldsource>
-        <translation>Enable native tools and worker conversation memory for the translation Agent. When disabled, use the batch text protocol. Each worker normally keeps using the same API.</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错</source>
-        <oldsource>仅 ForGalTsv、ForNovelTsv 生效，各协议能力在 Api 设置中配置</oldsource>
-        <translation>Configure protocol capabilities in API settings. Check model and endpoint support to avoid request errors.</translation>
-    </message>
-    <message>
-        <location line="+9"/>
-        <source>允许运行 Python 代码</source>
-        <translation>Allow running Python code</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！</source>
-        <oldsource>仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据</oldsource>
-        <translation>Only applies to advanced Agent. Uses the current Python environment to read files, search and analyze data; less capable models might eat your computer!</translation>
+        <location line="+12"/>
+        <source>Agent 模式下，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！</source>
+        <translation>In Agent mode, use the current Python environment to read files, search, and analyze data; an unintelligent model might eat your computer!</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>只读要求由工具提示约束，不限制进程写入；每次最多运行 120 秒，每路输出最多返回 64 KiB</source>
-        <translation>Read-only behavior is requested by the tool instructions; file writes are not restricted. Each run lasts at most 120 seconds and returns at most 64 KiB per output stream.</translation>
+        <translation>Read-only behavior is instructed by the tool prompt; process writes are not restricted. Each run is limited to 120 seconds and 64 KiB per output stream.</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-2"/>
+        <source>允许运行 Python 代码</source>
+        <translation>Allow running Python code</translation>
+    </message>
+    <message>
+        <location line="+12"/>
         <source>单块最大轮数</source>
         <translation>Max turns per block</translation>
     </message>
@@ -1403,13 +1370,12 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <source>未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话</source>
-        <oldsource>Agent 消息上下文超过该字节数后触发压缩</oldsource>
         <translation>Without native compaction, summarize and rebuild the session above this byte count</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>单位为字节；高级 Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效</source>
-        <translation>Unit: bytes. Ignored by the advanced Agent when native automatic compaction is enabled for Responses/Claude.</translation>
+        <source>单位为字节；Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效</source>
+        <translation>In bytes; ignored when native auto-compaction is enabled for Responses/Claude in Agent mode.</translation>
     </message>
     <message>
         <location line="+13"/>
@@ -1438,9 +1404,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Agent 可选读取的项目说明文件，需自己加 `read_project_note()` 的工具提示词</source>
-        <oldsource>Agent 可选读取的项目说明文件，需自己加 `get_project_note()` 的工具提示词</oldsource>
-        <translation>Optional project note file for Agent to read; add the `read_project_note()` tool prompt yourself</translation>
+        <source>Agent 可通过 read_project_note 工具读取的项目说明文件</source>
+        <translation>Project note file that Agent can read using the read_project_note tool</translation>
     </message>
     <message>
         <location line="+20"/>
@@ -1453,7 +1418,17 @@ sk-...</translation>
         <translation>Save cache after every n translation rounds</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+12"/>
+        <source>保留上一次的 otherinfo</source>
+        <translation>Keep previous otherinfo</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>命中缓存时保留附加信息，本轮生成的同名信息可覆盖旧值</source>
+        <translation>Keep metadata when a cache entry matches; current metadata can overwrite values with the same key</translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>智能重试</source>
         <translation>Smart retry</translation>
     </message>
@@ -1469,8 +1444,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>以 assistant 回复头开始续写；高级 Agent 使用自然语言预填充</source>
-        <translation>Continue from an assistant prefix; advanced Agent uses a natural-language prefill</translation>
+        <source>以 assistant 回复头开始续写；Agent 使用自然语言预填充</source>
+        <translation>Continue from an assistant prefill; Agent mode uses a natural-language prefill.</translation>
     </message>
     <message>
         <location line="+12"/>
@@ -1480,7 +1455,7 @@ sk-...</translation>
     <message>
         <location line="+14"/>
         <source>不开启则仅重翻漏掉的部分，开启可增加模型因串行而导致解析失败时的容错，在 Agent 模式下无效</source>
-        <translation>When disabled, retry only missing lines. Enable to tolerate parse failures from misaligned lines; ignored in both Agent modes.</translation>
+        <translation>When disabled, retry only missing lines. Enable to tolerate parse failures from misaligned lines; ignored in Agent mode.</translation>
     </message>
     <message>
         <location line="+254"/>
@@ -1488,7 +1463,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-521"/>
+        <location line="-522"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1505,7 +1480,6 @@ sk-...</translation>
     <message>
         <location line="+13"/>
         <source>分割缓存查找距离</source>
-        <oldsource>分割缓存贪婪查找</oldsource>
         <translation>Splitted cache search distance</translation>
     </message>
     <message>
@@ -1519,14 +1493,14 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+174"/>
+        <location line="+175"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
     </message>
     <message>
         <location line="+14"/>
-        <source>解析结果失败时尝试折半重翻与清空上下文，在高级 Agent 模式下无效</source>
-        <translation>On parse failure, retry halves and clear context; ignored in advanced Agent mode</translation>
+        <source>失败时尝试对半拆分重翻；普通模式还会清空上下文重试</source>
+        <translation>Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
     </message>
     <message>
         <location line="+28"/>
@@ -1539,7 +1513,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-364"/>
+        <location line="-365"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1556,7 +1530,6 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <source>重复脚本块只翻译首次出现的片段，后续句子引用复制结果，会把 onFileProcessed/分割文件合并/文件输出 延迟到翻译结束再执行</source>
-        <oldsource>重复脚本块只翻译首次出现的片段，后续句子引用复制结果</oldsource>
         <translation>Translate repeated blocks once; defer callbacks, merging, and output</translation>
     </message>
     <message>
@@ -1570,7 +1543,12 @@ sk-...</translation>
         <translation>Reference only after n identical speakers and source lines</translation>
     </message>
     <message>
-        <location line="+196"/>
+        <location line="+20"/>
+        <source>通过原生工具调用获取上下文，按 worker 保留跨文件会话；各协议能力在 Api 设置中配置</source>
+        <translation>Use native tools to retrieve context and keep cross-file conversations per worker; configure protocol capabilities in API settings.</translation>
+    </message>
+    <message>
+        <location line="+177"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1592,7 +1570,6 @@ sk-...</translation>
     <message>
         <location line="+41"/>
         <source>单个 log 文件大小限制</source>
-        <oldsource>log 文件大小限制</oldsource>
         <translation>Single log file size limit</translation>
     </message>
     <message>
@@ -1654,7 +1631,6 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <source>除了MeCab，剩下的都依赖Python，速度会比较慢</source>
-        <oldsource>除了MeCab，剩下的都依赖Python，所以速度变慢或内存占用变大是正常的</oldsource>
         <translation>spaCy and Stanza depend on Python</translation>
     </message>
     <message>
@@ -1665,7 +1641,6 @@ sk-...</translation>
     <message>
         <location line="+1"/>
         <source>MeCab词典目录，程序自带一个日文词典</source>
-        <oldsource>MeCab词典目录，程序自带一个</oldsource>
         <translation>Dir of MeCab&apos;s dictionary</translation>
     </message>
     <message>
@@ -1774,7 +1749,7 @@ sk-...</translation>
         <translation>Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+49"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
@@ -1794,7 +1769,7 @@ sk-...</translation>
         <translation>Agent system</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+24"/>
         <source>全部保存</source>
         <translation>Save all</translation>
     </message>
@@ -1818,16 +1793,6 @@ sk-...</translation>
         <location line="+7"/>
         <source>默认 %1 提示词配置已保存。</source>
         <translation>Default %1 prompt saved.</translation>
-    </message>
-    <message>
-        <location line="-42"/>
-        <source>高级 Agent 用户</source>
-        <translation>Advanced Agent user</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>高级 Agent 系统</source>
-        <translation>Advanced Agent system</translation>
     </message>
 </context>
 <context>
@@ -1870,31 +1835,26 @@ sk-...</translation>
     <message>
         <location line="+16"/>
         <source>将译前字典用在 name 字段</source>
-        <oldsource>将译前字典用在name字段</oldsource>
         <translation>Apply pre-dicts to name</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在 name 字段</source>
-        <oldsource>将译后字典用在name字段</oldsource>
         <translation>Apply post-dicts to name</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译前字典用在 message 字段</source>
-        <oldsource>将译前字典用在msg字段</oldsource>
         <translation>Apply pre-dicts to message</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>将译后字典用在 message 字段</source>
-        <oldsource>将译后字典用在msg字段</oldsource>
         <translation>Apply post-dicts to message</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>启用GPT字典替换 name 字段</source>
-        <oldsource>启用GPT字典替换name字段</oldsource>
         <translation>Apply GPT dicts to name</translation>
     </message>
 </context>
@@ -1973,7 +1933,7 @@ sk-...</translation>
     <message>
         <location line="+11"/>
         <source>生成字典删除失败</source>
-        <translation>Failt to delete GenDict</translation>
+        <translation>Failed to delete the generated dictionary</translation>
     </message>
     <message>
         <location line="+68"/>
@@ -1988,7 +1948,7 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>字典文件中没有词条</source>
-        <translation>No dicts in the file</translation>
+        <translation>No entries in the dictionary file</translation>
     </message>
     <message>
         <location line="+6"/>
@@ -2318,12 +2278,12 @@ sk-...</translation>
     <message>
         <location filename="GPPGUI.cpp" line="+151"/>
         <source>Updater 更新错误</source>
-        <translation>Updater error</translation>
+        <translation>Updater update error</translation>
     </message>
     <message>
         <location line="+59"/>
         <source>无法创建共享内存段，程序即将退出。</source>
-        <translation>Cannot create shared memory. Exiting.</translation>
+        <translation>Unable to create the shared memory segment. The program will exit.</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -2335,12 +2295,12 @@ sk-...</translation>
     <message>
         <location line="-65"/>
         <source>无法启动本地服务，程序即将退出。</source>
-        <translation>Cannot start local service. Exiting.</translation>
+        <translation>Unable to start the local server. The program will exit.</translation>
     </message>
     <message>
         <location line="+24"/>
         <source>缓存删除错误</source>
-        <translation>Cache delete error</translation>
+        <translation>Cache deletion error</translation>
     </message>
     <message>
         <location line="+11"/>
@@ -2355,12 +2315,12 @@ sk-...</translation>
     <message>
         <location line="+10"/>
         <source>标准错误</source>
-        <translation>Std error</translation>
+        <translation>Standard library error</translation>
     </message>
     <message>
         <location line="+9"/>
         <source>遇到了未知的错误，程序即将退出。</source>
-        <translation>Unknown error. Exiting.</translation>
+        <translation>An unknown error occurred. The program will exit.</translation>
     </message>
 </context>
 <context>
@@ -2478,7 +2438,6 @@ Issue summary:</translation>
     <message>
         <location line="+1"/>
         <source>项目 %1 仍在运行，请先停止运行！</source>
-        <oldsource> 仍在运行，请先停止运行！</oldsource>
         <translation>Project %1 is running; stop it first!</translation>
     </message>
     <message>
@@ -2546,7 +2505,6 @@ Issue summary:</translation>
         <location line="+4"/>
         <location line="+62"/>
         <source>应用设置</source>
-        <oldsource>设置</oldsource>
         <translation>App settings</translation>
     </message>
     <message>
@@ -2785,7 +2743,6 @@ Issue summary:</translation>
     <message>
         <location line="-18"/>
         <source>你确定要删除当前项目吗？                </source>
-        <oldsource>你确定要删除当前项目吗？</oldsource>
         <translation>Are you sure to delete current project?</translation>
     </message>
     <message>
@@ -3009,7 +2966,6 @@ Issue summary:</translation>
     <message>
         <location line="+1"/>
         <source>%1 项目已移动到新文件夹</source>
-        <oldsource> 项目已移动到新文件夹</oldsource>
         <translation>Project %1 moved to new folder</translation>
     </message>
     <message>
@@ -3465,19 +3421,16 @@ Cache: %4</translation>
     <message>
         <location filename="PluginItemWidget.cpp" line="+17"/>
         <source>滤过插件</source>
-        <oldsource>滤过插件，默认开启为 run 阶段</oldsource>
         <translation>Filter plugin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>全角半角转换插件</source>
-        <oldsource>全角半角转换插件，默认开启为 postRun 阶段</oldsource>
         <translation>Width conversion plugin</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>换行修复插件</source>
-        <oldsource>换行修复插件，默认开启为 run 阶段</oldsource>
         <translation>Text linebreak fixing plugin</translation>
     </message>
 </context>
@@ -3491,7 +3444,6 @@ Cache: %4</translation>
     <message>
         <location line="+15"/>
         <source>文本插件设置</source>
-        <oldsource>预处理插件设置</oldsource>
         <translation>Text plugin settings</translation>
     </message>
     <message>
@@ -3518,7 +3470,6 @@ Cache: %4</translation>
     <message>
         <location line="+23"/>
         <source>%1 不符合 toml 规范</source>
-        <oldsource> 不符合 toml 规范</oldsource>
         <translation>%1 is invalid TOML</translation>
     </message>
     <message>
@@ -3532,7 +3483,6 @@ Cache: %4</translation>
     <message>
         <location filename="ProjectCachePage.cpp" line="+34"/>
         <source>缓存管理</source>
-        <oldsource>缓存与问题</oldsource>
         <translation>Cache</translation>
     </message>
     <message>
@@ -3564,7 +3514,6 @@ Cache: %4</translation>
     <message>
         <location line="-12"/>
         <source>已保存 %1</source>
-        <oldsource>已保存 </oldsource>
         <translation>Saved %1</translation>
     </message>
     <message>
@@ -3575,7 +3524,6 @@ Cache: %4</translation>
     <message>
         <location line="+31"/>
         <source>已保存 %1 个缓存文件</source>
-        <oldsource> 个缓存文件</oldsource>
         <translation>Saved %1 cache files</translation>
     </message>
     <message>
@@ -3597,13 +3545,11 @@ Cache: %4</translation>
     <message>
         <location line="-367"/>
         <source>确定要删除选中的 %1 个缓存文件吗？</source>
-        <oldsource>确定要删除选中的 </oldsource>
         <translation>Delete %1 selected cache files?</translation>
     </message>
     <message>
         <location line="+21"/>
         <source>已删除 %1 个缓存文件</source>
-        <oldsource>已删除 </oldsource>
         <translation>Deleted %1 cache files</translation>
     </message>
     <message>
@@ -3768,7 +3714,6 @@ Cache: %4</translation>
     <message>
         <location line="+8"/>
         <source>确定要删除选中的 %1 个缓存条目吗？</source>
-        <oldsource> 个缓存条目吗？</oldsource>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
@@ -3779,7 +3724,6 @@ Cache: %4</translation>
     <message>
         <location filename="ProjectCachePageEntries.cpp" line="+105"/>
         <source>translated_view_text（只读）</source>
-        <oldsource>translated_preview（只读）</oldsource>
         <translation>translated_preview (read-only)</translation>
     </message>
     <message>
@@ -3810,7 +3754,6 @@ Cache: %4</translation>
     <message>
         <location line="+1"/>
         <source>translated_raw_text（译文，可编辑）</source>
-        <oldsource>pre_translated_text（译文，可编辑）</oldsource>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
@@ -3857,7 +3800,6 @@ Cache: %4</translation>
     <message>
         <location line="+37"/>
         <source>缓存文件不是 JSON 数组: %1</source>
-        <oldsource>缓存文件不是 JSON 数组: </oldsource>
         <translation>Cache is not a JSON array: %1</translation>
     </message>
     <message>
@@ -3915,7 +3857,6 @@ Cache: %4</translation>
         <location filename="ProjectCachePageFiles.cpp" line="+33"/>
         <source>解析缓存失败: %1
 %2</source>
-        <oldsource>解析缓存失败: </oldsource>
         <translation>Failed to parse cache: %1
 %2</translation>
     </message>
@@ -3923,7 +3864,6 @@ Cache: %4</translation>
         <location line="+15"/>
         <source>写入缓存失败: %1
 %2</source>
-        <oldsource>写入缓存失败: </oldsource>
         <translation>Cache write failed: %1
 %2</translation>
     </message>
@@ -4085,7 +4025,6 @@ Cache: %4</translation>
         <location line="-62"/>
         <location line="+68"/>
         <source>缓存管理</source>
-        <oldsource>缓存与问题</oldsource>
         <translation>Cache</translation>
     </message>
     <message>
@@ -4143,7 +4082,6 @@ Cache: %4</translation>
     <message>
         <location line="-13"/>
         <source>项目 %1 的提示词配置文件不符合标准。</source>
-        <oldsource> 的提示词配置文件不符合标准。</oldsource>
         <translation>Project %1 prompt config is invalid.</translation>
     </message>
     <message>
@@ -4157,7 +4095,7 @@ Cache: %4</translation>
         <translation>Prompt file not found</translation>
     </message>
     <message>
-        <location line="+50"/>
+        <location line="+49"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
@@ -4175,16 +4113,6 @@ Cache: %4</translation>
         <location line="+1"/>
         <source>Agent 系统</source>
         <translation>Agent system</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>高级 Agent 用户</source>
-        <translation>Advanced Agent user</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>高级 Agent 系统</source>
-        <translation>Advanced Agent system</translation>
     </message>
 </context>
 <context>
@@ -4258,7 +4186,7 @@ Cache: %4</translation>
         <translation>Get</translation>
     </message>
     <message>
-        <location filename="ApiSettingsPage.cpp" line="-178"/>
+        <location filename="ApiSettingsPage.cpp" line="-179"/>
         <location line="+7"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
@@ -4353,7 +4281,6 @@ Issue summary:</translation>
         <location line="-57"/>
         <source>[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。
 </source>
-        <oldsource>[GUI] 日志窗口缓存超过 5MB，有旧缓存被丢弃。完整日志请查看项目 logs/*.log。</oldsource>
         <translation>[GUI] Log cache exceeded 5MB; old entries dropped. Full logs: logs/*.log.</translation>
     </message>
     <message>
@@ -4378,7 +4305,6 @@ Issue summary:</translation>
         <location line="+34"/>
         <location line="+24"/>
         <source>继续输出(%1)</source>
-        <oldsource>继续输出</oldsource>
         <translation>Resume (%1)</translation>
     </message>
     <message>
@@ -4407,7 +4333,7 @@ Issue summary:</translation>
         <translation>Translation mode:</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+23"/>
         <source>开始翻译</source>
         <translation>Start translating</translation>
     </message>
@@ -4429,13 +4355,11 @@ Issue summary:</translation>
     <message>
         <location line="+5"/>
         <source>问题概览尚未导入</source>
-        <oldsource>检测到问题概览被修改但未导入</oldsource>
         <translation>Problem overview not imported</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>检测到 %1 被修改但未导入。是否继续翻译？</source>
-        <oldsource>检测到 %1 被修改但未导入。是否确定继续翻译？</oldsource>
         <translation>%1 was modified but has not been imported. Continue translating?</translation>
     </message>
     <message>
@@ -4449,7 +4373,7 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-460"/>
+        <location line="-461"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
@@ -4459,7 +4383,7 @@ Issue summary:</translation>
         <translation>File plugin:</translation>
     </message>
     <message>
-        <location line="+154"/>
+        <location line="+155"/>
         <source>文件格式错误</source>
         <translation>File format error</translation>
     </message>
@@ -4506,7 +4430,6 @@ Issue summary:</translation>
         <location line="+8"/>
         <location line="+2"/>
         <source>生成完成</source>
-        <oldsource>项目 </oldsource>
         <translation>Project </translation>
     </message>
     <message>
@@ -4671,7 +4594,6 @@ Issue summary:</translation>
     <message>
         <location line="+1"/>
         <source>MeCab中文词典需手动下载</source>
-        <oldsource>MeCab词典需手动下载</oldsource>
         <translation>Download MeCab Chinese dictionary manually</translation>
     </message>
     <message>
@@ -4714,14 +4636,12 @@ Issue summary:</translation>
     <message>
         <location line="+64"/>
         <source>可能可以获得更好的换行效果，其中 pkuseg 的安装需要电脑上有 MS C++ Build Tools</source>
-        <oldsource>可能可以获得更好的换行效果，其中 pkuseg 需要电脑上有 MS C++ Build Tools</oldsource>
         <translation>May get better performance (installing pkuseg needs MS C++ Build Tools on your PC)</translation>
     </message>
     <message>
         <location line="+72"/>
         <location line="+24"/>
         <source>打开模型列表网页</source>
-        <oldsource>浏览模型目录</oldsource>
         <translation>Browse model contents</translation>
     </message>
     <message>
@@ -4777,7 +4697,6 @@ Issue summary:</translation>
     <message>
         <location line="+1"/>
         <source> · 当前文件: %1</source>
-        <oldsource> · 当前文件: </oldsource>
         <translation> · Current file: %1</translation>
     </message>
     <message>
@@ -4788,7 +4707,6 @@ Issue summary:</translation>
     <message>
         <location line="+8"/>
         <source>已筛选文件: %1</source>
-        <oldsource>已筛选文件: </oldsource>
         <translation>Filtered files: %1</translation>
     </message>
     <message>
@@ -4807,37 +4725,31 @@ Issue summary:</translation>
     <message>
         <location filename="TranslatorWorker.cpp" line="+218"/>
         <source>[GalTransl++ 系统错误] %1</source>
-        <oldsource>[系统错误] %1</oldsource>
         <translation>[GalTransl++ System] %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>[GalTransl++ 参数错误] %1</source>
-        <oldsource>[参数错误] %1</oldsource>
         <translation>[GalTransl++ Arg] %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>[GalTransl++ 运行时错误] %1</source>
-        <oldsource>[运行时错误] %1</oldsource>
         <translation>[GalTransl++ Runtime] %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>[GalTransl++ 标准错误] %1</source>
-        <oldsource>[标准错误] %1</oldsource>
         <translation>[GalTransl++ Std] %1</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>[GalTransl++ 未知错误]</source>
-        <oldsource>[未知错误]</oldsource>
         <translation>[GalTransl++ Unknown]</translation>
     </message>
     <message>
         <location line="+5"/>
         <source>[GalTransl++ info] 翻译任务%1。</source>
-        <oldsource>翻译任务%1。</oldsource>
         <translation>[GalTransl++ info] Translation task %1.</translation>
     </message>
     <message>

@@ -148,9 +148,10 @@
 <p>读取 json 时主要关注两个键，分别为 <code>name</code> (有时是 <code>names</code>) 和 <code>message</code>，不同的翻译模式 (<code>transEngine</code>) 就是对这两个键进行各种不同的处理：</p>
 <h4>翻译模式 (transEngine)</h4>
 <ul>
-<li><strong><code># ForGalTsv</code></strong>: 实际翻译模式，向 AI 输入 TSV 格式的句子 (包含 <code>name</code> 和 <code>message</code>) 并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。</li>
-<li><strong><code># ForNovelTsv</code></strong>: 实际翻译模式，和 <code>ForGalTsv</code> 的区别主要是变动提示词，向 AI 输入和解析的时候都不带 <code>name</code> 键。</li>
-<li><strong><code># ForGalJson</code></strong>: 实际翻译模式，向 AI 输入 json 格式的句子 (包含 <code>name</code> 和 <code>message</code> ) 并要求 AI 以 json 格式回复，程序将解析返回的 JSON。</li>
+<li><strong><code># ForGalJson</code></strong>: 使用 JSONLINE 输入和输出，每行包含 <code>id</code>、<code>src</code> 及可选的 <code>name</code>，译文将 <code>src</code> 改为 <code>dst</code>。</li>
+<li><strong><code># ForNovelJson</code></strong>: 和 <code>ForGalJson</code> 的区别是输入不带 <code>name</code>，使用小说翻译提示词。</li>
+<li><strong><code># ForGalTsv</code></strong>: 使用 TSV 输入和输出，包含姓名、正文和句子 ID。</li>
+<li><strong><code># ForNovelTsv</code></strong>: 和 <code>ForGalTsv</code> 的区别是输入不带姓名列，使用小说翻译提示词。</li>
 <li><strong><code># Sakura</code></strong>: 实际翻译模式，向 AI 输入自然语言形式的句子 (包含 <code>name</code> 和 <code>message</code> )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。</li>
 <li><strong><code># DumpName</code></strong>: 提取所有的 <code>name</code> 键，在项目文件夹下生成 <code>NameTable.toml</code> 以供统一替换人名 (已有则仅更新)。</li>
 <li><strong><code># NameTrans</code></strong>: 翻译人名表 (如果没有则先 Dump)。</li>

@@ -135,76 +135,6 @@ json NormalJsonTranslatorTransAgent::loadFileNote(const fs::path& targetRelPath)
     return fileNote;
 }
 
-// 解析翻译 Agent 的 JSON 文本协议。
-TransAgentProtocolResponse NormalJsonTranslatorTransAgent::parseProtocolResponse(const std::string& content) const {
-    TransAgentProtocolResponse result;
-    const std::optional<json> payloadOpt = tryParseAgentCommonJsonEnvelope(content);
-    if (!payloadOpt.has_value() || !payloadOpt->is_object()) {
-        throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.parseProtocolResponse",
-            "翻译 Agent 响应不是合法 JSON 对象")
-            .toStdString());
-    }
-
-    const json& payload = *payloadOpt;
-    result.action = payload.value("action", "");
-    result.calls = parseAgentCommonToolCallRequests(payload);
-    if (result.action.empty()) {
-        throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.parseProtocolResponse",
-            "翻译 Agent 响应缺少动作字段")
-            .toStdString());
-    }
-    if (result.action == "tool_calls" && result.calls.empty()) {
-        throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.parseProtocolResponse",
-            "翻译 Agent 返回了空工具调用")
-            .toStdString());
-    }
-    if (result.action != "tool_calls" && result.action != "compact_context" && result.action != "commit") {
-        throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.parseProtocolResponse",
-            "翻译 Agent 返回未知动作: %1")
-            .arg(result.action)
-            .toStdString());
-    }
-    if (const auto it = payload.find("translations"); it != payload.end() && it->is_array()) {
-        result.translations = *it;
-    }
-    if (const auto it = payload.find("term_updates"); it != payload.end() && it->is_array()) {
-        result.termUpdates = json::array();
-        for (const auto& update : *it) {
-            if (!update.is_object()) {
-                continue;
-            }
-            json normalized = update;
-            if (!normalized.contains("source_term")) {
-                if (const auto srcIt = normalized.find("src"); srcIt != normalized.end() && srcIt->is_string()) {
-                    normalized["source_term"] = *srcIt;
-                }
-                else if (const auto termIt = normalized.find("term"); termIt != normalized.end() && termIt->is_string()) {
-                    normalized["source_term"] = *termIt;
-                }
-            }
-            if (!normalized.contains("target_term")) {
-                if (const auto dstIt = normalized.find("dst"); dstIt != normalized.end() && dstIt->is_string()) {
-                    normalized["target_term"] = *dstIt;
-                }
-                else if (const auto transIt = normalized.find("translation"); transIt != normalized.end() && transIt->is_string()) {
-                    normalized["target_term"] = *transIt;
-                }
-            }
-            result.termUpdates.push_back(std::move(normalized));
-        }
-    }
-    if (const auto it = payload.find("agent_suggest"); it != payload.end() && it->is_array()) {
-        result.agentSuggestions = *it;
-    }
-    if (const auto it = payload.find("file_note_patch"); it != payload.end() && it->is_object()) {
-        result.fileNotePatch = *it;
-    }
-    if (const auto it = payload.find("rolling_context"); it != payload.end() && it->is_string()) {
-        it->get_to(result.rollingContext);
-    }
-    return result;
-}
-
 // 解析 Agent 建议目标。
 std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAgentSuggestTarget(const json& suggestion) const {
     if (!suggestion.is_object()) {
@@ -430,116 +360,11 @@ absl::flat_hash_map<int, json> NormalJsonTranslatorTransAgent::loadCacheDstMap(c
     return cacheMap;
 }
 
-// 执行模型请求的工具调用序列。
-NormalJsonTranslatorTransAgent::TransAgentToolCallResult NormalJsonTranslatorTransAgent::executeToolCalls(
-    const fs::path& relInputPath,
-    const std::vector<AgentCommonToolCallRequest>& calls,
-    bool collectDetail
-) {
-    TransAgentToolCallResult executionResult;
-    executionResult.summary = formatAgentCommonToolCallDetails(calls);
-    for (const auto& call : calls) {
-        json result = { {"id", call.id}, {"name", call.name} };
-        try {
-            result["result"] = runReadTool(relInputPath, call.name, call.arguments);
-        }
-        catch (const std::exception& e) {
-            // 单个工具失败也按调用 id 回填，其他工具仍继续执行。
-            result["result"] = {{"error", e.what()}};
-        }
-        executionResult.results.push_back(std::move(result));
-    }
-    if (collectDetail) {
-        executionResult.detail = gppTr(
-            "NormalJsonTranslatorTransAgent.executeToolCalls",
-            "工具返回结果:\n%1")
-            .arg(executionResult.results.dump(2))
-            .toStdString();
-    }
-    return executionResult;
-}
-
-// 解析一轮响应并执行对应动作；失败时把错误交给外层重新请求当前轮次。
-std::expected<NormalJsonTranslatorTransAgent::TransAgentTurnResult, std::string> NormalJsonTranslatorTransAgent::parseAndApplyTurnResponse(
-    const fs::path& relInputPath,
-    std::span<Sentence*> pending,
-    std::string& rollingContext,
-    json& messages,
-    const std::string& content,
-    const std::string& modelName,
-    const std::string& batchIndexLog,
-    int turn,
-    int requestCount,
-    int threadId
-) {
-    try {
-        const TransAgentProtocolResponse protocol = parseProtocolResponse(content);
-        if (protocol.action == "tool_calls") {
-            const TransAgentToolCallResult toolCallResult = executeToolCalls(
-                relInputPath,
-                protocol.calls,
-                m_logger->should_log(spdlog::level::debug)
-            );
-            if (!toolCallResult.detail.empty()) {
-                m_logger->debug(gppTr(
-                    "NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
-                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 工具调用明细:\n%6")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(turn + 1)
-                    .arg(requestCount + 1)
-                    .arg(toolCallResult.detail)
-                    .toStdString());
-            }
-            messages.push_back({ {"role", "assistant"}, {"content", content} });
-            messages.push_back({
-                {"role", "user"},
-                {"content", "Tool results:\n```json\n" + toolCallResult.results.dump() + "\n```"}
-            });
-            return TransAgentTurnResult{
-                .action = TransAgentTurnResult::Action::ContinueTurn,
-                .summary = gppTr(
-                    "NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
-                    "执行工具调用 %1 个，进入下一轮。调用概览:\n%2")
-                    .arg(protocol.calls.size())
-                    .arg(toolCallResult.summary)
-                    .toStdString()
-            };
-        }
-
-        if (protocol.action == "compact_context") {
-            rollingContext = protocol.rollingContext.empty() ? content : protocol.rollingContext;
-            messages = buildBaseMessages(relInputPath, pending, rollingContext);
-            return TransAgentTurnResult{
-                .action = TransAgentTurnResult::Action::ContinueTurn,
-                .summary = gppTr(
-                    "NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
-                    "完成上下文压缩，进入下一轮")
-                    .toStdString()
-            };
-        }
-
-        std::string commitResultLog;
-        int recordedTermUpdateCount = 0;
-        int recordedSuggestionCount = 0;
-        const int committedCount = applyCommit(relInputPath, pending, rollingContext, threadId, protocol,
-            modelName, batchIndexLog, turn, requestCount, commitResultLog, recordedTermUpdateCount, recordedSuggestionCount);
-        return TransAgentTurnResult{
-            .action = TransAgentTurnResult::Action::CompleteBatch,
-            .summary = gppTr(
-                "NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
-                "该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:\n%4")
-                .arg(committedCount)
-                .arg(recordedTermUpdateCount)
-                .arg(recordedSuggestionCount)
-                .arg(limitLogLines(commitResultLog, m_inputBlockMaxLines))
-                .toStdString()
-        };
-    }
-    catch (const std::exception& e) {
-        return std::unexpected(std::string(e.what()));
-    }
+// Agent 按翻译格式构造输入；小说格式不包含姓名。
+std::string NormalJsonTranslatorTransAgent::buildInputBlock(std::span<Sentence*> pending) const {
+    std::string inputBlock;
+    fillBlockAndMap(pending, inputBlock, m_transEngine);
+    return inputBlock;
 }
 
 // 构造 Agent 开始请求前写入日志的可读诊断块。
@@ -548,8 +373,7 @@ std::string NormalJsonTranslatorTransAgent::buildLogBlock(
     std::span<Sentence*> pending,
     const std::string& rollingContext
 ) {
-    std::string inputBlock;
-    fillBlockAndMap(pending, inputBlock, m_transEngine);
+    const std::string inputBlock = buildInputBlock(pending);
 
     const std::string inputProblems = buildProblemSummary(pending);
     const std::string glossary = buildGlossary(pending);
@@ -576,60 +400,38 @@ std::string NormalJsonTranslatorTransAgent::buildLogBlock(
     return logBlock;
 }
 
-// 构造当前 chunk 和滚动上下文对应的模型 messages。
-json NormalJsonTranslatorTransAgent::buildBaseMessages(
+// 构造当前批次的用户提示词；摘要仅用于筛选相关术语，不直接注入。
+std::string NormalJsonTranslatorTransAgent::buildUserPrompt(
     const fs::path& relInputPath,
     std::span<Sentence*> pending,
     const std::string& rollingContext
 ) {
-    std::string inputBlock;
-    fillBlockAndMap(pending, inputBlock, m_transEngine);
+    const std::string inputBlock = buildInputBlock(pending);
     const std::string inputProblems = buildProblemSummary(pending);
     const std::string glossary = buildGlossary(pending);
     const json currentFileNote = loadFileNote(relInputPath);
     const std::string knownTerms = buildTermLedgerExcerpt(loadTermLedger(), inputBlock, rollingContext, currentFileNote);
-    constexpr std::string_view schemaDescription =
-        "{"
-        "\"schema\":\"gpp-agent-v1\","
-        "\"action\":\"tool_calls|commit|compact_context\","
-        "\"calls\":[],"
-        "\"translations\":[],"
-        "\"term_updates\":[],"
-        "\"agent_suggest\":[],"
-        "\"file_note_patch\":{},"
-        "\"rolling_context\":\"\""
-        "}";
-
-    std::string systemPrompt = m_agentSystemPrompt;
-    std::string userPrompt = m_agentUserPrompt;
-    // 普通 Agent 的 SYSTEM 与 USER 共用占位符；高级会话只追加这里生成的 USER 批次数据。
-    for (std::string* prompt : {&systemPrompt, &userPrompt}) {
-        replaceStrInplace(*prompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
-        replaceStrInplace(*prompt, "[AgentChunkIdRange]", std::format("{}-{}", pending.front()->index, pending.back()->index));
-        replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
-        replaceStrInplace(*prompt, "[AgentTargetLang]", m_targetLang);
-        replaceStrInplace(*prompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
-        replaceStrInplace(*prompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
-        replaceStrInplace(*prompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump());
-        replaceStrInplace(*prompt, "[AgentRollingContext]", rollingContext.empty() ? "None" : rollingContext);
-        replaceStrInplace(*prompt, "[AgentKnownTerms]", knownTerms);
-        replaceStrInplace(*prompt, "[AgentCurrentChunkTsv]", inputBlock);
-        replaceStrInplace(*prompt, "[AgentSchemaDescription]", schemaDescription);
-    }
-
-    return json::array({
-        {{"role", "system"}, {"content", systemPrompt}},
-        {{"role", "user"}, {"content", userPrompt}}
-    });
+    std::string prompt = m_agentUserPrompt;
+    replaceStrInplace(prompt, "[AgentCurrentFile]", wide2Ascii(relInputPath));
+    replaceStrInplace(prompt, "[AgentChunkIdRange]", std::format("{}-{}", pending.front()->index, pending.back()->index));
+    replaceStrInplace(prompt, "[TargetLang]", m_targetLang);
+    replaceStrInplace(prompt, "[AgentTargetLang]", m_targetLang);
+    replaceStrInplace(prompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
+    replaceStrInplace(prompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
+    replaceStrInplace(prompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump());
+    replaceStrInplace(prompt, "[AgentKnownTerms]", knownTerms);
+    replaceStrInplace(prompt,
+        m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv
+            ? "[AgentCurrentChunkTsv]" : "[AgentCurrentChunkJson]", inputBlock);
+    return prompt;
 }
 
 // 校验 Agent 提交结果，并应用句子译文、术语账本、文件备注和 Agent 建议副作用。
 int NormalJsonTranslatorTransAgent::applyCommit(
     const fs::path& relInputPath,
     std::span<Sentence*> pending,
-    std::string& rollingContext,
     int threadId,
-    const TransAgentProtocolResponse& protocol,
+    const json& arguments,
     const std::string& modelName,
     const std::string& batchIndexLog,
     int turn,
@@ -642,7 +444,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
     recordedSuggestionCount = 0;
 
     absl::flat_hash_map<int, json> translationMap;
-    for (const auto& item : protocol.translations) {
+    for (const auto& item : arguments.at("translations")) {
         if (!item.is_object()) {
             continue;
         }
@@ -697,31 +499,27 @@ int NormalJsonTranslatorTransAgent::applyCommit(
         ++committedCount;
     }
 
-    if (!protocol.rollingContext.empty()) {
-        rollingContext = protocol.rollingContext;
-    }
-
     const absl::flat_hash_set<int> currentChunkIds = pending
         | std::views::transform([](Sentence* se) { return se->index; })
         | std::ranges::to<absl::flat_hash_set<int>>();
-    auto addSuggestionFunc = [&](const fs::path& file, int id, const std::string& problem)
+    auto addSuggestionFunc = [&](const fs::path& file, int id, const std::string& suggestion)
         {
-            std::vector<std::string>& problems = m_agentSuggestions[file][id];
-            if (!std::ranges::contains(problems, problem)) {
-                problems.push_back(problem);
+            std::vector<std::string>& suggestions = m_agentSuggestions[file][id];
+            if (!std::ranges::contains(suggestions, suggestion)) {
+                suggestions.push_back(suggestion);
                 ++recordedSuggestionCount;
             }
         };
 
     try {
         std::lock_guard<std::mutex> lock(m_stateMutex);
-        if (!protocol.termUpdates.empty()) {
-            for (const auto& updateItem : protocol.termUpdates) {
+        if (!arguments.at("term_updates").empty()) {
+            for (const auto& updateItem : arguments.at("term_updates")) {
                 if (!updateItem.is_object()) {
                     continue;
                 }
-                const std::string sourceTerm = updateItem.value("source_term", "");
-                const std::string targetTerm = updateItem.value("target_term", "");
+                const std::string sourceTerm = updateItem.value("src", "");
+                const std::string targetTerm = updateItem.value("dst", "");
                 if (sourceTerm.empty() || targetTerm.empty()) {
                     continue;
                 }
@@ -772,7 +570,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
             atomicOutputFile(m_agentTermLedgerPath, m_termLedgerCache.dump(2));
         }
 
-        for (const auto& suggestionItem : protocol.agentSuggestions) {
+        for (const auto& suggestionItem : arguments.at("agent_suggest")) {
             const auto target = parseAgentSuggestTarget(suggestionItem);
             if (!target.has_value()) {
                 continue;
@@ -798,7 +596,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
 
     try {
         json fileNote = loadFileNote(relInputPath);
-        mergeFileNotePatch(fileNote, protocol.fileNotePatch);
+        mergeFileNotePatch(fileNote, arguments.at("file_note_patch"));
         fileNote["updated_at"] = currentTimestampString();
         std::lock_guard<std::mutex> lock(m_fileNotesMutex);
         atomicOutputFile(m_agentFileNotesDir / relInputPath, fileNote.dump(2));
@@ -820,297 +618,6 @@ int NormalJsonTranslatorTransAgent::applyCommit(
     return committedCount;
 }
 
-
-// 执行一个翻译 chunk 的完整 Agent 工作流。
-bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
-    int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
-{
-    if (m_advancedEnabled) return translateAdvancedBatch(relInputPath, batch, rollingContext, threadId, batchIndex);
-    // 智能体模式复用外层批次调度，但单个分块内可能进行多轮交互：
-    // 先发起工具调用，再按需压缩上下文，最后提交通过校验的 `commit`。
-    //
-    // 流程导览（示例）：
-    // 1. 构造时已经把 gt_input/chapter01.json 解析成 AgentCommonSourceFileView：
-    //    lines[20] == { id:20, speaker:"アリス", sourceText:"おはよう" }。
-    //    list_files 的 lines 就来自 sourceView.lines.size()，search/read 工具都读这份只读视图。
-    // 2. processFile() 按 m_batchSize 把待翻译句子切成 chunk；例如当前 chunk 是 id 20-39。
-    //    本函数只处理这个 chunk，外层文件内 batch 仍然顺序执行，rollingContext 负责传入/带出滚动上下文。
-    // 3. buildAgentBaseMessages() 把当前 chunk TSV、file_note、term_ledger 摘要、rollingContext 和工具说明拼成 messages。
-    // 4. 模型可以先返回 tool_calls：
-    //    { "action":"tool_calls", "calls":[
-    //      { "name":"list_files", "arguments":{"offset":0,"limit":20} },
-    //      { "name":"read_source", "arguments":{"file":"chapter01.json","offset":40,"limit":5,"fields":["name","src"]} },
-    //      { "name":"search_terms", "arguments":{"query":"アリス","limit":5,"fields":["src","dst"]} }
-    //    ] }
-    //    executeToolCalls() 会同步执行这些只读工具，把结果作为新的 user message 回填给下一轮模型。
-    // 5. 模型最终必须返回 commit：
-    //    { "action":"commit", "translations":[{"id":20,"translation":"早上好"}],
-    //      "term_updates":[{"source_term":"アリス","target_term":"爱丽丝","line_ids":[20]}],
-    //      "file_note_patch":{"summary":"..."},"rolling_context":"..." }
-    //    translations 的 id 可以是数字或数字字符串；它和 sourceView.lines 的 id、list_files 的 lines 范围、
-    //    read_source.ids / search result id 都在同一个翻译索引空间内；offset 是分页位置。
-    //    term_updates 写入共享 term_ledger；file_note_patch 合并到 file_notes/chapter01.json；
-    //    rolling_context 更新 rollingContext。
-    // 6. 若某个 term 的 target_term 变化，applyCommit() 会基于 term_ledger 里已有 occurrences
-    //    给受影响句子的缓存追加 Agent 建议，供后续人工检查或流程处理。
-    for (Sentence* se : batch) {
-        if (se->preproc.empty()) {
-            se->transCompleted = true;
-        }
-    }
-
-    bool retryExhausted = false;
-    const std::string batchIndexLog = recursionCount == 0
-        ? std::format("{}", batchIndex)
-        : std::format("{}-({}/{})", batchIndex, recursionIndex, recursionCount);
-
-    std::vector<Sentence*> pending = collectPendingSentences(batch);
-    if (pending.empty()) {
-        return true;
-    }
-    std::span<Sentence*> pendingSpan(pending);
-    json messages = buildBaseMessages(relInputPath, pendingSpan, rollingContext);
-
-    const std::string logBlock = buildLogBlock(relInputPath, pendingSpan, rollingContext);
-    m_logger->info(gppTr(
-        "NormalJsonTranslatorTransAgent.translateBatch",
-        "[线程 %1] [文件 %2] [批次 %3] Agent 开始翻译，最多 %4 轮，共 %5 句:\n%6")
-        .arg(threadId)
-        .arg(wide2Ascii(relInputPath))
-        .arg(batchIndexLog)
-        .arg(m_agentMaxTurnsPerChunk)
-        .arg(pending.size())
-        .arg(logBlock)
-        .toStdString());
-
-    int turn = 0;
-    int requestCount = 0;
-    for (; turn < m_agentMaxTurnsPerChunk; ++turn) {
-        requestCount = 0;
-        bool turnCompleted = false;
-        size_t messageBytes = approximateAgentCommonMessagesBytes(messages);
-        if (messageBytes > (size_t)m_agentCompactContextThresholdBytes) {
-            m_logger->info(gppTr(
-                "NormalJsonTranslatorTransAgent.translateBatch",
-                "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 上下文接近上限，要求模型先压缩上下文")
-                .arg(threadId)
-                .arg(wide2Ascii(relInputPath))
-                .arg(batchIndexLog)
-                .arg(turn + 1)
-                .toStdString());
-            messages.push_back({
-                {"role", "user"},
-                {"content", "Context exceeded the compact context threshold. Return a compact_context action only. Do not call tools or commit in this turn."}
-            });
-            messageBytes = approximateAgentCommonMessagesBytes(messages);
-        }
-
-        while (requestCount < m_maxRequestCount) {
-            if (m_controller->shouldStop()) {
-                return false;
-            }
-
-            pending = collectPendingSentences(batch);
-            if (pending.empty()) {
-                return true;
-            }
-            pendingSpan = std::span<Sentence*>(pending);
-
-            if (m_smartRetry && requestCount == 2 && pending.size() > 1) {
-                m_logger->warn(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(requestCount + 1)
-                    .toStdString());
-
-                const size_t mid = pending.size() / 2;
-                const std::span<Sentence*> firstHalf = pendingSpan.subspan(0, mid);
-                const std::span<Sentence*> secondHalf = pendingSpan.subspan(mid);
-
-                recursionCount += 2;
-                ++recursionIndex;
-                const bool firstOk = translateBatch(
-                    relInputPath, firstHalf, rollingContext,
-                    recursionIndex, recursionCount, threadId, batchIndex);
-                ++recursionIndex;
-                const bool secondOk = translateBatch(
-                    relInputPath, secondHalf, rollingContext,
-                    recursionIndex, recursionCount, threadId, batchIndex);
-                return firstOk && secondOk;
-            }
-            if (m_smartRetry && requestCount == 3) {
-                m_logger->warn(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(requestCount + 1)
-                    .toStdString());
-                rollingContext.clear();
-                messages = buildBaseMessages(relInputPath, pendingSpan, rollingContext);
-                messageBytes = approximateAgentCommonMessagesBytes(messages);
-            }
-
-            const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
-            if (!apiOpt.has_value()) {
-                throw std::runtime_error(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "没有可用的 Api key 了")
-                    .toStdString());
-            }
-            const TranslationApi& currentApi = apiOpt.value();
-
-            json payload = { {"messages", messages} };
-            if (m_enhanceJailbreak) {
-                payload["messages"].push_back({{"role", "assistant"}, {"content", "```json\n"}});
-            }
-
-            m_logger->info(gppTr(
-                "NormalJsonTranslatorTransAgent.translateBatch",
-                "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 开始请求，剩余 %6 句，上下文 %7 字节")
-                .arg(threadId)
-                .arg(wide2Ascii(relInputPath))
-                .arg(batchIndexLog)
-                .arg(turn + 1)
-                .arg(requestCount + 1)
-                .arg(pending.size())
-                .arg(messageBytes)
-                .toStdString());
-
-            ApiResponse response = performApiRequest(payload, currentApi, m_onPerformApi, m_controller, m_logger,
-                threadId, m_apiTimeOutMs);
-
-            if (!response.content) {
-                const std::string errorLogPrefix = gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5]")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(turn + 1)
-                    .arg(requestCount + 1)
-                    .toStdString();
-                handleApiError(
-                    response.content.error(), m_apiPool, currentApi, errorLogPrefix, relInputPath,
-                    m_apiStrategy, m_controller, m_logger, requestCount, m_checkQuota);
-                continue;
-            }
-            if (m_logger->should_log(spdlog::level::trace)) {
-                m_logger->trace(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 成功响应，响应内容:\n%6")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(turn + 1)
-                    .arg(requestCount + 1)
-                    .arg(response.content.value())
-                    .toStdString());
-            }
-
-            std::expected<TransAgentTurnResult, std::string> turnResult = parseAndApplyTurnResponse(
-                relInputPath,
-                pendingSpan,
-                rollingContext,
-                messages,
-                response.content.value(),
-                makeTransby(currentApi.apikey, currentApi.modelName),
-                batchIndexLog,
-                turn,
-                requestCount,
-                threadId
-            );
-            if (turnResult.has_value()) {
-                m_logger->info(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理成功，处理结果:\n%6")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(turn + 1)
-                    .arg(requestCount + 1)
-                    .arg(turnResult->summary)
-                    .toStdString());
-
-                if (turnResult->action == TransAgentTurnResult::Action::CompleteBatch) {
-                    return true;
-                }
-            }
-            else {
-                m_logger->warn(gppTr(
-                    "NormalJsonTranslatorTransAgent.translateBatch",
-                    "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 响应处理失败，错误: %6，响应内容:\n%7")
-                    .arg(threadId)
-                    .arg(wide2Ascii(relInputPath))
-                    .arg(batchIndexLog)
-                    .arg(turn + 1)
-                    .arg(requestCount + 1)
-                    .arg(turnResult.error())
-                    .arg(limitLogLines(response.content.value(), m_inputBlockMaxLines))
-                    .toStdString());
-                m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
-                    .kind = "agent",
-                    .level = "warning",
-                    .message = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "Agent 响应处理失败: %1")
-                        .arg(turnResult.error())
-                        .toStdString(),
-                    .filename = wide2Ascii(relInputPath),
-                    .indexRange = std::format("{}-{}", pending.front()->index, pending.back()->index),
-                    .requestCount = requestCount + 1,
-                    .model = makeTransby(currentApi.apikey, currentApi.modelName),
-                    .sleepSeconds = -1.0
-                });
-                ++requestCount;
-                continue;
-            }
-
-            turnCompleted = true;
-            break;
-        }
-
-        if (!turnCompleted) {
-            retryExhausted = true;
-            break;
-        }
-    }
-
-    size_t failedCount = 0;
-    for (Sentence* se : batch | std::views::filter([](Sentence* se_) { return !se_->transCompleted; })) {
-        ++failedCount;
-        se->transraw = "(Failed to translate)" + se->preproc;
-        se->transCompleted = true;
-    }
-    if (!retryExhausted) {
-        m_logger->error(gppTr(
-            "NormalJsonTranslatorTransAgent.translateBatch",
-            "[线程 %1] [文件 %2] [批次 %3] Agent 因超过最大轮数 (%4 轮) 而失败，共翻译 (%5 / %6) 句")
-            .arg(threadId)
-            .arg(wide2Ascii(relInputPath))
-            .arg(batchIndexLog)
-            .arg(m_agentMaxTurnsPerChunk)
-            .arg(batch.size() - failedCount)
-            .arg(batch.size())
-            .toStdString());
-    }
-    else {
-        m_logger->error(gppTr(
-            "NormalJsonTranslatorTransAgent.translateBatch",
-            "[线程 %1] [文件 %2] [批次 %3] [轮次 %4] Agent 在 %5 次请求后彻底失败，共翻译 (%6 / %7) 句")
-            .arg(threadId)
-            .arg(wide2Ascii(relInputPath))
-            .arg(batchIndexLog)
-            .arg(turn + 1)
-            .arg(m_maxRequestCount)
-            .arg(batch.size() - failedCount)
-            .arg(batch.size())
-            .toStdString());
-    }
-    return false;
-}
 
 // 将 commit 中收集到的 Agent 建议写入翻译缓存。
 void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
@@ -1134,14 +641,12 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
             if (suggestionIt == suggestionsByIndex.end()) {
                 continue;
             }
-            if (!item.contains("problems") || !item["problems"].is_array()) {
-                item["problems"] = json::array();
-            }
-            for (const std::string& problem : suggestionIt->second) {
-                item["problems"].push_back(problem);
-                ++markedCount;
-                cacheChanged = true;
-            }
+            auto otherinfo = item.value("other_info", absl::btree_map<std::string, std::string>{});
+            otherinfo.insert_or_assign("gpp.agent.suggestion", suggestionIt->second
+                | std::views::join_with('\n') | std::ranges::to<std::string>());
+            item["other_info"] = std::move(otherinfo);
+            markedCount += (int)suggestionIt->second.size();
+            cacheChanged = true;
         }
 
         if (!cacheChanged) {
@@ -1155,7 +660,7 @@ void NormalJsonTranslatorTransAgent::applyAgentSuggestions() {
     if (markedCount > 0) {
         m_logger->info(gppTr(
             "NormalJsonTranslatorTransAgent.applyAgentSuggestions",
-            "Agent 已将 %1 条建议写入缓存问题")
+            "Agent 已将 %1 条建议写入缓存附加信息")
             .arg(markedCount)
             .toStdString());
     }

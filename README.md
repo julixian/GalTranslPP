@@ -54,9 +54,10 @@ GalTransl++ 目前无论处理哪种文件格式，最后都是统一化为 json
 
 #### 翻译模式 (transEngine)
 
-* **`# ForGalTsv`**: 实际翻译模式，向 AI 输入 TSV 格式的句子 (包含 `name` 和`message`) 并要求 AI 以 TSV 格式回复，程序将解析返回的 TSV，可能比 ForGalJson 模式更省 token 但破限效果可能更弱。
-* **`# ForNovelTsv`**: 实际翻译模式，和 `ForGalTsv` 的区别主要是变动提示词，向 AI 输入和解析的时候都不带 `name` 键。
-* **`# ForGalJson`**: 实际翻译模式，向 AI 输入 json 格式的句子 (包含 `name` 和 `message` ) 并要求 AI 以 json 格式回复，程序将解析返回的 JSON。
+* **`# ForGalJson`**: 使用 JSONLINE 输入和输出，每行包含 `id`、`src` 及可选的 `name`，译文将 `src` 改为 `dst`。
+* **`# ForNovelJson`**: 和 `ForGalJson` 的区别是输入不带 `name`，使用小说翻译提示词。
+* **`# ForGalTsv`**: 使用 TSV 输入和输出，包含姓名、正文和句子 ID。
+* **`# ForNovelTsv`**: 和 `ForGalTsv` 的区别是输入不带姓名列，使用小说翻译提示词。
 * **`# Sakura`**: 实际翻译模式，向 AI 输入自然语言形式的句子 (包含 `name` 和 `message` )，由于 Sakura 是翻译特化模型，不必要求即会返回同样形式的的句子，程序解析返回的自然语言。
 * **`# DumpName`**: 提取所有的 `name` 键，在项目文件夹下生成 `NameTable.toml` 以供统一替换人名 (已有则仅更新)。
 * **`# NameTrans`**: 翻译人名表 (如果没有则先 Dump)。

@@ -136,12 +136,13 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             std::string assistantPrefill;
             switch (m_transEngine)
             {
+            case TransEngine::ForGalJson:
+            case TransEngine::ForNovelJson:
+                assistantPrefill = "```jsonline\n";
+                break;
             case TransEngine::ForGalTsv:
             case TransEngine::ForNovelTsv:
                 assistantPrefill = "```TSV\n";
-                break;
-            case TransEngine::ForGalJson:
-                assistantPrefill = "```jsonline\n";
                 break;
             default:
                 break;
@@ -164,6 +165,9 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
 
         const std::string relInputPathLog = wide2Ascii(relInputPath);
         if (!response.content) {
+            if (m_controller->shouldStop()) {
+                return false;
+            }
             const std::string errorLogPrefix = gppTr(
                 "NormalJsonTranslator.translateBatch",
                 "[线程 %1] [文件 %2] [批次 %3] [请求 %4]")

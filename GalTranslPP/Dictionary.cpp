@@ -61,6 +61,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
             switch (transEngine)
             {
             case TransEngine::ForGalJson:
+            case TransEngine::ForNovelJson:
                 promptContent += "| " + entry.org + " | " + entry.rep + " |";
                 if (!entry.note.empty()) {
                     promptContent += " " + entry.note;
@@ -101,6 +102,7 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
     switch (transEngine)
     {
     case TransEngine::ForGalJson:
+    case TransEngine::ForNovelJson:
         return "| Src | Dst(||Dst2||..) | Note |\n| --- | --- | --- |\n" + promptContent;
 
     case TransEngine::ForGalTsv:

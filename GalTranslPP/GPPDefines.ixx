@@ -98,14 +98,15 @@ struct Sentence {
 
 enum class TransEngine
 {
-    None, ForGalTsv, ForNovelTsv, ForGalJson, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
+    None, ForGalJson, ForNovelJson, ForGalTsv, ForNovelTsv, Sakura, DumpName, NameTrans, GenDict, Rebuild, ShowNormal
 };
 
 absl::btree_map<std::string_view, TransEngine> names2TransEngine =
 {
+    { "ForGalJson", TransEngine::ForGalJson },
+    { "ForNovelJson", TransEngine::ForNovelJson },
     { "ForGalTsv", TransEngine::ForGalTsv },
     { "ForNovelTsv", TransEngine::ForNovelTsv },
-    { "ForGalJson", TransEngine::ForGalJson },
     { "Sakura", TransEngine::Sakura },
     { "DumpName", TransEngine::DumpName },
     { "NameTrans", TransEngine::NameTrans },

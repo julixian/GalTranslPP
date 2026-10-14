@@ -512,7 +512,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 this->preProcess(se);
             }
         );
-        m_transAgent->configureAdvanced(m_agentAdvancedEnabled, m_threadsNum,
+        m_transAgent->configureWorkers(m_threadsNum,
             m_agentAllowPython, m_inputDir, m_outputDir);
     }
 

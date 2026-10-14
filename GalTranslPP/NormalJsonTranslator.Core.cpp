@@ -301,6 +301,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_repeatedBlockMinSize = toml::find_or(configData, "common", "repeatedBlock", "minSize", 5);
         m_cacheSearchDistance = toml::find_or(configData, "common", "split", "cacheSearchDistance", 5);
         m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
+        m_keepPreviousOtherInfo = toml::find_or(configData, "common", "keepPreviousOtherInfo", false);
         m_linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
         m_maxRequestCount = toml::find_or(configData, "common", "maxRequestCount", 4);
         m_inputBlockMaxLines = toml::find_or(configData, "common", "log", "inputBlockMaxLines", 10);
@@ -311,7 +312,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
         m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
         m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
-        m_agentAdvancedEnabled = toml::find_or(configData, "common", "agent", "advancedEnabled", false);
         m_agentAllowPython = toml::find_or(configData, "common", "agent", "allowPython", false);
         m_agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
         m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 400000);
@@ -332,8 +332,8 @@ void NormalJsonTranslator::normalJsonInit()
         }
         if (m_agentEnabled)
         {
-            if (m_transEngine != TransEngine::ForGalTsv &&
-                m_transEngine != TransEngine::ForNovelTsv)
+            if (m_transEngine != TransEngine::ForGalJson && m_transEngine != TransEngine::ForNovelJson &&
+                m_transEngine != TransEngine::ForGalTsv && m_transEngine != TransEngine::ForNovelTsv)
             {
                 m_agentEnabled = false;
                 m_logger->warn(gppTr(
@@ -473,7 +473,7 @@ void NormalJsonTranslator::normalJsonInit()
                     m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
                         "backend.apis[%1] 未找到 Api 协议字段，默认使用 OpenAI 协议").arg(apiIndex).toStdString());
                 }
-                if (m_agentEnabled && m_agentAdvancedEnabled && api.protocol == ApiProtocol::Gemini &&
+                if (m_agentEnabled && api.protocol == ApiProtocol::Gemini &&
                     apiTbl.contains("agentGeminiInteractions") && apiTbl.at("agentGeminiInteractions").as_boolean()) {
                     api.protocol = ApiProtocol::GeminiInterAction;
                 }
@@ -502,6 +502,7 @@ void NormalJsonTranslator::normalJsonInit()
                 if (apiTbl.contains("agentCompactThresholdTokens")) api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
                 api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
                 api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
+                api.fastPause = apiTbl.contains("fastPause") && apiTbl.at("fastPause").as_boolean();
                 api.thinkingLevel = "off";
                 if (apiTbl.contains("thinkingLevel")) {
                     api.thinkingLevel = apiTbl.at("thinkingLevel").as_string();
@@ -614,16 +615,20 @@ void NormalJsonTranslator::normalJsonInit()
                 switch (m_transEngine)
                 {
                 case TransEngine::ForGalJson:
-                    systemPromptKey = "FORGALJSON_SYSTEM";
-                    userPromptKey = "FORGALJSON_USER";
+                    systemPromptKey = m_agentEnabled ? "FORGALJSON_AGENT_SYSTEM" : "FORGALJSON_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORGALJSON_AGENT_USER" : "FORGALJSON_USER";
+                    break;
+                case TransEngine::ForNovelJson:
+                    systemPromptKey = m_agentEnabled ? "FORNOVELJSON_AGENT_SYSTEM" : "FORNOVELJSON_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORNOVELJSON_AGENT_USER" : "FORNOVELJSON_USER";
                     break;
                 case TransEngine::ForGalTsv:
-                    systemPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORGALTSV_AGENT_ADVANCED_SYSTEM" : "FORGALTSV_AGENT_SYSTEM") : "FORGALTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORGALTSV_AGENT_ADVANCED_USER" : "FORGALTSV_AGENT_USER") : "FORGALTSV_USER";
+                    systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_USER" : "FORGALTSV_USER";
                     break;
                 case TransEngine::ForNovelTsv:
-                    systemPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORNOVELTSV_AGENT_ADVANCED_SYSTEM" : "FORNOVELTSV_AGENT_SYSTEM") : "FORNOVELTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? (m_agentAdvancedEnabled ? "FORNOVELTSV_AGENT_ADVANCED_USER" : "FORNOVELTSV_AGENT_USER") : "FORNOVELTSV_USER";
+                    systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
+                    userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_USER" : "FORNOVELTSV_USER";
                     break;
                 case TransEngine::Sakura:
                     systemPromptKey = "SAKURA_SYSTEM";

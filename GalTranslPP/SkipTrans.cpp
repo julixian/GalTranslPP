@@ -92,7 +92,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
 
 void SkipTrans::processSkippedSentence(Sentence* se, const std::string& info) {
     se->transraw = se->preproc;
-    se->otherinfo["SkipTrans"] = info;
+    se->otherinfo.insert_or_assign("SkipTrans", info);
     se->transCompleted = true;
     se->problemAnalyzeDisabled = true;
 }

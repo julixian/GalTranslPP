@@ -8,7 +8,7 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
-void appendAdvancedAgentUserMessage(AdvancedAgentApiSession& session, const std::string& text)
+void appendAgentUserMessage(AgentApiSession& session, const std::string& text)
 {
     switch (session.api.protocol)
     {
@@ -24,7 +24,7 @@ void appendAdvancedAgentUserMessage(AdvancedAgentApiSession& session, const std:
     }
 }
 
-void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json& results)
+void appendAgentToolResults(AgentApiSession& session, const json& results)
 {
     json blocks = json::array();
     for (const auto& result : results) {
@@ -65,9 +65,9 @@ void appendAdvancedAgentToolResults(AdvancedAgentApiSession& session, const json
     }
 }
 
-// buildAdvancedAgentPayload 用于 Responses/Interactions：有 previousId 时仅发送 sentCount 之后的新增输入，否则发送完整历史。
-// sentCount 由成功的 parseAdvancedAgentReply 更新，须与本地 history 保持一致；此处不额外校验会话位置。
-json pendingAdvancedAgentInput(const AdvancedAgentApiSession& session, json history)
+// buildAgentPayload 用于 Responses/Interactions：有 previousId 时仅发送 sentCount 之后的新增输入，否则发送完整历史。
+// sentCount 由成功的 parseAgentReply 更新，须与本地 history 保持一致；此处不额外校验会话位置。
+json pendingAgentInput(const AgentApiSession& session, json history)
 {
     if (session.previousId.empty()) {
         return history;
@@ -75,17 +75,29 @@ json pendingAdvancedAgentInput(const AdvancedAgentApiSession& session, json hist
     return json(history.begin() + session.sentCount, history.end());
 }
 
-// performAdvancedAgentApiRequest 将统一工具 schema、system 和历史转为各协议请求，应用严格工具档位与原生压缩声明。
+// performAgentApiRequest 将统一工具 schema、system 和历史转为各协议请求，应用严格工具档位与原生压缩声明。
 // Responses/Interactions 可按 previousId 续接；其它路径发完整历史。不发送请求或修改会话。
-// tools 由 configureAdvanced 生成，直接按内部约定的字段转换。
-json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const json& tools, bool enhanceJailbreak)
+// tools 由 configureWorkers 生成，直接按内部约定的字段转换。
+json buildAgentPayload(const AgentApiSession& session, const json& tools, bool enhanceJailbreak)
 {
     const auto& api = session.api;
     json history = session.history;
     // 预填充只追加到本次请求，不写入会话；按用户开关原样发送，不检查模型或协议支持情况。
     if (enhanceJailbreak) {
-        history.push_back({{"role", "assistant"},
-            {"content", "Understood. I will translate this batch according to the translation requirements."}});
+        const std::string prefill = "Understood. I will translate this batch according to the translation requirements.";
+        switch (api.protocol)
+        {
+        case ApiProtocol::GeminiInterAction:
+            history.push_back({{"type", "model_output"},
+                {"content", json::array({{{"type", "text"}, {"text", prefill}}})}});
+            break;
+        case ApiProtocol::Gemini:
+            history.push_back({{"role", "model"}, {"parts", json::array({{{"text", prefill}}})}});
+            break;
+        default:
+            history.push_back({{"role", "assistant"}, {"content", prefill}});
+            break;
+        }
     }
     json payload;
     json nativeTools = json::array();
@@ -110,7 +122,7 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
 
     case ApiProtocol::OpenAIRes:
         // Responses 的 output 原样接回 input；有 previous_response_id 时只发送新增输入。
-        payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"instructions", session.systemPrompt},
+        payload = {{"input", pendingAgentInput(session, std::move(history))}, {"instructions", session.systemPrompt},
             {"store", api.agentStateful}, {"tool_choice", "required"}};
         if (!session.previousId.empty()) {
             payload["previous_response_id"] = session.previousId;
@@ -152,7 +164,7 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
 
     case ApiProtocol::GeminiInterAction:
         // Interactions 使用独立的步骤历史、function_result 和服务端会话 id。
-        payload = {{"input", pendingAdvancedAgentInput(session, std::move(history))}, {"system_instruction", session.systemPrompt},
+        payload = {{"input", pendingAgentInput(session, std::move(history))}, {"system_instruction", session.systemPrompt},
             {"store", api.agentStateful}};
         if (!session.previousId.empty()) {
             payload["previous_interaction_id"] = session.previousId;
@@ -186,13 +198,13 @@ json buildAdvancedAgentPayload(const AdvancedAgentApiSession& session, const jso
     return payload;
 }
 
-// performAdvancedAgentApiRequest 在 parseApiResponse 检查通过后调用，提取正文/原生工具调用，保留推理块与签名供后续请求。
-// 工具 arguments 保持原始 JSON 或字符串，具体参数解析/提交检查留给 translateAdvancedBatch 的逐工具 catch。
+// performAgentApiRequest 在 parseApiResponse 检查通过后调用，提取正文/原生工具调用，保留推理块与签名供后续请求。
+// 工具 arguments 保持原始 JSON 或字符串，具体参数解析/提交检查留给 translateBatch 的逐工具 catch。
 // 允许纯工具回复无正文；正文和调用都为空或响应字段异常时抛出，由请求入口转成带原始响应的 ResponseParse。
 // 完成响应提取后才更新 history、previousId 和 sentCount；Responses/Claude 有效压缩块会替换其之前的本地历史。
-AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentApiSession& session)
+AgentApiReply parseAgentReply(const json& parsed, AgentApiSession& session)
 {
-    AdvancedAgentApiReply reply;
+    AgentApiReply reply;
     json additions = json::array();
     bool compacted = false;
     std::string previousId;
@@ -310,7 +322,7 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
     }
 
     if (reply.text.empty() && reply.calls.empty()) {
-        throw std::runtime_error(gppTr("ApiTool.parseAdvancedAgentReply", "响应中没有文本内容或工具调用").toStdString());
+        throw std::runtime_error(gppTr("ApiTool.parseAgentReply", "响应中没有文本内容或工具调用").toStdString());
     }
     // 整个响应解析成功后才更新会话，失败重试不会留下半截工具调用。
     if (compacted) {
@@ -324,7 +336,7 @@ AdvancedAgentApiReply parseAdvancedAgentReply(const json& parsed, AdvancedAgentA
     return reply;
 }
 
-AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession& session, const json& tools, bool enhanceJailbreak,
+AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools, bool enhanceJailbreak,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs)
 {
@@ -332,7 +344,7 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
     std::string responseBody;
     try {
         auto api = session.api;
-        json payload = buildAdvancedAgentPayload(session, tools, enhanceJailbreak);
+        json payload = buildAgentPayload(session, tools, enhanceJailbreak);
         // 按实际协议应用选项，extraBody 最后覆盖。
         const json extraBody = api.extraBody;
         api.extraBody = json::object();
@@ -365,7 +377,7 @@ AdvancedAgentApiResponse performAdvancedAgentApiRequest(AdvancedAgentApiSession&
             return {std::unexpected(std::move(parsed.error()))};
         }
 
-        return {parseAdvancedAgentReply(*parsed, session)};
+        return {parseAgentReply(*parsed, session)};
     }
     catch (const std::exception& e) {
         return {std::unexpected(makeApiError(statusCode == 200 ? ApiErrorType::ResponseParse : ApiErrorType::Unknown,

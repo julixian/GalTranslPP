@@ -210,8 +210,8 @@ void CommonSettingsPage::setupUi()
 	agentSettingsDrawerArea->setDrawerHeader(agentEnabledArea);
 	QHBoxLayout* agentEnabledLayout = new QHBoxLayout(agentEnabledArea);
 	GppDoubleText* agentEnabledText = new GppDoubleText(tr("Agent 模式"), 16,
-		tr("仅 ForGalTsv、ForNovelTsv 会实际启用，新模型推荐一并开启 高级 Agent 选项"), 10,
-		tr("让模型可以调用一定的工具以获取更多上下文"), agentEnabledArea);
+		tr("支持 ForGalJson、ForNovelJson、ForGalTsv、ForNovelTsv"), 10,
+		tr("通过原生工具调用获取上下文，按 worker 保留跨文件会话；各协议能力在 Api 设置中配置"), agentEnabledArea);
 	agentEnabledLayout->addWidget(agentEnabledText);
 	agentEnabledLayout->addStretch();
 	ElaToggleSwitch* agentEnabledToggle = new ElaToggleSwitch(agentEnabledArea);
@@ -219,21 +219,10 @@ void CommonSettingsPage::setupUi()
 	agentEnabledLayout->addWidget(agentEnabledToggle);
 	mainLayout->addWidget(agentSettingsDrawerArea);
 
-	ElaScrollPageArea* agentAdvancedArea = new ElaScrollPageArea(agentSettingsDrawerArea);
-	QHBoxLayout* agentAdvancedLayout = new QHBoxLayout(agentAdvancedArea);
-	agentAdvancedLayout->addWidget(new GppDoubleText(tr("高级 Agent"), 16,
-		tr("为翻译 Agent 启用原生工具调用和 worker 会话记忆；关闭时使用批次文本协议；单 worker 正常情况下不会轮询 Api"), 10,
-		tr("各协议能力在 Api 设置中配置，需要自行查询，避免误用导致报错"), agentAdvancedArea));
-	agentAdvancedLayout->addStretch();
-	ElaToggleSwitch* agentAdvancedToggle = new ElaToggleSwitch(agentAdvancedArea);
-	agentAdvancedToggle->setIsToggled(toml::find_or(m_projectConfig, "common", "agent", "advancedEnabled", false));
-	agentAdvancedLayout->addWidget(agentAdvancedToggle);
-	agentSettingsDrawerArea->addDrawer(agentAdvancedArea);
-
 	ElaScrollPageArea* agentPythonArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentPythonLayout = new QHBoxLayout(agentPythonArea);
 	agentPythonLayout->addWidget(new GppDoubleText(tr("允许运行 Python 代码"), 16,
-		tr("仅高级 Agent 生效，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！"), 10,
+		tr("Agent 模式下，使用当前 Python 环境读取文件、搜索和分析数据；不聪明的模型可能会吃掉你的电脑！"), 10,
 		tr("只读要求由工具提示约束，不限制进程写入；每次最多运行 120 秒，每路输出最多返回 64 KiB"), agentPythonArea));
 	agentPythonLayout->addStretch();
 	ElaToggleSwitch* agentPythonToggle = new ElaToggleSwitch(agentPythonArea);
@@ -259,7 +248,7 @@ void CommonSettingsPage::setupUi()
 	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
 	GppDoubleText* agentCompactThresholdText = new GppDoubleText(tr("压缩上下文阈值"), 16,
 		tr("未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话"), 10,
-		tr("单位为字节；高级 Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效"), agentCompactThresholdArea);
+		tr("单位为字节；Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效"), agentCompactThresholdArea);
 	agentCompactThresholdLayout->addWidget(agentCompactThresholdText);
 	agentCompactThresholdLayout->addStretch();
 	ElaSpinBox* agentCompactThresholdSpinBox = new ElaSpinBox(agentCompactThresholdArea);
@@ -299,7 +288,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* agentProjectNotePathArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentProjectNotePathLayout = new QHBoxLayout(agentProjectNotePathArea);
 	GppDoubleText* agentProjectNotePathText = new GppDoubleText(tr("ProjectNote 路径"), 16,
-		tr("Agent 可选读取的项目说明文件，需自己加 `read_project_note()` 的工具提示词"), 10,
+		tr("Agent 可通过 read_project_note 工具读取的项目说明文件"), 10,
 		"", agentProjectNotePathArea);
 	agentProjectNotePathLayout->addWidget(agentProjectNotePathText);
 	agentProjectNotePathLayout->addStretch();
@@ -329,6 +318,18 @@ void CommonSettingsPage::setupUi()
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalSpinBox);
 	mainLayout->addWidget(cacheSaveIntervalArea);
 
+	bool keepPreviousOtherInfo = toml::find_or(m_projectConfig, "common", "keepPreviousOtherInfo", false);
+	ElaScrollPageArea* keepPreviousOtherInfoArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* keepPreviousOtherInfoLayout = new QHBoxLayout(keepPreviousOtherInfoArea);
+	GppDoubleText* keepPreviousOtherInfoText = new GppDoubleText(tr("保留上一次的 otherinfo"), 16,
+		tr("命中缓存时保留附加信息，本轮生成的同名信息可覆盖旧值"), 10, "", keepPreviousOtherInfoArea);
+	keepPreviousOtherInfoLayout->addWidget(keepPreviousOtherInfoText);
+	keepPreviousOtherInfoLayout->addStretch();
+	ElaToggleSwitch* keepPreviousOtherInfoToggle = new ElaToggleSwitch(keepPreviousOtherInfoArea);
+	keepPreviousOtherInfoToggle->setIsToggled(keepPreviousOtherInfo);
+	keepPreviousOtherInfoLayout->addWidget(keepPreviousOtherInfoToggle);
+	mainLayout->addWidget(keepPreviousOtherInfoArea);
+
 	// 最大请求次数
 	int maxRequestCount = toml::find_or(m_projectConfig, "common", "maxRequestCount", 4);
 	ElaScrollPageArea* maxRequestArea = new ElaScrollPageArea(mainWidget);
@@ -347,7 +348,7 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
 	GppDoubleText* smartRetryTextWidget = new GppDoubleText(tr("智能重试"), 16,
-		tr("解析结果失败时尝试折半重翻与清空上下文，在高级 Agent 模式下无效"), 10,
+		tr("失败时尝试对半拆分重翻；普通模式还会清空上下文重试"), 10,
 		"如果用的打野 key 其实不建议开这个", smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();
@@ -362,7 +363,7 @@ void CommonSettingsPage::setupUi()
 	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
 	GppDoubleText* enhanceJailbreakText = new GppDoubleText(tr("改善拒答（回复预填充）"), 16,
 		tr("仅少量模型支持，误启用会导致请求失效"), 10,
-		tr("以 assistant 回复头开始续写；高级 Agent 使用自然语言预填充"), enhanceJailbreakArea);
+		tr("以 assistant 回复头开始续写；Agent 使用自然语言预填充"), enhanceJailbreakArea);
 	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
 	enhanceJailbreakLayout->addStretch();
 	ElaToggleSwitch* enhanceJailbreakToggle = new ElaToggleSwitch(enhanceJailbreakArea);
@@ -676,7 +677,6 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.repeatedBlock.minSize", repeatedBlockMinSizeSpinBox->value());
 			insertToml(m_projectConfig, "GUIConfig.commonRepeatedBlockExpanded", repeatedBlockDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.agent.enabled", agentEnabledToggle->getIsToggled());
-			insertToml(m_projectConfig, "common.agent.advancedEnabled", agentAdvancedToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.allowPython", agentPythonToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.maxTurnsPerChunk", agentMaxTurnsSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.compactContextThresholdBytes", agentCompactThresholdSpinBox->value());
@@ -685,6 +685,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.agent.projectNotePath", agentProjectNotePathLineEdit->text().toStdString());
 			insertToml(m_projectConfig, "GUIConfig.commonAgentSettingsExpanded", agentSettingsDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.saveCacheInterval", cacheSaveIntervalSpinBox->value());
+			insertToml(m_projectConfig, "common.keepPreviousOtherInfo", keepPreviousOtherInfoToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakToggle->getIsToggled());

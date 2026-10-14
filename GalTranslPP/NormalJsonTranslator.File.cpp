@@ -258,6 +258,16 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                 continue;
             }
             const auto& item = it->second;
+            if (m_keepPreviousOtherInfo) {
+                if (const auto jit = item.find("other_info"); jit != item.end()) {
+                    auto otherinfo = std::move(se.otherinfo);
+                    jit->get_to(se.otherinfo);
+                    // 预处理已生成的信息优先于旧缓存，其余旧键继续保留。
+                    for (auto& [key, value] : otherinfo) {
+                        otherinfo.insert_or_assign(key, std::move(value));
+                    }
+                }
+            }
             if (m_transEngine == TransEngine::Rebuild ||
                 !hasRetranslKey(m_retranslKeys, item, se))
             {
@@ -318,6 +328,10 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         const std::string filePathWithHash = std::format("{}{:08X}", wide2Ascii(relInputPath), calculateFileCRC64(inputPath));
         std::string rollingContext = [&]()
             {
+                // Agent 的摘要由 worker 会话持有，文件级缓存只用于普通批次翻译。
+                if (m_agentEnabled) {
+                    return std::string{};
+                }
                 std::shared_lock<std::shared_mutex> lock(m_rollingContextCacheMapMutex);
                 if (const auto it = m_rollingContextCacheMap.find(filePathWithHash);
                     it != m_rollingContextCacheMap.end())
@@ -356,7 +370,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             int recursionCount = 0;
             if (m_agentEnabled) {
                 if (m_transAgent) {
-                    m_transAgent->translateBatch(relInputPath, batchView, rollingContext,
+                    m_transAgent->translateBatch(relInputPath, batchView,
                         recursionIndex, recursionCount, threadId, batchIndex + 1);
                 }
                 else {

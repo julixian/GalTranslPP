@@ -526,9 +526,10 @@ void StartSettingsPage::setupUi()
 	translateModeLabel->setText(tr("翻译模式:"));
 	buttonLayout->addWidget(translateModeLabel);
 	GppNoWheelComboBox* transEngineComboBox = new GppNoWheelComboBox(buttonArea);
+	transEngineComboBox->addItem("ForGalJson");
+	transEngineComboBox->addItem("ForNovelJson");
 	transEngineComboBox->addItem("ForGalTsv");
 	transEngineComboBox->addItem("ForNovelTsv");
-	transEngineComboBox->addItem("ForGalJson");
 	transEngineComboBox->addItem("Sakura");
 	transEngineComboBox->addItem("DumpName");
 	transEngineComboBox->addItem("NameTrans");

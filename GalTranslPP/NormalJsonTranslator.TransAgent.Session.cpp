@@ -12,7 +12,7 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-json advancedAgentObjectSchema(json properties)
+json agentObjectSchema(json properties)
 {
     json required = json::array();
     for (const auto& item : properties.items()) {
@@ -26,35 +26,31 @@ json advancedAgentObjectSchema(json properties)
     };
 }
 
-json advancedAgentArraySchema(const json& items)
+json agentArraySchema(const json& items)
 {
     return {{"type", "array"}, {"items", items}};
 }
 
-void NormalJsonTranslatorTransAgent::configureAdvanced(
-    bool enabled, int workerCount, bool allowPython,
+void NormalJsonTranslatorTransAgent::configureWorkers(
+    int workerCount, bool allowPython,
     const fs::path& inputDir, const fs::path& outputDir)
 {
-    m_advancedEnabled = enabled;
-    if (!enabled) {
-        return;
-    }
     // 调度前分配固定 worker 状态；运行中各线程只访问自己的槽，不需要全局会话锁。
     m_workers.resize(std::max(1, workerCount));
     for (auto& worker : m_workers) {
         if (auto api = m_apiPool->getApi(m_apiStrategy)) {
-            worker.session = AdvancedAgentApiSession{.api = *api, .systemPrompt = m_agentSystemPrompt};
+            worker.session = AgentApiSession{.api = *api, .systemPrompt = m_agentSystemPrompt};
         }
     }
     const json stringSchema = {{"type", "string"}};
     const json intSchema = {{"type", "integer"}};
 
-    const json stringsSchema = advancedAgentArraySchema(stringSchema);
-    const json idsSchema = advancedAgentArraySchema(intSchema);
-    const json translationSchema = advancedAgentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
-    const json suggestionSchema = advancedAgentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
+    const json stringsSchema = agentArraySchema(stringSchema);
+    const json idsSchema = agentArraySchema(intSchema);
+    const json translationSchema = agentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
+    const json suggestionSchema = agentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
 
-    const json termSchema = advancedAgentObjectSchema({
+    const json termSchema = agentObjectSchema({
         {"src", stringSchema},
         {"dst", stringSchema},
         {"category", stringSchema},
@@ -63,7 +59,7 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
         {"line_ids", idsSchema}
     });
 
-    const json noteSchema = advancedAgentObjectSchema({
+    const json noteSchema = agentObjectSchema({
         {"summary", stringSchema},
         {"scene_state", stringSchema},
         {"unresolved_clues", stringSchema},
@@ -71,12 +67,11 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
         {"term_hints", stringSchema}
     });
 
-    const json commitSchema = advancedAgentObjectSchema({
-        {"translations", advancedAgentArraySchema(translationSchema)},
-        {"term_updates", advancedAgentArraySchema(termSchema)},
-        {"agent_suggest", advancedAgentArraySchema(suggestionSchema)},
-        {"file_note_patch", noteSchema},
-        {"rolling_context", stringSchema}
+    const json commitSchema = agentObjectSchema({
+        {"translations", agentArraySchema(translationSchema)},
+        {"term_updates", agentArraySchema(termSchema)},
+        {"agent_suggest", agentArraySchema(suggestionSchema)},
+        {"file_note_patch", noteSchema}
     });
 
     const auto addTool = [&](const std::string& name, const std::string& description, const json& schema)
@@ -89,7 +84,7 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
         };
     const json pageProperties = {{"offset", intSchema}, {"limit", intSchema}};
     addTool("list_files", "List source files. offset is the number of result records to skip; offset=0 starts from the first result."
-        " limit=0 uses the configured limit.", advancedAgentObjectSchema(pageProperties));
+        " limit=0 uses the configured limit.", agentObjectSchema(pageProperties));
 
     for (const auto& domain : {"source", "cache", "dictionary", "terms"}) {
         json properties = pageProperties;
@@ -100,7 +95,7 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
             std::format("Read {} records. file='' selects the current file (ignored for dictionary/terms)."
                 " ids=[] selects all. fields=[] returns all available columns. offset is the number of result records to skip, not a page number or sentence id.",
                 domain),
-            advancedAgentObjectSchema(properties));
+            agentObjectSchema(properties));
         properties["query"] = stringSchema;
         properties["match_fields"] = stringsSchema;
         properties["context_before"] = intSchema;
@@ -109,11 +104,11 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
             std::format("Search {} by case-insensitive substring. file='*' searches all files. query='' matches all."
                 " match_fields=[] searches all data columns; fields selects returned columns. context_before/after apply to source/cache rows.",
                 domain),
-            advancedAgentObjectSchema(properties));
+            agentObjectSchema(properties));
     }
     addTool("read_file_note", "Read durable notes for a source file; file='' selects the current file.",
-        advancedAgentObjectSchema({{"file", stringSchema}}));
-    addTool("read_project_note", "Read the configured project note.", advancedAgentObjectSchema(json::object()));
+        agentObjectSchema({{"file", stringSchema}}));
+    addTool("read_project_note", "Read the configured project note.", agentObjectSchema(json::object()));
     if (allowPython) {
         const auto absolutePath = [](const fs::path& path)
             {
@@ -163,16 +158,19 @@ void NormalJsonTranslatorTransAgent::configureAdvanced(
             "file = Path(paths['current_file']).relative_to(paths['input_dir']); "
             "rows = json.loads((Path(paths['cache_dir']) / file).read_text(encoding='utf-8-sig')); "
             "print([r.get('translated_raw_text', '') for r in rows if '兄' in r.get('original_text', '')])",
-            advancedAgentObjectSchema({{"code", stringSchema}}));
+            agentObjectSchema({{"code", stringSchema}}));
     }
     addTool("commit_translations", "Submit every current sentence id, durable memory and sentence-level suggestions."
         " Empty note strings leave existing notes unchanged. Use [] for no term updates or suggestions.",
         commitSchema);
 }
 
-bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relInputPath, std::span<Sentence*> batch,
-    std::string& rollingContext, int threadId, int batchIndex)
+bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch,
+    int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
 {
+    if (m_controller->shouldStop()) {
+        return false;
+    }
     for (Sentence* se : batch) {
         if (se->preproc.empty()) {
             se->transCompleted = true;
@@ -185,20 +183,24 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
     }
 
     auto& worker = m_workers.at(threadId - 1);
-    if (!worker.rollingContext.empty()) {
-        rollingContext = worker.rollingContext;
-    }
+    auto& rollingContext = worker.rollingContext;
 
-    const std::string logPrefix = gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "[线程 %1] [文件 %2] [批次 %3] 高级 Agent")
-        .arg(threadId).arg(wide2Ascii(relInputPath)).arg(batchIndex).toStdString();
-    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始翻译，最多 %2 轮，共 %3 句:\n%4")
+    const std::string batchIndexLog = recursionCount == 0
+        ? std::format("{}", batchIndex)
+        : std::format("{}-({}/{})", batchIndex, recursionIndex, recursionCount);
+    const std::string logPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "[线程 %1] [文件 %2] [批次 %3] Agent")
+        .arg(threadId).arg(wide2Ascii(relInputPath)).arg(batchIndexLog).toStdString();
+    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 开始翻译，最多 %2 轮，共 %3 句:\n%4")
         .arg(logPrefix).arg(m_agentMaxTurnsPerChunk).arg(pending.size())
         .arg(buildLogBlock(relInputPath, pending, rollingContext)).toStdString());
 
     const auto rebuildSession = [&](const TranslationApi& api)
         {
-            worker.session = AdvancedAgentApiSession{.api = api, .systemPrompt = m_agentSystemPrompt};
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 创建会话: %2 / %3")
+            worker.session = AgentApiSession{.api = api, .systemPrompt = m_agentSystemPrompt};
+            if (!worker.rollingContext.empty()) {
+                appendAgentUserMessage(*worker.session, "Conversation summary:\n" + worker.rollingContext);
+            }
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 创建会话: %2 / %3")
                 .arg(logPrefix).arg(apiProtocolToString(api.protocol)).arg(api.modelName).toStdString());
         };
     const auto selectApi = [&](bool fallbackCheck)
@@ -206,7 +208,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             if (!worker.session || !m_apiPool->containsApi(worker.session->api) || (fallbackCheck && m_apiStrategy == "fallback")) {
                 auto api = m_apiPool->getApi(m_apiStrategy);
                 if (!api) {
-                    throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "没有可用的 Api key 了").toStdString());
+                    throw std::runtime_error(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "没有可用的 Api key 了").toStdString());
                 }
                 if (!worker.session || !isSameApi(worker.session->api, *api)) {
                     rebuildSession(*api);
@@ -215,14 +217,17 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         };
     selectApi(true);
 
+    AgentApiSession sessionBeforeBatch;
     const auto appendBatch = [&]()
         {
-            const json messages = buildBaseMessages(relInputPath, pending, rollingContext);
-            appendAdvancedAgentUserMessage(*worker.session, messages.at(1).at("content"));
+            if (m_smartRetry && pending.size() > 1) {
+                sessionBeforeBatch = *worker.session;
+            }
+            appendAgentUserMessage(*worker.session, buildUserPrompt(relInputPath, pending, rollingContext));
         };
     appendBatch();
 
-    const json compactSchema = advancedAgentObjectSchema({{"rolling_context", {{"type", "string"}}}});
+    const json compactSchema = agentObjectSchema({{"rolling_context", {{"type", "string"}}}});
     const json compactTools = json::array({
         {
             {"name", "compact_context"},
@@ -240,17 +245,22 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
     int turn = 0;
     int requestCount = 0;
     std::string requestLogPrefix;
-    const auto restartAfterCompaction = [&]()
+    const auto restartAfterCompaction = [&](std::string memory)
         {
             const auto api = worker.session->api;
-            // 新摘要无效时沿用上次提交的滚动记忆；旧消息、服务端续接 id 和推理签名一并清除。
+            // 有效摘要仅在重建时注入；压缩失败传入空摘要，旧记忆、历史和续接位置全部清除。
+            rollingContext = std::move(memory);
             rebuildSession(api);
             appendBatch();
             compactedMessageCount = worker.session->history.size();
             compacting = false;
+            noToolCallCount = 0;
         };
 
     for (; turn < m_agentMaxTurnsPerChunk; ++turn) {
+        if (m_controller->shouldStop()) {
+            return false;
+        }
         const auto& currentSession = *worker.session;
         const bool nativeAutoCompaction = currentSession.api.agentNativeAutoCompaction &&
             (currentSession.api.protocol == ApiProtocol::OpenAIRes || currentSession.api.protocol == ApiProtocol::Claude);
@@ -260,18 +270,22 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             currentSession.history.dump().size() > (size_t)m_agentCompactContextThresholdBytes)
         {
             compacting = true;
-            appendAdvancedAgentUserMessage(*worker.session,
+            appendAgentUserMessage(*worker.session,
                 "Context exceeded the compact context threshold. Summarize the full conversation into rolling_context using compact_context, "
                 "preserving translation decisions, character relationships, "
                 "unresolved clues and current progress. Do not call other tools or commit in this turn.");
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文")
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文")
                 .arg(logPrefix).arg(turn + 1).toStdString());
         }
         requestCount = 0;
-        AdvancedAgentApiResponse response;
+        AgentApiResponse response;
         while (requestCount < m_maxRequestCount) {
             if (m_controller->shouldStop()) {
                 return false;
+            }
+            pending = collectPendingSentences(batch);
+            if (pending.empty()) {
+                return true;
             }
             if (!m_apiPool->containsApi(worker.session->api)) {
                 selectApi(false);
@@ -279,11 +293,29 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 compacting = false;
                 compactedMessageCount = 0;
             }
-            requestLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] [请求 %3]")
+            if (m_smartRetry && !compacting && requestCount == 2 && pending.size() > 1) {
+                m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [请求 %2] 开始对半拆分句子重新请求...")
+                    .arg(logPrefix).arg(requestCount + 1).toStdString());
+
+                // 撤回失败批次及其工具轮次，服务端也从批次前的 id 续接，避免仍携带完整批次。
+                worker.session = std::move(sessionBeforeBatch);
+                const std::span<Sentence*> pendingSpan(pending);
+                const size_t mid = pending.size() / 2;
+
+                recursionCount += 2;
+                ++recursionIndex;
+                const bool firstOk = translateBatch(relInputPath, pendingSpan.first(mid),
+                    recursionIndex, recursionCount, threadId, batchIndex);
+                ++recursionIndex;
+                const bool secondOk = translateBatch(relInputPath, pendingSpan.subspan(mid),
+                    recursionIndex, recursionCount, threadId, batchIndex);
+                return firstOk && secondOk;
+            }
+            requestLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
                 .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 开始请求，剩余 %2 句，上下文预估 %3 字节")
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 开始请求，剩余 %2 句，上下文预估 %3 字节")
                 .arg(requestLogPrefix).arg(pending.size()).arg(worker.session->history.dump().size()).toStdString());
-            response = performAdvancedAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
+            response = performAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
                 m_enhanceJailbreak, m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) {
                 break;
@@ -308,9 +340,9 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 retryExhausted = true;
                 break;
             }
-            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 压缩请求重试耗尽，清空会话历史后继续当前批次: %2")
+            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 压缩请求重试耗尽，清空上下文后继续当前批次: %2")
                 .arg(requestLogPrefix).arg(formatApiError(response.content.error())).toStdString());
-            restartAfterCompaction();
+            restartAfterCompaction({});
             continue;
         }
 
@@ -322,9 +354,9 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             for (const auto& call : reply.calls) {
                 calls.push_back({ {"id", call.id}, {"name", call.name}, {"arguments", call.arguments} });
             }
-            m_logger->trace(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 成功响应，回复正文:\n%2\n工具调用:\n%3")
+            m_logger->trace(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 成功响应，回复正文:\n%2\n工具调用:\n%3")
                 .arg(requestLogPrefix)
-                .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "[GPP.正文为空]").toStdString() : reply.text)
+                .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateBatch", "[GPP.正文为空]").toStdString() : reply.text)
                 .arg(calls.dump(2)).toStdString());
         }
         if (!reply.calls.empty() && m_logger->should_log(spdlog::level::info)) {
@@ -338,7 +370,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 );
                 overview += limitLogLines(callOverview, m_inputBlockMaxLines);
             }
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 工具调用 %2 个，调用概览:\n%3")
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 工具调用 %2 个，调用概览:\n%3")
                 .arg(requestLogPrefix).arg(reply.calls.size())
                 .arg(overview).toStdString());
         }
@@ -346,15 +378,11 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         // 连续没有工具调用时沿用请求重试次数作为上限，任意工具调用都会清零。
         noToolCallCount = reply.calls.empty() ? noToolCallCount + 1 : 0;
         if (noToolCallCount > 0) {
-            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 未调用工具，连续 %2 / %3 轮未调用工具，回复正文:\n%4")
+            m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 未调用工具，连续 %2 / %3 轮未调用工具，回复正文:\n%4")
                 .arg(requestLogPrefix).arg(noToolCallCount).arg(m_maxRequestCount)
-                .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "[GPP.正文为空]").toStdString()
+                .arg(reply.text.empty() ? gppTr("NormalJsonTranslatorTransAgent.translateBatch", "[GPP.正文为空]").toStdString()
                     : limitLogLines(reply.text, m_inputBlockMaxLines)).toStdString());
         }
-        if (noToolCallCount >= m_maxRequestCount) {
-            break;
-        }
-
         if (compacting) {
             std::string memory;
             try {
@@ -371,21 +399,22 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 }
             }
             catch (const std::exception& e) {
-                m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 摘要无效，清空会话历史后继续当前批次: %2")
+                m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 摘要无效，清空上下文后继续当前批次: %2")
                     .arg(requestLogPrefix).arg(e.what()).toStdString());
-                restartAfterCompaction();
+                restartAfterCompaction({});
                 continue;
             }
-            rollingContext = memory;
-            worker.rollingContext = memory;
             if (m_logger->should_log(spdlog::level::debug)) {
-                m_logger->debug(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 压缩后的滚动上下文:\n%2")
+                m_logger->debug(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 压缩后的滚动上下文:\n%2")
                     .arg(requestLogPrefix).arg(memory).toStdString());
             }
-            restartAfterCompaction();
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已完成上下文压缩，继续当前批次")
+            restartAfterCompaction(std::move(memory));
+            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 已完成上下文压缩，继续当前批次")
                 .arg(requestLogPrefix).toStdString());
             continue;
+        }
+        if (noToolCallCount >= m_maxRequestCount) {
+            break;
         }
 
         bool committed = false;
@@ -395,7 +424,6 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                 if (committed) {
                     throw std::runtime_error("This batch has already been committed.");
                 }
-                arguments["action"] = "commit";
                 // 严格 schema 的空备注字段代表不修改，不能覆盖已有记忆。
                 if (arguments.contains("file_note_patch")) {
                     auto& patch = arguments["file_note_patch"];
@@ -415,24 +443,22 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                         }
                     }
                 }
-                const auto protocol = parseProtocolResponse(arguments.dump());
                 std::string commitLog;
                 int termCount = 0, suggestionCount = 0;
-                const int count = applyCommit(relInputPath, pending, rollingContext, threadId, protocol,
+                const int count = applyCommit(relInputPath, pending, threadId, arguments,
                     makeTransby(session.api.apikey, session.api.modelName),
-                    std::to_string(batchIndex), turn, requestCount, commitLog, termCount, suggestionCount);
-                worker.rollingContext = rollingContext;
+                    batchIndexLog, turn, requestCount, commitLog, termCount, suggestionCount);
                 committed = true;
-                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 响应处理成功，处理结果:\n%2")
+                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 响应处理成功，处理结果:\n%2")
                     .arg(requestLogPrefix)
-                    .arg(gppTr("NormalJsonTranslatorTransAgent.parseAndApplyTurnResponse",
+                    .arg(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
                         "该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:\n%4")
                         .arg(count).arg(termCount).arg(suggestionCount).arg(limitLogLines(commitLog, m_inputBlockMaxLines)))
                     .toStdString());
                 return json{{"committed", count}};
             };
         for (const auto& call : reply.calls) {
-            if (m_controller->shouldStop()) {
+            if (session.api.fastPause && m_controller->shouldStop()) {
                 return false;
             }
             json result;
@@ -447,7 +473,7 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                     json paths = m_pythonPaths;
                     paths["current_file"] = wide2Ascii(
                         fs::path(ascii2Wide(paths.at("input_dir").get<std::string>())) / relInputPath);
-                    result = runAgentPython(arguments.at("code").get_ref<const std::string&>(), paths, m_controller);
+                    result = runAgentPython(arguments.at("code").get_ref<const std::string&>(), paths, m_controller, session.api.fastPause);
                 }
                 else {
                     result = runReadTool(relInputPath, call.name, arguments);
@@ -455,12 +481,12 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
             }
             catch (const std::exception& e) {
                 result = {{"error", e.what()}};
-                m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 工具 %2 执行失败: %3")
+                m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 工具 %2 执行失败: %3")
                     .arg(requestLogPrefix).arg(call.name).arg(e.what()).toStdString());
                 m_controller->recordRuntimeTransError(RuntimeTransErrorEvent{
                     .kind = "agent",
                     .level = "warning",
-                    .message = gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "工具 %1 执行失败: %2")
+                    .message = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "工具 %1 执行失败: %2")
                         .arg(call.name).arg(e.what()).toStdString(),
                     .filename = wide2Ascii(relInputPath),
                     .indexRange = std::format("{}-{}", pending.front()->index, pending.back()->index),
@@ -474,12 +500,12 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         // 即使其中一个 commit 成功，也给全部并行调用回填结果，再结束批次。
         if (!results.empty()) {
             if (m_logger->should_log(spdlog::level::debug)) {
-                m_logger->debug(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 工具调用明细:\n%2")
+                m_logger->debug(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 工具调用明细:\n%2")
                     .arg(requestLogPrefix)
-                    .arg(gppTr("NormalJsonTranslatorTransAgent.executeToolCalls", "工具返回结果:\n%1").arg(results.dump(2)))
+                    .arg(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "工具返回结果:\n%1").arg(results.dump(2)))
                     .toStdString());
             }
-            appendAdvancedAgentToolResults(session, results);
+            appendAgentToolResults(session, results);
             if (m_logger->should_log(spdlog::level::info)) {
                 std::string overview;
                 for (const auto& [index, item] : results | std::views::enumerate) {
@@ -509,18 +535,18 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
                         + limitLogLines(resultOverview, m_inputBlockMaxLines);
                 }
                 if (!overview.empty()) {
-                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已回填 %2 个工具结果，回填概览:\n%3")
+                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 已回填 %2 个工具结果，回填概览:\n%3")
                         .arg(requestLogPrefix).arg(results.size())
                         .arg(overview).toStdString());
                 }
             }
             if (!committed) {
-                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 已回填 %2 个工具结果，进入下一轮")
+                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 已回填 %2 个工具结果，进入下一轮")
                     .arg(requestLogPrefix).arg(results.size()).toStdString());
             }
         }
         else {
-            appendAdvancedAgentUserMessage(session, "Text responses do not submit translations. Call a read/search tool if needed, "
+            appendAgentUserMessage(session, "Text responses do not submit translations. Call a read/search tool if needed, "
                 "or call commit_translations to submit every sentence in the current batch.");
         }
         if (committed) {
@@ -528,23 +554,23 @@ bool NormalJsonTranslatorTransAgent::translateAdvancedBatch(const fs::path& relI
         }
     }
 
-    appendAdvancedAgentUserMessage(*worker.session, "The current batch was abandoned after reaching the request/turn limit. Do not commit it later.");
+    appendAgentUserMessage(*worker.session, "The current batch was abandoned after reaching the request/turn limit. Do not commit it later.");
     for (Sentence* se : pending) {
         se->transraw = "(Failed to translate)" + se->preproc;
         se->transCompleted = true;
     }
-    // 与普通 Agent 一样分别记录轮次耗尽和请求重试耗尽，额外区分连续无工具调用。
+    // 分别记录轮次耗尽、请求重试耗尽和连续无工具调用。
     const size_t translatedCount = batch.size() - pending.size();
     if (retryExhausted) {
-        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句")
+        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句")
             .arg(logPrefix).arg(turn + 1).arg(requestCount).arg(translatedCount).arg(batch.size()).toStdString());
     }
     else if (noToolCallCount >= m_maxRequestCount) {
-        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句")
+        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句")
             .arg(logPrefix).arg(turn + 1).arg(noToolCallCount).arg(translatedCount).arg(batch.size()).toStdString());
     }
     else {
-        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateAdvancedBatch", "%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句")
+        m_logger->error(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句")
             .arg(logPrefix).arg(m_agentMaxTurnsPerChunk).arg(translatedCount).arg(batch.size()).toStdString());
     }
     return false;

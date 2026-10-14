@@ -215,6 +215,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     const std::string thinkingLevel = toml::find_or(api, "thinkingLevel", "off");
     const bool useSystemProxy = toml::find_or(api, "useSystemProxy", true);
     const bool stream = toml::find_or(api, "stream", false);
+    const bool fastPause = toml::find_or(api, "fastPause", false);
     const bool enable = toml::find_or(api, "enable", true);
     const bool extraHeadersEnable = toml::find_or(api, "extraHeadersEnable", false);
     const bool extraBodyEnable = toml::find_or(api, "extraBodyEnable", false);
@@ -490,6 +491,15 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     streamLayout->addWidget(streamSwitch);
     basicLayout->addWidget(streamArea);
 
+    auto [fastPauseArea, fastPauseLayout] = createFormRow(basicPage);
+    fastPauseLayout->addWidget(new GppDoubleText(tr("快速暂停"), 16,
+        tr("开启时立即中断请求；关闭时等待当前请求结束后暂停"), 10, "", fastPauseArea));
+    fastPauseLayout->addStretch();
+    ElaToggleSwitch* fastPauseSwitch = new ElaToggleSwitch(fastPauseArea);
+    fastPauseSwitch->setIsToggled(fastPause);
+    fastPauseLayout->addWidget(fastPauseSwitch);
+    basicLayout->addWidget(fastPauseArea);
+
     basicLayout->addStretch();
     tabWidget->addTab(basicTabPage.page, tr("基础设置"));
 
@@ -506,7 +516,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             return toggle;
         };
     agentTabPage.layout->addSpacing(8);
-    agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式和高级 Agent 总开关开启时生效"), 18, agentTabPage.content));
+    agentTabPage.layout->addWidget(new ElaText(tr("以下选项仅在 Agent 模式开启时生效"), 18, agentTabPage.content));
     auto [agentStrictToolsArea, agentStrictToolsLayout] = createFormRow(agentTabPage.content);
     agentStrictToolsLayout->addWidget(new GppDoubleText(tr("严格工具参数"), 16,
         tr("OpenAI/Claude 可选严格范围；Gemini 固定使用原生工具参数约束"), 10,
@@ -544,7 +554,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     connect(agentNativeAutoCompactionSwitch, &ElaToggleSwitch::toggled,
         agentCompactTokensSpinBox, &QWidget::setEnabled);
     agentTabPage.layout->addStretch();
-    tabWidget->addTab(agentTabPage.page, tr("高级 Agent"));
+    tabWidget->addTab(agentTabPage.page, tr("Agent"));
 
     const ScrollableTabPage advancedTabPage = createScrollablePage(tabWidget);
     QWidget* advancedPage = advancedTabPage.content;
@@ -806,6 +816,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             api_.thinkingLevel = thinkingComboBox->currentData().toString().toStdString();
             api_.useSystemProxy = systemProxySwitch->getIsToggled();
             api_.stream = streamSwitch->getIsToggled();
+            api_.fastPause = fastPauseSwitch->getIsToggled();
             if (temperatureCheckBox->isChecked()) {
                 api_.temperature = temperatureSlider->value();
             }
@@ -1026,6 +1037,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             apiTable.emplace("modelName", modelEdit->text().toStdString());
             apiTable.emplace("useSystemProxy", systemProxySwitch->getIsToggled());
             apiTable.emplace("stream", streamSwitch->getIsToggled());
+            apiTable.emplace("fastPause", fastPauseSwitch->getIsToggled());
             apiTable.emplace("enable", enableCheckBox->isChecked());
             apiTable.emplace("thinkingLevel", thinkingComboBox->currentData().toString().toStdString());
             apiTable.emplace("agentStateful", agentStatefulSwitch->getIsToggled());

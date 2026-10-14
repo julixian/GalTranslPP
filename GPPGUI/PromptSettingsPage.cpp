@@ -64,8 +64,7 @@ void PromptSettingsPage::setupUi()
 
 	auto createPromptWidgetFunc =
 		[=, this](const QString& promptName, const std::string& userPromptKey, const std::string& systemPromptKey,
-			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt,
-			const std::optional<std::string>& advancedUserPromptKey = std::nullopt, const std::optional<std::string>& advancedSystemPromptKey = std::nullopt) -> std::function<void()>
+			const std::optional<std::string>& agentUserPromptKey = std::nullopt, const std::optional<std::string>& agentSystemPromptKey = std::nullopt) -> std::function<void()>
 		{
 			QWidget* promptWidget = new QWidget(mainWidget);
 			QVBoxLayout* promptLayout = new QVBoxLayout(promptWidget);
@@ -100,10 +99,6 @@ void PromptSettingsPage::setupUi()
 				addPromptEditFunc(tr("Agent 用户"), ElaIconType::UserRobot, agentUserPromptKey.value());
 				addPromptEditFunc(tr("Agent 系统"), ElaIconType::Robot, agentSystemPromptKey.value());
 			}
-			if (advancedUserPromptKey.has_value() && advancedSystemPromptKey.has_value()) {
-				addPromptEditFunc(tr("高级 Agent 用户"), ElaIconType::UserRobot, advancedUserPromptKey.value());
-				addPromptEditFunc(tr("高级 Agent 系统"), ElaIconType::Robot, advancedSystemPromptKey.value());
-			}
 			connect(promptButtonGroup, &QButtonGroup::buttonClicked, this, [=](QAbstractButton* button)
 				{
 					for (const auto& b : promptButtonGroup->buttons()) {
@@ -129,13 +124,14 @@ void PromptSettingsPage::setupUi()
 			return resultApply2ConfigFunc;
 		};
 
+	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_USER", "FORGALJSON_SYSTEM",
+		"FORGALJSON_AGENT_USER", "FORGALJSON_AGENT_SYSTEM");
+	auto forNovelJsonApplyFunc = createPromptWidgetFunc("ForNovelJson", "FORNOVELJSON_USER", "FORNOVELJSON_SYSTEM",
+		"FORNOVELJSON_AGENT_USER", "FORNOVELJSON_AGENT_SYSTEM");
 	auto forgalTsvApplyFunc = createPromptWidgetFunc("ForGalTsv", "FORGALTSV_USER", "FORGALTSV_SYSTEM",
-		"FORGALTSV_AGENT_USER", "FORGALTSV_AGENT_SYSTEM",
-		"FORGALTSV_AGENT_ADVANCED_USER", "FORGALTSV_AGENT_ADVANCED_SYSTEM");
+		"FORGALTSV_AGENT_USER", "FORGALTSV_AGENT_SYSTEM");
 	auto forNovelTsvApplyFunc = createPromptWidgetFunc("ForNovelTsv", "FORNOVELTSV_USER", "FORNOVELTSV_SYSTEM",
-		"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM",
-		"FORNOVELTSV_AGENT_ADVANCED_USER", "FORNOVELTSV_AGENT_ADVANCED_SYSTEM");
-	auto forgalJsonApplyFunc = createPromptWidgetFunc("ForGalJson", "FORGALJSON_USER", "FORGALJSON_SYSTEM");
+		"FORNOVELTSV_AGENT_USER", "FORNOVELTSV_AGENT_SYSTEM");
 	auto sakuraApplyFunc = createPromptWidgetFunc("Sakura", "SAKURA_USER", "SAKURA_SYSTEM");
 	auto gendictApplyFunc = createPromptWidgetFunc("GenDict", "GENDICT_USER", "GENDICT_SYSTEM");
 	auto nametransApplyFunc = createPromptWidgetFunc("NameTrans", "NAMETRANS_USER", "NAMETRANS_SYSTEM");
@@ -143,6 +139,7 @@ void PromptSettingsPage::setupUi()
 	m_applyFunc = [=, this]()
 		{
 			forgalJsonApplyFunc();
+			forNovelJsonApplyFunc();
 			forgalTsvApplyFunc();
 			forNovelTsvApplyFunc();
 			sakuraApplyFunc();

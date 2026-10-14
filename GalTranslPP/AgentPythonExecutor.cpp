@@ -125,7 +125,7 @@ NAMESPACE_END(agent_python)
 
 json runAgentPython(
     const std::string& code, const json& paths,
-    const std::shared_ptr<IController>& controller)
+    const std::shared_ptr<IController>& controller, bool fastPause)
 {
 #ifdef _WIN32
     using namespace agent_python;
@@ -133,7 +133,7 @@ json runAgentPython(
     if (executable.empty()) {
         throw std::runtime_error("Python environment is not initialized.");
     }
-    if (controller->shouldStop()) {
+    if (fastPause && controller->shouldStop()) {
         return {{"cancelled", true}};
     }
 
@@ -209,7 +209,7 @@ json runAgentPython(
             if (state == WAIT_FAILED) {
                 check(FALSE, "WaitForSingleObject Python");
             }
-            cancelled = controller->shouldStop();
+            cancelled = fastPause && controller->shouldStop();
             timedOut = std::chrono::steady_clock::now() >= deadline;
             if (cancelled || timedOut) {
                 check(TerminateProcess(process.handle.value, 1), "TerminateProcess Python");

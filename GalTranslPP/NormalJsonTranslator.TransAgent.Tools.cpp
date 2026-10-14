@@ -27,7 +27,7 @@ json projectAgentRow(const json& row, const json& fields)
     return projected;
 }
 
-// 两种 Agent 路径共用读、搜索和备注工具，协议层只负责回填消息的形式。
+// Agent 的读、搜索和备注工具；协议层负责回填消息的形式。
 json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, const std::string& name, const json& arguments)
 {
     if (name == "list_files") {

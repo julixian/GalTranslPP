@@ -107,9 +107,19 @@ main = "main.cpp"
 '''
         (project / "mcpp.toml").write_text(manifest, encoding="utf-8")
         try:
-            run("mcpp-build", [mcpp, "build", "--no-color"], cwd=project)
-            executables = [path for path in (project / "target").rglob("gcc-probe") if path.is_file()]
-            run("mcpp-run", [max(executables, key=lambda path: path.stat().st_mtime)], cwd=project)
+            try:
+                run("mcpp-build", [mcpp, "build", "--no-color"], cwd=project)
+            except subprocess.CalledProcessError:
+                # 仅作诊断：拿已编译的模块对象交给 GCC 默认链接，不改 mcpp 图或应用代码。
+                objects = list((project / "target").glob("aarch64-macos/*/obj/main.o"))
+                if objects:
+                    binary = project / "modules-test"
+                    run("gcc-modules-link", [compiler, objects[0], objects[0].parent / "std.o", "-o", binary])
+                    run("gcc-modules-run", [binary])
+                raise
+            else:
+                executables = [path for path in (project / "target").rglob("gcc-probe") if path.is_file()]
+                run("mcpp-run", [max(executables, key=lambda path: path.stat().st_mtime)], cwd=project)
         finally:
             for name in ("build.ninja", "resolution.json", "mcpp.toml"):
                 for path in project.rglob(name):

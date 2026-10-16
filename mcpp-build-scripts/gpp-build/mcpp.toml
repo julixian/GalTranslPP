@@ -22,5 +22,5 @@ device_extensions = [".ui", ".qrc", ".ts"]
 path = "gpp-build.ixx"
 
 [build]
-sources = ["gpp-build.ixx", "deps/*.ixx"]
+sources = ["gpp-build.ixx", "macos.ixx", "deps/*.ixx"]
 module_extensions = [".ixx"]

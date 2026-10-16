@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module NormalJsonTranslator;
 
@@ -21,11 +18,7 @@ ordered_json buildProblemOverviewFromCache(
     std::vector<fs::path> relFilePaths = savedTranslCacheMap | std::views::keys | std::ranges::to<std::vector>();
     std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
         {
-#ifdef _WIN32
-            return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-            return a < b;
-#endif
+            return naturalCompare(a, b) < 0;
         });
 
     const int workerCount = std::max(1, std::min((int)std::thread::hardware_concurrency(), (int)relFilePaths.size()));
@@ -330,7 +323,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                     try {
                         ordered_json data = std::move(orgInputJsonMap.at(relJsonPath));
                         std::vector<ordered_json> parts = splitImplFunc(std::move(data), m_splitFileNum);
-                        const std::wstring relStem = relJsonPath.parent_path() / relJsonPath.stem();
+                        const std::wstring relStem = (relJsonPath.parent_path() / relJsonPath.stem()).wstring();
                         for (auto [index, part] : parts | std::views::enumerate) {
                             const fs::path relPartPath = std::format(L"{}_part_{}{}",
                                 relStem, index, relJsonPath.extension().wstring());
@@ -399,11 +392,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
     else if (m_sortMethod == "name") {
         std::ranges::sort(relFilePaths, [](const fs::path& a, const fs::path& b)
             {
-#ifdef _WIN32
-                return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-                return a < b;
-#endif
+                return naturalCompare(a, b) < 0;
             });
     }
     else {
@@ -545,20 +534,25 @@ void NormalJsonTranslator::normalJsonAfterRun()
     }
     else {
 #ifdef _WIN32
+        using ProblemOverviewString = std::wstring;
+#else
+        using ProblemOverviewString = std::string_view;
+#endif
         struct ProblemOverviewStringLess {
-            bool operator()(const std::wstring& left, const std::wstring& right) const {
-                if (left == right) return false;
-                const int order = StrCmpLogicalW(left.c_str(), right.c_str());
-                if (order != 0) return order < 0;
+            bool operator()(const ProblemOverviewString& left, const ProblemOverviewString& right) const {
+                if (left == right) {
+                    return false;
+                }
+                const int order = naturalCompare(left, right);
+                if (order != 0) {
+                    return order < 0;
+                }
                 return left < right;
             }
         };
-        absl::btree_map<std::wstring,
-            absl::btree_set<std::wstring, ProblemOverviewStringLess>,
+        absl::btree_map<ProblemOverviewString,
+            absl::btree_set<ProblemOverviewString, ProblemOverviewStringLess>,
             ProblemOverviewStringLess> problemMap;
-#else
-        absl::btree_map<std::string_view, absl::btree_set<std::string_view>> problemMap;
-#endif
         for (const ordered_json& item : problemOverview) {
 #ifdef _WIN32
             const std::wstring filename = ascii2Wide(item.at("filename").get_ref<const std::string&>());

@@ -453,6 +453,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathLayout->addWidget(pythonEnvPathButton);
     connect(pythonEnvPathButton, &ElaToolButton::clicked, this, [=, this]()
         {
+#ifdef _WIN32
             const QString pyExePath = QFileDialog::getOpenFileName(this->window(), tr("选择Python.exe"),
                 pythonEnvPathLineEdit->text(), "Python.exe (python.exe)");
             if (!pyExePath.isEmpty()) {
@@ -469,6 +470,11 @@ void AppSettingsPage::setupUi()
                 }
                 pythonEnvPathLineEdit->setText(QString::fromStdWString(newPythonEnvPath.wstring()));
             }
+#elif defined(__APPLE__)
+            const auto directory = QFileDialog::getExistingDirectory(this->window(), tr("Python环境路径"),
+                pythonEnvPathLineEdit->text());
+            if (!directory.isEmpty()) pythonEnvPathLineEdit->setText(directory);
+#endif
         });
     centerLayout->addWidget(pythonEnvPathArea);
 

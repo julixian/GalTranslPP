@@ -7,3 +7,10 @@ vcpkg_root = ''
 
 # Qt SDK 根目录（包含 include、lib、bin），不可留空。
 qt_root = 'D:\Qt\6.12.0\msvc2022_64'
+
+# build-macos.py 准备依赖后填写这些路径；也可手动指定已安装的 SDK。
+[macos]
+qt_root = ''
+python_root = ''
+dependencies_root = ''
+ela_root = ''

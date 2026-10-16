@@ -13,6 +13,8 @@ export namespace utf8
     using ::utf8::next;
     using ::utf8::next16;
     using ::utf8::peek_next;
+    using ::utf8::utf32to8;
+    using ::utf8::utf8to32;
 
     namespace unchecked
     {

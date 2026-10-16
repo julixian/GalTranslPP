@@ -1,0 +1,51 @@
+name: macOS portable
+
+on:
+  push:
+    branches: [codex/macos-portable]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-portable-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.mcpp
+            ~/.cache/vcpkg/archives
+            target/macos-tools
+          key: macos-arm64-${{ hashFiles('build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}
+      - name: Build portable package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p target/macos-logs
+          python -u build-macos.py 2>&1 | tee target/macos-logs/build.log
+      - name: Test portable Python and application
+        run: python scripts/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GalTranslPP-macos-arm64
+          path: |
+            Release/*.tar.gz
+            Release/*report*.json
+            Release/*.png
+            target/macos-logs/**
+            vcpkg_installed/**/vcpkg/issue_body.md
+          if-no-files-found: warn

@@ -34,13 +34,17 @@ jobs:
           restore-keys: |
             macos-arm64-${{ hashFiles('build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-
             macos-arm64-
-      - name: Build portable package
+      - name: Prepare SDK and native dependencies
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
           mkdir -p target/macos-logs
-          python -u build-macos.py 2>&1 | tee target/macos-logs/build.log
+          python -u build-macos.py --prepare-only 2>&1 | tee target/macos-logs/prepare.log
+      - name: Compile and package application
+        run: |
+          set -o pipefail
+          python -u build-macos.py --build-only 2>&1 | tee target/macos-logs/build.log
       - name: Test portable Python and application
         run: python scripts/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
       - name: Test Python independently when build fails

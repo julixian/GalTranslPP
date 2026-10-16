@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\GPPGUI\GppPlatform.h" />
-
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
@@ -14,6 +12,9 @@
     <Filter Include="Translation Files">
       <UniqueIdentifier>{29d4ab62-2143-4a3c-b217-276a5a45d9d8}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\GPPGUI\GppPlatform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\3rdParty\3rdModule\toml.ixx">

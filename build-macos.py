@@ -105,9 +105,10 @@ def prepare_dependencies(qt):
     # Clang 模块全局片段中的内部链接函数无法被后续模板实例化找到。
     # 只调整头文件内 ARM 两个助手的链接方式，函数体及二进制库保持一致。
     parse_context = ROOT / "vcpkg_installed/macos" / triplet / "include/google/protobuf/parse_context.h"
-    text = parse_context.read_text(encoding="utf-8")
-    text = text.replace("static const char* VarintParseSlowArm(", "inline const char* VarintParseSlowArm(")
-    parse_context.write_text(text, encoding="utf-8")
+    original = parse_context.read_text(encoding="utf-8")
+    text = original.replace("static const char* VarintParseSlowArm(", "inline const char* VarintParseSlowArm(")
+    if text != original:
+        parse_context.write_text(text, encoding="utf-8")
 
     # 单独使用 Ela 的库目录，避开其顶层示例及 Linux 链接参数。
     ela_source = TOOLS / "ela-config"
@@ -144,11 +145,12 @@ def prepare_archive_library():
 
 def write_local_config(qt, python_root, dependencies, ela):
     path = ROOT / "build-local.toml"
-    text = path.read_text(encoding="utf-8")
-    text = re.sub(r"(?ms)^\[macos\].*?(?=^\[|\Z)", "", text)
+    original = path.read_text(encoding="utf-8")
+    text = re.sub(r"(?ms)^\[macos\].*?(?=^\[|\Z)", "", original).rstrip()
     values = dict(qt_root=qt, python_root=python_root, dependencies_root=dependencies, ela_root=ela)
     text += "\n[macos]\n" + "".join(f"{key} = {json.dumps(str(value))}\n" for key, value in values.items())
-    path.write_text(text, encoding="utf-8")
+    if text != original:
+        path.write_text(text, encoding="utf-8")
 
 
 def macho(path):
@@ -271,17 +273,26 @@ def stage_package(qt, python_root, dependencies, ela, archive_library):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--prepare-only", action="store_true")
+    phase = parser.add_mutually_exclusive_group()
+    phase.add_argument("--prepare-only", action="store_true")
+    phase.add_argument("--build-only", action="store_true")
     args = parser.parse_args()
     if sys.platform != "darwin" or platform.machine() != "arm64":
         parser.error("请在 Apple Silicon Mac 上运行；Windows 不能验证 macOS 原生程序。")
     TOOLS.mkdir(parents=True, exist_ok=True)
     LOGS.mkdir(parents=True, exist_ok=True)
     os.environ["MACOSX_DEPLOYMENT_TARGET"] = CONFIG["build"]["deployment_target"]
-    mcpp, qt, python_root = prepare_tools()
-    dependencies, ela = prepare_dependencies(qt)
-    archive_library = prepare_archive_library()
-    write_local_config(qt, python_root, dependencies, ela)
+    if args.build_only:
+        settings = tomllib.loads((ROOT / "build-local.toml").read_text(encoding="utf-8"))["macos"]
+        qt, python_root, dependencies, ela = (Path(settings[key]) for key in
+            ("qt_root", "python_root", "dependencies_root", "ela_root"))
+        mcpp = next(path for path in (TOOLS / ("mcpp-" + CONFIG["tools"]["mcpp"])).rglob("mcpp") if path.is_file())
+        archive_library = next((TOOLS / ("7zip-" + CONFIG["tools"]["sevenzip"])).rglob("7z.so"))
+    else:
+        mcpp, qt, python_root = prepare_tools()
+        dependencies, ela = prepare_dependencies(qt)
+        archive_library = prepare_archive_library()
+        write_local_config(qt, python_root, dependencies, ela)
     if args.prepare_only:
         return
     for member in ("GPPGUI", "GPPCLI"):

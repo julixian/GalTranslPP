@@ -143,8 +143,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="GppPlatform.h" />
-
     <ClCompile Include="AboutDialog.cpp" />
     <ClCompile Include="ApiSettingsPage.cpp" />
     <ClCompile Include="BasePage.cpp" />
@@ -325,6 +323,7 @@
     <ClInclude Include="GppApiCard.h" />
     <ClInclude Include="GppComboBox.h" />
     <ClInclude Include="GppMultiSelectComboBox.h" />
+    <ClInclude Include="GppPlatform.h" />
     <ClInclude Include="GppRadioButton.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />

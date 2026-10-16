@@ -12,6 +12,7 @@ module;
 #include <spawn.h>
 #include <sys/wait.h>
 #include <sys/ioctl.h>
+#include <time.h>
 #include <unistd.h>
 #include <crt_externs.h>
 #endif
@@ -1168,9 +1169,21 @@ void saveTokenizeCache
 
 
 std::string currentTimestampString() {
+#ifdef _WIN32
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
     const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
     return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
+#elif defined(__APPLE__)
+    // macOS 的 libc++ 未启用时区库，使用系统本地时间并保留 ISO 8601 时区偏移。
+    const auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm localTime{};
+    if (!localtime_r(&now, &localTime)) throw std::runtime_error("localtime_r failed");
+    char timestamp[32]{};
+    std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%dT%H:%M:%S%z", &localTime);
+    std::string result(timestamp);
+    result.insert(result.size() - 2, ":");
+    return result;
+#endif
 }
 
 uint64_t calculateFileCRC64(const fs::path& filePath) {

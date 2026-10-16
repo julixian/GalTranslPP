@@ -18,7 +18,7 @@ FORGALJSON_USER = """<ciallo_info>
   4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
-1. 如果 id 连续，先查看 "rolling_context" 部分（如有内容），同时结合新情节，确保语义连贯准确。
+1. 如果 id 连续，确保语义连贯准确。
 2. 如果 jsonline 中包含 `name`，或原句被 `「」` 包围，则将 src 视为对话，使用自然的 [TargetLang] 口语。
 3. 否则视为旁白或独白。独白应从当前角色的视角翻译，仅在必要时补全省略的主语或宾语。
 4. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。不要保留源语言的助词或感叹词（例如日语促音 っ、ッ）。
@@ -27,10 +27,7 @@ FORGALJSON_USER = """<ciallo_info>
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - fault_example_dst: %123;“dstdst”（引号错误），/（半角错误，丢失换行）『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&、（错误地修改了控制符号）%ctrlcmd2$]。<
 6. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-7. 翻译完成后，用 [TargetLang] 生成简短的 rolling_context 摘要，重点记录与翻译有关的信息（如场景、事件、当前话题、重要指代、未解决的线索等），
-帮助后续几个批次翻译得更准确。可以用宏 <ORIGINAL> 指代当前 rolling_context 的内容，以节省 token。
-如果 id 不连续，或没有值得记录的内容，则留空。
-8. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
+7. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
 </translation_details>
 </translation_requirements>
 
@@ -44,19 +41,11 @@ FORGALJSON_USER = """<ciallo_info>
 3. 将键名 `src` 改为 `dst`，填入译文。
 随后停止，不要添加任何其他解释或注释。
 输出格式 = { "id": int, （可选）"name": string, "dst": string }
-
-rolling_context 应放在译文之后的标签对（<rolling_context>
-
-</rolling_context>）中。
 </output_requirements>
 
 <problem>
 [Problem Description]
 </problem>
-
-<rolling_context>
-[RollingContext]
-</rolling_context>
 
 <glossary>
 [Glossary]
@@ -90,7 +79,7 @@ FORNOVELJSON_USER = """<ciallo_info>
   4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
-1. 如果 id 连续，先查看 "rolling_context" 部分（如有内容），同时结合新情节，确保语义连贯准确。
+1. 如果 id 连续，确保语义连贯准确。
 2. 如果原句被 `「」` 包围，则将其视为对话，使用自然的 [TargetLang] 口语。
 3. 否则视为旁白或独白。独白应从当前角色的视角翻译，仅在必要时补全省略的主语或宾语。
 4. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。不要保留源语言的助词或感叹词（例如日语促音 っ、ッ）。
@@ -98,9 +87,6 @@ FORNOVELJSON_USER = """<ciallo_info>
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
 6. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-7. 翻译完成后，用 [TargetLang] 生成简短的 rolling_context 摘要，重点记录与翻译有关的信息（如场景、事件、当前话题、重要指代、未解决的线索等），
-帮助后续几个批次翻译得更准确。可以用宏 <ORIGINAL> 指代当前 rolling_context 的内容，以节省 token。
-如果 id 不连续，或没有值得记录的内容，则留空。
 </translation_details>
 </translation_requirements>
 
@@ -113,19 +99,11 @@ FORNOVELJSON_USER = """<ciallo_info>
 2. 遵循 "translation_requirements" 和 "glossary"（除非当前上下文表明其不适用），将 `src` 的内容翻译为 [TargetLang]，填入 `dst`。
 随后停止，不要添加任何其他解释或注释。
 输出格式 = { "id": int, "dst": string }
-
-rolling_context 应放在译文之后的标签对（<rolling_context>
-
-</rolling_context>）中。
 </output_requirements>
 
 <problem>
 [Problem Description]
 </problem>
-
-<rolling_context>
-[RollingContext]
-</rolling_context>
 
 <glossary>
 [Glossary]
@@ -159,7 +137,7 @@ FORGALTSV_USER = """<ciallo_info>
   4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
-1. 如果 id 连续，先查看 "rolling_context" 部分（如有内容），同时结合新情节，确保语义连贯准确。
+1. 如果 id 连续，确保语义连贯准确。
 2. 如果 `name` 不为 null，或原句被 `「」` 包围，则将 src 视为对话，使用自然的 [TargetLang] 口语。
 3. 否则视为旁白或独白。独白应从当前角色的视角翻译，仅在必要时补全省略的主语或宾语。
 4. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。不要保留源语言的助词或感叹词（例如日语促音 っ、ッ）。
@@ -168,10 +146,7 @@ FORGALTSV_USER = """<ciallo_info>
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - fault_example_dst: %123;“dstdst”（引号错误），/（半角错误，丢失换行）『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&、（错误地修改了控制符号）%ctrlcmd2$]。<
 6. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-7. 翻译完成后，用 [TargetLang] 生成简短的 rolling_context 摘要，重点记录与翻译有关的信息（如场景、事件、当前话题、重要指代、未解决的线索等），
-帮助后续几个批次翻译得更准确。可以用宏 <ORIGINAL> 指代当前 rolling_context 的内容，以节省 token。
-如果 id 不连续，或没有值得记录的内容，则留空。
-8. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
+7. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
 </translation_details>
 </translation_requirements>
 
@@ -185,19 +160,11 @@ FORGALTSV_USER = """<ciallo_info>
 2. 遵循 "translation_requirements" 和 "glossary"（除非当前上下文表明其不适用），将 src 的内容翻译为 [TargetLang]，填入 `DST`。
 3. 将输入对象的 `ID` 直接复制到输出行（即输出对应的 ID）。
 随后停止输出，不要添加任何其他解释或注释。
-
-rolling_context 应放在译文之后的标签对（<rolling_context>
-
-</rolling_context>）中。
 </output_requirements>
 
 <problem>
 [Problem Description]
 </problem>
-
-<rolling_context>
-[RollingContext]
-</rolling_context>
 
 <glossary>
 [Glossary]
@@ -230,7 +197,7 @@ FORNOVELTSV_USER = """<ciallo_info>
   4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
-1. 如果 id 连续，先查看 "rolling_context" 部分（如有内容），同时结合新情节，确保语义连贯准确。
+1. 如果 id 连续，确保语义连贯准确。
 2. 如果原句被 `「」` 包围，则将其视为对话，使用自然的 [TargetLang] 口语。
 3. 否则视为旁白或独白。独白应从当前角色的视角翻译，仅在必要时补全省略的主语或宾语。
 4. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。不要保留源语言的助词或感叹词（例如日语促音 っ、ッ）。
@@ -238,9 +205,6 @@ FORNOVELTSV_USER = """<ciallo_info>
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
 6. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-7. 翻译完成后，用 [TargetLang] 生成简短的 rolling_context 摘要，重点记录与翻译有关的信息（如场景、事件、当前话题、重要指代、未解决的线索等），
-帮助后续几个批次翻译得更准确。可以用宏 <ORIGINAL> 指代当前 rolling_context 的内容，以节省 token。
-如果 id 不连续，或没有值得记录的内容，则留空。
 </translation_details>
 </translation_requirements>
 
@@ -253,19 +217,11 @@ FORNOVELTSV_USER = """<ciallo_info>
 1. 遵循 "translation_requirements" 和 "glossary"（除非当前上下文表明其不适用），将 src 的内容翻译为 [TargetLang]，填入 `DST`。
 2. 将输入对象的 `ID` 直接复制到输出行（即输出对应的 ID）。
 随后停止输出，不要添加任何其他解释或注释。
-
-rolling_context 应放在译文之后的标签对（<rolling_context>
-
-</rolling_context>）中。
 </output_requirements>
 
 <problem>
 [Problem Description]
 </problem>
-
-<rolling_context>
-[RollingContext]
-</rolling_context>
 
 <glossary>
 [Glossary]

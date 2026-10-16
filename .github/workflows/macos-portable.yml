@@ -43,6 +43,12 @@ jobs:
           python -u build-macos.py 2>&1 | tee target/macos-logs/build.log
       - name: Test portable Python and application
         run: python scripts/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
+      - name: Test Python independently when build fails
+        if: failure()
+        run: |
+          if [ -x target/macos-tools/python/bin/python3 ]; then
+            python scripts/check-macos-portable.py --python-root target/macos-tools/python --optional-dependencies
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

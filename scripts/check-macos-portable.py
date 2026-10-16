@@ -17,13 +17,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("package", type=Path)
+    parser.add_argument("package", type=Path, nargs="?")
+    parser.add_argument("--python-root", type=Path)
     parser.add_argument("--optional-dependencies", action="store_true")
     args = parser.parse_args()
     if sys.platform != "darwin" or platform.machine() != "arm64":
         parser.error("检测需要真实的 macOS ARM64 环境")
-    report = {"platform": platform.platform(), "checks": [], "optional_dependencies": []}
-    output = ROOT / "Release/macos-check-report.json"
+    if not args.package and not args.python_root:
+        parser.error("请指定便携包目录，或用 --python-root 单独检测 Python")
+    report = {"platform": platform.platform(), "mode": "python" if args.python_root else "application",
+              "checks": [], "optional_dependencies": []}
+    output = ROOT / ("Release/macos-python-report.json" if args.python_root else "Release/macos-check-report.json")
     output.parent.mkdir(exist_ok=True)
 
     def record(name, command, *, cwd, timeout=120, group="checks", env=None):
@@ -41,10 +45,13 @@ def main():
 
     # 改变安装位置并包含中文和空格，验证没有偷偷依赖构建机的 Python 路径。
     with tempfile.TemporaryDirectory(prefix="GPP 便携检测 ") as temporary:
-        relocated = Path(temporary) / args.package.name
-        shutil.copytree(args.package.resolve(), relocated, symlinks=True)
+        relocated = Path(temporary) / (args.package.name if args.package else "Python runtime")
         directory = relocated / "GalTranslPP.app/Contents/MacOS"
         python_root = directory / "BaseConfig/Python"
+        if args.python_root:
+            shutil.copytree(args.python_root.resolve(), python_root, symlinks=True)
+        else:
+            shutil.copytree(args.package.resolve(), relocated, symlinks=True)
         python = python_root / "bin/python3"
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("PYTHON", "DYLD_", "QT_"))}
@@ -66,8 +73,9 @@ print(sys.version, sys.executable, sys.path, sep='\\n')
         record("安装后导入", [python, "-I", "-c", "import packaging, orjson; print(orjson.loads(orjson.dumps({'name':'中文'})))"],
                cwd=directory, env=env)
         record("pip 依赖一致性", [python, "-I", "-m", "pip", "check"], cwd=directory, env=env)
-        record("7-Zip 动态库入口", [python, "-I", "-c",
-               "import ctypes; lib=ctypes.CDLL('./7z.so'); print(lib.CreateObject)"], cwd=directory, env=env)
+        if not args.python_root:
+            record("7-Zip 动态库入口", [python, "-I", "-c",
+                   "import ctypes; lib=ctypes.CDLL('./7z.so'); print(lib.CreateObject)"], cwd=directory, env=env)
         record("Python 子进程", [python, "-I", "-c", '''
 import subprocess, sys
 p = subprocess.run([sys.executable, '-X', 'utf8', '-u', '-'], input="print('中文输出')",
@@ -85,29 +93,30 @@ if __name__ == '__main__':
 ''', encoding="utf-8")
         record("multiprocessing 启动及退出", [python, "-I", worker], cwd=directory, env=env)
         worker.unlink()
-        log = ROOT / "target/macos-logs/gui-startup.log"
-        log.parent.mkdir(parents=True, exist_ok=True)
-        with log.open("wb") as stream:
-            process = subprocess.Popen([directory / "GalTranslPP_GUI"], cwd=directory, env=env,
-                                       stdout=stream, stderr=subprocess.STDOUT)
-            try:
-                time.sleep(12)
-                alive = process.poll() is None
-                report["checks"].append(dict(name="重定位后的 GUI 启动", passed=alive, exit_code=process.poll()))
-                paths_file = directory / "BaseConfig/pythonSysPaths.txt"
-                paths = paths_file.read_text(encoding="utf-8") if paths_file.exists() else ""
-                report["checks"].append(dict(name="GUI 实际初始化嵌入式 Python",
-                    passed=str(python_root / "lib/python3.12") in paths, paths=paths))
-                if alive:
-                    subprocess.run(["screencapture", "-x", str(ROOT / "Release/macos-preview.png")], check=False)
-            finally:
-                if process.poll() is None:
-                    process.terminate()
-                    try:
-                        process.wait(timeout=15)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait()
+        if not args.python_root:
+            log = ROOT / "target/macos-logs/gui-startup.log"
+            log.parent.mkdir(parents=True, exist_ok=True)
+            with log.open("wb") as stream:
+                process = subprocess.Popen([directory / "GalTranslPP_GUI"], cwd=directory, env=env,
+                                           stdout=stream, stderr=subprocess.STDOUT)
+                try:
+                    time.sleep(12)
+                    alive = process.poll() is None
+                    report["checks"].append(dict(name="重定位后的 GUI 启动", passed=alive, exit_code=process.poll()))
+                    paths_file = directory / "BaseConfig/pythonSysPaths.txt"
+                    paths = paths_file.read_text(encoding="utf-8") if paths_file.exists() else ""
+                    report["checks"].append(dict(name="GUI 实际初始化嵌入式 Python",
+                        passed=str(python_root / "lib/python3.12") in paths, paths=paths))
+                    if alive:
+                        subprocess.run(["screencapture", "-x", str(ROOT / "Release/macos-preview.png")], check=False)
+                finally:
+                    if process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=15)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
         if args.optional_dependencies:
             config = tomllib.loads((ROOT / "build-macos.toml").read_text(encoding="utf-8"))
             for dependency in config["python"]["optional_dependencies"]:

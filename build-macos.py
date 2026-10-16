@@ -209,6 +209,11 @@ def deploy_libraries(directory, search_roots):
 def stage_package(qt, python_root, dependencies, ela, archive_library):
     release = ROOT / "Release"
     package = release / CONFIG["package"]["name"]
+    # 每次重新组装发布目录，升级 Qt/Python 后不沿用上一版的动态库。
+    if package.resolve().parent != release.resolve():
+        raise ValueError("package.name 必须是 Release 下的单个目录名")
+    if package.exists():
+        shutil.rmtree(package)
     app = package / "GalTranslPP.app"
     directory = app / "Contents/MacOS"
     directory.mkdir(parents=True, exist_ok=True)

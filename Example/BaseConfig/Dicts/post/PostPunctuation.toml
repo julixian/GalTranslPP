@@ -95,6 +95,16 @@ conditionReg = "\\A(?![\\S\\s]*?‘[\\S\\s]*?’)"
 conditionTarget = "preproc"
 
 [[normalDict]]
+org = "「([^「」]*?)」"
+rep = "『$1』"
+isReg = true
+priority = 0
+
+[[normalDict.conditions]]
+conditionReg = "\\A(?:[^「」]*|「[^「」]*」)\\z"
+conditionTarget = "preproc"
+
+[[normalDict]]
 org = "。）"
 rep = "）"
 isReg = false

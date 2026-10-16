@@ -1,0 +1,32 @@
+name: macOS GCC probe
+
+on:
+  push:
+    branches: [codex/macos-gcc]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install GNU GCC
+        run: brew install gcc
+      - name: Probe GCC and mcpp
+        run: python -u mcpp-build-scripts/macos/probe-gcc.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-gcc-probe
+          path: |
+            target/macos-gcc-probe/*.log
+            target/macos-gcc-probe/*.json
+            target/macos-gcc-probe/*.txt
+            target/macos-gcc-probe/project/**

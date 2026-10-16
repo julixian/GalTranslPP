@@ -104,6 +104,10 @@ priority = 0
 conditionReg = "\\A(?:[^「」]*|「[^「」]*」)\\z"
 conditionTarget = "preproc"
 
+[[normalDict.conditions]]
+conditionReg = "(?s)\\A(?!「[^「」]*」\\z).*「[^「」]*」.*\\z"
+conditionTarget = "transraw"
+
 [[normalDict]]
 org = "。）"
 rep = "）"

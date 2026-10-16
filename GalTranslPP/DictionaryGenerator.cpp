@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module DictionaryGenerator;
 
@@ -36,14 +33,10 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_relJsonPaths(relJsonPaths),
     m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_dictgen.json")
 {
-	std::ranges::sort(m_relJsonPaths, [](const fs::path& a, const fs::path& b)
-		{
-#ifdef _WIN32
-			return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-			return a < b;
-#endif
-		});
+    std::ranges::sort(m_relJsonPaths, [](const fs::path& a, const fs::path& b)
+        {
+            return naturalCompare(a, b) < 0;
+        });
 	loadTokenizeCache(m_tokenizeCacheMap, m_tokenizeCachePath, m_logger);
 }
 

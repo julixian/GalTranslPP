@@ -184,7 +184,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
     if (saveLog) {
         fs::create_directories(projectDir / L"logs");
         const fs::path logFilePath = projectDir / L"logs" / (ascii2Wide(transEngineStr) + L".log");
-        sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logFilePath.wstring(),
+        sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logFilePath.native(),
             logFileMaxSize, maxRotateFiles, true));
     }
 

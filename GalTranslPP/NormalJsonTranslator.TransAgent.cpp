@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module NormalJsonTranslator;
 
@@ -83,11 +80,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
 {
     std::ranges::sort(m_knownRelFiles, [](const fs::path& a, const fs::path& b)
         {
-#ifdef _WIN32
-            return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-            return a < b;
-#endif
+            return naturalCompare(a, b) < 0;
         });
 
     fs::create_directories(m_agentFileNotesDir);

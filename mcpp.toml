@@ -2,7 +2,7 @@
 members = ["GalTranslPP", "GPPVersion", "GPPCLI", "GPPGUI", "Updater"]
 
 [workspace.package]
-version = "3.2.6"
+version = "3.2.7"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"
 
@@ -29,6 +29,10 @@ defines = ["UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS",
   # 详见 https://github.com/microsoft/STL/issues/6121，https://developercommunity.visualstudio.com/t/11148844
   "_RANGES_",
   "SPDLOG_WCHAR_FILENAMES"]
+
+[workspace.target.aarch64-macos]
+# LLVM 的 libc++ 头文件需要配套运行库，不能链接系统较旧的 libc++。
+cxx_runtime = "self-contained"
 
 [workspace.profile.release]
 opt = 3

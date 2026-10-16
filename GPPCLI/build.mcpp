@@ -4,6 +4,7 @@ import gpp.rules.qt;
 import gpp.build;
 
 int main() {
+    if (std::string_view(mcpp::target_os()) == "macos") return gpp::macos::configure("GPPCLI");
     return gpp::run_build_script([] {
         gpp::win::configure_executable_link_options();
         const auto vcpkg_directory = gpp::win::configure_vcpkg("GalTranslPP_CLI");

@@ -12,7 +12,7 @@ import time
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def main():
@@ -118,7 +118,7 @@ if __name__ == '__main__':
                             process.kill()
                             process.wait()
         if args.optional_dependencies:
-            config = tomllib.loads((ROOT / "build-macos.toml").read_text(encoding="utf-8"))
+            config = tomllib.loads(Path(__file__).with_name("build-macos.toml").read_text(encoding="utf-8"))
             for dependency in config["python"]["optional_dependencies"]:
                 # 每个功能独立检测，失败保留 pip 原始输出；不把测试依赖塞进发布包。
                 clone = Path(temporary) / ("Python-" + dependency)

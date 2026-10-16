@@ -17,10 +17,10 @@ import tomllib
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 TOOLS = ROOT / "target/macos-tools"
 LOGS = ROOT / "target/macos-logs"
-CONFIG = tomllib.loads((ROOT / "build-macos.toml").read_text(encoding="utf-8"))
+CONFIG = tomllib.loads(Path(__file__).with_suffix(".toml").read_text(encoding="utf-8"))
 
 
 def run(command, *, cwd=ROOT, env=None):

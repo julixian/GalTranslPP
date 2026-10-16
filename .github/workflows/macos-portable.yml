@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: macos-portable-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -30,8 +30,10 @@ jobs:
             ~/.mcpp
             ~/.cache/vcpkg/archives
             target/macos-tools
-          key: macos-arm64-${{ hashFiles('build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}
-          restore-keys: macos-arm64-
+          key: macos-arm64-${{ hashFiles('build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-${{ github.run_id }}
+          restore-keys: |
+            macos-arm64-${{ hashFiles('build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-
+            macos-arm64-
       - name: Build portable package
         env:
           GH_TOKEN: ${{ github.token }}

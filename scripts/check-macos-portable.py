@@ -94,6 +94,10 @@ if __name__ == '__main__':
                 time.sleep(12)
                 alive = process.poll() is None
                 report["checks"].append(dict(name="重定位后的 GUI 启动", passed=alive, exit_code=process.poll()))
+                paths_file = directory / "BaseConfig/pythonSysPaths.txt"
+                paths = paths_file.read_text(encoding="utf-8") if paths_file.exists() else ""
+                report["checks"].append(dict(name="GUI 实际初始化嵌入式 Python",
+                    passed=str(python_root / "lib/python3.12") in paths, paths=paths))
                 if alive:
                     subprocess.run(["screencapture", "-x", str(ROOT / "Release/macos-preview.png")], check=False)
             finally:
@@ -114,7 +118,12 @@ if __name__ == '__main__':
                 installed = record(dependency + " 安装", [executable, "-I", "-m", "pip", "install", dependency],
                                    cwd=clone, env=env, timeout=1200, group="optional_dependencies")
                 if installed:
-                    record(dependency + " 导入", [executable, "-I", "-c", f"import {dependency}; print({dependency}.__file__)"],
+                    # 应用关闭自动 site 初始化；按相同规则加入 site-packages，再验证实际模块。
+                    module = "babeldoc.main" if dependency == "babeldoc" else dependency
+                    code = ("import sys, pathlib, importlib; "
+                            "sys.path.append(str(pathlib.Path(sys.prefix) / 'lib/python3.12/site-packages')); "
+                            f"module = importlib.import_module({module!r}); print(module.__file__)")
+                    record(dependency + " 隔离路径导入", [executable, "-I", "-S", "-c", code],
                            cwd=clone, env=env, timeout=180, group="optional_dependencies")
                     record(dependency + " pip check", [executable, "-I", "-m", "pip", "check"],
                            cwd=clone, env=env, group="optional_dependencies")

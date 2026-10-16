@@ -168,13 +168,17 @@ def deploy_libraries(directory, search_roots):
             dependency = line.strip().split(" (", 1)[0]
             if dependency.startswith(("/System/", "/usr/lib/")):
                 continue
-            candidate = Path(dependency.replace("@loader_path", str(binary.parent)).replace("@executable_path", str(directory)))
+            python_directory = directory / "BaseConfig/Python"
+            executable_directory = python_directory / "bin" if binary.is_relative_to(python_directory) else directory
+            candidate = Path(dependency.replace("@loader_path", str(binary.parent))
+                             .replace("@executable_path", str(executable_directory)))
             if not candidate.exists():
                 relative = dependency.removeprefix("@rpath/")
                 candidates = [base / relative for base in [library_directory, *search_roots]]
                 candidate = next((path for path in candidates if path.exists()), None)
                 if candidate is None:
                     raise FileNotFoundError(f"{binary}: cannot resolve {dependency}")
+            candidate = candidate.resolve()
             if candidate.is_relative_to(directory):
                 destination = candidate
             elif ".framework/" in str(candidate):
@@ -228,10 +232,23 @@ def stage_package(qt, python_root, dependencies, ela, archive_library):
         source = qt / "plugins" / category
         if source.exists():
             shutil.copytree(source, directory / "plugins" / category, dirs_exist_ok=True)
-    (directory / "qt.conf").write_text("[Paths]\nPrefix=.\nPlugins=plugins\nTranslations=translations\n", encoding="utf-8")
+    version = tomllib.loads((ROOT / "mcpp.toml").read_text(encoding="utf-8"))["workspace"]["package"]["version"]
+    resources = app / "Contents/Resources"
+    resources.mkdir(exist_ok=True)
+    # Qt 在 macOS 将 Prefix 相对于 Contents 解析。
+    (resources / "qt.conf").write_text("[Paths]\nPrefix=MacOS\nPlugins=plugins\nTranslations=translations\n", encoding="utf-8")
+    iconset = TOOLS / "GalTranslPP.iconset"
+    iconset.mkdir(exist_ok=True)
+    for size in (16, 32, 128, 256, 512):
+        for scale in (1, 2):
+            name = f"icon_{size}x{size}" + ("@2x" if scale == 2 else "") + ".png"
+            run(["sips", "-s", "format", "png", "-z", size * scale, size * scale,
+                 ROOT / "GPPGUI/resource/images/julixian_s.jpeg", "--out", iconset / name])
+    run(["iconutil", "-c", "icns", iconset, "-o", resources / "GalTranslPP.icns"])
     with (app / "Contents/Info.plist").open("wb") as output:
         plistlib.dump(dict(CFBundleExecutable="GalTranslPP_GUI", CFBundleIdentifier="io.github.julixian.galtranslpp",
                           CFBundleName="GalTransl++", CFBundlePackageType="APPL", NSHighResolutionCapable=True,
+                          CFBundleVersion=version, CFBundleShortVersionString=version, CFBundleIconFile="GalTranslPP.icns",
                           LSMinimumSystemVersion=CONFIG["build"]["deployment_target"]), output)
     llvm_libraries = list((Path.home() / ".mcpp").rglob("libc++.1.dylib"))
     search = [qt / "lib", ela, python_root / "lib", dependencies / "lib"]
@@ -258,6 +275,7 @@ def main():
         return
     for member in ("GPPGUI", "GPPCLI"):
         run([mcpp, "build", "-p", member, "--profile", CONFIG["build"]["profile"],
+             "--toolchain", "llvm@" + CONFIG["tools"]["llvm"],
              "--jobs", CONFIG["build"]["jobs"], "--no-color"])
     package = stage_package(qt, python_root, dependencies, ela, archive_library)
     print("Portable package:", package)

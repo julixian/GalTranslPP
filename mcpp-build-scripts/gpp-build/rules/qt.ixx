@@ -159,8 +159,7 @@ struct generator {
                 mcpp::link_flag(generic(sdk / "lib" / ("Qt6" + module + ".lib")).c_str());
             } else {
                 includes.push_back(generic(sdk / "lib" / ("Qt" + module + ".framework") / "Headers"));
-                mcpp::link_flag("-framework");
-                mcpp::link_flag(("Qt" + module).c_str());
+                mcpp::link_flag(("-Wl,-framework,Qt" + module).c_str());
             }
             define("QT_" + upper(module) + "_LIB");
         }

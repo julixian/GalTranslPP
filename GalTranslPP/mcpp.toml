@@ -37,7 +37,7 @@ include_dirs = ["../3rdParty/pybind11/Python/include"]
 ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi"]
 
 [target.macos.build]
-ldflags = ["-framework", "CoreFoundation", "-framework", "SystemConfiguration"]
+ldflags = ["-Wl,-framework,CoreFoundation", "-Wl,-framework,SystemConfiguration"]
 
 [targets.GalTranslPP]
 kind = "lib"

@@ -1,19 +1,19 @@
 <RCC>
     <qresource prefix="/GPPGUI">
-        <file>Resource/images/crass.png</file>
-        <file>Resource/images/gar.png</file>
-        <file>Resource/images/github.png</file>
-        <file>Resource/images/Home_Background.jpg</file>
-        <file>Resource/images/homebackground.png</file>
-        <file>Resource/images/IARC_7+.svg.png</file>
-        <file>Resource/images/julixian_s.ico</file>
-        <file>Resource/images/julixian_s.jpeg</file>
-        <file>Resource/images/revn.png</file>
-        <file>Resource/images/satan53x.jpg</file>
-        <file>Resource/images/sublime.png</file>
-        <file>Resource/images/vnt.png</file>
-        <file>Resource/images/webIcon.jpeg</file>
-        <file>Resource/SampleProject.zip</file>
-        <file>Resource/fonts/MonaspaceNeon-Regular.otf</file>
+        <file alias="Resource/images/crass.png">resource/images/crass.png</file>
+        <file alias="Resource/images/gar.png">resource/images/gar.png</file>
+        <file alias="Resource/images/github.png">resource/images/github.png</file>
+        <file alias="Resource/images/Home_Background.jpg">resource/images/Home_Background.jpg</file>
+        <file alias="Resource/images/homebackground.png">resource/images/homebackground.png</file>
+        <file alias="Resource/images/IARC_7+.svg.png">resource/images/IARC_7+.svg.png</file>
+        <file alias="Resource/images/julixian_s.ico">resource/images/julixian_s.ico</file>
+        <file alias="Resource/images/julixian_s.jpeg">resource/images/julixian_s.jpeg</file>
+        <file alias="Resource/images/revn.png">resource/images/revn.png</file>
+        <file alias="Resource/images/satan53x.jpg">resource/images/satan53x.jpg</file>
+        <file alias="Resource/images/sublime.png">resource/images/sublime.png</file>
+        <file alias="Resource/images/vnt.png">resource/images/vnt.png</file>
+        <file alias="Resource/images/webIcon.jpeg">resource/images/webIcon.jpeg</file>
+        <file alias="Resource/SampleProject.zip">resource/SampleProject.zip</file>
+        <file alias="Resource/fonts/MonaspaceNeon-Regular.otf">resource/fonts/MonaspaceNeon-Regular.otf</file>
     </qresource>
 </RCC>

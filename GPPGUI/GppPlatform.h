@@ -16,13 +16,13 @@ enum class GppMessageBoxType { Information, Error, Question };
 
 // 启动和更新阶段还没有主窗口，使用系统原生对话框。
 inline bool gppMessageBox(const QString& message, const QString& title,
-                         GppMessageBoxType type = GppMessageBoxType::Error)
+                         GppMessageBoxType type = GppMessageBoxType::Error, bool topmost = false)
 {
 #ifdef _WIN32
     const UINT flags = type == GppMessageBoxType::Question ? MB_YESNO | MB_ICONQUESTION
         : type == GppMessageBoxType::Error ? MB_OK | MB_ICONERROR : MB_OK;
     const int result = MessageBoxW(nullptr, (const wchar_t*)message.utf16(),
-        (const wchar_t*)title.utf16(), flags | MB_SETFOREGROUND);
+        (const wchar_t*)title.utf16(), flags | (topmost ? MB_TOPMOST | MB_SETFOREGROUND : 0));
     return result == (type == GppMessageBoxType::Question ? IDYES : IDOK);
 #elif defined(__APPLE__)
     const auto text = CFStringCreateWithCharacters(nullptr, (const UniChar*)message.utf16(), message.size());
@@ -64,5 +64,5 @@ inline constexpr auto gppArchiveLibrary = "7z.dll";
 inline constexpr auto gppUpdatePackage = "GUICORE_MACOS_ARM64.7z";
 inline constexpr auto gppUpdaterExecutable = "Updater";
 inline constexpr auto gppNewUpdaterExecutable = "Updater_new";
-inline constexpr auto gppArchiveLibrary = "./7z.so";
+inline constexpr auto gppArchiveLibrary = "7z.so";
 #endif

@@ -535,7 +535,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
     else {
 #ifdef _WIN32
         using ProblemOverviewString = std::wstring;
-#else
+#elif defined(__APPLE__)
         using ProblemOverviewString = std::string_view;
 #endif
         struct ProblemOverviewStringLess {
@@ -556,14 +556,14 @@ void NormalJsonTranslator::normalJsonAfterRun()
         for (const ordered_json& item : problemOverview) {
 #ifdef _WIN32
             const std::wstring filename = ascii2Wide(item.at("filename").get_ref<const std::string&>());
-#else
+#elif defined(__APPLE__)
             const std::string& filename = item.at("filename").get_ref<const std::string&>();
 #endif
             for (const ordered_json& problemItem : item.at("problems")) {
                 const std::string& problem = problemItem.get_ref<const std::string&>();
 #ifdef _WIN32
                 auto& fileNames = problemMap[ascii2Wide(problem)];
-#else
+#elif defined(__APPLE__)
                 auto& fileNames = problemMap[problem];
 #endif
                 fileNames.emplace(filename);
@@ -578,7 +578,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
         for (const auto& [problem, files] : problemMap) {
 #ifdef _WIN32
             const std::string problemText = wide2Ascii(problem);
-#else
+#elif defined(__APPLE__)
             const std::string_view problemText = problem;
 #endif
             std::string fileStr = "[";
@@ -589,7 +589,7 @@ void NormalJsonTranslator::normalJsonAfterRun()
                 }
 #ifdef _WIN32
                 fileStr.append(wide2Ascii(file)).append(", ");
-#else
+#elif defined(__APPLE__)
                 fileStr.append(file).append(", ");
 #endif
                 ++fileCount;

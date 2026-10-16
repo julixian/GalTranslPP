@@ -444,7 +444,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathLayout->addStretch();
     ElaLineEdit* pythonEnvPathLineEdit = new ElaLineEdit(pythonEnvPathArea);
     pythonEnvPathLineEdit->setFixedWidth(400);
-    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
+    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", defaultPythonEnvPath)));
     pythonEnvPathLayout->addWidget(pythonEnvPathLineEdit);
     ElaToolButton* pythonEnvPathButton = new ElaToolButton(pythonEnvPathArea);
     pythonEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);

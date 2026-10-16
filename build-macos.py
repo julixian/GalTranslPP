@@ -92,7 +92,15 @@ def prepare_dependencies(qt):
     if not (vcpkg / "vcpkg").exists():
         run(["bash", "bootstrap-vcpkg.sh", "-disableMetrics"], cwd=vcpkg)
     triplet = "gpp-arm64-osx-release"
+    # 上游 port 的 arm 限制也挡住了原生 Apple Silicon；仅在本次 macOS 构建中验证它。
+    overlay = TOOLS / "macos-ports/opencc"
+    shutil.copytree(vcpkg / "ports/opencc", overlay, dirs_exist_ok=True)
+    metadata = overlay / "vcpkg.json"
+    port = json.loads(metadata.read_text(encoding="utf-8"))
+    port["supports"] = "!uwp & (!arm | osx)"
+    metadata.write_text(json.dumps(port, indent=2) + "\n", encoding="utf-8")
     run([vcpkg / "vcpkg", "install", "--triplet", triplet,
+         "--overlay-ports=" + str(overlay.parent),
          "--x-install-root=" + str(ROOT / "vcpkg_installed/macos")])
 
     # 单独使用 Ela 的库目录，避开其顶层示例及 Linux 链接参数。
@@ -124,8 +132,7 @@ def prepare_archive_library():
     if not (source / "CPP/7zip/Bundles/Format7zF/makefile").exists():
         unpack(download(f"https://github.com/ip7z/7zip/releases/download/{version}/{name}", TOOLS / name), source)
     bundle = source / "CPP/7zip/Bundles/Format7zF"
-    run(["make", "-f", "../../cmpl_gcc.mak", "-j" + str(CONFIG["build"]["jobs"]),
-         "CC=clang", "CXX=clang++", "MY_ARCH=-arch arm64", "PLATFORM=arm64", "IS_MACOS=1"], cwd=bundle)
+    run(["make", "-f", "../../cmpl_mac_arm64.mak", "-j" + str(CONFIG["build"]["jobs"])], cwd=bundle)
     return next(bundle.rglob("7z.so"))
 
 

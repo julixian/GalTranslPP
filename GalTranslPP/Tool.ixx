@@ -119,7 +119,7 @@ int naturalCompare(const T& left, const T& right) {
     return naturalCompare(left.native(), right.native());
 }
 
-// 按文件通配符匹配路径；pattern 使用平台原生字符类型。
+// 按文件通配符匹配路径；spec 使用平台原生字符类型。
 bool matchFileSpec(const fs::path& path, const fs::path::string_type& spec);
 
 std::optional<int> str2Int(std::string_view str);

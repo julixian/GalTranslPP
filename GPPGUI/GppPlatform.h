@@ -64,5 +64,5 @@ inline constexpr auto gppArchiveLibrary = "7z.dll";
 inline constexpr auto gppUpdatePackage = "GUICORE_MACOS_ARM64.7z";
 inline constexpr auto gppUpdaterExecutable = "Updater";
 inline constexpr auto gppNewUpdaterExecutable = "Updater_new";
-inline constexpr auto gppArchiveLibrary = "7z.so";
+inline constexpr auto gppArchiveLibrary = "./7z.so";
 #endif

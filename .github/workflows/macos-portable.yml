@@ -45,6 +45,15 @@ jobs:
         run: |
           set -o pipefail
           python -u build-macos.py --build-only 2>&1 | tee target/macos-logs/build.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-native-build-logs
+          path: |
+            target/macos-logs/**
+            target/**/resolution.json
+            target/**/build.ninja
+          if-no-files-found: warn
       - name: Test portable Python and application
         run: python scripts/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
       - name: Test Python independently when build fails

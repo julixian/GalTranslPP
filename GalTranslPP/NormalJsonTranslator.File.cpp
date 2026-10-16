@@ -1,6 +1,9 @@
 module;
 
 #include "GPPMacros.hpp"
+#ifdef _WIN32
+#include <Shlwapi.h>
+#endif
 
 module NormalJsonTranslator;
 
@@ -146,12 +149,16 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         auto readAllPotentialPartFileCache = [&](const std::wstring& cacheSpec, const fs::path& specParentDir,
             const std::optional<fs::path>& additionalCachePath = std::nullopt)
             {
-                const fs::path nativeSpec(cacheSpec);
                 for (const auto& entry : fs::directory_iterator(specParentDir)) {
                     if (!entry.is_regular_file()) {
                         continue;
                     }
-                    if (matchFileSpec(entry.path().filename(), nativeSpec.native())) {
+                    if (
+#ifdef _WIN32
+                        PathMatchSpecW(entry.path().filename().native().c_str(), cacheSpec.c_str())
+#endif
+                        )
+                    {
                         if (m_splitFileEnabled) {
                             const int diff = calculateCachePartIndexDiff(relInputPath.wstring(), entry.path().wstring());
                             if (std::abs(diff) > m_cacheSearchDistance) {

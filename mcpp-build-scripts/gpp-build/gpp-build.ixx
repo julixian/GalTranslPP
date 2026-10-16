@@ -7,7 +7,6 @@ import mcpp.deps;
 import mcpp.plugins.fs;
 import gpp.deps.vcpkg;
 import gpp.rules.qt;
-export import gpp.build.macos;
 
 export namespace gpp {
 

@@ -1,4 +1,4 @@
-#include <QCoreApplication>
+﻿#include <QCoreApplication>
 #include <QDir>
 #include <QTranslator>
 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
                 app.installTranslator(&cliTranslator);
             }
         }
-        const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", defaultPythonEnvPath);
+        const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
         try {
             const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
             if (!startUpPythonEnv(pythonEnvPath, release)) {

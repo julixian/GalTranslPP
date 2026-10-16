@@ -26,7 +26,7 @@ struct options {
     translations i18n;
 };
 
-namespace detail {
+namespace win {
 std::string generic(const fs::path& path) {
     return path.lexically_normal().generic_string();
 }
@@ -105,9 +105,7 @@ std::vector<std::string> qrc_files(const fs::path& file) {
 
 // 所有 Qt 工具都取自同一个 SDK。
 std::string tool(const fs::path& sdk, std::string_view name) {
-    const bool windows = std::string_view(mcpp::host()).contains("windows");
-    auto executable = sdk / "bin" / (std::string(name) + (windows ? ".exe" : ""));
-    if (!windows && !fs::is_regular_file(executable)) executable = sdk / "libexec" / name;
+    const auto executable = sdk / "bin" / (std::string(name) + ".exe");
     if (!fs::is_regular_file(executable))
         throw std::runtime_error("Qt 工具不存在：" + executable.generic_string());
     return executable.generic_string();
@@ -144,23 +142,12 @@ struct generator {
         includes = {generic(sdk / "include"), std::string(mcpp::manifest_dir())};
         const std::string_view profile = mcpp::profile();
         if (profile != "dev" && profile != "debug") define("QT_NO_DEBUG");
-        const bool windows = std::string_view(mcpp::target_os()) == "windows";
-        if (windows) {
-            for (const char* value : {"UNICODE", "_UNICODE", "WIN32", "_ENABLE_EXTENDED_ALIGNED_STORAGE"})
-                define(value);
-            if (std::string_view(mcpp::target_arch()) == "x86_64") define("WIN64");
-        } else {
-            mcpp::cxxflag(("-F" + generic(sdk / "lib")).c_str());
-            mcpp::link_flag(("-F" + generic(sdk / "lib")).c_str());
-        }
+        for (const char* value : {"UNICODE", "_UNICODE", "WIN32", "_ENABLE_EXTENDED_ALIGNED_STORAGE"})
+            define(value);
+        if (std::string_view(mcpp::target_arch()) == "x86_64") define("WIN64");
         for (const auto& module : opt.modules) {
             includes.push_back(generic(sdk / "include" / ("Qt" + module)));
-            if (windows) {
-                mcpp::link_flag(generic(sdk / "lib" / ("Qt6" + module + ".lib")).c_str());
-            } else {
-                includes.push_back(generic(sdk / "lib" / ("Qt" + module + ".framework") / "Headers"));
-                mcpp::link_flag(("-Wl,-framework,Qt" + module).c_str());
-            }
+            mcpp::link_flag(generic(sdk / "lib" / ("Qt6" + module + ".lib")).c_str());
             define("QT_" + upper(module) + "_LIB");
         }
         for (const auto& directory : includes) mcpp::include_dir(directory.c_str());
@@ -313,16 +300,13 @@ void use(const options& opt) {
     build.configure_resources();
     build.configure_translations();
 }
-} // namespace detail
+} // namespace win
 
 void use(const options& opt) {
     if (std::string_view(mcpp::host()).contains("windows") &&
         std::string_view(mcpp::target_os()) == "windows" &&
         std::string_view(mcpp::target_env()) == "msvc")
-        return detail::use(opt);
-    if (std::string_view(mcpp::host()).contains("macos") &&
-        std::string_view(mcpp::target_os()) == "macos")
-        return detail::use(opt);
-    throw std::runtime_error("Qt 当前只支持 Windows 和 macOS 本机构建");
+        return win::use(opt);
+    throw std::runtime_error("Qt 当前只支持 Windows 本机的 MSVC ABI 构建");
 }
 } // namespace gpp::rules::qt

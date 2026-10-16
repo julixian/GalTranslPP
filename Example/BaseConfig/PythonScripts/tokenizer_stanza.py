@@ -16,8 +16,6 @@ HIDE_MULTIPROCESS_CONSOLE = True
 
 
 def _python_exe() -> Path:
-    if sys.platform == "darwin":
-        return Path(sys.executable)
     python_path = Path(sys.prefix) / "python.exe"
     if not python_path.exists():
         python_path = Path(sys.executable).with_name("python.exe")

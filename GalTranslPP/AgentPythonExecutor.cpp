@@ -3,16 +3,6 @@ module;
 #include "GPPMacros.hpp"
 #ifdef _WIN32
 #include <Windows.h>
-#elif defined(__APPLE__)
-#include <errno.h>
-#include <spawn.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <poll.h>
-#include <signal.h>
-#include <crt_externs.h>
-#include <stdio.h>
 #endif
 
 module AgentPythonExecutor;
@@ -70,11 +60,11 @@ struct AttributeList {
         SIZE_T bytes = 0;
         InitializeProcThreadAttributeList(nullptr, 1, 0, &bytes);
         storage.resize(bytes);
-        value = (LPPROC_THREAD_ATTRIBUTE_LIST)storage.data();
+        value = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(storage.data());
         check(InitializeProcThreadAttributeList(value, 1, 0, &bytes), "InitializeProcThreadAttributeList");
         if (!UpdateProcThreadAttribute(
             value, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            (HANDLE*)handles.data(), sizeof(handles), nullptr, nullptr))
+            const_cast<HANDLE*>(handles.data()), sizeof(handles), nullptr, nullptr))
         {
             const auto error = GetLastError();
             DeleteProcThreadAttributeList(value);
@@ -196,7 +186,7 @@ json runAgentPython(
                 DWORD bytes = 0;
                 if (!WriteFile(
                     pipe.value, script.data() + offset,
-                    (DWORD)std::min<size_t>(script.size() - offset, 64 * 1024),
+                    static_cast<DWORD>(std::min<size_t>(script.size() - offset, 64 * 1024)),
                     &bytes, nullptr))
                 {
                     writeError = GetLastError();
@@ -241,7 +231,7 @@ json runAgentPython(
     json result = {
         {"stdout", output.text},
         {"stderr", error.text},
-        {"exit_code", (int)exitCode},
+        {"exit_code", static_cast<int>(exitCode)},
         {"timed_out", timedOut},
         {"cancelled", cancelled},
         {"stdout_truncated", output.truncated},
@@ -257,125 +247,6 @@ json runAgentPython(
         result["error"] = std::system_category().message(writeError.load());
     }
     // 截断可能位于 UTF-8 字符中间；归一化后才能安全回填 API 的 JSON 消息。
-    return json::parse(result.dump(-1, ' ', false, json::error_handler_t::replace));
-#elif defined(__APPLE__)
-    const auto& executable = pythonExecutablePath();
-    if (executable.empty()) throw std::runtime_error("Python environment is not initialized.");
-    if (fastPause && controller->shouldStop()) return {{"cancelled", true}};
-
-    // stdin 使用匿名临时文件，避免写入长代码时与 stdout/stderr 互相等待。
-    const std::string script = "import json, sys\n"
-        "sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')\n"
-        "sys.stderr.reconfigure(encoding='utf-8', errors='backslashreplace')\n"
-        "paths = json.loads(" + json(paths.dump()).dump() + ")\n"
-        "exec(compile(" + json(code).dump() + ", '<agent-python>', 'exec'))\n";
-    struct Process {
-        FILE* input = nullptr;
-        int output[2] = {-1, -1};
-        int error[2] = {-1, -1};
-        pid_t pid = -1;
-        ~Process() {
-            if (pid > 0) {
-                kill(-pid, SIGKILL);
-                while (waitpid(pid, nullptr, 0) < 0 && errno == EINTR) {}
-            }
-            if (input) fclose(input);
-            for (int fd : {output[0], output[1], error[0], error[1]})
-                if (fd >= 0) close(fd);
-        }
-    } process;
-    const auto check = [](int error, const char* operation) {
-        if (error) throw std::system_error(error, std::generic_category(), operation);
-    };
-    process.input = tmpfile();
-    if (!process.input) check(errno, "tmpfile Python stdin");
-    if (fwrite(script.data(), 1, script.size(), process.input) != script.size())
-        check(errno ? errno : EIO, "write Python stdin");
-    if (fseek(process.input, 0, SEEK_SET)) check(errno, "rewind Python stdin");
-    if (pipe(process.output) || pipe(process.error)) check(errno, "pipe Python output");
-
-    struct SpawnOptions {
-        posix_spawn_file_actions_t files;
-        posix_spawnattr_t attributes;
-        SpawnOptions() {
-            const int fileError = posix_spawn_file_actions_init(&files);
-            if (fileError) throw std::system_error(fileError, std::generic_category());
-            const int attributeError = posix_spawnattr_init(&attributes);
-            if (attributeError) {
-                posix_spawn_file_actions_destroy(&files);
-                throw std::system_error(attributeError, std::generic_category());
-            }
-        }
-        ~SpawnOptions() {
-            posix_spawn_file_actions_destroy(&files);
-            posix_spawnattr_destroy(&attributes);
-        }
-    } spawn;
-    check(posix_spawn_file_actions_adddup2(&spawn.files, fileno(process.input), STDIN_FILENO), "stdin");
-    check(posix_spawn_file_actions_adddup2(&spawn.files, process.output[1], STDOUT_FILENO), "stdout");
-    check(posix_spawn_file_actions_adddup2(&spawn.files, process.error[1], STDERR_FILENO), "stderr");
-    const auto directory = paths.at("project_dir").get<std::string>();
-    check(posix_spawn_file_actions_addchdir_np(&spawn.files, directory.c_str()), "Python cwd");
-    // 独立进程组用于停止整棵子进程树；未显式映射的描述符不传给 Python。
-    check(posix_spawnattr_setflags(&spawn.attributes, POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT), "spawn flags");
-    check(posix_spawnattr_setpgroup(&spawn.attributes, 0), "spawn process group");
-    char* arguments[] = {(char*)executable.c_str(), (char*)"-X", (char*)"utf8", (char*)"-u", (char*)"-", nullptr};
-    check(posix_spawn(&process.pid, executable.c_str(), &spawn.files, &spawn.attributes,
-        arguments, *_NSGetEnviron()), "posix_spawn Python");
-    close(std::exchange(process.output[1], -1));
-    close(std::exchange(process.error[1], -1));
-    for (int fd : {process.output[0], process.error[0]}) {
-        if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) check(errno, "fcntl Python output");
-    }
-    std::string output, error;
-    bool outputTruncated = false, errorTruncated = false, timedOut = false, cancelled = false;
-    const auto readOutput = [&](int fd, std::string& text, bool& truncated) {
-        char buffer[16 * 1024];
-        for (int i = 0; i < 4; ++i) {
-            const auto bytes = read(fd, buffer, sizeof(buffer));
-            if (bytes == 0 || (bytes < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))) break;
-            if (bytes < 0) {
-                if (errno == EINTR) continue;
-                check(errno, "read Python output");
-            }
-            const auto keep = std::min<size_t>((size_t)bytes, 64 * 1024 - text.size());
-            text.append(buffer, keep);
-            truncated |= keep < (size_t)bytes;
-        }
-    };
-    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(120);
-    int status = 0;
-    for (;;) {
-        readOutput(process.output[0], output, outputTruncated);
-        readOutput(process.error[0], error, errorTruncated);
-        const auto state = waitpid(process.pid, &status, WNOHANG);
-        if (state == process.pid) break;
-        if (state < 0 && errno != EINTR) check(errno, "waitpid Python");
-        cancelled = fastPause && controller->shouldStop();
-        timedOut = std::chrono::steady_clock::now() >= deadline;
-        if (cancelled || timedOut) {
-            kill(-process.pid, SIGKILL);
-            while (waitpid(process.pid, &status, 0) < 0) {
-                if (errno != EINTR) check(errno, "waitpid stopped Python");
-            }
-            break;
-        }
-        pollfd streams[] = {{process.output[0], POLLIN, 0}, {process.error[0], POLLIN, 0}};
-        poll(streams, 2, 20);
-    }
-    // 主脚本退出后也结束它遗留的子进程，避免后台进程持有管道和项目文件。
-    kill(-process.pid, SIGKILL);
-    process.pid = -1;
-    readOutput(process.output[0], output, outputTruncated);
-    readOutput(process.error[0], error, errorTruncated);
-    json result = {
-        {"stdout", output}, {"stderr", error},
-        {"exit_code", WIFEXITED(status) ? WEXITSTATUS(status) : 128 + WTERMSIG(status)},
-        {"timed_out", timedOut}, {"cancelled", cancelled},
-        {"stdout_truncated", outputTruncated}, {"stderr_truncated", errorTruncated}
-    };
-    if (timedOut) result["error"] = "Python execution exceeded 120 seconds.";
-    else if (cancelled) result["error"] = "Python execution was cancelled.";
     return json::parse(result.dump(-1, ' ', false, json::error_handler_t::replace));
 #else
     throw std::runtime_error("Agent Python execution is currently implemented for Windows only.");

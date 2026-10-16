@@ -1,4 +1,3 @@
-#include "GppPlatform.h"
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QDir>
@@ -96,7 +95,15 @@ LONG WINAPI writeMiniDump(EXCEPTION_POINTERS* exceptionPointers) noexcept
 #endif
 
 void waitForProcessToExit(qint64 pid) {
-    gppWaitForProcess(pid);
+#ifdef Q_OS_WIN
+    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
+    if (hProcess != nullptr) {
+        WaitForSingleObject(hProcess, INFINITE);
+        CloseHandle(hProcess);
+    }
+#else
+
+#endif
 }
 
 int main(int argc, char* argv[])
@@ -131,15 +138,19 @@ int main(int argc, char* argv[])
         waitForProcessToExit(pid);
     }
 
-    if (fs::exists(gppNewUpdaterExecutable)) {
+    if (fs::exists(L"Updater_new.exe")) {
         try {
-            fs::rename(gppNewUpdaterExecutable, gppUpdaterExecutable);
+            fs::rename(L"Updater_new.exe", L"Updater.exe");
             fs::remove_all(L"new");
         }
         catch (const fs::filesystem_error& e) {
-            gppMessageBox(QString::fromUtf8(e.what()),
-                gppTr("GPPGUI.GPPGUI", "Updater 更新错误"),
-                GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+            MessageBoxW(
+                nullptr,
+                ascii2Wide(std::string_view(e.what())).c_str(),
+                gppTr("GPPGUI.GPPGUI", "Updater 更新错误").toStdWString().c_str(),
+                MB_ICONERROR);
+#endif
         }
     }
     
@@ -193,13 +204,17 @@ int main(int argc, char* argv[])
                 // --- 如果程序运行到这里，说明这是第一个实例（服务器） ---
                 // 尝试创建共享内存段
                 if (!sharedMemory.create(1)) {
-                    gppMessageBox(gppTr("GPPGUI.GPPGUI", "无法创建共享内存段，程序即将退出。"),
-                        gppTr("GPPGUI.GPPGUI", "错误"),
-                        GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+                    MessageBoxW(
+                        nullptr,
+                        gppTr("GPPGUI.GPPGUI", "无法创建共享内存段，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
+                        MB_ICONERROR);
+#endif
                     return 1; // 创建失败，退出
                 }
             }
-            const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", defaultPythonEnvPath);
+            const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
             const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
             startUpPythonEnv(pythonEnvPath, release);
         }
@@ -267,9 +282,13 @@ int main(int argc, char* argv[])
                 QLocalServer::removeServer(uniqueKey);
                 // 再次尝试监听
                 if (!server.listen(uniqueKey)) {
-                    gppMessageBox(gppTr("GPPGUI.GPPGUI", "无法启动本地服务，程序即将退出。"),
-                        gppTr("GPPGUI.GPPGUI", "错误"),
-                        GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+                    MessageBoxW(
+                        nullptr,
+                        gppTr("GPPGUI.GPPGUI", "无法启动本地服务，程序即将退出。").toStdWString().c_str(),
+                        gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
+                        MB_ICONERROR);
+#endif
                     return 1;
                 }
             }
@@ -286,34 +305,54 @@ int main(int argc, char* argv[])
             fs::remove_all(L"cache");
         }
         catch (const fs::filesystem_error& e) {
-            gppMessageBox(QString::fromUtf8(e.what()),
-                gppTr("GPPGUI.GPPGUI", "缓存删除错误"),
-                GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+            MessageBoxW(
+                nullptr,
+                ascii2Wide(std::string_view(e.what())).c_str(),
+                gppTr("GPPGUI.GPPGUI", "缓存删除错误").toStdWString().c_str(),
+                MB_ICONERROR);
+#endif
         }
         return result;
     }
     catch (const json::exception& e) {
-        gppMessageBox(QString::fromUtf8(e.what()),
-            gppTr("GPPGUI.GPPGUI", "JSON 错误"),
-            GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.GPPGUI", "JSON 错误").toStdWString().c_str(),
+            MB_ICONERROR);
+#endif
         return 1;
     }
     catch (const toml::exception& e) {
-        gppMessageBox(QString::fromUtf8(e.what()),
-            gppTr("GPPGUI.GPPGUI", "TOML 错误"),
-            GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.GPPGUI", "TOML 错误").toStdWString().c_str(),
+            MB_ICONERROR);
+#endif
         return 1;
     }
     catch (const std::exception& e) {
-        gppMessageBox(QString::fromUtf8(e.what()),
-            gppTr("GPPGUI.GPPGUI", "标准错误"),
-            GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(
+            nullptr,
+            ascii2Wide(std::string_view(e.what())).c_str(),
+            gppTr("GPPGUI.GPPGUI", "标准错误").toStdWString().c_str(),
+            MB_ICONERROR);
+#endif
         return 1;
     }
     catch (...) {
-        gppMessageBox(gppTr("GPPGUI.GPPGUI", "遇到了未知的错误，程序即将退出。"),
-            gppTr("GPPGUI.GPPGUI", "错误"),
-            GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(
+            nullptr,
+            gppTr("GPPGUI.GPPGUI", "遇到了未知的错误，程序即将退出。").toStdWString().c_str(),
+            gppTr("GPPGUI.GPPGUI", "错误").toStdWString().c_str(),
+            MB_ICONERROR);
+#endif
         return 1;
     }
 

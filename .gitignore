@@ -20,6 +20,3 @@ mcpp.lock
 # Files populated by Release.py
 /Example/BaseConfig/opencc/
 /Example/BaseConfig/Python-3.12.10-embed-amd64/
-
-# Python 构建及检测脚本缓存
-__pycache__/

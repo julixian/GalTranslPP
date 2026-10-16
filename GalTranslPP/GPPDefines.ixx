@@ -17,12 +17,6 @@ export NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-#ifdef _WIN32
-inline constexpr auto defaultPythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64";
-#elif defined(__APPLE__)
-inline constexpr auto defaultPythonEnvPath = "BaseConfig/Python";
-#endif
-
 extern const fs::path baseConfigPath;
 extern const fs::path globalConfigPath;
 extern const fs::path defaultPromptPath;

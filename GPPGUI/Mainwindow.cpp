@@ -1,4 +1,3 @@
-#include "GppPlatform.h"
 #include "Mainwindow.h"
 
 #include <QHBoxLayout>
@@ -47,11 +46,15 @@ MainWindow::MainWindow(QWidget* parent)
             m_globalConfig = gpp::uoparseToml(fs::path(L"BaseConfig/GlobalConfig.toml"));
         }
         catch (...) {
-            gppMessageBox(tr("解析错误"), tr("基本配置文件不符合 toml 规范！"), GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+            MessageBoxW(nullptr, tr("解析错误").toStdWString().c_str(), tr("基本配置文件不符合 toml 规范！").toStdWString().c_str(), MB_ICONERROR);
+#endif
         }
     }
     else {
-        gppMessageBox(tr("不是哥们"), tr("有病吧，你把我软件的配置文件删了！？"), GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(nullptr, tr("不是哥们").toStdWString().c_str(), tr("有病吧，你把我软件的配置文件删了！？").toStdWString().c_str(), MB_ICONERROR);
+#endif
     }
     setIsAllowPageOpenInNewWindow(false);
 
@@ -705,12 +708,12 @@ void MainWindow::onCloseWindowClicked(bool restart)
     if (m_updateChecker->shouldStartUpdater()) {
         QStringList arguments;
         arguments << "--pid" << QString::number(QApplication::applicationPid());
-        arguments << "--source" << QApplication::applicationDirPath() + "/" + gppUpdatePackage;
+        arguments << "--source" << QApplication::applicationDirPath() + "/GUICORE.7z";
         arguments << "--target" << QApplication::applicationDirPath();
         if (restart) {
             arguments << "--restart" << QApplication::applicationFilePath();
         }
-        QProcess::startDetached(QApplication::applicationDirPath() + "/" + gppUpdaterExecutable, arguments, QDir::currentPath());
+        QProcess::startDetached("Updater.exe", arguments, QDir::currentPath());
     }
     MainWindow::close();
 }

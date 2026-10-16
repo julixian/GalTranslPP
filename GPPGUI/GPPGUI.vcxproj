@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -323,7 +323,6 @@
     <ClInclude Include="GppApiCard.h" />
     <ClInclude Include="GppComboBox.h" />
     <ClInclude Include="GppMultiSelectComboBox.h" />
-    <ClInclude Include="GppPlatform.h" />
     <ClInclude Include="GppRadioButton.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />

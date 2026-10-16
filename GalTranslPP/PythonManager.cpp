@@ -759,6 +759,7 @@ static const fs::path gs_pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt
 bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
 #ifdef _WIN32
     initializeProcessJob();
+#endif
     if (fs::exists(pythonEnvPath) && fs::exists(pythonEnvPath / L"python.exe")) {
 
         const fs::path envZipPath = [&]()
@@ -803,41 +804,6 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
             return true;
         }
     }
-#elif defined(__APPLE__)
-    // 随包提供 python-build-standalone 的 install_only 目录，不依赖系统 Python。
-    const auto executable = pythonEnvPath / "bin/python3";
-    const auto standardLibrary = pythonEnvPath / std::format("lib/python{}.{}", PY_MAJOR_VERSION, PY_MINOR_VERSION);
-    if (!fs::is_regular_file(executable) || !fs::is_directory(standardLibrary)) return false;
-    const auto root = fs::canonical(pythonEnvPath);
-    gs_pythonExePath = fs::canonical(executable);
-    PyConfig config;
-    PyConfig_InitIsolatedConfig(&config);
-    config.site_import = 0;
-    config.module_search_paths_set = 1;
-    const auto check = [&config](PyStatus status)
-        {
-            if (PyStatus_Exception(status)) {
-                const std::string error = status.err_msg ? status.err_msg : "Python configuration failed";
-                PyConfig_Clear(&config);
-                throw std::runtime_error(error);
-            }
-        };
-    check(PyConfig_SetBytesString(&config, &config.home, root.c_str()));
-    check(PyConfig_SetBytesString(&config, &config.executable, gs_pythonExePath.c_str()));
-    const auto library = fs::canonical(standardLibrary);
-    for (const auto& path : {library, library / "lib-dynload", library / "site-packages",
-                            fs::absolute("BaseConfig/PythonScripts")}) {
-        check(PyWideStringList_Append(&config.module_search_paths, ascii2Wide(path.native()).c_str()));
-    }
-    py::initialize_interpreter(&config);
-    py::module_::import("importlib.metadata");
-    const py::list sysPaths = py::module_::import("sys").attr("path");
-    std::string sysPathsText;
-    for (const auto& path : sysPaths) sysPathsText += path.cast<std::string>() + "\n";
-    atomicOutputFile(gs_pythonSysPathsTxtPath, sysPathsText);
-    release = std::make_unique<py::gil_scoped_release>();
-    return true;
-#endif
     return false;
 }
 

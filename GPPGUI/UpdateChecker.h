@@ -1,7 +1,5 @@
 #pragma once
 
-#include "GppPlatform.h"
-
 #include <QNetworkReply>
 #include <QUrl>
 #include <QTimer>
@@ -89,7 +87,7 @@ private:
     toml::ordered_value& m_globalConfig;
     const QString m_repoOwner = "julixian";
     const QString m_repoName = "GalTranslPP";
-    const QString m_assetName = gppUpdatePackage;
-    const QString m_packagePath = m_assetName;
-    const QString m_tempPackagePath = m_packagePath + ".download";
+    const QString m_assetName = "GUICORE.7z";
+    const QString m_packagePath = "GUICORE.7z";
+    const QString m_tempPackagePath = "GUICORE.7z.download";
 };

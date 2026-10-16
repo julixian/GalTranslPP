@@ -4,13 +4,13 @@
 <context>
     <name>Updater.Updater</name>
     <message>
-        <location filename="Updater.cpp" line="273"/>
+        <location filename="Updater.cpp" line="271"/>
         <source>非法参数</source>
         <translation>Invalid arguments</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="274"/>
-        <location filename="Updater.cpp" line="391"/>
+        <location filename="Updater.cpp" line="272"/>
+        <location filename="Updater.cpp" line="397"/>
         <source>GalTransl++ Updater</source>
         <translation>GalTransl++ Updater</translation>
     </message>
@@ -22,29 +22,29 @@
 Back up first, then click OK.</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="311"/>
+        <location filename="Updater.cpp" line="313"/>
         <source>检测到新版本的 Prompt，是否更新 Prompt (会覆盖当前的默认提示词)？</source>
         <translation>New Prompt found. Update it? This overwrites defaults.</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="320"/>
+        <location filename="Updater.cpp" line="324"/>
         <source>检测到新版本的 GPT 字典，是否更新字典（会覆盖当前的默认字典）？</source>
         <translation>New GPT dictionary found. Update it? This overwrites the defaults.</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="345"/>
+        <location filename="Updater.cpp" line="351"/>
         <source>GalTransl++ 更新成功</source>
         <translation>GalTransl++ updated successfully</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="356"/>
+        <location filename="Updater.cpp" line="364"/>
         <source>GalTransl++ 更新包解压失败。
 错误: %1</source>
         <translation>Failed to extract GalTransl++ update package.
 Error: %1</translation>
     </message>
     <message>
-        <location filename="Updater.cpp" line="389"/>
+        <location filename="Updater.cpp" line="395"/>
         <source>提取 Updater_new.exe 失败。
 错误: %1</source>
         <translation>Failed to extract Updater_new.exe.

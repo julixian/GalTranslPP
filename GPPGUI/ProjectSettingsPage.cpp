@@ -1,4 +1,3 @@
-#include "GppPlatform.h"
 #include "ProjectSettingsPage.h"
 
 #include <QHBoxLayout>
@@ -74,8 +73,10 @@ void ProjectSettingsPage::saveProjectConfig()
         atomicOutputFile(m_projectDir / L"Config.toml", toml::format(m_projectConfig));
     }
     catch (const toml::exception& e) {
-        gppMessageBox(QString::fromUtf8(e.what()),
-            tr("Toml 格式化错误"),GppMessageBoxType::Error);
+#ifdef Q_OS_WIN
+        MessageBoxW(nullptr, ascii2Wide(e.what()).c_str(),
+            tr("Toml 格式化错误").toStdWString().c_str(),MB_ICONERROR);
+#endif
     }
 }
 

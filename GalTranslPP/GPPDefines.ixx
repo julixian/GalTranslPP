@@ -4,7 +4,7 @@
 
 export module GPPDefines;
 
-export import std.compat;
+export import std;
 
 export import AbslContainers;
 export import GPPI18n;

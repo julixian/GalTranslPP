@@ -335,9 +335,9 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }();
 
         Sentence* pLastSentence = nullptr;
-        for (size_t batchIndex = 0, offset = 0; offset < toTranslate.size(); ++batchIndex, offset += m_batchSize) {
-            const auto batchView = std::span(toTranslate).subspan(offset,
-                std::min<size_t>(m_batchSize, toTranslate.size() - offset));
+        for (auto [batchIndex, batchView] : toTranslate
+            | std::views::chunk(m_batchSize) | std::views::enumerate)
+        {
             if (!rollingContext.empty() && pLastSentence) {
                 if (batchView.front()->index - pLastSentence->index > m_batchSize) {
                     rollingContext.clear();

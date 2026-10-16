@@ -100,7 +100,10 @@ standard = "c++23"
 [toolchain]
 default = {{ path = {json.dumps(str(layout))}, family = "gcc", sysroot = {json.dumps(sdk)} }}
 [build]
-sources = ["main.cpp"]
+sources = []
+[targets.gcc-probe]
+kind = "bin"
+main = "main.cpp"
 '''
         (project / "mcpp.toml").write_text(manifest, encoding="utf-8")
         try:

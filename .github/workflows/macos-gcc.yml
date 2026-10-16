@@ -25,4 +25,8 @@ jobs:
         if: always()
         with:
           name: macOS-gcc-probe
-          path: target/macos-gcc-probe/**
+          path: |
+            target/macos-gcc-probe/*.log
+            target/macos-gcc-probe/*.json
+            target/macos-gcc-probe/*.txt
+            target/macos-gcc-probe/project/**

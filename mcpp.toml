@@ -30,6 +30,10 @@ defines = ["UNICODE", "_UNICODE", "_CRT_SECURE_NO_WARNINGS",
   "_RANGES_",
   "SPDLOG_WCHAR_FILENAMES"]
 
+[workspace.target.macos.build]
+# LLVM 的 libc++ 头文件需要配套运行库，不能链接系统较旧的 libc++。
+cxx_runtime = "self-contained"
+
 [workspace.profile.release]
 opt = 3
 debug = true

@@ -4,6 +4,7 @@ module;
 #ifdef _WIN32
 #include <Windows.h>
 #elif defined(__APPLE__)
+#include <errno.h>
 #include <spawn.h>
 #include <sys/wait.h>
 #include <fcntl.h>

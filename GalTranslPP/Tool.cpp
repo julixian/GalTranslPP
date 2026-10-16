@@ -6,6 +6,7 @@ module;
 #include <Windows.h>
 #include <Shlwapi.h>
 #elif defined(__APPLE__)
+#include <errno.h>
 #include <CoreFoundation/CFString.h>
 #include <fnmatch.h>
 #include <spawn.h>

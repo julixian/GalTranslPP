@@ -102,6 +102,12 @@ def prepare_dependencies(qt):
     run([vcpkg / "vcpkg", "install", "--triplet", triplet,
          "--overlay-ports=" + str(overlay.parent),
          "--x-install-root=" + str(ROOT / "vcpkg_installed/macos")])
+    # Clang 模块全局片段中的内部链接函数无法被后续模板实例化找到。
+    # 只调整头文件内 ARM 两个助手的链接方式，函数体及二进制库保持一致。
+    parse_context = ROOT / "vcpkg_installed/macos" / triplet / "include/google/protobuf/parse_context.h"
+    text = parse_context.read_text(encoding="utf-8")
+    text = text.replace("static const char* VarintParseSlowArm(", "inline const char* VarintParseSlowArm(")
+    parse_context.write_text(text, encoding="utf-8")
 
     # 单独使用 Ela 的库目录，避开其顶层示例及 Linux 链接参数。
     ela_source = TOOLS / "ela-config"

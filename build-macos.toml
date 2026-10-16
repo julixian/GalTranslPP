@@ -11,7 +11,7 @@ sevenzip = "26.04"
 [build]
 profile = "release"
 jobs = 3
-deployment_target = "14.0"
+deployment_target = "14.4"
 
 [python]
 # 基础检测先验证标准库、pip、扩展模块、中文路径和 multiprocessing。

@@ -385,7 +385,8 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidg
     ElaPlainTextEdit* translationEdit = addTextBlock(tr("译文（rep）"), entry.translation);
     ElaPlainTextEdit* descriptionEdit = addTextBlock(tr("注释（note）"), entry.description);
 
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QWidget* buttonWidget = new QWidget(this);
+    QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
     buttonLayout->setContentsMargins(0, 2, 0, 0);
     buttonLayout->setSpacing(8);
     buttonLayout->addStretch();
@@ -413,7 +414,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiGptDictEntry& entry, QWidg
             accept();
         });
     buttonLayout->addWidget(saveButton);
-    mainLayout->addLayout(buttonLayout);
+    mainLayout->addWidget(buttonWidget);
 
     originalEdit->setFocus();
     if (parent) {
@@ -439,11 +440,13 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     mainLayout->setContentsMargins(16, 0, 16, 14);
     mainLayout->setSpacing(8);
 
-    QHBoxLayout* textLayout = new QHBoxLayout();
+    QWidget* textWidget = new QWidget(this);
+    QHBoxLayout* textLayout = new QHBoxLayout(textWidget);
     textLayout->setContentsMargins(0, 0, 0, 0);
     textLayout->setSpacing(10);
 
-    QVBoxLayout* originalLayout = new QVBoxLayout();
+    QWidget* originalWidget = new QWidget(textWidget);
+    QVBoxLayout* originalLayout = new QVBoxLayout(originalWidget);
     originalLayout->setContentsMargins(0, 0, 0, 0);
     originalLayout->setSpacing(4);
     originalLayout->addWidget(createFieldLabel(tr("原文（org）"), this));
@@ -452,9 +455,10 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     originalEdit->setMinimumHeight(88);
     originalEdit->setMaximumHeight(120);
     originalLayout->addWidget(originalEdit);
-    textLayout->addLayout(originalLayout, 1);
+    textLayout->addWidget(originalWidget, 1);
 
-    QVBoxLayout* translationLayout = new QVBoxLayout();
+    QWidget* translationWidget = new QWidget(textWidget);
+    QVBoxLayout* translationLayout = new QVBoxLayout(translationWidget);
     translationLayout->setContentsMargins(0, 0, 0, 0);
     translationLayout->setSpacing(4);
     translationLayout->addWidget(createFieldLabel(tr("译文（rep）"), this));
@@ -463,8 +467,8 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     translationEdit->setMinimumHeight(88);
     translationEdit->setMaximumHeight(120);
     translationLayout->addWidget(translationEdit);
-    textLayout->addLayout(translationLayout, 1);
-    mainLayout->addLayout(textLayout);
+    textLayout->addWidget(translationWidget, 1);
+    mainLayout->addWidget(textWidget);
 
     mainLayout->addWidget(createFieldLabel(tr("匹配设置"), this));
     QGridLayout* settingsLayout = new QGridLayout();
@@ -490,7 +494,8 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     settingsLayout->setColumnStretch(3, 1);
     mainLayout->addLayout(settingsLayout);
 
-    QHBoxLayout* conditionHeaderLayout = new QHBoxLayout();
+    QWidget* conditionHeaderWidget = new QWidget(this);
+    QHBoxLayout* conditionHeaderLayout = new QHBoxLayout(conditionHeaderWidget);
     conditionHeaderLayout->setContentsMargins(0, 0, 0, 0);
     conditionHeaderLayout->setSpacing(4);
     conditionHeaderLayout->addWidget(createFieldLabel(tr("条件（conditions）"), this));
@@ -505,7 +510,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
     ElaToolTip* removeConditionToolTip = new ElaToolTip(removeConditionButton);
     removeConditionToolTip->setToolTip(tr("删除条件"));
     conditionHeaderLayout->addWidget(removeConditionButton);
-    mainLayout->addLayout(conditionHeaderLayout);
+    mainLayout->addWidget(conditionHeaderWidget);
 
     ReorderableTableView* tableView = new ReorderableTableView(this);
     NormalConditionTableModel* model = new NormalConditionTableModel(m_normalEntry.conditions, tableView);
@@ -576,7 +581,8 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
             }
         });
 
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QWidget* buttonWidget = new QWidget(this);
+    QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
     buttonLayout->setContentsMargins(0, 0, 0, 0);
     buttonLayout->setSpacing(8);
     buttonLayout->addStretch();
@@ -628,7 +634,7 @@ DictionaryEntryDialog::DictionaryEntryDialog(const GuiNormalDictEntry& entry, QW
             accept();
         });
     buttonLayout->addWidget(saveButton);
-    mainLayout->addLayout(buttonLayout);
+    mainLayout->addWidget(buttonWidget);
 
     originalEdit->setFocus();
     if (parent) {

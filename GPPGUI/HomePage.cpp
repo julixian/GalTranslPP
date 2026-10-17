@@ -115,7 +115,8 @@ namespace
         ElaText* descriptionText = new ElaText("Translate your favorite galgames", parent);
         descriptionText->setTextPixelSize(18);
 
-        QVBoxLayout* titleLayout = new QVBoxLayout();
+        QWidget* titleWidget = new QWidget(parent);
+        QVBoxLayout* titleLayout = new QVBoxLayout(titleWidget);
         titleLayout->setContentsMargins(30, 60, 0, 0);
         titleLayout->addWidget(titleText);
         titleLayout->addWidget(descriptionText);
@@ -136,7 +137,8 @@ namespace
         cardScrollAreaWidget->setStyleSheet("background-color:transparent;");
         cardScrollArea->setWidget(cardScrollAreaWidget);
 
-        QHBoxLayout* urlCardLayout = new QHBoxLayout();
+        QWidget* urlCardWidget = new QWidget(cardScrollAreaWidget);
+        QHBoxLayout* urlCardLayout = new QHBoxLayout(urlCardWidget);
         urlCardLayout->setSpacing(15);
         urlCardLayout->setContentsMargins(30, 0, 0, 6);
         urlCardLayout->addWidget(createUrlCard(
@@ -156,11 +158,11 @@ namespace
         QVBoxLayout* cardScrollAreaWidgetLayout = new QVBoxLayout(cardScrollAreaWidget);
         cardScrollAreaWidgetLayout->setContentsMargins(0, 0, 0, 0);
         cardScrollAreaWidgetLayout->addStretch();
-        cardScrollAreaWidgetLayout->addLayout(urlCardLayout);
+        cardScrollAreaWidgetLayout->addWidget(urlCardWidget);
 
         QVBoxLayout* backgroundLayout = new QVBoxLayout(backgroundCard);
         backgroundLayout->setContentsMargins(0, 0, 0, 0);
-        backgroundLayout->addLayout(titleLayout);
+        backgroundLayout->addWidget(titleWidget);
         backgroundLayout->addWidget(cardScrollArea);
 
         return backgroundCard;
@@ -298,13 +300,15 @@ void HomePage::setupUi()
     ElaText* flowText = new ElaText("Useful Tools", centralWidget);
     flowText->setTextPixelSize(20);
 
-    QHBoxLayout* flowTextLayout = new QHBoxLayout();
+    QWidget* flowTextWidget = new QWidget(centralWidget);
+    QHBoxLayout* flowTextLayout = new QHBoxLayout(flowTextWidget);
+    flowTextLayout->setSpacing(centerLayout->spacing());
     flowTextLayout->setContentsMargins(25, 0, 0, 0);
     flowTextLayout->addWidget(flowText);
 
     centerLayout->addWidget(createHeroCard(centralWidget));
     centerLayout->addSpacing(20);
-    centerLayout->addLayout(flowTextLayout);
+    centerLayout->addWidget(flowTextWidget);
     centerLayout->addSpacing(10);
     centerLayout->addLayout(createPopularCardsLayout(m_globalConfig, centralWidget,this, this));
     centerLayout->addStretch();

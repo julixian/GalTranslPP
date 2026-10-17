@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "ElaToolButton.h"
-#include "ElaFlowLayout.h"
 #include "ElaPlainTextEdit.h"
 #include "ElaMenu.h"
 #include "ElaMessageBar.h"
@@ -55,7 +54,10 @@ void DefaultPromptsPage::setupUi()
 			QWidget* promptWidget = new QWidget(mainWidget);
 			QVBoxLayout* promptLayout = new QVBoxLayout(promptWidget);
 			promptLayout->setContentsMargins(0, 0, 0, 0);
-			ElaFlowLayout* promptButtonLayout = new ElaFlowLayout(0, 6, 6);
+			QWidget* promptButtonWidget = new QWidget(promptWidget);
+			QHBoxLayout* promptButtonLayout = new QHBoxLayout(promptButtonWidget);
+			promptButtonLayout->setContentsMargins(0, 0, 0, 0);
+			promptButtonLayout->setSpacing(6);
 			QStackedWidget* promptStackedWidget = new QStackedWidget(promptWidget);
 			QButtonGroup* promptButtonGroup = new QButtonGroup(promptWidget);
 			std::vector<std::pair<std::string, ElaPlainTextEdit*>> promptEdits;
@@ -112,6 +114,7 @@ void DefaultPromptsPage::setupUi()
 			promptSaveButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 			promptSaveButton->setElaIcon(ElaIconType::Check);
 			promptSaveButton->setText(tr("保存"));
+			promptButtonLayout->addStretch();
 			promptButtonLayout->addWidget(promptSaveAllButton);
 			promptButtonLayout->addWidget(promptSaveButton);
 			connect(promptSaveAllButton, &ElaToolButton::clicked, this, [=, this]()
@@ -127,7 +130,7 @@ void DefaultPromptsPage::setupUi()
 						tr("默认 %1 提示词配置已保存。").arg(promptName), 3000);
 				});
 
-			promptLayout->addLayout(promptButtonLayout);
+			promptLayout->addWidget(promptButtonWidget);
 			promptLayout->addWidget(promptStackedWidget);
 			tabWidget->addTab(promptWidget, promptName);
 			return resultApply2ConfigFunc;

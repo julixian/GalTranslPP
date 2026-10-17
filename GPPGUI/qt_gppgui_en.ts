@@ -38,7 +38,7 @@
         <translation>Api settings</translation>
     </message>
     <message>
-        <location line="+65"/>
+        <location line="+68"/>
         <source>Api 使用策略</source>
         <translation>Api strategy</translation>
     </message>
@@ -73,7 +73,7 @@
         <translation>List layout</translation>
     </message>
     <message>
-        <location line="+166"/>
+        <location line="+169"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -98,13 +98,13 @@
         <translation>Protocol</translation>
     </message>
     <message>
-        <location line="+50"/>
-        <location line="+637"/>
+        <location line="+52"/>
+        <location line="+639"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="-630"/>
+        <location line="-632"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -121,13 +121,13 @@
     <message>
         <location line="+4"/>
         <location line="+1"/>
-        <location line="+581"/>
+        <location line="+583"/>
         <location line="+23"/>
         <source>自定义 Api</source>
         <translation>Custom API</translation>
     </message>
     <message>
-        <location line="-586"/>
+        <location line="-588"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -324,12 +324,12 @@ sk-...</translation>
         <translation>Penalizes the reuse of tokens</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+37"/>
         <source>JSON 对象，用于追加自定义 HTTP header</source>
         <translation>JSON object for appending custom HTTP headers</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+24"/>
         <source>JSON 对象，用于追加或覆盖请求体顶层字段；使用模型专用思考参数时请将思考等级设为不传递</source>
         <translation>Body overrides; set thinking to Omit for model-specific options</translation>
     </message>
@@ -746,7 +746,7 @@ sk-...</translation>
         <translation>Default gptDict settings</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+15"/>
         <source>通用GPT字典</source>
         <translation>Common gptDicts</translation>
     </message>
@@ -766,7 +766,7 @@ sk-...</translation>
         <translation>Save all pages</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>纯文本</source>
         <translation>Plain text</translation>
     </message>
@@ -1010,7 +1010,7 @@ sk-...</translation>
         <translation>Unknown common dictionary mode</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>通用译前字典</source>
         <translation>Common preDicts</translation>
     </message>
@@ -1035,7 +1035,7 @@ sk-...</translation>
         <translation>Save all pages</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>纯文本</source>
         <translation>Plain text</translation>
     </message>
@@ -1734,7 +1734,7 @@ sk-...</translation>
 <context>
     <name>DefaultPromptsPage</name>
     <message>
-        <location filename="DefaultPromptsPage.cpp" line="+25"/>
+        <location filename="DefaultPromptsPage.cpp" line="+24"/>
         <source>默认提示词管理</source>
         <translation>Default prompts</translation>
     </message>
@@ -1749,7 +1749,7 @@ sk-...</translation>
         <translation>Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+52"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
@@ -1779,7 +1779,7 @@ sk-...</translation>
         <translation>Save</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <location line="+6"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
@@ -1989,7 +1989,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDeleteDialog</name>
     <message>
-        <location filename="DictionaryEntryDialog.cpp" line="+658"/>
+        <location filename="DictionaryEntryDialog.cpp" line="+664"/>
         <source>否</source>
         <translation>No</translation>
     </message>
@@ -2017,7 +2017,7 @@ sk-...</translation>
 <context>
     <name>DictionaryEntryDialog</name>
     <message>
-        <location line="-582"/>
+        <location line="-588"/>
         <source>拖动调整顺序</source>
         <translation>Drag to reorder</translation>
     </message>
@@ -2043,54 +2043,54 @@ sk-...</translation>
     </message>
     <message>
         <location line="+25"/>
-        <location line="+65"/>
+        <location line="+68"/>
         <source>原文（org）</source>
         <translation>Original (org)</translation>
     </message>
     <message>
-        <location line="-64"/>
-        <location line="+75"/>
+        <location line="-67"/>
+        <location line="+79"/>
         <source>译文（rep）</source>
         <translation>Replace (rep)</translation>
     </message>
     <message>
-        <location line="-74"/>
+        <location line="-78"/>
         <source>注释（note）</source>
         <translation>Note (note)</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+191"/>
+        <location line="+8"/>
+        <location line="+196"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="-186"/>
-        <location line="+191"/>
+        <location line="-191"/>
+        <location line="+196"/>
         <source>保存</source>
         <translation>Save</translation>
     </message>
     <message>
-        <location line="-184"/>
-        <location line="+192"/>
+        <location line="-189"/>
+        <location line="+197"/>
         <location line="+12"/>
         <location line="+9"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
     <message>
-        <location line="-212"/>
-        <location line="+192"/>
+        <location line="-217"/>
+        <location line="+197"/>
         <source>原文（org）不能为空</source>
         <translation>Original (org) required</translation>
     </message>
     <message>
-        <location line="-171"/>
+        <location line="-176"/>
         <source>编辑 Normal 字典词条</source>
         <translation>Edit Normal entry</translation>
     </message>
     <message>
-        <location line="+42"/>
+        <location line="+45"/>
         <source>匹配设置</source>
         <translation>Match</translation>
     </message>
@@ -2105,7 +2105,7 @@ sk-...</translation>
         <translation>Priority</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+14"/>
         <source>条件（conditions）</source>
         <translation>Rules (conditions)</translation>
     </message>
@@ -2120,7 +2120,7 @@ sk-...</translation>
         <translation>Delete rule</translation>
     </message>
     <message>
-        <location line="+104"/>
+        <location line="+105"/>
         <source>第 %1 条条件的条件正则不能为空</source>
         <translation>Rule %1 regex required</translation>
     </message>
@@ -2377,7 +2377,7 @@ Issue summary:</translation>
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="HomePage.cpp" line="+283"/>
+        <location filename="HomePage.cpp" line="+285"/>
         <location line="+10"/>
         <source>主页</source>
         <translation>Home Page</translation>
@@ -3486,7 +3486,7 @@ Cache: %4</translation>
         <translation>Cache</translation>
     </message>
     <message>
-        <location line="+35"/>
+        <location line="+37"/>
         <source>打开缓存文件夹</source>
         <translation>Open Cache Folder</translation>
     </message>
@@ -3527,7 +3527,7 @@ Cache: %4</translation>
         <translation>Saved %1 cache files</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+56"/>
         <source>删除选中文件</source>
         <translation>Delete Selected Files</translation>
     </message>
@@ -3538,12 +3538,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+368"/>
+        <location line="+378"/>
         <source>确认删除</source>
         <translation>Confirm Delete</translation>
     </message>
     <message>
-        <location line="-367"/>
+        <location line="-377"/>
         <source>确定要删除选中的 %1 个缓存文件吗？</source>
         <translation>Delete %1 selected cache files?</translation>
     </message>
@@ -3553,40 +3553,40 @@ Cache: %4</translation>
         <translation>Deleted %1 cache files</translation>
     </message>
     <message>
-        <location line="+281"/>
+        <location line="+291"/>
         <source>在当前文件中搜索 preproc/transraw/problems...</source>
         <translation>Search preproc/transraw/problems in current file...</translation>
     </message>
     <message>
-        <location line="-332"/>
+        <location line="-342"/>
         <source>文件</source>
         <translation>Files</translation>
     </message>
     <message>
-        <location line="-98"/>
+        <location line="-100"/>
         <source>刷新</source>
         <translation>Refresh</translation>
     </message>
     <message>
-        <location line="+187"/>
+        <location line="+190"/>
         <source>搜索内容...</source>
         <translation>Search...</translation>
     </message>
     <message>
         <location line="+11"/>
         <location line="+8"/>
-        <location line="+91"/>
+        <location line="+92"/>
         <source>全部</source>
         <translation>All</translation>
     </message>
     <message>
-        <location line="-66"/>
-        <location line="+222"/>
+        <location line="-67"/>
+        <location line="+231"/>
         <source>正则搜索</source>
         <translation>Regex</translation>
     </message>
     <message>
-        <location line="-135"/>
+        <location line="-143"/>
         <source>正则替换</source>
         <translation>Regex</translation>
     </message>
@@ -3596,12 +3596,12 @@ Cache: %4</translation>
         <translation>Invalid regex: %1 (at %2)</translation>
     </message>
     <message>
-        <location line="+268"/>
+        <location line="+269"/>
         <source>批量替换</source>
         <translation>Batch Replace</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-60"/>
         <source>批量替换预览</source>
         <translation>Batch Replace Preview</translation>
     </message>
@@ -3616,7 +3616,7 @@ Cache: %4</translation>
         <translation>Apply Replacements</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+28"/>
         <source>跳转页码</source>
         <translation>Go to page</translation>
     </message>
@@ -3627,7 +3627,7 @@ Cache: %4</translation>
         <translation>Page %1 / %2</translation>
     </message>
     <message>
-        <location line="-72"/>
+        <location line="-73"/>
         <location line="+12"/>
         <source>替换前</source>
         <translation>Before</translation>
@@ -3639,7 +3639,7 @@ Cache: %4</translation>
         <translation>After</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="-50"/>
+        <location filename="ProjectCachePage.cpp" line="-51"/>
         <source>查找</source>
         <translation>Find</translation>
     </message>
@@ -3649,7 +3649,7 @@ Cache: %4</translation>
         <translation>Replace with</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <location line="+8"/>
         <source>transraw</source>
         <translation>transraw</translation>
@@ -3660,7 +3660,7 @@ Cache: %4</translation>
         <translation>preproc</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+33"/>
         <source>预览</source>
         <translation>Preview</translation>
     </message>
@@ -3670,33 +3670,33 @@ Cache: %4</translation>
         <translation>Replace</translation>
     </message>
     <message>
-        <location line="-233"/>
+        <location line="-238"/>
         <location filename="ProjectCachePageSearch.cpp" line="-171"/>
         <location line="+7"/>
         <source>搜索</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location line="+274"/>
+        <location line="+279"/>
         <source>刷新问题</source>
         <translation>Refresh Problems</translation>
     </message>
     <message>
-        <location line="-273"/>
+        <location line="-278"/>
         <location filename="ProjectCachePageSearch.cpp" line="+64"/>
-        <location line="+288"/>
+        <location line="+289"/>
         <source>问题</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location line="+313"/>
+        <location line="+321"/>
         <location filename="ProjectCachePageEntries.cpp" line="+44"/>
         <location line="+44"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+54"/>
         <source>只看问题句</source>
         <translation>Problems only</translation>
     </message>
@@ -3757,7 +3757,7 @@ Cache: %4</translation>
         <translation>pre_translated_text (translation, editable)</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+58"/>
         <source>已删除 %1 个条目，保存后生效</source>
         <translation>Deleted %1 entries; save to apply</translation>
     </message>
@@ -3782,13 +3782,13 @@ Cache: %4</translation>
         <translation>%1 lines · %2 problems</translation>
     </message>
     <message>
-        <location filename="ProjectCachePage.cpp" line="-241"/>
+        <location filename="ProjectCachePage.cpp" line="-250"/>
         <location filename="ProjectCachePageActions.cpp" line="+58"/>
         <source>展开批量替换</source>
         <translation>Expand Batch Replace</translation>
     </message>
     <message>
-        <location line="+220"/>
+        <location line="+229"/>
         <source>编辑选中条目</source>
         <translation>Edit Selected Entry</translation>
     </message>
@@ -3803,13 +3803,13 @@ Cache: %4</translation>
         <translation>Cache is not a JSON array: %1</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageEntries.cpp" line="-161"/>
+        <location filename="ProjectCachePageEntries.cpp" line="-164"/>
         <source>problems（只读）</source>
         <translation>problems (read-only)</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location filename="ProjectCachePageSearch.cpp" line="-184"/>
+        <location line="+10"/>
+        <location filename="ProjectCachePageSearch.cpp" line="-185"/>
         <source>关闭</source>
         <translation>Close</translation>
     </message>
@@ -3893,18 +3893,18 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+15"/>
-        <location line="+159"/>
+        <location line="+160"/>
         <source>请输入查找内容</source>
         <translation>Please enter text to find</translation>
     </message>
     <message>
-        <location line="-138"/>
+        <location line="-139"/>
         <source>共 %1 处匹配，涉及 %2 个文件</source>
         <translation>%1 match(es) across %2 file(s)</translation>
     </message>
     <message>
         <location line="-12"/>
-        <location line="+158"/>
+        <location line="+159"/>
         <source>无匹配内容</source>
         <translation>No matches</translation>
     </message>
@@ -4313,7 +4313,7 @@ Issue summary:</translation>
         <translation>File plugin config</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+12"/>
         <source>工作线程数:</source>
         <translation>Working threads:</translation>
     </message>
@@ -4373,7 +4373,7 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-461"/>
+        <location line="-463"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
@@ -4383,7 +4383,7 @@ Issue summary:</translation>
         <translation>File plugin:</translation>
     </message>
     <message>
-        <location line="+155"/>
+        <location line="+157"/>
         <source>文件格式错误</source>
         <translation>File format error</translation>
     </message>
@@ -4663,7 +4663,7 @@ Issue summary:</translation>
         <translation>Translation Workbench</translation>
     </message>
     <message>
-        <location line="+15"/>
+        <location line="+18"/>
         <source>等待翻译任务</source>
         <translation>Waiting for translation task</translation>
     </message>
@@ -4673,12 +4673,12 @@ Issue summary:</translation>
         <translation>Clear Filter</translation>
     </message>
     <message>
-        <location line="+18"/>
+        <location line="+20"/>
         <source>成功句流</source>
         <translation>Success Stream</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+28"/>
         <location line="+252"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>

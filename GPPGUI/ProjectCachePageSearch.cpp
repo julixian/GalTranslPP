@@ -412,7 +412,8 @@ void ProjectCachePage::previewReplace()
 
     constexpr int pageSize = 500;
     const int pageCount = (int)qMax(1, (previewEntries.size() + pageSize - 1) / pageSize);
-    QHBoxLayout* paginationLayout = new QHBoxLayout();
+    QWidget* paginationWidget = new QWidget(content);
+    QHBoxLayout* paginationLayout = new QHBoxLayout(paginationWidget);
     paginationLayout->setContentsMargins(0, 0, 0, 0);
     paginationLayout->setSpacing(6);
     ElaSpinBox* pageSpinBox = new ElaSpinBox(content);
@@ -425,7 +426,7 @@ void ProjectCachePage::previewReplace()
     pageLabel->setStyleSheet(auxiliaryTextStyle());
     paginationLayout->addWidget(pageLabel);
     paginationLayout->addStretch();
-    layout->addLayout(paginationLayout);
+    layout->addWidget(paginationWidget);
 
     QTextBrowser* previewBrowser = new QTextBrowser(content);
     previewBrowser->setOpenLinks(false);

@@ -73,7 +73,10 @@ void ApiSettingsPage::setupUi()
     mainLayout->setContentsMargins(20, 15, 15, 0);
     mainLayout->setSpacing(8);
 
-    QHBoxLayout* toolbar = new QHBoxLayout();
+    QWidget* toolbarWidget = new QWidget(centerWidget);
+    QHBoxLayout* toolbar = new QHBoxLayout(toolbarWidget);
+    toolbar->setContentsMargins(0, 0, 0, 0);
+    toolbar->setSpacing(mainLayout->spacing());
     ElaToolButton* addApiButton = new ElaToolButton(centerWidget);
     addApiButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     addApiButton->setElaIcon(ElaIconType::Plus);
@@ -102,7 +105,7 @@ void ApiSettingsPage::setupUi()
         {
             switchLayout(1);
         });
-    mainLayout->addLayout(toolbar);
+    mainLayout->addWidget(toolbarWidget);
 
     m_flowList = new GppFlowList(centerWidget);
     mainLayout->addWidget(m_flowList);
@@ -241,14 +244,17 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     container->setFixedHeight(180);
 
     QHBoxLayout* containerLayout = new QHBoxLayout(container);
-    QVBoxLayout* fieldsLayout = new QVBoxLayout();
+    QWidget* fieldsWidget = new QWidget(container);
+    QVBoxLayout* fieldsLayout = new QVBoxLayout(fieldsWidget);
+    fieldsLayout->setContentsMargins(0, 0, 0, 0);
+    fieldsLayout->setSpacing(containerLayout->spacing());
     ElaText* nameLabel = new ElaText(container);
     nameLabel->setTextPixelSize(16);
     nameLabel->setWordWrap(false);
     nameLabel->setIndent(8);
     fieldsLayout->addSpacing(8);
     fieldsLayout->addWidget(nameLabel);
-    containerLayout->addLayout(fieldsLayout, 1);
+    containerLayout->addWidget(fieldsWidget, 1);
 
     QWidget* formWidget = new QWidget(container);
     QGridLayout* formLayout = new QGridLayout(formWidget);
@@ -308,21 +314,23 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             moveApiRow(container, 1);
         });
 
-    QHBoxLayout* protocolLabelLayout = new QHBoxLayout();
+    QWidget* protocolLabelWidget = new QWidget(formWidget);
+    QHBoxLayout* protocolLabelLayout = new QHBoxLayout(protocolLabelWidget);
     protocolLabelLayout->setContentsMargins(0, 0, 0, 0);
     protocolLabelLayout->setSpacing(8);
     protocolLabelLayout->addWidget(protocolLabel);
     protocolLabelLayout->addWidget(moveUpButton);
     protocolLabelLayout->addStretch();
-    formLayout->addLayout(protocolLabelLayout, 1, 2);
+    formLayout->addWidget(protocolLabelWidget, 1, 2);
 
-    QHBoxLayout* protocolComboLayout = new QHBoxLayout();
+    QWidget* protocolComboWidget = new QWidget(formWidget);
+    QHBoxLayout* protocolComboLayout = new QHBoxLayout(protocolComboWidget);
     protocolComboLayout->setContentsMargins(0, 0, 0, 0);
     protocolComboLayout->setSpacing(8);
     protocolComboLayout->addWidget(protocolComboBox);
     protocolComboLayout->addWidget(moveDownButton);
     protocolComboLayout->addStretch();
-    formLayout->addLayout(protocolComboLayout, 2, 2);
+    formLayout->addWidget(protocolComboWidget, 2, 2);
     formLayout->setColumnStretch(3, 1);
 
     QWidget* rightWidget = new QWidget(container);
@@ -636,7 +644,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QVBoxLayout* extraHeadersLayout = new QVBoxLayout(extraHeadersArea);
     extraHeadersLayout->setContentsMargins(12, 6, 12, 8);
     extraHeadersLayout->setSpacing(6);
-    QHBoxLayout* extraHeadersTitleLayout = new QHBoxLayout();
+    QWidget* extraHeadersTitleWidget = new QWidget(extraHeadersArea);
+    QHBoxLayout* extraHeadersTitleLayout = new QHBoxLayout(extraHeadersTitleWidget);
     extraHeadersTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraHeadersTitleLayout->setSpacing(8);
     extraHeadersTitleLayout->addWidget(new GppDoubleText("extraHeaders", 16,
@@ -645,7 +654,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     ElaCheckBox* extraHeadersCheckBox = new ElaCheckBox(extraHeadersArea);
     extraHeadersCheckBox->setChecked(extraHeadersEnable);
     extraHeadersTitleLayout->addWidget(extraHeadersCheckBox);
-    extraHeadersLayout->addLayout(extraHeadersTitleLayout);
+    extraHeadersLayout->addWidget(extraHeadersTitleWidget);
     ElaPlainTextEdit* extraHeadersEdit = new ElaPlainTextEdit(extraHeadersArea);
     extraHeadersEdit->setFixedHeight(115);
     extraHeadersEdit->setPlaceholderText("{\n  \"HTTP-Referer\": \"https://example.com\",\n  \"X-Title\": \"GalTranslPP\"\n}");
@@ -659,7 +668,8 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     QVBoxLayout* extraBodyLayout = new QVBoxLayout(extraBodyArea);
     extraBodyLayout->setContentsMargins(12, 6, 12, 8);
     extraBodyLayout->setSpacing(6);
-    QHBoxLayout* extraBodyTitleLayout = new QHBoxLayout();
+    QWidget* extraBodyTitleWidget = new QWidget(extraBodyArea);
+    QHBoxLayout* extraBodyTitleLayout = new QHBoxLayout(extraBodyTitleWidget);
     extraBodyTitleLayout->setContentsMargins(0, 0, 0, 0);
     extraBodyTitleLayout->setSpacing(8);
     extraBodyTitleLayout->addWidget(new GppDoubleText("extraBody", 16,
@@ -669,7 +679,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     ElaCheckBox* extraBodyCheckBox = new ElaCheckBox(extraBodyArea);
     extraBodyCheckBox->setChecked(extraBodyEnable);
     extraBodyTitleLayout->addWidget(extraBodyCheckBox);
-    extraBodyLayout->addLayout(extraBodyTitleLayout);
+    extraBodyLayout->addWidget(extraBodyTitleWidget);
     ElaPlainTextEdit* extraBodyEdit = new ElaPlainTextEdit(extraBodyArea);
     extraBodyEdit->setFixedHeight(115);
     extraBodyEdit->setPlaceholderText("{\n  \"enable_thinking\": true\n}");

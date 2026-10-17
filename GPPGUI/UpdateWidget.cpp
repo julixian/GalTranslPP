@@ -20,6 +20,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     QStringList updateList = {
         "1. 优化字典与 MyCustom 提示词",
         "2. 修复 429 与频率检测晚于额度检测的bug",
+        "3. [GUI] 修复默认提示词管理保存按钮没有靠右的 bug",
     };
 
     mainLayout->addWidget(updateTitle);

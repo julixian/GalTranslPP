@@ -480,10 +480,12 @@ void StartSettingsPage::setupUi()
 	outputSetting->setElaIcon(ElaIconType::Gear);
 	outputSetting->setText(tr("文件处理器设置"));
 	outputSetting->setMenu(filePluginSettingMenu);
-	QHBoxLayout* outputSettingLayout = new QHBoxLayout();
+	QWidget* outputSettingWidget = new QWidget(buttonArea);
+	QHBoxLayout* outputSettingLayout = new QHBoxLayout(outputSettingWidget);
+	outputSettingLayout->setSpacing(buttonLayout->spacing());
 	outputSettingLayout->setContentsMargins(4, 0, 0, 0);
 	outputSettingLayout->addWidget(outputSetting);
-	buttonLayout->addLayout(outputSettingLayout);
+	buttonLayout->addWidget(outputSettingWidget);
 
 	// 线程数
 	ElaText* threadNumLabel = new ElaText(buttonArea);

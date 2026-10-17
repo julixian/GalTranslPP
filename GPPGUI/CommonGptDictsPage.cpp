@@ -45,7 +45,9 @@ void CommonGptDictsPage::setupUi()
 	QVBoxLayout* mainLayout = new QVBoxLayout(mainWidget);
 	mainLayout->setContentsMargins(10, 10, 10, 0);
 
-	QHBoxLayout* mainButtonLayout = new QHBoxLayout(mainWidget);
+	QWidget* mainButtonWidget = new QWidget(mainWidget);
+	QHBoxLayout* mainButtonLayout = new QHBoxLayout(mainButtonWidget);
+	mainButtonLayout->setContentsMargins(0, 0, 0, 0);
 	ElaText* dictNameLabel = new ElaText(tr("通用GPT字典"), mainWidget);
 	dictNameLabel->setTextPixelSize(18);
 	ElaToolButton* importButton = new ElaToolButton(mainWidget);
@@ -66,7 +68,7 @@ void CommonGptDictsPage::setupUi()
 	mainButtonLayout->addWidget(importButton);
 	mainButtonLayout->addWidget(addNewTabButton);
 	mainButtonLayout->addWidget(saveAllButton);
-	mainLayout->addLayout(mainButtonLayout);
+	mainLayout->addWidget(mainButtonWidget);
 
 	ElaTabWidget* tabWidget = new ElaTabWidget(mainWidget);
 	tabWidget->setTabsClosable(false);
@@ -82,7 +84,9 @@ void CommonGptDictsPage::setupUi()
 			QVBoxLayout* pageMainLayout = new QVBoxLayout(pageMainWidget);
 			pageMainLayout->setContentsMargins(0, 0, 0, 0);
 
-			QHBoxLayout* pageButtonLayout = new QHBoxLayout(pageMainWidget);
+			QWidget* pageButtonWidget = new QWidget(pageMainWidget);
+			QHBoxLayout* pageButtonLayout = new QHBoxLayout(pageButtonWidget);
+			pageButtonLayout->setContentsMargins(0, 0, 0, 0);
 			ElaToolButton* plainTextModeButton = new ElaToolButton(pageMainWidget);
 			plainTextModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 			plainTextModeButton->setElaIcon(ElaIconType::Text);
@@ -145,7 +149,7 @@ void CommonGptDictsPage::setupUi()
 			pageButtonLayout->addWidget(addDictButton);
 			pageButtonLayout->addWidget(editEntryButton);
 			pageButtonLayout->addWidget(removeDictButton);
-			pageMainLayout->addLayout(pageButtonLayout);
+			pageMainLayout->addWidget(pageButtonWidget);
 
 			QStackedWidget* stackedWidget = new QStackedWidget(tabWidget);
 

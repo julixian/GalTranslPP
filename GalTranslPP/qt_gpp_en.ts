@@ -2045,7 +2045,7 @@ Tool calls:
 <context>
     <name>chooseCachePart</name>
     <message>
-        <location filename="Tool.cpp" line="784"/>
+        <location filename="Tool.cpp" line="783"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2053,7 +2053,7 @@ Tool calls:
 <context>
     <name>chooseStringRef</name>
     <message>
-        <location filename="Tool.cpp" line="767"/>
+        <location filename="Tool.cpp" line="766"/>
         <source>无法获取字符串的条件目标 %1</source>
         <translation>Invalid string target %1</translation>
     </message>
@@ -2079,17 +2079,17 @@ Tool calls:
 <context>
     <name>countGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="219"/>
+        <location filename="Tool.cpp" line="218"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="228"/>
+        <location filename="Tool.cpp" line="227"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="234"/>
+        <location filename="Tool.cpp" line="233"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2160,12 +2160,12 @@ Tool calls:
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1064"/>
+        <location filename="Tool.cpp" line="1063"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1070"/>
+        <location filename="Tool.cpp" line="1069"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2202,12 +2202,12 @@ Tool calls:
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1082"/>
+        <location filename="Tool.cpp" line="1081"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1087"/>
+        <location filename="Tool.cpp" line="1086"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2223,17 +2223,17 @@ Tool calls:
 <context>
     <name>splitIntoGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="170"/>
+        <location filename="Tool.cpp" line="169"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="180"/>
+        <location filename="Tool.cpp" line="179"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="187"/>
+        <location filename="Tool.cpp" line="186"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2249,7 +2249,7 @@ Tool calls:
 <context>
     <name>splitTsvLine</name>
     <message>
-        <location filename="Tool.cpp" line="104"/>
+        <location filename="Tool.cpp" line="103"/>
         <source>内部错误: TSV 行切分不允许使用空分隔符</source>
         <translation>TSV split cannot use empty delimiter</translation>
     </message>

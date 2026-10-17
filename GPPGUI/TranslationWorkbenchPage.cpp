@@ -366,7 +366,10 @@ void TranslationWorkbenchPage::setupUi()
     mainLayout->setContentsMargins(18, 14, 16, 0);
     mainLayout->setSpacing(8);
 
-    QHBoxLayout* headerLayout = new QHBoxLayout();
+    QWidget* headerWidget = new QWidget(mainWidget);
+    QHBoxLayout* headerLayout = new QHBoxLayout(headerWidget);
+    headerLayout->setContentsMargins(0, 0, 0, 0);
+    headerLayout->setSpacing(mainLayout->spacing());
     m_summaryText = new ElaText(tr("等待翻译任务"), 13, mainWidget);
     headerLayout->addWidget(m_summaryText, 1);
     m_filterText = new ElaText("", 12, mainWidget);
@@ -383,9 +386,11 @@ void TranslationWorkbenchPage::setupUi()
             refreshHeader();
         });
     headerLayout->addWidget(m_clearFilterButton);
-    mainLayout->addLayout(headerLayout);
+    mainLayout->addWidget(headerWidget);
 
-    QHBoxLayout* bodyLayout = new QHBoxLayout();
+    QWidget* bodyWidget = new QWidget(mainWidget);
+    QHBoxLayout* bodyLayout = new QHBoxLayout(bodyWidget);
+    bodyLayout->setContentsMargins(0, 0, 0, 0);
     bodyLayout->setSpacing(10);
 
     QWidget* successPane = new QWidget(mainWidget);
@@ -411,7 +416,9 @@ void TranslationWorkbenchPage::setupUi()
     QVBoxLayout* sideLayout = new QVBoxLayout(sidePane);
     sideLayout->setContentsMargins(0, 0, 0, 0);
     sideLayout->setSpacing(5);
-    QHBoxLayout* tabLayout = new QHBoxLayout();
+    QWidget* tabWidget = new QWidget(sidePane);
+    QHBoxLayout* tabLayout = new QHBoxLayout(tabWidget);
+    tabLayout->setContentsMargins(0, 0, 0, 0);
     tabLayout->setSpacing(5);
     m_sideTabGroup = new QButtonGroup(this);
     m_sideTabGroup->setExclusive(true);
@@ -430,7 +437,7 @@ void TranslationWorkbenchPage::setupUi()
     tabLayout->addStretch();
     tabLayout->addWidget(m_errorsTabButton);
     tabLayout->addWidget(m_filesTabButton);
-    sideLayout->addLayout(tabLayout);
+    sideLayout->addWidget(tabWidget);
     connect(m_sideTabGroup, &QButtonGroup::idClicked, this, &TranslationWorkbenchPage::setSideTab);
 
     m_sideStack = new QStackedWidget(sidePane);
@@ -469,7 +476,7 @@ void TranslationWorkbenchPage::setupUi()
     sideLayout->addWidget(m_sideStack, 1);
     bodyLayout->addWidget(sidePane, 3);
 
-    mainLayout->addLayout(bodyLayout, 1);
+    mainLayout->addWidget(bodyWidget, 1);
     addCentralWidget(mainWidget, true, false, 0);
     setSideTab(0);
     refreshHeader();

@@ -12,7 +12,6 @@ module;
 
 #include <opencc/opencc.h>
 
-
 #include <unicode/brkiter.h>
 #include <unicode/uscript.h>
 #include <unicode/translit.h>

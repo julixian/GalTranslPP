@@ -193,7 +193,10 @@ void ProjectCachePage::openEntryEditor(int row)
     ElaPlainTextEdit* previewEdit = addEditor(tr("translated_view_text（只读）"), entryPreview(item), true, 60);
     Q_UNUSED(previewEdit);
 
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
+    QWidget* buttonWidget = new QWidget(&dialog);
+    QHBoxLayout* buttonLayout = new QHBoxLayout(buttonWidget);
+    buttonLayout->setContentsMargins(0, 0, 0, 0);
+    buttonLayout->setSpacing(mainLayout->spacing());
     buttonLayout->addStretch();
     GppPushButton* closeButton = new GppPushButton(tr("关闭"), &dialog);
     connect(closeButton, &GppPushButton::clicked, &dialog, &ElaDialog::reject);
@@ -208,7 +211,7 @@ void ProjectCachePage::openEntryEditor(int row)
             dialog.accept();
         });
     buttonLayout->addWidget(saveButton);
-    mainLayout->addLayout(buttonLayout);
+    mainLayout->addWidget(buttonWidget);
 
     dialog.move(window()->frameGeometry().center() - dialog.rect().center());
     dialog.exec();

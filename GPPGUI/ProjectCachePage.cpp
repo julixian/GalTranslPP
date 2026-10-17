@@ -58,7 +58,9 @@ void ProjectCachePage::setupUi()
     mainLayout->setContentsMargins(10, 10, 10, 0);
     mainLayout->setSpacing(8);
 
-    QHBoxLayout* topLayout = new QHBoxLayout();
+    QWidget* topWidget = new QWidget(mainWidget);
+    QHBoxLayout* topLayout = new QHBoxLayout(topWidget);
+    topLayout->setContentsMargins(0, 0, 0, 0);
     topLayout->setSpacing(8);
 
     m_cacheDirLabel = new ElaText(QString::fromStdWString(getCacheDir().wstring()), kBodyFontPx, mainWidget);
@@ -141,7 +143,7 @@ void ProjectCachePage::setupUi()
             updateActionStates();
         });
     topLayout->addWidget(m_saveAllButton);
-    mainLayout->addLayout(topLayout);
+    mainLayout->addWidget(topWidget);
 
     m_mainSplitter = new QSplitter(Qt::Horizontal, mainWidget);
     m_mainSplitter->setChildrenCollapsible(false);
@@ -155,7 +157,9 @@ void ProjectCachePage::setupUi()
     sidebarLayout->setContentsMargins(0, 0, 6, 0);
     sidebarLayout->setSpacing(5);
 
-    QHBoxLayout* navLayout = new QHBoxLayout();
+    QWidget* navWidget = new QWidget(sidebarWidget);
+    QHBoxLayout* navLayout = new QHBoxLayout(navWidget);
+    navLayout->setContentsMargins(0, 0, 0, 0);
     navLayout->setSpacing(4);
     m_sidebarButtonGroup = new QButtonGroup(this);
     m_sidebarButtonGroup->setExclusive(true);
@@ -178,7 +182,7 @@ void ProjectCachePage::setupUi()
         {
             setSidebarPage(index);
         });
-    sidebarLayout->addLayout(navLayout);
+    sidebarLayout->addWidget(navWidget);
 
     m_sidebarStack = new QStackedWidget(sidebarWidget);
 
@@ -252,7 +256,8 @@ void ProjectCachePage::setupUi()
     searchLayout->setContentsMargins(0, 0, 0, 0);
     searchLayout->setSpacing(4);
 
-    QHBoxLayout* globalSearchOptionsLayout = new QHBoxLayout();
+    QWidget* globalSearchOptionsWidget = new QWidget(searchTab);
+    QHBoxLayout* globalSearchOptionsLayout = new QHBoxLayout(globalSearchOptionsWidget);
     globalSearchOptionsLayout->setContentsMargins(0, 0, 0, 0);
     globalSearchOptionsLayout->setSpacing(4);
     QTimer* globalSearchTimer = new QTimer(searchTab);
@@ -307,7 +312,7 @@ void ProjectCachePage::setupUi()
     m_globalRegexButton->setToolTip(tr("正则搜索"));
     globalSearchOptionsLayout->addWidget(m_globalSearchField, 1);
     globalSearchOptionsLayout->addWidget(m_globalRegexButton);
-    searchLayout->addLayout(globalSearchOptionsLayout);
+    searchLayout->addWidget(globalSearchOptionsWidget);
 
     connect(globalSearchTimer, &QTimer::timeout, this, &ProjectCachePage::runGlobalSearch);
     connect(m_globalSearchEdit, &ElaLineEdit::returnPressed, this, [=, this]()
@@ -354,7 +359,8 @@ void ProjectCachePage::setupUi()
     m_replaceWithEdit->setIsClearButtonEnable(true);
     replaceLayout->addWidget(m_replaceWithEdit);
 
-    QHBoxLayout* replaceFieldLayout = new QHBoxLayout();
+    QWidget* replaceFieldWidget = new QWidget(m_replacePanel);
+    QHBoxLayout* replaceFieldLayout = new QHBoxLayout(replaceFieldWidget);
     replaceFieldLayout->setContentsMargins(0, 0, 0, 0);
     replaceFieldLayout->setSpacing(4);
     m_replaceField = new ElaToolButton(searchTab);
@@ -393,9 +399,12 @@ void ProjectCachePage::setupUi()
     m_replaceRegexButton->setFixedWidth(25);
     m_replaceRegexButton->setToolTip(tr("正则替换"));
     replaceFieldLayout->addWidget(m_replaceRegexButton);
-    replaceLayout->addLayout(replaceFieldLayout);
+    replaceLayout->addWidget(replaceFieldWidget);
 
-    QHBoxLayout* replaceButtonLayout = new QHBoxLayout();
+    QWidget* replaceButtonWidget = new QWidget(m_replacePanel);
+    QHBoxLayout* replaceButtonLayout = new QHBoxLayout(replaceButtonWidget);
+    replaceButtonLayout->setContentsMargins(0, 0, 0, 0);
+    replaceButtonLayout->setSpacing(replaceLayout->spacing());
     ElaToolButton* replacePreviewButton = new ElaToolButton(searchTab);
     replacePreviewButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     replacePreviewButton->setElaIcon(ElaIconType::Eye);
@@ -408,7 +417,7 @@ void ProjectCachePage::setupUi()
     m_replaceExecuteButton->setText(tr("替换"));
     connect(m_replaceExecuteButton, &ElaToolButton::clicked, this, &ProjectCachePage::executeReplace);
     replaceButtonLayout->addWidget(m_replaceExecuteButton);
-    replaceLayout->addLayout(replaceButtonLayout);
+    replaceLayout->addWidget(replaceButtonWidget);
     connect(m_replaceRegexButton, &ElaToolButton::toggled, this, [=, this](bool)
         {
             setRegexError(m_replaceQueryEdit, m_replaceRegexErrorAction, {});
@@ -485,7 +494,10 @@ void ProjectCachePage::setupUi()
     editorLayout->setContentsMargins(8, 0, 0, 0);
     editorLayout->setSpacing(8);
 
-    QHBoxLayout* currentLayout = new QHBoxLayout();
+    QWidget* currentWidget = new QWidget(editorWidget);
+    QHBoxLayout* currentLayout = new QHBoxLayout(currentWidget);
+    currentLayout->setContentsMargins(0, 0, 0, 0);
+    currentLayout->setSpacing(editorLayout->spacing());
     m_currentFileLabel = new ElaText(tr("未选择缓存文件"), kTitleFontPx, editorWidget);
     m_currentFileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     QFont currentFont = m_currentFileLabel->font();
@@ -498,9 +510,11 @@ void ProjectCachePage::setupUi()
     m_currentSummaryLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_currentSummaryLabel->setMinimumWidth(360);
     currentLayout->addWidget(m_currentSummaryLabel);
-    editorLayout->addLayout(currentLayout);
+    editorLayout->addWidget(currentWidget);
 
-    QHBoxLayout* filterLayout = new QHBoxLayout();
+    QWidget* filterWidget = new QWidget(editorWidget);
+    QHBoxLayout* filterLayout = new QHBoxLayout(filterWidget);
+    filterLayout->setContentsMargins(0, 0, 0, 0);
     filterLayout->setSpacing(8);
     m_localSearchEdit = new ElaLineEdit(editorWidget);
     m_localSearchEdit->setPlaceholderText(tr("在当前文件中搜索 preproc/transraw/problems..."));
@@ -575,7 +589,7 @@ void ProjectCachePage::setupUi()
             deleteEntryRows(m_selectedEntryRows.values());
         });
     filterLayout->addWidget(m_deleteEntriesButton);
-    editorLayout->addLayout(filterLayout);
+    editorLayout->addWidget(filterWidget);
 
     m_entryModel = new QStandardItemModel(this);
     m_entryList = new ElaListView(editorWidget);

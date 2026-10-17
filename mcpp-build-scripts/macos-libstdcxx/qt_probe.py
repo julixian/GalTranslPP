@@ -198,15 +198,14 @@ int main() {
 #include <stdexcept>
 int main() {
     std::cout << "make_exception_ptr" << std::endl;
-    auto error = std::make_exception_ptr(std::runtime_error("standalone exception passed"));
     std::cout << "rethrow_exception" << std::endl;
-    try { std::rethrow_exception(error); }
+    try { std::rethrow_exception(std::make_exception_ptr(std::runtime_error("standalone exception passed"))); }
     catch (const std::runtime_error& caught) { std::cout << caught.what() << std::endl; return 0; }
     return 1;
 }
 ''', encoding="utf-8")
     for name, extra in (("bare", []), ("appkit", ["-framework", "AppKit"]),
-                        ("dwarf", ["-framework", "AppKit", "-Wl,-no_compact_unwind"])):
+                        ("dwarf", ["-framework", "AppKit", "-femit-dwarf-unwind=always", "-Wl,-no_compact_unwind"])):
         binary = test / ("exception-" + name)
         run("qt-exception-build-" + name, [clang, *cxxflags, "-std=c++23", "-g", "--sysroot=" + sdk,
              "-mmacosx-version-min=15.0", exception_source, *ldflags, *extra, "-o", binary])
@@ -263,6 +262,8 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 6.12 REQUIRED COMPONENTS Core Gui Widgets)
 qt_add_executable(qt-libstdcxx-probe main.cpp)
 set_target_properties(qt-libstdcxx-probe PROPERTIES MACOSX_BUNDLE FALSE)
+target_compile_options(qt-libstdcxx-probe PRIVATE -femit-dwarf-unwind=always)
+target_link_options(qt-libstdcxx-probe PRIVATE -Wl,-no_compact_unwind)
 target_link_libraries(qt-libstdcxx-probe PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 ''', encoding="utf-8")
         run("qt-test-configure", ["cmake", "-S", test, "-B", test / "build", "-G", "Ninja",

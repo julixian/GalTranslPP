@@ -248,9 +248,31 @@ def main():
             run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
         except subprocess.CalledProcessError:
             failures.append(name)
+    # 运行库放在 LINKER_FLAGS 中会早于目标文件，静态库可能因此没有抽取成员。
+    runtime_arguments = [value for value in exact_args
+                         if value.endswith(("/libstdc++.dylib", "/libgcc_s.1.1.dylib", "/libgcc.a"))
+                         or value in ("-lSystem", "-lobjc")]
+    gcc_archive = next(value for value in runtime_arguments if value.endswith("/libgcc.a"))
+    for name, moved in (("runtime-after-objects", runtime_arguments), ("gcc-after-objects", [gcc_archive])):
+        arguments = [value for value in exact_args if value not in moved]
+        last_object = max(index for index, value in enumerate(arguments) if value.endswith(".o"))
+        arguments[last_object + 1:last_object + 1] = moved
+        target = project / name
+        run("debug-exact-link-" + name, [*arguments, "-o", target], cwd=cmake_build)
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
     for name, candidate in (("original", cmake_binary), ("working", project / "cmake-object")):
         run("debug-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--bind", candidate])
         run("debug-weak-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--weak-bind", candidate])
+        run("debug-fixups-" + name, [clang.with_name("llvm-objdump"), "--macho", "--chained-fixups", candidate])
+        symbols = subprocess.check_output([clang.with_name("llvm-nm"), "--defined-only", candidate], text=True)
+        (OUTPUT / ("debug-unwind-symbols-" + name + ".log")).write_text(
+            "\n".join(line for line in symbols.splitlines()
+                      if any(word in line for word in ("Unwind", "personality", "cxa_", "rethrow_exception"))), encoding="utf-8")
+    archive_symbols = subprocess.check_output([clang.with_name("llvm-nm"), gcc_archive], text=True)
+    (OUTPUT / "debug-gcc-archive.log").write_text(archive_symbols, encoding="utf-8")
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

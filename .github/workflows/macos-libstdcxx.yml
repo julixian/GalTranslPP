@@ -1,0 +1,42 @@
+name: macOS Clang with libstdc++
+
+on:
+  push:
+    branches: [codex/macos-libstdcxx]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: ~/.mcpp
+          key: macos-clang-libstdcxx-23.1.3-${{ github.run_id }}
+          restore-keys: macos-clang-libstdcxx-23.1.3-
+      - name: Install libstdc++
+        run: brew install gcc
+      - name: Probe Clang, LLD and mcpp
+        run: python -u mcpp-build-scripts/macos-libstdcxx/probe.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-clang-libstdcxx-probe
+          path: |
+            target/macos-libstdcxx/*.log
+            target/macos-libstdcxx/*.json
+            target/macos-libstdcxx/project/**
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ~/.mcpp
+          key: ${{ steps.cache.outputs.cache-primary-key }}

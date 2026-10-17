@@ -1455,12 +1455,12 @@ sk-...</translation>
     <message>
         <location line="+0"/>
         <source>一级填充</source>
-        <translation>Level 1 prefill</translation>
+        <translation>Level 1</translation>
     </message>
     <message>
         <location line="+0"/>
         <source>二级填充</source>
-        <translation>Level 2 prefill</translation>
+        <translation>Level 2</translation>
     </message>
     <message>
         <location line="+9"/>

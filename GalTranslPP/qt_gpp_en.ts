@@ -1275,54 +1275,54 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="200"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="194"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent</source>
         <translation>[Thread %1] [File %2] [Batch %3] Agent</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="202"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="196"/>
         <source>%1 开始翻译，最多 %2 轮，共 %3 句:
 %4</source>
         <translation>%1 Starts translation, max %2 turns, %3 sentences total:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="212"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="206"/>
         <source>%1 创建会话: %2 / %3</source>
         <translation>%1 Created conversation: %2 / %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="220"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="214"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="286"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="280"/>
         <source>%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文</source>
         <translation>%1 [Turn %2] Context exceeds the byte threshold; asking the model to summarize first</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="306"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="300"/>
         <source>%1 [请求 %2] 开始对半拆分句子重新请求...</source>
         <translation>%1 [Request %2] Splitting sentences in half and retrying...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="323"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="317"/>
         <source>%1 [轮次 %2] [请求 %3]</source>
         <translation>%1 [Turn %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="325"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="319"/>
         <source>%1 开始请求，剩余 %2 句，上下文预估 %3 字节</source>
         <translation>%1 Starting request, %2 sentences remaining, %3 bytes of estimated context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="352"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="346"/>
         <source>%1 压缩请求重试耗尽，清空上下文后继续当前批次: %2</source>
         <translation>%1 Compaction request retries exhausted; clearing context and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="366"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="360"/>
         <source>%1 成功响应，回复正文:
 %2
 工具调用:
@@ -1333,104 +1333,104 @@ Tool calls:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="368"/>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="392"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="362"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="386"/>
         <source>[GPP.正文为空]</source>
         <translation>[GPP.Empty response text]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="382"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="376"/>
         <source>%1 工具调用 %2 个，调用概览:
 %3</source>
         <translation>%1 Received %2 tool calls, call overview:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="390"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="384"/>
         <source>%1 未调用工具，连续 %2 / %3 轮未调用工具，回复正文:
 %4</source>
         <translation>%1 No tool calls, %2 / %3 consecutive turns without tool calls, response text:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="411"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="405"/>
         <source>%1 摘要无效，清空上下文后继续当前批次: %2</source>
         <translation>%1 Invalid summary; clearing context and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="417"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="411"/>
         <source>%1 压缩后的滚动上下文:
 %2</source>
         <translation>%1 Rolling context after compaction:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="421"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="415"/>
         <source>%1 已完成上下文压缩，继续当前批次</source>
         <translation>%1 Context compaction completed; continuing the current batch</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="461"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="455"/>
         <source>%1 响应处理成功，处理结果:
 %2</source>
         <translation>%1 Response processed successfully, result:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="463"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="457"/>
         <source>该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:
 %4</source>
         <translation>Saved %1 lines, %2 terms, %3 suggestions. Result:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="493"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="487"/>
         <source>%1 工具 %2 执行失败: %3</source>
         <translation>%1 Tool %2 failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="498"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="492"/>
         <source>工具 %1 执行失败: %2</source>
         <translation>Tool %1 failed: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="512"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="506"/>
         <source>%1 工具调用明细:
 %2</source>
         <translation>%1 Tool call details:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="514"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="508"/>
         <source>工具返回结果:
 %1</source>
         <translation>Tool result:
 %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="547"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="541"/>
         <source>%1 已回填 %2 个工具结果，回填概览:
 %3</source>
         <translation>%1 Added %2 tool results to the conversation; result overview:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="553"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="547"/>
         <source>%1 已回填 %2 个工具结果，进入下一轮</source>
         <translation>%1 Added %2 tool results to the conversation; proceeding to the next turn</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="574"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="568"/>
         <source>%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句</source>
         <translation>%1 [Turn %2] Failed after %3 requests; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="578"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="572"/>
         <source>%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句</source>
         <translation>%1 [Turn %2] Failed after %3 consecutive turns without tool calls; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="582"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="576"/>
         <source>%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句</source>
         <translation>%1 Failed after reaching the maximum turn count (%2 turns); translated (%3 / %4) sentences</translation>
     </message>

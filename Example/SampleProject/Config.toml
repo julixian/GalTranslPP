@@ -60,6 +60,7 @@ transEngine = "ForGalJson"
 textPlugins = [
   # 以 '>' 开头表示此插件不生效，和注释掉一个效果
   ">SkipTrans",                # 等效于 ">prerun:SkipTrans"
+  #">dpostrun:%PROJECT_DIR%/CheckTranslationMixup.py", # 复制 PythonSample 中的同名脚本到项目目录，检查疑似串行
   #">TextLinebreakFix",        # 等效于 "dpostrun:TextLinebreakFix"
   #">postrun:TextFull2Half",   # 改到执行译后字典替换之前的时机转换
   # 这里虽然 TextLinebreakFix 在 TextFull2Half 之前

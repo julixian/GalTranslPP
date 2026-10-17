@@ -23,7 +23,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, bool enhanceJailbreak,
+    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, int enhanceJailbreak,
     const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
     const std::vector<fs::path>& relJsonPaths)
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool),
@@ -186,9 +186,7 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
         {{"role", "system"}, {"content", m_systemPrompt}},
         {{"role", "user"}, {"content", prompt}}
         });
-    if (m_enhanceJailbreak) {
-        messages.push_back({{"role", "assistant"}, {"content", "```TSV\n"}});
-    }
+    appendApiPrefill(messages, "```TSV\n", m_enhanceJailbreak);
 
     int requestCount = 0;
     while (requestCount < m_maxRequestCount) {

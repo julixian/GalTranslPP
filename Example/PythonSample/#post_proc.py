@@ -16,42 +16,37 @@ def wait_for_exit(sec):
     input_thread.start()
     input_thread.join(timeout=sec)
 
-try:
-    patchPackPath = Path("#g31pp补丁")
-    projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\clacra")
+def main():
+    sextractorPath = Path(r"D:\GALGAME\GALGAMETOOLS\AIGC\GalTransl\GalTransl\useful_tools\SExtractor\run.py")
+    patchPackPath = Path("#g4ar补丁")
+    projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\PrincessStyle")
     projectName = projectPackPath.name
     packScriptPath = projectPackPath / "pack.py"
     basePackagePath = projectPackPath / (projectName + "_cn_base")
     scriptPackagePath = projectPackPath / (projectName + "_cn_script")
     baseDir = basePackagePath / "base"
 
+    scriptPath = Path(__file__).parent.resolve()
+    os.chdir(scriptPath)
     patchPackPath.mkdir(parents=True, exist_ok=True)
 
-
     subprocess.run(
-        ["work/text_tool.exe", "inject",
-         "clacra_rep.asm.txt", "rep/clacra_rep.json",
-         "-o", "clacra_rep.injected.asm.txt"],
-        cwd="work"
+        [sys.executable, sextractorPath,
+         "-e", scriptPath / "textproc"],
+        cwd=sextractorPath.parent
     )
 
     subprocess.run(
-        ["work/script_tool.exe", "assemble",
-         "clacra_rep.injected.asm.txt", "-o", "clacra_rep.injected.rebuild"],
-        cwd="work"
+        ["MergeJsonTransMap.exe", "textproc/trans", "textproc/orig", baseDir / "transMap.json"]
     )
 
-    subprocess.run(
-        ["MergeJsonTransMap.exe", "work/rep", "work/bak", baseDir / "transMap.json"]
-    )
-
-    shutil.copy2("work/clacra_rep.injected.rebuild", scriptPackagePath / "clacra.hcb")
-    shutil.copy2(projectName + "_mjp.ttf",
-                 basePackagePath / (projectName + "_cn") / "Font")
-    shutil.copy2("charMap.json", baseDir)
-    shutil.copy2("charsNotMap.json", baseDir)
-    shutil.copy2("charMap.json", patchPackPath)
-    shutil.copy2("charsNotMap.json", patchPackPath)
+    shutil.copytree("textproc/new", scriptPackagePath / "project_cn", dirs_exist_ok=True)
+    # shutil.copy2(projectName + "_mjp.ttf",
+    #              basePackagePath / (projectName + "_cn") / "Font")
+    # shutil.copy2("charMap.json", baseDir)
+    # shutil.copy2("charsNotMap.json", baseDir)
+    # shutil.copy2("charMap.json", patchPackPath)
+    # shutil.copy2("charsNotMap.json", patchPackPath)
 
     subprocess.run(
         [sys.executable, packScriptPath],
@@ -60,10 +55,12 @@ try:
         input="\n"
     )
 
-    wait_for_exit(3)
-
-except Exception as e:
-    print(f"Error: {e}")
-    input("Enter any key to exit.")
-    sys.exit(1)
+if __name__ == "__main__":
+    try:
+        main()
+        wait_for_exit(3)
+    except Exception as e:
+        print(f"Error: {e}")
+        input("\n按回车键退出...")
+        sys.exit(1)
     

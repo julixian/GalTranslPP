@@ -13,6 +13,36 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
+void appendApiPrefill(json& messages, const std::string& prefill, int enhanceJailbreak, ApiProtocol protocol)
+{
+    if (enhanceJailbreak == 0 || prefill.empty()) {
+        return;
+    }
+
+    const auto appendMessage = [&](bool assistant, const std::string& text)
+        {
+            switch (protocol)
+            {
+            case ApiProtocol::GeminiInterAction:
+                messages.push_back({{"type", assistant ? "model_output" : "user_input"},
+                    {"content", json::array({{{"type", "text"}, {"text", text}}})}});
+                break;
+            case ApiProtocol::Gemini:
+                messages.push_back({{"role", assistant ? "model" : "user"},
+                    {"parts", json::array({{{"text", text}}})}});
+                break;
+            default:
+                messages.push_back({{"role", assistant ? "assistant" : "user"}, {"content", text}});
+                break;
+            }
+        };
+
+    appendMessage(true, prefill);
+    if (enhanceJailbreak == 2) {
+        appendMessage(false, "Continue.");
+    }
+}
+
 bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
 {
     // 健康计数不属于会话身份；端点、凭据、模型或协议选项改变时不能沿用服务端 id 和签名。

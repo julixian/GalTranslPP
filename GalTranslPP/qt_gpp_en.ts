@@ -94,7 +94,7 @@
 <context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
-        <location filename="ApiTool.cpp" line="238"/>
+        <location filename="ApiTool.cpp" line="268"/>
         <source>请用中文完整回复一句话：GPP Api 测试成功。</source>
         <translation>Reply in Chinese: GPP API test succeeded.</translation>
     </message>
@@ -102,7 +102,7 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="553"/>
+        <location filename="ApiTool.cpp" line="583"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -110,7 +110,7 @@
 <context>
     <name>ApiTool.parseAgentReply</name>
     <message>
-        <location filename="ApiTool.Agent.cpp" line="325"/>
+        <location filename="ApiTool.Agent.cpp" line="311"/>
         <source>响应中没有文本内容或工具调用</source>
         <translation>The response contains no text or tool calls</translation>
     </message>
@@ -118,7 +118,7 @@
 <context>
     <name>ApiTool.sendApiHttpRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="624"/>
+        <location filename="ApiTool.cpp" line="654"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
@@ -185,36 +185,36 @@
 <context>
     <name>DictionaryGenerator.callLLMToGenerate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="201"/>
+        <location filename="DictionaryGenerator.cpp" line="199"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="215"/>
+        <location filename="DictionaryGenerator.cpp" line="213"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 开始生成术语表:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] Start generating glossary:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="230"/>
+        <location filename="DictionaryGenerator.cpp" line="228"/>
         <source>[线程 %1] [批次 %2] [请求 %3]</source>
         <translation>[Thread %1] [Batch %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="243"/>
+        <location filename="DictionaryGenerator.cpp" line="241"/>
         <source>[线程 %1] [批次 %2] [请求 %3] AI 字典生成成功:
 %4</source>
         <translation>[Thread %1] [Batch %2] [Request %3] AI dictionary generation succeeded:
 %4</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="259"/>
+        <location filename="DictionaryGenerator.cpp" line="257"/>
         <source>发现重复术语: %1	%2	%3</source>
         <translation>Duplicate term found: %1	%2	%3</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="272"/>
+        <location filename="DictionaryGenerator.cpp" line="270"/>
         <source>[线程 %1] [批次 %2] 在 %3 次请求后彻底失败，没有生成字典</source>
         <translation>[T%1][Batch %2] Failed after %3 requests; no dictionary</translation>
     </message>
@@ -222,63 +222,63 @@
 <context>
     <name>DictionaryGenerator.generate</name>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="285"/>
+        <location filename="DictionaryGenerator.cpp" line="283"/>
         <source>没有输入文件，无法生成字典。</source>
         <translation>No input files; cannot generate dictionary</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="292"/>
-        <location filename="DictionaryGenerator.cpp" line="361"/>
+        <location filename="DictionaryGenerator.cpp" line="290"/>
+        <location filename="DictionaryGenerator.cpp" line="359"/>
         <source>任务终止，将不会生成字典文件</source>
         <translation>Task stopped; no dictionary file will be generated</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="296"/>
+        <location filename="DictionaryGenerator.cpp" line="294"/>
         <source>阶段二: 搜索并选择信息量最大的文本块(单线程)...</source>
         <translation>Stage 2: pick key text blocks (single-threaded)...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="365"/>
+        <location filename="DictionaryGenerator.cpp" line="363"/>
         <source>阶段三: 启动 %1 个线程，向 AI 发送 %2 个任务...</source>
         <translation>Stage 3: starting %1 threads and sending %2 tasks to AI...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="388"/>
+        <location filename="DictionaryGenerator.cpp" line="386"/>
         <source>任务终止，将保存已经生成的字典结果</source>
         <translation>Task stopped; saving generated dictionary results</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="390"/>
+        <location filename="DictionaryGenerator.cpp" line="388"/>
         <source>阶段四: 整理并保存结果...</source>
         <translation>Stage 4: organize and save results...</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="407"/>
+        <location filename="DictionaryGenerator.cpp" line="405"/>
         <source>人名</source>
         <translation>Person name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="408"/>
+        <location filename="DictionaryGenerator.cpp" line="406"/>
         <source>地名</source>
         <translation>Place name</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="424"/>
+        <location filename="DictionaryGenerator.cpp" line="422"/>
         <source>男性</source>
         <translation>Male</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="425"/>
+        <location filename="DictionaryGenerator.cpp" line="423"/>
         <source>女性</source>
         <translation>Female</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="429"/>
+        <location filename="DictionaryGenerator.cpp" line="427"/>
         <source>，与其它字典存在性别争议</source>
         <translation>, gender differs from other dicts</translation>
     </message>
     <message>
-        <location filename="DictionaryGenerator.cpp" line="449"/>
+        <location filename="DictionaryGenerator.cpp" line="447"/>
         <source>字典生成完成，共 %1 个词语，已保存到 [%2]</source>
         <translation>Dictionary generation completed: %1 terms saved to [%2]</translation>
     </message>
@@ -670,37 +670,37 @@ Error: %2</translation>
 <context>
     <name>NameTranslator.run</name>
     <message>
-        <location filename="NameTranslator.cpp" line="214"/>
+        <location filename="NameTranslator.cpp" line="212"/>
         <source>NameTrans: 未找到人名表文件 %1</source>
         <translation>NameTrans: name table not found: %1</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="220"/>
+        <location filename="NameTranslator.cpp" line="218"/>
         <source>NameTrans: 开始处理人名表...</source>
         <translation>NameTrans: processing name table...</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="228"/>
+        <location filename="NameTranslator.cpp" line="226"/>
         <source>NameTrans: 解析人名表失败: %1</source>
         <translation>NameTrans: failed to parse name table: %1</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="248"/>
+        <location filename="NameTranslator.cpp" line="246"/>
         <source>NameTrans: 没有发现需要翻译的名字（所有条目均已有译名）</source>
         <translation>NameTrans: no names need translation; all entries already have translations</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="253"/>
+        <location filename="NameTranslator.cpp" line="251"/>
         <source>NameTrans: 共发现 %1 个待翻译的名字</source>
         <translation>NameTrans: found %1 names to translate</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="261"/>
+        <location filename="NameTranslator.cpp" line="259"/>
         <source>NameTrans: 启动 %1 个线程，每批处理最多 %2 个名字</source>
         <translation>NameTrans: starting %1 threads, %2 names per batch</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="302"/>
+        <location filename="NameTranslator.cpp" line="300"/>
         <source>NameTrans 处理完成，已更新 %1 个译名，保存至 [%2]</source>
         <translation>NameTrans completed, updated %1 translations and saved to [%2]</translation>
     </message>
@@ -708,45 +708,45 @@ Error: %2</translation>
 <context>
     <name>NameTranslator.translateBatch</name>
     <message>
-        <location filename="NameTranslator.cpp" line="100"/>
+        <location filename="NameTranslator.cpp" line="98"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="112"/>
+        <location filename="NameTranslator.cpp" line="110"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 开始翻译人名，剩余 %4 个:
 %5</source>
         <translation>[Thread %1] [Batch %2] [Request %3] Start translating names, %4 remaining:
 %5</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="129"/>
+        <location filename="NameTranslator.cpp" line="127"/>
         <source>[线程 %1] [批次 %2] [请求 %3]</source>
         <translation>[Thread %1] [Batch %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="143"/>
+        <location filename="NameTranslator.cpp" line="141"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 人名翻译成功响应，响应内容:
 %4</source>
         <translation>[T%1][Batch %2][Req %3] Name translation OK:
 %4</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="175"/>
+        <location filename="NameTranslator.cpp" line="173"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 剩余 %4 个人名均被解析完毕，解析结果:
 %5</source>
         <translation>[Thread %1] [Batch %2] [Request %3] All %4 remaining names were parsed, result:
 %5</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="187"/>
+        <location filename="NameTranslator.cpp" line="185"/>
         <source>[线程 %1] [批次 %2] [请求 %3] 人名翻译响应解析不完整 (%4 / %5)，解析结果:
 %6</source>
         <translation>[T%1][Batch %2][Req %3] Names parsed %4/%5:
 %6</translation>
     </message>
     <message>
-        <location filename="NameTranslator.cpp" line="201"/>
+        <location filename="NameTranslator.cpp" line="199"/>
         <source>[线程 %1] [批次 %2] 人名翻译在 %3 次请求后彻底失败，共翻译 (%4 / %5) 个</source>
         <translation>[T%1][Batch %2] Names failed after %3 requests; translated %4/%5</translation>
     </message>
@@ -1179,48 +1179,48 @@ Problem overview:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="157"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="153"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="171"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="167"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4]</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="187"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="183"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 成功响应，响应内容:
 %5</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Successful response, content:
 %5</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="210"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="206"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 剩余 %5 句文本均被解析完毕，解析结果:
 %6</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] All %5 remaining sentences were parsed, result:
 %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="224"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="220"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [请求 %4] 解析失败或不完整 (%5 / %6), 解析结果:
 %7</source>
         <translation>[Thread %1] [File %2] [Batch %3] [Request %4] Parse failed or incomplete (%5 / %6), result:
 %7</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="234"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="230"/>
         <source>[GPP.内容不为空但输出翻译为空]</source>
         <translation>[GPP.Nonempty content but empty translation output]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="240"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="236"/>
         <source>解析失败或不完整 (%1 / %2)</source>
         <translation>Parse failed or incomplete (%1 / %2)</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Batch.cpp" line="262"/>
+        <location filename="NormalJsonTranslator.Batch.cpp" line="258"/>
         <source>[线程 %1] [文件 %2] [批次 %3] 在 %4 次请求后彻底失败，共翻译 (%5 / %6) 句</source>
         <translation>[T%1][File %2][Batch %3] Failed after %4 requests; translated %5/%6 lines</translation>
     </message>
@@ -1275,54 +1275,54 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.translateBatch</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="191"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="200"/>
         <source>[线程 %1] [文件 %2] [批次 %3] Agent</source>
         <translation>[Thread %1] [File %2] [Batch %3] Agent</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="193"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="202"/>
         <source>%1 开始翻译，最多 %2 轮，共 %3 句:
 %4</source>
         <translation>%1 Starts translation, max %2 turns, %3 sentences total:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="203"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="212"/>
         <source>%1 创建会话: %2 / %3</source>
         <translation>%1 Created conversation: %2 / %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="211"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="220"/>
         <source>没有可用的 Api key 了</source>
         <translation>No Api keys available</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="277"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="286"/>
         <source>%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文</source>
         <translation>%1 [Turn %2] Context exceeds the byte threshold; asking the model to summarize first</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="297"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="306"/>
         <source>%1 [请求 %2] 开始对半拆分句子重新请求...</source>
         <translation>%1 [Request %2] Splitting sentences in half and retrying...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="314"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="323"/>
         <source>%1 [轮次 %2] [请求 %3]</source>
         <translation>%1 [Turn %2] [Request %3]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="316"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="325"/>
         <source>%1 开始请求，剩余 %2 句，上下文预估 %3 字节</source>
         <translation>%1 Starting request, %2 sentences remaining, %3 bytes of estimated context</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="343"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="352"/>
         <source>%1 压缩请求重试耗尽，清空上下文后继续当前批次: %2</source>
         <translation>%1 Compaction request retries exhausted; clearing context and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="357"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="366"/>
         <source>%1 成功响应，回复正文:
 %2
 工具调用:
@@ -1333,104 +1333,104 @@ Tool calls:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="359"/>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="383"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="368"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="392"/>
         <source>[GPP.正文为空]</source>
         <translation>[GPP.Empty response text]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="373"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="382"/>
         <source>%1 工具调用 %2 个，调用概览:
 %3</source>
         <translation>%1 Received %2 tool calls, call overview:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="381"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="390"/>
         <source>%1 未调用工具，连续 %2 / %3 轮未调用工具，回复正文:
 %4</source>
         <translation>%1 No tool calls, %2 / %3 consecutive turns without tool calls, response text:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="402"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="411"/>
         <source>%1 摘要无效，清空上下文后继续当前批次: %2</source>
         <translation>%1 Invalid summary; clearing context and continuing the current batch: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="408"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="417"/>
         <source>%1 压缩后的滚动上下文:
 %2</source>
         <translation>%1 Rolling context after compaction:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="412"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="421"/>
         <source>%1 已完成上下文压缩，继续当前批次</source>
         <translation>%1 Context compaction completed; continuing the current batch</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="452"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="461"/>
         <source>%1 响应处理成功，处理结果:
 %2</source>
         <translation>%1 Response processed successfully, result:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="454"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="463"/>
         <source>该批次 %1 句译文均已提交，记录术语 %2 条，记录建议 %3 条，翻译结果:
 %4</source>
         <translation>Saved %1 lines, %2 terms, %3 suggestions. Result:
 %4</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="484"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="493"/>
         <source>%1 工具 %2 执行失败: %3</source>
         <translation>%1 Tool %2 failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="489"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="498"/>
         <source>工具 %1 执行失败: %2</source>
         <translation>Tool %1 failed: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="503"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="512"/>
         <source>%1 工具调用明细:
 %2</source>
         <translation>%1 Tool call details:
 %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="505"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="514"/>
         <source>工具返回结果:
 %1</source>
         <translation>Tool result:
 %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="538"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="547"/>
         <source>%1 已回填 %2 个工具结果，回填概览:
 %3</source>
         <translation>%1 Added %2 tool results to the conversation; result overview:
 %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="544"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="553"/>
         <source>%1 已回填 %2 个工具结果，进入下一轮</source>
         <translation>%1 Added %2 tool results to the conversation; proceeding to the next turn</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="565"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="574"/>
         <source>%1 [轮次 %2] 在 %3 次请求后彻底失败，共翻译 (%4 / %5) 句</source>
         <translation>%1 [Turn %2] Failed after %3 requests; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="569"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="578"/>
         <source>%1 [轮次 %2] 因连续 %3 轮未调用工具而失败，共翻译 (%4 / %5) 句</source>
         <translation>%1 [Turn %2] Failed after %3 consecutive turns without tool calls; translated (%4 / %5) sentences</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="573"/>
+        <location filename="NormalJsonTranslator.TransAgent.Session.cpp" line="582"/>
         <source>%1 因超过最大轮数 (%2 轮) 而失败，共翻译 (%3 / %4) 句</source>
         <translation>%1 Failed after reaching the maximum turn count (%2 turns); translated (%3 / %4) sentences</translation>
     </message>
@@ -2173,7 +2173,7 @@ Tool calls:
 <context>
     <name>parseApiProtocol</name>
     <message>
-        <location filename="ApiTool.cpp" line="49"/>
+        <location filename="ApiTool.cpp" line="79"/>
         <source>无效的 Api 协议: %1 不在 {openai, claude, gemini, openaires} 中</source>
         <translation>Invalid Api protocol: %1 is not in {openai, claude, gemini, openaires}</translation>
     </message>
@@ -2215,7 +2215,7 @@ Tool calls:
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="651"/>
+        <location filename="ApiTool.cpp" line="681"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>

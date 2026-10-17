@@ -42,7 +42,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     int glossaryMaxLines,
     bool smartRetry,
     bool checkQuota,
-    bool enhanceJailbreak,
+    int enhanceJailbreak,
     std::shared_mutex& transCacheMutex,
     absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     const std::vector<fs::path>& knownRelFiles,

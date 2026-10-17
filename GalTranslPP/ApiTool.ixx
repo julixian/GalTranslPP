@@ -84,6 +84,11 @@ struct ApiResponse {
 // ApiPool 的身份匹配与 Agent 的会话复用共用：比较端点、凭据、模型及请求选项，不比较健康计数。
 bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs);
 
+// 改善拒答档位：0 无；1 一级填充，以模型预填充结尾；2 二级填充，再追加用户 Continue.。
+// 普通请求使用 assistant/user 消息，Agent 按原生协议追加；只修改传入的本次请求消息。
+void appendApiPrefill(json& messages, const std::string& prefill, int enhanceJailbreak,
+    ApiProtocol protocol = ApiProtocol::OpenAI);
+
 // 以下类型和会话操作供 Agent 的原生工具流程使用。
 struct AgentApiToolCall {
     std::string id;
@@ -115,11 +120,11 @@ void appendAgentUserMessage(AgentApiSession& session, const std::string& text);
 void appendAgentToolResults(AgentApiSession& session, const json& results);
 // Agent 的单次请求入口，由 translateBatch 调用：构造原生工具请求 -> 应用 API 选项/插件
 // -> sendApiHttpRequest -> parseApiResponse -> parseAgentReply；响应解析成功后更新会话历史和续接位置。
-// enhanceJailbreak 开启时，在本次请求末尾原样追加 assistant 自然语言预填充，不写入会话、不检查协议兼容性。
+// enhanceJailbreak 按档位追加自然语言预填充及用户 Continue.，不写入会话、不检查协议兼容性。
 // 允许纯工具响应正文为空，不在这里解析工具参数或提交译文。std::exception 转为 ApiError：
 // 拿到 HTTP 200 原始响应后归为 ResponseParse，此前归为 Unknown；已有传输/协议错误直接返回。
 // 本函数不重试，调用方通过 handleApiError 处理失败并决定下一次请求。
-AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools, bool enhanceJailbreak,
+AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools, int enhanceJailbreak,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs);
 

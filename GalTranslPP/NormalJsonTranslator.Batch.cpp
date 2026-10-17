@@ -132,25 +132,21 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
         json messages = json::array({ {{"role", "system"}, {"content", systemPrompt}} });
         messages.push_back({ {"role", "user"}, {"content", promptReq} });
 
-        if (m_enhanceJailbreak) {
-            std::string assistantPrefill;
-            switch (m_transEngine)
-            {
-            case TransEngine::ForGalJson:
-            case TransEngine::ForNovelJson:
-                assistantPrefill = "```jsonline\n";
-                break;
-            case TransEngine::ForGalTsv:
-            case TransEngine::ForNovelTsv:
-                assistantPrefill = "```TSV\n";
-                break;
-            default:
-                break;
-            }
-            if (!assistantPrefill.empty()) {
-                messages.push_back({ {"role", "assistant"}, {"content", assistantPrefill} });
-            }
+        std::string assistantPrefill;
+        switch (m_transEngine)
+        {
+        case TransEngine::ForGalJson:
+        case TransEngine::ForNovelJson:
+            assistantPrefill = "```jsonline\n";
+            break;
+        case TransEngine::ForGalTsv:
+        case TransEngine::ForNovelTsv:
+            assistantPrefill = "```TSV\n";
+            break;
+        default:
+            break;
         }
+        appendApiPrefill(messages, assistantPrefill, m_enhanceJailbreak);
 
         const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
         if (!apiOpt.has_value()) {

@@ -32,7 +32,7 @@ private:
     int m_maxRequestCount;
     int m_apiTimeoutMs;
     bool m_checkQuota;
-    bool m_enhanceJailbreak;
+    int m_enhanceJailbreak;
 
     // 翻译一个批次，并将成功解析的译名写入共享结果。
     void translateBatch(std::span<const std::string> batchNames, int threadId, size_t batchIndex,
@@ -56,7 +56,7 @@ public:
         int maxRequestCount,
         int apiTimeoutMs,
         bool checkQuota,
-        bool enhanceJailbreak
+        int enhanceJailbreak
     );
 
     void run(const fs::path& nameTablePath);

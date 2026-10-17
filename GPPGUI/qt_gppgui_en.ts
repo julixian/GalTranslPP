@@ -1439,16 +1439,31 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>仅少量模型支持，误启用会导致请求失效</source>
-        <translation>Only a few models support this; enabling it for an unsupported model will cause requests to fail</translation>
+        <source>仅少量模型支持。一级填充：以 assistant 预填充结尾；二级填充：再追加用户消息要求继续。</source>
+        <translation>Only a few models support this. Level 1: end with an assistant prefill. Level 2: append a user message asking the model to continue.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>以 assistant 回复头开始续写；Agent 使用自然语言预填充</source>
-        <translation>Continue from an assistant prefill; Agent mode uses a natural-language prefill.</translation>
+        <source>不检查模型支持，误用可能导致请求失败</source>
+        <translation>Model support is not checked; an unsupported mode may cause requests to fail</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+4"/>
+        <source>无</source>
+        <translation>None</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>一级填充</source>
+        <translation>Level 1 prefill</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>二级填充</source>
+        <translation>Level 2 prefill</translation>
+    </message>
+    <message>
+        <location line="+9"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1463,7 +1478,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-522"/>
+        <location line="-523"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1503,7 +1518,7 @@ sk-...</translation>
         <translation>Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+29"/>
         <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
@@ -1513,7 +1528,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-365"/>
+        <location line="-366"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1548,7 +1563,7 @@ sk-...</translation>
         <translation>Use native tools to retrieve context and keep cross-file conversations per worker; configure protocol capabilities in API settings.</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+178"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>

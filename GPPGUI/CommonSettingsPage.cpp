@@ -358,17 +358,18 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(smartRetryArea);
 
 	// 改善拒答（回复预填充）
-	bool enhanceJailbreak = toml::find_or(m_projectConfig, "common", "enhanceJailbreak", false);
+	const int enhanceJailbreak = toml::find_or(m_projectConfig, "common", "enhanceJailbreak", 0);
 	ElaScrollPageArea* enhanceJailbreakArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
 	GppDoubleText* enhanceJailbreakText = new GppDoubleText(tr("改善拒答（回复预填充）"), 16,
-		tr("仅少量模型支持，误启用会导致请求失效"), 10,
-		tr("以 assistant 回复头开始续写；Agent 使用自然语言预填充"), enhanceJailbreakArea);
+		tr("仅少量模型支持。一级填充：以 assistant 预填充结尾；二级填充：再追加用户消息要求继续。"), 10,
+		tr("不检查模型支持，误用可能导致请求失败"), enhanceJailbreakArea);
 	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
 	enhanceJailbreakLayout->addStretch();
-	ElaToggleSwitch* enhanceJailbreakToggle = new ElaToggleSwitch(enhanceJailbreakArea);
-	enhanceJailbreakToggle->setIsToggled(enhanceJailbreak);
-	enhanceJailbreakLayout->addWidget(enhanceJailbreakToggle);
+	GppNoWheelComboBox* enhanceJailbreakComboBox = new GppNoWheelComboBox(enhanceJailbreakArea);
+	enhanceJailbreakComboBox->addItems({tr("无"), tr("一级填充"), tr("二级填充")});
+	enhanceJailbreakComboBox->setCurrentIndex(enhanceJailbreak);
+	enhanceJailbreakLayout->addWidget(enhanceJailbreakComboBox);
 	mainLayout->addWidget(enhanceJailbreakArea);
 
 	// 额度检测
@@ -688,7 +689,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.keepPreviousOtherInfo", keepPreviousOtherInfoToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
-			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakComboBox->currentIndex());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 

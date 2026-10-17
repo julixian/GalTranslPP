@@ -47,7 +47,16 @@ void NormalJsonTranslatorTransAgent::configureWorkers(
 
     const json stringsSchema = agentArraySchema(stringSchema);
     const json idsSchema = agentArraySchema(intSchema);
-    const json translationSchema = agentObjectSchema({{"id", intSchema}, {"dst", stringSchema}});
+    const json translationSchema = agentObjectSchema({
+        {"id", intSchema},
+        {"dst", {
+            {"type", "string"},
+            {"description",
+                "Translate only the src belonging to this item's id."
+                " DO NOT add content belonging to other ids."
+                " Keep each row separate even when consecutive rows form one paragraph."}
+        }}
+    });
     const json suggestionSchema = agentObjectSchema({{"file", stringSchema}, {"id", intSchema}, {"suggestion", stringSchema}});
 
     const json termSchema = agentObjectSchema({

@@ -12,15 +12,20 @@ ApiError makeApiError(ApiErrorType type, const std::string& detail, std::string 
 {
     // 只对已失败的请求推断服务端错误；明确的拒答、截断和解析错误不再按正文关键词分类。
     if (type == ApiErrorType::Unknown) {
-        const std::string lower = str2Lower(detail + '\n' + rawResponse);
+        const std::string normalized = str2Lower(detail + '\n' + rawResponse)
+            | std::views::transform([](const char c) { return (c == '-' || c == '_') ? ' ' : c; })
+            | std::ranges::to<std::string>();
         // 限流状态及关键词优先，避免响应中的 quota 等词误触发 key 移除。
-        if (statusCode == 429 || lower.contains("rate limit") || lower.contains("rate_limit") || lower.contains("try again") || lower.contains("饱和")) {
+        if (statusCode == 429 || normalized.contains("rate limit") || normalized.contains("try again") || normalized.contains("饱和"))
+        {
             type = ApiErrorType::RateLimit;
         }
-        else if (statusCode == 401 || lower.contains("quota") || lower.contains("invalid token") || lower.contains("invalid_api_key")) {
+        else if (statusCode == 401 || normalized.contains("quota") || normalized.contains("invalid token") || normalized.contains("invalid api key"))
+        {
             type = ApiErrorType::InvalidKeyOrQuota;
         }
-        else if (lower.contains("no available") || lower.contains("no access") || lower.contains("model_not_found")) {
+        else if (normalized.contains("no available") || normalized.contains("no access") || normalized.contains("model not found"))
+        {
             type = ApiErrorType::ModelUnavailable;
         }
     }

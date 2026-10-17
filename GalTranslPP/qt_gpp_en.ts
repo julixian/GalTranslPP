@@ -33,12 +33,12 @@
 <context>
     <name>ApiTool.formatApiError</name>
     <message>
-        <location filename="ApiTool.Error.cpp" line="56"/>
+        <location filename="ApiTool.Error.cpp" line="62"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="54"/>
+        <location filename="ApiTool.Error.cpp" line="60"/>
         <source>原始响应:</source>
         <translation>Raw response:</translation>
     </message>
@@ -46,47 +46,47 @@
 <context>
     <name>ApiTool.makeApiError</name>
     <message>
-        <location filename="ApiTool.Error.cpp" line="30"/>
+        <location filename="ApiTool.Error.cpp" line="36"/>
         <source>Api 网络请求失败</source>
         <translation>API network request failed</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="31"/>
+        <location filename="ApiTool.Error.cpp" line="37"/>
         <source>Api key 疑似无效或额度用尽</source>
         <translation>The API key may be invalid or its quota exhausted</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="32"/>
+        <location filename="ApiTool.Error.cpp" line="38"/>
         <source>Api 没有可用模型或没有模型访问权限</source>
         <translation>No available model or no model access permission</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="33"/>
+        <location filename="ApiTool.Error.cpp" line="39"/>
         <source>Api 频率限制或暂时不可用</source>
         <translation>API rate limit or temporary unavailability</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="34"/>
+        <location filename="ApiTool.Error.cpp" line="40"/>
         <source>Api 拒答或内容被拦截</source>
         <translation>API refusal or blocked content</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="35"/>
+        <location filename="ApiTool.Error.cpp" line="41"/>
         <source>Api 响应 JSON 解析失败</source>
         <translation>Failed to parse the API response JSON</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="36"/>
+        <location filename="ApiTool.Error.cpp" line="42"/>
         <source>Api 响应字段解析失败</source>
         <translation>Failed to parse API response fields</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="37"/>
+        <location filename="ApiTool.Error.cpp" line="43"/>
         <source>Api 回复未完成或已截断</source>
         <translation>The API response is incomplete or truncated</translation>
     </message>
     <message>
-        <location filename="ApiTool.Error.cpp" line="38"/>
+        <location filename="ApiTool.Error.cpp" line="44"/>
         <source>未知 Api 错误</source>
         <translation>Unknown API error</translation>
     </message>

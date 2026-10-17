@@ -180,6 +180,30 @@ int main() {
     run("qt-tls-build", [clang, *cxxflags, "-std=c++23", "--sysroot=" + sdk,
                          "-mmacosx-version-min=15.0", tls_source, *ldflags, "-o", test / "tls-test"])
     run("qt-tls-run", [test / "tls-test"], timeout=60)
+    exception_source = test / "exception.cpp"
+    exception_source.write_text('''#include <exception>
+#include <iostream>
+#include <stdexcept>
+int main() {
+    std::cout << "make_exception_ptr" << std::endl;
+    auto error = std::make_exception_ptr(std::runtime_error("standalone exception passed"));
+    std::cout << "rethrow_exception" << std::endl;
+    try { std::rethrow_exception(error); }
+    catch (const std::runtime_error& caught) { std::cout << caught.what() << std::endl; return 0; }
+    return 1;
+}
+''', encoding="utf-8")
+    for name, extra in (("bare", []), ("appkit", ["-framework", "AppKit"]),
+                        ("dwarf", ["-framework", "AppKit", "-Wl,-no_compact_unwind"])):
+        binary = test / ("exception-" + name)
+        run("qt-exception-build-" + name, [clang, *cxxflags, "-std=c++23", "-g", "--sysroot=" + sdk,
+             "-mmacosx-version-min=15.0", exception_source, *ldflags, *extra, "-o", binary])
+        try:
+            run("qt-exception-run-" + name, [binary], timeout=60)
+        except subprocess.CalledProcessError:
+            run("qt-exception-backtrace-" + name, ["xcrun", "lldb", "--batch",
+                "-k", "thread backtrace all", "-k", "image lookup -n __cxa_throw",
+                "-k", "image lookup -n __gxx_personality_v0", "-o", "run", "--", binary], timeout=120)
     toolchain = OUTPUT / "qt-toolchain.cmake"
     toolchain.write_text("\n".join([
         f'set(CMAKE_{language}_COMPILER {json.dumps(str(compiler))} CACHE FILEPATH "")'
@@ -243,7 +267,7 @@ target_link_libraries(qt-libstdcxx-probe PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets
         except subprocess.CalledProcessError:
             run("qt-test-exceptions-backtrace", ["xcrun", "lldb", "--batch",
                 "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
-                "-o", "run", "-o", "thread backtrace all", "--", binary, "--exceptions-only"],
+                "-k", "thread backtrace all", "-o", "run", "--", binary, "--exceptions-only"],
                 cwd=test, timeout=120)
             raise
     finally:

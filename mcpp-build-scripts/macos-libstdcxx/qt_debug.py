@@ -206,11 +206,22 @@ def main():
                                   "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"])
     commands = json.loads((cmake_build / "compile_commands.json").read_text())
     command = next(item["command"] for item in commands if item["file"].endswith("/main.cpp"))
-    run("debug-cmake-compile-driver", [*shlex.split(command), "-###"])
-    run("debug-cmake-ir", [*shlex.split(command), "-S", "-emit-llvm", "-o", OUTPUT / "debug-cmake-ir.log"])
+    run("debug-cmake-compile-driver", [*shlex.split(command), "-###"], cwd=cmake_build)
+    run("debug-cmake-ir", [*shlex.split(command), "-S", "-emit-llvm", "-o", OUTPUT / "debug-cmake-main-ir.log"], cwd=cmake_build)
     ninja_commands = subprocess.check_output(["ninja", "-C", str(cmake_build), "-t", "commands", "qt-libstdcxx-probe"], text=True)
     link_command = ninja_commands.strip().splitlines()[-1].removeprefix(": && ").removesuffix(" && :")
     run("debug-cmake-link-driver", [*shlex.split(link_command), "-###"], cwd=cmake_build)
+    for name, extra in (
+            ("cmake-no-deduplicate", ["-Wl,-no_deduplicate"]),
+            ("cmake-O0", ["-O0"]),
+            ("cmake-O2", ["-O2"]),
+            ("cmake-no-outlining", ["-Wl,-mllvm,-enable-linkonceodr-outlining=false"])):
+        target = project / name
+        run("debug-exact-link-" + name, [*shlex.split(link_command), *extra, "-o", target], cwd=cmake_build)
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

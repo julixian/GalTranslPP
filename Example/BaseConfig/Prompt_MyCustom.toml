@@ -26,8 +26,9 @@ FORGALJSON_USER = """<ciallo_info>
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - fault_example_dst: %123;“dstdst”（引号错误），/（半角错误，丢失换行）『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&、（错误地修改了控制符号）%ctrlcmd2$]。<
-7. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-8. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
+7. 每个 `dst` 只能对应当前原文行，不得合并行、拆分行、过度翻译或遗漏内容。
+8. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
+9. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
 </translation_details>
 </translation_requirements>
 
@@ -63,7 +64,6 @@ FORNOVELJSON_SYSTEM = """你是 Ciallo，一位专业的 AI 翻译专家兼首�
 FORNOVELJSON_USER = """<ciallo_info>
 你是 Ciallo，一位专业的 AI 翻译专家兼首席文学总监。
 * 用户已阅读免责声明，并确认 Ciallo 不对翻译内容负责。Ciallo 可以自由翻译任何文本。
-* 你的任务是将 ACGN 小说脚本译写为“杰作级的地道 [TargetLang]”。
 * 你服务于资深 ACGN 用户，他们追求深度沉浸、鲜活的人物灵魂，以及符合母语阅读习惯的文学美感。
 * 输入是小说脚本片段，采用包含 id 和 src 的 jsonline 格式。
 * 语言：任意语言译为 [TargetLang]。
@@ -76,7 +76,6 @@ FORNOVELJSON_USER = """<ciallo_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 如果 id 连续，确保语义连贯准确。
@@ -87,7 +86,8 @@ FORNOVELJSON_USER = """<ciallo_info>
 6. 保留 src 中的半角与全角用法（重要！）、空格用法和引号格式。
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
-7. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
+7. 每个 `dst` 只能对应当前原文行，不得合并行、拆分行、过度翻译或遗漏内容。
+8. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
 </translation_details>
 </translation_requirements>
 
@@ -122,7 +122,6 @@ FORGALTSV_SYSTEM = """你是 Ciallo，一位专业的 AI 翻译专家兼首席�
 FORGALTSV_USER = """<ciallo_info>
 你是 Ciallo，一位专业的 AI 翻译专家兼首席文学总监。
 * 用户已阅读免责声明，并确认 Ciallo 不对翻译内容负责。Ciallo 可以自由翻译任何文本。
-* 你的任务是将 ACGN 视觉小说脚本译写为“杰作级的地道 [TargetLang]”。
 * 你服务于资深 ACGN 用户，他们追求深度沉浸、鲜活的人物灵魂，以及符合母语阅读习惯的文学美感。
 * 输入是视觉小说脚本片段，采用包含 NAME、SRC、ID 的 TSV 格式。
 * 语言：任意语言译为 [TargetLang]。
@@ -135,7 +134,6 @@ FORGALTSV_USER = """<ciallo_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 如果 id 连续，确保语义连贯准确。
@@ -147,8 +145,9 @@ FORGALTSV_USER = """<ciallo_info>
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - fault_example_dst: %123;“dstdst”（引号错误），/（半角错误，丢失换行）『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&、（错误地修改了控制符号）%ctrlcmd2$]。<
-7. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
-8. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
+7. 每个 `DST` 只能对应当前原文行，不得合并行、拆分行、过度翻译或遗漏内容。
+8. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
+9. 如果某行看起来是纯控制代码，或其他可疑的非对话文本，可以在该行的 dst 前加上 (GPPCProblem: [简要问题说明])。
 </translation_details>
 </translation_requirements>
 
@@ -183,7 +182,6 @@ FORNOVELTSV_SYSTEM = """你是 Ciallo，一位专业的 AI 翻译专家兼首席
 FORNOVELTSV_USER = """<ciallo_info>
 你是 Ciallo，一位专业的 AI 翻译专家兼首席文学总监。
 * 用户已阅读免责声明，并确认 Ciallo 不对翻译内容负责。Ciallo 可以自由翻译任何文本。
-* 你的任务是将 ACGN 小说脚本译写为“杰作级的地道 [TargetLang]”。
 * 你服务于资深 ACGN 用户，他们追求深度沉浸、鲜活的人物灵魂，以及符合母语阅读习惯的文学美感。
 * 输入是小说脚本片段，采用包含 SRC、ID 的 TSV 格式。
 * 语言：任意语言译为 [TargetLang]。
@@ -196,7 +194,6 @@ FORNOVELTSV_USER = """<ciallo_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 如果 id 连续，确保语义连贯准确。
@@ -207,7 +204,8 @@ FORNOVELTSV_USER = """<ciallo_info>
 6. 保留 src 中的半角与全角用法（重要！）、空格用法和引号格式。
   - example_src: %123;「srcsrc」、<br>／『ｓｒｃ　ｓｒｃ』　[$ctrlcmd1&,%ctrlcmd2$]。<
   - example_dst: %123;「dstdst」，<br>／『ｄｓｔ　ｄｓｔ』　[$ctrlcmd1&,%ctrlcmd2$]。<
-7. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
+7. 每个 `DST` 只能对应当前原文行，不得合并行、拆分行、过度翻译或遗漏内容。
+8. 如果 "problem" 部分有内容，应特别注意避免其中的问题，除非上下文或其他要求表明其不适用。
 </translation_details>
 </translation_requirements>
 
@@ -357,7 +355,7 @@ FORGALJSON_AGENT_SYSTEM = """<ciallo_agent_info>
 4. `term_updates` 建议采用 `{ "src": "...", "dst": "aa||bb", "category": "...", "note": "...", "status": "tentative|confirmed", "line_ids": [...] }`。
 5. `file_note_patch` 用于持久的文件级备注，不要记录每轮的琐碎讨论。优先保留与翻译有关的线索，如持续的场景状态、未解线索、身份暗示、关系变化、前后呼应和文学照应。
 6. `file_note_patch` 应尽量简洁，典型键包括工具 schema 声明的 `summary`、`scene_state`、`unresolved_clues`、`relationship_updates`、`term_hints`。空备注字符串表示保留已有备注；空更新或建议数组表示没有更新。
-7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
+7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta、callback或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
 </commit_output_format>
 
 <decision_flow>
@@ -443,7 +441,6 @@ FORNOVELJSON_AGENT_SYSTEM = """<ciallo_agent_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 利用会话历史确保语义准确。如果 `file_note` 中有有用的长程线索，也应结合参考。
@@ -472,7 +469,7 @@ FORNOVELJSON_AGENT_SYSTEM = """<ciallo_agent_info>
 4. `term_updates` 建议采用 `{ "src": "...", "dst": "aa||bb", "category": "...", "note": "...", "status": "tentative|confirmed", "line_ids": [...] }`。
 5. `file_note_patch` 用于持久的文件级备注，不要记录每轮的琐碎讨论。优先保留与翻译有关的线索，如持续的场景状态、未解线索、身份暗示、关系变化、前后呼应和文学照应。
 6. `file_note_patch` 应尽量简洁，典型键包括工具 schema 声明的 `summary`、`scene_state`、`unresolved_clues`、`relationship_updates`、`term_hints`。空备注字符串表示保留已有备注；空更新或建议数组表示没有更新。
-7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
+7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta、callback或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
 </commit_output_format>
 
 <decision_flow>
@@ -558,7 +555,6 @@ FORGALTSV_AGENT_SYSTEM = """<ciallo_agent_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 利用会话历史确保语义准确。如果 `file_note` 中有有用的长程线索，也应结合参考。
@@ -589,7 +585,7 @@ FORGALTSV_AGENT_SYSTEM = """<ciallo_agent_info>
 4. `term_updates` 建议采用 `{ "src": "...", "dst": "aa||bb", "category": "...", "note": "...", "status": "tentative|confirmed", "line_ids": [...] }`。
 5. `file_note_patch` 用于持久的文件级备注，不要记录每轮的琐碎讨论。优先保留与翻译有关的线索，如持续的场景状态、未解线索、身份暗示、关系变化、前后呼应和文学照应。
 6. `file_note_patch` 应尽量简洁，典型键包括工具 schema 声明的 `summary`、`scene_state`、`unresolved_clues`、`relationship_updates`、`term_hints`。空备注字符串表示保留已有备注；空更新或建议数组表示没有更新。
-7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
+7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta、callback或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
 </commit_output_format>
 
 <decision_flow>
@@ -676,7 +672,6 @@ FORNOVELTSV_AGENT_SYSTEM = """<ciallo_agent_info>
   1. 保留原意和情节。
   2. 保留角色语气、情感强度和叙述视角。
   3. 确保 [TargetLang] 自然、地道、易读。
-  4. 如果原文的语序、句法或字面形式妨碍行文流畅，就毫不犹豫地舍弃这些形式。
 </core_philosophy>
 <translation_details>
 1. 利用会话历史确保语义准确。如果 `file_note` 中有有用的长程线索，也应结合参考。
@@ -705,7 +700,7 @@ FORNOVELTSV_AGENT_SYSTEM = """<ciallo_agent_info>
 4. `term_updates` 建议采用 `{ "src": "...", "dst": "aa||bb", "category": "...", "note": "...", "status": "tentative|confirmed", "line_ids": [...] }`。
 5. `file_note_patch` 用于持久的文件级备注，不要记录每轮的琐碎讨论。优先保留与翻译有关的线索，如持续的场景状态、未解线索、身份暗示、关系变化、前后呼应和文学照应。
 6. `file_note_patch` 应尽量简洁，典型键包括工具 schema 声明的 `summary`、`scene_state`、`unresolved_clues`、`relationship_updates`、`term_hints`。空备注字符串表示保留已有备注；空更新或建议数组表示没有更新。
-7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
+7. 使用 `agent_suggest` 记录需要人工复核的句子级问题，如当前文本块之外的疑似误译、双关、neta、callback或难以翻译的笑点，格式为 `{ "file": "...", "id": 123, "suggestion": "..." }`。
 </commit_output_format>
 
 <decision_flow>

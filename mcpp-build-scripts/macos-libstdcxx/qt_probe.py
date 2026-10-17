@@ -66,10 +66,17 @@ int main(int argc, char** argv) {
     if (QVariant::fromValue(Message{"converter passed"}).toString() != "converter passed") return 2;
     std::cout << "std::function converter passed" << std::endl;
 
+    if (!app.arguments().contains("--gui-only")) {
+    std::cout << "make and rethrow exception_ptr" << std::endl;
+    try { std::rethrow_exception(std::make_exception_ptr(std::runtime_error("exception_ptr passed"))); }
+    catch (const std::runtime_error& error) { std::cout << error.what() << std::endl; }
+    std::cout << "create QFutureInterface" << std::endl;
     QFutureInterface<void> future;
     future.reportStarted();
     future.reportException(std::make_exception_ptr(std::runtime_error("future exception passed")));
+    std::cout << "exception stored" << std::endl;
     future.reportFinished();
+    std::cout << "future finished, waiting" << std::endl;
     bool caught = false;
     try { future.future().waitForFinished(); }
     catch (const std::runtime_error& error) {
@@ -77,6 +84,8 @@ int main(int argc, char** argv) {
         std::cout << error.what() << std::endl;
     }
     if (!caught) return 3;
+    if (app.arguments().contains("--exceptions-only")) return 0;
+    }
 
     std::vector<int> values{1, 2, 3, 4, 5};
     int sum = 0;
@@ -227,7 +236,16 @@ target_link_libraries(qt-libstdcxx-probe PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets
         run("qt-test-dependencies", ["otool", "-L", binary])
         for platform in ("offscreen", "cocoa"):
             environment = dict(os.environ, QT_QPA_PLATFORM=platform, QT_DEBUG_PLUGINS="1")
-            run("qt-test-" + platform, [binary], cwd=test, env=environment, timeout=60)
+            run("qt-test-" + platform, [binary, "--gui-only"], cwd=test, env=environment, timeout=60)
+        environment = dict(os.environ, QT_QPA_PLATFORM="offscreen")
+        try:
+            run("qt-test-exceptions", [binary, "--exceptions-only"], cwd=test, env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            run("qt-test-exceptions-backtrace", ["xcrun", "lldb", "--batch",
+                "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
+                "-o", "run", "-o", "thread backtrace all", "--", binary, "--exceptions-only"],
+                cwd=test, timeout=120)
+            raise
     finally:
         for name in ("CMakeCache.txt", "config.summary", "configure.cmake", "compile_commands.json"):
             for path in build.glob(name):

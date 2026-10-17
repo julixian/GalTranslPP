@@ -111,17 +111,19 @@ int main(int argc, char** argv) {
     QObject::connect(&sender, &Sender::delivered, &window, [&](Message value) {
         delivered = value.text == "queued signal passed";
         std::cout << value.text << std::endl;
+        QTimer::singleShot(50, &window, [&] {
+            const bool saved = window.grab().save(app.platformName() + "-window.png");
+            std::cout << "clicks=" << clicks << " screenshot=" << saved << std::endl;
+            app.exit(delivered && clicks == 1 && saved ? 0 : 5);
+        });
     }, Qt::QueuedConnection);
     window.show();
     QTimer::singleShot(100, &window, [&] {
         button->click();
         emit sender.delivered(Message{"queued signal passed"});
     });
-    QTimer::singleShot(500, &window, [&] {
-        const bool saved = window.grab().save(app.platformName() + "-window.png");
-        std::cout << "clicks=" << clicks << " screenshot=" << saved << std::endl;
-        app.exit(delivered && clicks == 1 && saved ? 0 : 5);
-    });
+    // Cocoa 首次初始化可能较慢，收到队列消息后再截图，超时只用于检测真正的挂起。
+    QTimer::singleShot(10000, &window, [&] { app.exit(6); });
     return app.exec();
 }
 

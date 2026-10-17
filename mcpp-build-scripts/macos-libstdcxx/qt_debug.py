@@ -253,7 +253,10 @@ def main():
                          if value.endswith(("/libstdc++.dylib", "/libgcc_s.1.1.dylib", "/libgcc.a"))
                          or value in ("-lSystem", "-lobjc")]
     gcc_archive = next(value for value in runtime_arguments if value.endswith("/libgcc.a"))
-    for name, moved in (("runtime-after-objects", runtime_arguments), ("gcc-after-objects", [gcc_archive])):
+    runtime_cases = [("runtime-after-objects", runtime_arguments), ("gcc-after-objects", [gcc_archive])]
+    runtime_cases.extend(("runtime-single-" + str(index), [value])
+                         for index, value in enumerate(runtime_arguments))
+    for name, moved in runtime_cases:
         arguments = [value for value in exact_args if value not in moved]
         last_object = max(index for index, value in enumerate(arguments) if value.endswith(".o"))
         arguments[last_object + 1:last_object + 1] = moved
@@ -263,10 +266,15 @@ def main():
             run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
         except subprocess.CalledProcessError:
             failures.append(name)
+        run("debug-unwind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--unwind-info", target])
     for name, candidate in (("original", cmake_binary), ("working", project / "cmake-object")):
         run("debug-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--bind", candidate])
         run("debug-weak-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--weak-bind", candidate])
         run("debug-fixups-" + name, [clang.with_name("llvm-objdump"), "--macho", "--chained-fixups", candidate])
+        run("debug-unwind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--unwind-info", candidate])
+        run("debug-dyld-" + name, ["xcrun", "lldb", "--batch",
+            "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen DYLD_PRINT_BINDINGS=1 DYLD_PRINT_WEAK_BINDINGS=1",
+            "-k", "thread backtrace", "-o", "run", "--", candidate, "--exceptions-only"], timeout=120)
         symbols = subprocess.check_output([clang.with_name("llvm-nm"), "--defined-only", candidate], text=True)
         (OUTPUT / ("debug-unwind-symbols-" + name + ".log")).write_text(
             "\n".join(line for line in symbols.splitlines()

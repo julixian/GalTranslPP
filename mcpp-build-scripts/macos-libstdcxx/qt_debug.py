@@ -155,6 +155,30 @@ def main():
                 "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
                 "-k", "thread backtrace all", "-k", "image lookup -n __gxx_personality_v0",
                 "-k", "disassemble -n main", "-o", "run", "--", target, "--exceptions-only"], timeout=120)
+    obj = project / "original.o"
+    cmake_flags = [*flags, "--rtlib=compiler-rt", "-g0", "-std=gnu++23", "-arch", "arm64",
+                   "-DQT_NO_DEBUG", "-DQT_CORE_LIB", "-DQT_GUI_LIB", "-DQT_WIDGETS_LIB"]
+    run("debug-compile-cmake", [clang, *cmake_flags, "-c", original, "-o", obj])
+    frameworks = [value for name in ("AppKit", "OpenGL", "ImageIO", "Metal", "IOKit",
+                                    "DiskArbitration", "UniformTypeIdentifiers")
+                  for value in ("-framework", name)]
+    for name, arguments in (
+            ("object-first", [obj, *link]),
+            ("libraries-first", [*link, obj]),
+            ("frameworks", [*link, obj, *frameworks]),
+            ("cmake-link-options", [*link, obj, *frameworks, "-Wl,-search_paths_first", "-Wl,-headerpad_max_install_names"]),
+            ("apple-linker", [*link, obj, *frameworks, "-fuse-ld=/usr/bin/ld"])):
+        target = project / name
+        run("debug-link-" + name, [clang, *cmake_flags, *arguments, "-o", target])
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
+            run("debug-bindings-" + name, [clang.with_name("llvm-objdump"), "--macho", "--bind", target])
+            run("debug-backtrace-" + name, ["xcrun", "lldb", "--batch",
+                "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
+                "-k", "thread backtrace all", "-k", "image lookup -n __gxx_personality_v0",
+                "-o", "run", "--", target, "--exceptions-only"], timeout=120)
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

@@ -1,10 +1,14 @@
 """复用已构建的 Qt，定位异常类型匹配和 C++ 运行库绑定问题。"""
 
 import os
+import json
+import shlex
 import subprocess
+import sys
 
 from probe import OUTPUT, prepare
 from qt_probe import TEST_SOURCE, run
+import qt_probe
 
 
 SOURCE = r'''
@@ -179,6 +183,34 @@ def main():
                 "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
                 "-k", "thread backtrace all", "-k", "image lookup -n __gxx_personality_v0",
                 "-o", "run", "--", target, "--exceptions-only"], timeout=120)
+    try:
+        run("debug-cmake-probe", [sys.executable, qt_probe.__file__], timeout=1800)
+    except subprocess.CalledProcessError:
+        pass  # 这里保留原始失败产物，用同一目标文件检查 CMake 的编译与链接。
+    cmake_project = OUTPUT / "qt-test"
+    cmake_build = cmake_project / "build"
+    cmake_obj = cmake_build / "CMakeFiles/qt-libstdcxx-probe.dir/main.cpp.o"
+    moc_obj = cmake_build / "CMakeFiles/qt-libstdcxx-probe.dir/qt-libstdcxx-probe_autogen/mocs_compilation.cpp.o"
+    for name, objects, extra in (
+            ("direct-isysroot", [obj], ["-isysroot", sdk]),
+            ("cmake-object", [moc_obj, cmake_obj], []),
+            ("cmake-object-isysroot", [moc_obj, cmake_obj], ["-isysroot", sdk])):
+        target = project / name
+        run("debug-relink-" + name, [clang, *cmake_flags, *extra, *objects, *link, *frameworks, "-o", target])
+        run("debug-driver-" + name, [clang, *cmake_flags, *extra, *objects, *link, *frameworks, "-o", target, "-###"])
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
+    run("debug-export-commands", ["cmake", "-S", cmake_project, "-B", cmake_build,
+                                  "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"])
+    commands = json.loads((cmake_build / "compile_commands.json").read_text())
+    command = next(item["command"] for item in commands if item["file"].endswith("/main.cpp"))
+    run("debug-cmake-compile-driver", [*shlex.split(command), "-###"])
+    run("debug-cmake-ir", [*shlex.split(command), "-S", "-emit-llvm", "-o", OUTPUT / "debug-cmake-ir.log"])
+    ninja_commands = subprocess.check_output(["ninja", "-C", str(cmake_build), "-t", "commands", "qt-libstdcxx-probe"], text=True)
+    link_command = ninja_commands.strip().splitlines()[-1].removeprefix(": && ").removesuffix(" && :")
+    run("debug-cmake-link-driver", [*shlex.split(link_command), "-###"], cwd=cmake_build)
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

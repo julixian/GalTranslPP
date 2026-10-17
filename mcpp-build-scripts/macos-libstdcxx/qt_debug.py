@@ -4,12 +4,14 @@ import os
 import subprocess
 
 from probe import OUTPUT, prepare
-from qt_probe import run
+from qt_probe import TEST_SOURCE, run
 
 
 SOURCE = r'''
 #include <QApplication>
 #include <QCoreApplication>
+#include <QFuture>
+#include <QFutureInterface>
 #include <QMetaType>
 #include <QVariant>
 #include <cxxabi.h>
@@ -136,6 +138,23 @@ def main():
                 "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
                 "-k", "thread backtrace all", "-k", "image lookup -n __gxx_personality_v0",
                 "-k", "image lookup -n __cxa_get_globals", "-o", "run", "--", binary, mode], timeout=120)
+    # 保留原来失败的 main 和 moc 生成代码，分别比较调试信息及 catch-all 的影响。
+    original = project / "original.cpp"
+    original.write_text(TEST_SOURCE, encoding="utf-8")
+    run("debug-moc", [install / "libexec/moc", "-I" + str(install / "include"),
+                      "-I" + str(install / "include/QtCore"), original, "-o", project / "main.moc"])
+    for name, extra in (("original-debug", []), ("original-no-debug", ["-g0"]),
+                        ("original-gnu", ["-g0", "-std=gnu++23", "-DQT_NO_DEBUG", "-arch", "arm64"])):
+        target = project / name
+        run("debug-build-" + name, [clang, *flags, *extra, original, *link, "-o", target])
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
+            run("debug-backtrace-" + name, ["xcrun", "lldb", "--batch",
+                "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
+                "-k", "thread backtrace all", "-k", "image lookup -n __gxx_personality_v0",
+                "-k", "disassemble -n main", "-o", "run", "--", target, "--exceptions-only"], timeout=120)
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

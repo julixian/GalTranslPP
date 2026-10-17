@@ -116,6 +116,29 @@ def main():
         run("modules-run", [binary])
         run("modules-dependencies", ["otool", "-L", binary])
 
+        # 同时验证 std.compat 的全局 C 接口，以及自定义模块之间的标准库类型和异常。
+        (project / "Probe.cppm").write_text('''export module Probe;
+import std.compat;
+export namespace probe {
+std::string message() { return "module passed"; }
+void fail() { throw std::runtime_error("module exception passed"); }
+}
+''', encoding="utf-8")
+        source.write_text('''import std.compat;
+import Probe;
+int check_modules() {
+    char buffer[32]{};
+    ::snprintf(buffer, sizeof(buffer), "%s", probe::message().c_str());
+    if (std::string(buffer) != "module passed") return 3;
+    try { probe::fail(); }
+    catch (const std::runtime_error& error) {
+        std::cout << error.what() << '\\n';
+        return 0;
+    }
+    return 4;
+}
+''' + BODY.replace("int main() {", "int main() {\n    if (int error = check_modules()) return error;"), encoding="utf-8")
+
         provider_manifest = f'''[package]
 namespace = "probe"
 name = "libstdcxx"
@@ -142,7 +165,7 @@ default = "llvm@{LLVM_VERSION}"
 [dependencies]
 "probe.libstdcxx" = {{ path = "libstdcxx" }}
 [build]
-sources = []
+sources = ["Probe.cppm"]
 macos_deployment_target = "14.4"
 [targets.clang-libstdcxx-probe]
 kind = "bin"
@@ -150,13 +173,13 @@ main = "main.cpp"
 '''
         (project / "mcpp.toml").write_text(manifest, encoding="utf-8")
         try:
-            run("mcpp-build", [mcpp, "build", "--no-color"], cwd=project)
+            run("mcpp-build", [mcpp, "build", "--no-color", "--verbose"], cwd=project)
             executables = [path for path in (project / "target").rglob("clang-libstdcxx-probe") if path.is_file()]
             binary = max(executables, key=lambda path: path.stat().st_mtime)
             run("mcpp-run", [binary], cwd=project)
             run("mcpp-dependencies", ["otool", "-L", binary])
         finally:
-            for name in ("build.ninja", "resolution.json", "mcpp.toml"):
+            for name in ("build.ninja", "resolution.json", "compile_commands.json", "mcpp.toml", "*.cpp", "*.cppm"):
                 for path in project.rglob(name):
                     destination = OUTPUT / "project" / path.relative_to(project)
                     destination.parent.mkdir(parents=True, exist_ok=True)

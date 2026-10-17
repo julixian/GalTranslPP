@@ -149,8 +149,20 @@ def main():
     for include in includes:
         cxxflags.extend(["-isystem", str(include)])
     gcc_runtime = library.resolve().parent / "libgcc_s.1.1.dylib"
-    ldflags = ["-fuse-ld=lld", "-nostdlib++", str(library), str(gcc_runtime),
-               "-Wl,-rpath," + str(library.parent)]
+    gcc_builtins = next(library.resolve().parent.rglob("libgcc.a"))
+    # 禁止 Clang 自动加入 compiler-rt，避免动态插件带入另一套 emulated TLS 管理器。
+    ldflags = ["-fuse-ld=lld", "-nodefaultlibs", str(library), str(gcc_runtime), str(gcc_builtins),
+               "-lSystem", "-lobjc", "-Wl,-rpath," + str(library.parent)]
+    def save_runtime_symbols(stage):
+        lines = []
+        for path in (build / "lib/libQt6Core.dylib", build / "lib/libQt6Gui.dylib",
+                     build / "plugins/platforms/libqoffscreen.dylib", build / "plugins/platforms/libqcocoa.dylib"):
+            if path.is_file():
+                lines.append(str(path))
+                symbols = subprocess.check_output(["nm", "-m", str(path)], text=True)
+                lines.extend(line for line in symbols.splitlines() if "emutls" in line or "__gxx_personality" in line)
+        (OUTPUT / ("qt-runtime-symbols-" + stage + ".log")).write_text("\n".join(lines), encoding="utf-8")
+    save_runtime_symbols("before")
     symbols = subprocess.check_output(["nm", "-g", str(library)], text=True)
     (OUTPUT / "qt-tls-symbols.log").write_text(
         "\n".join(line for line in symbols.splitlines() if "once" in line or "emutls" in line), encoding="utf-8")
@@ -237,6 +249,7 @@ int main() {
                              "-DFEATURE_framework=OFF", "-DQT_BUILD_TESTS=OFF",
                              "-DQT_BUILD_EXAMPLES=OFF", "-DQT_BUILD_BENCHMARKS=OFF"])
         run("qt-build", ["cmake", "--build", build, "--parallel", str(os.cpu_count() or 3)])
+        save_runtime_symbols("after")
         run("qt-install", ["cmake", "--install", build])
         for name in ("Core", "Gui", "Widgets"):
             run("qt-dependencies-" + name.lower(), ["otool", "-L", install / "lib" / f"libQt6{name}.dylib"])

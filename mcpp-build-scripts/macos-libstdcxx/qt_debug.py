@@ -3,6 +3,7 @@
 import os
 import json
 import shlex
+import shutil
 import subprocess
 import sys
 
@@ -211,7 +212,20 @@ def main():
     ninja_commands = subprocess.check_output(["ninja", "-C", str(cmake_build), "-t", "commands", "qt-libstdcxx-probe"], text=True)
     link_command = ninja_commands.strip().splitlines()[-1].removeprefix(": && ").removesuffix(" && :")
     run("debug-cmake-link-driver", [*shlex.split(link_command), "-###"], cwd=cmake_build)
+    cmake_binary = cmake_build / "qt-libstdcxx-probe"
+    copied_binary = project / "copied-cmake-binary"
+    shutil.copy2(cmake_binary, copied_binary)
+    for name, candidate, directory in (
+            ("original-cwd-test", cmake_binary, cmake_project),
+            ("original-cwd-root", cmake_binary, None),
+            ("copied-cwd-test", copied_binary, cmake_project),
+            ("copied-cwd-root", copied_binary, None)):
+        try:
+            run("debug-run-" + name, [candidate, "--exceptions-only"], env=environment, cwd=directory, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
     for name, extra in (
+            ("cmake-exact-replay", []),
             ("cmake-no-deduplicate", ["-Wl,-no_deduplicate"]),
             ("cmake-O0", ["-O0"]),
             ("cmake-O2", ["-O2"]),
@@ -222,6 +236,21 @@ def main():
             run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
         except subprocess.CalledProcessError:
             failures.append(name)
+    exact_args = shlex.split(link_command)
+    core_argument = str(install / "lib/libQt6Core.6.12.0.dylib")
+    core_before_frameworks = [value for value in exact_args if value != core_argument]
+    core_before_frameworks.insert(core_before_frameworks.index("-framework"), core_argument)
+    aliases = [value.replace(".6.12.0.dylib", ".dylib") if value.startswith(str(install)) else value for value in exact_args]
+    for name, arguments in (("core-before-frameworks", core_before_frameworks), ("unversioned-libraries", aliases)):
+        target = project / name
+        run("debug-exact-link-" + name, [*arguments, "-o", target], cwd=cmake_build)
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
+    for name, candidate in (("original", cmake_binary), ("working", project / "cmake-object")):
+        run("debug-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--bind", candidate])
+        run("debug-weak-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--weak-bind", candidate])
     if failures:
         raise RuntimeError("异常测试失败：" + ", ".join(failures))
 

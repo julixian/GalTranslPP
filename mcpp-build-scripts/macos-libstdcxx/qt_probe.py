@@ -25,10 +25,12 @@ def run(name, command, *, cwd=None, env=None, timeout=3600):
 
 TEST_SOURCE = r'''
 #include <QApplication>
+#include <QFuture>
 #include <QFutureInterface>
 #include <QLabel>
 #include <QMetaType>
 #include <QPushButton>
+#include <QPixmap>
 #include <QTimer>
 #include <QVariant>
 #include <QVBoxLayout>
@@ -132,10 +134,43 @@ def main():
     if not source.is_dir():
         run("qt-clone", ["git", "clone", "--depth", "1", "--branch", "v6.12.0",
                          "https://github.com/qt/qtbase.git", source])
-    cxxflags = ["--no-default-config", "-nostdinc++", "-stdlib=libstdc++", "--rtlib=compiler-rt"]
+    # Homebrew 的 GCC 使用 emulated TLS，Clang 访问 GNU 库的 TLS 变量也必须一致。
+    cxxflags = ["--no-default-config", "-nostdinc++", "-stdlib=libstdc++",
+                "--rtlib=compiler-rt", "-femulated-tls"]
     for include in includes:
         cxxflags.extend(["-isystem", str(include)])
-    ldflags = ["-fuse-ld=lld", "-nostdlib++", str(library), "-Wl,-rpath," + str(library.parent)]
+    gcc_runtime = library.resolve().parent / "libgcc_s.1.1.dylib"
+    ldflags = ["-fuse-ld=lld", "-nostdlib++", str(library), str(gcc_runtime),
+               "-Wl,-rpath," + str(library.parent)]
+    symbols = subprocess.check_output(["nm", "-g", str(library)], text=True)
+    (OUTPUT / "qt-tls-symbols.log").write_text(
+        "\n".join(line for line in symbols.splitlines() if "once" in line or "emutls" in line), encoding="utf-8")
+    tls_source = test / "tls.cpp"
+    tls_source.write_text('''#include <atomic>
+#include <future>
+#include <iostream>
+#include <mutex>
+#include <thread>
+#include <vector>
+thread_local int local = 0;
+int main() {
+    std::once_flag once;
+    std::atomic<int> count = 0;
+    std::vector<std::jthread> threads;
+    for (int i = 0; i < 32; ++i) threads.emplace_back([&] {
+        if (++local != 1) std::abort();
+        std::call_once(once, [&] { ++count; });
+    });
+    threads.clear();
+    if (count != 1) return 1;
+    auto result = std::async(std::launch::async, [] { return 42; });
+    if (result.get() != 42) return 2;
+    std::cout << "TLS, call_once and future passed" << std::endl;
+}
+''', encoding="utf-8")
+    run("qt-tls-build", [clang, *cxxflags, "-std=c++23", "--sysroot=" + sdk,
+                         "-mmacosx-version-min=15.0", tls_source, *ldflags, "-o", test / "tls-test"])
+    run("qt-tls-run", [test / "tls-test"], timeout=60)
     toolchain = OUTPUT / "qt-toolchain.cmake"
     toolchain.write_text("\n".join([
         f'set(CMAKE_{language}_COMPILER {json.dumps(str(compiler))} CACHE FILEPATH "")'
@@ -159,6 +194,11 @@ def main():
         run("qt-configure", ["cmake", "-S", source, "-B", build, "-G", "Ninja",
                              "-DCMAKE_TOOLCHAIN_FILE=" + str(toolchain),
                              "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_CXX_STANDARD=23",
+                             "-DCMAKE_OSX_DEPLOYMENT_TARGET=15.0",
+                             "-DCMAKE_CXX_FLAGS=" + shlex.join(cxxflags),
+                             "-DCMAKE_OBJCXX_FLAGS=" + shlex.join(cxxflags),
+                             *[f"-DCMAKE_{kind}_LINKER_FLAGS=" + shlex.join(ldflags)
+                               for kind in ("EXE", "SHARED", "MODULE")],
                              "-DCMAKE_INSTALL_PREFIX=" + str(install),
                              "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON", "-DBUILD_SHARED_LIBS=ON",
                              "-DFEATURE_framework=OFF", "-DQT_BUILD_TESTS=OFF",
@@ -176,6 +216,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_AUTOMOC ON)
 find_package(Qt6 6.12 REQUIRED COMPONENTS Core Gui Widgets)
 qt_add_executable(qt-libstdcxx-probe main.cpp)
+set_target_properties(qt-libstdcxx-probe PROPERTIES MACOSX_BUNDLE FALSE)
 target_link_libraries(qt-libstdcxx-probe PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
 ''', encoding="utf-8")
         run("qt-test-configure", ["cmake", "-S", test, "-B", test / "build", "-G", "Ninja",

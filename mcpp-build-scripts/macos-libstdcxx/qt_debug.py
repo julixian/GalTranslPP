@@ -267,6 +267,17 @@ def main():
         except subprocess.CalledProcessError:
             failures.append(name)
         run("debug-unwind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--unwind-info", target])
+    no_headerpad = [value for value in exact_args if value != "-Wl,-headerpad_max_install_names"]
+    for name, arguments, extra in (
+            ("no-headerpad", no_headerpad, []),
+            ("large-headerpad", no_headerpad, ["-Wl,-headerpad,10000"]),
+            ("no-chained-fixups", exact_args, ["-Wl,-no_fixup_chains"])):
+        target = project / name
+        run("debug-exact-link-" + name, [*arguments, *extra, "-o", target], cwd=cmake_build)
+        try:
+            run("debug-run-" + name, [target, "--exceptions-only"], env=environment, timeout=60)
+        except subprocess.CalledProcessError:
+            failures.append(name)
     for name, candidate in (("original", cmake_binary), ("working", project / "cmake-object")):
         run("debug-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--bind", candidate])
         run("debug-weak-bind-" + name, [clang.with_name("llvm-objdump"), "--macho", "--weak-bind", candidate])
@@ -275,6 +286,18 @@ def main():
         run("debug-dyld-" + name, ["xcrun", "lldb", "--batch",
             "-o", "settings set target.env-vars QT_QPA_PLATFORM=offscreen DYLD_PRINT_BINDINGS=1 DYLD_PRINT_WEAK_BINDINGS=1",
             "-k", "thread backtrace", "-o", "run", "--", candidate, "--exceptions-only"], timeout=120)
+        debugger = project / (name + "-personality.lldb")
+        debugger.write_text("\n".join([
+            "settings set target.env-vars QT_QPA_PLATFORM=offscreen",
+            "breakpoint set -n __gxx_personality_v0", "run",
+            *[command for _ in range(4) for command in (
+                "thread backtrace", "register read x0 x1 x2 x3 x4", "thread step-out",
+                "register read x0", "continue")], "thread backtrace"]), encoding="utf-8")
+        try:
+            run("debug-personality-" + name, ["xcrun", "lldb", "--batch", "-s", debugger,
+                "--", candidate, "--exceptions-only"], timeout=120)
+        except subprocess.CalledProcessError:
+            pass  # 进程提前结束后，后续调试命令自然无效，仍保留之前的采样。
         symbols = subprocess.check_output([clang.with_name("llvm-nm"), "--defined-only", candidate], text=True)
         (OUTPUT / ("debug-unwind-symbols-" + name + ".log")).write_text(
             "\n".join(line for line in symbols.splitlines()

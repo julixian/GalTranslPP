@@ -103,12 +103,12 @@ std::string GptDictionary::generatePrompt(std::span<Sentence*> batch, TransEngin
     {
     case TransEngine::ForGalJson:
     case TransEngine::ForNovelJson:
-        return "| Src | Dst(||Dst2||..) | Note |\n| --- | --- | --- |\n" + promptContent;
+        return "| src | dst | note |\n| --- | --- | --- |\n" + promptContent;
 
     case TransEngine::ForGalTsv:
     case TransEngine::ForNovelTsv:
     case TransEngine::NameTrans:
-        return "SRC\tDST(||Dst2||..)\tNOTE\n" + promptContent;
+        return "SRC\tDST\tNOTE\n" + promptContent;
 
     case TransEngine::Sakura:
         return promptContent; // Sakura 模式没有标题

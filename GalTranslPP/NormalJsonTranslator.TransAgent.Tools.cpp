@@ -96,8 +96,7 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
             row["file"] = "";
             row["id"] = id++;
             row["src"] = entry.key();
-            row["dst"] = row.value("target_term", "");
-            row.erase("target_term");
+            row["dst"] = row.value("dst", "");
             rows.push_back(std::move(row));
         }
     }

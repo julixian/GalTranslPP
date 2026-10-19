@@ -18,7 +18,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 优化 MyCustom 提示词",
+        "1. 继续优化提示词，注意一下我现在基本上都是在优化 MyCustom，基本上都是针对 gemini-4-argon 的日译中问题，有需要的请手动替换",
+        "2. 优化字典发送格式，这会导致旧项目 Agent 模式的 term_ledger.json 术语表失效，请将此文件删除或将其中的 \"target_term\" 键改为 \"dst\"",
+
     };
 
     mainLayout->addWidget(updateTitle);

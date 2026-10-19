@@ -368,22 +368,9 @@ std::string lightRepairJsonText(std::string_view jsonStr) {
         return std::string(jsonStr);
     }
 
-    static constexpr std::array<std::string_view, 15> repairableFields = {
-        "\"dst\":",
-        "\"note\":",
-        "\"rolling_context\":",
-        "\"query\":",
-        "\"source_term\":",
-        "\"target_term\":",
-        "\"final_target\":",
-        "\"final_note\":",
-        "\"merge_into\":",
-        "\"suggestion\":",
-        "\"summary\":",
-        "\"scene_state\":",
-        "\"unresolved_clues\":",
-        "\"relationship_updates\":",
-        "\"term_hints\":"
+    static constexpr std::array<std::string_view, 2> repairableFields = {
+        "\"name\":",
+        "\"dst\":"
     };
 
     std::string newText = std::string(jsonStr);

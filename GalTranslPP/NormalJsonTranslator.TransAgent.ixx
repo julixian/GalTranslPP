@@ -143,8 +143,8 @@ private:
     // 读取指定文件备注，优先使用内存缓存，首次访问时从磁盘加载。
     json loadFileNote(const fs::path& targetRelPath);
 
-    // 把 Agent 建议目标解析为相对文件和句子 id。
-    std::optional<std::pair<fs::path, int>> parseAgentSuggestTarget(const json& suggestion) const;
+    // 把 Agent 建议目标解析为相对文件和句子 id；file 为空时默认指向当前文件。
+    std::optional<std::pair<fs::path, int>> parseAgentSuggestTarget(const json& suggestion, const fs::path& defaultRelPath) const;
 
     // 读取已配置的翻译字典，并构造成小写搜索缓存项。
     std::vector<LoadedDictionaryEntry> loadDictionaryEntries() const;

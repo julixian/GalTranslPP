@@ -135,17 +135,23 @@ json NormalJsonTranslatorTransAgent::loadFileNote(const fs::path& targetRelPath)
     return fileNote;
 }
 
-// 解析 Agent 建议目标。
-std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAgentSuggestTarget(const json& suggestion) const {
+// 解析 Agent 建议目标；file 为空时默认使用当前文件。
+std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAgentSuggestTarget(
+    const json& suggestion, const fs::path& defaultRelPath) const
+{
     if (!suggestion.is_object()) {
         return std::nullopt;
     }
     const std::string file = suggestion.value("file", "");
     const auto idOpt = suggestion.contains("id") ? parseAgentCommonJsonInt(suggestion["id"]) : std::nullopt;
-    if (file.empty() || !idOpt.has_value() || idOpt.value() < 0) {
+    if (!idOpt.has_value() || idOpt.value() < 0) {
         return std::nullopt;
     }
-    return std::make_pair(ascii2Wide(file), idOpt.value());
+    const fs::path targetPath = file.empty() ? defaultRelPath : fs::path(ascii2Wide(file));
+    if (targetPath.empty()) {
+        return std::nullopt;
+    }
+    return std::make_pair(targetPath, idOpt.value());
 }
 
 // 读取翻译 Agent 可搜索的 GPT 字典项。
@@ -192,25 +198,32 @@ std::string NormalJsonTranslatorTransAgent::buildTermLedgerExcerpt(
     const std::string& rollingContext,
     const json& fileNote
 ) const {
-    json relevant = json::array();
-    json fallback = json::array();
+    struct TermExcerptRow {
+        std::string src;
+        std::string dst;
+        std::string status;
+        std::string category;
+        std::string note;
+    };
+    std::vector<TermExcerptRow> relevant;
+    std::vector<TermExcerptRow> fallback;
     const std::string inputLower = str2Lower(currentInputBlock);
     const std::string rollingContextLower = str2Lower(rollingContext);
     const std::string fileNoteLower = str2Lower(fileNote.dump());
     for (const auto& item : ledger.items()) {
-        const std::string term = item.key();
+        const std::string& term = item.key();
         const json& entry = item.value();
-        const json normalizedEntry = {
-            {"source_term", term},
-            {"target_term", entry.value("target_term", "")},
-            {"status", entry.value("status", "tentative")},
-            {"category", entry.value("category", "")},
-            {"note", entry.value("note", "")}
+        TermExcerptRow row{
+            .src = term,
+            .dst = entry.value("dst", ""),
+            .status = entry.value("status", "tentative"),
+            .category = entry.value("category", ""),
+            .note = entry.value("note", "")
         };
 
-        const std::string termLower = str2Lower(term);
-        const std::string targetLower = str2Lower(entry.value("target_term", ""));
-        const std::string noteLower = str2Lower(entry.value("note", ""));
+        const std::string termLower = str2Lower(row.src);
+        const std::string targetLower = str2Lower(row.dst);
+        const std::string noteLower = str2Lower(row.note);
         const bool isRelevant =
             (!inputLower.empty() && inputLower.contains(termLower)) ||
             (!rollingContextLower.empty() && (rollingContextLower.contains(termLower) ||
@@ -220,14 +233,41 @@ std::string NormalJsonTranslatorTransAgent::buildTermLedgerExcerpt(
             (!noteLower.empty() && fileNoteLower.contains(noteLower))));
 
         if (isRelevant) {
-            relevant.push_back(normalizedEntry);
+            relevant.push_back(std::move(row));
             continue;
         }
         if ((int)fallback.size() < m_agentSearchResultLimit) {
-            fallback.push_back(normalizedEntry);
+            fallback.push_back(std::move(row));
         }
     }
-    return (relevant.empty() ? fallback : relevant).dump(2);
+
+    const auto& chosen = relevant.empty() ? fallback : relevant;
+    if (chosen.empty()) {
+        return {};
+    }
+
+    std::string content;
+    switch (m_transEngine) {
+    case TransEngine::ForGalJson:
+    case TransEngine::ForNovelJson:
+        content = "| src | dst | status | category | note |\n| --- | --- | --- | --- | --- |\n";
+        for (const auto& r : chosen) {
+            content += std::format("| {} | {} | {} | {} | {} |\n", r.src, r.dst, r.status, r.category, r.note);
+        }
+        return content;
+
+    case TransEngine::ForGalTsv:
+    case TransEngine::ForNovelTsv:
+    case TransEngine::NameTrans:
+        content = "SRC\tDST\tSTATUS\tCATEGORY\tNOTE\n";
+        for (const auto& r : chosen) {
+            content += std::format("{}\t{}\t{}\t{}\t{}\n", r.src, r.dst, r.status, r.category, r.note);
+        }
+        return content;
+
+    default:
+        throw std::runtime_error(gppTr("GptDictionary.getPrompt", "内部错误: 无效的提示词类型").toStdString());
+    }
 }
 
 // 汇总当前待翻译句子已有的问题文本。
@@ -393,14 +433,14 @@ std::string NormalJsonTranslatorTransAgent::buildLogBlock(
     if (!glossary.empty()) {
         logBlock += "\nGlossary:\n" + limitLogLines(glossary, m_glossaryMaxLines);
     }
-    if (m_logger->should_log(spdlog::level::debug) && knownTerms != "[]") {
+    if (m_logger->should_log(spdlog::level::debug) && !knownTerms.empty()) {
         logBlock += "\nKnownTerms:\n" + knownTerms;
     }
     logBlock += "\ninputBlock:\n" + limitLogLines(inputBlock, m_inputBlockMaxLines);
     return logBlock;
 }
 
-// 构造当前批次的用户提示词；摘要仅用于筛选相关术语，不直接注入。
+// 构造当前批次的用户提示词；摘要和文件备注仅用于筛选相关术语，不直接注入。
 std::string NormalJsonTranslatorTransAgent::buildUserPrompt(
     const fs::path& relInputPath,
     std::span<Sentence*> pending,
@@ -418,8 +458,7 @@ std::string NormalJsonTranslatorTransAgent::buildUserPrompt(
     replaceStrInplace(prompt, "[AgentTargetLang]", m_targetLang);
     replaceStrInplace(prompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
     replaceStrInplace(prompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
-    replaceStrInplace(prompt, "[AgentFileNote]", currentFileNote.empty() ? "None" : currentFileNote.dump());
-    replaceStrInplace(prompt, "[AgentKnownTerms]", knownTerms);
+    replaceStrInplace(prompt, "[AgentKnownTerms]", knownTerms.empty() ? "None" : knownTerms);
     replaceStrInplace(prompt,
         m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv
             ? "[AgentCurrentChunkTsv]" : "[AgentCurrentChunkJson]", inputBlock);
@@ -528,8 +567,8 @@ int NormalJsonTranslatorTransAgent::applyCommit(
                 if (!termItem.is_object()) {
                     termItem = json::object();
                 }
-                const std::string oldTarget = termItem.value("target_term", "");
-                termItem["target_term"] = targetTerm;
+                const std::string oldTarget = termItem.value("dst", "");
+                termItem["dst"] = targetTerm;
                 termItem["status"] = updateItem.value("status", termItem.value("status", "tentative"));
                 termItem["category"] = updateItem.value("category", termItem.value("category", ""));
                 termItem["note"] = updateItem.value("note", termItem.value("note", ""));
@@ -571,7 +610,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
         }
 
         for (const auto& suggestionItem : arguments.at("agent_suggest")) {
-            const auto target = parseAgentSuggestTarget(suggestionItem);
+            const auto target = parseAgentSuggestTarget(suggestionItem, relInputPath);
             if (!target.has_value()) {
                 continue;
             }

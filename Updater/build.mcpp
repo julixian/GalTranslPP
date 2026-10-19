@@ -6,6 +6,24 @@ import gpp.build;
 int main() {
     return gpp::run_build_script([] {
         gpp::win::configure_executable_link_options();
+        // mcpp 将本包作为 GUI 的 artifact 依赖时未带入 [resources]，显式绑定到 Updater。
+        const auto resource_compiler = std::filesystem::path(mcpp::toolchain_dir()) / "bin" / "llvm-windres.exe";
+        const auto resource_directory = std::filesystem::path(mcpp::manifest_dir());
+        const auto resource_file = resource_directory / "Updater.rc";
+        const auto manifest_file = resource_directory / "Updater.manifest";
+        const auto resource_object = std::filesystem::path(mcpp::out_dir()) / "Updater.resources.o";
+        mcpp::action resource;
+        resource.id = "updater-resources";
+        resource.role = mcpp::roles::object;
+        resource.target("Updater");
+        resource.arg(resource_compiler.generic_string().c_str())
+            .arg("--codepage=65001").arg("-O").arg("coff")
+            .arg("-I").arg(resource_directory.generic_string().c_str())
+            .arg("-o").arg(resource_object.generic_string().c_str())
+            .arg(resource_file.generic_string().c_str())
+            .input(resource_compiler.generic_string().c_str())
+            .input(resource_file.generic_string().c_str()).input(manifest_file.generic_string().c_str())
+            .output(resource_object.generic_string().c_str()).submit();
         const auto vcpkg_directory = gpp::win::configure_vcpkg("Updater");
         auto qt_options = gpp::win::make_qt_options({"Core"});
         const auto translation_file = gpp::win::configure_translation(qt_options, "qt_gppupdater_en.ts");

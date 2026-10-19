@@ -218,7 +218,8 @@ void initializeProcessJob()
                     }
                 };
             JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
-            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            // 普通子进程仍随主进程退出；Updater 可通过 CREATE_BREAKAWAY_FROM_JOB 显式脱离。
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_BREAKAWAY_OK;
             check(SetInformationJobObject(handle, JobObjectExtendedLimitInformation, &limits, sizeof(limits)), "SetInformationJobObject");
             check(AssignProcessToJobObject(handle, GetCurrentProcess()), "AssignProcessToJobObject");
             return handle;

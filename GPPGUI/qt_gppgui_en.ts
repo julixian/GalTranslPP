@@ -2682,6 +2682,10 @@ Issue summary:</translation>
         <translation>Project %1 config saved!</translation>
     </message>
     <message>
+        <source>更新程序启动失败</source>
+        <translation type="vanished">Failed to start the updater</translation>
+    </message>
+    <message>
         <location line="-119"/>
         <location line="+4"/>
         <source>移除失败</source>

@@ -713,7 +713,18 @@ void MainWindow::onCloseWindowClicked(bool restart)
         if (restart) {
             arguments << "--restart" << QApplication::applicationFilePath();
         }
-        QProcess::startDetached("Updater.exe", arguments, QDir::currentPath());
+        QProcess updater;
+        updater.setProgram(QApplication::applicationDirPath() + "/Updater.exe");
+        updater.setArguments(arguments);
+        updater.setWorkingDirectory(QApplication::applicationDirPath());
+#ifdef Q_OS_WIN
+        // startDetached 不会脱离 Windows Job，必须显式排除主进程退出时的子进程清理。
+        updater.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments* args)
+            {
+                args->flags |= CREATE_BREAKAWAY_FROM_JOB;
+            });
+#endif
+        updater.startDetached();
     }
     MainWindow::close();
 }

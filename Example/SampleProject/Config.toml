@@ -1,6 +1,6 @@
 [backend]
 apiStrategy = "random" # 令牌策略，random 随机轮询，fallback 优先第一个，出现[请求错误]时使用下一个
-apiTimeout = 300 # 请求超时时间，单位秒
+apiTimeout = 300       # 请求超时时间，单位秒
 
   [[backend.apis]]
   name = "自定义 Api"     # 仅用于 GUI 展示，便于区分渠道，不参与翻译请求

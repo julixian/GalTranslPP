@@ -25,6 +25,9 @@ module_extensions = [".ixx"]
 [target.windows.build]
 ldflags = ["-luser32", "-loleaut32"]
 
+[resources]
+files = ["Updater.rc"]
+
 [targets.Updater]
 kind = "bin"
 main = "Updater.cpp"

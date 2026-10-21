@@ -1,6 +1,6 @@
 # Private workspace
-/.idea/
 /.vscode/
+/.cache/
 .vs/
 *.user
 

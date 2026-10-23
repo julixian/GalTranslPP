@@ -54,7 +54,7 @@ auto& str2LowerInplace(std::basic_string<CharT, Traits, Alloc>& str) {
                 ch = (wchar_t)(ch - L'A' + L'a');
             }
         }
-#ifdef PROJECT_NO_ANSI
+#if (PROJECT_NO_ANSI)
         else if constexpr (std::is_same_v<CharT, char>) {
             if (ch >= 'A' && ch <= 'Z') {
                 ch = (char)(ch - 'A' + 'a');
@@ -77,7 +77,7 @@ auto str2Lower(T&& str) {
         str2LowerInplace(ret);
         return ret;
     }
-#ifdef PROJECT_NO_ANSI
+#if (PROJECT_NO_ANSI)
     else if constexpr (std::is_same_v<std::remove_cvref_t<T>, std::string>
         || std::constructible_from<std::string, T>)
     {

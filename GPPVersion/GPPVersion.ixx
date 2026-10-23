@@ -4,7 +4,7 @@ export import std;
 
 export namespace gpp
 {
-	constexpr std::string_view GPPVERSION = "3.2.8";
+	constexpr std::string_view GPPVERSION = "3.2.9";
 	constexpr std::string_view PYTHONVERSION = "1.0.0";
 	constexpr std::string_view PROMPTVERSION = "3.0.2";
 	constexpr std::string_view DICTVERSION = "1.0.4";

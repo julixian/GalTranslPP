@@ -32,9 +32,8 @@ lineBreakGlueMarks = { "…", "—", "～" }
 kGameMaxLineLength = 35
 kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "{{BR}}"
-# 开启后半角字符按半字计宽；全角、宽字符和东亚宽度不明确的字符仍按一字计宽。
-halfWidthAsHalf = False
 dialogueNewLinePrefix = ""
+halfWidthAsHalf = False
 checkIsDialogueByName = True
 checkIsDialogueByQuotation = True
 

@@ -3,6 +3,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import json
 import re
+import unicodedata
 from typing import Callable, Optional, cast
 
 tokenizeResult = tuple[list[tuple[str, str]], list[tuple[str, str]]]
@@ -31,21 +32,33 @@ lineBreakGlueMarks = { "…", "—", "～" }
 kGameMaxLineLength = 35
 kCommonMaxLineLength = kGameMaxLineLength
 linebreakSymbol = "{{BR}}"
+# 开启后半角字符按半字计宽；全角、宽字符和东亚宽度不明确的字符仍按一字计宽。
+halfWidthAsHalf = False
 dialogueNewLinePrefix = ""
 checkIsDialogueByName = True
 checkIsDialogueByQuotation = True
 
+
+def plainDisplayLength(text: str) -> float:
+    if not halfWidthAsHalf:
+        return len(text)
+    return sum(
+        0.5 if unicodedata.east_asian_width(ch) in {"Na", "H", "N"} else 1
+        for ch in text
+    )
+
+
 @dataclass(frozen=True)
 class InlineTokenRule:
     pattern: re.Pattern[str]
-    displayWidth: Callable[[re.Match[str]], int]
+    displayWidth: Callable[[re.Match[str]], float]
 
 # 行内特殊格式都在这里配置：匹配到的整段原文不会被分词或拆开。
 # 格式变更时，只需修改/增加规则及其显示宽度算法。规则重叠时前者优先。
 inlineTokenRules = (
     InlineTokenRule(
         re.compile(r"《([^《》｜]+?)｜([^《》｜]+?)》"),
-        lambda match: len(match.group(1)),
+        lambda match: plainDisplayLength(match.group(1)),
     ),
     # InlineTokenRule(
     #     re.compile(r"\\[A-Za-z\d\+;]+"),
@@ -229,16 +242,16 @@ def mergePunctuationTokens(tokens: list[str]) -> list[str]:
     return mergedTokens
 
 
-def displayLength(text: str) -> int:
-    """计算引擎实际显示的字符数，而不是原始字符串长度。"""
+def displayLength(text: str) -> float:
+    """按配置计算显示宽度，行内特殊格式使用各自的宽度规则。"""
     width = 0
     cursor = 0
     while token := findNextInlineToken(text, cursor):
         rule, match = token
-        width += match.start() - cursor
+        width += plainDisplayLength(text[cursor:match.start()])
         width += rule.displayWidth(match)
         cursor = match.end()
-    return width + len(text) - cursor
+    return width + plainDisplayLength(text[cursor:])
 
 
 def balancedGroupEnd(text: str, start: int) -> Optional[int]:

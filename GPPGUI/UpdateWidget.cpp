@@ -18,9 +18,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 继续优化提示词，注意一下我现在基本上都是在优化 MyCustom，基本上都是针对 gemini-4-argon 的日译中问题，有需要的请手动替换",
-        "2. 优化字典发送格式，这会导致旧项目 Agent 模式的 term_ledger.json 术语表失效，请将此文件删除或将其中的 \"target_term\" 键改为 \"dst\"",
-        "3. 修复自 3.2.4 起由于更新退出杀 Python 子进程导致的 Updater 无法生效的 bug（3.2.4-3.2.7 用户需要手动下一下 3.2.8 来修复）",
+        "1. 我提示词更新比版本更新频繁的多，想要我自己用的最新版提示词可以自己去 github 仓库中下载",
     };
 
     mainLayout->addWidget(updateTitle);

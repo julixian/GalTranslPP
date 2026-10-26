@@ -175,6 +175,7 @@ PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTim
 void waitForTransThreads(const std::shared_ptr<IController>& controller, ctpl::thread_pool& pool, std::vector<std::future<void>>& results);
 
 
+void initializeProcessJob();
 bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow = true, int timeDelayAfterCommand = 5);
 int getConsoleWidth();
 

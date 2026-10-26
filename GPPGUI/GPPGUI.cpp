@@ -114,6 +114,7 @@ int main(int argc, char* argv[])
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
     std::setlocale(LC_ALL, ".UTF-8");
+    initializeProcessJob();
 #endif
 
     // 使用一个唯一的key

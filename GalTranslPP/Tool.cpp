@@ -830,6 +830,31 @@ void waitForTransThreads(const std::shared_ptr<IController>& controller, ctpl::t
 
 
 
+void initializeProcessJob()
+{
+#ifdef _WIN32
+    // 句柄由主进程独占，保留到进程退出，由系统关闭并终止 Job 内的子进程。
+    const HANDLE handle = CreateJobObjectW(nullptr, nullptr);
+    if (!handle) {
+        throw std::system_error(GetLastError(), std::system_category(), "CreateJobObject");
+    }
+    const auto check = [handle](BOOL success, const char* operation)
+        {
+            if (!success) {
+                const DWORD error = GetLastError();
+                CloseHandle(handle);
+                throw std::system_error(error, std::system_category(), operation);
+            }
+        };
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+    // 普通子进程仍随主进程退出；Updater 可通过 CREATE_BREAKAWAY_FROM_JOB 显式脱离。
+    limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_BREAKAWAY_OK;
+    check(SetInformationJobObject(handle, JobObjectExtendedLimitInformation,
+    	&limits, sizeof(limits)), "SetInformationJobObject");
+    check(AssignProcessToJobObject(handle, GetCurrentProcess()), "AssignProcessToJobObject");
+#endif
+}
+
 bool executeCommand(const std::wstring& program, const std::wstring& args, bool showWindow, int timeDelayAfterCommand) {
 #ifdef _WIN32
     std::wstring commandLineStr;

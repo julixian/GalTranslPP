@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
     std::setlocale(LC_ALL, ".UTF-8");
+    initializeProcessJob();
 #endif
 
     QTranslator baseTranslator;

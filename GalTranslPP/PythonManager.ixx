@@ -102,10 +102,11 @@ private:
 void checkPythonDependencies(const std::vector<std::string>& dependencies, const std::shared_ptr<spdlog::logger>& logger);
 
 
-
-bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release);
 // 返回启动时选中的 Python 可执行文件；未找到环境时为空。
 const fs::path& pythonExecutablePath();
+
+bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release);
+
 void shutDownPythonEnv(std::unique_ptr<py::gil_scoped_release>& release);
 
 NAMESPACE_END(gpp)

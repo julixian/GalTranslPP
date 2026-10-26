@@ -131,7 +131,7 @@ json runAgentPython(
     using namespace agent_python;
     const auto& executable = pythonExecutablePath();
     if (executable.empty()) {
-        throw std::runtime_error("Python environment is not initialized.");
+        throw std::runtime_error("Python environment is not initialized");
     }
     if (fastPause && controller->shouldStop()) {
         return {{"cancelled", true}};
@@ -249,7 +249,7 @@ json runAgentPython(
     // 截断可能位于 UTF-8 字符中间；归一化后才能安全回填 API 的 JSON 消息。
     return json::parse(result.dump(-1, ' ', false, json::error_handler_t::replace));
 #else
-    throw std::runtime_error("Agent Python execution is currently implemented for Windows only.");
+    throw std::runtime_error("Agent Python execution is currently implemented for Windows only");
 #endif
 }
 

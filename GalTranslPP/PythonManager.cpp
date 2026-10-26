@@ -199,35 +199,6 @@ NAMESPACE_BEGIN(gpp)
 
 static fs::path gs_pythonExePath;
 
-#ifdef _WIN32
-void initializeProcessJob()
-{
-    // 句柄由主进程独占，保留到进程退出，由系统关闭并终止 Job 内的子进程。
-    static const HANDLE job = []()
-        {
-            const HANDLE handle = CreateJobObjectW(nullptr, nullptr);
-            if (!handle) {
-                throw std::system_error(GetLastError(), std::system_category(), "CreateJobObject");
-            }
-            const auto check = [handle](BOOL success, const char* operation)
-                {
-                    if (!success) {
-                        const DWORD error = GetLastError();
-                        CloseHandle(handle);
-                        throw std::system_error(error, std::system_category(), operation);
-                    }
-                };
-            JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
-            // 普通子进程仍随主进程退出；Updater 可通过 CREATE_BREAKAWAY_FROM_JOB 显式脱离。
-            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_BREAKAWAY_OK;
-            check(SetInformationJobObject(handle, JobObjectExtendedLimitInformation, &limits, sizeof(limits)), "SetInformationJobObject");
-            check(AssignProcessToJobObject(handle, GetCurrentProcess()), "AssignProcessToJobObject");
-            return handle;
-        }();
-    (void)job;
-}
-#endif
-
 const fs::path& pythonExecutablePath()
 {
     return gs_pythonExePath;
@@ -757,10 +728,8 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
 
 // 开启关闭 Python 解释器
 static const fs::path gs_pythonSysPathsTxtPath = L"BaseConfig/pythonSysPaths.txt";
-bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release) {
-#ifdef _WIN32
-    initializeProcessJob();
-#endif
+bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_scoped_release>& release)
+{
     if (fs::exists(pythonEnvPath) && fs::exists(pythonEnvPath / L"python.exe")) {
 
         const fs::path envZipPath = [&]()

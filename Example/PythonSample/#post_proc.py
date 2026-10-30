@@ -26,13 +26,13 @@ def main():
     scriptPackagePath = projectPackPath / (projectName + "_cn_script")
     baseDir = basePackagePath / "base"
 
-    scriptPath = Path(__file__).parent.resolve()
-    os.chdir(scriptPath)
+    scriptDirPath = Path(__file__).parent.resolve()
+    os.chdir(scriptDirPath)
     patchPackPath.mkdir(parents=True, exist_ok=True)
 
     subprocess.run(
         [sys.executable, sextractorPath,
-         "-e", scriptPath / "textproc"],
+         "-e", scriptDirPath / "textproc"],
         cwd=sextractorPath.parent
     )
 

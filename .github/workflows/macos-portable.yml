@@ -4,9 +4,15 @@ on:
   push:
     branches: [codex/macos-libcxx]
   workflow_dispatch:
+    inputs:
+      source_run:
+        description: '复用已有构建产物的运行 ID；留空则重新编译'
+        required: false
+        type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: macos-portable-${{ github.ref }}
@@ -14,6 +20,7 @@ concurrency:
 
 jobs:
   build:
+    if: inputs.source_run == ''
     runs-on: macos-15
     timeout-minutes: 240
     steps:
@@ -77,8 +84,41 @@ jobs:
           name: GalTranslPP-macos-arm64
           path: |
             Release/*.tar.gz
+            Release/*.dmg
             Release/*report*.json
             Release/*.png
             target/macos-logs/**
             vcpkg_installed/**/vcpkg/issue_body.md
+          if-no-files-found: warn
+
+  dmg:
+    if: inputs.source_run != ''
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: GalTranslPP-macos-arm64
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+          path: target/macos-source
+      - name: Create and test DMG
+        run: |
+          set -o pipefail
+          mkdir -p Release target/macos-logs
+          tar -xzf target/macos-source/Release/GalTranslPP-macos-arm64.tar.gz -C Release
+          python -u mcpp-build-scripts/macos/make-dmg.py Release/GalTranslPP-macos-arm64 --check 2>&1 | tee target/macos-logs/dmg.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GPPGUI-macos-arm64-DMG
+          path: |
+            Release/*.dmg
+            Release/*report*.json
+            Release/*.png
+            target/macos-logs/**
           if-no-files-found: warn

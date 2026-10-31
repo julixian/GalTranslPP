@@ -1,4 +1,4 @@
-"""在 Apple Silicon Mac 上构建并组装便携版；暂不生成 DMG。"""
+"""在 Apple Silicon Mac 上构建应用，并组装便携压缩包和 DMG。"""
 
 from __future__ import annotations
 
@@ -329,6 +329,7 @@ def main():
             raise
     package = stage_package(qt, python_root, dependencies, ela, archive_library)
     print("Portable package:", package)
+    run([sys.executable, Path(__file__).with_name("make-dmg.py"), package])
 
 
 if __name__ == "__main__":

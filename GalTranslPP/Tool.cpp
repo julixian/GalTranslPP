@@ -1251,10 +1251,7 @@ void saveTokenizeCache
 
 std::string currentTimestampString() {
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-#if defined(_WIN32) || (defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907L)
-    const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
-    return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
-#elif defined(__APPLE__)
+#if defined(_LIBCPP_VERSION) && (!defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907L)
     // libc++ 尚未实现时区数据库时，由系统提供当地时间和 UTC 偏移。
     const auto time = std::chrono::system_clock::to_time_t(now);
     std::tm localTime{};
@@ -1266,6 +1263,9 @@ std::string currentTimestampString() {
         result.insert(result.size() - 2, ":");
     }
     return result;
+#else
+    const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
+    return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
 #endif
 }
 

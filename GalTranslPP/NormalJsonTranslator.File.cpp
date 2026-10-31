@@ -335,15 +335,15 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }();
 
         Sentence* pLastSentence = nullptr;
-#if defined(_WIN32) || defined(__cpp_lib_ranges_chunk)
-        for (auto [batchIndex, batchView] : toTranslate
-            | std::views::chunk(m_batchSize) | std::views::enumerate)
-        {
-#else
+#if defined(_LIBCPP_VERSION) && !defined(__cpp_lib_ranges_chunk)
         // libc++ 尚未提供 chunk_view 时，用 span 保留同样的批次范围和编号。
         for (size_t batchIndex = 0, offset = 0; offset < toTranslate.size(); ++batchIndex, offset += m_batchSize) {
             const auto batchView = std::span(toTranslate).subspan(offset,
                 std::min<size_t>(m_batchSize, toTranslate.size() - offset));
+#else
+        for (auto [batchIndex, batchView] : toTranslate
+            | std::views::chunk(m_batchSize) | std::views::enumerate)
+        {
 #endif
             if (!rollingContext.empty() && pLastSentence) {
                 if (batchView.front()->index - pLastSentence->index > m_batchSize) {

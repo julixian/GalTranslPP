@@ -16,11 +16,11 @@ std::optional<std::int64_t> ProblemOverviewTracker::lastWriteTime(const fs::path
     if (error) {
         return std::nullopt;
     }
-#if defined(_WIN32) || (defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907L)
-    const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(writeTime);
-#elif defined(_LIBCPP_VERSION)
+#if defined(_LIBCPP_VERSION) && (!defined(__cpp_lib_chrono) || __cpp_lib_chrono < 201907L)
     // libc++ 的文件时钟提供 to_sys；不支持 clock_cast 时仍转换为同一个 Unix 时间轴。
     const auto systemTime = std::chrono::file_clock::to_sys(writeTime);
+#else
+    const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(writeTime);
 #endif
     return std::chrono::floor<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
 }

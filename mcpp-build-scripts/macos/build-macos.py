@@ -175,10 +175,13 @@ def deploy_libraries(directory, search_roots):
         if binary in visited:
             continue
         visited.add(binary)
+        # otool -L 也会列出 dylib 自己的 LC_ID_DYLIB；它不是需要寻找和复制的依赖。
+        install_names = subprocess.check_output(["otool", "-D", binary], text=True)
+        own_names = {line.strip() for line in install_names.splitlines() if line.strip() and not line.endswith(":")}
         listing = subprocess.check_output(["otool", "-L", binary], text=True)
         for line in listing.splitlines()[1:]:
             dependency = line.strip().split(" (", 1)[0]
-            if dependency.startswith(("/System/", "/usr/lib/")):
+            if dependency in own_names or dependency.startswith(("/System/", "/usr/lib/")):
                 continue
             candidate = Path(dependency.replace("@loader_path", str(binary.parent))
                              .replace("@executable_path", str(directory)))

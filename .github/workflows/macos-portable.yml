@@ -50,6 +50,7 @@ jobs:
             target/macos-tools
           key: ${{ steps.cache.outputs.cache-primary-key }}
       - name: Compile and package application
+        id: application
         run: |
           set -o pipefail
           python -u mcpp-build-scripts/macos/build-macos.py --build-only 2>&1 | tee target/macos-logs/build.log
@@ -65,7 +66,7 @@ jobs:
       - name: Test portable Python and application
         run: python mcpp-build-scripts/macos/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
       - name: Test Python independently when build fails
-        if: failure()
+        if: failure() && steps.application.outcome == 'failure'
         run: |
           if [ -x target/macos-tools/python/bin/python3 ]; then
             python mcpp-build-scripts/macos/check-macos-portable.py --python-root target/macos-tools/python --optional-dependencies

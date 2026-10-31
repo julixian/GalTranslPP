@@ -30,11 +30,13 @@ def main():
     output = ROOT / ("Release/macos-python-report.json" if args.python_root else "Release/macos-check-report.json")
     output.parent.mkdir(exist_ok=True)
 
-    def record(name, command, *, cwd, timeout=120, group="checks", env=None):
+    def record(name, command, *, cwd, timeout=120, group="checks", env=None,
+               expected_exit=0, expected_output=""):
         try:
             result = subprocess.run([str(x) for x in command], cwd=cwd, env=env,
                                     capture_output=True, text=True, timeout=timeout)
-            item = dict(name=name, passed=result.returncode == 0, exit_code=result.returncode,
+            item = dict(name=name, passed=result.returncode == expected_exit and expected_output in result.stdout,
+                        exit_code=result.returncode, expected_exit=expected_exit,
                         stdout=result.stdout, stderr=result.stderr)
         except Exception as error:
             item = dict(name=name, passed=False, error=str(error))
@@ -75,8 +77,9 @@ print(sys.version, sys.executable, sys.path, sep='\\n')
         record("pip 依赖一致性", [python, "-I", "-m", "pip", "check"], cwd=directory, env=env)
         if not args.python_root:
             record("CLI 帮助", [directory / "GalTranslPP_CLI", "--help"], cwd=directory, env=env)
-            record("CLI 项目预览", [directory / "GalTranslPP_CLI", "SampleProject", "--preview", "--no-tui"],
-                   cwd=directory, env=env)
+            # 发布样例没有 API 凭据；完整输出预览后返回 1，表示配置尚不可运行。
+            record("CLI 样例预览（未配置 API）", [directory / "GalTranslPP_CLI", "SampleProject", "--preview", "--no-tui"],
+                   cwd=directory, env=env, expected_exit=1, expected_output="FORGALJSON_USER")
             record("7-Zip 动态库入口", [python, "-I", "-c",
                    "import ctypes; lib=ctypes.CDLL('./7z.so'); print(lib.CreateObject)"], cwd=directory, env=env)
         record("Python 子进程", [python, "-I", "-c", '''

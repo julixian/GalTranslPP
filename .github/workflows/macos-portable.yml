@@ -111,6 +111,7 @@ jobs:
           mkdir -p Release target/macos-logs
           tar -xzf target/macos-source/Release/GalTranslPP-macos-arm64.tar.gz -C Release
           cp -R Example/BaseConfig/PythonScripts/. Release/GalTranslPP-macos-arm64/GalTranslPP.app/Contents/MacOS/BaseConfig/PythonScripts/
+          cp -R Example/BaseConfig/illustration/. Release/GalTranslPP-macos-arm64/GalTranslPP.app/Contents/MacOS/BaseConfig/illustration/
       - name: Sign application bundle
         run: python -u mcpp-build-scripts/macos/sign-macos.py Release/GalTranslPP-macos-arm64/GalTranslPP.app
       - name: Test compatible BabelDOC installation

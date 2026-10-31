@@ -9,7 +9,27 @@
 
 ## 启动环境
 
+### Windows
+
 如果程序启动失败，请先尝试安装程序附带的 `vc_redist.x64.exe`。
+
+### macOS（Apple Silicon 测试版）
+
+当前提供 M 系列芯片的 ARM64 版本，要求 macOS 14.4 或以上。
+
+1. 下载并打开 `GPPGUI_MACOS_ARM64.dmg`。
+2. 将 `GalTranslPP.app` 拖到旁边的 `Applications` 文件夹，等待复制完成后推出磁盘映像。
+3. 从“应用程序”打开 GalTranslPP。
+
+当前版本使用 ad-hoc 签名，未进行 Apple 公证。如果首次打开提示“已损坏”或无法验证开发者，请确认下载来自本项目，然后在终端执行：
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/GalTranslPP.app"
+```
+
+再从“应用程序”打开。如果命令提示权限不足，可在命令前加上 `sudo` 并输入系统密码。
+
+macOS 版同样采用便携布局：全局设置、默认提示词、字典及随包 Python 保存在应用包内，逻辑路径为 `Contents/MacOS/BaseConfig`。在 Finder 中右键应用，选择“显示包内容”即可查看；更换整个应用前请备份自己的设置和字典。项目的译文、缓存和日志仍保存在各自的项目目录中。
 
 ## ✨ 特性
 
@@ -368,6 +388,17 @@ rep = ''
 
 当遇到需要使用Python库的情况时 (如**翻译PDF**或**使用依赖Python的分词器**)，程序会自动为嵌入式环境下载对应的库。
 
+macOS 版也自带 Python，无需另装系统 Python。随包解释器位于 `GalTranslPP.app/Contents/MacOS/BaseConfig/Python/bin/python3`，手动安装依赖时请使用这个解释器。
+
+PDF 功能使用裁剪依赖的 BabelDOC，不启用扫描件相似度检测和 BabelDOC 自带的术语匹配，翻译与字典仍由 GPP 处理。需要手动安装或修复 PDF 依赖时，运行随包的 `BaseConfig/PythonScripts/install_babeldoc.py`，例如 macOS：
+
+```bash
+"/Applications/GalTranslPP.app/Contents/MacOS/BaseConfig/Python/bin/python3" \
+    "/Applications/GalTranslPP.app/Contents/MacOS/BaseConfig/PythonScripts/install_babeldoc.py"
+```
+
+以下 CUDA 配置教程针对 NVIDIA 显卡环境，macOS 无需执行这些步骤。
+
 然而在不启用 GPU加速 的情况下使用如 `spaCy 最好的 trf 模型` 或 `Stanza` 进行全文分词的速度是比较灾难性的，如果想启用 GPU 加速，请跟随以下教程。
 
 **请确保自己有一定的动手和思考能力 && 一块还不错的 NVIDIA 显卡！**
@@ -517,6 +548,4 @@ GalTransl++ 在文件支持和插件支持上仍处于起步阶段，也不排�
 
 ### 其它注意事项
 
-由于我自己的开发和构建环境基本绑定 Windows 系统，我自己也没有 Linux/Mac 设备，所以即使在代码本身中使用的 WinApi 数量很少也很好替换，
-
-跨平台的事我自己也是不会主动考虑的。
+目前主要在 Windows 下开发；macOS ARM64 版本通过 GitHub Actions 原生 runner 构建和检测，仍属于测试支持。其它平台暂未适配。

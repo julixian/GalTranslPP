@@ -1,4 +1,5 @@
 #include "AppSettingsPage.h"
+#include "GppPlatform.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -409,7 +410,12 @@ void AppSettingsPage::setupUi()
     autoDownloadLayout->addWidget(autoDownloadText);
     autoDownloadLayout->addStretch();
     ElaToggleSwitch* autoDownloadSwitch = new ElaToggleSwitch(autoDownloadArea);
-    autoDownloadSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
+    autoDownloadSwitch->setIsToggled(gppSupportsPackageUpdate
+        && toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
+    if constexpr (!gppSupportsPackageUpdate) {
+        autoDownloadArea->setEnabled(false);
+        autoDownloadArea->setToolTip(tr("macOS 仅提示新版本，不支持下载和自动安装"));
+    }
     autoDownloadLayout->addWidget(autoDownloadSwitch);
     connect(autoDownloadSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {

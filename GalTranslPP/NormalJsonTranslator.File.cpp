@@ -151,7 +151,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
                     if (!entry.is_regular_file()) {
                         continue;
                     }
-                    if (matchFileSpec(entry.path().filename(), nativeSpec.native())) {
+                    if (matchFileSpec(entry.path().filename().native(), nativeSpec.native())) {
                         if (m_splitFileEnabled) {
                             const int diff = calculateCachePartIndexDiff(relInputPath.wstring(), entry.path().wstring());
                             if (std::abs(diff) > m_cacheSearchDistance) {

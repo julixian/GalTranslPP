@@ -72,7 +72,7 @@ void ProjectCachePage::loadCacheFiles(bool discardDirty)
     // 按数字段自然排序，例如 1、2、10，而不是 1、10、2。
     std::ranges::sort(m_cacheFiles, [](const CacheFileInfo& a, const CacheFileInfo& b)
         {
-            return compareNatural(std::u16string_view(a.relativeName), std::u16string_view(b.relativeName)) < 0;
+            return compareNatural(a.relativeName.toStdWString(), b.relativeName.toStdWString()) < 0;
         });
 
     m_cacheDirLabel->setText(QString::fromStdWString(cacheDir.wstring()));

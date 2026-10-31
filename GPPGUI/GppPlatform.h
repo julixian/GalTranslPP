@@ -26,12 +26,12 @@ inline bool gppMessageBox(const QString& message, const QString& title,
     const UINT flags = type == GppMessageBoxType::Question ? MB_YESNO | MB_ICONQUESTION
         : type == GppMessageBoxType::Error ? MB_OK | MB_ICONERROR
         : MB_OK;
-    const int result = MessageBoxW(nullptr, (const wchar_t*)message.utf16(),
-        (const wchar_t*)title.utf16(), flags | (topmost ? MB_TOPMOST | MB_SETFOREGROUND : 0));
+    const int result = MessageBoxW(nullptr, message.toStdWString().c_str(),
+        title.toStdWString().c_str(), flags | (topmost ? MB_TOPMOST | MB_SETFOREGROUND : 0));
     return result == (type == GppMessageBoxType::Question ? IDYES : IDOK);
 #elif defined(__APPLE__)
-    const auto text = CFStringCreateWithCharacters(nullptr, (const UniChar*)message.utf16(), message.size());
-    const auto heading = CFStringCreateWithCharacters(nullptr, (const UniChar*)title.utf16(), title.size());
+    const auto text = CFStringCreateWithCString(nullptr, message.toStdString().c_str(), kCFStringEncodingUTF8);
+    const auto heading = CFStringCreateWithCString(nullptr, title.toStdString().c_str(), kCFStringEncodingUTF8);
     const bool question = type == GppMessageBoxType::Question;
     CFOptionFlags response = 0;
     const auto level = type == GppMessageBoxType::Error
@@ -66,13 +66,15 @@ inline void gppWaitForProcess(qint64 pid)
 }
 
 #ifdef _WIN32
-inline constexpr auto gppUpdatePackage = "GUICORE.7z";
-inline constexpr auto gppUpdaterExecutable = "Updater.exe";
-inline constexpr auto gppNewUpdaterExecutable = "Updater_new.exe";
-inline constexpr auto gppArchiveLibrary = "7z.dll";
+constexpr bool gppSupportsPackageUpdate = true;
+constexpr auto gppUpdatePackage = "GUICORE.7z";
+constexpr auto gppUpdaterExecutable = "Updater.exe";
+constexpr auto gppNewUpdaterExecutable = "Updater_new.exe";
+constexpr auto gppArchiveLibrary = "7z.dll";
 #elif defined(__APPLE__)
-inline constexpr auto gppUpdatePackage = "GUICORE_MACOS_ARM64.7z";
-inline constexpr auto gppUpdaterExecutable = "Updater";
-inline constexpr auto gppNewUpdaterExecutable = "Updater_new";
-inline constexpr auto gppArchiveLibrary = "7z.so";
+constexpr bool gppSupportsPackageUpdate = false;
+constexpr auto gppUpdatePackage = "GUICORE_MACOS_ARM64.7z";
+constexpr auto gppUpdaterExecutable = "Updater";
+constexpr auto gppNewUpdaterExecutable = "Updater_new";
+constexpr auto gppArchiveLibrary = "7z.so";
 #endif

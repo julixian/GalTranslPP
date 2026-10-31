@@ -1237,7 +1237,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyAgentSuggestions</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="697"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="657"/>
         <source>Agent 已将 %1 条建议写入缓存附加信息</source>
         <translation>Agent wrote %1 suggestions into cache metadata</translation>
     </message>
@@ -1245,22 +1245,22 @@ Problem overview:
 <context>
     <name>NormalJsonTranslatorTransAgent.applyCommit</name>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="504"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="464"/>
         <source>提交结果缺少句子 %1</source>
         <translation>Commit result is missing sentence %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="512"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="472"/>
         <source>提交结果中句子 %1 的 dst 为空</source>
         <translation>Sentence %1 in commit result has empty dst</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="621"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="581"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但术语账本/建议写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; term/suggestion write failed, no retry: %6</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.TransAgent.cpp" line="642"/>
+        <location filename="NormalJsonTranslator.TransAgent.cpp" line="602"/>
         <source>[线程 %1] [文件 %2] [批次 %3] [轮次 %4] [请求 %5] Agent 译文已提交，但 file note 写入中途出现异常，本次不重新请求: %6</source>
         <translation>[T%1][File %2][Batch %3][Turn %4][Req %5] Translation saved; file note write failed, no retry: %6</translation>
     </message>
@@ -2060,37 +2060,37 @@ Cache source: %4</translation>
         <translation>Dependency %1 not installed; trying install</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="690"/>
+        <location filename="PythonManager.cpp" line="693"/>
         <source>将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！</source>
         <translation>Dependency install starts in 3s; do not close the next window!</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="693"/>
+        <location filename="PythonManager.cpp" line="696"/>
         <source>正在执行安装命令: %1</source>
         <translation>Running install command: %1</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="699"/>
+        <location filename="PythonManager.cpp" line="702"/>
         <source>安装依赖 %1 的命令失败</source>
         <translation>Install command for dependency %1 failed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="706"/>
+        <location filename="PythonManager.cpp" line="709"/>
         <source>依赖 %1 安装成功</source>
         <translation>Dependency %1 installed</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="711"/>
+        <location filename="PythonManager.cpp" line="714"/>
         <source>依赖 %1 安装验证失败: %2</source>
         <translation>Dependency %1 validation failed: %2</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="721"/>
+        <location filename="PythonManager.cpp" line="724"/>
         <source>依赖 %1 检查完毕</source>
         <translation>Dependency %1 check complete</translation>
     </message>
     <message>
-        <location filename="PythonManager.cpp" line="723"/>
+        <location filename="PythonManager.cpp" line="726"/>
         <source>所有依赖均已安装</source>
         <translation>All dependencies installed</translation>
     </message>
@@ -2098,7 +2098,7 @@ Cache source: %4</translation>
 <context>
     <name>chooseCachePart</name>
     <message>
-        <location filename="Tool.cpp" line="888"/>
+        <location filename="Tool.cpp" line="883"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2106,7 +2106,7 @@ Cache source: %4</translation>
 <context>
     <name>chooseStringRef</name>
     <message>
-        <location filename="Tool.cpp" line="871"/>
+        <location filename="Tool.cpp" line="866"/>
         <source>无法获取字符串的条件目标 %1</source>
         <translation>Invalid string target %1</translation>
     </message>
@@ -2132,17 +2132,17 @@ Cache source: %4</translation>
 <context>
     <name>countGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="336"/>
+        <location filename="Tool.cpp" line="331"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="345"/>
+        <location filename="Tool.cpp" line="340"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="351"/>
+        <location filename="Tool.cpp" line="346"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2205,7 +2205,7 @@ Cache source: %4</translation>
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="408"/>
+        <location filename="Tool.ixx" line="406"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2213,12 +2213,12 @@ Cache source: %4</translation>
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1221"/>
+        <location filename="Tool.cpp" line="1216"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1227"/>
+        <location filename="Tool.cpp" line="1222"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2242,12 +2242,12 @@ Cache source: %4</translation>
 <context>
     <name>parsePluginToml</name>
     <message>
-        <location filename="Tool.ixx" line="282"/>
+        <location filename="Tool.ixx" line="280"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="300"/>
+        <location filename="Tool.ixx" line="298"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2255,12 +2255,12 @@ Cache source: %4</translation>
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1239"/>
+        <location filename="Tool.cpp" line="1234"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1244"/>
+        <location filename="Tool.cpp" line="1239"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2276,17 +2276,17 @@ Cache source: %4</translation>
 <context>
     <name>splitIntoGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="287"/>
+        <location filename="Tool.cpp" line="282"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="297"/>
+        <location filename="Tool.cpp" line="292"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="304"/>
+        <location filename="Tool.cpp" line="299"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2302,7 +2302,7 @@ Cache source: %4</translation>
 <context>
     <name>splitTsvLine</name>
     <message>
-        <location filename="Tool.cpp" line="221"/>
+        <location filename="Tool.cpp" line="216"/>
         <source>内部错误: TSV 行切分不允许使用空分隔符</source>
         <translation>TSV split cannot use empty delimiter</translation>
     </message>
@@ -2310,7 +2310,7 @@ Cache source: %4</translation>
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="368"/>
+        <location filename="Tool.ixx" line="366"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>

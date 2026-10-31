@@ -4,7 +4,6 @@ module;
 
 export module NormalJsonTranslator:TransAgent;
 
-export import AgentToolCommon;
 export import ApiPool;
 export import Dictionary;
 export import ITranslator;
@@ -78,6 +77,33 @@ public:
         const fs::path& inputDir, const fs::path& outputDir);
 
 private:
+    struct SourceLineView {
+        int id = -1;
+        std::string speaker;
+        std::string sourceText;
+    };
+
+    struct SourceFileView {
+        std::vector<SourceLineView> lines;
+    };
+
+    // 从 Normal JSON 输入构造预处理后的只读源文件视图。
+    static SourceFileView buildSourceFileView(const ordered_json& data,
+        const std::function<void(Sentence*)>& preProcessFunc);
+
+    // 解析整数 JSON 值，或解析字符串形式的十进制整数。
+    static std::optional<int> parseJsonInt(const json& object);
+
+    // file/id 始终保留，其余列由工具的 fields 参数选择。
+    static json projectRow(const json& row, const json& fields);
+
+    // 把工具返回数量限制到配置上限；未指定时使用上限。
+    int sanitizeToolLimit(int requested) const;
+
+    // 列出已知源文件，或读取项目备注。
+    json listFiles(const json& arguments) const;
+    json readProjectNote() const;
+
     struct TransAgentWorker {
         std::optional<AgentApiSession> session;
         std::string rollingContext;
@@ -135,7 +161,7 @@ private:
     std::vector<fs::path> m_knownRelFiles;
     std::vector<fs::path> m_gptDictionaryPaths;
     std::optional<fs::path> m_agentProjectNotePath;
-    absl::flat_hash_map<fs::path, AgentCommonSourceFileView> m_sourceFileViews;
+    absl::flat_hash_map<fs::path, SourceFileView> m_sourceFileViews;
 
     // 在线程锁下读取共享术语账本快照。
     json loadTermLedger();
@@ -179,7 +205,7 @@ private:
     std::string formatTermUpdateSuggestion(const std::string& sourceTerm, const std::string& oldTarget, const std::string& newTarget) const;
 
     // 为工具调用查找源文件只读视图。
-    const AgentCommonSourceFileView* findSourceFileView(const fs::path& relPath) const;
+    const SourceFileView* findSourceFileView(const fs::path& relPath) const;
 
     // 读取源文件行数，供 list_files 输出辅助信息。
     std::optional<int> getSourceFileLineCount(const fs::path& relPath) const;

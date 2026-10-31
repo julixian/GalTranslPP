@@ -564,7 +564,7 @@ void ProjectCachePage::loadProblems()
             if (a.second != b.second) {
                 return a.second > b.second;
             }
-            return compareNatural(std::u16string_view(a.first), std::u16string_view(b.first)) < 0;
+            return compareNatural(a.first.toStdWString(), b.first.toStdWString()) < 0;
         });
 
     m_problemModel->clear();

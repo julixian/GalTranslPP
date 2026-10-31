@@ -451,7 +451,7 @@ void StartSettingsPage::setupUi()
 	m_filePluginComboBox->addItem("PDF");
 	m_filePluginComboBox->addItem("Custom");
 	if (!filePluginStr.isEmpty()) {
-		if (filePluginStr.toLower().endsWith(".lua") || filePluginStr.toLower().endsWith(".py")) {
+		if (filePluginStr.endsWith(".lua", Qt::CaseInsensitive) || filePluginStr.endsWith(".py", Qt::CaseInsensitive)) {
 			m_filePluginComboBox->setCurrentIndex(3);
 		}
 		else {

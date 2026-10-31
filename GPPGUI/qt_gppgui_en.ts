@@ -28,6 +28,10 @@
         <source>下载更新</source>
         <translation>Download update</translation>
     </message>
+    <message>
+        <source>macOS 仅提示新版本，不支持下载和自动安装</source>
+        <translation>macOS only notifies you of new versions. Downloading and automatic installation are disabled.</translation>
+    </message>
 </context>
 <context>
     <name>ApiSettingsPage</name>
@@ -700,6 +704,10 @@ sk-...</translation>
         <location line="+13"/>
         <source>检测到更新后自动下载</source>
         <translation>Automatically download detected updates</translation>
+    </message>
+    <message>
+        <source>macOS 仅提示新版本，不支持下载和自动安装</source>
+        <translation>macOS only notifies you of new versions. Downloading and automatic installation are disabled.</translation>
     </message>
     <message>
         <location line="+17"/>
@@ -2292,7 +2300,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+142"/>
+        <location filename="GPPGUI.cpp" line="+138"/>
         <source>Updater 更新错误</source>
         <translation>Updater update error</translation>
     </message>

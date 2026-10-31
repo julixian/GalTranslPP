@@ -25,10 +25,6 @@ QString gppTr(const char* context, const char* source) {
     return QCoreApplication::translate(context, source);
 }
 
-void waitForProcessToExit(qint64 pid) {
-    gppWaitForProcess(pid);
-}
-
 #if __cpp_lib_string_view < 202403L
 template<class CharT, class Traits, class Alloc>
 [[nodiscard]] std::basic_string<CharT, Traits, Alloc>
@@ -243,7 +239,7 @@ int main(int argc, char* argv[])
     const QString targetDir = parser.value("target");
 
     if (pid != 0) {
-        waitForProcessToExit(pid);
+        gppWaitForProcess(pid);
     }
 
     try {
@@ -283,10 +279,10 @@ int main(int argc, char* argv[])
         const std::string orgPythonVersion = parser.isSet("pythonVersion") ? parser.value("pythonVersion").toStdString() : "1.0.0";
         const std::string orgPromptVersion = parser.isSet("promptVersion") ? parser.value("promptVersion").toStdString() : "1.0.0";
         const std::string orgDictVersion = parser.isSet("dictVersion") ? parser.value("dictVersion").toStdString() : "1.0.0";
-        const std::string orgQtVersion = parser.isSet("qtVersion") ? parser.value("qtVersion").toStdString() : "6.11.1";
+        const std::string orgQtVersion = parser.isSet("qtVersion") ? parser.value("qtVersion").toStdString() : "6.12.0";
         const std::string orgIcuVersion = parser.isSet("icuVersion") ? parser.value("icuVersion").toStdString() : "7.8.0";
 
-        waitForProcessToExit(pid);
+        gppWaitForProcess(pid);
 
         try {
             std::set<std::string> excludePreFixes =

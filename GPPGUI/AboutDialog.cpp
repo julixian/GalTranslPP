@@ -1,4 +1,5 @@
 #include "AboutDialog.h"
+#include "GppPlatform.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -114,7 +115,8 @@ void AboutDialog::setupUi()
             Q_EMIT checkUpdateSignal();
         });
 
-    m_downloadButton = createIconButtonWithToolTipFunc(ElaIconType::Download, tr("下载更新"), textWidget);
+    m_downloadButton = createIconButtonWithToolTipFunc(ElaIconType::Download,
+        gppSupportsPackageUpdate ? tr("下载更新") : tr("macOS 仅提示新版本，不支持下载和自动安装"), textWidget);
     m_downloadButton->setEnabled(false);
     buttonLayout->addWidget(m_downloadButton);
     connect(m_downloadButton, &ElaIconButton::clicked, this, [this]()

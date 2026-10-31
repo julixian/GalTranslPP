@@ -95,10 +95,6 @@ LONG WINAPI writeMiniDump(EXCEPTION_POINTERS* exceptionPointers) noexcept
 }
 #endif
 
-void waitForProcessToExit(qint64 pid) {
-    gppWaitForProcess(pid);
-}
-
 int main(int argc, char* argv[])
 {
     // 公共初始化
@@ -129,10 +125,10 @@ int main(int argc, char* argv[])
     parser.process(app);
     if (parser.isSet("pid")) {
         const qint64 pid = parser.value("pid").toLongLong();
-        waitForProcessToExit(pid);
+        gppWaitForProcess(pid);
     }
 
-    if (fs::exists(gppNewUpdaterExecutable)) {
+    if (gppSupportsPackageUpdate && fs::exists(gppNewUpdaterExecutable)) {
         try {
             fs::rename(gppNewUpdaterExecutable, gppUpdaterExecutable);
             fs::remove_all(L"new");

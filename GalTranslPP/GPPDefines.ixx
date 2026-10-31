@@ -23,9 +23,9 @@ using std::size_t;
 #endif
 
 #ifdef _WIN32
-inline constexpr auto defaultPythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64";
+constexpr auto defaultPythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64";
 #elif defined(__APPLE__)
-inline constexpr auto defaultPythonEnvPath = "BaseConfig/Python";
+constexpr auto defaultPythonEnvPath = "BaseConfig/Python";
 #endif
 
 extern const fs::path baseConfigPath;

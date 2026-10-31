@@ -4,6 +4,7 @@ module;
 
 module NormalJsonTranslator;
 
+import boost;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -103,7 +104,7 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
         try {
             m_sourceFileViews.insert_or_assign(
                 relFilePath,
-                buildAgentCommonSourceFileViewFromJson(inputJson, preProcessFunc)
+                buildSourceFileView(inputJson, preProcessFunc)
             );
         }
         catch (...) { }
@@ -140,7 +141,7 @@ std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAge
         return std::nullopt;
     }
     const std::string file = suggestion.value("file", "");
-    const auto idOpt = suggestion.contains("id") ? parseAgentCommonJsonInt(suggestion["id"]) : std::nullopt;
+    const auto idOpt = suggestion.contains("id") ? parseJsonInt(suggestion["id"]) : std::nullopt;
     if (!idOpt.has_value() || idOpt.value() < 0) {
         return std::nullopt;
     }
@@ -220,14 +221,13 @@ std::string NormalJsonTranslatorTransAgent::buildTermLedgerExcerpt(
 
         const std::string termLower = str2Lower(row.src);
         const std::string targetLower = str2Lower(row.dst);
-        const std::string noteLower = str2Lower(row.note);
         const bool isRelevant =
             (!inputLower.empty() && inputLower.contains(termLower)) ||
             (!rollingContextLower.empty() && (rollingContextLower.contains(termLower) ||
             (!targetLower.empty() && rollingContextLower.contains(targetLower)))) ||
             (!fileNoteLower.empty() && (fileNoteLower.contains(termLower) ||
             (!targetLower.empty() && fileNoteLower.contains(targetLower)) ||
-            (!noteLower.empty() && fileNoteLower.contains(noteLower))));
+            (!row.note.empty() && boost::algorithm::icontains(fileNoteLower, row.note))));
 
         if (isRelevant) {
             relevant.push_back(std::move(row));
@@ -357,46 +357,6 @@ std::string NormalJsonTranslatorTransAgent::formatTermUpdateSuggestion(
         .toStdString();
 }
 
-// 查找指定相对路径的源文件视图。
-const AgentCommonSourceFileView* NormalJsonTranslatorTransAgent::findSourceFileView(const fs::path& relPath) const {
-    const auto it = m_sourceFileViews.find(relPath);
-    if (it == m_sourceFileViews.end()) {
-        return nullptr;
-    }
-    return &it->second;
-}
-
-// 返回源文件视图里的行数，供 list_files 工具显示。
-std::optional<int> NormalJsonTranslatorTransAgent::getSourceFileLineCount(const fs::path& relPath) const {
-    const AgentCommonSourceFileView* sourceView = findSourceFileView(relPath);
-    if (sourceView == nullptr) {
-        return std::nullopt;
-    }
-    return (int)sourceView->lines.size();
-}
-
-// 读取翻译缓存并按句子 id 建索引。
-absl::flat_hash_map<int, json> NormalJsonTranslatorTransAgent::loadCacheDstMap(const fs::path& targetRelPath) const {
-    absl::flat_hash_map<int, json> cacheMap;
-    const fs::path cachePath = m_transCacheDir / targetRelPath;
-    std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
-    json cacheJson;
-    if (const auto it = m_savedTranslCacheMap.find(targetRelPath); it != m_savedTranslCacheMap.end()) {
-        cacheJson = it->second;
-    }
-    else if (fs::exists(cachePath)) {
-        cacheJson = parseJson(cachePath);
-    }
-    else return cacheMap;
-    for (const auto& item : cacheJson) {
-        const int index = item.value("index", -1);
-        if (index >= 0) {
-            cacheMap[index] = item;
-        }
-    }
-    return cacheMap;
-}
-
 // Agent 按翻译格式构造输入；小说格式不包含姓名。
 std::string NormalJsonTranslatorTransAgent::buildInputBlock(std::span<Sentence*> pending) const {
     std::string inputBlock;
@@ -484,7 +444,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
         if (!item.is_object()) {
             continue;
         }
-        const auto idOpt = item.contains("id") ? parseAgentCommonJsonInt(item["id"]) : std::nullopt;
+        const auto idOpt = item.contains("id") ? parseJsonInt(item["id"]) : std::nullopt;
         const int id = idOpt.value_or(-1);
         const std::string dst = item.value("dst", "");
         if (id >= 0 && !dst.empty()) {
@@ -590,7 +550,7 @@ int NormalJsonTranslatorTransAgent::applyCommit(
                 // 这里不会去跨文件全文扫描，也不会把出现记录当成严格完整的全局出现表。
                 if (const auto it = updateItem.find("line_ids"); it != updateItem.end() && it->is_array()) {
                     for (const auto& idVal : *it) {
-                        const auto idOpt = parseAgentCommonJsonInt(idVal);
+                        const auto idOpt = parseJsonInt(idVal);
                         if (idOpt.has_value() && currentChunkIds.contains(idOpt.value())) {
                             addToTermOccurrence(termItem, relInputPath, idOpt.value());
                         }

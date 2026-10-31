@@ -190,18 +190,6 @@
     <ClCompile Include="Tool.ixx">
       <Filter>Tools</Filter>
     </ClCompile>
-    <ClCompile Include="AgentCommonSourceView.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="AgentCommonSourceView.ixx">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="AgentToolCommon.cpp">
-      <Filter>Tools</Filter>
-    </ClCompile>
-    <ClCompile Include="AgentToolCommon.ixx">
-      <Filter>Tools</Filter>
-    </ClCompile>
     <ClCompile Include="ApiTool.Agent.cpp">
       <Filter>Tools</Filter>
     </ClCompile>

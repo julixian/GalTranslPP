@@ -16,12 +16,6 @@ export NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-// 数字段按数值比较，相同数值中前导零多的在前；忽略 ASCII 大小写，其它字符按编码单元比较。
-// 直接接受字符串视图，比较路径的 native() 或 GUI 的 UTF-16 字符串时不复制文本。
-int compareNatural(std::string_view lhs, std::string_view rhs) noexcept;
-int compareNatural(std::wstring_view lhs, std::wstring_view rhs) noexcept;
-int compareNatural(std::u16string_view lhs, std::u16string_view rhs) noexcept;
-
 #if __cpp_lib_string_view < 202403L
 template<class CharT, class Traits, class Alloc>
 [[nodiscard]] std::basic_string<CharT, Traits, Alloc>
@@ -41,6 +35,10 @@ template<class CharT, class Traits, class Alloc>
     return r.append(lhs).append(rhs);
 }
 #endif
+
+// 数字段按数值比较，相同数值中前导零多的在前；忽略 ASCII 大小写，其它字符按编码单元比较。
+int compareNatural(std::string_view lhs, std::string_view rhs) noexcept;
+int compareNatural(std::wstring_view lhs, std::wstring_view rhs) noexcept;
 
 #ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar = nullptr);
@@ -113,7 +111,7 @@ std::wstring str2Lower(const fs::path& path) {
 }
 
 // 按文件通配符匹配路径；spec 使用平台原生字符类型。
-bool matchFileSpec(const fs::path& path, const fs::path::string_type& spec);
+bool matchFileSpec(const fs::path::string_type& path, const fs::path::string_type& spec);
 
 std::optional<int> str2Int(std::string_view str);
 

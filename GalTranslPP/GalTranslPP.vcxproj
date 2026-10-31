@@ -212,10 +212,6 @@
     <ClCompile Include="..\3rdParty\3rdModule\utf8cpp.ixx" />
     <ClCompile Include="ApiPool.cpp" />
     <ClCompile Include="ApiPool.ixx" />
-    <ClCompile Include="AgentToolCommon.cpp" />
-    <ClCompile Include="AgentToolCommon.ixx" />
-    <ClCompile Include="AgentCommonSourceView.cpp" />
-    <ClCompile Include="AgentCommonSourceView.ixx" />
     <ClCompile Include="ApiTool.cpp" />
     <ClCompile Include="ApiTool.Agent.cpp" />
     <ClCompile Include="ApiTool.Error.cpp" />

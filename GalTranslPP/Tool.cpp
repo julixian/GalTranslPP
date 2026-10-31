@@ -115,12 +115,7 @@ int compareNatural(std::wstring_view lhs, std::wstring_view rhs) noexcept
     return compareNaturalImpl(lhs, rhs);
 }
 
-int compareNatural(std::u16string_view lhs, std::u16string_view rhs) noexcept
-{
-    return compareNaturalImpl(lhs, rhs);
-}
-
-bool matchFileSpec(const fs::path& path, const fs::path::string_type& spec)
+bool matchFileSpec(const fs::path::string_type& path, const fs::path::string_type& spec)
 {
 #ifdef _WIN32
     return PathMatchSpecW(path.c_str(), spec.c_str());
@@ -1083,7 +1078,7 @@ bool isSameExtension(const fs::path& filePath, std::wstring_view ext) {
 #ifdef _WIN32
 constexpr auto archiveLibrary = "7z.dll";
 #elif defined(__APPLE__)
-constexpr auto archiveLibrary = "./7z.so";
+constexpr auto archiveLibrary = "./7z.so"; // "./" 适配非 Windows 平台的动态库查找逻辑
 #endif
 
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {

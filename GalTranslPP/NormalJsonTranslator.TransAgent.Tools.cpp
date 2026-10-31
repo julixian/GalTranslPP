@@ -4,6 +4,7 @@ module;
 
 module NormalJsonTranslator;
 
+import boost;
 import NormalJsonTranslatorHelperTool;
 import Tool;
 
@@ -11,7 +12,171 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-json projectAgentRow(const json& row, const json& fields)
+NormalJsonTranslatorTransAgent::SourceFileView NormalJsonTranslatorTransAgent::buildSourceFileView(
+    const ordered_json& data, const std::function<void(Sentence*)>& preProcessFunc)
+{
+    std::vector<Sentence> sentences;
+    sentences.reserve(data.size());
+    for (const auto& [index, item] : data | std::views::enumerate) {
+        Sentence se;
+        se.index = (int)index;
+        if (auto jit = item.find("name"); jit != item.end()) {
+            se.nameType = NameType::Single;
+            jit->get_to(se.name);
+        }
+        else if (jit = item.find("names"); jit != item.end()) {
+            se.nameType = NameType::Multiple;
+            jit->get_to(se.names);
+        }
+        item["message"].get_to(se.orig);
+        sentences.push_back(std::move(se));
+    }
+    for (auto [se1, se2] : std::views::adjacent<2>(sentences)) {
+        se1.next = &se2;
+        se2.prev = &se1;
+    }
+    for (Sentence& se : sentences) {
+        preProcessFunc(&se);
+    }
+
+    SourceFileView fileView;
+    fileView.lines.reserve(sentences.size());
+    for (const Sentence& se : sentences) {
+        fileView.lines.push_back({
+            .id = se.index,
+            .speaker = getNameString(se),
+            .sourceText = se.preproc
+        });
+    }
+    return fileView;
+}
+
+const NormalJsonTranslatorTransAgent::SourceFileView* NormalJsonTranslatorTransAgent::findSourceFileView(
+    const fs::path& relPath) const
+{
+    const auto it = m_sourceFileViews.find(relPath);
+    if (it == m_sourceFileViews.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::optional<int> NormalJsonTranslatorTransAgent::getSourceFileLineCount(const fs::path& relPath) const
+{
+    const auto* sourceView = findSourceFileView(relPath);
+    if (sourceView == nullptr) {
+        return std::nullopt;
+    }
+    return (int)sourceView->lines.size();
+}
+
+absl::flat_hash_map<int, json> NormalJsonTranslatorTransAgent::loadCacheDstMap(const fs::path& targetRelPath) const
+{
+    absl::flat_hash_map<int, json> cacheMap;
+    const fs::path cachePath = m_transCacheDir / targetRelPath;
+    std::shared_lock<std::shared_mutex> lock(m_transCacheMutex);
+    json cacheJson;
+    if (const auto it = m_savedTranslCacheMap.find(targetRelPath); it != m_savedTranslCacheMap.end()) {
+        cacheJson = it->second;
+    }
+    else if (fs::exists(cachePath)) {
+        cacheJson = parseJson(cachePath);
+    }
+    else {
+        return cacheMap;
+    }
+    for (const auto& item : cacheJson) {
+        const int index = item.value("index", -1);
+        if (index >= 0) {
+            cacheMap[index] = item;
+        }
+    }
+    return cacheMap;
+}
+
+std::optional<int> NormalJsonTranslatorTransAgent::parseJsonInt(const json& object)
+{
+    if (object.is_number_integer()) {
+        const std::int64_t value = object.get<std::int64_t>();
+        if (value >= std::numeric_limits<int>::min() && value <= std::numeric_limits<int>::max()) {
+            return (int)value;
+        }
+        return std::nullopt;
+    }
+    if (object.is_string()) {
+        const std::string& value = object.get_ref<const std::string&>();
+        int parsed = 0;
+        const auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+        if (ec == std::errc{} && ptr == value.data() + value.size()) {
+            return parsed;
+        }
+    }
+    return std::nullopt;
+}
+
+int NormalJsonTranslatorTransAgent::sanitizeToolLimit(int requested) const
+{
+    if (requested <= 0) {
+        return m_agentSearchResultLimit;
+    }
+    return std::min(requested, m_agentSearchResultLimit);
+}
+
+json NormalJsonTranslatorTransAgent::listFiles(const json& arguments) const
+{
+    const fs::path nativeSpec = ascii2Wide(arguments.value("spec", ""));
+    const int offset = std::max(0, arguments.value("offset", 0));
+    const int limit = sanitizeToolLimit(arguments.value("limit", 0));
+    json files = json::array();
+
+    int matchCount = 0;
+    for (const fs::path& relFile : m_knownRelFiles) {
+        if (!nativeSpec.empty()) {
+            if (!boost::algorithm::icontains(relFile.native(), nativeSpec.native()) &&
+                !matchFileSpec(relFile.native(), nativeSpec.native()))
+            {
+                continue;
+            }
+        }
+        ++matchCount;
+        if (matchCount <= offset || (int)files.size() >= limit) {
+            continue;
+        }
+
+        json fileInfo = {{"file", wide2Ascii(relFile)}};
+        if (const auto lineCount = getSourceFileLineCount(relFile)) {
+            fileInfo["lines"] = *lineCount;
+        }
+        files.push_back(std::move(fileInfo));
+    }
+    return {
+        {"files", std::move(files)},
+        {"offset", offset},
+        {"limit", limit},
+        {"total", matchCount}
+    };
+}
+
+json NormalJsonTranslatorTransAgent::readProjectNote() const
+{
+    if (!m_agentProjectNotePath) {
+        return {{"available", false}, {"file", nullptr}, {"content", ""}};
+    }
+
+    const fs::path& path = *m_agentProjectNotePath;
+    std::error_code ec;
+    const fs::path relPath = fs::relative(path, m_projectDir, ec);
+    const std::string file = wide2Ascii(ec ? path.filename() : relPath);
+    if (!fs::exists(path)) {
+        return {{"available", false}, {"file", file}, {"content", ""}};
+    }
+
+    std::ifstream ifs(path, std::ios::binary);
+    const std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    return {{"file", file}, {"content", content}};
+}
+
+json NormalJsonTranslatorTransAgent::projectRow(const json& row, const json& fields)
 {
     // file/id 始终返回；fields 只控制数据列，不影响搜索使用的 match_fields。
     json projected = {{"file", row.value("file", "")}, {"id", row.at("id")}};
@@ -31,14 +196,7 @@ json projectAgentRow(const json& row, const json& fields)
 json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, const std::string& name, const json& arguments)
 {
     if (name == "list_files") {
-        json args = arguments;
-        args["start"] = arguments.value("offset", 0);
-        args["limit"] = sanitizeAgentCommonToolLimit(arguments.value("limit", 0), m_agentSearchResultLimit);
-        json result = runAgentCommonListFilesTool(m_knownRelFiles,
-            [this](const fs::path& path) { return getSourceFileLineCount(path); }, m_agentSearchResultLimit, args);
-        result["offset"] = std::move(result.at("start"));
-        result.erase("start");
-        return result;
+        return listFiles(arguments);
     }
     if (name == "read_file_note") {
         const std::string file = arguments.value("file", "");
@@ -46,7 +204,7 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
         return {{"file", wide2Ascii(targetRelPath)}, {"note", loadFileNote(targetRelPath)}};
     }
     if (name == "read_project_note") {
-        return runAgentCommonGetProjectNoteTool(m_projectDir, m_agentProjectNotePath, arguments);
+        return readProjectNote();
     }
     const bool search = name.starts_with("search_");
     const std::string domain = name.substr(search ? 7 : 5);
@@ -105,13 +263,13 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
     }
 
     const int offset = std::max(0, arguments.value("offset", 0));
-    const int limit = sanitizeAgentCommonToolLimit(arguments.value("limit", 0), m_agentSearchResultLimit);
+    const int limit = sanitizeToolLimit(arguments.value("limit", 0));
     const int before = std::clamp(arguments.value("context_before", 0), 0, m_agentContextLinesLimit);
     const int after = std::clamp(arguments.value("context_after", 0), 0, m_agentContextLinesLimit);
     const json ids = arguments.value("ids", json::array());
     const json fields = arguments.value("fields", json::array());
     const json matchFields = arguments.value("match_fields", json::array());
-    const std::string query = str2Lower(arguments.value("query", ""));
+    const std::string query = arguments.value("query", "");
     json results = json::array();
     int total = 0;
     for (int i = 0; i < (int)rows.size(); ++i) {
@@ -128,9 +286,11 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
                 if (!matchFields.empty() && std::ranges::none_of(matchFields, [&](const json& field) { return field == entry.key(); })) {
                     continue;
                 }
-                const std::string textLower = entry.value().is_string() ? str2Lower(entry.value().get_ref<const std::string&>()) : str2Lower(entry.value().dump());
-                if (textLower.contains(query)) {
-	                matched = true; break;
+                matched = entry.value().is_string()
+                    ? boost::algorithm::icontains(entry.value().get_ref<const std::string&>(), query)
+                    : boost::algorithm::icontains(entry.value().dump(), query);
+                if (matched) {
+                    break;
                 }
             }
         }
@@ -141,12 +301,12 @@ json NormalJsonTranslatorTransAgent::runReadTool(const fs::path& relInputPath, c
         if (total <= offset || (int)results.size() >= limit) {
             continue;
         }
-        json result = projectAgentRow(row, fields);
+        json result = projectRow(row, fields);
         if (search && (domain == "source" || domain == "cache") && (before || after)) {
             result["context"] = json::array();
             for (int j = std::max(0, i - before); j <= std::min((int)rows.size() - 1, i + after); ++j) {
                 if (j != i && rows[j].at("file") == row.at("file")) {
-                    result["context"].push_back(projectAgentRow(rows[j], fields));
+                    result["context"].push_back(projectRow(rows[j], fields));
                 }
             }
         }

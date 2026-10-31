@@ -639,8 +639,8 @@ void TranslationWorkbenchPage::renderFiles()
     // 始终按文件名自然排序，避免文件完成时改变位置。
     std::ranges::sort(files, [](const auto& a, const auto& b)
         {
-            const std::u16string_view left(a.filename);
-            const std::u16string_view right(b.filename);
+            const std::wstring left = a.filename.toStdWString();
+            const std::wstring right = b.filename.toStdWString();
             const int result = compareNatural(left, right);
             if (result != 0) {
                 return result < 0;

@@ -67,6 +67,7 @@ UpdateChecker::~UpdateChecker()
 
 void UpdateChecker::check(bool downloadIfAvailableAfterChecking)
 {
+    downloadIfAvailableAfterChecking = gppSupportsPackageUpdate && downloadIfAvailableAfterChecking;
     if (m_state == UpdateState::Downloading) {
         ElaMessageBar::information(ElaMessageBarType::Top, tr("请稍候"), tr("正在下载更新包..."), 5000);
         return;
@@ -99,18 +100,13 @@ void UpdateChecker::check(bool downloadIfAvailableAfterChecking)
 
 bool UpdateChecker::shouldDownloadButtonEnabled() const
 {
-	if (m_state == UpdateState::UpdateAvailable) {
-        return true;
-	}
-    return false;
+    return gppSupportsPackageUpdate && m_state == UpdateState::UpdateAvailable;
 }
 
 bool UpdateChecker::shouldStartUpdater() const
 {
-    if (m_state == UpdateState::ReadyToInstall && hasValidLocalPackage(m_latestRelease.asset)) {
-        return true;
-    }
-    return false;
+    return gppSupportsPackageUpdate && m_state == UpdateState::ReadyToInstall
+        && hasValidLocalPackage(m_latestRelease.asset);
 }
 
 void UpdateChecker::setState(UpdateState state)
@@ -223,13 +219,15 @@ bool UpdateChecker::parseLatestRelease(const QByteArray& responseData, LatestRel
     }
     info.hasNewVersion = versionCompare > 0;
     info.isCompatible = versionCompare != 2;
-    info.asset = findGuiCoreAsset(jsonObj["assets"].toArray()).value_or(UpdateAssetInfo{});
-
-    if (info.hasNewVersion && !info.asset.downloadUrl.isValid()) {
-        if (errorMessage) {
-            *errorMessage = tr("发布页中未找到 GUICORE.7z 更新包。");
+    // macOS 仅检查版本，不依赖发布页是否附带对应的 GUICORE 更新包。
+    if constexpr (gppSupportsPackageUpdate) {
+        info.asset = findGuiCoreAsset(jsonObj["assets"].toArray()).value_or(UpdateAssetInfo{});
+        if (info.hasNewVersion && !info.asset.downloadUrl.isValid()) {
+            if (errorMessage) {
+                *errorMessage = tr("发布页中未找到 GUICORE.7z 更新包。");
+            }
+            return false;
         }
-        return false;
     }
 
     return true;
@@ -287,11 +285,7 @@ bool UpdateChecker::hasValidLocalPackage(const UpdateAssetInfo& asset) const
 
 void UpdateChecker::maybeStartDownload(bool requestDownload)
 {
-    if (!m_latestRelease.hasNewVersion) {
-        return;
-    }
-
-    if (!requestDownload) {
+    if (!gppSupportsPackageUpdate || !requestDownload || !m_latestRelease.hasNewVersion) {
         return;
     }
 

@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 import tomllib
 import urllib.request
 from pathlib import Path
@@ -160,6 +161,15 @@ def macho(path):
         return source.read(4) in (b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"\xfe\xed\xfa\xcf")
 
 
+def sign_binary(binary):
+    # codesign 会把包内的主程序识别为整个 .app；在包外签名单个 Mach-O，避免遍历可修改的项目数据。
+    with tempfile.TemporaryDirectory(prefix="gpp-codesign-") as temporary:
+        standalone = Path(temporary) / binary.name
+        shutil.copy2(binary, standalone)
+        run(["codesign", "--force", "--sign", "-", standalone])
+        shutil.copy2(standalone, binary)
+
+
 def deploy_libraries(directory, search_roots):
     """递归收集非系统 dylib，并把引用改成相对当前文件的路径。"""
     library_directory = directory / "lib"
@@ -210,11 +220,11 @@ def deploy_libraries(directory, search_roots):
             relative = "@loader_path/" + os.path.relpath(destination, binary.parent)
             run(["install_name_tool", "-change", dependency, relative, binary])
         # 修改 Mach-O 后原签名失效；便携版使用本地 ad-hoc 签名。
-        run(["codesign", "--force", "--sign", "-", binary])
+        sign_binary(binary)
     # Python 保留原载入命令，只统一签名；它的解释器和扩展继续使用随包提供的私有库。
     for binary in python_directory.rglob("*"):
         if macho(binary):
-            run(["codesign", "--force", "--sign", "-", binary])
+            sign_binary(binary)
 
 
 def stage_package(qt, python_root, dependencies, ela, archive_library):

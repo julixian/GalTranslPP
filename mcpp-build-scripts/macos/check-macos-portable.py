@@ -74,6 +74,9 @@ print(sys.version, sys.executable, sys.path, sep='\\n')
                cwd=directory, env=env)
         record("pip 依赖一致性", [python, "-I", "-m", "pip", "check"], cwd=directory, env=env)
         if not args.python_root:
+            record("CLI 帮助", [directory / "GalTranslPP_CLI", "--help"], cwd=directory, env=env)
+            record("CLI 项目预览", [directory / "GalTranslPP_CLI", "SampleProject", "--preview", "--no-tui"],
+                   cwd=directory, env=env)
             record("7-Zip 动态库入口", [python, "-I", "-c",
                    "import ctypes; lib=ctypes.CDLL('./7z.so'); print(lib.CreateObject)"], cwd=directory, env=env)
         record("Python 子进程", [python, "-I", "-c", '''

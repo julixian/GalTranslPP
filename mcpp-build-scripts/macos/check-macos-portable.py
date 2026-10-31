@@ -19,7 +19,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("package", type=Path, nargs="?")
     parser.add_argument("--python-root", type=Path)
-    parser.add_argument("--optional-dependencies", action="store_true")
+    parser.add_argument("--optional-dependencies", nargs="*", metavar="PACKAGE",
+                        help="检查指定的可选依赖；不指定包名时检查构建配置中的全部依赖")
     args = parser.parse_args()
     if sys.platform != "darwin" or platform.machine() != "arm64":
         parser.error("检测需要真实的 macOS ARM64 环境")
@@ -123,14 +124,16 @@ if __name__ == '__main__':
                         except subprocess.TimeoutExpired:
                             process.kill()
                             process.wait()
-        if args.optional_dependencies:
+        if args.optional_dependencies is not None:
             config = tomllib.loads(Path(__file__).with_name("build-macos.toml").read_text(encoding="utf-8"))
-            for dependency in config["python"]["optional_dependencies"]:
+            for dependency in args.optional_dependencies or config["python"]["optional_dependencies"]:
                 # 每个功能独立检测，失败保留 pip 原始输出；不把测试依赖塞进发布包。
                 clone = Path(temporary) / ("Python-" + dependency)
                 shutil.copytree(python_root, clone, symlinks=True)
                 executable = clone / "bin/python3"
-                installed = record(dependency + " 安装", [executable, "-I", "-m", "pip", "install", dependency],
+                requirement = ROOT / "Example/BaseConfig/PythonScripts/requirements-babeldoc.txt"
+                install = ["-r", requirement] if dependency == "babeldoc" else [dependency]
+                installed = record(dependency + " 安装", [executable, "-I", "-m", "pip", "install", *install],
                                    cwd=clone, env=env, timeout=1200, group="optional_dependencies")
                 if installed:
                     # 应用关闭自动 site 初始化；按相同规则加入 site-packages，再验证实际模块。

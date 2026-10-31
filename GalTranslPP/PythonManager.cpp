@@ -686,7 +686,10 @@ void checkPythonDependencies(const std::vector<std::string>& dependencies, const
                     logger->error(gppTr("checkPythonDependencies", "依赖 %1 未安装，正在尝试安装")
                         .arg(dependency)
                         .toStdString());
-                    const std::string installCommand = "-m pip install " + dependency;
+                    const std::string installCommand = dependency == "babeldoc"
+                        ? std::format("-m pip install -r \"{}\"",
+                            wide2Ascii(fs::absolute(baseConfigPath / "PythonScripts/requirements-babeldoc.txt")))
+                        : "-m pip install " + dependency;
                     logger->info(gppTr("checkPythonDependencies", "将在 3s 后开始安装依赖，请勿关闭接下来出现的窗口！")
                         .toStdString());
                     std::this_thread::sleep_for(std::chrono::seconds(3));

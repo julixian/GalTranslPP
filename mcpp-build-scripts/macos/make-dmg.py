@@ -44,6 +44,22 @@ def main():
     report = {"image": str(image), "checks": []}
 
     try:
+        # 直接运行成功不代表下载后能通过 Gatekeeper；分别记录包签名与系统发布策略的结果。
+        report["signature_assessments"] = []
+        for name, command in [
+            ("应用包签名", ["codesign", "--verify", "--deep", "--strict", "--verbose=4", str(app)]),
+            ("Gatekeeper", ["spctl", "--assess", "--type", "execute", "--verbose=4", str(app)]),
+        ]:
+            result = subprocess.run(command, capture_output=True, text=True)
+            report["signature_assessments"].append({
+                "name": name,
+                "passed": result.returncode == 0,
+                "exit_code": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+            })
+            print(name, "PASS" if result.returncode == 0 else "FAIL", flush=True)
+            print(result.stdout + result.stderr, flush=True)
         with tempfile.TemporaryDirectory(prefix="gpp-dmg-") as temporary:
             temporary = Path(temporary)
             staging = temporary / "image"

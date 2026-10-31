@@ -277,8 +277,8 @@ gptDicts = [
   "ProjGptDict-Gen.toml"
 ]
 postDicts = [
+  "PostPunctuation.toml",
   "PostRareCnChar.toml",
   "PostStd.toml",
-  "PostSymbol.toml",
   "ProjPostDict.toml"
 ]

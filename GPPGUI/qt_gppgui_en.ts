@@ -4,7 +4,7 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="AboutDialog.cpp" line="+23"/>
+        <location filename="AboutDialog.cpp" line="+24"/>
         <source>关于</source>
         <translation>About</translation>
     </message>
@@ -24,11 +24,12 @@
         <translation>Check update</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+8"/>
         <source>下载更新</source>
         <translation>Download update</translation>
     </message>
     <message>
+        <location line="+0"/>
         <source>macOS 仅提示新版本，不支持下载和自动安装</source>
         <translation>macOS only notifies you of new versions. Downloading and automatic installation are disabled.</translation>
     </message>
@@ -548,7 +549,7 @@ sk-...</translation>
 <context>
     <name>AppSettingsPage</name>
     <message>
-        <location filename="AppSettingsPage.cpp" line="+29"/>
+        <location filename="AppSettingsPage.cpp" line="+30"/>
         <location line="+10"/>
         <source>应用设置</source>
         <translation>App Settings</translation>
@@ -706,11 +707,12 @@ sk-...</translation>
         <translation>Automatically download detected updates</translation>
     </message>
     <message>
+        <location line="+10"/>
         <source>macOS 仅提示新版本，不支持下载和自动安装</source>
         <translation>macOS only notifies you of new versions. Downloading and automatic installation are disabled.</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+12"/>
         <source>语言设置</source>
         <translation>Language</translation>
     </message>
@@ -4789,19 +4791,19 @@ Issue summary:</translation>
 <context>
     <name>UpdateChecker</name>
     <message>
-        <location filename="UpdateChecker.cpp" line="+441"/>
+        <location filename="UpdateChecker.cpp" line="+435"/>
         <location line="+2"/>
         <source>更新检测失败</source>
         <translation>Failed to check update</translation>
     </message>
     <message>
-        <location line="-284"/>
-        <location line="+231"/>
+        <location line="-282"/>
+        <location line="+229"/>
         <source>网络连接失败，请检查网络设置。</source>
         <translation>Failed to connect to internet.</translation>
     </message>
     <message>
-        <location line="-187"/>
+        <location line="-185"/>
         <source>获取更新信息失败。</source>
         <translation>Failed to get update information.</translation>
     </message>
@@ -4811,14 +4813,14 @@ Issue summary:</translation>
         <translation>New version detected</translation>
     </message>
     <message>
-        <location line="-117"/>
+        <location line="-112"/>
         <location line="+16"/>
         <source>请稍候</source>
         <translation>Please wait</translation>
     </message>
     <message>
         <location line="+0"/>
-        <location line="+39"/>
+        <location line="+34"/>
         <source>正在检查更新...</source>
         <translation>Checking for update...</translation>
     </message>
@@ -4843,12 +4845,12 @@ Issue summary:</translation>
         <translation>Version parse failed</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>发布页中未找到 GUICORE.7z 更新包。</source>
         <translation>GUICORE.7z was not found on the release page.</translation>
     </message>
     <message>
-        <location line="+71"/>
+        <location line="+68"/>
         <source>不兼容更新</source>
         <translation>Incompatible update</translation>
     </message>
@@ -4863,18 +4865,18 @@ Issue summary:</translation>
         <translation>Download completed</translation>
     </message>
     <message>
-        <location line="-345"/>
-        <location line="+345"/>
+        <location line="-338"/>
+        <location line="+338"/>
         <source>点击以关闭程序并安装更新</source>
         <translation>Click to exit app and apply update</translation>
     </message>
     <message>
-        <location line="-237"/>
+        <location line="-235"/>
         <source>检测到新版本！</source>
         <translation>New version detected!</translation>
     </message>
     <message>
-        <location line="+117"/>
+        <location line="+115"/>
         <source>最新版含有不兼容当前版本的内容，请确认 GitHub 发布页更新日志后再下载。</source>
         <translation>Latest release is incompatible. Check its GitHub changelog first.</translation>
     </message>
@@ -4889,23 +4891,23 @@ Issue summary:</translation>
         <translation>Downloading update</translation>
     </message>
     <message>
-        <location line="-273"/>
-        <location line="+273"/>
+        <location line="-266"/>
+        <location line="+266"/>
         <source>正在下载更新包...</source>
         <translation>Downloading update package...</translation>
     </message>
     <message>
-        <location line="-267"/>
+        <location line="-260"/>
         <source>下载已完成</source>
         <translation>Download completed</translation>
     </message>
     <message>
-        <location line="+265"/>
+        <location line="+258"/>
         <source>下载更新...</source>
         <translation>Downloading update...</translation>
     </message>
     <message>
-        <location line="-164"/>
+        <location line="-162"/>
         <source>版本检测</source>
         <translation>Version check</translation>
     </message>
@@ -4915,7 +4917,7 @@ Issue summary:</translation>
         <translation>Current version is the latest</translation>
     </message>
     <message>
-        <location line="+173"/>
+        <location line="+171"/>
         <source>未知大小</source>
         <translation>Unknown size</translation>
     </message>

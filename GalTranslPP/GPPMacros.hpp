@@ -1,6 +1,8 @@
 ﻿#pragma once
 
+#ifdef __APPLE__
 #include <version>
+#endif
 
 #ifdef PYBIND11_HEADERS
 #include "pybind11_headers.hpp"

@@ -1245,7 +1245,7 @@ void saveTokenizeCache
 
 std::string currentTimestampString() {
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
-#if defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907L
+#if defined(_WIN32) || (defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907L)
     const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
     return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
 #elif defined(__APPLE__)

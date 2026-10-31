@@ -335,7 +335,7 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }();
 
         Sentence* pLastSentence = nullptr;
-#if defined(__cpp_lib_ranges_chunk)
+#if defined(_WIN32) || defined(__cpp_lib_ranges_chunk)
         for (auto [batchIndex, batchView] : toTranslate
             | std::views::chunk(m_batchSize) | std::views::enumerate)
         {

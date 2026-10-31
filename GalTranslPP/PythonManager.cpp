@@ -733,32 +733,23 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
 #ifdef _WIN32
     if (fs::exists(pythonEnvPath) && fs::exists(pythonEnvPath / L"python.exe")) {
 
-        const fs::path envZipPath = [&]()
-	        {
-                for (const auto& entry : fs::directory_iterator(pythonEnvPath)) {
-                    if (isSameExtension(entry.path(), L".zip") &&
-                        str2Lower(entry.path().filename()).starts_with(L"python"))
-                    {
-                        return fs::canonical(entry.path());
-                    }
-                }
-                return fs::path{};
-            }();
+        const fs::path pythonEnvCanonicalPath = fs::canonical(pythonEnvPath);
+        const fs::path envZipPath = pythonEnvCanonicalPath /
+            std::format(L"python{}{}.zip", PY_MAJOR_VERSION, PY_MINOR_VERSION);
 
-        if (!envZipPath.empty()) {
-            const fs::path pythonEnvCanonicalPath = fs::canonical(pythonEnvPath);
+        if (fs::exists(envZipPath)) {
             gs_pythonExePath = fs::canonical(pythonEnvCanonicalPath / L"python.exe");
             PyConfig config;
             PyConfig_InitIsolatedConfig(&config);
             config.site_import = 0;
             config.module_search_paths_set = 1;
-            PyConfig_SetString(&config, &config.home, pythonEnvCanonicalPath.wstring().c_str());
-            PyConfig_SetString(&config, &config.executable, gs_pythonExePath.wstring().c_str());
-            PyWideStringList_Append(&config.module_search_paths, pythonEnvCanonicalPath.wstring().c_str());
-            PyWideStringList_Append(&config.module_search_paths, envZipPath.wstring().c_str());
-            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"DLLs").wstring().c_str());
-            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib").wstring().c_str());
-            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib" / L"site-packages").wstring().c_str());
+            PyConfig_SetString(&config, &config.home, pythonEnvCanonicalPath.c_str());
+            PyConfig_SetString(&config, &config.executable, gs_pythonExePath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, pythonEnvCanonicalPath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, envZipPath.c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"DLLs").c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib").c_str());
+            PyWideStringList_Append(&config.module_search_paths, (pythonEnvCanonicalPath / L"Lib" / L"site-packages").c_str());
             py::initialize_interpreter(&config);
             {
                 py::module_::import("importlib.metadata");
@@ -779,7 +770,9 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
     // 随包提供 python-build-standalone 的 install_only 目录，不依赖系统 Python。
     const auto executable = pythonEnvPath / "bin/python3";
     const auto standardLibrary = pythonEnvPath / std::format("lib/python{}.{}", PY_MAJOR_VERSION, PY_MINOR_VERSION);
-    if (!fs::is_regular_file(executable) || !fs::is_directory(standardLibrary)) return false;
+    if (!fs::is_regular_file(executable) || !fs::is_directory(standardLibrary)) {
+        return false;
+    }
     const auto root = fs::canonical(pythonEnvPath);
     gs_pythonExePath = fs::canonical(executable);
     PyConfig config;
@@ -798,14 +791,17 @@ bool startUpPythonEnv(const fs::path& pythonEnvPath, std::unique_ptr<py::gil_sco
     check(PyConfig_SetBytesString(&config, &config.executable, gs_pythonExePath.c_str()));
     const auto library = fs::canonical(standardLibrary);
     for (const auto& path : {library, library / "lib-dynload", library / "site-packages",
-                            fs::absolute("BaseConfig/PythonScripts")}) {
+        fs::absolute("BaseConfig/PythonScripts")})
+    {
         check(PyWideStringList_Append(&config.module_search_paths, ascii2Wide(path.native()).c_str()));
     }
     py::initialize_interpreter(&config);
     py::module_::import("importlib.metadata");
     const py::list sysPaths = py::module_::import("sys").attr("path");
     std::string sysPathsText;
-    for (const auto& path : sysPaths) sysPathsText += path.cast<std::string>() + "\n";
+    for (const auto& path : sysPaths) {
+        sysPathsText += path.cast<std::string>() + "\n";
+    }
     atomicOutputFile(gs_pythonSysPathsTxtPath, sysPathsText);
     release = std::make_unique<py::gil_scoped_release>();
     return true;

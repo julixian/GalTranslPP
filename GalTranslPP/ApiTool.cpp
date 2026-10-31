@@ -573,24 +573,36 @@ cpr::Proxies makeSystemProxies(const std::shared_ptr<spdlog::logger>& logger = n
 #elif defined(__APPLE__)
     // 读取系统网络设置中的代理；每种协议优先用自己的配置，未配置时再用 SOCKS。
     const auto settings = SCDynamicStoreCopyProxies(nullptr);
-    if (!settings) return {};
+    if (!settings) {
+        return {};
+    }
     const auto readProxy = [&](CFStringRef enabledKey, CFStringRef hostKey,
-                               CFStringRef portKey, std::string_view scheme) -> std::string
+        CFStringRef portKey, std::string_view scheme) -> std::string
         {
             const auto enabledValue = (CFNumberRef)CFDictionaryGetValue(settings, enabledKey);
             const auto hostValue = (CFStringRef)CFDictionaryGetValue(settings, hostKey);
             const auto portValue = (CFNumberRef)CFDictionaryGetValue(settings, portKey);
             int enabled = 0, port = 0;
-            if (!enabledValue || !hostValue || !portValue) return {};
+            if (!enabledValue || !hostValue || !portValue) {
+                return {};
+            }
             CFNumberGetValue(enabledValue, kCFNumberIntType, &enabled);
             CFNumberGetValue(portValue, kCFNumberIntType, &port);
-            if (!enabled || !port) return {};
+            if (!enabled || !port) {
+                return {};
+            }
             std::string host(CFStringGetMaximumSizeForEncoding(
                 CFStringGetLength(hostValue), kCFStringEncodingUTF8) + 1, '\0');
-            if (!CFStringGetCString(hostValue, host.data(), host.size(), kCFStringEncodingUTF8)) return {};
+            if (!CFStringGetCString(hostValue, host.data(), host.size(), kCFStringEncodingUTF8)) {
+                return {};
+            }
             host.resize(host.find('\0'));
-            if (host.empty()) return {};
-            if (host.contains(':') && !host.starts_with('[')) host = '[' + host + ']';
+            if (host.empty()) {
+                return {};
+            }
+            if (host.contains(':') && !host.starts_with('[')) {
+                host = '[' + host + ']';
+            }
             return std::format("{}://{}:{}", scheme, host, port);
         };
     auto http = readProxy(kSCPropNetProxiesHTTPEnable, kSCPropNetProxiesHTTPProxy,
@@ -600,8 +612,12 @@ cpr::Proxies makeSystemProxies(const std::shared_ptr<spdlog::logger>& logger = n
     const auto socks = readProxy(kSCPropNetProxiesSOCKSEnable, kSCPropNetProxiesSOCKSProxy,
         kSCPropNetProxiesSOCKSPort, "socks5h");
     CFRelease(settings);
-    if (http.empty()) http = socks;
-    if (https.empty()) https = socks;
+    if (http.empty()) {
+        http = socks;
+    }
+    if (https.empty()) {
+        https = socks;
+    }
     if (logger && (!http.empty() || !https.empty())) {
         logger->trace(gppTr("ApiTool.makeSystemProxies", "正在使用系统代理: [%1]")
             .arg(std::format("http={}, https={}", http, https)).toStdString());

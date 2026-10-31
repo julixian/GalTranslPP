@@ -910,16 +910,16 @@ ActiveWorkerGuard::~ActiveWorkerGuard()
 
 
 PluginRunTime choosePluginRunTime(std::string_view pluginNameLower, PluginRunTime defaultTime) {
-    if (pluginNameLower.contains("dprerun:")) {
+    if (pluginNameLower.starts_with("dprerun:")) {
         return PluginRunTime::DPre;
     }
-    else if (pluginNameLower.contains("dpostrun:")) {
+    else if (pluginNameLower.starts_with("dpostrun:")) {
         return PluginRunTime::DPost;
     }
-    else if (pluginNameLower.contains("prerun:")) {
+    else if (pluginNameLower.starts_with("prerun:")) {
         return PluginRunTime::Pre;
     }
-    else if (pluginNameLower.contains("postrun:")) {
+    else if (pluginNameLower.starts_with("postrun:")) {
         return PluginRunTime::Post;
     }
     return defaultTime;
@@ -1029,12 +1029,18 @@ bool executeCommand(const std::wstring& program, const std::wstring& args, bool 
     const std::string command = "'" + replaceStr(wide2Ascii(program), "'", "'\\''") + "' " + wide2Ascii(args);
     char* arguments[] = {(char*)"/bin/sh", (char*)"-c", (char*)command.c_str(), nullptr};
     pid_t process = 0;
-    if (posix_spawn(&process, "/bin/sh", nullptr, nullptr, arguments, *_NSGetEnviron())) return false;
+    if (posix_spawn(&process, "/bin/sh", nullptr, nullptr, arguments, *_NSGetEnviron())) {
+        return false;
+    }
     int status = 0;
     while (waitpid(process, &status, 0) < 0) {
-        if (errno != EINTR) return false;
+        if (errno != EINTR) {
+            return false;
+        }
     }
-    if (timeDelayAfterCommand > 0) std::this_thread::sleep_for(std::chrono::seconds(timeDelayAfterCommand));
+    if (timeDelayAfterCommand > 0) {
+        std::this_thread::sleep_for(std::chrono::seconds(timeDelayAfterCommand));
+    }
     return WIFEXITED(status) && WEXITSTATUS(status) == 0;
 #endif
 }

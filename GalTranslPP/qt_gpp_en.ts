@@ -102,8 +102,8 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="606"/>
         <location filename="ApiTool.cpp" line="622"/>
+        <location filename="ApiTool.cpp" line="638"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -119,7 +119,7 @@
 <context>
     <name>ApiTool.sendApiHttpRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="693"/>
+        <location filename="ApiTool.cpp" line="709"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
@@ -2213,12 +2213,12 @@ Cache source: %4</translation>
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1215"/>
+        <location filename="Tool.cpp" line="1221"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1221"/>
+        <location filename="Tool.cpp" line="1227"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2255,12 +2255,12 @@ Cache source: %4</translation>
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1233"/>
+        <location filename="Tool.cpp" line="1239"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1238"/>
+        <location filename="Tool.cpp" line="1244"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2268,7 +2268,7 @@ Cache source: %4</translation>
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="720"/>
+        <location filename="ApiTool.cpp" line="736"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>

@@ -55,6 +55,7 @@ def main():
             shutil.copytree(args.python_root.resolve(), python_root, symlinks=True)
         else:
             shutil.copytree(args.package.resolve(), relocated, symlinks=True)
+        python_root = python_root.resolve()
         python = python_root / "bin/python3"
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("PYTHON", "DYLD_", "QT_"))}
@@ -131,24 +132,33 @@ if __name__ == '__main__':
                 clone = Path(temporary) / ("Python-" + dependency)
                 shutil.copytree(python_root, clone, symlinks=True)
                 executable = clone / "bin/python3"
-                requirement = ROOT / "Example/BaseConfig/PythonScripts/requirements-babeldoc.txt"
-                install = ["-r", requirement] if dependency == "babeldoc" else [dependency]
-                installed = record(dependency + " 安装", [executable, "-I", "-m", "pip", "install", *install],
+                scripts = ROOT / "Example/BaseConfig/PythonScripts"
+                command = [executable, "-I", scripts / "install_babeldoc.py"] if dependency == "babeldoc" else [
+                    executable, "-I", "-m", "pip", "install", dependency,
+                ]
+                installed = record(dependency + " 安装", command,
                                    cwd=clone, env=env, timeout=1200, group="optional_dependencies")
                 if installed:
-                    # 应用关闭自动 site 初始化；按相同规则加入 site-packages，再验证实际模块。
-                    module = "babeldoc.main" if dependency == "babeldoc" else dependency
-                    code = ("import sys, pathlib, importlib; "
-                            "sys.path.append(str(pathlib.Path(sys.prefix) / 'lib/python3.12/site-packages')); "
-                            f"module = importlib.import_module({module!r}); print(module.__file__)")
-                    record(dependency + " 隔离路径导入", [executable, "-I", "-S", "-c", code],
-                           cwd=clone, env=env, timeout=180, group="optional_dependencies")
-                    record(dependency + " pip check", [executable, "-I", "-m", "pip", "check"],
-                           cwd=clone, env=env, group="optional_dependencies")
+                    if dependency == "babeldoc":
+                        record("BabelDOC 裁剪依赖、隔离导入和 PDF 提取回填", [
+                            executable, "-I", "-S", Path(__file__).with_name("check-babeldoc.py"), scripts,
+                        ], cwd=clone, env=env, timeout=900, group="optional_dependencies")
+                    else:
+                        # 应用关闭自动 site 初始化；按相同规则加入 site-packages，再验证实际模块。
+                        code = ("import sys, pathlib, importlib; "
+                                "sys.path.append(str(pathlib.Path(sys.prefix) / 'lib/python3.12/site-packages')); "
+                                f"module = importlib.import_module({dependency!r}); print(module.__file__)")
+                        record(dependency + " 隔离路径导入", [executable, "-I", "-S", "-c", code],
+                               cwd=clone, env=env, timeout=180, group="optional_dependencies")
+                        record(dependency + " pip check", [executable, "-I", "-m", "pip", "check"],
+                               cwd=clone, env=env, group="optional_dependencies")
                 shutil.rmtree(clone)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     # 可选模型功能单独报告，不把“应用可启动”误报成“所有模型都已验证”。
-    if not all(item["passed"] for item in report["checks"]):
+    checks = report["checks"]
+    if args.optional_dependencies:
+        checks = checks + report["optional_dependencies"]
+    if not all(item["passed"] for item in checks):
         raise SystemExit(1)
 
 

@@ -1,3 +1,35 @@
-# 当前 PDF 适配使用 BabelDOC 0.6.4；bitstring 5 已删除它依赖的 BitStream。
-babeldoc==0.6.4
+# BabelDOC 的 PDF 提取和回填依赖，由 install_babeldoc.py 安装。
+# 不使用扫描件相似度检测和原生术语匹配，因此省去 scikit-image、hyperscan。
+# 保留无界面的 OpenCV；当前流程不需要 AiNiee 的 RapidOCR 依赖。
 bitstring>=4.3,<5
+chardet>=5.2.0
+charset-normalizer>=2.0.0
+configargparse>=1.7
+cryptography>=46.0.7
+freetype-py>=2.5.1
+httpx[socks]>=0.27.0
+huggingface-hub>=0.27.0
+levenshtein>=0.27.1
+msgpack>=1.1.0
+numpy>=2.0.2
+onnx>=1.21.0
+onnxruntime>=1.16.1,<1.24; python_version < "3.11"
+onnxruntime>=1.16.1; python_version >= "3.11"
+openai>=1.59.3
+opencv-python-headless>=4.10.0.84
+orjson>=3.10.14
+peewee>=3.17.8
+psutil>=7.0.0
+pydantic>=2.10.6
+pymupdf>=1.26.7
+pyzstd>=0.17.0
+rich>=13.9.4
+rtree>=1.4.0
+scikit-learn>=1.7.1
+scipy>=1.15.3
+tenacity>=9.0.0
+tiktoken>=0.9.0
+toml>=0.10.2
+tqdm>=4.67.1
+uharfbuzz>=0.50.2
+xsdata[cli,lxml,soap]>=24.12

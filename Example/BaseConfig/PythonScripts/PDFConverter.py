@@ -149,6 +149,9 @@ def _create_progress_stage(progress_monitor):
 
 
 def _load_babeldoc():
+    from babeldoc_compat import prepare_optional_imports
+
+    prepare_optional_imports()
     from babeldoc.docvision.doclayout import DocLayoutModel
     from babeldoc.format.pdf.document_il.midend import il_translator
     from babeldoc.format.pdf.high_level import TRANSLATE_STAGES, do_translate
@@ -170,6 +173,23 @@ def _load_babeldoc():
         "progress_monitor": progress_monitor,
         "progress_stage": _create_progress_stage(progress_monitor),
     }
+
+
+def _create_translation_config(runtime, args, translator):
+    # 提取和回填使用相同的裁剪规则；翻译与字典由 GPP 完成，不启用 BabelDOC 的术语提取。
+    return runtime["translation_config"](
+        input_file=args.files[0],
+        output_dir=args.output,
+        translator=translator,
+        doc_layout_model=runtime["doc_layout_model"].load_onnx(),
+        no_dual=args.no_dual,
+        no_mono=args.no_mono,
+        watermark_output_mode=runtime["watermark_output_mode"].NoWatermark,
+        skip_scanned_detection=True,
+        auto_extract_glossary=False,
+        lang_in=args.lang_in,
+        lang_out=args.lang_out,
+    )
 
 
 @contextmanager
@@ -219,16 +239,7 @@ def _extract_texts_from_pdf(pdf_path: Path, babeldoc_lang_out: str, show_progres
                 babeldoc_lang_out,
             ]
         )
-        config = runtime["translation_config"](
-            input_file=args.files[0],
-            output_dir=args.output,
-            translator=text_collector,
-            doc_layout_model=runtime["doc_layout_model"].load_onnx(),
-            watermark_output_mode=runtime["watermark_output_mode"].NoWatermark,
-            skip_scanned_detection=True,
-            lang_in=args.lang_in,
-            lang_out=args.lang_out,
-        )
+        config = _create_translation_config(runtime, args, text_collector)
 
         il_translator = runtime["il_translator"]
         original_translate = il_translator.ILTranslator.translate
@@ -263,23 +274,14 @@ def _generate_pdf_from_texts(
         "--output",
         str(output_dir),
         "--ignore-cache",
-        "--skip-scanned-detection",
         "--lang-out",
         babeldoc_lang_out,
     ]
+    if not bilingual_output:
+        cmd_args.append("--no-dual")
 
     args = parser.parse_args(cmd_args)
-    config = runtime["translation_config"](
-        input_file=args.files[0],
-        output_dir=args.output,
-        translator=SequentialTranslator(translated_texts),
-        doc_layout_model=runtime["doc_layout_model"].load_onnx(),
-        no_dual=not bilingual_output,
-        no_mono=False,
-        watermark_output_mode=runtime["watermark_output_mode"].NoWatermark,
-        lang_in=args.lang_in,
-        lang_out=args.lang_out,
-    )
+    config = _create_translation_config(runtime, args, SequentialTranslator(translated_texts))
 
     with _patched_progress_stage(runtime):
         result = _run_babeldoc(runtime, config, show_progress)

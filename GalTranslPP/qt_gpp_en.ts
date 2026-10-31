@@ -797,7 +797,7 @@ Error: %2</translation>
 <context>
     <name>NormalJsonTranslator.normalJsonAfterRun</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="532"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="536"/>
         <source>
 
 ```
@@ -812,12 +812,12 @@ No problem overview
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="525"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="529"/>
         <source>已生成 [ProblemOverview.%1] 文件</source>
         <translation>Generated [ProblemOverview.%1] file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="557"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="561"/>
         <source>
 
 ```
@@ -830,12 +830,12 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="581"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="585"/>
         <source>%1 个文件</source>
         <translation>%1 files</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="588"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="592"/>
         <source>问题概览结束
 ```
 </source>
@@ -844,17 +844,17 @@ Problem overview:
 </translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="599"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="603"/>
         <source>rolling context 缓存已保存至 [%1]</source>
         <translation>rolling context cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="604"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="608"/>
         <source>rolling context 缓存 [%1] 保存失败</source>
         <translation>Failed to save rolling context cache [%1]</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="613"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="617"/>
         <source>重建过程中有句子未命中缓存 (%1 / %2 lines)，请检查日志以定位问题</source>
         <translation>Cache misses during rebuild (%1/%2 lines); see logs</translation>
     </message>
@@ -903,32 +903,32 @@ Problem overview:
         <translation>File split mode detected (%1); preprocessing input files...</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="339"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="343"/>
         <source>文件 [%1] 已被分割成 %2 份，存入输入缓存</source>
         <translation>File [%1] was split into %2 parts and saved to input cache</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="347"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="351"/>
         <source>分割文件 [%1] 时出错: %2</source>
         <translation>Error while splitting file [%1]: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="373"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="377"/>
         <source>未知的文件分割模式: %1, 请使用 &apos;No&apos;, &apos;Equal&apos;, &apos;Num&apos;</source>
         <translation>Unknown file split mode: %1; use &apos;No&apos;, &apos;Equal&apos;, or &apos;Num&apos;</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="399"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="403"/>
         <source>未知的排序模式: %1</source>
         <translation>Unknown sort mode: %1</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="446"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="450"/>
         <source>连续重复块引用分析完成，阈值 %1，共配置引用 %2 句，onFileProcessed/分割文件合并/文件输出 将被延后</source>
         <translation>Repeat refs: min %1, %2 lines; callback/merge/output deferred</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="456"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="460"/>
         <source>连续重复块引用分析完成，未发现长度不小于 %1 的重复块</source>
         <translation>Repeat-block refs: none at length &gt;= %1</translation>
     </message>
@@ -1049,7 +1049,7 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.normalJsonProcessFiles</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="648"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="652"/>
         <source>已将 %1 个文件任务分配到线程池，等待处理完成...</source>
         <translation>Assigned %1 file tasks to thread pool; waiting...</translation>
     </message>
@@ -1145,17 +1145,17 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.resolveRepeatedBlockReferences</name>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="777"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="781"/>
         <source>文件 [%1] 仍有未回填的连续重复块引用，跳过本轮最终输出</source>
         <translation>File [%1] has pending repeat-block refs; final output skipped</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="842"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="846"/>
         <source>连续重复块引用回填完成，共复制 (%1 / %2) 句</source>
         <translation>Repeat-block fill done: copied %1/%2 lines</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.Run.cpp" line="856"/>
+        <location filename="NormalJsonTranslator.Run.cpp" line="860"/>
         <source>文件 [%1] 尚未翻译完毕或分割输出尚未全部回填完成，跳过本轮合并</source>
         <translation>File [%1] incomplete or split output pending; merge skipped</translation>
     </message>
@@ -2160,13 +2160,13 @@ Cache source: %4</translation>
         <translation>Invalid log level: %1</translation>
     </message>
     <message>
-        <location filename="ITranslator.cpp" line="201"/>
+        <location filename="ITranslator.cpp" line="207"/>
         <source>日志记录器初始化完成</source>
         <translation>Logger initialized</translation>
     </message>
     <message>
-        <location filename="ITranslator.cpp" line="224"/>
-        <location filename="ITranslator.cpp" line="248"/>
+        <location filename="ITranslator.cpp" line="230"/>
+        <location filename="ITranslator.cpp" line="254"/>
         <source>无效的基类名称: %1</source>
         <translation>Invalid base class name: %1</translation>
     </message>

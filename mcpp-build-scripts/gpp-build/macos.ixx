@@ -45,6 +45,8 @@ int configure(std::string_view member) {
         mcpp::link_flag((ela / "libElaWidgetTools.dylib").generic_string().c_str());
     }
     if (!core) {
+        // 应用自己的可执行文件为打包时修改 dylib 引用预留空间。
+        mcpp::link_flag("-Wl,-headerpad_max_install_names");
         // Darwin 链接器会重新搜索归档以满足新出现的引用，无需把所有库强制装入。
         mcpp::rerun_if_changed_glob((dependencies / "lib/*.a").generic_string().c_str());
         std::vector<fs::path> libraries;

@@ -164,7 +164,11 @@ def deploy_libraries(directory, search_roots):
     """递归收集非系统 dylib，并把引用改成相对当前文件的路径。"""
     library_directory = directory / "lib"
     library_directory.mkdir(exist_ok=True)
-    pending = [path for path in directory.rglob("*") if macho(path)]
+    python_directory = directory / "BaseConfig/Python"
+    # python-build-standalone 自身已经可重定位，保留它内部的 @rpath 和库布局。
+    # 这些扩展未必预留了扩展 Mach-O 载入命令的空间，不能统一改成更长的 @loader_path。
+    pending = [path for path in directory.rglob("*")
+               if not path.is_relative_to(python_directory) and macho(path)]
     visited = set()
     while pending:
         binary = pending.pop()
@@ -176,13 +180,11 @@ def deploy_libraries(directory, search_roots):
             dependency = line.strip().split(" (", 1)[0]
             if dependency.startswith(("/System/", "/usr/lib/")):
                 continue
-            python_directory = directory / "BaseConfig/Python"
-            executable_directory = python_directory / "bin" if binary.is_relative_to(python_directory) else directory
             candidate = Path(dependency.replace("@loader_path", str(binary.parent))
-                             .replace("@executable_path", str(executable_directory)))
+                             .replace("@executable_path", str(directory)))
             if not candidate.exists():
                 relative = dependency.removeprefix("@rpath/")
-                candidates = [base / relative for base in [library_directory, *search_roots]]
+                candidates = [base / relative for base in [python_directory / "lib", library_directory, *search_roots]]
                 candidate = next((path for path in candidates if path.exists()), None)
                 if candidate is None:
                     raise FileNotFoundError(f"{binary}: cannot resolve {dependency}")
@@ -206,6 +208,10 @@ def deploy_libraries(directory, search_roots):
             run(["install_name_tool", "-change", dependency, relative, binary])
         # 修改 Mach-O 后原签名失效；便携版使用本地 ad-hoc 签名。
         run(["codesign", "--force", "--sign", "-", binary])
+    # Python 保留原载入命令，只统一签名；它的解释器和扩展继续使用随包提供的私有库。
+    for binary in python_directory.rglob("*"):
+        if macho(binary):
+            run(["codesign", "--force", "--sign", "-", binary])
 
 
 def stage_package(qt, python_root, dependencies, ela, archive_library):

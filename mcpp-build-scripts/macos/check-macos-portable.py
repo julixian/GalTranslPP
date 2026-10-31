@@ -56,7 +56,7 @@ def main():
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("PYTHON", "DYLD_", "QT_"))}
         record("Python 标准库、动态扩展和中文路径", [python, "-I", "-c", '''
-import sys, ssl, sqlite3, ctypes, json, lzma, bz2, zlib, pathlib, importlib.metadata
+import sys, ssl, sqlite3, ctypes, json, lzma, bz2, zlib, pathlib, importlib.metadata, _tkinter
 assert sys.version_info[:2] == (3, 12)
 assert pathlib.Path(sys.prefix).resolve() == pathlib.Path(sys.executable).resolve().parents[1]
 p = pathlib.Path('中文 文件.json')

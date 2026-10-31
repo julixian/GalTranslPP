@@ -17,6 +17,11 @@ export NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
+#if defined(_LIBCPP_VERSION)
+// libc++ 的 std 模块不导出全局 size_t；在项目命名空间中提供标准类型，保留现有声明。
+using std::size_t;
+#endif
+
 #ifdef _WIN32
 inline constexpr auto defaultPythonEnvPath = "BaseConfig/Python-3.12.10-embed-amd64";
 #elif defined(__APPLE__)

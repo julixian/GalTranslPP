@@ -41,6 +41,14 @@ jobs:
           set -o pipefail
           mkdir -p target/macos-logs
           python -u mcpp-build-scripts/macos/build-macos.py --prepare-only 2>&1 | tee target/macos-logs/prepare.log
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.mcpp
+            ~/.cache/vcpkg/archives
+            target/macos-tools
+          key: ${{ steps.cache.outputs.cache-primary-key }}
       - name: Compile and package application
         run: |
           set -o pipefail
@@ -73,11 +81,3 @@ jobs:
             target/macos-logs/**
             vcpkg_installed/**/vcpkg/issue_body.md
           if-no-files-found: warn
-      - uses: actions/cache/save@v4
-        if: always() && steps.cache.outputs.cache-hit != 'true'
-        with:
-          path: |
-            ~/.mcpp
-            ~/.cache/vcpkg/archives
-            target/macos-tools
-          key: ${{ steps.cache.outputs.cache-primary-key }}

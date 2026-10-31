@@ -30,7 +30,7 @@ jobs:
             ~/.mcpp
             ~/.cache/vcpkg/archives
             target/macos-tools
-          key: macos-arm64-${{ hashFiles('mcpp-build-scripts/macos/build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-${{ github.run_id }}
+          key: macos-arm64-${{ hashFiles('mcpp-build-scripts/macos/build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}
           restore-keys: |
             macos-arm64-${{ hashFiles('mcpp-build-scripts/macos/build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-
             macos-arm64-

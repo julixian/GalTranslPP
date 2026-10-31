@@ -323,7 +323,11 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                     try {
                         ordered_json data = std::move(orgInputJsonMap.at(relJsonPath));
                         std::vector<ordered_json> parts = splitImplFunc(std::move(data), m_splitFileNum);
+#ifdef _WIN32
                         const std::wstring relStem = relJsonPath.parent_path() / relJsonPath.stem();
+#elif defined(__APPLE__)
+                        const std::wstring relStem = ascii2Wide((relJsonPath.parent_path() / relJsonPath.stem()).native());
+#endif
                         for (auto [index, part] : parts | std::views::enumerate) {
                             const fs::path relPartPath = std::format(L"{}_part_{}{}",
                                 relStem, index, relJsonPath.extension().wstring());

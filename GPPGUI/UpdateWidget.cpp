@@ -19,6 +19,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
         "1. 我提示词更新比版本更新频繁的多，想要我自己用的最新版提示词可以自己去 github 仓库中下载",
+        "2. [CLI] 新增 TUI 配置预览，可分页查看 Api、字典、插件、Agent 和提示词；支持纯文本预览、跳过确认及仅预览模式。"
+        "支持导入 ProblemOverview.json/toml，并提示问题清单修改后尚未导入的情况",
+        "3. 姓名翻译、字典生成的系统提示词支持占位符替换。",
     };
 
     mainLayout->addWidget(updateTitle);

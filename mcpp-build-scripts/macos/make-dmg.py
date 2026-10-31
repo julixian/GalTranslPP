@@ -60,6 +60,9 @@ def main():
             })
             print(name, "PASS" if result.returncode == 0 else "FAIL", flush=True)
             print(result.stdout + result.stderr, flush=True)
+        report["release_ready"] = all(item["passed"] for item in report["signature_assessments"])
+        if not report["signature_assessments"][0]["passed"]:
+            raise RuntimeError("应用包签名校验失败，停止生成 DMG；需要先修正应用包布局并重新签名。")
         with tempfile.TemporaryDirectory(prefix="gpp-dmg-") as temporary:
             temporary = Path(temporary)
             staging = temporary / "image"

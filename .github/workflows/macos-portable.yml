@@ -106,14 +106,16 @@ jobs:
           run-id: ${{ inputs.source_run }}
           github-token: ${{ github.token }}
           path: target/macos-source
+      - name: Unpack application
+        run: |
+          mkdir -p Release target/macos-logs
+          tar -xzf target/macos-source/Release/GalTranslPP-macos-arm64.tar.gz -C Release
+      - name: Test compatible BabelDOC installation
+        run: python -u mcpp-build-scripts/macos/check-macos-portable.py --python-root Release/GalTranslPP-macos-arm64/GalTranslPP.app/Contents/MacOS/BaseConfig/Python --optional-dependencies babeldoc
       - name: Create and test DMG
         run: |
           set -o pipefail
-          mkdir -p Release target/macos-logs
-          tar -xzf target/macos-source/Release/GalTranslPP-macos-arm64.tar.gz -C Release
           python -u mcpp-build-scripts/macos/make-dmg.py Release/GalTranslPP-macos-arm64 --check 2>&1 | tee target/macos-logs/dmg.log
-      - name: Test compatible BabelDOC installation
-        run: python -u mcpp-build-scripts/macos/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies babeldoc
       - uses: actions/upload-artifact@v4
         if: always()
         with:

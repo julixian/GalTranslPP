@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module NormalJsonTranslator;
 
@@ -149,16 +146,12 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
         auto readAllPotentialPartFileCache = [&](const std::wstring& cacheSpec, const fs::path& specParentDir,
             const std::optional<fs::path>& additionalCachePath = std::nullopt)
             {
+                const fs::path nativeSpec(cacheSpec);
                 for (const auto& entry : fs::directory_iterator(specParentDir)) {
                     if (!entry.is_regular_file()) {
                         continue;
                     }
-                    if (
-#ifdef _WIN32
-                        PathMatchSpecW(entry.path().filename().native().c_str(), cacheSpec.c_str())
-#endif
-                        )
-                    {
+                    if (matchFileSpec(entry.path().filename(), nativeSpec.native())) {
                         if (m_splitFileEnabled) {
                             const int diff = calculateCachePartIndexDiff(relInputPath.wstring(), entry.path().wstring());
                             if (std::abs(diff) > m_cacheSearchDistance) {
@@ -342,9 +335,16 @@ void NormalJsonTranslator::processFile(const fs::path& relInputPath, int threadI
             }();
 
         Sentence* pLastSentence = nullptr;
+#if defined(__cpp_lib_ranges_chunk)
         for (auto [batchIndex, batchView] : toTranslate
             | std::views::chunk(m_batchSize) | std::views::enumerate)
         {
+#else
+        // libc++ 尚未提供 chunk_view 时，用 span 保留同样的批次范围和编号。
+        for (size_t batchIndex = 0, offset = 0; offset < toTranslate.size(); ++batchIndex, offset += m_batchSize) {
+            const auto batchView = std::span(toTranslate).subspan(offset,
+                std::min<size_t>(m_batchSize, toTranslate.size() - offset));
+#endif
             if (!rollingContext.empty() && pLastSentence) {
                 if (batchView.front()->index - pLastSentence->index > m_batchSize) {
                     rollingContext.clear();

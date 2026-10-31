@@ -4,6 +4,15 @@ module;
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <Shlwapi.h>
+#elif defined(__APPLE__)
+#include <errno.h>
+#include <fnmatch.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <crt_externs.h>
 #endif
 
 #define BIT7Z_AUTO_FORMAT
@@ -111,6 +120,17 @@ int compareNatural(std::u16string_view lhs, std::u16string_view rhs) noexcept
     return compareNaturalImpl(lhs, rhs);
 }
 
+bool matchFileSpec(const fs::path& path, const fs::path::string_type& spec)
+{
+#ifdef _WIN32
+    return PathMatchSpecW(path.c_str(), spec.c_str());
+#elif defined(__APPLE__)
+    // 与 Windows 一样忽略大小写，反斜杠按普通字符处理。
+    return fnmatch(spec.c_str(), path.c_str(), FNM_CASEFOLD | FNM_NOESCAPE) == 0;
+#endif
+}
+
+
 #ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),
@@ -129,6 +149,20 @@ std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
     std::wstring wide(len, L'\0');
     MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         wide.data(), len);
+    return wide;
+}
+#elif defined(__APPLE__)
+std::string wide2Ascii(std::wstring_view wide) {
+    // macOS 的 wchar_t 为 UTF-32，与 Windows 的 UTF-16 分开处理。
+    std::string ascii;
+    ascii.reserve(wide.length() * 3);
+    utf8::utf32to8(wide.begin(), wide.end(), std::back_inserter(ascii));
+    return ascii;
+}
+std::wstring ascii2Wide(std::string_view ascii) {
+    std::wstring wide;
+    wide.reserve(ascii.length());
+    utf8::utf8to32(ascii.begin(), ascii.end(), std::back_inserter(wide));
     return wide;
 }
 #endif
@@ -990,6 +1024,18 @@ bool executeCommand(const std::wstring& program, const std::wstring& args, bool 
     CloseHandle(pi.hThread);
 
     return true;
+#elif defined(__APPLE__)
+    // 与 Windows 命令行接口保持一致；程序路径单独引用，空格和单引号不会改变命令。
+    const std::string command = "'" + replaceStr(wide2Ascii(program), "'", "'\\''") + "' " + wide2Ascii(args);
+    char* arguments[] = {(char*)"/bin/sh", (char*)"-c", (char*)command.c_str(), nullptr};
+    pid_t process = 0;
+    if (posix_spawn(&process, "/bin/sh", nullptr, nullptr, arguments, *_NSGetEnviron())) return false;
+    int status = 0;
+    while (waitpid(process, &status, 0) < 0) {
+        if (errno != EINTR) return false;
+    }
+    if (timeDelayAfterCommand > 0) std::this_thread::sleep_for(std::chrono::seconds(timeDelayAfterCommand));
+    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
 #endif
 }
 
@@ -1006,6 +1052,9 @@ int getConsoleWidth() {
         return csbi.srWindow.Right - csbi.srWindow.Left + 1;
     }
     return 80; // 获取失败，返回默认值
+#elif defined(__APPLE__)
+    winsize size{};
+    return ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == 0 && size.ws_col ? size.ws_col : 80;
 #endif
 }
 
@@ -1024,8 +1073,15 @@ bool isSameExtension(const fs::path& filePath, std::wstring_view ext) {
 
 
 
+// bit7z 在 macOS 使用 7-Zip 的原生共享库，文件名仍为 7z.so。
+#ifdef _WIN32
+constexpr auto archiveLibrary = "7z.dll";
+#elif defined(__APPLE__)
+constexpr auto archiveLibrary = "./7z.so";
+#endif
+
 void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ archiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extract(wide2Ascii(zipPath), wide2Ascii(outputDir));
@@ -1033,7 +1089,7 @@ void extractZip(const fs::path& zipPath, const fs::path& outputDir) {
 
 void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, std::string_view fileName) {
     bool extracted = false;
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ archiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -1051,7 +1107,7 @@ void extractFileFromZip(const fs::path& zipPath, const fs::path& outputDir, std:
 
 void extractFilesFromZip(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& fileNames) {
     size_t restFileCount = fileNames.size();
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ archiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -1068,7 +1124,7 @@ void extractFilesFromZip(const fs::path& zipPath, const fs::path& outputDir, con
 }
 
 void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& includePrefixes) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ archiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -1087,7 +1143,7 @@ void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const
 }
 
 void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ archiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -1189,8 +1245,22 @@ void saveTokenizeCache
 
 std::string currentTimestampString() {
     const auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+#if defined(__cpp_lib_chrono) && __cpp_lib_chrono >= 201907L
     const std::chrono::zoned_time localTime{ std::chrono::current_zone(), now };
     return std::format("{:%Y-%m-%dT%H:%M:%S%Ez}", localTime);
+#elif defined(__APPLE__)
+    // libc++ 尚未实现时区数据库时，由系统提供当地时间和 UTC 偏移。
+    const auto time = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime{};
+    localtime_r(&time, &localTime);
+    char text[32]{};
+    std::strftime(text, sizeof(text), "%Y-%m-%dT%H:%M:%S%z", &localTime);
+    std::string result(text);
+    if (result.size() == 24) {
+        result.insert(result.size() - 2, ":");
+    }
+    return result;
+#endif
 }
 
 uint64_t calculateFileCRC64(const fs::path& filePath) {

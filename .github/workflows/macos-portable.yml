@@ -1,0 +1,83 @@
+name: macOS libc++ portable
+
+on:
+  push:
+    branches: [codex/macos-libcxx]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-portable-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: |
+            ~/.mcpp
+            ~/.cache/vcpkg/archives
+            target/macos-tools
+          key: macos-arm64-${{ hashFiles('mcpp-build-scripts/macos/build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-${{ github.run_id }}
+          restore-keys: |
+            macos-arm64-${{ hashFiles('mcpp-build-scripts/macos/build-macos.toml', 'vcpkg.json', 'vcpkg-scripts/ports/**') }}-
+            macos-arm64-
+      - name: Prepare SDK and native dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          mkdir -p target/macos-logs
+          python -u mcpp-build-scripts/macos/build-macos.py --prepare-only 2>&1 | tee target/macos-logs/prepare.log
+      - name: Compile and package application
+        run: |
+          set -o pipefail
+          python -u mcpp-build-scripts/macos/build-macos.py --build-only 2>&1 | tee target/macos-logs/build.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macOS-native-build-logs
+          path: |
+            target/macos-logs/**
+            target/**/resolution.json
+            target/**/build.ninja
+          if-no-files-found: warn
+      - name: Test portable Python and application
+        run: python mcpp-build-scripts/macos/check-macos-portable.py Release/GalTranslPP-macos-arm64 --optional-dependencies
+      - name: Test Python independently when build fails
+        if: failure()
+        run: |
+          if [ -x target/macos-tools/python/bin/python3 ]; then
+            python mcpp-build-scripts/macos/check-macos-portable.py --python-root target/macos-tools/python --optional-dependencies
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GalTranslPP-macos-arm64
+          path: |
+            Release/*.tar.gz
+            Release/*report*.json
+            Release/*.png
+            target/macos-logs/**
+            vcpkg_installed/**/vcpkg/issue_body.md
+          if-no-files-found: warn
+      - uses: actions/cache/save@v4
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.mcpp
+            ~/.cache/vcpkg/archives
+            target/macos-tools
+          key: ${{ steps.cache.outputs.cache-primary-key }}

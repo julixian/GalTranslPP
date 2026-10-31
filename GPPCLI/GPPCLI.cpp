@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
                 runtimeStarted = true;
                 try {
                     const auto environment =
-                        ascii2Wide(toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64"));
+                        ascii2Wide(toml::find_or(globalConfig, "pythonEnvPath", defaultPythonEnvPath));
                     if (!startUpPythonEnv(environment, release)) {
                         spdlog::warn(
                             gppTr("GPPCLI.GPPCLI", "未设置 Python 环境，将无法使用需要 Python 环境的模块").toStdString());

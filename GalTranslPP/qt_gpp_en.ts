@@ -94,7 +94,7 @@
 <context>
     <name>ApiTool.makeApiTestPayload</name>
     <message>
-        <location filename="ApiTool.cpp" line="268"/>
+        <location filename="ApiTool.cpp" line="270"/>
         <source>请用中文完整回复一句话：GPP Api 测试成功。</source>
         <translation>Reply in Chinese: GPP API test succeeded.</translation>
     </message>
@@ -102,7 +102,8 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="583"/>
+        <location filename="ApiTool.cpp" line="606"/>
+        <location filename="ApiTool.cpp" line="622"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -118,7 +119,7 @@
 <context>
     <name>ApiTool.sendApiHttpRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="654"/>
+        <location filename="ApiTool.cpp" line="693"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
@@ -411,13 +412,13 @@
 <context>
     <name>GptDictionary.checkDictUse</name>
     <message>
-        <location filename="Dictionary.cpp" line="220"/>
+        <location filename="Dictionary.cpp" line="229"/>
         <source>GPT字典 `%1`-&gt;`%2` 未使用，但使用了 `%3`-&gt;`%4` 这一包含性字典</source>
         <translation>GPT dictionary `%1`-&gt;`%2` was not used, but containing dictionary `%3`-&gt;`%4` was used</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="233"/>
-        <location filename="Dictionary.cpp" line="271"/>
+        <location filename="Dictionary.cpp" line="242"/>
+        <location filename="Dictionary.cpp" line="280"/>
         <source>GPT字典 `%1`-&gt;`%2` 未使用</source>
         <translation>GPT dictionary `%1`-&gt;`%2` was not used</translation>
     </message>
@@ -755,22 +756,22 @@ Error: %2</translation>
 <context>
     <name>NormalDictionary.loadFromFile</name>
     <message>
-        <location filename="Dictionary.cpp" line="285"/>
+        <location filename="Dictionary.cpp" line="294"/>
         <source>字典文件 [%1] 不存在</source>
         <translation>Dictionary file [%1] does not exist</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="317"/>
+        <location filename="Dictionary.cpp" line="326"/>
         <source>Normal 字典文件 [%1] 正则表达式 `%2` 编译失败</source>
         <translation>Normal dictionary file [%1] regex `%2` compile failed</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="351"/>
+        <location filename="Dictionary.cpp" line="360"/>
         <source>Normal 字典文件 [%1] 解析错误: %2</source>
         <translation>Normal dictionary file [%1] parse error: %2</translation>
     </message>
     <message>
-        <location filename="Dictionary.cpp" line="357"/>
+        <location filename="Dictionary.cpp" line="366"/>
         <source>已加载 Normal 字典文件 [%1], 共 %2 个词条</source>
         <translation>Loaded Normal dictionary file [%1], %2 entries total</translation>
     </message>
@@ -1070,33 +1071,33 @@ Problem overview:
 <context>
     <name>NormalJsonTranslator.processFile</name>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="24"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="21"/>
         <source>处理文件</source>
         <translation>Processing file</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="27"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="24"/>
         <source>[线程 %1] 开始处理文件: %2</source>
         <translation>[Thread %1] start processing file: %2</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="74"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="71"/>
         <source>[线程 %1] [文件 %2] 输入数据处理失败: %3</source>
         <translation>[Thread %1] [File %2] input processing failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="137"/>
-        <location filename="NormalJsonTranslator.File.cpp" line="224"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="134"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="217"/>
         <source>[线程 %1] 缓存文件 [%2] 解析失败: %3</source>
         <translation>[Thread %1] cache file [%2] parse failed: %3</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="294"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="287"/>
         <source>[线程 %1] [文件 %2] 共 %3 句，命中缓存/跳过 %4 句，需翻译 %5 句</source>
         <translation>[Thread %1] [File %2] %3 sentences, %4 cache/skip hits, %5 to translate</translation>
     </message>
     <message>
-        <location filename="NormalJsonTranslator.File.cpp" line="310"/>
+        <location filename="NormalJsonTranslator.File.cpp" line="303"/>
         <source>[线程 %1] [文件 %2] 有 %3 句未命中缓存，这些句子是: %4</source>
         <translation>[Thread %1] [File %2] %3 sentences missed cache: %4</translation>
     </message>
@@ -1596,37 +1597,37 @@ Tool calls:
 <context>
     <name>ProblemOverview</name>
     <message>
-        <location filename="ProblemOverview.cpp" line="44"/>
+        <location filename="ProblemOverview.cpp" line="49"/>
         <source>找不到问题概览文件 [%1]</source>
         <translation>Problem overview file not found: [%1]</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="55"/>
+        <location filename="ProblemOverview.cpp" line="60"/>
         <source>未知的问题概览文件类型</source>
         <translation>Unknown problem overview file type</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="67"/>
+        <location filename="ProblemOverview.cpp" line="72"/>
         <source>[文件 %1] 不是有效的缓存相对路径，跳过导入</source>
         <translation>[File %1] Invalid relative cache path; skipped</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="73"/>
+        <location filename="ProblemOverview.cpp" line="78"/>
         <source>[文件 %1] 未在 cache 中找到，跳过导入</source>
         <translation>[File %1] Not found in the cache; skipped</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="87"/>
+        <location filename="ProblemOverview.cpp" line="92"/>
         <source>[文件 %1] 无法解析，跳过导入</source>
         <translation>[File %1] Cannot parse; skipped</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="97"/>
+        <location filename="ProblemOverview.cpp" line="102"/>
         <source>[文件 %1] 句子(index %2) 未在 cache 中找到，跳过导入</source>
         <translation>[File %1] Sentence (index %2) not found in the cache; skipped</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="105"/>
+        <location filename="ProblemOverview.cpp" line="110"/>
         <source>[文件 %1] 句子(index %2) 与 cache 中原文不匹配，可能产生意外结果，
 概览原文: %3
 缓存原文: %4</source>
@@ -1635,12 +1636,12 @@ Overview source: %3
 Cache source: %4</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="126"/>
+        <location filename="ProblemOverview.cpp" line="131"/>
         <source>[文件 %1] 无法写入，跳过导入</source>
         <translation>[File %1] Cannot write; skipped</translation>
     </message>
     <message>
-        <location filename="ProblemOverview.cpp" line="134"/>
+        <location filename="ProblemOverview.cpp" line="139"/>
         <source>成功导入 %1 个句子至 transl_cache</source>
         <translation>Imported %1 sentences into transl_cache</translation>
     </message>
@@ -2097,7 +2098,7 @@ Cache source: %4</translation>
 <context>
     <name>chooseCachePart</name>
     <message>
-        <location filename="Tool.cpp" line="854"/>
+        <location filename="Tool.cpp" line="888"/>
         <source>无效的 CachePart 名称: %1</source>
         <translation>Invalid CachePart Name %1</translation>
     </message>
@@ -2105,7 +2106,7 @@ Cache source: %4</translation>
 <context>
     <name>chooseStringRef</name>
     <message>
-        <location filename="Tool.cpp" line="837"/>
+        <location filename="Tool.cpp" line="871"/>
         <source>无法获取字符串的条件目标 %1</source>
         <translation>Invalid string target %1</translation>
     </message>
@@ -2131,17 +2132,17 @@ Cache source: %4</translation>
 <context>
     <name>countGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="302"/>
+        <location filename="Tool.cpp" line="336"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="311"/>
+        <location filename="Tool.cpp" line="345"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="317"/>
+        <location filename="Tool.cpp" line="351"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2204,7 +2205,7 @@ Cache source: %4</translation>
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="397"/>
+        <location filename="Tool.ixx" line="408"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2212,12 +2213,12 @@ Cache source: %4</translation>
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1159"/>
+        <location filename="Tool.cpp" line="1215"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1165"/>
+        <location filename="Tool.cpp" line="1221"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2225,7 +2226,7 @@ Cache source: %4</translation>
 <context>
     <name>parseApiProtocol</name>
     <message>
-        <location filename="ApiTool.cpp" line="79"/>
+        <location filename="ApiTool.cpp" line="81"/>
         <source>无效的 Api 协议: %1 不在 {openai, claude, gemini, openaires} 中</source>
         <translation>Invalid Api protocol: %1 is not in {openai, claude, gemini, openaires}</translation>
     </message>
@@ -2241,12 +2242,12 @@ Cache source: %4</translation>
 <context>
     <name>parsePluginToml</name>
     <message>
-        <location filename="Tool.ixx" line="271"/>
+        <location filename="Tool.ixx" line="282"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="289"/>
+        <location filename="Tool.ixx" line="300"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2254,12 +2255,12 @@ Cache source: %4</translation>
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1177"/>
+        <location filename="Tool.cpp" line="1233"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1182"/>
+        <location filename="Tool.cpp" line="1238"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2267,7 +2268,7 @@ Cache source: %4</translation>
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="681"/>
+        <location filename="ApiTool.cpp" line="720"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>
@@ -2275,17 +2276,17 @@ Cache source: %4</translation>
 <context>
     <name>splitIntoGraphemes</name>
     <message>
-        <location filename="Tool.cpp" line="253"/>
+        <location filename="Tool.cpp" line="287"/>
         <source>打开 UTF-8 文本失败: %1</source>
         <translation>Failed to open UTF-8 text: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="263"/>
+        <location filename="Tool.cpp" line="297"/>
         <source>创建字符边界迭代器失败: %1</source>
         <translation>Failed to create character boundary iterator: %1</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="270"/>
+        <location filename="Tool.cpp" line="304"/>
         <source>设置字符边界迭代文本失败: %1</source>
         <translation>Failed to set character boundary iterator text: %1</translation>
     </message>
@@ -2301,7 +2302,7 @@ Cache source: %4</translation>
 <context>
     <name>splitTsvLine</name>
     <message>
-        <location filename="Tool.cpp" line="187"/>
+        <location filename="Tool.cpp" line="221"/>
         <source>内部错误: TSV 行切分不允许使用空分隔符</source>
         <translation>TSV split cannot use empty delimiter</translation>
     </message>
@@ -2309,7 +2310,7 @@ Cache source: %4</translation>
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="357"/>
+        <location filename="Tool.ixx" line="368"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>

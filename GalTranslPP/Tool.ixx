@@ -50,6 +50,14 @@ std::string wide2Ascii(T&& path, UINT codePage = CP_UTF8, LPBOOL usedDefaultChar
     return wide2Ascii(path.native(), codePage, usedDefaultChar);
 }
 std::wstring ascii2Wide(std::string_view ascii, UINT codePage = CP_UTF8);
+#elif defined(__APPLE__)
+std::string wide2Ascii(std::wstring_view wide);
+template<typename T>
+    requires(std::is_same_v<std::remove_cvref_t<T>, fs::path>)
+std::string wide2Ascii(T&& path) {
+    return path.native();
+}
+std::wstring ascii2Wide(std::string_view ascii);
 #endif
 
 template <typename CharT, typename Traits, typename Alloc>
@@ -99,10 +107,13 @@ auto str2Lower(T&& str) {
 std::wstring str2Lower(const fs::path& path) {
 #ifdef _WIN32
     return str2Lower(path.native());
-#else
-    return str2Lower(path.wstring());
+#elif defined(__APPLE__)
+    return str2Lower(ascii2Wide(path.native()));
 #endif
 }
+
+// 按文件通配符匹配路径；spec 使用平台原生字符类型。
+bool matchFileSpec(const fs::path& path, const fs::path::string_type& spec);
 
 std::optional<int> str2Int(std::string_view str);
 

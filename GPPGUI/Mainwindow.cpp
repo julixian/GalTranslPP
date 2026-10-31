@@ -1,3 +1,4 @@
+#include "GppPlatform.h"
 #include "Mainwindow.h"
 
 #include <QHBoxLayout>
@@ -708,13 +709,13 @@ void MainWindow::onCloseWindowClicked(bool restart)
     if (m_updateChecker->shouldStartUpdater()) {
         QStringList arguments;
         arguments << "--pid" << QString::number(QApplication::applicationPid());
-        arguments << "--source" << QApplication::applicationDirPath() + "/GUICORE.7z";
+        arguments << "--source" << QApplication::applicationDirPath() + "/" + gppUpdatePackage;
         arguments << "--target" << QApplication::applicationDirPath();
         if (restart) {
             arguments << "--restart" << QApplication::applicationFilePath();
         }
         QProcess updater;
-        updater.setProgram(QApplication::applicationDirPath() + "/Updater.exe");
+        updater.setProgram(QApplication::applicationDirPath() + "/" + gppUpdaterExecutable);
         updater.setArguments(arguments);
         updater.setWorkingDirectory(QApplication::applicationDirPath());
 #ifdef Q_OS_WIN

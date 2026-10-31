@@ -2,10 +2,6 @@ module;
 
 #include "GPPMacros.hpp"
 
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
-
 module AgentToolCommon;
 
 import Tool;
@@ -56,6 +52,7 @@ json runAgentCommonListFilesTool(
     const json& arguments
 ) {
     const std::wstring spec = str2Lower(ascii2Wide(arguments.value("spec", "")));
+    const fs::path nativeSpec(spec);
     const int start = std::max(0, arguments.value("start", 0));
     const int limit = sanitizeAgentCommonToolLimit(arguments.value("limit", searchResultLimit), searchResultLimit);
     json files = json::array();
@@ -63,11 +60,7 @@ json runAgentCommonListFilesTool(
     int matchCount = 0;
     for (const fs::path& relFile : relFiles) {
         if (!spec.empty()) {
-            if (!str2Lower(relFile.wstring()).contains(spec) &&
-#ifdef _WIN32
-                !PathMatchSpecW(relFile.c_str(), spec.c_str())
-#endif
-                )
+            if (!str2Lower(relFile).contains(spec) && !matchFileSpec(relFile, nativeSpec.native()))
             {
                 continue;
             }

@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <version>
+
 #ifdef PYBIND11_HEADERS
 #include "pybind11_headers.hpp"
 #endif

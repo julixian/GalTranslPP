@@ -444,7 +444,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathLayout->addStretch();
     ElaLineEdit* pythonEnvPathLineEdit = new ElaLineEdit(pythonEnvPathArea);
     pythonEnvPathLineEdit->setFixedWidth(400);
-    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64")));
+    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", defaultPythonEnvPath)));
     pythonEnvPathLayout->addWidget(pythonEnvPathLineEdit);
     ElaToolButton* pythonEnvPathButton = new ElaToolButton(pythonEnvPathArea);
     pythonEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -453,6 +453,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathLayout->addWidget(pythonEnvPathButton);
     connect(pythonEnvPathButton, &ElaToolButton::clicked, this, [=, this]()
         {
+#ifdef _WIN32
             const QString pyExePath = QFileDialog::getOpenFileName(this->window(), tr("选择Python.exe"),
                 pythonEnvPathLineEdit->text(), "Python.exe (python.exe)");
             if (!pyExePath.isEmpty()) {
@@ -469,6 +470,11 @@ void AppSettingsPage::setupUi()
                 }
                 pythonEnvPathLineEdit->setText(QString::fromStdWString(newPythonEnvPath.wstring()));
             }
+#elif defined(__APPLE__)
+            const auto directory = QFileDialog::getExistingDirectory(this->window(), tr("Python环境路径"),
+                pythonEnvPathLineEdit->text());
+            if (!directory.isEmpty()) pythonEnvPathLineEdit->setText(directory);
+#endif
         });
     centerLayout->addWidget(pythonEnvPathArea);
 

@@ -1,4 +1,5 @@
-﻿#include <QCoreApplication>
+#include "../GPPGUI/GppPlatform.h"
+#include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QDir>
 #include <QProcess>
@@ -25,15 +26,7 @@ QString gppTr(const char* context, const char* source) {
 }
 
 void waitForProcessToExit(qint64 pid) {
-#ifdef Q_OS_WIN
-    const HANDLE hProcess = OpenProcess(SYNCHRONIZE, FALSE, (DWORD)pid);
-    if (hProcess != nullptr) {
-        WaitForSingleObject(hProcess, INFINITE);
-        CloseHandle(hProcess);
-    }
-#else
-
-#endif
+    gppWaitForProcess(pid);
 }
 
 #if __cpp_lib_string_view < 202403L
@@ -84,6 +77,16 @@ std::wstring ascii2Wide(std::string_view ascii, UINT codePage) {
     MultiByteToWideChar(codePage, 0, ascii.data(), (int)ascii.length(),
         wide.data(), len);
     return wide;
+}
+#endif
+
+#ifdef __APPLE__
+std::string wide2Ascii(const fs::path& path) { return path.native(); }
+std::string wide2Ascii(std::wstring_view text) {
+    return QString::fromWCharArray(text.data(), text.size()).toStdString();
+}
+std::wstring ascii2Wide(std::string_view text) {
+    return QString::fromUtf8(text.data(), text.size()).toStdWString();
 }
 #endif
 
@@ -170,7 +173,7 @@ int compareVersion(std::string_view latestVer, std::string_view currentVer)
 }
 
 void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& includePrefixes) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ std::string("./") + gppArchiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -189,7 +192,7 @@ void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const
 }
 
 void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes) {
-    const bit7z::Bit7zLibrary library{ "7z.dll" };
+    const bit7z::Bit7zLibrary library{ std::string("./") + gppArchiveLibrary };
     bit7z::BitFileExtractor extractor{ library, bit7z::BitFormat::Auto };
     extractor.setOverwriteMode(bit7z::OverwriteMode::Overwrite);
     extractor.extractIf(wide2Ascii(zipPath), wide2Ascii(outputDir), [&](const bit7z::BitArchiveItem& item)
@@ -267,11 +270,9 @@ int main(int argc, char* argv[])
     catch (...) { }
 
     if (pid == 0 || sourceZip.isEmpty() || targetDir.isEmpty()) {
-#ifdef Q_OS_WIN
-        MessageBoxW(nullptr, gppTr("Updater.Updater", "非法参数").toStdWString().c_str(),
-            gppTr("Updater.Updater", "GalTransl++ Updater").toStdWString().c_str(),
-            MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND);
-#endif
+        gppMessageBox(gppTr("Updater.Updater", "非法参数"),
+            gppTr("Updater.Updater", "GalTransl++ Updater"),
+            GppMessageBoxType::Error, true);
         return -1;
     }
 
@@ -300,43 +301,36 @@ int main(int argc, char* argv[])
             const int promptVersionCompare = compareVersion(PROMPTVERSION, orgPromptVersion);
             if (promptVersionCompare > 0) {
                 if (promptVersionCompare == 2) {
-#ifdef Q_OS_WIN
-                    MessageBoxW(nullptr, gppTr("Updater.Updater",
+                    gppMessageBox(gppTr("Updater.Updater",
                         "由于提示词解析方式发生不兼容变更，本次更新将强制覆盖原默认提示词。\n"
-                        "你可以先行备份，然后点击确定以继续更新。").toStdWString().c_str(),
-                        L"GalTransl++ Updater", MB_OK | MB_TOPMOST | MB_SETFOREGROUND);
-#endif
+                        "你可以先行备份，然后点击确定以继续更新。"),
+                        QStringLiteral("GalTransl++ Updater"), GppMessageBoxType::Information, true);
                     excludePreFixes.erase("BaseConfig/Prompt.toml");
                 }
                 else {
-#ifdef Q_OS_WIN
-                    const int ret = MessageBoxW(nullptr, gppTr("Updater.Updater",
-                        "检测到新版本的 Prompt，是否更新 Prompt (会覆盖当前的默认提示词)？").toStdWString().c_str(),
-                        L"GalTransl++ Updater", MB_YESNO | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND);
-                    if (ret == IDYES) {
+                    const bool ret = gppMessageBox(gppTr("Updater.Updater",
+                        "检测到新版本的 Prompt，是否更新 Prompt (会覆盖当前的默认提示词)？"),
+                        QStringLiteral("GalTransl++ Updater"), GppMessageBoxType::Question, true);
+                    if (ret) {
                         excludePreFixes.erase("BaseConfig/Prompt.toml");
                     }
-#endif
                 }
             }
             if (compareVersion(DICTVERSION, orgDictVersion) > 0) {
-#ifdef Q_OS_WIN
-                const int ret = MessageBoxW(nullptr, gppTr("Updater.Updater",
-                    "检测到新版本的 GPT 字典，是否更新字典（会覆盖当前的默认字典）？").toStdWString().c_str(),
-                    L"GalTransl++ Updater", MB_YESNO | MB_ICONQUESTION | MB_TOPMOST | MB_SETFOREGROUND);
-                if (ret == IDYES) {
+                const bool ret = gppMessageBox(gppTr("Updater.Updater",
+                    "检测到新版本的 GPT 字典，是否更新字典（会覆盖当前的默认字典）？"),
+                    QStringLiteral("GalTransl++ Updater"), GppMessageBoxType::Question, true);
+                if (ret) {
                     excludePreFixes.erase("BaseConfig/Dicts");
                 }
-#endif
             }
+#ifdef Q_OS_WIN
             if (compareVersion(ICUVERSION, orgIcuVersion) > 0) {
                 try {
                     const std::vector<std::string> orgVerStrVec = splitString(orgIcuVersion, '.');
                     const std::wstring orgVerStr = ascii2Wide(orgVerStrVec.at(0) + orgVerStrVec.at(1));
                     for (const auto& icuDll : { L"icudt", L"icuin", L"icuuc" }) {
-#ifdef Q_OS_WIN
                         const fs::path dllPath = std::wstring(L"../") + icuDll + orgVerStr + L".dll";
-#endif
                         if (fs::exists(dllPath)) {
                             fs::remove(dllPath);
                         }
@@ -345,13 +339,12 @@ int main(int argc, char* argv[])
                 catch(...) { }
             }
 
+#endif
             extractZipExclude(sourceZip.toStdWString(), targetDir.toStdWString(), excludePreFixes);
 
-#ifdef Q_OS_WIN
-            MessageBoxW(nullptr, gppTr("Updater.Updater",
-                "GalTransl++ 更新成功").toStdWString().c_str(),
-                L"GalTransl++ Updater", MB_OK | MB_TOPMOST | MB_SETFOREGROUND);
-#endif
+            gppMessageBox(gppTr("Updater.Updater",
+                "GalTransl++ 更新成功"),
+                QStringLiteral("GalTransl++ Updater"), GppMessageBoxType::Information, true);
             fs::remove(sourceZip.toStdWString());
             if (parser.isSet("restart")) {
                 QStringList args;
@@ -360,11 +353,9 @@ int main(int argc, char* argv[])
             }
         }
         catch (const std::exception& e) {
-#ifdef Q_OS_WIN
-            MessageBoxW(nullptr, gppTr("Updater.Updater",
-                "GalTransl++ 更新包解压失败。\n错误: %1").arg(e.what()).toStdWString().c_str(),
-                L"GalTransl++ Updater", MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND);
-#endif
+            gppMessageBox(gppTr("Updater.Updater",
+                "GalTransl++ 更新包解压失败。\n错误: %1").arg(e.what()),
+                QStringLiteral("GalTransl++ Updater"), GppMessageBoxType::Error, true);
             return -1;
         }
         return 0;
@@ -374,7 +365,11 @@ int main(int argc, char* argv[])
     // 主程序启动时路径
     try {
         extractZipInclude(sourceZip.toStdWString(), targetDir.toStdWString() + L"/new",
-            { "Updater_new.exe", "Qt6Core.dll", "7z.dll", "translations" });
+            { gppNewUpdaterExecutable, "Qt6Core.dll", gppArchiveLibrary, "lib", "translations" });
+#ifdef __APPLE__
+        fs::permissions(fs::path(targetDir.toStdString()) / "new" / gppNewUpdaterExecutable,
+            fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec, fs::perm_options::add);
+#endif
         QStringList arguments;
         arguments << "--newActionFlag" << QString::number(QCoreApplication::applicationPid());
         arguments << "--pid" << QString::number(QCoreApplication::applicationPid());
@@ -388,15 +383,13 @@ int main(int argc, char* argv[])
         if (parser.isSet("restart")) {
             arguments << "--restart" << parser.value("restart");
         }
-        QProcess::startDetached("new/Updater_new.exe", arguments, targetDir + "/new");
+        QProcess::startDetached(targetDir + "/new/" + gppNewUpdaterExecutable, arguments, targetDir + "/new");
     }
     catch (const std::exception& e) {
-#ifdef Q_OS_WIN
-        MessageBoxW(nullptr, gppTr("Updater.Updater", "提取 Updater_new.exe 失败。\n错误: %1")
-            .arg(e.what()).toStdWString().c_str(),
-            gppTr("Updater.Updater", "GalTransl++ Updater").toStdWString().c_str(),
-            MB_ICONERROR | MB_TOPMOST | MB_SETFOREGROUND);
-#endif
+        gppMessageBox(gppTr("Updater.Updater", "提取 Updater_new.exe 失败。\n错误: %1")
+            .arg(e.what()),
+            gppTr("Updater.Updater", "GalTransl++ Updater"),
+            GppMessageBoxType::Error, true);
         return -1;
     }
 

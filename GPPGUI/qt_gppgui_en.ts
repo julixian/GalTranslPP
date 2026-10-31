@@ -714,16 +714,17 @@ sk-...</translation>
     </message>
     <message>
         <location line="-1"/>
+        <location line="+33"/>
         <source>Python环境路径</source>
         <translation>Python Environment Path</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="-22"/>
         <source>浏览</source>
         <translation>Browse</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+5"/>
         <source>选择Python.exe</source>
         <translation>Select Python.exe</translation>
     </message>
@@ -2291,49 +2292,49 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+152"/>
+        <location filename="GPPGUI.cpp" line="+142"/>
         <source>Updater 更新错误</source>
         <translation>Updater update error</translation>
     </message>
     <message>
-        <location line="+59"/>
+        <location line="+55"/>
         <source>无法创建共享内存段，程序即将退出。</source>
         <translation>Unable to create the shared memory segment. The program will exit.</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+78"/>
-        <location line="+64"/>
+        <location line="+74"/>
+        <location line="+44"/>
         <source>错误</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location line="-65"/>
+        <location line="-45"/>
         <source>无法启动本地服务，程序即将退出。</source>
         <translation>Unable to start the local server. The program will exit.</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+20"/>
         <source>缓存删除错误</source>
         <translation>Cache deletion error</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+7"/>
         <source>JSON 错误</source>
         <translation>JSON error</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
         <source>TOML 错误</source>
         <translation>TOML error</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+6"/>
         <source>标准错误</source>
         <translation>Standard library error</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+5"/>
         <source>遇到了未知的错误，程序即将退出。</source>
         <translation>An unknown error occurred. The program will exit.</translation>
     </message>
@@ -2401,7 +2402,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+50"/>
+        <location filename="Mainwindow.cpp" line="+51"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -3946,33 +3947,33 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+37"/>
+        <location filename="ProjectSettingsPage.cpp" line="+38"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+276"/>
+        <location line="+274"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-244"/>
+        <location line="-243"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+24"/>
         <source>清理成功</source>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-55"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+55"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>

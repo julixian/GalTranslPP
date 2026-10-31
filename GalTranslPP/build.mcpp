@@ -4,6 +4,7 @@ import gpp.rules.qt;
 import gpp.build;
 
 int main() {
+    if (std::string_view(mcpp::target_os()) == "macos") return gpp::macos::configure("GalTranslPP");
     return gpp::run_build_script([] {
         gpp::win::configure_vcpkg();
         gpp::win::link_python_libraries();

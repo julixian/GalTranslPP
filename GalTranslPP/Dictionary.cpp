@@ -196,14 +196,23 @@ void GptDictionary::checkDictUse(Sentence* sentence, CachePart base, CachePart c
     const std::string& transView = chooseStringRef(sentence, check);
 
     std::vector<std::uint8_t> checkResults(m_entries.size(), 0); // 0: 原文不包含, 1: 原文包含且译文使用字典, 2: 原文包含但译文没有使用字典
+#if defined(__cpp_lib_ranges_as_const)
     for (auto [checkResult, entry] : std::views::zip(checkResults, m_entries | std::views::as_const)) {
+#else
+    // libc++ 尚未提供 as_const_view 时，直接使用只读容器。
+    for (auto [checkResult, entry] : std::views::zip(checkResults, std::as_const(m_entries))) {
+#endif
         if (!origText.contains(entry.org)) {
             continue;
         }
         checkResult = checkTransIncludeReplace(transView, entry.rep);
     }
 
+#if defined(__cpp_lib_ranges_as_const)
     for (auto [checkResult, entry] : std::views::zip(checkResults, m_entries | std::views::as_const)) {
+#else
+    for (auto [checkResult, entry] : std::views::zip(checkResults, std::as_const(m_entries))) {
+#endif
         // 如果原文中不包含这个词或译文中使用了对应的词，就跳过检查
         if (checkResult != 2) {
             continue;

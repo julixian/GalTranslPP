@@ -3,7 +3,6 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QButtonGroup>
-#include <QCollator>
 #include <QDateTime>
 #include <QPainter>
 #include <QScrollBar>
@@ -16,6 +15,10 @@
 #include "ElaToolTip.h"
 #include "ElaText.h"
 #include "ElaTheme.h"
+
+import Tool;
+
+using namespace gpp;
 
 namespace
 {
@@ -633,17 +636,16 @@ void TranslationWorkbenchPage::renderFiles()
 {
     m_fileModel->clear();
     QList<GuiRuntimeFileProgress> files = m_files.values();
-    QCollator collator;
-    collator.setNumericMode(true);
-    collator.setCaseSensitivity(Qt::CaseInsensitive);
     // 始终按文件名自然排序，避免文件完成时改变位置。
-    std::ranges::sort(files, [&](const auto& a, const auto& b)
+    std::ranges::sort(files, [](const auto& a, const auto& b)
         {
-            const int result = collator.compare(a.filename, b.filename);
+            const std::u16string_view left(a.filename);
+            const std::u16string_view right(b.filename);
+            const int result = compareNatural(left, right);
             if (result != 0) {
                 return result < 0;
             }
-            return QString::compare(a.filename, b.filename, Qt::CaseSensitive) < 0;
+            return left < right;
         });
     for (const auto& file : files) {
         QStandardItem* item = new QStandardItem(file.filename);

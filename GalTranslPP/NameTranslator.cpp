@@ -82,14 +82,17 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
 
         const std::string glossary = m_gptDictionary->generatePrompt(dummyPtrs, TransEngine::NameTrans);
 
-        std::string prompt = m_userPrompt;
-        replaceStrInplace(prompt, "[TargetLang]", m_targetLang);
-        replaceStrInplace(prompt, "[Glossary]", glossary.empty() ? "None" : glossary);
-        replaceStrInplace(prompt, "[Input]", inputBlock);
+        std::string systemPrompt = m_systemPrompt;
+        std::string userPrompt = m_userPrompt;
+        for (std::string* prompt : { &systemPrompt, &userPrompt }) {
+            replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
+            replaceStrInplace(*prompt, "[Glossary]", glossary.empty() ? "None" : glossary);
+            replaceStrInplace(*prompt, "[Input]", inputBlock);
+        }
 
         json messages = json::array({
-            {{"role", "system"}, {"content", m_systemPrompt}},
-            {{"role", "user"}, {"content", prompt}}
+            {{"role", "system"}, {"content", systemPrompt}},
+            {{"role", "user"}, {"content", userPrompt}}
             });
         appendApiPrefill(messages, "```TSV\n", m_enhanceJailbreak);
 

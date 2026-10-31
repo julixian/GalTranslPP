@@ -27,6 +27,12 @@
     <ClCompile Include="TerminalController.ixx">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="TerminalPreview.ixx">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TerminalPreview.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="GPPCLI.manifest">

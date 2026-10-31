@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module DictionaryGenerator;
 
@@ -38,11 +35,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
 {
 	std::ranges::sort(m_relJsonPaths, [](const fs::path& a, const fs::path& b)
 		{
-#ifdef _WIN32
-			return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-			return a < b;
-#endif
+			return compareNatural(a.native(), b.native()) < 0;
 		});
 	loadTokenizeCache(m_tokenizeCacheMap, m_tokenizeCachePath, m_logger);
 }
@@ -177,14 +170,17 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
         hint = "The real names in this list should always be added into glossary:\n" + hint;
     }
 
-    std::string prompt = m_userPrompt;
-    replaceStrInplace(prompt, "[TargetLang]", m_targetLang);
-    replaceStrInplace(prompt, "[Input]", text);
-    replaceStrInplace(prompt, "[Hint]", hint.empty() ? "None" : hint);
+    std::string systemPrompt = m_systemPrompt;
+    std::string userPrompt = m_userPrompt;
+    for (std::string* prompt : { &systemPrompt, &userPrompt }) {
+        replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
+        replaceStrInplace(*prompt, "[Input]", text);
+        replaceStrInplace(*prompt, "[Hint]", hint.empty() ? "None" : hint);
+    }
 
     json messages = json::array({
-        {{"role", "system"}, {"content", m_systemPrompt}},
-        {{"role", "user"}, {"content", prompt}}
+        {{"role", "system"}, {"content", systemPrompt}},
+        {{"role", "user"}, {"content", userPrompt}}
         });
     appendApiPrefill(messages, "```TSV\n", m_enhanceJailbreak);
 

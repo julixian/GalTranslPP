@@ -266,6 +266,10 @@
     <ClCompile Include="PDFTool.ixx" />
     <ClCompile Include="PDFTranslator.cpp" />
     <ClCompile Include="ProblemAnalyzer.cpp" />
+    <ClCompile Include="ProblemOverview.ixx" />
+    <ClCompile Include="ProblemOverview.cpp" />
+    <ClCompile Include="ProjectConfig.ixx" />
+    <ClCompile Include="ProjectConfig.cpp" />
     <ClCompile Include="PythonManager.cpp" />
     <ClCompile Include="PythonManager.ixx" />
     <ClCompile Include="NormalJsonTranslator.ixx" />

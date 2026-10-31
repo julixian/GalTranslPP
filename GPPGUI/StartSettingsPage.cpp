@@ -28,9 +28,9 @@
 #include "PDFCfgPage.h"
 #include "CustomFilePluginCfgPage.h"
 #include "TranslationWorkbenchPage.h"
-#include "ProblemOverviewTracker.h"
 
 import Tool;
+import ProblemOverview;
 
 using namespace gpp;
 

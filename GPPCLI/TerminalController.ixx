@@ -95,6 +95,7 @@ export
             if (m_flushThread.joinable()) {
                 m_flushThread.join();
             }
+            flush();
         }
 
     private:

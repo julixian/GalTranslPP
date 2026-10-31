@@ -15,9 +15,9 @@
 #include "GppInputDialog.h"
 #include "GppDoubleText.h"
 #include "GppRadioButton.h"
-#include "ProblemOverviewTracker.h"
 
 import Tool;
+import ProblemOverview;
 
 using namespace gpp;
 
@@ -212,97 +212,9 @@ void OtherSettingsPage::setupUi()
 				return;
 			}
 			try {
-				std::unordered_map<std::string, std::vector<json>> overviewFileMap;
-				std::vector<std::string> problems;
-				std::ifstream ifs;
-				std::ofstream ofs;
-				size_t importCount = 0;
-
-				{
-					json overviewData;
-					if (importOverviewPathQStr.endsWith(".json", Qt::CaseInsensitive)) {
-						overviewData = parseJson(fs::path(importOverviewPathQStr.toStdWString()));
-					}
-					else if (importOverviewPathQStr.endsWith(".toml", Qt::CaseInsensitive)) {
-						const auto tomlData = gpp::uparseToml(fs::path(importOverviewPathQStr.toStdWString()));
-						overviewData = toml2Json(tomlData.at("problemOverview"));
-					}
-					else {
-						throw std::runtime_error("未知的文件类型");
-					}
-					for (const auto& overviewItem : overviewData) {
-						overviewFileMap[overviewItem["filename"].get_ref<const std::string&>()].push_back(overviewItem);
-					}
-				}
-
-				for (const auto& [cacheFileName, overviewItems] : overviewFileMap) {
-					const fs::path cachePath = m_projectDir / transCacheDirName / ascii2Wide(cacheFileName);
-					if (!fs::exists(cachePath)) {
-						problems.push_back(tr("[文件 %1] 未在 cache 中找到，跳过导入")
-							.arg(QString::fromStdString(cacheFileName)).toStdString());
-						continue;
-					}
-
-					json cacheData;
-					std::unordered_map<int, std::reference_wrapper<json>> cacheIndexMap;
-
-					try {
-						cacheData = parseJson(cachePath, ifs);
-						for (auto& cacheItem : cacheData) {
-							cacheIndexMap.try_emplace(cacheItem["index"].get<int>(), cacheItem);
-						}
-					}
-					catch (...) {
-						problems.push_back(tr("[文件 %1] 无法解析，跳过导入")
-							.arg(QString::fromStdString(cacheFileName)).toStdString());
-						continue;
-					}
-					size_t fileImportCount = 0;
-					for (const auto& overviewItem : overviewItems) {
-						int overviewItemIndex = overviewItem["index"].get<int>();
-						auto it = cacheIndexMap.find(overviewItemIndex);
-						if (it == cacheIndexMap.end()) {
-							problems.push_back(tr("[文件 %1] 句子(index %2) 未在 cache 中找到，跳过导入")
-								.arg(QString::fromStdString(cacheFileName))
-								.arg(overviewItemIndex).toStdString());
-							continue;
-						}
-						auto& cacheItem = it->second.get();
-						const std::string& overviewItemOrigText = overviewItem["original_text"].get_ref<const std::string&>();
-						const std::string& cacheItemOrigText = cacheItem["original_text"].get_ref<const std::string&>();
-						if (overviewItemOrigText != cacheItemOrigText) {
-							problems.push_back(tr("[文件 %1] 句子(index %2) 与 cache 中原文不匹配，可能产生意外结果，\n概览原文: %3\n缓存原文: %4")
-								.arg(QString::fromStdString(cacheFileName))
-								.arg(overviewItemIndex)
-								.arg(QString::fromStdString(overviewItemOrigText))
-								.arg(QString::fromStdString(cacheItemOrigText)).toStdString());
-						}
-						cacheItem = overviewItem;
-						cacheItem.erase("filename");
-						++fileImportCount;
-					}
-					if (fileImportCount != 0) {
-						try {
-							atomicOutputFile(ofs, cachePath, cacheData.dump(2));
-						}
-						catch (...) {
-							problems.push_back(tr("[文件 %1] 无法写入，跳过导入")
-								.arg(QString::fromStdString(cacheFileName)).toStdString());
-							continue;
-						}
-						importCount += fileImportCount;
-					}
-				}
-
-				const QString completeQStr = tr("成功导入 %1 个句子至 transl_cache").arg(QString::number(importCount));
-				if (!problems.empty()) {
-					const fs::path problemPath = m_projectDir / L"import_problems.log";
-					std::string problemLog;
-					for (const auto& problem : problems) {
-						problemLog += problem + "\n";
-					}
-					problemLog += completeQStr.toStdString() + "\n";
-					atomicOutputFile(ofs, problemPath, problemLog);
+				const auto result = importProblemOverview(m_projectDir, fs::path(importOverviewPathQStr.toStdWString()));
+				const QString completeQStr = tr("成功导入 %1 个句子至 transl_cache").arg(QString::number(result.imported));
+				if (!result.problems.empty()) {
 					ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入完毕"), tr("导入中出现的问题记录在 import_problems.log 中"), 3000);
 				}
 				else {

@@ -18,6 +18,8 @@ default-profile = "release"
 sources = [
   "ProgressBar.ixx",
   "TerminalController.ixx",
+  "TerminalPreview.cpp",
+  "TerminalPreview.ixx",
   "!x64/**",
   "!x86/**"
 ]

@@ -3042,7 +3042,7 @@ Issue summary:</translation>
         <translation>Choose issue summary file</translation>
     </message>
     <message>
-        <location line="+124"/>
+        <location line="+36"/>
         <source>保存项目配置</source>
         <translation>Save project settings</translation>
     </message>
@@ -3104,7 +3104,7 @@ Issue summary:</translation>
         <translation>No</translation>
     </message>
     <message>
-        <location line="-311"/>
+        <location line="-223"/>
         <source>项目移动/更名</source>
         <translation>Move/Rename project</translation>
     </message>
@@ -3125,51 +3125,46 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+116"/>
+        <location line="+28"/>
         <source>导入失败</source>
         <translation>Fail to import</translation>
     </message>
     <message>
-        <location line="-116"/>
+        <location line="-28"/>
         <source>项目仍在运行中，无法导入</source>
         <translation>Project is still running</translation>
     </message>
     <message>
-        <location line="+35"/>
         <source>[文件 %1] 未在 cache 中找到，跳过导入</source>
-        <translation>[File %1] not in cache; import skipped</translation>
+        <translation type="vanished">[File %1] not in cache; import skipped</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>[文件 %1] 无法解析，跳过导入</source>
-        <translation>[File %1] cannot parse; import skipped</translation>
+        <translation type="vanished">[File %1] cannot parse; import skipped</translation>
     </message>
     <message>
-        <location line="+9"/>
         <source>[文件 %1] 句子(index %2) 未在 cache 中找到，跳过导入</source>
-        <translation>[File %1] sentence %2 not in cache; skipped</translation>
+        <translation type="vanished">[File %1] sentence %2 not in cache; skipped</translation>
     </message>
     <message>
-        <location line="+9"/>
         <source>[文件 %1] 句子(index %2) 与 cache 中原文不匹配，可能产生意外结果，
 概览原文: %3
 缓存原文: %4</source>
-        <translation>[File %1] sentence %2 differs from cache; result may vary
+        <translation type="vanished">[File %1] sentence %2 differs from cache; result may vary
 Preview: %3
 Cache: %4</translation>
     </message>
     <message>
-        <location line="+15"/>
         <source>[文件 %1] 无法写入，跳过导入</source>
-        <translation>[File %1] cannot write; import skipped</translation>
+        <translation type="vanished">[File %1] cannot write; import skipped</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+10"/>
         <source>成功导入 %1 个句子至 transl_cache</source>
         <translation>Imported %1 sentences to transl_cache</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+2"/>
         <location line="+3"/>
         <source>导入完毕</source>
         <translation>Importing completes</translation>
@@ -3610,7 +3605,7 @@ Cache: %4</translation>
         <translation>Regex</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageSearch.cpp" line="+197"/>
+        <location filename="ProjectCachePageSearch.cpp" line="+201"/>
         <source>正则表达式无效: %1（位置 %2）</source>
         <translation>Invalid regex: %1 (at %2)</translation>
     </message>
@@ -3736,7 +3731,7 @@ Cache: %4</translation>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="+136"/>
+        <location filename="ProjectCachePageFiles.cpp" line="+132"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -4159,7 +4154,7 @@ Cache: %4</translation>
         <translation>Match</translation>
     </message>
     <message>
-        <location filename="TranslationWorkbenchPage.cpp" line="+226"/>
+        <location filename="TranslationWorkbenchPage.cpp" line="+229"/>
         <source>结果解析</source>
         <translation>Parse Result</translation>
     </message>
@@ -4698,13 +4693,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+28"/>
-        <location line="+252"/>
+        <location line="+251"/>
         <source>最近错误</source>
         <translation>Recent Errors</translation>
     </message>
     <message>
-        <location line="-247"/>
-        <location line="+252"/>
+        <location line="-246"/>
+        <location line="+251"/>
         <source>文件进度</source>
         <translation>File Progress</translation>
     </message>

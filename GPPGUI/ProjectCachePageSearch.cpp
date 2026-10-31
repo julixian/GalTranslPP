@@ -21,6 +21,10 @@
 #include "ElaText.h"
 #include "ElaToolButton.h"
 
+import Tool;
+
+using namespace gpp;
+
 using namespace ProjectCachePagePrivate;
 
 QStringList ProjectCachePage::problemsFromEditorText(const QString& text)
@@ -560,7 +564,7 @@ void ProjectCachePage::loadProblems()
             if (a.second != b.second) {
                 return a.second > b.second;
             }
-            return a.first.localeAwareCompare(b.first) < 0;
+            return compareNatural(std::u16string_view(a.first), std::u16string_view(b.first)) < 0;
         });
 
     m_problemModel->clear();

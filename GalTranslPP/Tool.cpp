@@ -27,6 +27,90 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
+template<typename CharT>
+int compareNaturalImpl(std::basic_string_view<CharT> lhs, std::basic_string_view<CharT> rhs) noexcept
+{
+    const auto isDigit = [](CharT ch)
+        {
+            return ch >= '0' && ch <= '9';
+        };
+    const auto foldCase = [](CharT ch)
+        {
+            if (ch >= 'A' && ch <= 'Z') {
+                ch = (CharT)(ch - 'A' + 'a');
+            }
+            return (std::make_unsigned_t<CharT>)ch;
+        };
+
+    size_t left = 0;
+    size_t right = 0;
+    while (left < lhs.size() && right < rhs.size()) {
+        if (isDigit(lhs[left]) && isDigit(rhs[right])) {
+            const size_t leftStart = left;
+            const size_t rightStart = right;
+            while (left < lhs.size() && lhs[left] == '0') {
+                ++left;
+            }
+            while (right < rhs.size() && rhs[right] == '0') {
+                ++right;
+            }
+            const size_t leftSignificant = left;
+            const size_t rightSignificant = right;
+            while (left < lhs.size() && isDigit(lhs[left])) {
+                ++left;
+            }
+            while (right < rhs.size() && isDigit(rhs[right])) {
+                ++right;
+            }
+
+            // 比较有效位数和数字文本，避免长编号转成整数后溢出。
+            const size_t leftDigits = left - leftSignificant;
+            const size_t rightDigits = right - rightSignificant;
+            if (leftDigits != rightDigits) {
+                return leftDigits < rightDigits ? -1 : 1;
+            }
+            const int numberOrder = lhs.substr(leftSignificant, leftDigits)
+                .compare(rhs.substr(rightSignificant, rightDigits));
+            if (numberOrder != 0) {
+                return numberOrder < 0 ? -1 : 1;
+            }
+            const size_t leftWidth = left - leftStart;
+            const size_t rightWidth = right - rightStart;
+            if (leftWidth != rightWidth) {
+                return leftWidth > rightWidth ? -1 : 1;
+            }
+            continue;
+        }
+
+        const auto leftChar = foldCase(lhs[left]);
+        const auto rightChar = foldCase(rhs[right]);
+        if (leftChar != rightChar) {
+            return leftChar < rightChar ? -1 : 1;
+        }
+        ++left;
+        ++right;
+    }
+    if (left == lhs.size() && right == rhs.size()) {
+        return 0;
+    }
+    return left == lhs.size() ? -1 : 1;
+}
+
+int compareNatural(std::string_view lhs, std::string_view rhs) noexcept
+{
+    return compareNaturalImpl(lhs, rhs);
+}
+
+int compareNatural(std::wstring_view lhs, std::wstring_view rhs) noexcept
+{
+    return compareNaturalImpl(lhs, rhs);
+}
+
+int compareNatural(std::u16string_view lhs, std::u16string_view rhs) noexcept
+{
+    return compareNaturalImpl(lhs, rhs);
+}
+
 #ifdef _WIN32
 std::string wide2Ascii(std::wstring_view wide, UINT codePage, LPBOOL usedDefaultChar) {
     int len = WideCharToMultiByte(codePage, 0, wide.data(), (int)wide.length(),

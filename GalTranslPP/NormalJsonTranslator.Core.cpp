@@ -10,207 +10,11 @@ module NormalJsonTranslator;
 import ConditionTool;
 import NLPTool;
 import Tool;
+import ProjectConfig;
 
 NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
-
-#define GPP_REQUIRE_CONFIG(CONDITION, KEY, VALUE, REQUIREMENT) \
-do { \
-    if (!(CONDITION)) { \
-        const std::string gppConfigValue = std::format("{}", VALUE); \
-        const std::string gppRequirement = std::format("{}", REQUIREMENT); \
-        throw std::invalid_argument(gppTr( \
-                "validateNormalJsonCoreConfig", \
-                "配置项 %1 无效: 当前值 %2，要求%3") \
-            .arg(KEY) \
-            .arg(gppConfigValue) \
-            .arg(gppRequirement) \
-            .toStdString()); \
-    } \
-} while (false)
-
-struct NormalJsonCoreConfig {
-    std::string_view sortMethod;
-    std::string_view splitFileMethod;
-    std::string_view problemOverviewFormat;
-    bool agentEnabled{};
-    int batchSize{};
-    int threadsNum{};
-    int nameTransBatchSize{};
-    int splitFileNum{};
-    int repeatedBlockMinSize{};
-    int cacheSearchDistance{};
-    int saveCacheInterval{};
-    int maxRequestCount{};
-    int inputBlockMaxLines{};
-    int problemMaxLines{};
-    int glossaryMaxLines{};
-    int agentMaxTurnsPerChunk{};
-    int agentCompactContextThresholdBytes{};
-    int agentSearchResultLimit{};
-    int agentContextLinesLimit{};
-};
-
-void validateNormalJsonCoreConfig(const NormalJsonCoreConfig& config)
-{
-	auto isOneOf = [](std::string_view value, std::initializer_list<std::string_view> candidates)
-        {
-            return std::ranges::find(candidates, value) != candidates.end();
-        };
-
-    GPP_REQUIRE_CONFIG(
-        config.batchSize > 0,
-        "common.numPerRequestTranslate",
-        config.batchSize,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.threadsNum > 0,
-        "common.threadsNum",
-        config.threadsNum,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.nameTransBatchSize > 0,
-        "common.numPerRequestNameTranslate",
-        config.nameTransBatchSize,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        isOneOf(config.sortMethod, { "name", "size" }),
-        "common.sortMethod",
-        config.sortMethod,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "为 name 或 size")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        isOneOf(config.splitFileMethod, { "No", "Num", "Equal" }),
-        "common.split.method",
-        config.splitFileMethod,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "为 No、Num 或 Equal")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        isOneOf(config.problemOverviewFormat, { "toml", "json" }),
-        "common.problemOverviewFormat",
-        config.problemOverviewFormat,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "为 toml 或 json")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.splitFileNum > 0,
-        "common.split.num",
-        config.splitFileNum,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.repeatedBlockMinSize >= 2,
-        "common.repeatedBlock.minSize",
-        config.repeatedBlockMinSize,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于等于 2")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.cacheSearchDistance >= 0,
-        "common.split.cacheSearchDistance",
-        config.cacheSearchDistance,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于等于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.saveCacheInterval > 0,
-        "common.saveCacheInterval",
-        config.saveCacheInterval,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.maxRequestCount > 0,
-        "common.maxRequestCount",
-        config.maxRequestCount,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.inputBlockMaxLines > 0,
-        "common.log.inputBlockMaxLines",
-        config.inputBlockMaxLines,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.problemMaxLines > 0,
-        "common.log.problemMaxLines",
-        config.problemMaxLines,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.glossaryMaxLines > 0,
-        "common.log.glossaryMaxLines",
-        config.glossaryMaxLines,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-
-    if (!config.agentEnabled) {
-        return;
-    }
-
-    GPP_REQUIRE_CONFIG(
-        config.agentMaxTurnsPerChunk > 0,
-        "common.agent.maxTurnsPerChunk",
-        config.agentMaxTurnsPerChunk,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.agentSearchResultLimit >= 1,
-        "common.agent.searchResultLimit",
-        config.agentSearchResultLimit,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于等于 1")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.agentContextLinesLimit >= 0,
-        "common.agent.contextLinesLimit",
-        config.agentContextLinesLimit,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于等于 0")
-            .toStdString());
-    GPP_REQUIRE_CONFIG(
-        config.agentCompactContextThresholdBytes > 0,
-        "common.agent.compactContextThresholdBytes",
-        config.agentCompactContextThresholdBytes,
-        gppTr(
-            "validateNormalJsonCoreConfig",
-            "大于 0")
-            .toStdString());
-}
-
-#undef GPP_REQUIRE_CONFIG
 
 NormalJsonTranslator::~NormalJsonTranslator()
 {
@@ -289,36 +93,36 @@ void NormalJsonTranslator::normalJsonInit()
         m_outputWithSrc = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithSrc");
         m_outputWithRefInfo = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithRefInfo");
 
-        m_batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
-        m_threadsNum = toml::find_or(configData, "common", "threadsNum", 5);
-        m_nameTransBatchSize = toml::find_or(configData, "common", "numPerRequestNameTranslate", 50);
-        m_sortMethod = toml::find_or(configData, "common", "sortMethod", "size");
-        m_targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
-        m_splitFileMethod = toml::find_or(configData, "common", "split", "method", "No");
-        m_problemOverviewFormat = toml::find_or(configData, "common", "problemOverviewFormat", "json");
-        m_splitFileNum = toml::find_or(configData, "common", "split", "num", 10);
-        m_reuseRepeatedBlocks = toml::find_or(configData, "common", "repeatedBlock", "enabled", false);
-        m_repeatedBlockMinSize = toml::find_or(configData, "common", "repeatedBlock", "minSize", 5);
-        m_cacheSearchDistance = toml::find_or(configData, "common", "split", "cacheSearchDistance", 5);
-        m_saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
-        m_keepPreviousOtherInfo = toml::find_or(configData, "common", "keepPreviousOtherInfo", false);
-        m_linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
-        m_maxRequestCount = toml::find_or(configData, "common", "maxRequestCount", 4);
-        m_inputBlockMaxLines = toml::find_or(configData, "common", "log", "inputBlockMaxLines", 10);
-        m_problemMaxLines = toml::find_or(configData, "common", "log", "problemMaxLines", 3);
-        m_glossaryMaxLines = toml::find_or(configData, "common", "log", "glossaryMaxLines", 5);
-        m_smartRetry = toml::find_or(configData, "common", "smartRetry", false);
-        m_enhanceJailbreak = toml::find_or(configData, "common", "enhanceJailbreak", 0);
-        m_checkQuota = toml::find_or(configData, "common", "checkQuota", true);
-        m_retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
-        m_agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
-        m_agentAllowPython = toml::find_or(configData, "common", "agent", "allowPython", false);
-        m_agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
-        m_agentCompactContextThresholdBytes = toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 400000);
-        m_agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);
-        m_agentContextLinesLimit = toml::find_or(configData, "common", "agent", "contextLinesLimit", 20);
-        const std::string projectNotePathStr = toml::find_or(configData, "common", "agent", "projectNotePath", "ProjectNote.md");
-        fs::path projectNotePath = ascii2Wide(projectNotePathStr);
+        const auto settings = readTranslationSettings(configData);
+        m_batchSize = settings.batchSize;
+        m_threadsNum = settings.threadsNum;
+        m_nameTransBatchSize = settings.nameTransBatchSize;
+        m_sortMethod = settings.sortMethod;
+        m_targetLang = settings.targetLang;
+        m_splitFileMethod = settings.splitFileMethod;
+        m_problemOverviewFormat = settings.problemOverviewFormat;
+        m_splitFileNum = settings.splitFileNum;
+        m_reuseRepeatedBlocks = settings.reuseRepeatedBlocks;
+        m_repeatedBlockMinSize = settings.repeatedBlockMinSize;
+        m_cacheSearchDistance = settings.cacheSearchDistance;
+        m_saveCacheInterval = settings.saveCacheInterval;
+        m_keepPreviousOtherInfo = settings.keepPreviousOtherInfo;
+        m_linebreakSymbol = settings.linebreakSymbol;
+        m_maxRequestCount = settings.maxRequestCount;
+        m_inputBlockMaxLines = settings.inputBlockMaxLines;
+        m_problemMaxLines = settings.problemMaxLines;
+        m_glossaryMaxLines = settings.glossaryMaxLines;
+        m_smartRetry = settings.smartRetry;
+        m_enhanceJailbreak = settings.enhanceJailbreak;
+        m_checkQuota = settings.checkQuota;
+        m_retransAllWhenFail = settings.retransAllWhenFail;
+        m_agentEnabled = settings.agentEnabled;
+        m_agentAllowPython = settings.agentAllowPython;
+        m_agentMaxTurnsPerChunk = settings.agentMaxTurnsPerChunk;
+        m_agentCompactContextThresholdBytes = settings.agentCompactContextThresholdBytes;
+        m_agentSearchResultLimit = settings.agentSearchResultLimit;
+        m_agentContextLinesLimit = settings.agentContextLinesLimit;
+        fs::path projectNotePath = ascii2Wide(settings.projectNotePath);
         if (projectNotePath.is_relative()) {
             projectNotePath = m_projectDir / projectNotePath;
         }
@@ -332,8 +136,7 @@ void NormalJsonTranslator::normalJsonInit()
         }
         if (m_agentEnabled)
         {
-            if (m_transEngine != TransEngine::ForGalJson && m_transEngine != TransEngine::ForNovelJson &&
-                m_transEngine != TransEngine::ForGalTsv && m_transEngine != TransEngine::ForNovelTsv)
+            if (!supportsTransAgent(m_transEngine))
             {
                 m_agentEnabled = false;
                 m_logger->warn(gppTr(
@@ -350,76 +153,27 @@ void NormalJsonTranslator::normalJsonInit()
             }
         }
 
-        validateNormalJsonCoreConfig({
-            .sortMethod = m_sortMethod,
-            .splitFileMethod = m_splitFileMethod,
-            .problemOverviewFormat = m_problemOverviewFormat,
-            .agentEnabled = m_agentEnabled,
-            .batchSize = m_batchSize,
-            .threadsNum = m_threadsNum,
-            .nameTransBatchSize = m_nameTransBatchSize,
-            .splitFileNum = m_splitFileNum,
-            .repeatedBlockMinSize = m_repeatedBlockMinSize,
-            .cacheSearchDistance = m_cacheSearchDistance,
-            .saveCacheInterval = m_saveCacheInterval,
-            .maxRequestCount = m_maxRequestCount,
-            .inputBlockMaxLines = m_inputBlockMaxLines,
-            .problemMaxLines = m_problemMaxLines,
-            .glossaryMaxLines = m_glossaryMaxLines,
-            .agentMaxTurnsPerChunk = m_agentMaxTurnsPerChunk,
-            .agentCompactContextThresholdBytes = m_agentCompactContextThresholdBytes,
-            .agentSearchResultLimit = m_agentSearchResultLimit,
-            .agentContextLinesLimit = m_agentContextLinesLimit
-            });
+        validateTranslationSettings(settings, m_agentEnabled);
 
         m_usePreDictInName = toml::find_or(configData, "dictionary", "usePreDictInName", false);
         m_usePostDictInName = toml::find_or(configData, "dictionary", "usePostDictInName", false);
         m_usePreDictInMsg = toml::find_or(configData, "dictionary", "usePreDictInMsg", true);
         m_usePostDictInMsg = toml::find_or(configData, "dictionary", "usePostDictInMsg", true);
         m_useGptDictToReplaceName = toml::find_or(configData, "dictionary", "useGPTDictToReplaceName", false);
-        const std::string defaultDictFolderStr = toml::find_or(configData, "dictionary", "defaultDictFolder", "BaseConfig/Dicts");
-        const fs::path defaultDictFolderPath = ascii2Wide(defaultDictFolderStr);
-
-    	auto resolveDictPathsFunc = [&](const std::string& dictType)
+        auto resolveDictPathsFunc = [&](const std::string& dictType)
             {
-                std::vector<fs::path> dictPaths;
-                const auto dictFileNamesOpt = toml::find<
-                    std::optional<std::vector<std::string>>
-                >(configData, "dictionary", dictType + "Dicts");
-                if (!dictFileNamesOpt.has_value()) {
-                    return dictPaths;
-                }
-                for (const auto& dictFileName : dictFileNamesOpt.value()) {
-                    fs::path dictPath = ascii2Wide(dictFileName);
-                    if (dictPath.is_absolute()) {
-                        if (fs::exists(dictPath)) {
-                            dictPaths.push_back(dictPath);
-                        }
-                        else {
-                            m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
-                                "未找到字典文件 [%1]，已忽略")
-                                .arg(dictFileName).toStdString());
-                        }
+                std::vector<fs::path> paths;
+                for (const auto& file : resolveProjectDictionaries(m_projectDir, configData, dictType))
+                {
+                    if (file.exists) {
+                        paths.push_back(file.path);
                     }
                     else {
-                        dictPath = m_projectDir / dictPath;
-                        if (fs::exists(dictPath)) {
-                            dictPaths.push_back(dictPath);
-                        }
-                        else {
-                            dictPath = defaultDictFolderPath / ascii2Wide(dictType) / ascii2Wide(dictFileName);
-                            if (fs::exists(dictPath)) {
-                                dictPaths.push_back(dictPath);
-                            }
-                            else {
-                                m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
-                                    "未找到字典文件 [%1]，已忽略")
-                                    .arg(dictFileName).toStdString());
-                            }
-                        }
+                        m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
+                            "未找到字典文件 [%1]，已忽略").arg(file.name).toStdString());
                     }
                 }
-                return dictPaths;
+                return paths;
             };
 
         auto loadDictsFunc = [&]<typename DictionaryType>(const std::string& dictType, DictionaryType& dict)
@@ -455,108 +209,11 @@ void NormalJsonTranslator::normalJsonInit()
             int apiTimeOutSecond = toml::find_or(configData, "backend", "apiTimeout", 300);
             m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
-            const auto apisArr = toml::find<
-                std::vector<toml::table>
-            >(configData, "backend", "apis");
-
             std::vector<TranslationApi> apis;
-            for (const auto& [apiIndex, apiTbl] : apisArr | std::views::enumerate) {
-                if (apiTbl.contains("enable") && !apiTbl.at("enable").as_boolean()) {
-                    continue;
-                }
-                TranslationApi api;
-                if (apiTbl.contains("protocol") && apiTbl.at("protocol").is_string()) {
-                    api.protocol = parseApiProtocol(apiTbl.at("protocol").as_string());
-                }
-                else {
-                    api.protocol = ApiProtocol::OpenAI;
-                    m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
-                        "backend.apis[%1] 未找到 Api 协议字段，默认使用 OpenAI 协议").arg(apiIndex).toStdString());
-                }
-                if (m_agentEnabled && api.protocol == ApiProtocol::Gemini &&
-                    apiTbl.contains("agentGeminiInteractions") && apiTbl.at("agentGeminiInteractions").as_boolean()) {
-                    api.protocol = ApiProtocol::GeminiInterAction;
-                }
-                if (apiTbl.contains("apiurl") && !apiTbl.at("apiurl").as_string().empty()) {
-                    api.apiurl = cvt2StdApiUrl(apiTbl.at("apiurl").as_string(), api.protocol);
-                }
-                else {
-                    m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
-                        "backend.apis[%1] apiurl 为空，已忽略").arg(apiIndex).toStdString());
-                    continue;
-                }
-                if (apiTbl.contains("modelName") && !apiTbl.at("modelName").as_string().empty()) {
-                    api.modelName = apiTbl.at("modelName").as_string();
-                }
-                else if (m_transEngine == TransEngine::Sakura) {
-                    api.modelName = "sakura";
-                }
-                else {
-                    m_logger->warn(gppTr("NormalJsonTranslator.normalJsonInit",
-                        "backend.apis[%1] modelName 为空且不是 Sakura TransEngine，已忽略").arg(apiIndex).toStdString());
-                    continue;
-                }
-                if (apiTbl.contains("agentStrictTools")) api.agentStrictTools = apiTbl.at("agentStrictTools").as_string();
-                api.agentStateful = apiTbl.contains("agentStateful") && apiTbl.at("agentStateful").as_boolean();
-                api.agentNativeAutoCompaction = apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").as_boolean();
-                if (apiTbl.contains("agentCompactThresholdTokens")) api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
-                api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
-                api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
-                api.fastPause = apiTbl.contains("fastPause") && apiTbl.at("fastPause").as_boolean();
-                api.thinkingLevel = "off";
-                if (apiTbl.contains("thinkingLevel")) {
-                    api.thinkingLevel = apiTbl.at("thinkingLevel").as_string();
-                }
-                if (apiTbl.contains("extraHeadersEnable") &&
-                    apiTbl.at("extraHeadersEnable").as_boolean() &&
-                    apiTbl.contains("extraHeaders"))
-                {
-                    for (const auto& [key, value] : apiTbl.at("extraHeaders").as_table()) {
-                        if (value.is_string()) {
-                            api.extraHeaders[key] = value.as_string();
-                        }
-                        else {
-                            api.extraHeaders[key] = toml2Json(value).dump();
-                        }
-                    }
-                }
-                if (apiTbl.contains("extraBodyEnable") &&
-                    apiTbl.at("extraBodyEnable").as_boolean() &&
-                    apiTbl.contains("extraBody") &&
-                    apiTbl.at("extraBody").is_table())
-                {
-                    api.extraBody = toml2Json(apiTbl.at("extraBody"));
-                }
-                if (apiTbl.contains("temperature")) {
-                    api.temperature = apiTbl.at("temperature").as_floating();
-                }
-                if (apiTbl.contains("topP")) {
-                    api.topP = apiTbl.at("topP").as_floating();
-                }
-                if (apiTbl.contains("frequencyPenalty")) {
-                    api.frequencyPenalty = apiTbl.at("frequencyPenalty").as_floating();
-                }
-                if (apiTbl.contains("presencePenalty")) {
-                    api.presencePenalty = apiTbl.at("presencePenalty").as_floating();
-                }
-                bool hasApiKey = false;
-                if (apiTbl.contains("apikeys")) {
-                    for (const auto& apiKeyValue : apiTbl.at("apikeys").as_array()) {
-                        const std::string& apiKey = apiKeyValue.as_string();
-                        if (apiKey.empty()) {
-                            continue;
-                        }
-                        TranslationApi apiWithKey = api;
-                        apiWithKey.apikey = apiKey;
-                        apis.push_back(std::move(apiWithKey));
-                        hasApiKey = true;
-                    }
-                }
-                if (!hasApiKey && m_transEngine == TransEngine::Sakura) {
-                    TranslationApi apiWithKey = api;
-                    apiWithKey.apikey = "sk-sakura";
-                    apis.push_back(std::move(apiWithKey));
-                }
+            for (auto& entry : readProjectApis(configData, m_transEngine, m_agentEnabled,
+                [&](const std::string& message) { m_logger->warn(message); }))
+            {
+                apis.insert_range(apis.end(), std::move(entry.tokens));
             }
             if (apis.empty()) {
                 throw std::invalid_argument(gppTr(
@@ -569,90 +226,14 @@ void NormalJsonTranslator::normalJsonInit()
                 m_apiPool->loadApis(std::move(apis));
             }
 
-            const fs::path projectPromptPath = m_projectDir / L"Prompt.toml";
-            const bool hasProjectPrompt = fs::exists(projectPromptPath);
-            const bool hasDefaultPrompt = fs::exists(defaultPromptPath);
-            if (!hasProjectPrompt && !hasDefaultPrompt) {
-                throw std::runtime_error(gppTr(
-                    "NormalJsonTranslator.normalJsonInit",
-                    "找不到 Prompt.toml 文件")
-                    .toStdString());
-            }
-
-            const auto projectPromptData = hasProjectPrompt ? gpp::uparseToml(projectPromptPath) : toml::value{};
-            const auto defaultPromptData = hasDefaultPrompt ? gpp::uparseToml(defaultPromptPath) : toml::value{};
-
-            const auto readPromptString = [&](const std::string& key) -> std::string
-                {
-                    std::string prompt;
-                    if (hasProjectPrompt && projectPromptData.contains(key)) {
-                        prompt = projectPromptData.at(key).as_string();
-                    }
-                    else if (hasDefaultPrompt && defaultPromptData.contains(key)) {
-                        prompt = defaultPromptData.at(key).as_string();
-                    }
-                    else {
-                        throw std::invalid_argument(gppTr(
-                            "NormalJsonTranslator.normalJsonInit",
-                            "Prompt.toml 中缺少 %1 键")
-                            .arg(key)
-                            .toStdString());
-                    }
-                    // 固定语言占位符统一在读取时替换，SYSTEM 与 USER 使用相同规则。
-                    replaceStrInplace(prompt, "[TargetLang]", m_targetLang);
-                    replaceStrInplace(prompt, "[AgentTargetLang]", m_targetLang);
-                    return prompt;
-                };
-
-            if (m_transEngine == TransEngine::GenDict) {
-                m_systemPrompt = readPromptString("GENDICT_SYSTEM");
-                m_userPrompt = readPromptString("GENDICT_USER");
+            auto prompts = readProjectPrompts(m_projectDir, m_transEngine, m_agentEnabled);
+            if (m_agentEnabled) {
+                m_agentSystemPrompt = std::move(prompts.system.text);
+                m_agentUserPrompt = std::move(prompts.user.text);
             }
             else {
-                std::string systemPromptKey;
-                std::string userPromptKey;
-
-                switch (m_transEngine)
-                {
-                case TransEngine::ForGalJson:
-                    systemPromptKey = m_agentEnabled ? "FORGALJSON_AGENT_SYSTEM" : "FORGALJSON_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORGALJSON_AGENT_USER" : "FORGALJSON_USER";
-                    break;
-                case TransEngine::ForNovelJson:
-                    systemPromptKey = m_agentEnabled ? "FORNOVELJSON_AGENT_SYSTEM" : "FORNOVELJSON_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORNOVELJSON_AGENT_USER" : "FORNOVELJSON_USER";
-                    break;
-                case TransEngine::ForGalTsv:
-                    systemPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_SYSTEM" : "FORGALTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORGALTSV_AGENT_USER" : "FORGALTSV_USER";
-                    break;
-                case TransEngine::ForNovelTsv:
-                    systemPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_SYSTEM" : "FORNOVELTSV_SYSTEM";
-                    userPromptKey = m_agentEnabled ? "FORNOVELTSV_AGENT_USER" : "FORNOVELTSV_USER";
-                    break;
-                case TransEngine::Sakura:
-                    systemPromptKey = "SAKURA_SYSTEM";
-                    userPromptKey = "SAKURA_USER";
-                    break;
-                case TransEngine::NameTrans:
-                    systemPromptKey = "NAMETRANS_SYSTEM";
-                    userPromptKey = "NAMETRANS_USER";
-                    break;
-                default:
-                    throw std::invalid_argument(gppTr(
-                        "NormalJsonTranslator.normalJsonInit",
-                        "内部错误: 未知的 TransEngine")
-                        .toStdString());
-                }
-
-                if (m_agentEnabled) {
-                    m_agentSystemPrompt = readPromptString(systemPromptKey);
-                    m_agentUserPrompt = readPromptString(userPromptKey);
-                }
-                else {
-                    m_systemPrompt = readPromptString(systemPromptKey);
-                    m_userPrompt = readPromptString(userPromptKey);
-                }
+                m_systemPrompt = std::move(prompts.system.text);
+                m_userPrompt = std::move(prompts.user.text);
             }
         }
 

@@ -173,8 +173,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\lib;..\3rdParty\pybind11\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ftxui-component.lib;ftxui-dom.lib;ftxui-screen.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\vcpkg_installed\gpp-x64-windows-release-mcpp\gpp-x64-windows-release-mcpp\lib;..\lib;..\3rdParty\pybind11\bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>
@@ -193,6 +193,8 @@
     <ClCompile Include="GPPCLI.cpp" />
     <ClCompile Include="ProgressBar.ixx" />
     <ClCompile Include="TerminalController.ixx" />
+    <ClCompile Include="TerminalPreview.ixx" />
+    <ClCompile Include="TerminalPreview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GalTranslPP\GalTranslPP.vcxproj">

@@ -1,7 +1,6 @@
 #include "ProjectCachePage.h"
 #include "ProjectCachePage_p.h"
 
-#include <QCollator>
 #include <QFileInfo>
 #include <QItemSelectionModel>
 #include <QStandardItem>
@@ -70,13 +69,10 @@ void ProjectCachePage::loadCacheFiles(bool discardDirty)
         }
     }
 
-    QCollator collator;
-    collator.setNumericMode(true);
-    collator.setCaseSensitivity(Qt::CaseInsensitive);
-    // 使用 Windows 资源管理器式自然排序，例如 1、2、10，而不是 1、10、2。
-    std::ranges::sort(m_cacheFiles, [&collator](const CacheFileInfo& a, const CacheFileInfo& b)
+    // 按数字段自然排序，例如 1、2、10，而不是 1、10、2。
+    std::ranges::sort(m_cacheFiles, [](const CacheFileInfo& a, const CacheFileInfo& b)
         {
-            return collator.compare(a.relativeName, b.relativeName) < 0;
+            return compareNatural(std::u16string_view(a.relativeName), std::u16string_view(b.relativeName)) < 0;
         });
 
     m_cacheDirLabel->setText(QString::fromStdWString(cacheDir.wstring()));

@@ -1,4 +1,6 @@
-﻿#include <QCoreApplication>
+#include "../GalTranslPP/GPPMacros.hpp"
+#include <QCommandLineParser>
+#include <QCoreApplication>
 #include <QDir>
 #include <QTranslator>
 
@@ -9,6 +11,7 @@
 import GPPVersion;
 import PythonManager;
 import TerminalController;
+import TerminalPreview;
 import toml11;
 import Tool;
 
@@ -16,6 +19,58 @@ using namespace gpp;
 
 namespace fs = std::filesystem;
 namespace py = pybind11;
+
+NAMESPACE_BEGIN(gpp::cli)
+
+fs::path projectDirectory(const std::string& input)
+{
+    auto pathText = input;
+    if (pathText.size() >= 2 && pathText.front() == '"' && pathText.back() == '"') {
+        pathText = pathText.substr(1, pathText.size() - 2);
+    }
+    fs::path path = ascii2Wide(pathText);
+    if (fs::is_regular_file(path)) {
+        path = path.parent_path();
+    }
+    if (!fs::is_directory(path)) {
+        throw std::invalid_argument(gppTr("GPPCLI.GPPCLI", "路径 '%1' 不存在或不是一个有效的文件夹，请重新输入")
+                .arg(wide2Ascii(path))
+                .toStdString());
+    }
+    return fs::canonical(path);
+}
+
+bool confirmProject(const fs::path& projectDir, bool plain)
+{
+    if (!plain) {
+        return showProjectPreview(projectDir);
+    }
+    printProjectPreview(projectDir);
+    std::cout << gppTr("GPPCLI.GPPCLI", "按 Enter 开始翻译，输入 q 返回：").toStdString();
+    std::string answer;
+    if (!std::getline(std::cin, answer) || !answer.empty()) {
+        return false;
+    }
+    const auto config = uparseToml(projectDir / L"Config.toml");
+    if (ProblemOverviewTracker::hasUnimportedChanges(projectDir, transCacheDirName, config)) {
+        std::cout << gppTr("GPPCLI.GPPCLI", "输入 y 继续翻译，其它输入返回：").toStdString();
+        return std::getline(std::cin, answer) && (answer == "y" || answer == "Y");
+    }
+    return true;
+}
+
+void importOverview(const fs::path& projectDir, const fs::path& file)
+{
+    const auto result = importProblemOverview(projectDir, file);
+    ProblemOverviewTracker::recordLastWriteTime(projectDir, file);
+    std::cout << gppTr("ProblemOverview", "成功导入 %1 个句子至 transl_cache").arg(result.imported).toStdString()
+              << '\n';
+    for (const auto& problem : result.problems) {
+        std::cerr << problem << '\n';
+    }
+}
+
+NAMESPACE_END(gpp::cli)
 
 int main(int argc, char* argv[])
 {
@@ -25,27 +80,40 @@ int main(int argc, char* argv[])
     std::setlocale(LC_ALL, ".UTF-8");
     initializeProcessJob();
 #endif
-
+    QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationName("GalTransl++ CLI");
+    QCoreApplication::setApplicationVersion(QString::fromUtf8(GPPVERSION));
     QTranslator baseTranslator;
     QTranslator coreTranslator;
     QTranslator cliTranslator;
-    QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName("GalTransl++ CLI");
     QDir::setCurrent(QCoreApplication::applicationDirPath());
-    std::unique_ptr<py::gil_scoped_release> release;
 
+    QCommandLineParser parser;
+    parser.setApplicationDescription("GalTransl++ CLI");
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("project", "Project folder or Config.toml", "[project]");
+    const QCommandLineOption yesOption({ "y", "yes" }, "Run without the configuration preview");
+    const QCommandLineOption previewOption("preview", "Print the configuration preview and exit");
+    const QCommandLineOption plainOption("no-tui", "Use a plain-text preview instead of the TUI");
+    const QCommandLineOption importOption("import-problems", "Import a ProblemOverview file and exit", "file");
+    parser.addOptions({ yesOption, previewOption, plainOption, importOption });
+    parser.process(app);
+    const auto projects = parser.positionalArguments();
+    if (projects.size() > 1 || ((parser.isSet(previewOption) || parser.isSet(importOption)) && projects.isEmpty()) ||
+        (parser.isSet(previewOption) && parser.isSet(importOption)))
+    {
+        parser.showHelp(1);
+    }
+
+    toml::value globalConfig;
     try {
-        const auto globalConfig = gpp::uparseToml(globalConfigPath);
-        const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
-        if (language == "zh_CN") {
-            if (baseTranslator.load("qt_zh_CN.qm", "translations")) {
-                app.installTranslator(&baseTranslator);
-            }
+        globalConfig = uparseToml(globalConfigPath);
+        const auto language = toml::find_or(globalConfig, "language", "zh_CN");
+        if (baseTranslator.load(QString("qt_%1.qm").arg(language), "translations")) {
+            app.installTranslator(&baseTranslator);
         }
-        else {
-            if (baseTranslator.load(QString("qt_%1.qm").arg(language), "translations")) {
-                app.installTranslator(&baseTranslator);
-            }
+        if (language != "zh_CN") {
             if (coreTranslator.load(QString("qt_gpp_%1.qm").arg(language), "translations")) {
                 app.installTranslator(&coreTranslator);
             }
@@ -53,160 +121,138 @@ int main(int argc, char* argv[])
                 app.installTranslator(&cliTranslator);
             }
         }
-        const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64");
-        try {
-            const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
-            if (!startUpPythonEnv(pythonEnvPath, release)) {
-                spdlog::warn(gppTr("GPPCLI.GPPCLI", "未设置 Python 环境，将无法使用需要 Python 环境的模块")
-                    .toStdString());
-            }
-        }
-        catch(...) {
-            spdlog::error(gppTr("GPPCLI.GPPCLI", "Python 环境配置失败").toStdString());
-        }
     }
-    catch (...) {
-        spdlog::critical(gppTr("GPPCLI.GPPCLI", "无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在")
-            .toStdString());
+    catch (const std::exception& e) {
+        spdlog::critical(
+            gppTr("GPPCLI.GPPCLI", "无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在").toStdString());
+        spdlog::error(e.what());
         return 1;
     }
 
-    try {
-        if (fs::exists(L"cache")) {
-            spdlog::warn(gppTr("GPPCLI.GPPCLI", "检测到异常退出，请注意备份相关翻译缓存").toStdString());
-        }
-        else {
-            fs::create_directories(L"cache");
-        }
-    }
-    catch (const fs::filesystem_error& e) {
-        spdlog::error(gppTr("GPPCLI.GPPCLI", "缓存检测或创建错误: %1")
-            .arg(e.what())
-            .toStdString());
-    }
-
-    fs::path currentProjectPath;
-    while (true) {
-        // 先清理所有可能残留的输入和屏幕
-        std::cin.clear();
-        std::cout << "\n======================================================\n";
-        std::cout << std::format("GalTransl++ CLI v{}", GPPVERSION) << "\n";
-        std::cout << "Press Ctrl+Z to exit.\n";
-        std::cout << "======================================================\n";
-
-        std::cout << gppTr("GPPCLI.GPPCLI", "请输入项目文件夹或 Config.toml 的路径。").toStdString();
-        if (!currentProjectPath.empty()) {
-            std::cout << gppTr("GPPCLI.GPPCLI", " (直接按 Enter 可再次处理: %1)")
-                .arg(wide2Ascii(currentProjectPath.wstring()))
-                .toStdString();
-        }
-        std::cout << "\n> ";
-
-        std::string inputPathStr;
-        if (release) {
-            py::gil_scoped_acquire acquire;
-            auto builtins = py::module_::import("builtins");
-            try {
-                inputPathStr = builtins.attr("input")("").cast<std::string>();
-            }
-            catch (...) {
-                break;
-            }
-        }
-        else {
-            if (!std::getline(std::cin, inputPathStr)) {
-                break; // 输入结束，退出程序
-            }
-        }
-
-        // --- 处理用户输入 ---
-        if (inputPathStr.empty()) {
-            // 用户直接按了回车
-            if (currentProjectPath.empty()) {
-                // 如果之前没有处理过任何项目，提示用户必须输入
-                spdlog::warn(gppTr("GPPCLI.GPPCLI", "首次运行，请输入一个有效的项目路径")
-                    .toStdString());
-                continue; // 回到循环开头，再次提示
-            }
-            // 如果之前有项目，就使用上一次的路径
-            spdlog::info(gppTr("GPPCLI.GPPCLI", "再次处理项目: %1")
-                .arg(wide2Ascii(currentProjectPath.wstring()))
-                .toStdString());
-        }
-        else {
-            // 用户输入了新路径
-            // 去除可能存在的引号
-            if (inputPathStr.starts_with('"') && inputPathStr.ends_with('"')) {
-                inputPathStr = inputPathStr.substr(1, inputPathStr.length() - 2);
-            }
-            currentProjectPath = ascii2Wide(inputPathStr);
-            if (fs::is_regular_file(currentProjectPath) && currentProjectPath.has_parent_path()) {
-                currentProjectPath = currentProjectPath.parent_path(); // 去掉文件名，只留目录
-            }
-        }
-
-        // 检查路径是否存在且为目录
-        if (!fs::exists(currentProjectPath) || !fs::is_directory(currentProjectPath)) {
-            spdlog::error(gppTr("GPPCLI.GPPCLI", "路径 '%1' 不存在或不是一个有效的文件夹，请重新输入")
-                .arg(wide2Ascii(currentProjectPath.wstring()))
-                .toStdString());
-            currentProjectPath.clear(); // 清空无效路径，以便下次循环提示用户重新输入
-            continue;
-        }
-
-        try {
-            spdlog::info(gppTr("GPPCLI.GPPCLI", "开始处理项目: %1")
-                .arg(wide2Ascii(currentProjectPath.wstring()))
-                .toStdString());
-
-            {
-                const std::unique_ptr<ITranslator> translator = createTranslator(currentProjectPath, std::make_shared<TerminalController>());
-                if (!translator) {
-                    spdlog::error(gppTr("GPPCLI.GPPCLI", "创建翻译器实例失败，请检查项目配置")
-                        .toStdString());
-                    continue;
+    // 预览、帮助和问题清单导入不初始化 Python，也不创建运行时缓存。
+    std::unique_ptr<py::gil_scoped_release> release;
+    bool runtimeStarted = false;
+    const auto runProject = [&](const fs::path& projectDir)
+        {
+            if (parser.isSet(yesOption)) {
+                const auto config = uparseToml(projectDir / L"Config.toml");
+                if (ProblemOverviewTracker::hasUnimportedChanges(projectDir, transCacheDirName, config)) {
+                    spdlog::warn(gppTr("TerminalPreview", "检测到 %1 被修改但未导入。")
+                            .arg(wide2Ascii(ProblemOverviewTracker::overviewPath(projectDir, config).filename()))
+                            .toStdString());
                 }
-
+            }
+            if (!runtimeStarted) {
+                runtimeStarted = true;
+                try {
+                    const auto environment =
+                        ascii2Wide(toml::find_or(globalConfig, "pythonEnvPath", "BaseConfig/Python-3.12.10-embed-amd64"));
+                    if (!startUpPythonEnv(environment, release)) {
+                        spdlog::warn(
+                            gppTr("GPPCLI.GPPCLI", "未设置 Python 环境，将无法使用需要 Python 环境的模块").toStdString());
+                    }
+                }
+                catch (...) {
+                    spdlog::error(gppTr("GPPCLI.GPPCLI", "Python 环境配置失败").toStdString());
+                }
+                if (fs::exists(L"cache")) {
+                    spdlog::warn(gppTr("GPPCLI.GPPCLI", "检测到异常退出，请注意备份相关翻译缓存").toStdString());
+                }
+                else {
+                    fs::create_directories(L"cache");
+                }
+            }
+            spdlog::info(gppTr("GPPCLI.GPPCLI", "开始处理项目: %1").arg(wide2Ascii(projectDir)).toStdString());
+            {
+                const auto controller = std::make_shared<TerminalController>();
+                const auto translator = createTranslator(projectDir, controller);
+                if (!translator) {
+                    throw std::runtime_error(gppTr("GPPCLI.GPPCLI", "创建翻译器实例失败，请检查项目配置").toStdString());
+                }
                 translator->run();
             }
+            ProblemOverviewTracker::recordLastWriteTime(projectDir);
+            spdlog::info(gppTr("GPPCLI.GPPCLI", "项目 '%1' 处理完成！").arg(wide2Ascii(projectDir)).toStdString());
+        };
 
-            std::cout << std::endl;
-            spdlog::info(gppTr("GPPCLI.GPPCLI", "项目 '%1' 处理完成！")
-                .arg(wide2Ascii(currentProjectPath.wstring()))
-                .toStdString());
-
-        }
-        catch (const std::invalid_argument& e) {
-            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[参数错误] %1")
-                .arg(e.what())
-                .toStdString());
-        }
-        catch (const std::runtime_error& e) {
-            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[运行时错误] %1")
-                .arg(e.what())
-                .toStdString());
+    int exitCode = 0;
+    fs::path currentProject;
+    const bool interactive = hasInteractiveTerminal();
+    const bool singleProject = !projects.isEmpty();
+    while (true) {
+        try {
+            if (singleProject) {
+                currentProject = cli::projectDirectory(projects.front().toStdString());
+            }
+            else {
+                std::cout << "\nGalTransl++ CLI v" << GPPVERSION << '\n';
+#ifdef _WIN32
+                std::cout << gppTr("GPPCLI.GPPCLI", "按 Ctrl+Z 回车退出。").toStdString() << '\n';
+#elif defined(__APPLE__)
+                std::cout << gppTr("GPPCLI.GPPCLI", "按 Ctrl+D 退出。").toStdString() << '\n';
+#endif
+                std::cout << gppTr("GPPCLI.GPPCLI", "请输入项目文件夹或 Config.toml 的路径。").toStdString();
+                if (!currentProject.empty()) {
+                    std::cout << gppTr("GPPCLI.GPPCLI", " (直接按 Enter 可再次处理: %1)")
+                                     .arg(wide2Ascii(currentProject))
+                                     .toStdString();
+                }
+                std::cout << "\n> ";
+                std::string input;
+                if (!std::getline(std::cin, input)) {
+                    break;
+                }
+                if (!input.empty()) {
+                    currentProject = cli::projectDirectory(input);
+                }
+                if (currentProject.empty()) {
+                    continue;
+                }
+            }
+            if (parser.isSet(importOption)) {
+                fs::path file = ascii2Wide(parser.value(importOption).toStdString());
+                cli::importOverview(currentProject, file);
+            }
+            else if (parser.isSet(previewOption)) {
+                printProjectPreview(currentProject);
+            }
+            else {
+                if (!parser.isSet(yesOption)) {
+                    if (!interactive) {
+                        throw std::invalid_argument(
+                            gppTr("GPPCLI.GPPCLI", "非交互终端请使用 --yes 执行翻译，或使用 --preview 查看配置")
+                                .toStdString());
+                    }
+                    if (!cli::confirmProject(currentProject, parser.isSet(plainOption))) {
+                        if (singleProject) {
+                            break;
+                        }
+                        continue;
+                    }
+                }
+                runProject(currentProject);
+            }
         }
         catch (const std::exception& e) {
-            spdlog::critical(gppTr("GPPCLI.GPPCLI", "[标准库错误] %1")
-                .arg(e.what())
-                .toStdString());
+            spdlog::error(e.what());
+            exitCode = 1;
         }
         catch (...) {
             spdlog::critical(gppTr("GPPCLI.GPPCLI", "发生未知错误").toStdString());
+            exitCode = 1;
+        }
+        if (singleProject || !interactive) {
+            break;
         }
     }
-
-    shutDownPythonEnv(release);
-
-    try {
-        fs::remove(L"cache");
+    if (runtimeStarted) {
+        shutDownPythonEnv(release);
+        try {
+            fs::remove_all(L"cache");
+        }
+        catch (const fs::filesystem_error& e) {
+            spdlog::warn(gppTr("GPPCLI.GPPCLI", "缓存删除错误: %1").arg(e.what()).toStdString());
+        }
     }
-    catch (const fs::filesystem_error& e) {
-        spdlog::warn(gppTr("GPPCLI.GPPCLI", "缓存删除错误: %1")
-            .arg(e.what())
-            .toStdString());
-    }
-
-    spdlog::info(gppTr("GPPCLI.GPPCLI", "程序退出").toStdString());
-    return 0;
+    return exitCode;
 }

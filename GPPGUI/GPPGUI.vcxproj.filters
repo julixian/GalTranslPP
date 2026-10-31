@@ -362,9 +362,6 @@
     <QtMoc Include="DictionarySearchBar.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </QtMoc>
-    <ClInclude Include="ProblemOverviewTracker.h">
-      <Filter>Header Files\ToolWidgetsH</Filter>
-    </ClInclude>
     <ClInclude Include="GppComboBox.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>

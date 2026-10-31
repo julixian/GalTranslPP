@@ -25,9 +25,9 @@
 #include "OtherSettingsPage.h"
 #include "PromptSettingsPage.h"
 #include "ProjectCachePage.h"
-#include "ProblemOverviewTracker.h"
 
 import Tool;
+import ProblemOverview;
 
 using namespace gpp;
 

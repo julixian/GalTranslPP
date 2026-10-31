@@ -1,9 +1,6 @@
 module;
 
 #include "GPPMacros.hpp"
-#ifdef _WIN32
-#include <Shlwapi.h>
-#endif
 
 module NormalJsonTranslator;
 
@@ -81,13 +78,13 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     m_gptDictionaryPaths(gptDictionaryPaths),
     m_agentProjectNotePath(agentProjectNotePath)
 {
+    // 系统提示词在会话间复用，固定语言占位符在 Agent 初始化时处理。
+    replaceStrInplace(m_agentSystemPrompt, "[TargetLang]", m_targetLang);
+    replaceStrInplace(m_agentSystemPrompt, "[AgentTargetLang]", m_targetLang);
+
     std::ranges::sort(m_knownRelFiles, [](const fs::path& a, const fs::path& b)
         {
-#ifdef _WIN32
-            return StrCmpLogicalW(a.c_str(), b.c_str()) < 0;
-#else
-            return a < b;
-#endif
+            return compareNatural(a.native(), b.native()) < 0;
         });
 
     fs::create_directories(m_agentFileNotesDir);

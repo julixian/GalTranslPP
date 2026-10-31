@@ -124,6 +124,18 @@
     <ClCompile Include="GPPDefines.cpp">
       <Filter>Tools</Filter>
     </ClCompile>
+    <ClCompile Include="ProjectConfig.ixx">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectConfig.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ProblemOverview.ixx">
+      <Filter>Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="ProblemOverview.cpp">
+      <Filter>Tools</Filter>
+    </ClCompile>
     <ClCompile Include="GPPI18n.ixx">
       <Filter>Tools</Filter>
     </ClCompile>

@@ -297,11 +297,12 @@ json runAgentPython(
         }
     } process;
 
-    const auto check = [](int error, const char* operation) {
-        if (error) {
-            throw std::system_error(error, std::generic_category(), operation);
-        }
-    };
+    const auto check = [](int error, const char* operation)
+        {
+            if (error) {
+                throw std::system_error(error, std::generic_category(), operation);
+            }
+        };
     process.input = tmpfile();
     if (!process.input) {
         check(errno, "tmpfile Python stdin");

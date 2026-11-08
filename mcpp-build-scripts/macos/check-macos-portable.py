@@ -12,32 +12,32 @@ import time
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+kScriptRoot = Path(__file__).resolve().parents[2]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("package", type=Path, nargs="?")
-    parser.add_argument("--python-root", type=Path)
-    parser.add_argument("--optional-dependencies", nargs="*", metavar="PACKAGE",
+    parser.add_argument("--python-root", dest="pythonRoot", type=Path)
+    parser.add_argument("--optional-dependencies", dest="optionalDependencies", nargs="*", metavar="PACKAGE",
                         help="检查指定的可选依赖；不指定包名时检查构建配置中的全部依赖")
     args = parser.parse_args()
     if sys.platform != "darwin" or platform.machine() != "arm64":
         parser.error("检测需要真实的 macOS ARM64 环境")
-    if not args.package and not args.python_root:
+    if not args.package and not args.pythonRoot:
         parser.error("请指定便携包目录，或用 --python-root 单独检测 Python")
-    report = {"platform": platform.platform(), "mode": "python" if args.python_root else "application",
+    report = {"platform": platform.platform(), "mode": "python" if args.pythonRoot else "application",
               "checks": [], "optional_dependencies": []}
-    output = ROOT / ("Release/macos-python-report.json" if args.python_root else "Release/macos-check-report.json")
+    output = kScriptRoot / ("Release/macos-python-report.json" if args.pythonRoot else "Release/macos-check-report.json")
     output.parent.mkdir(exist_ok=True)
 
     def record(name, command, *, cwd, timeout=120, group="checks", env=None,
-               expected_exit=0, expected_output=""):
+               expectedExit=0, expectedOutput=""):
         try:
             result = subprocess.run([str(x) for x in command], cwd=cwd, env=env,
                                     capture_output=True, text=True, timeout=timeout)
-            item = dict(name=name, passed=result.returncode == expected_exit and expected_output in result.stdout,
-                        exit_code=result.returncode, expected_exit=expected_exit,
+            item = dict(name=name, passed=result.returncode == expectedExit and expectedOutput in result.stdout,
+                        exit_code=result.returncode, expected_exit=expectedExit,
                         stdout=result.stdout, stderr=result.stderr)
         except Exception as error:
             item = dict(name=name, passed=False, error=str(error))
@@ -50,13 +50,13 @@ def main():
     with tempfile.TemporaryDirectory(prefix="GPP 便携检测 ") as temporary:
         relocated = Path(temporary) / (args.package.name if args.package else "Python runtime")
         directory = relocated / "GalTranslPP.app/Contents/MacOS"
-        python_root = directory / "BaseConfig/Python"
-        if args.python_root:
-            shutil.copytree(args.python_root.resolve(), python_root, symlinks=True)
+        pythonRoot = directory / "BaseConfig/Python"
+        if args.pythonRoot:
+            shutil.copytree(args.pythonRoot.resolve(), pythonRoot, symlinks=True)
         else:
             shutil.copytree(args.package.resolve(), relocated, symlinks=True)
-        python_root = python_root.resolve()
-        python = python_root / "bin/python3"
+        pythonRoot = pythonRoot.resolve()
+        python = pythonRoot / "bin/python3"
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("PYTHON", "DYLD_", "QT_"))}
         record("Python 标准库、动态扩展和中文路径", [python, "-I", "-c", '''
@@ -77,11 +77,11 @@ print(sys.version, sys.executable, sys.path, sep='\\n')
         record("安装后导入", [python, "-I", "-c", "import packaging, orjson; print(orjson.loads(orjson.dumps({'name':'中文'})))"],
                cwd=directory, env=env)
         record("pip 依赖一致性", [python, "-I", "-m", "pip", "check"], cwd=directory, env=env)
-        if not args.python_root:
+        if not args.pythonRoot:
             record("CLI 帮助", [directory / "GalTranslPP_CLI", "--help"], cwd=directory, env=env)
             # 发布样例没有 API 凭据；完整输出预览后返回 1，表示配置尚不可运行。
             record("CLI 样例预览（未配置 API）", [directory / "GalTranslPP_CLI", "SampleProject", "--preview", "--no-tui"],
-                   cwd=directory, env=env, expected_exit=1, expected_output="FORGALJSON_USER")
+                   cwd=directory, env=env, expectedExit=1, expectedOutput="FORGALJSON_USER")
             record("7-Zip 动态库入口", [python, "-I", "-c",
                    "import ctypes; lib=ctypes.CDLL('./7z.so'); print(lib.CreateObject)"], cwd=directory, env=env)
         record("Python 子进程", [python, "-I", "-c", '''
@@ -101,8 +101,8 @@ if __name__ == '__main__':
 ''', encoding="utf-8")
         record("multiprocessing 启动及退出", [python, "-I", worker], cwd=directory, env=env)
         worker.unlink()
-        if not args.python_root:
-            log = ROOT / "target/macos-logs/gui-startup.log"
+        if not args.pythonRoot:
+            log = kScriptRoot / "target/macos-logs/gui-startup.log"
             log.parent.mkdir(parents=True, exist_ok=True)
             with log.open("wb") as stream:
                 process = subprocess.Popen([directory / "GalTranslPP_GUI"], cwd=directory, env=env,
@@ -111,12 +111,12 @@ if __name__ == '__main__':
                     time.sleep(12)
                     alive = process.poll() is None
                     report["checks"].append(dict(name="重定位后的 GUI 启动", passed=alive, exit_code=process.poll()))
-                    paths_file = directory / "BaseConfig/pythonSysPaths.txt"
-                    paths = paths_file.read_text(encoding="utf-8") if paths_file.exists() else ""
+                    pathsFile = directory / "BaseConfig/pythonSysPaths.txt"
+                    paths = pathsFile.read_text(encoding="utf-8") if pathsFile.exists() else ""
                     report["checks"].append(dict(name="GUI 实际初始化嵌入式 Python",
-                        passed=str(python_root / "lib/python3.12") in paths, paths=paths))
+                        passed=str(pythonRoot / "lib/python3.12") in paths, paths=paths))
                     if alive:
-                        subprocess.run(["screencapture", "-x", str(ROOT / "Release/macos-preview.png")], check=False)
+                        subprocess.run(["screencapture", "-x", str(kScriptRoot / "Release/macos-preview.png")], check=False)
                 finally:
                     if process.poll() is None:
                         process.terminate()
@@ -125,14 +125,14 @@ if __name__ == '__main__':
                         except subprocess.TimeoutExpired:
                             process.kill()
                             process.wait()
-        if args.optional_dependencies is not None:
+        if args.optionalDependencies is not None:
             config = tomllib.loads(Path(__file__).with_name("build-macos.toml").read_text(encoding="utf-8"))
-            for dependency in args.optional_dependencies or config["python"]["optional_dependencies"]:
+            for dependency in args.optionalDependencies or config["python"]["optional_dependencies"]:
                 # 每个功能独立检测，失败保留 pip 原始输出；不把测试依赖塞进发布包。
                 clone = Path(temporary) / ("Python-" + dependency)
-                shutil.copytree(python_root, clone, symlinks=True)
+                shutil.copytree(pythonRoot, clone, symlinks=True)
                 executable = clone / "bin/python3"
-                scripts = ROOT / "Example/BaseConfig/PythonScripts"
+                scripts = kScriptRoot / "Example/BaseConfig/PythonScripts"
                 command = [executable, "-I", scripts / "install_babeldoc.py"] if dependency == "babeldoc" else [
                     executable, "-I", "-m", "pip", "install", dependency,
                 ]
@@ -156,7 +156,7 @@ if __name__ == '__main__':
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     # 可选模型功能单独报告，不把“应用可启动”误报成“所有模型都已验证”。
     checks = report["checks"]
-    if args.optional_dependencies:
+    if args.optionalDependencies:
         checks = checks + report["optional_dependencies"]
     if not all(item["passed"] for item in checks):
         raise SystemExit(1)

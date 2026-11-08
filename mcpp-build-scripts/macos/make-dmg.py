@@ -10,13 +10,13 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+kScriptRoot = Path(__file__).resolve().parents[2]
 
 
 def run(command):
     command = [str(value) for value in command]
     print("+", " ".join(command), flush=True)
-    subprocess.run(command, cwd=ROOT, check=True)
+    subprocess.run(command, cwd=kScriptRoot, check=True)
 
 
 def symlinks(directory):
@@ -37,10 +37,10 @@ def main():
     app = args.package.resolve() / "GalTranslPP.app"
     if not app.is_dir():
         parser.error("找不到应用包：" + str(app))
-    release = ROOT / "Release"
+    release = kScriptRoot / "Release"
     release.mkdir(exist_ok=True)
     image = release / "GPPGUI_MACOS_ARM64.dmg"
-    report_path = release / "macos-dmg-report.json"
+    reportPath = release / "macos-dmg-report.json"
     report = {"image": str(image), "checks": []}
 
     try:
@@ -86,8 +86,8 @@ def main():
             try:
                 entities = plistlib.loads(attachment)["system-entities"]
                 mount = Path(next(entity["mount-point"] for entity in entities if "mount-point" in entity))
-                mounted_app = mount / app.name
-                links = symlinks(mounted_app)
+                mountedApp = mount / app.name
+                links = symlinks(mountedApp)
                 report["symlink_count"] = len(links)
                 report["checks"].append({
                     "name": "应用符号链接完整保留",
@@ -101,17 +101,17 @@ def main():
                 executables = ["GalTranslPP_GUI", "GalTranslPP_CLI", "Updater", "BaseConfig/Python/bin/python3"]
                 report["checks"].append({
                     "name": "应用及 Python 执行权限",
-                    "passed": all(os.access(mounted_app / "Contents/MacOS" / name, os.X_OK) for name in executables),
+                    "passed": all(os.access(mountedApp / "Contents/MacOS" / name, os.X_OK) for name in executables),
                 })
 
                 if args.check:
                     # 当前便携版会写配置，按实际安装流程先复制到可写目录，再启动检测。
                     installed = temporary / "安装检测"
-                    run(["ditto", mounted_app, installed / app.name])
+                    run(["ditto", mountedApp, installed / app.name])
                     run(["codesign", "--verify", "--deep", "--strict", installed / app.name])
                     result = subprocess.run([
                         sys.executable, str(Path(__file__).with_name("check-macos-portable.py")), str(installed),
-                    ], cwd=ROOT)
+                    ], cwd=kScriptRoot)
                     report["checks"].append({
                         "name": "从 DMG 复制后运行便携检测",
                         "passed": result.returncode == 0,
@@ -123,13 +123,13 @@ def main():
             report["sha256"] = hashlib.file_digest(stream, "sha256").hexdigest()
         report["size"] = image.stat().st_size
         if not all(check["passed"] for check in report["checks"]):
-            raise RuntimeError("DMG 检测失败，详情见 " + str(report_path))
+            raise RuntimeError("DMG 检测失败，详情见 " + str(reportPath))
         print("DMG:", image, flush=True)
     except Exception as error:
         report["error"] = str(error)
         raise
     finally:
-        report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        reportPath.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

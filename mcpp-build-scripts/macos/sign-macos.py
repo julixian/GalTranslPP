@@ -20,7 +20,7 @@ def macho(path):
         return stream.read(4) in (b"\xcf\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"\xfe\xed\xfa\xcf")
 
 
-def sign_app(app):
+def signApp(app):
     contents = app / "Contents"
     directory = contents / "MacOS"
     resources = contents / "Resources"
@@ -53,7 +53,7 @@ def main():
     args = parser.parse_args()
     if sys.platform != "darwin":
         parser.error("应用签名需要 macOS")
-    sign_app(args.app.resolve())
+    signApp(args.app.resolve())
 
 
 if __name__ == "__main__":

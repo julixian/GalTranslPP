@@ -4,13 +4,13 @@ import shutil
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parent
-RELEASE = ROOT / "Release"
-BASE_CONFIG = ROOT / "Example" / "BaseConfig"
-PYTHON_ARCHIVE = "Python-3.12.10-embed-amd64.zip"
+kScriptRoot = Path(__file__).resolve().parent
+kReleaseDir = kScriptRoot / "Release"
+kBaseConfigDir = kScriptRoot / "Example" / "BaseConfig"
+kPythonArchive = "Python-3.12.10-embed-amd64.zip"
 
 
-def copy_tree(source: Path, destination: Path, *excluded: str) -> None:
+def copyTree(source: Path, destination: Path, *excluded: str) -> None:
     if not source.is_dir():
         raise FileNotFoundError(f"Missing release input: {source}")
     shutil.copytree(
@@ -21,22 +21,22 @@ def copy_tree(source: Path, destination: Path, *excluded: str) -> None:
 
 def main() -> None:
     for member in ("GPPCLI", "GPPGUI"):
-        copy_tree(BASE_CONFIG, RELEASE / member / "BaseConfig", PYTHON_ARCHIVE, "opencc")
-    copy_tree(
-        BASE_CONFIG, RELEASE / "GUICORE" / "BaseConfig",
-        PYTHON_ARCHIVE, "opencc", "GlobalConfig.toml", "mecab", "Python-3.12.10-embed-amd64",
+        copyTree(kBaseConfigDir, kReleaseDir / member / "BaseConfig", kPythonArchive, "opencc")
+    copyTree(
+        kBaseConfigDir, kReleaseDir / "GUICORE" / "BaseConfig",
+        kPythonArchive, "opencc", "GlobalConfig.toml", "mecab", "Python-3.12.10-embed-amd64",
     )
 
-    archive_dll = ROOT / "3rdParty" / "7z.dll"
-    if not archive_dll.is_file():
-        raise FileNotFoundError(f"Missing release input: {archive_dll}")
+    archiveDll = kScriptRoot / "3rdParty" / "7z.dll"
+    if not archiveDll.is_file():
+        raise FileNotFoundError(f"Missing release input: {archiveDll}")
     for member in ("GPPCLI", "GPPGUI", "GUICORE"):
-        destination = RELEASE / member
+        destination = kReleaseDir / member
         destination.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(archive_dll, destination / archive_dll.name)
+        shutil.copy2(archiveDll, destination / archiveDll.name)
 
-    copy_tree(ROOT / "Example" / "SampleProject",
-              RELEASE / "GPPCLI" / "SampleProject")
+    copyTree(kScriptRoot / "Example" / "SampleProject",
+              kReleaseDir / "GPPCLI" / "SampleProject")
 
 
 if __name__ == "__main__":

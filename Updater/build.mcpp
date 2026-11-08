@@ -5,14 +5,15 @@ import gpp.build;
 
 int main() {
     if (std::string_view(mcpp::target_os()) == "macos") return gpp::macos::configure("Updater");
-    return gpp::run_build_script([] {
-        gpp::win::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::win::configure_vcpkg("Updater");
-        auto qt_options = gpp::win::make_qt_options({"Core"});
-        const auto translation_file = gpp::win::configure_translation(qt_options, "qt_gppupdater_en.ts");
-        gpp::rules::qt::use(qt_options);
-        gpp::win::release_publisher publisher("Updater", vcpkg_directory);
-        publisher.publish_release("Updater", translation_file);
-        return 0;
-    });
+    return gpp::runBuildScript([]()
+        {
+            gpp::win::configureExecutableLinkOptions();
+            const auto vcpkgDirectory = gpp::win::configureVcpkg("Updater");
+            auto qtOptions = gpp::win::makeQtOptions({"Core"});
+            const auto translationFile = gpp::win::configureTranslation(qtOptions, "qt_gppupdater_en.ts");
+            gpp::rules::qt::use(qtOptions);
+            gpp::win::ReleasePublisher publisher("Updater", vcpkgDirectory);
+            publisher.publishRelease("Updater", translationFile);
+            return 0;
+        });
 }

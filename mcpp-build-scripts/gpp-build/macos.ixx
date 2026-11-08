@@ -17,16 +17,17 @@ int configure(std::string_view member) {
     const auto settings = workspace / "build-local.toml";
     mcpp::rerun_if_changed(settings.generic_string().c_str());
     const auto config = toml::parse_file(settings.string());
-    const auto path = [&](const char* key) {
-        const fs::path value = config["macos"][key].value_or(std::string{});
-        if (value.empty()) {
-            throw std::runtime_error(std::string("build-local.toml 缺少 macos.") + key);
-        }
-        return fs::absolute(workspace / value);
-    };
-    const auto dependencies = path("dependencies_root");
-    const auto python = path("python_root");
-    const auto ela = path("ela_root");
+    const auto pathFunc = [&](const char* key)
+        {
+            const fs::path value = config["macos"][key].value_or(std::string{});
+            if (value.empty()) {
+                throw std::runtime_error(std::string("build-local.toml 缺少 macos.") + key);
+            }
+            return fs::absolute(workspace / value);
+        };
+    const auto dependencies = pathFunc("dependencies_root");
+    const auto python = pathFunc("python_root");
+    const auto ela = pathFunc("ela_root");
     mcpp::include_dir((dependencies / "include").generic_string().c_str());
     mcpp::include_dir((python / "include/python3.12").generic_string().c_str());
     if (std::string_view(mcpp::profile()) == "release" ||
@@ -36,8 +37,8 @@ int configure(std::string_view member) {
     }
     const bool core = member == "GalTranslPP";
     const bool gui = member == "GPPGUI";
-    gpp::rules::qt::options qt;
-    qt.root = path("qt_root");
+    gpp::rules::qt::Options qt;
+    qt.root = pathFunc("qt_root");
     qt.modules = gui
         ? std::vector<std::string>{"Core", "Gui", "Network", "Widgets"}
         : std::vector<std::string>{"Core"};
@@ -49,7 +50,7 @@ int configure(std::string_view member) {
         : member == "GPPCLI" ? "qt_gppcli_en.ts"
         : "qt_gppupdater_en.ts";
     qt.i18n.ts = {translation};
-    qt.i18n.out_dir = mcpp::manifest_dir();
+    qt.i18n.outDir = mcpp::manifest_dir();
     gpp::rules::qt::use(qt);
     if (gui) {
         mcpp::include_dir((workspace / "3rdParty/ElaWidgetTools/ElaWidgetTools").generic_string().c_str());

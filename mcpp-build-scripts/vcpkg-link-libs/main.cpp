@@ -35,16 +35,17 @@ int main(int argc, char** argv) {
             std::ofstream response(responsePath, std::ios::binary);
             response.exceptions(std::ios::failbit | std::ios::badbit);
             response << "\xEF\xBB\xBF";
-            auto writePath = [&](const fs::path& path) {
-                const auto text = path.generic_u8string();
-                response.write(reinterpret_cast<const char*>(text.data()), text.size());
-            };
+            auto writePathFunc = [&](const fs::path& path)
+                {
+                    const auto text = path.generic_u8string();
+                    response.write((const char*)(text.data()), text.size());
+                };
             response << "\"/OUT:";
-            writePath(output);
+            writePathFunc(output);
             response << "\"\n";
             for (const auto& library : libraries) {
                 response << '\"';
-                writePath(library);
+                writePathFunc(library);
                 response << "\"\n";
             }
         }
@@ -60,8 +61,9 @@ int main(int argc, char** argv) {
         DWORD exitCode = 1;
         GetExitCodeProcess(process.hProcess, &exitCode);
         CloseHandle(process.hProcess);
-        return static_cast<int>(exitCode);
-    } catch (const std::exception& error) {
+        return (int)(exitCode);
+    }
+    catch (const std::exception& error) {
         std::cerr << "vcpkg-link-libs: " << error.what() << '\n';
         return 1;
     }

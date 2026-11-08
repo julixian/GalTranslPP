@@ -5,19 +5,20 @@ import gpp.build;
 
 int main() {
     if (std::string_view(mcpp::target_os()) == "macos") return gpp::macos::configure("GPPGUI");
-    return gpp::run_build_script([] {
-        gpp::win::configure_executable_link_options();
-        const auto vcpkg_directory = gpp::win::configure_vcpkg("GalTranslPP_GUI");
+    return gpp::runBuildScript([]()
+        {
+            gpp::win::configureExecutableLinkOptions();
+            const auto vcpkgDirectory = gpp::win::configureVcpkg("GalTranslPP_GUI");
 
-        auto qt_options = gpp::win::make_qt_options({"Core", "Gui", "Network", "Widgets"});
-        qt_options.resources = {"GPPGUI.qrc"};
-        const auto translation_file = gpp::win::configure_translation(qt_options, "qt_gppgui_en.ts");
-        gpp::rules::qt::use(qt_options);
-        const auto ela_widget_tools = gpp::win::use_ela_widget_tools(qt_options);
+            auto qtOptions = gpp::win::makeQtOptions({"Core", "Gui", "Network", "Widgets"});
+            qtOptions.resources = {"GPPGUI.qrc"};
+            const auto translationFile = gpp::win::configureTranslation(qtOptions, "qt_gppgui_en.ts");
+            gpp::rules::qt::use(qtOptions);
+            const auto elaWidgetTools = gpp::win::useElaWidgetTools(qtOptions);
 
-        gpp::win::release_publisher publisher("GalTranslPP_GUI", vcpkg_directory);
-        publisher.additional_runtime_directories.emplace_back(ela_widget_tools);
-        publisher.publish_release("GPPGUI", translation_file);
-        return 0;
-    });
+            gpp::win::ReleasePublisher publisher("GalTranslPP_GUI", vcpkgDirectory);
+            publisher.additionalRuntimeDirectories.emplace_back(elaWidgetTools);
+            publisher.publishRelease("GPPGUI", translationFile);
+            return 0;
+        });
 }

@@ -12,9 +12,9 @@ import stat
 import sys
 
 
-ROOT = Path(__file__).resolve().parent
+kScriptRoot = Path(__file__).resolve().parent
 # 根目录必须排在首位，先清 Ninja 记录，再清成员的生成目录。
-TARGET_DIRS = (
+kTargetDirs = (
     "target",
     "GalTranslPP/target",
     "GPPCLI/target",
@@ -24,7 +24,7 @@ TARGET_DIRS = (
 )
 
 
-def is_link(path: Path) -> bool:
+def isLink(path: Path) -> bool:
     # Windows 的目录联接也属于重解析点，不能跟随它清理仓库外的文件。
     info = path.lstat()
     return stat.S_ISLNK(info.st_mode) or bool(
@@ -33,39 +33,39 @@ def is_link(path: Path) -> bool:
     )
 
 
-def validate_target(root: Path, path: Path) -> None:
+def validateTarget(root: Path, path: Path) -> None:
     resolved = path.resolve(strict=True)
-    if path.name != "target" or is_link(path) or not resolved.is_relative_to(root) or resolved == root:
+    if path.name != "target" or isLink(path) or not resolved.is_relative_to(root) or resolved == root:
         raise ValueError(f"拒绝清理不属于项目的 target 目录：{path}")
 
 
-def clean_targets(root: Path, dry_run: bool = False) -> int:
+def cleanTargets(root: Path, dryRun: bool = False) -> int:
     root = root.resolve(strict=True)
-    targets = [root / relative for relative in TARGET_DIRS if (root / relative).exists()]
+    targets = [root / relative for relative in kTargetDirs if (root / relative).exists()]
     if not targets:
         print("没有找到 target 构建缓存。")
         return 0
 
     for path in targets:
         # 实际删除前再次核对路径；删除失败立即停止，避免继续清理成员缓存。
-        validate_target(root, path)
+        validateTarget(root, path)
         relative = path.relative_to(root)
-        if dry_run:
+        if dryRun:
             print(f"将清理：{relative}")
         else:
             print(f"正在清理：{relative}", flush=True)
             shutil.rmtree(path)
 
-    print(f"{'预览' if dry_run else '清理'}完成，共 {len(targets)} 个 target 目录。")
+    print(f"{'预览' if dryRun else '清理'}完成，共 {len(targets)} 个 target 目录。")
     return len(targets)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="清理本项目内的 target 构建缓存。")
-    parser.add_argument("--dry-run", action="store_true", help="只列出待清理目录，不删除文件")
+    parser.add_argument("--dry-run", dest="dryRun", action="store_true", help="只列出待清理目录，不删除文件")
     args = parser.parse_args()
     try:
-        clean_targets(ROOT, args.dry_run)
+        cleanTargets(kScriptRoot, args.dryRun)
     except (OSError, ValueError) as error:
         print(f"清理失败：{error}", file=sys.stderr)
         return 1

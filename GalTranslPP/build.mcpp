@@ -5,12 +5,13 @@ import gpp.build;
 
 int main() {
     if (std::string_view(mcpp::target_os()) == "macos") return gpp::macos::configure("GalTranslPP");
-    return gpp::run_build_script([] {
-        gpp::win::configure_vcpkg();
-        gpp::win::link_python_libraries();
-        auto qt_options = gpp::win::make_qt_options({"Core"});
-        gpp::win::configure_translation(qt_options, "qt_gpp_en.ts");
-        gpp::rules::qt::use(qt_options);
-        return 0;
-    });
+    return gpp::runBuildScript([]()
+        {
+            gpp::win::configureVcpkg();
+            gpp::win::linkPythonLibraries();
+            auto qtOptions = gpp::win::makeQtOptions({"Core"});
+            gpp::win::configureTranslation(qtOptions, "qt_gpp_en.ts");
+            gpp::rules::qt::use(qtOptions);
+            return 0;
+        });
 }

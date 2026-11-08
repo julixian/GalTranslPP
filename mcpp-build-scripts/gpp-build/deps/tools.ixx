@@ -6,7 +6,7 @@ import mcpp.core;
 export namespace gpp::deps::tools::win {
 
 // 工具由用户安装；这里只从 PATH 查找并解析符号链接。
-std::filesystem::path find_executable(std::string_view name) {
+std::filesystem::path findExecutable(std::string_view name) {
     namespace fs = std::filesystem;
     mcpp::rerun_if_env_changed("PATH");
     const char* environment = std::getenv("PATH");

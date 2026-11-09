@@ -3,16 +3,16 @@ namespace = "gpp"
 name = "gui"
 
 [dependencies]
-"gpp.core" = { path = "../GalTranslPP" }
-"gpp.version" = { path = "../GPPVersion" }
-"gpp.updater" = { path = "../Updater", artifacts = ["Updater"] }
+gpp.core = { path = "../GalTranslPP" }
+gpp.version = { path = "../GPPVersion" }
+gpp.updater = { path = "../Updater", artifacts = ["Updater"] }
 
 [build-dependencies]
-"gpp.build" = { path = "../mcpp-build-scripts/gpp-build" }
+gpp.build = { path = "../mcpp-build-scripts/gpp-build" }
 
 [target.windows.build-dependencies]
-"gpp.vcpkg-link-libs" = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
-"gpp.runtime-stage" = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
+gpp.vcpkg-link-libs = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
+gpp.runtime-stage = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
 
 [build]
 default-profile = "release"

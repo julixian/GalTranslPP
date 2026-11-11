@@ -267,18 +267,36 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
         const auto& currentSession = *worker.session;
         const bool nativeAutoCompaction = currentSession.api.agentNativeAutoCompaction &&
             (currentSession.api.protocol == ApiProtocol::OpenAIRes || currentSession.api.protocol == ApiProtocol::Claude);
-        // 没有启用原生压缩时，先让模型总结完整历史，再用摘要重建会话；不直接截断旧消息。
+        // 没有启用原生压缩时，优先按模型响应返回的 token 用量判断当前 API 的压缩阈值；
+        // 缺少用量信息时按该 token 阈值的 4 倍字节数回退。先让模型总结完整历史，再用摘要重建会话。
         // 刚重建的批次本身可能已超过阈值，等历史增加后再判断，避免连续只做压缩。
-        if (!compacting && !nativeAutoCompaction && currentSession.history.size() > compactedMessageCount &&
-            currentSession.history.dump().size() > (size_t)m_agentCompactContextThresholdBytes)
-        {
-            compacting = true;
-            appendAgentUserMessage(*worker.session,
-                "Context exceeded the compact context threshold. Summarize the full conversation into rolling_context using compact_context, "
-                "preserving translation decisions, character relationships, "
-                "unresolved clues and current progress. Do not call other tools or commit in this turn.");
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] 上下文超过字节阈值，要求模型先压缩上下文")
-                .arg(logPrefix).arg(turn + 1).toStdString());
+        if (!compacting && !nativeAutoCompaction && currentSession.history.size() > compactedMessageCount) {
+            const std::int64_t thresholdTokens = currentSession.api.agentCompactThresholdTokens > 0
+                ? currentSession.api.agentCompactThresholdTokens
+                : kDefaultAgentCompactThresholdTokens;
+            const std::size_t fallbackThresholdBytes = (std::size_t)thresholdTokens * kAgentFallbackBytesPerToken;
+            const bool exceedTokens = currentSession.lastContextTokens.has_value() &&
+                *currentSession.lastContextTokens > thresholdTokens;
+            const std::size_t historyBytes = currentSession.lastContextTokens.has_value() ? 0 : currentSession.history.dump().size();
+            const bool exceedBytes = !currentSession.lastContextTokens.has_value() &&
+                historyBytes > fallbackThresholdBytes;
+            if (exceedTokens || exceedBytes) {
+                compacting = true;
+                appendAgentUserMessage(*worker.session,
+                    "Context exceeded the compact context threshold. Summarize the full conversation into rolling_context using compact_context, "
+                    "preserving translation decisions, character relationships, "
+                    "unresolved clues and current progress. Do not call other tools or commit in this turn.");
+                if (exceedTokens) {
+                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                        "%1 [轮次 %2] 上下文超过 token 阈值（%3 / %4），要求模型先压缩上下文")
+                        .arg(logPrefix).arg(turn + 1).arg(*currentSession.lastContextTokens).arg(thresholdTokens).toStdString());
+                }
+                else {
+                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                        "%1 [轮次 %2] 上下文超过回退字节阈值（%3 / %4），要求模型先压缩上下文")
+                        .arg(logPrefix).arg(turn + 1).arg(historyBytes).arg(fallbackThresholdBytes).toStdString());
+                }
+            }
         }
         requestCount = 0;
         AgentApiResponse response;
@@ -316,8 +334,17 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             }
             requestLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
                 .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
-            m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 开始请求，剩余 %2 句，上下文预估 %3 字节")
-                .arg(requestLogPrefix).arg(pending.size()).arg(worker.session->history.dump().size()).toStdString());
+            const size_t currentHistoryBytes = worker.session->history.dump().size();
+            if (worker.session->lastContextTokens.has_value()) {
+                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                    "%1 开始请求，剩余 %2 句，上次上下文 %3 tokens，本地历史 %4 字节")
+                    .arg(requestLogPrefix).arg(pending.size()).arg(*worker.session->lastContextTokens).arg(currentHistoryBytes).toStdString());
+            }
+            else {
+                m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                    "%1 开始请求，剩余 %2 句，上下文预估 %3 字节")
+                    .arg(requestLogPrefix).arg(pending.size()).arg(currentHistoryBytes).toStdString());
+            }
             response = performAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
                 m_enhanceJailbreak, m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) {

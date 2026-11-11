@@ -41,9 +41,12 @@ struct TranslationApi {
     bool agentStateful = false;
     // 在 Agent 请求中启用服务端按 token 阈值自动压缩，需要模型和接口支持。
     bool agentNativeAutoCompaction = false;
-    // 0 不指定阈值；需要显式阈值的 Responses 路径沿用默认 100000 tokens。
+    // 上下文压缩 token 阈值；0 表示本地压缩与 Responses 原生压缩默认 100000，Claude 原生压缩采用服务端默认值。
     int agentCompactThresholdTokens = 0;
 };
+
+constexpr int kDefaultAgentCompactThresholdTokens = 100000;
+constexpr std::size_t kAgentFallbackBytesPerToken = 4;
 
 enum class ApiErrorType {
     Unknown,
@@ -112,6 +115,7 @@ struct AgentApiSession {
     json history = json::array();
     std::string previousId;
     size_t sentCount = 0;
+    std::optional<std::int64_t> lastContextTokens;
 };
 
 // translateBatch 按协议向本地历史追加用户输入。

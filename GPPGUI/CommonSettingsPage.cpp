@@ -243,21 +243,6 @@ void CommonSettingsPage::setupUi()
 	agentMaxTurnsLayout->addWidget(agentMaxTurnsSpinBox);
 	agentSettingsDrawerArea->addDrawer(agentMaxTurnsArea);
 
-	const int agentCompactContextThresholdBytes = toml::find_or(m_projectConfig, "common", "agent", "compactContextThresholdBytes", 400000);
-	ElaScrollPageArea* agentCompactThresholdArea = new ElaScrollPageArea(agentSettingsDrawerArea);
-	QHBoxLayout* agentCompactThresholdLayout = new QHBoxLayout(agentCompactThresholdArea);
-	GppDoubleText* agentCompactThresholdText = new GppDoubleText(tr("压缩上下文阈值"), 16,
-		tr("未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话"), 10,
-		tr("单位为字节；Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效"), agentCompactThresholdArea);
-	agentCompactThresholdLayout->addWidget(agentCompactThresholdText);
-	agentCompactThresholdLayout->addStretch();
-	ElaSpinBox* agentCompactThresholdSpinBox = new ElaSpinBox(agentCompactThresholdArea);
-	agentCompactThresholdSpinBox->setRange(1, 1000000000);
-	agentCompactThresholdSpinBox->setFixedWidth(180);
-	agentCompactThresholdSpinBox->setValue(agentCompactContextThresholdBytes);
-	agentCompactThresholdLayout->addWidget(agentCompactThresholdSpinBox);
-	agentSettingsDrawerArea->addDrawer(agentCompactThresholdArea);
-
 	const int agentSearchResultLimit = toml::find_or(m_projectConfig, "common", "agent", "searchResultLimit", 80);
 	ElaScrollPageArea* agentSearchResultLimitArea = new ElaScrollPageArea(agentSettingsDrawerArea);
 	QHBoxLayout* agentSearchResultLimitLayout = new QHBoxLayout(agentSearchResultLimitArea);
@@ -680,7 +665,10 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.agent.enabled", agentEnabledToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.allowPython", agentPythonToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.agent.maxTurnsPerChunk", agentMaxTurnsSpinBox->value());
-			insertToml(m_projectConfig, "common.agent.compactContextThresholdBytes", agentCompactThresholdSpinBox->value());
+			if (m_projectConfig.contains("common") && m_projectConfig["common"].contains("agent") &&
+				m_projectConfig["common"]["agent"].is_table()) {
+				m_projectConfig["common"]["agent"].as_table().erase("compactContextThresholdBytes");
+			}
 			insertToml(m_projectConfig, "common.agent.searchResultLimit", agentSearchResultLimitSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.contextLinesLimit", agentContextLinesLimitSpinBox->value());
 			insertToml(m_projectConfig, "common.agent.projectNotePath", agentProjectNotePathLineEdit->text().toStdString());

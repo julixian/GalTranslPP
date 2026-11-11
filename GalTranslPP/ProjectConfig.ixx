@@ -35,7 +35,6 @@ struct TranslationSettings {
     bool agentEnabled;
     bool agentAllowPython;
     int agentMaxTurnsPerChunk;
-    int agentCompactContextThresholdBytes;
     int agentSearchResultLimit;
     int agentContextLinesLimit;
     std::string projectNotePath;

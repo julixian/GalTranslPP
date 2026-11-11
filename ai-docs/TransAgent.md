@@ -11,7 +11,6 @@ Agent 使用原生工具调用，并按 worker 保留跨批次、跨文件会话
 enabled = true
 allowPython = false
 maxTurnsPerChunk = 50
-compactContextThresholdBytes = 400000
 searchResultLimit = 80
 contextLinesLimit = 20
 projectNotePath = "ProjectNote.md"
@@ -30,7 +29,7 @@ SYSTEM 保存固定角色、翻译要求、工具规则和提交规则。USER �
 | `agentStrictTools` | `off`、`all`、`commit` 分别表示不严格、全部工具严格、仅提交工具严格；用于 OpenAI/Claude |
 | `agentStateful` | Responses/Interactions 使用服务端 id 续接，否则发送客户端历史 |
 | `agentNativeAutoCompaction` | Responses/Claude 启用原生自动压缩 |
-| `agentCompactThresholdTokens` | 原生压缩的 token 阈值，0 使用当前协议的默认处理 |
+| `agentCompactThresholdTokens` | 上下文压缩的 token 阈值；0 在本地压缩与 Responses 原生压缩中使用默认 100000，Claude 原生压缩使用服务端默认值 |
 | `agentGeminiInteractions` | 在配置加载时将 Gemini 选择为独立的 `GeminiInterAction` 协议 |
 
 流式输出沿用 API 的流式选项，收集完整响应后统一解析工具调用。完整协议内容（包括推理块和签名）保存在会话历史中。Responses/Interactions 的 `previousId` 和 `sentCount` 决定本轮只发送哪些新增消息。
@@ -41,13 +40,13 @@ SYSTEM 保存固定角色、翻译要求、工具规则和提交规则。USER �
 
 每个 worker 初始化时选择 API。同一 worker 换文件时继续会话；API 身份改变时重建。`random` 保持当前 API 直到被移出池，`fallback` 在批次开始及请求失败时允许重新选择 API。
 
-未启用原生自动压缩时，按 `history.dump().size()` 判断字节阈值。超出阈值后进入专门的压缩轮次，只提供 `compact_context`，通过其 `rolling_context` 参数获取摘要。
+未启用原生自动压缩时，优先按上一轮响应返回的用量信息计算当前上下文 token 数，并与当前 API 的 `agentCompactThresholdTokens`（`0` 默认 `100000`）比较；仅在尚未收到用量或接口未返回有效用量时，才回退按 `history.dump().size()` 与该 token 阈值的 4 倍字节数判断。超出阈值后进入专门的压缩轮次，只提供 `compact_context`，通过其 `rolling_context` 参数获取摘要。
 
-- 摘要有效：清空旧历史、服务端 id 和发送位置，向新会话追加一次 `Conversation summary:\n` 加摘要，再追加当前批次。
+- 摘要有效：清空旧历史、服务端 id、发送位置和上次 token 用量，向新会话追加一次 `Conversation summary:\n` 加摘要，再追加当前批次。
 - 摘要无效或压缩请求重试耗尽：清空摘要和会话，重新追加当前批次。
 - 正常提交不更新摘要，也不要求输出摘要。压缩不会删除已保存的译文、术语和备注。
 
-Responses/Claude 启用原生自动压缩时，不走上述字节阈值摘要流程。收到有效压缩块后，客户端仅保留最新压缩块及其后的历史；Responses 保持最新服务端续接 id。日志中的上下文字节数来自本地历史，只是估算值。
+Responses/Claude 启用原生自动压缩时，不走本地摘要压缩流程。收到有效压缩块后，客户端仅保留最新压缩块及其后的历史；Responses 保持最新服务端续接 id。
 
 API 错误交给 `handleApiError` 处理重试、等待和 API 健康。工具参数或执行错误按调用 id 回填，供模型下一轮修正。仅返回正文时提醒模型调用工具，连续无工具调用达到 `maxRequestCount` 后结束批次。
 

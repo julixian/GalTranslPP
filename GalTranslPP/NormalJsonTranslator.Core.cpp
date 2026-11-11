@@ -119,7 +119,6 @@ void NormalJsonTranslator::normalJsonInit()
         m_agentEnabled = settings.agentEnabled;
         m_agentAllowPython = settings.agentAllowPython;
         m_agentMaxTurnsPerChunk = settings.agentMaxTurnsPerChunk;
-        m_agentCompactContextThresholdBytes = settings.agentCompactContextThresholdBytes;
         m_agentSearchResultLimit = settings.agentSearchResultLimit;
         m_agentContextLinesLimit = settings.agentContextLinesLimit;
         fs::path projectNotePath = ascii2Wide(settings.projectNotePath);

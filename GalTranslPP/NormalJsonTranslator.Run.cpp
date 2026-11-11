@@ -486,7 +486,6 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_maxRequestCount,
             m_apiTimeOutMs,
             m_agentMaxTurnsPerChunk,
-            m_agentCompactContextThresholdBytes,
             m_agentSearchResultLimit,
             m_agentContextLinesLimit,
             m_inputBlockMaxLines,

@@ -104,12 +104,12 @@
     </message>
     <message>
         <location line="+52"/>
-        <location line="+639"/>
+        <location line="+636"/>
         <source>启用</source>
         <translation>Enable</translation>
     </message>
     <message>
-        <location line="-632"/>
+        <location line="-629"/>
         <source>详细配置</source>
         <translation>Advanced</translation>
     </message>
@@ -126,13 +126,13 @@
     <message>
         <location line="+4"/>
         <location line="+1"/>
-        <location line="+583"/>
+        <location line="+580"/>
         <location line="+23"/>
         <source>自定义 Api</source>
         <translation>Custom API</translation>
     </message>
     <message>
-        <location line="-588"/>
+        <location line="-585"/>
         <source>一行一个 key，保存时会接在首个 Api key 后面</source>
         <translation>One key per line; saved after the first Api key</translation>
     </message>
@@ -255,23 +255,27 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。</source>
-        <translation>The model and endpoint must support this. Enabling it bypasses local summarization at the byte threshold. Unsupported models or endpoints may return errors, or ignore compaction settings and eventually exceed the context limit.</translation>
+        <source>需要模型和中转支持。开启后由服务端执行自动压缩，不再进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。</source>
+        <oldsource>需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。</oldsource>
+        <translation>The model and endpoint must support this. When enabled, the server handles compaction and local summarization is bypassed. Unsupported models or endpoints may return errors, or ignore compaction settings and eventually exceed the context limit.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>原生自动压缩 token 阈值</source>
-        <translation>Native automatic compaction token threshold</translation>
+        <source>上下文压缩 token 阈值</source>
+        <oldsource>原生自动压缩 token 阈值</oldsource>
+        <translation>Context compaction token threshold</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值</source>
-        <translation>0 uses the default: 100000 for Responses; the server default for Claude</translation>
+        <source>0 使用默认值；本地压缩与 Responses 原生压缩默认 100000，Claude 原生压缩使用服务端默认值</source>
+        <oldsource>0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值</oldsource>
+        <translation>0 uses defaults: 100000 for local compaction and Responses native compaction; server default for Claude native compaction</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>仅 Responses/Claude 启用原生自动压缩时生效；按服务端 token 数触发，与本地历史字节数不等价</source>
-        <translation>Applies only to native compaction in Responses/Claude. Uses server token counts, which differ from local history byte counts.</translation>
+        <source>未启用原生自动压缩时，按模型响应返回的 token 用量触发本地摘要压缩；若响应未返回用量信息，则按该阈值的 4 倍字节数回退估算</source>
+        <oldsource>未启用原生自动压缩时，按模型响应返回的 token 用量触发本地摘要压缩；若响应未返回用量信息，则回退使用通用设置中的字节阈值</oldsource>
+        <translation>Without native auto-compaction, triggers local summarization using token usage returned in model responses; falls back to 4x the threshold in bytes if usage info is absent</translation>
     </message>
     <message>
         <location line="+9"/>
@@ -284,7 +288,7 @@ sk-...</translation>
         <translation>Use Gemini Interactions. When disabled, use native tools with generateContent.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+3"/>
         <source>Agent</source>
         <translation>Agent</translation>
     </message>
@@ -1375,21 +1379,6 @@ sk-...</translation>
     </message>
     <message>
         <location line="+12"/>
-        <source>压缩上下文阈值</source>
-        <translation>Context compression threshold</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>未启用原生压缩时，消息上下文超过该字节数后请求模型总结并重建会话</source>
-        <translation>Without native compaction, summarize and rebuild the session above this byte count</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>单位为字节；Agent 在 Responses/Claude 启用原生自动压缩时，此参数无效</source>
-        <translation>In bytes; ignored when native auto-compaction is enabled for Responses/Claude in Agent mode.</translation>
-    </message>
-    <message>
-        <location line="+13"/>
         <source>工具搜索结果上限</source>
         <translation>Tool search result limit</translation>
     </message>
@@ -1489,7 +1478,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-523"/>
+        <location line="-508"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1519,7 +1508,7 @@ sk-...</translation>
         <translation>Larger number may cause more memory usage</translation>
     </message>
     <message>
-        <location line="+175"/>
+        <location line="+160"/>
         <source>最大请求次数</source>
         <translation>Max request count</translation>
     </message>
@@ -1539,7 +1528,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-366"/>
+        <location line="-351"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1574,7 +1563,7 @@ sk-...</translation>
         <translation>Use native tools to retrieve context and keep cross-file conversations per worker; configure protocol capabilities in API settings.</translation>
     </message>
     <message>
-        <location line="+178"/>
+        <location line="+163"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1696,12 +1685,12 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+111"/>
+        <location line="+114"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-150"/>
+        <location line="-153"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1723,7 +1712,7 @@ sk-...</translation>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+79"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

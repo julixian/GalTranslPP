@@ -154,19 +154,17 @@ ProjectPreview readPreview(const fs::path& projectDir)
                     api.agentNativeAutoCompaction &&
                     (api.protocol == ApiProtocol::OpenAIRes || api.protocol == ApiProtocol::Claude);
                 addRow(apis, gppTr("TerminalPreview", "原生自动压缩"), enabledText(nativeCompaction));
-                std::string threshold = gppTr("TerminalPreview", "当前模式不使用").toStdString();
-                if (nativeCompaction) {
-                    if (api.agentCompactThresholdTokens > 0) {
-                        threshold = std::to_string(api.agentCompactThresholdTokens);
-                    }
-                    else if (api.protocol == ApiProtocol::Claude) {
-                        threshold = gppTr("TerminalPreview", "服务端默认").toStdString();
-                    }
-                    else {
-                        threshold = "100000";
-                    }
+                std::string threshold;
+                if (api.agentCompactThresholdTokens > 0) {
+                    threshold = std::to_string(api.agentCompactThresholdTokens);
                 }
-                addRow(apis, gppTr("TerminalPreview", "原生压缩阈值（tokens）"), threshold);
+                else if (nativeCompaction && api.protocol == ApiProtocol::Claude) {
+                    threshold = gppTr("TerminalPreview", "服务端默认").toStdString();
+                }
+                else {
+                    threshold = std::to_string(kDefaultAgentCompactThresholdTokens);
+                }
+                addRow(apis, gppTr("TerminalPreview", "压缩阈值（tokens）"), threshold);
             }
         }
         if (entries.empty()) {
@@ -233,10 +231,7 @@ ProjectPreview readPreview(const fs::path& projectDir)
     if (agentEnabled) {
         addRow(agent, gppTr("TerminalPreview", "允许运行 Python"), enabledText(settings.agentAllowPython));
         addRow(agent, gppTr("TerminalPreview", "每批最大轮次"), std::to_string(settings.agentMaxTurnsPerChunk));
-        addRow(agent,
-            gppTr("TerminalPreview", "本地压缩阈值（字节）"),
-            std::to_string(settings.agentCompactContextThresholdBytes));
-        agent.lines.push_back(gppTr("TerminalPreview", "启用原生自动压缩的 Api 不使用本地压缩阈值").toStdString());
+        agent.lines.push_back(gppTr("TerminalPreview", "上下文压缩按各 Api 的 token 阈值触发；响应无用量信息时按 4 倍字节数回退").toStdString());
         addRow(agent, gppTr("TerminalPreview", "搜索结果上限"), std::to_string(settings.agentSearchResultLimit));
         addRow(agent, gppTr("TerminalPreview", "读取行数上限"), std::to_string(settings.agentContextLinesLimit));
         auto note = fs::path(ascii2Wide(settings.projectNotePath));

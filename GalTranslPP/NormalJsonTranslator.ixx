@@ -93,7 +93,6 @@ protected:
     int m_cacheSearchDistance{};
     std::string m_linebreakSymbol;
     int m_agentMaxTurnsPerChunk{};
-    int m_agentCompactContextThresholdBytes{};
     int m_agentSearchResultLimit{};
     int m_agentContextLinesLimit{};
     std::vector<CheckSeCondNormalFunc> m_retranslKeys;

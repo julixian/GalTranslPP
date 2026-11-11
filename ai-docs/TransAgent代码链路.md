@@ -25,7 +25,7 @@ NormalJsonTranslator::processFile
 
 `buildInputBlock()` 按翻译格式构造 JSONLINE 或 TSV 输入。`buildUserPrompt()` 只替换 USER 的批次占位符，SYSTEM 由会话单独保存。压缩摘要只在重建会话时单独注入，不加入每批 USER。
 
-`ApiTool.Agent.cpp` 负责按 Chat Completions、Responses、Claude、Gemini、Gemini Interactions 构造请求和解析响应。`AgentApiSession::history` 保存协议原生历史，`previousId` 保存最新服务端续接 id，`sentCount` 标记服务端已知历史的结束位置。`pendingAgentInput()` 在续接时只发送新增历史。
+`ApiTool.Agent.cpp` 负责按 Chat Completions、Responses、Claude、Gemini、Gemini Interactions 构造请求和解析响应。`AgentApiSession::history` 保存协议原生历史，`previousId` 保存最新服务端续接 id，`sentCount` 标记服务端已知历史的结束位置，`lastContextTokens` 记录最新响应返回的上下文 token 数。`pendingAgentInput()` 在续接时只发送新增历史。
 
 流式请求在 HTTP 层收集完整响应后进入同一解析流程。响应通过检查后，才更新会话历史及续接位置。
 
@@ -39,7 +39,7 @@ NormalJsonTranslator::processFile
 
 ## 压缩与重试
 
-没有原生自动压缩时，批次循环检查历史字节数。压缩轮次只声明 `compact_context`，读取其 `rolling_context` 参数。摘要有效时重建会话并注入一次摘要，无效或请求重试耗尽时清空摘要重新开始当前批次。
+没有原生自动压缩时，批次循环优先按 `lastContextTokens` 检查当前 API 的 `agentCompactThresholdTokens`（`0` 默认 `100000`），仅在响应缺少有效用量信息时回退检查本地历史字节数是否超过该 token 阈值的 4 倍。压缩轮次只声明 `compact_context`，读取其 `rolling_context` 参数。摘要有效时重建会话并注入一次摘要，无效或请求重试耗尽时清空摘要重新开始当前批次。
 
 原生自动压缩由 Responses/Claude 的请求选项和响应解析维护，不调用文本摘要流程。
 

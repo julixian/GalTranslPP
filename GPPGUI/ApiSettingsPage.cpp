@@ -543,11 +543,11 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
         tr("仅 Responses/Gemini Interactions 生效；开启后使用会话 ID 并启用服务端存储"), false);
     ElaToggleSwitch* agentNativeAutoCompactionSwitch = addAgentSwitch("agentNativeAutoCompaction", tr("原生自动压缩"),
         tr("Responses/Claude 原生自动压缩；模型不支持时可能报错或超出上下文上限"), false,
-        tr("需要模型和中转支持。开启后不再使用字节阈值进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
+        tr("需要模型和中转支持。开启后由服务端执行自动压缩，不再进行本地摘要压缩；不支持的模型或中转可能报错，或忽略压缩参数并最终超出上下文上限。"));
     auto [agentCompactTokensArea, agentCompactTokensLayout] = createFormRow(agentTabPage.content);
-    agentCompactTokensLayout->addWidget(new GppDoubleText(tr("原生自动压缩 token 阈值"), 16,
-        tr("0 使用默认值；Responses 默认 100000，Claude 使用服务端默认值"), 10,
-        tr("仅 Responses/Claude 启用原生自动压缩时生效；按服务端 token 数触发，与本地历史字节数不等价"), agentCompactTokensArea));
+    agentCompactTokensLayout->addWidget(new GppDoubleText(tr("上下文压缩 token 阈值"), 16,
+        tr("0 使用默认值；本地压缩与 Responses 原生压缩默认 100000，Claude 原生压缩使用服务端默认值"), 10,
+        tr("未启用原生自动压缩时，按模型响应返回的 token 用量触发本地摘要压缩；若响应未返回用量信息，则按该阈值的 4 倍字节数回退估算"), agentCompactTokensArea));
     agentCompactTokensLayout->addStretch();
     ElaSpinBox* agentCompactTokensSpinBox = new ElaSpinBox(agentCompactTokensArea);
     agentCompactTokensSpinBox->setRange(0, 1000000000);
@@ -558,9 +558,6 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     ElaToggleSwitch* agentGeminiInteractionsSwitch = addAgentSwitch("agentGeminiInteractions",
     	tr("为 TransAgent 启用 Interactions API"), tr("Gemini 使用 Interactions；关闭后使用 generateContent 原生工具调用"), false);
     // 选项位置保持固定，适用协议由说明文字提示，不随协议切换隐藏。
-    agentCompactTokensSpinBox->setEnabled(agentNativeAutoCompactionSwitch->getIsToggled());
-    connect(agentNativeAutoCompactionSwitch, &ElaToggleSwitch::toggled,
-        agentCompactTokensSpinBox, &QWidget::setEnabled);
     agentTabPage.layout->addStretch();
     tabWidget->addTab(agentTabPage.page, tr("Agent"));
 

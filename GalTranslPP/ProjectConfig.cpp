@@ -99,10 +99,6 @@ void validateTranslationSettings(const TranslationSettings& config, bool agentEn
         "common.agent.contextLinesLimit",
         config.agentContextLinesLimit,
         gppTr("validateNormalJsonCoreConfig", "大于等于 0").toStdString());
-    GPP_REQUIRE_CONFIG(config.agentCompactContextThresholdBytes > 0,
-        "common.agent.compactContextThresholdBytes",
-        config.agentCompactContextThresholdBytes,
-        gppTr("validateNormalJsonCoreConfig", "大于 0").toStdString());
 }
 
 #undef GPP_REQUIRE_CONFIG
@@ -135,8 +131,6 @@ TranslationSettings readTranslationSettings(const toml::value& configData)
     settings.agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
     settings.agentAllowPython = toml::find_or(configData, "common", "agent", "allowPython", false);
     settings.agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
-    settings.agentCompactContextThresholdBytes =
-        toml::find_or(configData, "common", "agent", "compactContextThresholdBytes", 400000);
     settings.agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);
     settings.agentContextLinesLimit = toml::find_or(configData, "common", "agent", "contextLinesLimit", 20);
     settings.projectNotePath = toml::find_or(configData, "common", "agent", "projectNotePath", "ProjectNote.md");

@@ -1052,7 +1052,6 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_cacheSearchDistance", &NormalJsonTranslator::m_cacheSearchDistance,
 		"m_linebreakSymbol", &NormalJsonTranslator::m_linebreakSymbol,
 		"m_agentMaxTurnsPerChunk", &NormalJsonTranslator::m_agentMaxTurnsPerChunk,
-		"m_agentCompactContextThresholdBytes", &NormalJsonTranslator::m_agentCompactContextThresholdBytes,
 		"m_agentSearchResultLimit", &NormalJsonTranslator::m_agentSearchResultLimit,
 		"m_agentContextLinesLimit", &NormalJsonTranslator::m_agentContextLinesLimit,
 		"m_splitFileEnabled", &NormalJsonTranslator::m_splitFileEnabled,

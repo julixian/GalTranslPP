@@ -44,7 +44,6 @@ public:
         int maxRequestCount,
         int apiTimeOutMs,
         int agentMaxTurnsPerChunk,
-        int agentCompactContextThresholdBytes,
         int agentSearchResultLimit,
         int agentContextLinesLimit,
         int inputBlockMaxLines,
@@ -140,7 +139,6 @@ private:
     int m_maxRequestCount;
     int m_apiTimeOutMs;
     int m_agentMaxTurnsPerChunk;
-    int m_agentCompactContextThresholdBytes;
     int m_agentSearchResultLimit;
     int m_agentContextLinesLimit;
     int m_inputBlockMaxLines;

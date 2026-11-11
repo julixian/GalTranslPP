@@ -355,7 +355,6 @@ class NormalJsonTranslator(ITranslator):
     m_cacheSearchDistance: int
     m_linebreakSymbol: str
     m_agentMaxTurnsPerChunk: int
-    m_agentCompactContextThresholdBytes: int
     m_agentSearchResultLimit: int
     m_agentContextLinesLimit: int
     m_splitFileEnabled: bool

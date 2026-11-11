@@ -40,7 +40,7 @@ struct ApiStreamState
         for (const auto& item : event.items()) {
             const auto& key = item.key();
             const auto& value = item.value();
-            if (key != "choices") {
+            if (key != "choices" && (!value.is_null() || !response.contains(key))) {
                 response[key] = value;
             }
         }
@@ -135,7 +135,10 @@ struct ApiStreamState
         }
         else if (type == "message_delta") {
             response.update(event.at("delta"));
-            if (event.contains("usage")) {
+            if (event.contains("usage") && event.at("usage").is_object()) {
+                if (!response.contains("usage") || !response.at("usage").is_object()) {
+                    response["usage"] = json::object();
+                }
                 response["usage"].update(event.at("usage"));
             }
         }
@@ -262,6 +265,9 @@ struct ApiStreamState
         else if (type == "interaction.completed" || type == "interaction.requires_action" || type == "interaction.failed") {
             if (event.contains("interaction")) {
                 response.update(event.at("interaction"));
+            }
+            if (!response.contains("usage") && event.contains("usage") && event.at("usage").is_object()) {
+                response["usage"] = event.at("usage");
             }
             if (!event.contains("interaction") || !event.at("interaction").contains("status")) {
                 response["status"] = type.substr(std::string_view("interaction.").size());

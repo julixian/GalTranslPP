@@ -122,7 +122,8 @@ json buildAgentPayload(const AgentApiSession& session, const json& tools, int en
         if (api.agentNativeAutoCompaction) {
             // Responses 由服务端判断 token 数；配置为 0 时沿用本项目默认阈值。
             payload["context_management"] = json::array({{{"type", "compaction"},
-                {"compact_threshold", api.agentCompactThresholdTokens > 0 ? api.agentCompactThresholdTokens : 100000}}});
+                {"compact_threshold", api.agentCompactThresholdTokens > 0
+                    ? api.agentCompactThresholdTokens : kDefaultAgentCompactThresholdTokens}}});
         }
         break;
 
@@ -184,10 +185,139 @@ json buildAgentPayload(const AgentApiSession& session, const json& tools, int en
     return payload;
 }
 
+std::optional<std::int64_t> readNonNegativeInt(const json& obj, std::string_view key)
+{
+    const auto it = obj.find(key);
+    if (it == obj.end() || !it->is_number_integer()) {
+        return std::nullopt;
+    }
+    const std::int64_t value = it->get<std::int64_t>();
+    return value >= 0 ? std::optional<std::int64_t>(value) : std::nullopt;
+}
+
+// 从响应的用量字段提取本轮结束后的上下文 token 数；字段缺失或为 0 时返回 nullopt，供调用方回退到字节阈值。
+std::optional<std::int64_t> extractAgentContextTokens(const json& parsed, ApiProtocol protocol, bool compacted)
+{
+    auto positiveOrNulloptFunc = [](std::int64_t tokens) -> std::optional<std::int64_t>
+        {
+            return tokens > 0 ? std::optional<std::int64_t>(tokens) : std::nullopt;
+        };
+
+    switch (protocol)
+    {
+    case ApiProtocol::OpenAI:
+    {
+        const auto usage = parsed.find("usage");
+        if (usage == parsed.end() || !usage->is_object()) {
+            return std::nullopt;
+        }
+        const auto prompt = readNonNegativeInt(*usage, "prompt_tokens");
+        const auto completion = readNonNegativeInt(*usage, "completion_tokens");
+        if (prompt && completion) {
+            std::int64_t outputInContext = *completion;
+            // 标准 Chat 不向下一轮回传隐藏推理 token；仅在消息未携带显式推理字段时扣除。
+            const auto& message = parsed.at("choices").at(0).at("message");
+            if (!message.contains("reasoning_content") && !message.contains("reasoning")) {
+                if (const auto details = usage->find("completion_tokens_details");
+                    details != usage->end() && details->is_object()) {
+                    const std::int64_t reasoning = readNonNegativeInt(*details, "reasoning_tokens").value_or(0);
+                    outputInContext = std::max<std::int64_t>(0, outputInContext - reasoning);
+                }
+            }
+            return positiveOrNulloptFunc(*prompt + outputInContext);
+        }
+        if (const auto total = readNonNegativeInt(*usage, "total_tokens")) {
+            return positiveOrNulloptFunc(*total);
+        }
+        return std::nullopt;
+    }
+
+    case ApiProtocol::OpenAIRes:
+    {
+        const auto usage = parsed.find("usage");
+        if (usage == parsed.end() || !usage->is_object()) {
+            return std::nullopt;
+        }
+        const auto input = readNonNegativeInt(*usage, "input_tokens");
+        const auto output = readNonNegativeInt(*usage, "output_tokens");
+        if (input && output) {
+            return positiveOrNulloptFunc(*input + *output);
+        }
+        if (const auto total = readNonNegativeInt(*usage, "total_tokens")) {
+            return positiveOrNulloptFunc(*total);
+        }
+        return std::nullopt;
+    }
+
+    case ApiProtocol::Claude:
+    {
+        const auto usage = parsed.find("usage");
+        if (usage == parsed.end() || !usage->is_object()) {
+            return std::nullopt;
+        }
+        const json* effectiveUsage = &(*usage);
+        if (compacted) {
+            if (const auto iterations = usage->find("iterations");
+                iterations != usage->end() && iterations->is_array() && !iterations->empty() && iterations->back().is_object()) {
+                effectiveUsage = &iterations->back();
+            }
+        }
+        // Claude 启用缓存时 input_tokens 仅统计未命中部分，完整输入需计入缓存创建和读取部分。
+        const auto uncachedInput = readNonNegativeInt(*effectiveUsage, "input_tokens");
+        const std::int64_t cacheCreation = readNonNegativeInt(*effectiveUsage, "cache_creation_input_tokens").value_or(0);
+        const std::int64_t cacheRead = readNonNegativeInt(*effectiveUsage, "cache_read_input_tokens").value_or(0);
+        const std::int64_t output = readNonNegativeInt(*effectiveUsage, "output_tokens").value_or(0);
+        if (uncachedInput || cacheCreation > 0 || cacheRead > 0) {
+            return positiveOrNulloptFunc(uncachedInput.value_or(0) + cacheCreation + cacheRead + output);
+        }
+        return std::nullopt;
+    }
+
+    case ApiProtocol::Gemini:
+    {
+        const auto usage = parsed.find("usageMetadata");
+        if (usage == parsed.end() || !usage->is_object()) {
+            return std::nullopt;
+        }
+        // promptTokenCount 已包含缓存；纯工具调用可能省略 candidatesTokenCount。
+        if (const auto prompt = readNonNegativeInt(*usage, "promptTokenCount")) {
+            const std::int64_t candidates = readNonNegativeInt(*usage, "candidatesTokenCount").value_or(0);
+            return positiveOrNulloptFunc(*prompt + candidates);
+        }
+        if (const auto total = readNonNegativeInt(*usage, "totalTokenCount")) {
+            return positiveOrNulloptFunc(*total);
+        }
+        return std::nullopt;
+    }
+
+    case ApiProtocol::GeminiInterAction:
+    {
+        const auto usage = parsed.find("usage");
+        if (usage == parsed.end() || !usage->is_object()) {
+            return std::nullopt;
+        }
+        auto input = readNonNegativeInt(*usage, "total_input_tokens");
+        if (!input) input = readNonNegativeInt(*usage, "input_tokens");
+        if (!input) input = readNonNegativeInt(*usage, "prompt_tokens");
+        auto output = readNonNegativeInt(*usage, "total_output_tokens");
+        if (!output) output = readNonNegativeInt(*usage, "output_tokens");
+        if (!output) output = readNonNegativeInt(*usage, "candidates_tokens");
+        if (input) {
+            return positiveOrNulloptFunc(*input + output.value_or(0));
+        }
+        if (const auto total = readNonNegativeInt(*usage, "total_tokens")) {
+            return positiveOrNulloptFunc(*total);
+        }
+        return std::nullopt;
+    }
+    }
+    return std::nullopt;
+}
+
 // performAgentApiRequest 在 parseApiResponse 检查通过后调用，提取正文/原生工具调用，保留推理块与签名供后续请求。
 // 工具 arguments 保持原始 JSON 或字符串，具体参数解析/提交检查留给 translateBatch 的逐工具 catch。
 // 允许纯工具回复无正文；正文和调用都为空或响应字段异常时抛出，由请求入口转成带原始响应的 ResponseParse。
-// 完成响应提取后才更新 history、previousId 和 sentCount；Responses/Claude 有效压缩块会替换其之前的本地历史。
+// 完成响应提取后才更新 history、previousId、sentCount 和上下文用量；Responses/Claude 有效压缩块会替换其之前的本地历史。
 AgentApiReply parseAgentReply(const json& parsed, AgentApiSession& session)
 {
     AgentApiReply reply;
@@ -319,6 +449,7 @@ AgentApiReply parseAgentReply(const json& parsed, AgentApiSession& session)
     }
     session.previousId = std::move(previousId);
     session.sentCount = session.history.size();
+    session.lastContextTokens = extractAgentContextTokens(parsed, session.api.protocol, compacted);
     return reply;
 }
 

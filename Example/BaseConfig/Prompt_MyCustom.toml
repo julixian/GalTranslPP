@@ -59,6 +59,7 @@ FORGALJSON_USER = """<ciallo_info>
   - example_src: 「俺達、結婚しようって話になったんだ」
   - fault_dst: 「我们，商量好要结婚了」
   - correct_dst: 「我们商量好要结婚了」
+3. 对于作品名，使用双书名号而非引号。
 </category>
 <category name="拟声词、感官描写与成人内容">
 1. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。可灵活选择音译或通过动作描述来呈现。
@@ -155,6 +156,7 @@ FORNOVELJSON_USER = """<ciallo_info>
   - example_src: 「俺達、結婚しようって話になったんだ」
   - fault_dst: 「我们，商量好要结婚了」
   - correct_dst: 「我们商量好要结婚了」
+3. 对于作品名，使用双书名号而非引号。
 </category>
 <category name="拟声词、感官描写与成人内容">
 1. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。可灵活选择音译或通过动作描述来呈现。
@@ -333,6 +335,7 @@ FORGALJSON_AGENT_SYSTEM = """<ciallo_agent_info>
   - example_src: 「俺達、結婚しようって話になったんだ」
   - fault_dst: 「我们，商量好要结婚了」
   - correct_dst: 「我们商量好要结婚了」
+3. 对于作品名，使用双书名号而非引号。
 </category>
 <category name="拟声词、感官描写与成人内容">
 1. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。可灵活选择音译或通过动作描述来呈现。
@@ -476,6 +479,7 @@ FORNOVELJSON_AGENT_SYSTEM = """<ciallo_agent_info>
   - example_src: 「俺達、結婚しようって話になったんだ」
   - fault_dst: 「我们，商量好要结婚了」
   - correct_dst: 「我们商量好要结婚了」
+3. 对于作品名，使用双书名号而非引号。
 </category>
 <category name="拟声词、感官描写与成人内容">
 1. 将拟声词和感叹词直接转换为自然的 [TargetLang] 表达。可灵活选择音译或通过动作描述来呈现。

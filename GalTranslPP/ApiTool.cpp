@@ -513,8 +513,10 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
             if (thinkingLevel == "none" || thinkingLevel == "minimal") {
                 thinkingLevel = supportsMinimal ? "minimal" : "low";
             }
-            if (thinkingLevel == "xhigh" || thinkingLevel == "max"
-                || (thinkingLevel == "medium" && isModel("gemini-3-pro"))) {
+            if (thinkingLevel == "max") {
+                thinkingLevel = isModel("gemini-4-hydrogen") ? "xhigh" : "high";
+            }
+            else if (thinkingLevel == "medium" && isModel("gemini-3-pro")) {
                 thinkingLevel = "high";
             }
             if (isModel("gemini-3-1-flash-lite-image") && thinkingLevel != "minimal") {

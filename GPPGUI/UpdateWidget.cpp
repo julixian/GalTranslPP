@@ -18,7 +18,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 优化 Agent 压缩阈值相关计算，现在优先使用 token 作为计量单位，并使用模型返回的准确值进行计算。以 token 阈值 * 4 作为字节数回退",
+        "1. 支持向 gemini 模型原生传递 xhigh 思考以支持 gemini-4-hydrogen 的新思考挡位",
     };
 
     mainLayout->addWidget(updateTitle);

@@ -468,7 +468,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
 
     auto [thinkingConfigArea, thinkingConfigLayout] = createFormRow(basicPage);
     thinkingConfigLayout->addWidget(new GppDoubleText(tr("思考等级"), 16,
-        tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度"), 10,
+        tr("不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位"), 10,
         "", thinkingConfigArea));
     thinkingConfigLayout->addStretch();
     GppNoWheelComboBox* thinkingComboBox = new GppNoWheelComboBox(thinkingConfigArea);

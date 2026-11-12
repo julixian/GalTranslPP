@@ -102,8 +102,8 @@
 <context>
     <name>ApiTool.makeSystemProxies</name>
     <message>
-        <location filename="ApiTool.cpp" line="622"/>
-        <location filename="ApiTool.cpp" line="638"/>
+        <location filename="ApiTool.cpp" line="624"/>
+        <location filename="ApiTool.cpp" line="640"/>
         <source>正在使用系统代理: [%1]</source>
         <translation>Using system proxy: [%1]</translation>
     </message>
@@ -119,7 +119,7 @@
 <context>
     <name>ApiTool.sendApiHttpRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="709"/>
+        <location filename="ApiTool.cpp" line="711"/>
         <source>[GPP.响应为空]</source>
         <translation>[GPP.Empty response]</translation>
     </message>
@@ -2282,7 +2282,7 @@ Cache source: %4</translation>
 <context>
     <name>sendApiRequest</name>
     <message>
-        <location filename="ApiTool.cpp" line="736"/>
+        <location filename="ApiTool.cpp" line="738"/>
         <source>最终解析出的回复为:</source>
         <translation>Final parsed response:</translation>
     </message>

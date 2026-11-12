@@ -165,8 +165,8 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位，无法关闭思考的模型使用最低强度</source>
-        <translation>Omit uses the API default. Other levels are mapped by protocol and model to the closest available level; models that cannot disable thinking use the lowest effort.</translation>
+        <source>不传递则使用接口默认行为；其余等级按协议和模型转换，不支持的档位使用最接近的可用档位</source>
+        <translation>Omit uses the API default. Other levels are mapped by protocol and model to the closest available level.</translation>
     </message>
     <message>
         <location line="+5"/>

@@ -324,6 +324,7 @@
     <ClInclude Include="GppComboBox.h" />
     <ClInclude Include="GppMultiSelectComboBox.h" />
     <ClInclude Include="GppPlatform.h" />
+    <ClInclude Include="GppTomlFwd.h" />
     <ClInclude Include="GppRadioButton.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />

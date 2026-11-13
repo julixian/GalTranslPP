@@ -15,7 +15,7 @@ import Tool;
 
 using namespace gpp;
 
-CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
+CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent)
 	: BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("自定义文件处理插件配置"));
@@ -26,7 +26,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 创建自定义文件处理插件路径设置
-	const std::string customFilePluginPath = toml::find_or(m_projectConfig, "plugins", "customFilePlugin", "Lua/SampleNormalJsonFilePlugin.lua");
+	const std::string customFilePluginPath = tomlkit::findOr(m_projectConfig, "plugins", "customFilePlugin", "Lua/SampleNormalJsonFilePlugin.lua");
 	ElaScrollPageArea* filePluginArea = new ElaScrollPageArea(this);
 	QHBoxLayout* filePluginLayout = new QHBoxLayout(filePluginArea);
 	ElaText* filePluginText = new ElaText(tr("自定义文件处理插件路径"), 16, filePluginArea);
@@ -42,7 +42,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	connect(filePluginBtn, &ElaToolButton::clicked, this, [=, this]()
 		{
 			QString path = QFileDialog::getOpenFileName(window(), tr("选择自定义文件处理插件"),
-				QString::fromStdString(toml::find_or(m_globalConfig, "lastPluginPath", "./")),
+				QString::fromStdString(tomlkit::findOr(m_globalConfig, "lastPluginPath", "./")),
 				"custom script (*.lua *.py)");
 			if (!path.isEmpty())
 			{
@@ -54,7 +54,7 @@ CustomFilePluginCfgPage::CustomFilePluginCfgPage(fs::path& projectDir, toml::ord
 	mainLayout->addWidget(filePluginArea);
 
 	// 继承的基类 # NormalJson, Epub, PDF
-	const std::string inherit = toml::find_or(m_projectConfig, "plugins", "baseClassName", "NormalJson");
+	const std::string inherit = tomlkit::findOr(m_projectConfig, "plugins", "baseClassName", "NormalJson");
 	ElaScrollPageArea* inheritArea = new ElaScrollPageArea(this);
 	QHBoxLayout* inheritLayout = new QHBoxLayout(inheritArea);
 	ElaText* inheritText = new ElaText(tr("基类继承"), 16, inheritArea);

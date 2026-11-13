@@ -1,14 +1,14 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class AppSettingsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-	explicit AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+	explicit AppSettingsPage(tomlkit::Item& globalConfig, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void clearLogShortcutChangedSignal(const QString& shortcut);
@@ -16,5 +16,5 @@ Q_SIGNALS:
 private:
     void setupUi();
 
-    toml::ordered_value& m_globalConfig;
+    tomlkit::Item& m_globalConfig;
 };

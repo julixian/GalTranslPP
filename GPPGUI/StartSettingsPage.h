@@ -6,7 +6,7 @@
 #include <QThread>
 #include <QSystemTrayIcon>
 #include <filesystem>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 namespace fs = std::filesystem;
 
@@ -29,7 +29,7 @@ class StartSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit StartSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
     ~StartSettingsPage() override;
 
 	void apply2Config() override;
@@ -66,8 +66,8 @@ private:
 
     void setupUi();
     fs::path& m_projectDir;
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    tomlkit::Item& m_projectConfig;
 
     QThread* m_workThread = nullptr;
     TranslatorWorker* m_worker = nullptr;

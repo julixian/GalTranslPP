@@ -4,3 +4,6 @@
 [submodule "3rdParty/ElaWidgetTools"]
 	path = 3rdParty/ElaWidgetTools
 	url = https://github.com/julixian/ElaWidgetTools.git
+[submodule "3rdParty/tomlkitpp"]
+	path = 3rdParty/tomlkitpp
+	url = https://github.com/julixian/tomlkitpp.git

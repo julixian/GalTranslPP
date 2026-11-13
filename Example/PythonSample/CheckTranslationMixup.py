@@ -1,7 +1,7 @@
 """检查相邻行的疑似串行，只标记问题，不修改译文。
 
-作为 Text 插件：复制到项目目录，在 textPlugins 中加入
-"dpostrun:%PROJECT_DIR%/CheckTranslationMixup.py"。
+作为 Text 插件：复制到项目目录，在 customTextPlugins 中加入
+"%PROJECT_DIR%/CheckTranslationMixup.py"。
 
 离线检查：python -X utf8 CheckTranslationMixup.py 项目目录 --output 检查结果.json
 也可以传入 transl_cache 目录或单个缓存 JSON；离线模式只输出报告。

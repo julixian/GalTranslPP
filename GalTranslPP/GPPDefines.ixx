@@ -11,7 +11,7 @@ export import GPPI18n;
 export import jpcre2;
 export import nlohmann.json;
 export import spdlog;
-export import toml11;
+export import tomlkitpp;
 
 export NAMESPACE_BEGIN(gpp)
 
@@ -46,6 +46,7 @@ extern const std::string defaultRegReplaceModifier;
 
 using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
+using toml = tomlkit::Item;
 
 enum class NameType
 {

@@ -2,8 +2,9 @@
 
 #include "BasePage.h"
 #include "NormalDictModel.h"
+#include "GppTomlFwd.h"
 #include <filesystem>
-#include <toml.hpp>
+#include <memory>
 
 namespace fs = std::filesystem;
 
@@ -12,13 +13,14 @@ class PromptSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit PromptSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit PromptSettingsPage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
+    ~PromptSettingsPage() override;
 
 private:
 
     void setupUi();
-    toml::ordered_value m_promptConfig;
-    toml::ordered_value& m_projectConfig;
+    std::unique_ptr<tomlkit::Item> m_promptConfig;
+    tomlkit::Item& m_projectConfig;
     fs::path& m_projectDir;
 
 };

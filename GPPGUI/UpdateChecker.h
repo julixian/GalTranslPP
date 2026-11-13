@@ -6,7 +6,7 @@
 #include <QUrl>
 #include <QTimer>
 #include <QSystemTrayIcon>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class ElaText;
 class QFile;
@@ -15,7 +15,7 @@ class UpdateChecker : public QObject
 {
     Q_OBJECT
 public:
-    explicit UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusText, QObject* parent = nullptr);
+    explicit UpdateChecker(tomlkit::Item& globalConfig, ElaText* statusText, QObject* parent = nullptr);
     ~UpdateChecker() override;
     void check(bool downloadIfAvailableAfterChecking = false);
     bool shouldDownloadButtonEnabled() const;
@@ -86,7 +86,7 @@ private:
     QTimer* m_downloadTimer = nullptr;
     QFile* m_downloadFile = nullptr;
 
-    toml::ordered_value& m_globalConfig;
+    tomlkit::Item& m_globalConfig;
     const QString m_repoOwner = "julixian";
     const QString m_repoName = "GalTranslPP";
     const QString m_assetName = gppUpdatePackage;

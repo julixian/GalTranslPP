@@ -9,7 +9,7 @@
 #include <QStandardItemModel>
 #include <filesystem>
 #include <nlohmann/json.hpp>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class ElaPlainTextEdit;
 class ElaIconButton;
@@ -34,7 +34,7 @@ class ProjectCachePage : public BasePage
     Q_OBJECT
 
 public:
-    explicit ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit ProjectCachePage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
     void ensureCacheFilesLoaded();
     void refreshCacheFiles();
@@ -147,7 +147,7 @@ private:
 
 private:
     fs::path& m_projectDir;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 
     QList<CacheFileInfo> m_cacheFiles;
     QMap<QString, json> m_loadedEntriesByFile;

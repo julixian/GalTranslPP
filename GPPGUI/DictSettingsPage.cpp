@@ -26,7 +26,7 @@ import Tool;
 
 using namespace gpp;
 
-DictSettingsPage::DictSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
+DictSettingsPage::DictSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("项目字典设置"));
@@ -143,21 +143,21 @@ void DictSettingsPage::setupUi()
 		tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
 		if constexpr (std::is_same_v<EntryType, GuiGptDictEntry>) {
-			tableView->setColumnWidth(GptDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 346));
-			tableView->setColumnWidth(GptDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 199));
-			tableView->setColumnWidth(GptDictModel::Description, toml::find_or(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 559));
+			tableView->setColumnWidth(GptDictModel::Original, tomlkit::findOr(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "0", 346));
+			tableView->setColumnWidth(GptDictModel::Translation, tomlkit::findOr(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "1", 199));
+			tableView->setColumnWidth(GptDictModel::Description, tomlkit::findOr(m_projectConfig, "GUIConfig", "gptDictTableColumnWidth", "2", 559));
 		}
 		else {
-			tableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "0", 285));
-			tableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "1", 195));
-			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 350));
-			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 82));
-			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 65));
+			tableView->setColumnWidth(NormalDictModel::Original, tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "0", 285));
+			tableView->setColumnWidth(NormalDictModel::Translation, tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "1", 195));
+			tableView->setColumnWidth(NormalDictModel::Conditions, tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "2", 350));
+			tableView->setColumnWidth(NormalDictModel::IsReg, tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "3", 82));
+			tableView->setColumnWidth(NormalDictModel::Priority, tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableColumnWidth", "4", 65));
 		}
 
 		stackedWidget->addWidget(tableView);
-		stackedWidget->setCurrentIndex(toml::find_or(m_projectConfig, "GUIConfig", configKey + "DictTableOpenMode",
-			toml::find_or(m_globalConfig, "defaultDictOpenMode", 1)));
+		stackedWidget->setCurrentIndex(tomlkit::findOr(m_projectConfig, "GUIConfig", configKey + "DictTableOpenMode",
+			tomlkit::findOr(m_globalConfig, "defaultDictOpenMode", 1)));
 		DictionarySearchBar* searchBar = new DictionarySearchBar(tableView,
 			std::is_same_v<EntryType, GuiGptDictEntry> ? tr("备注") : tr("条件"), pageMainWidget);
 		searchBar->setVisible(stackedWidget->currentIndex() == 1);
@@ -195,17 +195,19 @@ void DictSettingsPage::setupUi()
 						model->loadData(DictionaryReader::readGptDict(dictPath));
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						toml::ordered_value dictsArr = toml::array{};
+						tomlkit::Item dictsArr = tomlkit::Item::array();
 						const QList<EntryType>& dictEntries = model->getEntriesRef();
 						for (const auto& dictEntry : dictEntries) {
-							toml::ordered_table dictTable;
-							dictTable.emplace("org", dictEntry.original.toStdString());
-							dictTable.emplace("rep", dictEntry.translation.toStdString());
-							dictTable.emplace("note", dictEntry.description.toStdString());
-							dictsArr.push_back(std::move(dictTable));
+							dictsArr.push_back(tomlkit::Item::inlineTable({
+								{ "org", dictEntry.original.toStdString() },
+								{ "rep", dictEntry.translation.toStdString() },
+								{ "note", dictEntry.description.toStdString() }
+							}));
 						}
-						dictsArr.as_array_fmt().fmt = toml::array_format::multiline;
-						atomicOutputFile(dictPath, toml::format(toml::ordered_value{ toml::ordered_table{{"gptDict", dictsArr}} }));
+						dictsArr.setMultilineArray(true);
+						toml doc = toml::document();
+						doc["gptDict"] = std::move(dictsArr);
+						atomicOutputFile(dictPath, tomlkit::format(doc));
 						plainTextEdit->setPlainText(DictionaryReader::readDictStr(dictPath));
 					}
 					insertToml(m_projectConfig, "GUIConfig.gptDictTableColumnWidth.0", tableView->columnWidth(GptDictModel::Original));
@@ -219,27 +221,29 @@ void DictSettingsPage::setupUi()
 						model->loadData(readEntriesFunc());
 					}
 					else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						toml::ordered_value dictsArr = toml::array{};
-						for (const GuiNormalDictEntry& dictEntry : model->getEntriesRef()) {
-							toml::ordered_table dictTable;
-							dictTable.emplace("org", dictEntry.original.toStdString());
-							dictTable.emplace("rep", dictEntry.translation.toStdString());
+						const QList<GuiNormalDictEntry>& dictEntries = model->getEntriesRef();
+						tomlkit::Item dictsArr = dictEntries.isEmpty() ? tomlkit::Item::array() : tomlkit::Item::arrayOfTables();
+						for (const GuiNormalDictEntry& dictEntry : dictEntries) {
+							tomlkit::Item dictTable = tomlkit::Item::table();
+							dictTable["org"] = dictEntry.original.toStdString();
+							dictTable["rep"] = dictEntry.translation.toStdString();
 							if (!dictEntry.conditions.isEmpty()) {
-								toml::ordered_value conditions = toml::array{};
+								tomlkit::Item conditions = tomlkit::Item::array();
 								for (const NormalCondition& condition : dictEntry.conditions) {
-									toml::ordered_table conditionTable;
-									conditionTable.emplace("conditionReg", condition.pattern.toStdString());
-									conditionTable.emplace("conditionTarget", serializeNormalConditionTarget(condition).toStdString());
-									conditions.push_back(std::move(conditionTable));
+									conditions.push_back(tomlkit::Item::inlineTable({
+										{ "conditionReg", condition.pattern.toStdString() },
+										{ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() }
+									}));
 								}
-								dictTable.emplace("conditions", std::move(conditions));
+								dictTable["conditions"] = std::move(conditions);
 							}
-							dictTable.emplace("isReg", dictEntry.isReg);
-							dictTable.emplace("priority", dictEntry.priority);
+							dictTable["isReg"] = dictEntry.isReg;
+							dictTable["priority"] = dictEntry.priority;
 							dictsArr.push_back(std::move(dictTable));
 						}
-						atomicOutputFile(dictPath,
-							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictsArr) }} }));
+						toml doc = toml::document();
+						doc["normalDict"] = std::move(dictsArr);
+						atomicOutputFile(dictPath, tomlkit::format(doc));
 						plainTextEdit->setPlainText(readPlainTextFunc());
 					}
 					insertToml(m_projectConfig, "GUIConfig." + configKey + "DictTableColumnWidth.0", tableView->columnWidth(NormalDictModel::Original));
@@ -256,7 +260,7 @@ void DictSettingsPage::setupUi()
 					? "TOML files (*.toml);;JSON files (*.json);;TSV files (*.tsv *.txt)"
 					: "TOML files (*.toml);;JSON files (*.json)";
 				const QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
-					QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectDictPath", wide2Ascii(m_projectDir))), filter);
+					QString::fromStdString(tomlkit::findOr(m_globalConfig, "lastProjectDictPath", wide2Ascii(m_projectDir))), filter);
 				if (importDictPathQStr.isEmpty()) {
 					return;
 				}

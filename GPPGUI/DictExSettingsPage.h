@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 namespace fs = std::filesystem;
 
@@ -10,14 +10,14 @@ class DictExSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit DictExSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit DictExSettingsPage(tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
     void refreshCommonDictsList();
 
 private:
 
     void setupUi();
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    tomlkit::Item& m_projectConfig;
 
     std::function<void()> m_refreshCommonDictsListFunc;
 };

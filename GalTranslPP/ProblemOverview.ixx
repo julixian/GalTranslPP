@@ -15,63 +15,19 @@ struct ProblemOverviewImportResult {
 
 namespace ProblemOverviewTracker {
 
-template<typename TC>
-bool usesJson(const toml::basic_value<TC>& config)
-{
-    return toml::find_or(config, "common", "problemOverviewFormat", "json") == "json";
-}
+bool usesJson(const toml& config);
+fs::path overviewPath(const fs::path& projectDir, const toml& config);
+std::string configKey(const toml& config);
 
-template<typename TC>
-fs::path overviewPath(const fs::path& projectDir, const toml::basic_value<TC>& config)
-{
-    return projectDir / (usesJson(config) ? L"ProblemOverview.json" : L"ProblemOverview.toml");
-}
+// 记录带本地时区偏移的毫秒级日期时间，同时兼容读取旧版整数毫秒时间戳。
+std::optional<tomlkit::OffsetDateTime> lastWriteTime(const fs::path& path);
+std::optional<tomlkit::OffsetDateTime> recordedLastWriteTime(const toml& config);
+bool hasUnimportedChanges(const fs::path& projectDir, const fs::path& cacheDirName, const toml& config);
+bool isCurrentOverviewFile(const fs::path& path, const fs::path& projectDir, const toml& config);
 
-template<typename TC>
-std::string configKey(const toml::basic_value<TC>& config)
-{
-    return usesJson(config)
-        ? "GUIConfig.problemOverviewJsonLastWriteTime"
-        : "GUIConfig.problemOverviewTomlLastWriteTime";
-}
-
-// 与 GUI 原有记录一致，使用 Unix 时间戳，单位为毫秒。
-std::optional<std::int64_t> lastWriteTime(const fs::path& path);
-
-template<typename TC>
-std::optional<std::int64_t> recordedLastWriteTime(const toml::basic_value<TC>& config)
-{
-    constexpr std::int64_t unrecorded = std::numeric_limits<std::int64_t>::min();
-    const std::int64_t time = usesJson(config)
-        ? toml::find_or(config, "GUIConfig", "problemOverviewJsonLastWriteTime", unrecorded)
-        : toml::find_or(config, "GUIConfig", "problemOverviewTomlLastWriteTime", unrecorded);
-    if (time == unrecorded) {
-        return std::nullopt;
-    }
-    return time;
-}
-
-template<typename TC>
-bool hasUnimportedChanges(const fs::path& projectDir, const fs::path& cacheDirName,
-    const toml::basic_value<TC>& config)
-{
-    if (!fs::is_directory(projectDir / cacheDirName)) {
-        return false;
-    }
-    const auto time = lastWriteTime(overviewPath(projectDir, config));
-    const auto recorded = recordedLastWriteTime(config);
-    return time && recorded && *time > *recorded;
-}
-
-template<typename TC>
-bool isCurrentOverviewFile(const fs::path& path, const fs::path& projectDir,
-    const toml::basic_value<TC>& config)
-{
-    std::error_code error;
-    return fs::equivalent(path, overviewPath(projectDir, config), error) && !error;
-}
-
-// CLI 导入或完成翻译后保存记录；导入其它文件时不改变当前清单的时间戳。
+// 更新内存配置中的当前问题清单修改时间记录；导入其它文件或文件不存在时返回 false。
+bool recordLastWriteTime(toml& config, const fs::path& projectDir, const std::optional<fs::path>& importedPath = std::nullopt);
+// CLI 导入或完成翻译后读取并保存记录到 Config.toml；导入其它文件时不改变当前清单的时间戳。
 void recordLastWriteTime(const fs::path& projectDir, const std::optional<fs::path>& importedPath = std::nullopt);
 
 }

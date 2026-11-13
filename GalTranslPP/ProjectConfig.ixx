@@ -63,14 +63,14 @@ struct ProjectPrompts {
     ProjectPrompt user;
 };
 
-TranslationSettings readTranslationSettings(const toml::value& config);
+TranslationSettings readTranslationSettings(const tomlkit::Item& config);
 void validateTranslationSettings(const TranslationSettings& config, bool agentEnabled);
 bool supportsTransAgent(TransEngine engine);
 bool usesTranslationApi(TransEngine engine);
-std::vector<ProjectApi> readProjectApis(const toml::value& config, TransEngine engine, bool agentEnabled,
+std::vector<ProjectApi> readProjectApis(const tomlkit::Item& config, TransEngine engine, bool agentEnabled,
     const std::function<void(const std::string&)>& warningFunc);
 std::vector<ProjectDictionaryFile> resolveProjectDictionaries(const std::filesystem::path& projectDir,
-    const toml::value& config, const std::string& type);
+    const tomlkit::Item& config, const std::string& type);
 ProjectPrompts readProjectPrompts(const std::filesystem::path& projectDir,
     TransEngine engine, bool agentEnabled);
 

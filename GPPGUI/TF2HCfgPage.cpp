@@ -16,7 +16,7 @@ import Tool;
 
 using namespace gpp;
 
-TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
+TF2HCfgPage::TF2HCfgPage(tomlkit::Item& projectConfig, QWidget* parent)
     : BasePage(parent), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("全角半角转换设置"));
@@ -27,7 +27,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
     // 标点符号转换
-    bool convertPunctuation = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "replacePunctuation", true);
+    bool convertPunctuation = tomlkit::findOr(m_projectConfig, "plugins", "TextFull2Half", "replacePunctuation", true);
     ElaScrollPageArea* punctuationArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* punctuationLayout = new QHBoxLayout(punctuationArea);
     ElaText* punctuationText = new ElaText(tr("转换标点符号"), punctuationArea);
@@ -41,7 +41,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addWidget(punctuationArea);
 
     // 反向替换
-    bool reverseConvert = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "reverseConversion", false);
+    bool reverseConvert = tomlkit::findOr(m_projectConfig, "plugins", "TextFull2Half", "reverseConversion", false);
     ElaScrollPageArea* reverseArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* reverseLayout = new QHBoxLayout(reverseArea);
     GppDoubleText* reverseText = new GppDoubleText(tr("反向替换"), 16,
@@ -54,7 +54,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
     mainLayout->addWidget(reverseArea);
 
     // 不转换的字符
-    const std::string excludeChars = toml::find_or(m_projectConfig, "plugins", "TextFull2Half", "excludeChars", "");
+    const std::string excludeChars = tomlkit::findOr(m_projectConfig, "plugins", "TextFull2Half", "excludeChars", "");
     ElaScrollPageArea* excludeArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* excludeLayout = new QHBoxLayout(excludeArea);
     ElaText* excludeText = new ElaText(tr("不转换的字符"), excludeArea);
@@ -69,7 +69,7 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
 
     mainLayout->addSpacing(10);
     // notConvertRegs
-    toml::ordered_array notConvertRegsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "TextFull2Half", "notConvertRegs");
+    tomlkit::Item notConvertRegsArr = tomlkit::findArrayOrEmpty(m_projectConfig, "plugins", "TextFull2Half", "notConvertRegs");
     ElaText* notConvertRegsTitle = new ElaText("不转换的正则组", 18, centerWidget);
     notConvertRegsTitle->setWordWrap(false);
     mainLayout->addWidget(notConvertRegsTitle);
@@ -78,8 +78,10 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
 	font.setPixelSize(14);
 	notConvertRegsEdit->setFont(font);
 	installTreeSitterHighlighter(notConvertRegsEdit->document(), SyntaxLanguage::Toml);
+	tomlkit::Item notConvertRegsDoc = tomlkit::Item::document();
+	notConvertRegsDoc["notConvertRegs"] = std::move(notConvertRegsArr);
 	notConvertRegsEdit->setPlainText(
-        QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "notConvertRegs", notConvertRegsArr }} }))
+        QString::fromStdString(tomlkit::format(notConvertRegsDoc))
     );
     notConvertRegsEdit->moveCursor(QTextCursor::Start);
     mainLayout->addWidget(notConvertRegsEdit);
@@ -90,22 +92,18 @@ TF2HCfgPage::TF2HCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
             insertToml(m_projectConfig, "plugins.TextFull2Half.reverseConversion", reverseSwitch->getIsToggled());
             insertToml(m_projectConfig, "plugins.TextFull2Half.excludeChars", excludeEdit->text().toStdString());
 
-            toml::ordered_array newNotConvertRegsArr;
             try {
-                toml::ordered_value newTbl = toml::parse_str<toml::ordered_type_config>(notConvertRegsEdit->toPlainText().toStdString());
-                auto& newArr = newTbl["notConvertRegs"];
-                if (newArr.is_array()) {
-                    for (const auto& item : newArr.as_array()
-                        | std::views::filter([](const auto& item_) { return item_.is_string(); }))
-                    {
-                        newNotConvertRegsArr.push_back(item);
-                    }
+                const toml newTbl = tomlkit::parse(notConvertRegsEdit->toPlainText().toStdString());
+                if (const toml* pNewArr = newTbl.find("notConvertRegs"); pNewArr && pNewArr->isArray()) {
+                    insertToml(m_projectConfig, "plugins.TextFull2Half.notConvertRegs", *pNewArr);
+                }
+                else {
+                    insertToml(m_projectConfig, "plugins.TextFull2Half.notConvertRegs", tomlkit::Item::array());
                 }
             }
             catch (...) {
                 ElaMessageBar::error(ElaMessageBarType::TopLeft, tr("解析失败"), tr("notConvertRegs 不符合 toml 规范"), 3000);
             }
-            insertToml(m_projectConfig, "plugins.TextFull2Half.notConvertRegs", newNotConvertRegsArr);
         };
 
     mainLayout->addStretch();

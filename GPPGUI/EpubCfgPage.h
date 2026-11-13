@@ -1,15 +1,15 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class EpubCfgPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit EpubCfgPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit EpubCfgPage(tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
 private:
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 };

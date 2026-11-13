@@ -25,7 +25,7 @@ private:
     void skipImpl(Sentence* se);
 
 public:
-    SkipTrans(const fs::path& projectDir, const toml::value& projectConfig,
+    SkipTrans(const fs::path& projectDir, const tomlkit::Item& projectConfig,
         const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
         const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
     ~SkipTrans() = default;

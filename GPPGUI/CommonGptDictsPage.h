@@ -7,7 +7,7 @@
 #include <QStackedWidget>
 #include <QSharedPointer>
 #include <filesystem>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class ElaPlainTextEdit;
 class ElaTableView;
@@ -30,7 +30,7 @@ class CommonGptDictsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit CommonGptDictsPage(toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+    explicit CommonGptDictsPage(tomlkit::Item& globalConfig, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void commonDictsChangedSignal();
@@ -39,7 +39,7 @@ private:
 
     void setupUi();
 
-    toml::ordered_value& m_globalConfig;
+    tomlkit::Item& m_globalConfig;
 
     QList<QSharedPointer<GptTabEntry>> m_gptTabEntries;
 };

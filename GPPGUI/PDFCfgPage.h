@@ -1,15 +1,15 @@
 #pragma once
 
-#include <toml.hpp>
 #include "BasePage.h"
+#include "GppTomlFwd.h"
 
 class PDFCfgPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit PDFCfgPage(tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
 private:
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 };

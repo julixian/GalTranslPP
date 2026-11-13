@@ -12,7 +12,7 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfig,
+SkipTrans::SkipTrans(const fs::path& projectDir, const tomlkit::Item& projectConfig,
     const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
     const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
     : m_logger(logger), m_runTime(runTime)
@@ -37,7 +37,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                 }
                 return ret;
             }();
-        const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
+        const auto pluginConfig = parseToml(pluginConfigPath);
 
         m_skipH = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.SkipTrans.skipH", reversePriority);
         if (m_skipH) {
@@ -47,18 +47,21 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
             m_hKeys = splitString(hKeysStr, '\n');
         }
 
-        const auto& skipKeys = parsePluginToml<toml::array>(projectConfig, pluginConfig,
+        const auto& skipKeys = parsePluginToml<tomlkit::Item>(projectConfig, pluginConfig,
             "plugins.SkipTrans.skipKeys", reversePriority);
+        if (!skipKeys.isArray()) {
+            throw tomlkit::TypeError("Expected TOML array for plugins.SkipTrans.skipKeys");
+        }
         for (const auto& elem : skipKeys) {
-            if (elem.is_string()) {
+            if (elem.isString()) {
                 GppConditionPattern pattern;
                 pattern.conditionTarget = CachePart::Preproc;
-                pattern.conditionReg.setPattern(elem.as_string()).setModifier(defaultRegCompileModifier).compile();
+                pattern.conditionReg.setPattern(elem.asString()).setModifier(defaultRegCompileModifier).compile();
                 if (!pattern.conditionReg) {
                     throw std::runtime_error(gppTr(
                         "SkipTrans.SkipTrans",
                         "skipKeys 正则表达式 `%1` 编译失败")
-                        .arg(elem.as_string())
+                        .arg(elem.asString())
                         .toStdString());
                 }
                 GPPCondition gppCondition{ std::move(pattern) };
@@ -68,7 +71,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
                     };
                 m_skipKeys.push_back(std::move(checkFunc));
             }
-            else if (elem.is_array() || elem.is_table()) {
+            else if (elem.isArray() || elem.isTable()) {
                 CheckSeCondNormalFunc checkFunc = getCheckSeCondFunc(elem, projectDir, pythonManager, luaManager, m_logger);
                 m_skipKeys.push_back(std::move(checkFunc));
             }
@@ -82,7 +85,7 @@ SkipTrans::SkipTrans(const fs::path& projectDir, const toml::value& projectConfi
             .arg(m_skipH ? "true" : "false")
             .toStdString());
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr("SkipTrans.SkipTrans", "SkipTrans-%1 配置文件解析错误: %2")
             .arg(pluginRunTime2Names[m_runTime])
             .arg(e.what())

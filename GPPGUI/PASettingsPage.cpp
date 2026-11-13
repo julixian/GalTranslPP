@@ -26,7 +26,7 @@ import Tool;
 
 using namespace gpp;
 
-PASettingsPage::PASettingsPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
+PASettingsPage::PASettingsPage(tomlkit::Item& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("问题分析"));
 	setTitleVisible(false);
@@ -84,19 +84,16 @@ void PASettingsPage::setupUi()
 	problemListTitle->setTextPixelSize(18);
 	mainLayout->addWidget(problemListTitle);
 	ElaFlowLayout* problemListLayout = new ElaFlowLayout(0, 8, 8);
-	const toml::ordered_value& projectConfig = m_projectConfig;
+	const tomlkit::Item& projectConfig = m_projectConfig;
 	for (const ProblemDefinition& definition : problemDefinitions) {
-		const auto problemConfigTableOpt = toml::find<
-			std::optional<toml::ordered_table>
-		>(projectConfig, "problemAnalyze", definition.key);
+		const auto* pProblemConfig = projectConfig.find("problemAnalyze", definition.key);
 		bool enabled = definition.defaultEnabled;
 		std::string base = definition.defaultBase;
 		std::string check = definition.defaultCheck;
-		if (problemConfigTableOpt) {
-			const toml::ordered_value problemConfigValue = problemConfigTableOpt.value();
-			enabled = toml::find_or(problemConfigValue, "enable", definition.defaultEnabled);
-			base = toml::find_or(problemConfigValue, "base", definition.defaultBase);
-			check = toml::find_or(problemConfigValue, "check", definition.defaultCheck);
+		if (pProblemConfig && pProblemConfig->isTable()) {
+			enabled = tomlkit::findOr(*pProblemConfig, "enable", definition.defaultEnabled);
+			base = tomlkit::findOr(*pProblemConfig, "base", definition.defaultBase);
+			check = tomlkit::findOr(*pProblemConfig, "check", definition.defaultCheck);
 		}
 		if (!cachePartNames.contains(QString::fromStdString(base))) {
 			base = definition.defaultBase;
@@ -123,7 +120,7 @@ void PASettingsPage::setupUi()
 	mainLayout->addSpacing(10);
 
 	// 规定标点错漏要查哪些标点
-	const std::string punctuationSet = toml::find_or(m_projectConfig, "problemAnalyze", "punctSet",
+	const std::string punctuationSet = tomlkit::findOr(m_projectConfig, "problemAnalyze", "punctSet",
 		"（()）：:*[]{}<>『』「」“”;；'/\\");
 	QString punctuationSetStr = QString::fromStdString(punctuationSet);
 	ElaScrollPageArea* punctuationListArea = new ElaScrollPageArea(mainWidget);
@@ -138,7 +135,7 @@ void PASettingsPage::setupUi()
 	mainLayout->addWidget(punctuationListArea);
 
 	// 语言不通检测的语言置信度，设置越高则检测越精准，但可能遗漏，反之亦然
-	double languageProbability = toml::find_or(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
+	double languageProbability = tomlkit::findOr(m_projectConfig, "problemAnalyze", "langProbability", 0.94);
 	ElaScrollPageArea* languageProbabilityArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* languageProbabilityLayout = new QHBoxLayout(languageProbabilityArea);
 	GppDoubleText* languageProbabilityTitle = new GppDoubleText(tr("语言置信度"), 16,
@@ -152,7 +149,7 @@ void PASettingsPage::setupUi()
 	mainLayout->addWidget(languageProbabilityArea);
 
 	// 非法字符要检查的字符集
-	const std::string codePage = toml::find_or(m_projectConfig, "problemAnalyze", "codePage", "gbk");
+	const std::string codePage = tomlkit::findOr(m_projectConfig, "problemAnalyze", "codePage", "gbk");
 	ElaScrollPageArea* codePageArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* codePageLayout = new QHBoxLayout(codePageArea);
 	GppDoubleText* codePageTitle = new GppDoubleText(tr("字符集"), 16,
@@ -264,7 +261,7 @@ void PASettingsPage::setupUi()
 		[=, this](const std::string& configKey, const QString& title, std::optional<int> minHeight = std::nullopt)
 		-> std::function<void()>
 		{
-			toml::ordered_array PASettingsArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "problemAnalyze", configKey);
+			tomlkit::Item PASettingsArr = tomlkit::findArrayOrEmpty(m_projectConfig, "problemAnalyze", configKey);
 			ElaScrollPageArea* PASettingsArea = new ElaScrollPageArea(mainWidget);
 			QVBoxLayout* PASettingsLayout = new QVBoxLayout(PASettingsArea);
 			PASettingsLayout->setContentsMargins(12, 6, 12, 8);
@@ -279,7 +276,9 @@ void PASettingsPage::setupUi()
 			QFont font = PASettingsEdit->font();
 			font.setPixelSize(14);
 			PASettingsEdit->setFont(font);
-			PASettingsEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ configKey, PASettingsArr }} })));
+			tomlkit::Item PASettingsDoc = tomlkit::Item::document();
+			PASettingsDoc[configKey] = std::move(PASettingsArr);
+			PASettingsEdit->setPlainText(QString::fromStdString(tomlkit::format(PASettingsDoc)));
 			PASettingsEdit->moveCursor(QTextCursor::Start);
 			installTreeSitterHighlighter(PASettingsEdit->document(), SyntaxLanguage::Toml);
 			PASettingsLayout->addWidget(PASettingsEdit);
@@ -288,13 +287,13 @@ void PASettingsPage::setupUi()
 			std::function<void()> saveFunc = [=, this]()
 				{
 					try {
-						toml::ordered_value newPASettingsTbl = toml::parse_str<toml::ordered_type_config>(PASettingsEdit->toPlainText().toStdString());
+						toml newPASettingsTbl = tomlkit::parse(PASettingsEdit->toPlainText().toStdString());
 						auto& newPASettingsArr = newPASettingsTbl[configKey];
-						if (newPASettingsArr.is_array()) {
+						if (newPASettingsArr.isArray()) {
 							insertToml(m_projectConfig, "problemAnalyze." + configKey, newPASettingsArr);
 						}
 						else {
-							insertToml(m_projectConfig, "problemAnalyze." + configKey, toml::array{});
+							insertToml(m_projectConfig, "problemAnalyze." + configKey, tomlkit::Item::array());
 						}
 					}
 					catch (...) {
@@ -334,7 +333,11 @@ void PASettingsPage::setupUi()
 		{
 			for (const ProblemRow& row : problemRows) {
 				const bool enabled = row.enableButton->getIsToggled();
-				toml::ordered_table problemConfig;
+				const auto* pExisting = m_projectConfig.find("problemAnalyze", row.key);
+				const tomlkit::TableStyle style = (pExisting && pExisting->isTable() && pExisting->tableStyle() == tomlkit::TableStyle::Standard)
+					? tomlkit::TableStyle::Standard
+					: tomlkit::TableStyle::Inline;
+				tomlkit::Item problemConfig = tomlkit::Item::table(style);
 				problemConfig["enable"] = enabled;
 				if (enabled) {
 					problemConfig["base"] = row.baseComboBox->currentText().toStdString();

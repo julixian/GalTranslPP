@@ -34,7 +34,7 @@ import ProblemOverview;
 
 using namespace gpp;
 
-StartSettingsPage::StartSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
+StartSettingsPage::StartSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent)
 	: BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("启动设置"));
@@ -439,7 +439,7 @@ void StartSettingsPage::setupUi()
 	QVBoxLayout* buttonLayout = new QVBoxLayout(buttonArea);
 
 	// 文件处理器
-	const std::string filePlugin = toml::find_or(m_projectConfig, "plugins", "filePlugin", "NormalJson");
+	const std::string filePlugin = tomlkit::findOr(m_projectConfig, "plugins", "filePlugin", "NormalJson");
 	QString filePluginStr = QString::fromStdString(filePlugin);
 	ElaText* fileFormatLabel = new ElaText(buttonArea);
 	fileFormatLabel->setTextPixelSize(16);
@@ -521,7 +521,7 @@ void StartSettingsPage::setupUi()
 	buttonLayout->addWidget(m_remainTimeLabel);
 
 	// 翻译模式
-	const std::string transEngine = toml::find_or(m_projectConfig, "plugins", "transEngine", "ForGalJson");
+	const std::string transEngine = tomlkit::findOr(m_projectConfig, "plugins", "transEngine", "ForGalJson");
 	QString transEngineStr = QString::fromStdString(transEngine);
 	ElaText* translateModeLabel = new ElaText(buttonArea);
 	translateModeLabel->setTextPixelSize(16);
@@ -592,7 +592,7 @@ void StartSettingsPage::setupUi()
 				insertToml(m_projectConfig, "plugins.filePlugin", m_filePluginComboBox->currentText().toStdString());
 			}
 			else {
-				const std::string customFilePluginStr = toml::find_or(m_projectConfig, "plugins", "customFilePlugin",
+				const std::string customFilePluginStr = tomlkit::findOr(m_projectConfig, "plugins", "customFilePlugin",
 					"Lua/SampleNormalJsonFilePlugin.lua");
 				const fs::path customFilePluginPath = ascii2Wide(customFilePluginStr);
 				if (
@@ -668,7 +668,7 @@ void StartSettingsPage::onStartTranslatingClicked()
 		scrollBar->setValue(scrollBar->maximum());
 	}
 	Q_EMIT startTranslatingSignal();
-	m_workerTransEngine = QString::fromStdString(toml::find_or(m_projectConfig, "plugins", "transEngine", ""));
+	m_workerTransEngine = QString::fromStdString(tomlkit::findOr(m_projectConfig, "plugins", "transEngine", ""));
 
 	m_startTime = std::chrono::high_resolution_clock::now();
 	m_usedTimeLabel->display("00:00:00");

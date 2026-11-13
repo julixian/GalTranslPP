@@ -60,9 +60,9 @@ std::string protocolName(ApiProtocol protocol)
 ProjectPreview readPreview(const fs::path& projectDir)
 {
     ProjectPreview preview;
-    const auto config = uparseToml(projectDir / L"Config.toml");
+    const auto config = parseToml(projectDir / L"Config.toml");
     const auto settings = readTranslationSettings(config);
-    const auto engineName = toml::find<std::string>(config, "plugins", "transEngine");
+    const auto engineName = tomlkit::find<std::string>(config, "plugins", "transEngine");
     const auto engineIt = names2TransEngine.find(engineName);
     if (engineIt == names2TransEngine.end()) {
         throw std::invalid_argument(
@@ -112,7 +112,7 @@ ProjectPreview readPreview(const fs::path& projectDir)
 
     PreviewPage apis{ gppTr("TerminalPreview", "Api").toStdString() };
     if (usesTranslationApi(engine)) {
-        const auto strategy = toml::find_or(config, "backend", "apiStrategy", "random");
+        const auto strategy = tomlkit::findOr(config, "backend", "apiStrategy", "random");
         if (strategy != "random" && strategy != "fallback") {
             throw std::invalid_argument(
                 gppTr("NormalJsonTranslator.normalJsonInit", "apiStrategy 必须为 random 或 fallback").toStdString());
@@ -120,7 +120,7 @@ ProjectPreview readPreview(const fs::path& projectDir)
         addRow(apis, gppTr("TerminalPreview", "令牌策略"), strategy);
         addRow(apis,
             gppTr("TerminalPreview", "请求超时（秒）"),
-            std::to_string(toml::find_or(config, "backend", "apiTimeout", 300)));
+            std::to_string(tomlkit::findOr(config, "backend", "apiTimeout", 300)));
         const auto entries = readProjectApis(config,
             engine,
             agentEnabled,
@@ -197,33 +197,38 @@ ProjectPreview readPreview(const fs::path& projectDir)
              { "usePreDictInMsg", true },
              { "usePostDictInMsg", true },
              { "useGPTDictToReplaceName", false } }) {
-        dictionaries.lines.push_back(key + ": " + enabledText(toml::find_or(config, "dictionary", key, fallback)));
+        dictionaries.lines.push_back(key + ": " + enabledText(tomlkit::findOr(config, "dictionary", key, fallback)));
     }
-    if (config.contains("problemAnalyze")) {
+    if (config.contains("problemAnalyze") && config.at("problemAnalyze").isTable()) {
         dictionaries.lines.push_back("");
-        for (const auto& [key, value] : config.at("problemAnalyze").as_table()) {
+        for (const auto [key, value] : config.at("problemAnalyze").tableItems()) {
             // 只列出检查开关及规则，保留规则的原始类型和结构。
-            if (value.is_table() && value.contains("enable")) {
-                dictionaries.lines.push_back(key + ": " + enabledText(toml::find_or(value, "enable", false)));
+            if (value.isTable() && value.contains("enable")) {
+                dictionaries.lines.push_back(key.name() + ": " + enabledText(tomlkit::findOr(value, "enable", false)));
             }
             else {
-                dictionaries.lines.push_back(key + ": " + toml::format(value));
+                dictionaries.lines.push_back(key.name() + ": " + tomlkit::format(value));
             }
         }
     }
     preview.pages.push_back(std::move(dictionaries));
 
     PreviewPage plugins{ gppTr("TerminalPreview", "插件").toStdString() };
-    addRow(plugins, gppTr("TerminalPreview", "文件插件"), toml::find_or(config, "plugins", "filePlugin", "NormalJson"));
+    addRow(plugins, gppTr("TerminalPreview", "文件插件"), tomlkit::findOr(config, "plugins", "filePlugin", "NormalJson"));
     addRow(
-        plugins, gppTr("TerminalPreview", "脚本基类"), toml::find_or(config, "plugins", "baseClassName", "NormalJson"));
-    const auto textPlugins = toml::find<std::optional<std::vector<std::string>>>(config, "plugins", "textPlugins");
-    if (textPlugins) {
-        for (const auto& plugin : *textPlugins) {
-            plugins.lines.push_back((plugin.starts_with('>') ? "[-] " : "[+] ") +
-                                    replaceStr(plugin, "%PROJECT_DIR%", wide2Ascii(projectDir)));
-        }
-    }
+        plugins, gppTr("TerminalPreview", "脚本基类"), tomlkit::findOr(config, "plugins", "baseClassName", "NormalJson"));
+    auto appendPluginLines = [&](const std::optional<std::vector<std::string>>& list)
+        {
+            if (!list) {
+                return;
+            }
+            for (const auto& plugin : *list) {
+                plugins.lines.push_back((plugin.starts_with('>') ? "[-] " : "[+] ") +
+                                        replaceStr(plugin, "%PROJECT_DIR%", wide2Ascii(projectDir)));
+            }
+        };
+    appendPluginLines(tomlkit::findOptional<std::vector<std::string>>(config, "plugins", "textPlugins"));
+    appendPluginLines(tomlkit::findOptional<std::vector<std::string>>(config, "plugins", "customTextPlugins"));
     preview.pages.push_back(std::move(plugins));
 
     PreviewPage agent{ gppTr("TerminalPreview", "Agent").toStdString() };
@@ -333,7 +338,7 @@ bool showProjectPreview(const fs::path& projectDir)
                 return;
             }
             try {
-                const auto config = uparseToml(projectDir / L"Config.toml");
+                const auto config = parseToml(projectDir / L"Config.toml");
                 if (ProblemOverviewTracker::hasUnimportedChanges(projectDir, transCacheDirName, config)) {
                     confirmStartMessage =
                         gppTr("TerminalPreview", "检测到 %1 被修改但未导入。是否继续翻译？")

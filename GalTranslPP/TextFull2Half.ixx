@@ -26,7 +26,7 @@ private:
     std::string convertText(const std::string& text, Sentence* se, bool jumpTag);
 
 public:
-    TextFull2Half(const toml::value& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
+    TextFull2Half(const tomlkit::Item& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
     ~TextFull2Half() = default;
 
     void dPreRun(Sentence* se);

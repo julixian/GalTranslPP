@@ -37,7 +37,7 @@ private:
 
 public:
 
-	TextLinebreakFix(const fs::path& otherCacheDir, const toml::value& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
+	TextLinebreakFix(const fs::path& otherCacheDir, const tomlkit::Item& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime);
 	~TextLinebreakFix();
 
 	void dPostRun(Sentence* se);

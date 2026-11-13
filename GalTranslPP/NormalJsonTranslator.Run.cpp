@@ -234,10 +234,10 @@ void NormalJsonTranslator::normalJsonBeforeRun()
         }
         m_controller->makeBar(totalSentences, m_threadsNum);
 
-        toml::value orgNameTable = toml::table{};
+        toml orgNameTable = toml::document();
         try {
             if (fs::exists(m_nameTablePath)) {
-                orgNameTable = gpp::uparseToml(m_nameTablePath);
+                orgNameTable = parseToml(m_nameTablePath);
             }
         }
         catch (...) {
@@ -256,20 +256,20 @@ void NormalJsonTranslator::normalJsonBeforeRun()
                 return a.second > b.second;
             });
 
-        toml::ordered_value newNameTable = toml::ordered_table{};
-        newNameTable.comments().push_back("'原名' = [ '译名', 出现次数 ]");
+        toml newNameTable = toml::document();
+        newNameTable.addLeadingComment("'原名' = [ '译名', 出现次数 ]");
         for (const std::string& key : nameTablePairsFromInputJson | std::views::keys) {
             std::string transName;
             try {
-                transName = toml::find_or(orgNameTable, key, 0, "");
+                transName = tomlkit::findOr(orgNameTable, key, 0, "");
             }
             catch (...) { }
-            newNameTable[key] = toml::array{ transName, nameTableFromInputJson[key] };
+            newNameTable[key] = tomlkit::Item::array({ transName, nameTableFromInputJson[key] });
             if (!transName.empty()) {
                 m_nameMap.try_emplace(key, std::move(transName));
             }
         }
-        atomicOutputFile(ofs, m_nameTablePath, toml::format(newNameTable));
+        atomicOutputFile(ofs, m_nameTablePath, tomlkit::format(newNameTable));
         m_logger->info(gppTr("NormalJsonTranslator.normalJsonBeforeRun", "已更新 NameTable.toml 文件")
             .toStdString());
         if (m_transEngine == TransEngine::DumpName) {
@@ -519,11 +519,21 @@ void NormalJsonTranslator::normalJsonAfterRun()
 
     ordered_json problemOverview = buildProblemOverviewFromCache(m_savedTranslCacheMap);
     if (m_problemOverviewFormat == "json") {
-        atomicOutputFile(m_projectDir / "ProblemOverview.json", problemOverview.dump(2));
+        atomicOutputFile(m_projectDir / L"ProblemOverview.json", problemOverview.dump(2));
     }
     else {
-        atomicOutputFile(m_projectDir / "ProblemOverview.toml",
-            toml::format("problemOverview", json2Toml(problemOverview)));
+        toml overviewDoc = toml::document();
+        if (problemOverview.is_array() && !problemOverview.empty() && std::ranges::all_of(problemOverview, [](const auto& el) { return el.is_object(); })) {
+            tomlkit::Item aot = tomlkit::Item::arrayOfTables();
+            for (const auto& el : problemOverview) {
+                aot.push_back(json2Toml(el, tomlkit::TableStyle::ArrayOfTablesElement));
+            }
+            overviewDoc["problemOverview"] = std::move(aot);
+        }
+        else {
+            overviewDoc["problemOverview"] = json2Toml(problemOverview);
+        }
+        atomicOutputFile(m_projectDir / L"ProblemOverview.toml", tomlkit::format(overviewDoc));
     }
     m_logger->debug(gppTr(
         "NormalJsonTranslator.normalJsonAfterRun",

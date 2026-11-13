@@ -20,7 +20,7 @@ import Tool;
 
 using namespace gpp;
 
-NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
+NameTableSettingsPage::NameTableSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle("NameTable");
@@ -45,16 +45,18 @@ QList<NameTableEntry> NameTableSettingsPage::readNameTable()
 	}
 
 	try {
-		const toml::ordered_value tbl = gpp::uoparseToml(nameTablePath);
-		for (const auto& [key, value] : tbl.as_table()) {
-			if (!value.is_array() || value.size() < 2 || !value[0].is_string() || !value[1].is_integer()) {
-				continue;
+		const toml tbl = parseToml(nameTablePath);
+		if (tbl.isTable()) {
+			for (const auto [key, value] : tbl.tableItems()) {
+				if (!value.isArray() || value.size() < 2 || !value[0].isString() || !value[1].isInteger()) {
+					continue;
+				}
+				NameTableEntry entry;
+				entry.original = QString::fromStdString(key.name());
+				entry.translation = QString::fromStdString(value[0].asString());
+				entry.count = value[1].asInteger();
+				result.push_back(entry);
 			}
-			NameTableEntry entry;
-			entry.original = QString::fromStdString(key);
-			entry.translation = QString::fromStdString(value[0].as_string());
-			entry.count = value[1].as_integer();
-			result.push_back(entry);
 		}
 		/*std::ranges::sort(result, [](const NameTableEntry& a, const NameTableEntry& b)
 			{
@@ -151,11 +153,11 @@ void NameTableSettingsPage::setupUi()
 	nameTableView->verticalHeader()->setHidden(true);
 	nameTableView->setAlternatingRowColors(true);
 	nameTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-	nameTableView->setColumnWidth(0, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "0", 258));
-	nameTableView->setColumnWidth(1, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "1", 258));
-	nameTableView->setColumnWidth(2, toml::find_or(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "2", 258));
+	nameTableView->setColumnWidth(0, tomlkit::findOr(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "0", 258));
+	nameTableView->setColumnWidth(1, tomlkit::findOr(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "1", 258));
+	nameTableView->setColumnWidth(2, tomlkit::findOr(m_projectConfig, "GUIConfig", "nameTableColumnWidth", "2", 258));
 	stackedWidget->addWidget(nameTableView);
-	stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, "GUIConfig", "nameTableOpenMode", toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 1)));
+	stackedWidget->setCurrentIndex(tomlkit::findOr(m_globalConfig, "GUIConfig", "nameTableOpenMode", tomlkit::findOr(m_globalConfig, "defaultNameTableOpenMode", 1)));
 
 	plainTextModeButton->setEnabled(stackedWidget->currentIndex() != 0);
 	tableModeButton->setEnabled(stackedWidget->currentIndex() != 1);
@@ -254,16 +256,16 @@ void NameTableSettingsPage::setupUi()
 				nameTableModel->loadData(readNameTable());
 			}
 			else if (index == 1) {
-				toml::ordered_value tbl = toml::ordered_table{};
-				tbl.comments().push_back("'原名' = [ '译名', 出现次数 ]");
+				toml tbl = toml::document();
+				tbl.addLeadingComment("'原名' = [ '译名', 出现次数 ]");
 				const QList<NameTableEntry>& entries = nameTableModel->getEntriesRef();
 				for (const NameTableEntry& entry : entries) {
 					if (entry.original.isEmpty()) {
 						continue;
 					}
-					tbl[entry.original.toStdString()] = toml::array{ entry.translation.toStdString(), entry.count };
+					tbl[entry.original.toStdString()] = tomlkit::Item::array({ entry.translation.toStdString(), entry.count });
 				}
-				atomicOutputFile(ofs, nameTablePath, toml::format(tbl));
+				atomicOutputFile(ofs, nameTablePath, tomlkit::format(tbl));
 				plainTextEdit->setPlainText(readNameTableStr());
 			}
 			insertToml(m_projectConfig, "GUIConfig.nameTableOpenMode", stackedWidget->currentIndex());

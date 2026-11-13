@@ -1,16 +1,16 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class CommonSettingsPage : public BasePage
 {
     Q_OBJECT
 
 public:
-    explicit CommonSettingsPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit CommonSettingsPage(tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
 private:
     void setupUi();
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 };

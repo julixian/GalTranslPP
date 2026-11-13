@@ -19,22 +19,25 @@ using namespace gpp;
 namespace fs = std::filesystem;
 
 DefaultPromptsPage::DefaultPromptsPage(QWidget* parent)
-    : BasePage(parent)
+    : BasePage(parent), m_promptConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document()))
 {
     setWindowTitle(tr("默认提示词管理"));
     setTitleVisible(false);
 
 	if (fs::exists(defaultPromptPath)) {
 		try {
-			m_promptConfig = gpp::uoparseToml(defaultPromptPath);
+			*m_promptConfig = parseToml(defaultPromptPath);
 		}
 		catch (...) {
+			*m_promptConfig = tomlkit::Item::document();
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词配置文件不符合 toml 规范"), 3000);
 		}
 	}
 
     setupUi();
 }
+
+DefaultPromptsPage::~DefaultPromptsPage() = default;
 
 void DefaultPromptsPage::setupUi()
 {
@@ -77,7 +80,7 @@ void DefaultPromptsPage::setupUi()
 					QFont plainTextFont = promptTextEdit->font();
 					plainTextFont.setPixelSize(15);
 					promptTextEdit->setFont(plainTextFont);
-					promptTextEdit->setPlainText(QString::fromStdString(toml::find_or(m_promptConfig, key, "")));
+					promptTextEdit->setPlainText(QString::fromStdString(tomlkit::findOr(*m_promptConfig, key, "")));
 					promptStackedWidget->addWidget(promptTextEdit);
 					promptEdits.emplace_back(key, promptTextEdit);
 				};
@@ -100,9 +103,9 @@ void DefaultPromptsPage::setupUi()
 			auto resultApply2ConfigFunc = [=, this]()
 				{
 					for (const auto& [key, edit] : promptEdits) {
-						toml::ordered_value promptVal = edit->toPlainText().toStdString();
-						promptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						insertToml(m_promptConfig, key, promptVal);
+						tomlkit::Item promptVal(edit->toPlainText().toStdString());
+						promptVal.setStringStyle(tomlkit::StringStyle::MultilineBasic);
+						insertToml(*m_promptConfig, key, promptVal);
 					}
 				};
 
@@ -125,7 +128,7 @@ void DefaultPromptsPage::setupUi()
 			connect(promptSaveButton, &ElaToolButton::clicked, this, [=, this]()
 				{
 					resultApply2ConfigFunc();
-					atomicOutputFile(defaultPromptPath, toml::format(m_promptConfig));
+					atomicOutputFile(defaultPromptPath, tomlkit::format(*m_promptConfig));
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("保存成功"),
 						tr("默认 %1 提示词配置已保存。").arg(promptName), 3000);
 				});
@@ -158,7 +161,7 @@ void DefaultPromptsPage::setupUi()
 			sakuraApplyFunc();
 			gendictApplyFunc();
 			nametransApplyFunc();
-			atomicOutputFile(defaultPromptPath, toml::format(m_promptConfig));
+			atomicOutputFile(defaultPromptPath, tomlkit::format(*m_promptConfig));
 		};
 
 	mainLayout->addWidget(tabWidget);

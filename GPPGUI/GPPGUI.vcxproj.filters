@@ -377,6 +377,9 @@
     <ClInclude Include="GppPlatform.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
+    <ClInclude Include="GppTomlFwd.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
     <ClInclude Include="GppRadioButton.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>

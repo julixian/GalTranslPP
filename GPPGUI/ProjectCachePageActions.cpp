@@ -16,6 +16,8 @@
 #include "ElaToolButton.h"
 #include "ElaText.h"
 
+import Tool;
+
 using namespace ProjectCachePagePrivate;
 
 void ProjectCachePage::markDirty(const QString& filename)
@@ -150,7 +152,7 @@ void ProjectCachePage::setReplacePanelVisible(bool visible)
 
 bool ProjectCachePage::isProjectRunning() const
 {
-    return toml::find_or(m_projectConfig, "GUIConfig", "isRunning", false);
+    return tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", false);
 }
 
 bool ProjectCachePage::ensureWritableAction(const QString& actionName) const

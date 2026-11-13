@@ -154,18 +154,21 @@ std::optional<std::pair<fs::path, int>> NormalJsonTranslatorTransAgent::parseAge
 std::vector<NormalJsonTranslatorTransAgent::LoadedDictionaryEntry> NormalJsonTranslatorTransAgent::loadDictionaryEntries() const {
     std::vector<LoadedDictionaryEntry> entries;
     for (const fs::path& dictPath : m_gptDictionaryPaths) {
-        const auto dictData = gpp::uparseToml(dictPath);
+        const auto dictData = parseToml(dictPath);
         if (!dictData.contains("gptDict")) {
             continue;
         }
-        const auto& dictTbls = dictData.at("gptDict").as_array();
+        const auto& dictTbls = dictData.at("gptDict");
+        if (!dictTbls.isArray()) {
+            throw tomlkit::TypeError("Expected TOML array for gptDict");
+        }
         for (const auto& el : dictTbls) {
             if (!el.contains("org") || !el.contains("rep")) {
                 continue;
             }
-            const std::string& sourceTerm = el.at("org").as_string();
-            const std::string& targetTerm = el.at("rep").as_string();
-            const std::string note = toml::find_or(el, "note", "");
+            const std::string& sourceTerm = el.at("org").asString();
+            const std::string& targetTerm = el.at("rep").asString();
+            const std::string note = tomlkit::findOr(el, "note", "");
             if (sourceTerm.empty() && targetTerm.empty() && note.empty()) {
                 continue;
             }

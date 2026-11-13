@@ -1,9 +1,9 @@
 #pragma once
 
 #include "BasePage.h"
+#include "GppTomlFwd.h"
 #include <QList>
 #include <QSize>
-#include <toml.hpp>
 
 class QEvent;
 class QVBoxLayout;
@@ -18,7 +18,7 @@ class ApiSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit ApiSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit ApiSettingsPage(tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
     ~ApiSettingsPage() override;
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -35,8 +35,8 @@ private:
     QWidget* m_listWidget = nullptr;
     QVBoxLayout* m_listLayout = nullptr;
     GppFlowList* m_flowList = nullptr;
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    tomlkit::Item& m_projectConfig;
 
     // 用于存储动态控件的列表
     struct ApiRowControls {
@@ -45,12 +45,12 @@ private:
         QWidget* configWidget;
         ElaIconButton* moveUpButton;
         ElaIconButton* moveDownButton;
-        std::function<bool(toml::ordered_array&)> serializeFunc;
+        std::function<bool(tomlkit::Item&)> serializeFunc;
     };
     QList<ApiRowControls> m_apiRows;
 
     void setupUi();
-    bool serializeApis(toml::ordered_array& apis) const;
+    bool serializeApis(tomlkit::Item& apis) const;
     void switchLayout(int mode);
     void refreshApiLayout();
     void deleteApiRow(ElaScrollPageArea* container);
@@ -58,5 +58,6 @@ private:
     void moveApiRow(ElaScrollPageArea* container, int offset);
     void updateMoveButtonStates();
     // 创建一个新的 Api 输入行（现在返回一个ElaScrollPageArea*）
-    ElaScrollPageArea* createApiInputRowWidget(const toml::ordered_value& apiTblValue = toml::ordered_table{});
+    ElaScrollPageArea* createApiInputRowWidget();
+    ElaScrollPageArea* createApiInputRowWidget(const tomlkit::Item& apiTblValue);
 };

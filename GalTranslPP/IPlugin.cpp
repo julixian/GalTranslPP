@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 
 void registerPlugins(std::vector<pro::proxy<PPlugin>>& plugins, const std::vector<std::string>& pluginNames, const fs::path& projectDir, const fs::path& otherCacheDir,
     const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager, const std::shared_ptr<spdlog::logger>& logger,
-    const toml::value& projectConfig, bool preProcOnly) {
+    const tomlkit::Item& projectConfig, bool preProcOnly) {
 
     auto runTimeCheckFunc = [&](PluginRunTime runTime) -> bool
         {

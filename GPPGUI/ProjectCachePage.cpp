@@ -28,7 +28,7 @@
 
 using namespace ProjectCachePagePrivate;
 
-ProjectCachePage::ProjectCachePage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent)
+ProjectCachePage::ProjectCachePage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent)
     : BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("缓存管理"));

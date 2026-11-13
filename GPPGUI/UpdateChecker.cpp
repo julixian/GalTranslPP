@@ -27,7 +27,7 @@ namespace
     }
 }
 
-UpdateChecker::UpdateChecker(toml::ordered_value& globalConfig, ElaText* statusText, QObject* parent)
+UpdateChecker::UpdateChecker(tomlkit::Item& globalConfig, ElaText* statusText, QObject* parent)
     : QObject(parent), m_statusText(statusText), m_globalConfig(globalConfig)
 {
     m_checkManager = new QNetworkAccessManager(this);
@@ -185,7 +185,7 @@ void UpdateChecker::onReplyFinished(QNetworkReply* reply)
             tr("最新版本: %1").arg(m_latestRelease.version), 5000);
     }
 
-    maybeStartDownload(m_pendingDownloadRequest || toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
+    maybeStartDownload(m_pendingDownloadRequest || tomlkit::findOr(m_globalConfig, "autoDownloadUpdate", true));
     if (m_state != UpdateState::ReadyToInstall) {
         Q_EMIT checkCompleteSignal(true);
     }

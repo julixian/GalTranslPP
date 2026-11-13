@@ -28,96 +28,18 @@ using GPPCondition = std::vector<GppConditionPattern>;
 
 bool checkString(const jpc::Regex& conditionReg, const std::string& str);
 bool checkGppCondition(const GPPCondition& gppCondition, Sentence* se);
+GPPCondition createGppCondition(const toml& conditionPatterns);
+ConditionType getConditionType(const toml& tbl);
 
-template<typename TC>
-GPPCondition createGppCondition(const toml::basic_value<TC>& conditionPatterns) {
-    GPPCondition patterns;
-
-    auto appendPatternFunc = [&](const auto& conditionTbl)
-        {
-            if (!conditionTbl.contains("conditionTarget") || !conditionTbl.at("conditionTarget").is_string()
-                || !conditionTbl.contains("conditionReg") || !conditionTbl.at("conditionReg").is_string()
-                || (conditionTbl.contains("compileModifier") && !conditionTbl.at("compileModifier").is_string()))
-            {
-                return;
-            }
-
-            GppConditionPattern pattern;
-            std::string_view conditionTargetStr = conditionTbl.at("conditionTarget").as_string();
-            while (true) {
-                if (conditionTargetStr.starts_with("prev_")) {
-                    --pattern.sentenceOffset;
-                    conditionTargetStr.remove_prefix(5);
-                }
-                else if (conditionTargetStr.starts_with("next_")) {
-                    ++pattern.sentenceOffset;
-                    conditionTargetStr.remove_prefix(5);
-                }
-                else {
-                    break;
-                }
-            }
-
-            pattern.conditionTarget = chooseCachePart(conditionTargetStr);
-            const std::string& conditionRegStr = conditionTbl.at("conditionReg").as_string();
-            if (conditionRegStr.empty()) {
-                return;
-            }
-            const std::string modifier = toml::find_or(conditionTbl, "compileModifier", defaultRegCompileModifier);
-            pattern.conditionReg.setPattern(conditionRegStr).setModifier(modifier).compile();
-            if (!pattern.conditionReg) {
-                return;
-            }
-            patterns.emplace_back(std::move(pattern));
-        };
-    if (conditionPatterns.is_array()) {
-        for (const auto& condition : conditionPatterns.as_array()
-            | std::views::filter([](const auto& condition_) { return condition_.is_table(); }))
-        {
-            appendPatternFunc(condition);
-        }
-    }
-    else if (conditionPatterns.is_table()) {
-        appendPatternFunc(conditionPatterns);
-    }
-
-    return patterns;
-}
-
-template<typename TC>
-ConditionType getConditionType(const toml::basic_value<TC>& tbl) {
-    if (tbl.contains("conditionTarget") && tbl.at("conditionTarget").is_string()
-        && !tbl.at("conditionTarget").as_string().empty()
-        && tbl.contains("conditionReg") && tbl.at("conditionReg").is_string()
-        && !tbl.at("conditionReg").as_string().empty())
-    {
-        return ConditionType::Gpp;
-    }
-    if (tbl.contains("conditionScript") && tbl.at("conditionScript").is_string()
-        && !tbl.at("conditionScript").as_string().empty()
-        && tbl.contains("conditionFunc") && tbl.at("conditionFunc").is_string()
-        && !tbl.at("conditionFunc").as_string().empty())
-    {
-        const std::string conditionScriptStr = str2Lower(tbl.at("conditionScript").as_string());
-        if (conditionScriptStr.ends_with(".lua")) {
-            return ConditionType::Lua;
-        }
-        else if (conditionScriptStr.ends_with(".py")) {
-            return ConditionType::Python;
-        }
-    }
-    return ConditionType::None;
-}
-
-template<typename ...Args, typename TC>
-CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& condElem, const fs::path& projectDir,
+template<typename ...Args>
+CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml& condElem, const fs::path& projectDir,
     const std::unique_ptr<PythonManager>& pythonManager, const std::unique_ptr<LuaManager>& luaManager,
     const std::shared_ptr<spdlog::logger>& logger)
 {
     using RetFuncType = CheckSeCondBaseFunc<Args...>;
     std::vector<RetFuncType> funcs;
 
-    auto appendFunctionFunc = [&](const auto& tbl)
+    auto appendFunctionFunc = [&](const tomlkit::Item& tbl)
         {
             ConditionType condType = getConditionType(tbl);
             switch (condType)
@@ -138,9 +60,9 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
 
             case ConditionType::Lua:
             {
-                std::string conditionLuaStr = tbl.at("conditionScript").as_string();
+                std::string conditionLuaStr = tbl.at("conditionScript").asString();
                 replaceStrInplace(conditionLuaStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
-                const std::string conditionFuncStr = tbl.at("conditionFunc").as_string();
+                const std::string conditionFuncStr = tbl.at("conditionFunc").asString();
                 const std::optional<std::shared_ptr<LuaStateInstance>> luaStateOpt = luaManager->registerFunction(
                     conditionLuaStr, conditionFuncStr);
                 if (luaStateOpt) {
@@ -186,9 +108,9 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
 
             case ConditionType::Python:
             {
-                std::string conditionPythonStr = tbl.at("conditionScript").as_string();
+                std::string conditionPythonStr = tbl.at("conditionScript").asString();
                 replaceStrInplace(conditionPythonStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
-                const std::string conditionFuncStr = tbl.at("conditionFunc").as_string();
+                const std::string conditionFuncStr = tbl.at("conditionFunc").asString();
                 const std::optional<std::shared_ptr<PythonInterpreterInstance>> pythonInterpreterOpt = pythonManager->registerFunction(
                     conditionPythonStr, conditionFuncStr);
                 if (pythonInterpreterOpt) {
@@ -237,14 +159,14 @@ CheckSeCondBaseFunc<Args...> getCheckSeCondFunc(const toml::basic_value<TC>& con
             }
         };
 
-    if (condElem.is_array()) {
-        for (const auto& condition : condElem.as_array()
-            | std::views::filter([](const auto& condition_) { return condition_.is_table(); }))
+    if (condElem.isArray()) {
+        for (const auto& condition : condElem
+            | std::views::filter([](const auto& condition_) { return condition_.isTable(); }))
         {
             appendFunctionFunc(condition);
         }
     }
-    else if (condElem.is_table()) {
+    else if (condElem.isTable()) {
         appendFunctionFunc(condElem);
     }
 
@@ -272,6 +194,84 @@ NAMESPACE_END(gpp)
 module :private;
 
 NAMESPACE_BEGIN(gpp)
+
+GPPCondition createGppCondition(const toml& conditionPatterns) {
+    GPPCondition patterns;
+
+    auto appendPatternFunc = [&](const toml& conditionTbl)
+        {
+            if (!conditionTbl.contains("conditionTarget") || !conditionTbl.at("conditionTarget").isString()
+                || !conditionTbl.contains("conditionReg") || !conditionTbl.at("conditionReg").isString()
+                || (conditionTbl.contains("compileModifier") && !conditionTbl.at("compileModifier").isString()))
+            {
+                return;
+            }
+
+            GppConditionPattern pattern;
+            std::string_view conditionTargetStr = conditionTbl.at("conditionTarget").asString();
+            while (true) {
+                if (conditionTargetStr.starts_with("prev_")) {
+                    --pattern.sentenceOffset;
+                    conditionTargetStr.remove_prefix(5);
+                }
+                else if (conditionTargetStr.starts_with("next_")) {
+                    ++pattern.sentenceOffset;
+                    conditionTargetStr.remove_prefix(5);
+                }
+                else {
+                    break;
+                }
+            }
+
+            pattern.conditionTarget = chooseCachePart(conditionTargetStr);
+            const std::string& conditionRegStr = conditionTbl.at("conditionReg").asString();
+            if (conditionRegStr.empty()) {
+                return;
+            }
+            const std::string modifier = tomlkit::findOr(conditionTbl, "compileModifier", defaultRegCompileModifier);
+            pattern.conditionReg.setPattern(conditionRegStr).setModifier(modifier).compile();
+            if (!pattern.conditionReg) {
+                return;
+            }
+            patterns.emplace_back(std::move(pattern));
+        };
+    if (conditionPatterns.isArray()) {
+        for (const auto& condition : conditionPatterns
+            | std::views::filter([](const auto& condition_) { return condition_.isTable(); }))
+        {
+            appendPatternFunc(condition);
+        }
+    }
+    else if (conditionPatterns.isTable()) {
+        appendPatternFunc(conditionPatterns);
+    }
+
+    return patterns;
+}
+
+ConditionType getConditionType(const toml& tbl) {
+    if (tbl.contains("conditionTarget") && tbl.at("conditionTarget").isString()
+        && !tbl.at("conditionTarget").asString().empty()
+        && tbl.contains("conditionReg") && tbl.at("conditionReg").isString()
+        && !tbl.at("conditionReg").asString().empty())
+    {
+        return ConditionType::Gpp;
+    }
+    if (tbl.contains("conditionScript") && tbl.at("conditionScript").isString()
+        && !tbl.at("conditionScript").asString().empty()
+        && tbl.contains("conditionFunc") && tbl.at("conditionFunc").isString()
+        && !tbl.at("conditionFunc").asString().empty())
+    {
+        const std::string conditionScriptStr = str2Lower(tbl.at("conditionScript").asString());
+        if (conditionScriptStr.ends_with(".lua")) {
+            return ConditionType::Lua;
+        }
+        else if (conditionScriptStr.ends_with(".py")) {
+            return ConditionType::Python;
+        }
+    }
+    return ConditionType::None;
+}
 
 bool checkString(const jpc::Regex& conditionReg, const std::string& str) {
     jpc::RegexMatch rm(&conditionReg);

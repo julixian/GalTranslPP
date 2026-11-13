@@ -509,22 +509,22 @@ public:
 
 class LuaToml {
 public:
-	static toml::value luaRef2TomlValue(const luabridge::LuaRef& obj)
+	static tomlkit::Item luaRef2TomlValue(const luabridge::LuaRef& obj, bool isTopLevel = false)
 	{
 		if (obj.isString()) {
-			return toml::value(obj.cast<std::string>().value());
+			return tomlkit::Item(obj.cast<std::string>().value());
 		}
 		if (obj.isNumber()) {
 			obj.push();
 			const bool isInteger = lua_isinteger(obj.state(), -1);
 			lua_pop(obj.state(), 1);
 			if (isInteger) {
-				return toml::value(obj.cast<std::int64_t>().value());
+				return tomlkit::Item(obj.cast<std::int64_t>().value());
 			}
-			return toml::value(obj.cast<double>().value());
+			return tomlkit::Item(obj.cast<double>().value());
 		}
 		if (obj.isBool()) {
-			return toml::value(obj.cast<bool>().value());
+			return tomlkit::Item(obj.cast<bool>().value());
 		}
 		if (obj.isTable()) {
 			bool arrayLike = true;
@@ -539,55 +539,60 @@ public:
 			}
 			arrayLike &= obj.length() == (int)(expectedKey - 1);
 
-			if (arrayLike) {
-				toml::array arr;
+			if (arrayLike && !(isTopLevel && expectedKey == 1)) {
+				tomlkit::Item arr = tomlkit::Item::array();
 				for (size_t i = 1; i <= obj.length(); ++i) {
-					arr.push_back(luaRef2TomlValue(obj[(lua_Integer)i]));
+					const luabridge::LuaRef child = obj[(lua_Integer)i];
+					if (!child.isNil()) {
+						arr.push_back(luaRef2TomlValue(child));
+					}
 				}
 				return arr;
 			}
 
-			toml::table tbl;
+			tomlkit::Item tbl = isTopLevel ? tomlkit::Item::document() : tomlkit::Item::table();
 			for (const auto& [key, value] : luabridge::pairs(obj)) {
 				if (!key.isString()) {
 					throw std::runtime_error(gppTr("LuaToml.luaRef2TomlValue", "LuaToml: key 必须是字符串")
 						.toStdString());
 				}
-				tbl.try_emplace(key.cast<std::string>().value(), luaRef2TomlValue(value));
+				if (!value.isNil()) {
+					tbl.insertOrAssign(key.cast<std::string>().value(), luaRef2TomlValue(value));
+				}
 			}
 			return tbl;
 		}
-		return toml::value{ "LuaToml: unsupported type" };
+		return tomlkit::Item("LuaToml: unsupported type");
 	}
 
-	static luabridge::LuaRef tomlValue2LuaRef(const toml::value& value, lua_State* lua)
+	static luabridge::LuaRef tomlValue2LuaRef(const tomlkit::Item& value, lua_State* lua)
 	{
-		if (value.is_table()) {
+		if (value.isTable()) {
 			luabridge::LuaRef resultMap = luabridge::LuaRef::newTable(lua);
-			for (const auto& [key, val] : value.as_table()) {
-				resultMap[key] = tomlValue2LuaRef(val, lua);
+			for (const auto [key, val] : value.tableItems()) {
+				resultMap[key.name()] = tomlValue2LuaRef(val, lua);
 			}
 			return resultMap;
 		}
-		if (value.is_array()) {
+		if (value.isArray()) {
 			luabridge::LuaRef resultVec = luabridge::LuaRef::newTable(lua);
 			lua_Integer index = 1;
-			for (const auto& elem : value.as_array()) {
+			for (const auto& elem : value) {
 				resultVec[index++] = tomlValue2LuaRef(elem, lua);
 			}
 			return resultVec;
 		}
-		if (value.is_string()) {
-			return luabridge::LuaRef(lua, value.as_string());
+		if (value.isString()) {
+			return luabridge::LuaRef(lua, value.asString());
 		}
-		if (value.is_integer()) {
-			return luabridge::LuaRef(lua, value.as_integer());
+		if (value.isInteger()) {
+			return luabridge::LuaRef(lua, value.asInteger());
 		}
-		if (value.is_floating()) {
-			return luabridge::LuaRef(lua, value.as_floating());
+		if (value.isFloat()) {
+			return luabridge::LuaRef(lua, value.asFloat());
 		}
-		if (value.is_boolean()) {
-			return luabridge::LuaRef(lua, value.as_boolean());
+		if (value.isBoolean()) {
+			return luabridge::LuaRef(lua, value.asBoolean());
 		}
 		return luabridge::LuaRef(lua);
 	}
@@ -804,7 +809,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	luaTomlTable["parse"] = [](const fs::path& path, lua_State* lua_) -> std::tuple<luabridge::LuaRef, std::optional<std::string>>
 		{
 			try {
-				return { LuaToml::tomlValue2LuaRef(gpp::uparseToml(path), lua_), std::nullopt };
+				return { LuaToml::tomlValue2LuaRef(parseToml(path), lua_), std::nullopt };
 			}
 			catch (const std::exception& e) {
 				return { luabridge::LuaRef(lua_), std::string(e.what()) };
@@ -813,7 +818,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	luaTomlTable["str"] = [](const luabridge::LuaRef& obj) -> std::tuple<std::optional<std::string>, std::optional<std::string>>
 		{
 			try {
-				return { toml::format(LuaToml::luaRef2TomlValue(obj)), std::nullopt };
+				return { tomlkit::format(LuaToml::luaRef2TomlValue(obj, true)), std::nullopt };
 			}
 			catch (const std::exception& e) {
 				return { std::nullopt, std::string(e.what()) };
@@ -822,7 +827,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 	luaTomlTable["save"] = [](const fs::path& path, const luabridge::LuaRef& obj) -> std::tuple<bool, std::optional<std::string>>
 		{
 			try {
-				atomicOutputFile(path, toml::format(LuaToml::luaRef2TomlValue(obj)));
+				atomicOutputFile(path, tomlkit::format(LuaToml::luaRef2TomlValue(obj, true)));
 				return { true, std::nullopt };
 			}
 			catch (const std::exception& e) {

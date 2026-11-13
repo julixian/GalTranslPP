@@ -4,7 +4,7 @@
 #include "NameTableModel.h"
 #include <QList>
 #include <filesystem>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 namespace fs = std::filesystem;
 
@@ -13,8 +13,8 @@ class NameTableSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit NameTableSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig,
-        toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit NameTableSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig,
+        tomlkit::Item& projectConfig, QWidget* parent = nullptr);
     void refreshTable();
 
 private:
@@ -23,8 +23,8 @@ private:
     QList<NameTableEntry> readNameTable();
     QString readNameTableStr();
     fs::path& m_projectDir;
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    tomlkit::Item& m_projectConfig;
     std::function<void()> m_refreshFunc;
 
     QList<NameTableEntry> m_withdrawList;

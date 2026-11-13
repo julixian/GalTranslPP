@@ -1,6 +1,5 @@
 ﻿#include "DictionaryReader.h"
 #include "ElaMessageBar.h"
-#include <toml.hpp>
 
 import Tool;
 
@@ -25,19 +24,19 @@ QList<GuiGptDictEntry> DictionaryReader::readGptDict(const fs::path& dictPath)
 
 	if (isSameExtension(dictPath, L".toml")) {
 		try {
-			const toml::ordered_value tbl = gpp::uoparseToml(dictPath);
-			if (!tbl.contains("gptDict") || !tbl.at("gptDict").is_array()) {
+			const toml tbl = parseToml(dictPath);
+			if (!tbl.contains("gptDict") || !tbl.at("gptDict").isArray()) {
 				return result;
 			}
-			const auto& dictArr = tbl.at("gptDict").as_array();
+			const auto& dictArr = tbl.at("gptDict");
 			for (const auto& dict : dictArr) {
-				if (!dict.is_table()) {
+				if (!dict.isTable()) {
 					continue;
 				}
 				GuiGptDictEntry entry;
-				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
-				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
-				entry.description = dict.contains("note") ? QString::fromStdString(toml::find_or(dict, "note", "")) : QString{};
+				entry.original = QString::fromStdString(tomlkit::findOr(dict, "org", ""));
+				entry.translation = QString::fromStdString(tomlkit::findOr(dict, "rep", ""));
+				entry.description = dict.contains("note") ? QString::fromStdString(tomlkit::findOr(dict, "note", "")) : QString{};
 				result.push_back(entry);
 			}
 			return result;
@@ -117,30 +116,41 @@ QList<GuiGptDictEntry> DictionaryReader::readGptDicts(const std::vector<fs::path
 
 QString DictionaryReader::readGptDictsStr(const std::vector<fs::path>& dictPaths)
 {
-	toml::ordered_value newDictArr = toml::array{};
+	tomlkit::Item newDictArr = tomlkit::Item::array();
 	for (const auto& dictPath : dictPaths) {
 		if (!isSameExtension(dictPath, L".toml") || !fs::exists(dictPath)) {
 			continue;
 		}
 		try {
-			toml::ordered_value tbl = gpp::uoparseToml(dictPath);
-			if (!tbl.contains("gptDict") || !tbl.at("gptDict").is_array()) {
+			toml tbl = parseToml(dictPath);
+			if (!tbl.contains("gptDict") || !tbl.at("gptDict").isArray()) {
 				continue;
 			}
-			const auto& dictArr = tbl.at("gptDict").as_array();
+			const auto& dictArr = tbl.at("gptDict");
 			for (const auto& dict : dictArr) {
-				if (!dict.is_table()) {
+				if (!dict.isTable()) {
 					continue;
 				}
-				newDictArr.push_back(dict);
+				if (dict.isInlineTable()) {
+					newDictArr.push_back(dict);
+				}
+				else {
+					tomlkit::Item inlineDict = tomlkit::Item::inlineTable();
+					for (const auto [k, v] : dict.tableItems()) {
+						inlineDict[k.name()] = v;
+					}
+					newDictArr.push_back(std::move(inlineDict));
+				}
 			}
 		}
 		catch (...) {
 
 		}
 	}
-	newDictArr.as_array_fmt().fmt = toml::array_format::multiline;
-	return QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "gptDict", newDictArr }} }));
+	newDictArr.setMultilineArray(true);
+	toml doc = toml::document();
+	doc["gptDict"] = std::move(newDictArr);
+	return QString::fromStdString(tomlkit::format(doc));
 }
 
 QList<GuiNormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictPath)
@@ -152,32 +162,32 @@ QList<GuiNormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictP
 
 	if (isSameExtension(dictPath, L".toml")) {
 		try {
-			toml::ordered_value tbl = gpp::uoparseToml(dictPath);
-			if (!tbl["normalDict"].is_array()) {
+			const toml tbl = parseToml(dictPath);
+			if (!tbl.contains("normalDict") || !tbl.at("normalDict").isArray()) {
 				return result;
 			}
-			auto dictArr = tbl["normalDict"].as_array();
+			const auto& dictArr = tbl.at("normalDict");
 			for (const auto& dict : dictArr) {
-				if (!dict.is_table()) {
+				if (!dict.isTable()) {
 					continue;
 				}
 				GuiNormalDictEntry entry;
-				entry.original = QString::fromStdString(toml::find_or(dict, "org", ""));
-				entry.translation = QString::fromStdString(toml::find_or(dict, "rep", ""));
-				entry.isReg = toml::find_or(dict, "isReg", false);
-				entry.priority = toml::find_or(dict, "priority", 0);
+				entry.original = QString::fromStdString(tomlkit::findOr(dict, "org", ""));
+				entry.translation = QString::fromStdString(tomlkit::findOr(dict, "rep", ""));
+				entry.isReg = tomlkit::findOr(dict, "isReg", false);
+				entry.priority = tomlkit::findOr(dict, "priority", 0);
 
-				if (dict.contains("conditions") && dict.at("conditions").is_array()) {
+				if (dict.contains("conditions") && dict.at("conditions").isArray()) {
 					const auto& conditions = dict.at("conditions");
-					for (const auto& conditionValue : conditions.as_array()) {
-						if (!conditionValue.is_table() || !conditionValue.contains("conditionTarget")
+					for (const auto& conditionValue : conditions) {
+						if (!conditionValue.isTable() || !conditionValue.contains("conditionTarget")
 							|| !conditionValue.contains("conditionReg")
-							|| !conditionValue.at("conditionTarget").is_string()
-							|| !conditionValue.at("conditionReg").is_string()) {
+							|| !conditionValue.at("conditionTarget").isString()
+							|| !conditionValue.at("conditionReg").isString()) {
 							continue;
 						}
 						NormalCondition condition;
-						QString target = QString::fromStdString(conditionValue.at("conditionTarget").as_string());
+						QString target = QString::fromStdString(conditionValue.at("conditionTarget").asString());
 						while (target.startsWith("prev_")) {
 							--condition.sentenceOffset;
 							target = target.mid(5);
@@ -192,7 +202,7 @@ QList<GuiNormalDictEntry> DictionaryReader::readNormalDict(const fs::path& dictP
 							&& target != "transby" && target != "transraw" && target != "transview") {
 							continue;
 						}
-						const QString pattern = QString::fromStdString(conditionValue.at("conditionReg").as_string());
+						const QString pattern = QString::fromStdString(conditionValue.at("conditionReg").asString());
 						if (pattern.isEmpty()) {
 							continue;
 						}

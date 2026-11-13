@@ -221,11 +221,11 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     m_logger->info(gppTr("NameTranslator.run", "NameTrans: 开始处理人名表...").toStdString());
 
     // 1. 读取 TOML
-    toml::ordered_value nameTableData;
+    toml nameTableData = toml::document();
     try {
-        nameTableData = gpp::uoparseToml(nameTablePath);
+        nameTableData = parseToml(nameTablePath);
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         m_logger->error(gppTr("NameTranslator.run", "NameTrans: 解析人名表失败: %1")
             .arg(e.what())
             .toStdString());
@@ -235,12 +235,12 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     // 2. 收集需要翻译的名字
     std::vector<std::string> namesToTranslate;
 
-    for (const auto& [key, value] : nameTableData.as_table()) {
-        if (value.is_array() && value.size() > 0) {
-            const std::string& currentTrans = value[0].as_string();
+    for (const auto [key, value] : nameTableData.tableItems()) {
+        if (value.isArray() && value.size() > 0) {
+            const std::string& currentTrans = value[0].asString();
             // 如果译名为空，加入待翻译列表
             if (currentTrans.empty()) {
-                namesToTranslate.push_back(key);
+                namesToTranslate.push_back(key.name());
             }
         }
     }
@@ -289,16 +289,16 @@ void NameTranslator::run(const fs::path& nameTablePath) {
     for (const auto& [key, trans] : translationResults) {
         if (nameTableData.contains(key)) {
             auto& val = nameTableData.at(key);
-            if (val.is_array() && val.size() > 0) {
+            if (val.isArray() && val.size() > 0) {
                 // 更新译名 (index 0)
-                val.as_array()[0] = trans;
+                val[0] = trans;
                 ++updatedCount;
             }
         }
     }
 
     // 5. 保存文件
-    atomicOutputFile(nameTablePath, toml::format(nameTableData));
+    atomicOutputFile(nameTablePath, tomlkit::format(nameTableData));
 
     m_logger->info(gppTr("NameTranslator.run", "NameTrans 处理完成，已更新 %1 个译名，保存至 [%2]")
         .arg(updatedCount)

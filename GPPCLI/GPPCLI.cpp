@@ -12,7 +12,6 @@ import GPPVersion;
 import PythonManager;
 import TerminalController;
 import TerminalPreview;
-import toml11;
 import Tool;
 
 using namespace gpp;
@@ -51,7 +50,7 @@ bool confirmProject(const fs::path& projectDir, bool plain)
     if (!std::getline(std::cin, answer) || !answer.empty()) {
         return false;
     }
-    const auto config = uparseToml(projectDir / L"Config.toml");
+    const auto config = parseToml(projectDir / L"Config.toml");
     if (ProblemOverviewTracker::hasUnimportedChanges(projectDir, transCacheDirName, config)) {
         std::cout << gppTr("GPPCLI.GPPCLI", "输入 y 继续翻译，其它输入返回：").toStdString();
         return std::getline(std::cin, answer) && (answer == "y" || answer == "Y");
@@ -106,10 +105,10 @@ int main(int argc, char* argv[])
         parser.showHelp(1);
     }
 
-    toml::value globalConfig;
+    toml globalConfig = toml::document();
     try {
-        globalConfig = uparseToml(globalConfigPath);
-        const auto language = toml::find_or(globalConfig, "language", "zh_CN");
+        globalConfig = parseToml(globalConfigPath);
+        const auto language = tomlkit::findOr(globalConfig, "language", "zh_CN");
         if (baseTranslator.load(QString("qt_%1.qm").arg(language), "translations")) {
             app.installTranslator(&baseTranslator);
         }
@@ -135,7 +134,7 @@ int main(int argc, char* argv[])
     const auto runProject = [&](const fs::path& projectDir)
         {
             if (parser.isSet(yesOption)) {
-                const auto config = uparseToml(projectDir / L"Config.toml");
+                const auto config = parseToml(projectDir / L"Config.toml");
                 if (ProblemOverviewTracker::hasUnimportedChanges(projectDir, transCacheDirName, config)) {
                     spdlog::warn(gppTr("TerminalPreview", "检测到 %1 被修改但未导入。")
                             .arg(wide2Ascii(ProblemOverviewTracker::overviewPath(projectDir, config).filename()))
@@ -146,7 +145,7 @@ int main(int argc, char* argv[])
                 runtimeStarted = true;
                 try {
                     const auto environment =
-                        ascii2Wide(toml::find_or(globalConfig, "pythonEnvPath", defaultPythonEnvPath));
+                        ascii2Wide(tomlkit::findOr(globalConfig, "pythonEnvPath", defaultPythonEnvPath));
                     if (!startUpPythonEnv(environment, release)) {
                         spdlog::warn(
                             gppTr("GPPCLI.GPPCLI", "未设置 Python 环境，将无法使用需要 Python 环境的模块").toStdString());

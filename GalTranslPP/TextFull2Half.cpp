@@ -13,7 +13,7 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
-TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
+TextFull2Half::TextFull2Half(const tomlkit::Item& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
     : m_logger(logger), m_runTime(runTime)
 {
     try {
@@ -30,7 +30,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
                 }
                 return ret;
             }();
-        const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
+        const auto pluginConfig = parseToml(pluginConfigPath);
 
         m_replacePunctuation = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.replacePunctuation", reversePriority);
         m_reverseConversion = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.TextFull2Half.reverseConversion", reversePriority);
@@ -71,7 +71,7 @@ TextFull2Half::TextFull2Half(const toml::value& projectConfig, const std::shared
             .arg(m_reverseConversion ? "true" : "false")
             .toStdString());
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr(
             "TextFull2Half.TextFull2Half",
             "TextFull2Half-%1 配置文件解析错误: %2")

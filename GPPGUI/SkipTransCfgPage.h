@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 class ElaWidget;
 
@@ -10,10 +10,10 @@ class SkipTransCfgPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit SkipTransCfgPage(tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 	~SkipTransCfgPage() override;
 
 private:
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 	ElaWidget* m_hKeysWidget = nullptr;
 };

@@ -32,24 +32,27 @@ import ProblemOverview;
 
 using namespace gpp;
 
-ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent)
-    : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig)
+ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, tomlkit::Item& globalConfig, QWidget* parent)
+    : BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig),
+    m_projectConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document()))
 {
     setWindowTitle(tr("项目设置主页"));
     setTitleVisible(false);
 
     try {
-        m_projectConfig = gpp::uoparseToml(m_projectDir / L"Config.toml");
+        *m_projectConfig = parseToml(m_projectDir / L"Config.toml");
     }
     catch (...) {
-        m_projectConfig = toml::ordered_table{};
+        *m_projectConfig = tomlkit::Item::document();
         ElaMessageBar::error(ElaMessageBarType::TopLeft,
             tr("解析失败"), tr("项目 %1 的配置文件不符合 toml 规范")
             .arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
     }
-    insertToml(m_projectConfig, "GUIConfig.isRunning", false);
-    m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, m_projectConfig, this);
+    insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
+    m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, this);
 }
+
+ProjectSettingsPage::~ProjectSettingsPage() = default;
 
 
 void ProjectSettingsPage::apply2Config()
@@ -71,9 +74,9 @@ void ProjectSettingsPage::apply2Config()
 void ProjectSettingsPage::saveProjectConfig()
 {
     try {
-        atomicOutputFile(m_projectDir / L"Config.toml", toml::format(m_projectConfig));
+        atomicOutputFile(m_projectDir / L"Config.toml", tomlkit::format(*m_projectConfig));
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         gppMessageBox(QString::fromUtf8(e.what()),
             tr("Toml 格式化错误"),GppMessageBoxType::Error);
     }
@@ -131,7 +134,7 @@ void ProjectSettingsPage::setupUi()
     foundamentalSettingButton->setMenu(foundamentalSettingMenu);
 
     ElaMenu* transMenu = new ElaMenu(centralWidget);
-    if (const std::string language = toml::find_or(m_globalConfig, "language", "zh_CN"); language == "en") {
+    if (const std::string language = tomlkit::findOr(m_globalConfig, "language", "zh_CN"); language == "en") {
         transMenu->setFixedWidth(145);
     }
     QAction* nameTableSettingAction = transMenu->addElaIconAction(ElaIconType::User, tr("人名表"));
@@ -241,37 +244,37 @@ void ProjectSettingsPage::setupUi()
 void ProjectSettingsPage::createPages()
 {
     if (!m_apiSettingsPage) {
-        m_apiSettingsPage = new ApiSettingsPage(m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_apiSettingsPage = new ApiSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
     if (!m_commonSettingsPage) {
-        m_commonSettingsPage = new CommonSettingsPage(m_projectConfig, m_stackedWidget);
+        m_commonSettingsPage = new CommonSettingsPage(*m_projectConfig, m_stackedWidget);
     }
     if (!m_paSettingsPage) {
-        m_paSettingsPage = new PASettingsPage(m_projectConfig, m_stackedWidget);
+        m_paSettingsPage = new PASettingsPage(*m_projectConfig, m_stackedWidget);
     }
     if (!m_nameTableSettingsPage) {
-        m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
     if (!m_dictSettingsPage) {
-        m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
     if (!m_dictExSettingsPage) {
-        m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
     if (!m_promptSettingsPage) {
-        m_promptSettingsPage = new PromptSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
+        m_promptSettingsPage = new PromptSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
     }
     if (!m_pluginSettingsPage) {
-        m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, m_projectConfig, m_stackedWidget);
+        m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
     }
     if (!m_projectCachePage) {
-        m_projectCachePage = new ProjectCachePage(m_projectDir, m_projectConfig, m_stackedWidget);
+        m_projectCachePage = new ProjectCachePage(m_projectDir, *m_projectConfig, m_stackedWidget);
     }
     if (!m_startSettingsPage) {
-        m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
     if (!m_otherSettingsPage) {
-        m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, m_projectConfig, m_stackedWidget);
+        m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
     }
 
     m_stackedWidget->addWidget(m_apiSettingsPage);
@@ -314,7 +317,7 @@ void ProjectSettingsPage::onRefreshProjectConfig()
         return;
     }
     try {
-        m_projectConfig = gpp::uoparseToml(m_projectDir / L"Config.toml");
+        *m_projectConfig = parseToml(m_projectDir / L"Config.toml");
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopLeft,
@@ -322,7 +325,7 @@ void ProjectSettingsPage::onRefreshProjectConfig()
             .arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
         return;
     }
-    insertToml(m_projectConfig, "GUIConfig.isRunning", false);
+    insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
     while (m_stackedWidget->count() > 0) {
         QWidget* widget = m_stackedWidget->currentWidget();
         m_stackedWidget->removeWidget(widget);
@@ -346,14 +349,14 @@ void ProjectSettingsPage::onRefreshProjectConfig()
 
 void ProjectSettingsPage::onStartTranslating()
 {
-    insertToml(m_projectConfig, "GUIConfig.isRunning", true);
+    insertToml(*m_projectConfig, "GUIConfig.isRunning", true);
     this->apply2Config();
 }
 
 void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int exitCode)
 {
     if (exitCode >= 0 &&
-        toml::find_or(m_globalConfig, "autoRefreshAfterTranslate", true)
+        tomlkit::findOr(m_globalConfig, "autoRefreshAfterTranslate", true)
         )
     {
         if (transEngine == "DumpName" || transEngine == "NameTrans") {
@@ -363,13 +366,9 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
             m_dictSettingsPage->refreshGptDict();
         }
     }
-    insertToml(m_projectConfig, "GUIConfig.isRunning", false);
+    insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
     if (exitCode >= 0) {
-        const auto writeTime = ProblemOverviewTracker::lastWriteTime(
-            ProblemOverviewTracker::overviewPath(m_projectDir, m_projectConfig));
-        if (writeTime) {
-            insertToml(m_projectConfig, ProblemOverviewTracker::configKey(m_projectConfig), *writeTime);
-        }
+        ProblemOverviewTracker::recordLastWriteTime(*m_projectConfig, m_projectDir);
     }
     saveProjectConfig();
     Q_EMIT finishTranslatingSignal(this->property("ElaPageKey").toString());
@@ -377,5 +376,5 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
 
 bool ProjectSettingsPage::getIsRunning()
 {
-    return toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true);
+    return tomlkit::findOr(*m_projectConfig, "GUIConfig", "isRunning", true);
 }

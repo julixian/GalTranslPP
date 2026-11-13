@@ -9,7 +9,6 @@ x64/
 x86/
 Release/
 target/
-compile_commands.json
 mcpp.lock
 /vcpkg_installed/
 /GalTranslPP/qt_gpp_en.qm

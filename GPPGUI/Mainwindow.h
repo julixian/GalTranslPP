@@ -4,8 +4,9 @@
 
 #include <QMainWindow>
 #include <QSize>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 #include <filesystem>
+#include <memory>
 
 class HomePage;
 class AboutDialog;
@@ -78,5 +79,5 @@ private:
     UpdateChecker* m_updateChecker = nullptr;
 
     QSize m_windowSize;
-    toml::ordered_value m_globalConfig;
+    std::unique_ptr<tomlkit::Item> m_globalConfig;
 };

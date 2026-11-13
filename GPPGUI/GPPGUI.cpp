@@ -20,8 +20,6 @@
 #include <strsafe.h>
 #endif
 
-#include <toml.hpp>
-
 import PythonManager;
 import Tool;
 
@@ -149,9 +147,9 @@ int main(int argc, char* argv[])
         QLocalServer server;  // 创建 QLocalServer，用于接收来自新实例的消息
 
         try {
-            const toml::value globalConfig = gpp::uparseToml(globalConfigPath);
-            checkUpdate = toml::find_or(globalConfig, "autoCheckUpdate", true);
-            const std::string language = toml::find_or(globalConfig, "language", "zh_CN");
+            const toml globalConfig = parseToml(globalConfigPath);
+            checkUpdate = tomlkit::findOr(globalConfig, "autoCheckUpdate", true);
+            const std::string language = tomlkit::findOr(globalConfig, "language", "zh_CN");
             if (language == "zh_CN") {
                 if (baseTranslator.load("qt_zh_CN.qm", "translations")) {
                     app.installTranslator(&baseTranslator);
@@ -168,7 +166,7 @@ int main(int argc, char* argv[])
                     app.installTranslator(&guiTranslator);
                 }
             }
-            allowMultiInstance = toml::find_or(globalConfig, "allowMultiInstance", false);
+            allowMultiInstance = tomlkit::findOr(globalConfig, "allowMultiInstance", false);
             if (!allowMultiInstance) {
                 // 尝试附加到共享内存。
                 // 如果成功，说明已有实例在运行。
@@ -196,7 +194,7 @@ int main(int argc, char* argv[])
                     return 1; // 创建失败，退出
                 }
             }
-            const std::string pythonEnvPathStr = toml::find_or(globalConfig, "pythonEnvPath", defaultPythonEnvPath);
+            const std::string pythonEnvPathStr = tomlkit::findOr(globalConfig, "pythonEnvPath", defaultPythonEnvPath);
             const fs::path pythonEnvPath = ascii2Wide(pythonEnvPathStr);
             startUpPythonEnv(pythonEnvPath, release);
         }
@@ -295,7 +293,7 @@ int main(int argc, char* argv[])
             GppMessageBoxType::Error);
         return 1;
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         gppMessageBox(QString::fromUtf8(e.what()),
             gppTr("GPPGUI.GPPGUI", "TOML 错误"),
             GppMessageBoxType::Error);

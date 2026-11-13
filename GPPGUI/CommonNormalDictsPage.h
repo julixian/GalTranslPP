@@ -3,7 +3,7 @@
 #include "BasePage.h"
 #include "NormalTabEntry.h"
 #include <QSharedPointer>
-#include <toml.hpp>
+#include "GppTomlFwd.h"
 
 namespace fs = std::filesystem;
 
@@ -12,7 +12,7 @@ class CommonNormalDictsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit CommonNormalDictsPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+    explicit CommonNormalDictsPage(const std::string& mode, tomlkit::Item& globalConfig, QWidget* parent = nullptr);
 
 Q_SIGNALS:
     void commonDictsChangedSignal();
@@ -21,7 +21,7 @@ private:
 
     void setupUi();
 
-    toml::ordered_value& m_globalConfig;
+    tomlkit::Item& m_globalConfig;
 
     QList<QSharedPointer<NormalTabEntry>> m_normalTabEntries;
 

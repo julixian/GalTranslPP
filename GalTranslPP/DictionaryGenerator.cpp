@@ -432,13 +432,15 @@ void DictionaryGenerator::generate(const fs::path& outputFilePath) {
     }
 
 
-    toml::ordered_value arr = toml::array{};
+    tomlkit::Item arr = tomlkit::Item::array();
     for (const auto& item : finalList) {
-        arr.push_back(toml::ordered_table{ { "org", std::get<0>(item) }, { "rep", std::get<1>(item) }, { "note", std::get<2>(item) } });
+        arr.push_back(tomlkit::Item::inlineTable({ { "org", std::get<0>(item) }, { "rep", std::get<1>(item) }, { "note", std::get<2>(item) } }));
     }
 
-    arr.as_array_fmt().fmt = toml::array_format::multiline;
-    atomicOutputFile(outputFilePath, toml::format(toml::ordered_value{ toml::ordered_table{{ "gptDict", arr }} }));
+    arr.setMultilineArray(true);
+    tomlkit::Item doc = tomlkit::Item::document();
+    doc["gptDict"] = std::move(arr);
+    atomicOutputFile(outputFilePath, tomlkit::format(doc));
 
     m_logger->info(gppTr("DictionaryGenerator.generate", "字典生成完成，共 %1 个词语，已保存到 [%2]")
         .arg(finalList.size())

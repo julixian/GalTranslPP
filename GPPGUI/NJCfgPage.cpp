@@ -11,7 +11,7 @@ import Tool;
 
 using namespace gpp;
 
-NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
+NJCfgPage::NJCfgPage(tomlkit::Item& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("NormalJson 输出配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -21,7 +21,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出带原文
-	bool outputWithSrc = toml::find_or(m_projectConfig, "plugins", "NormalJson", "outputWithSrc", true);
+	bool outputWithSrc = tomlkit::findOr(m_projectConfig, "plugins", "NormalJson", "outputWithSrc", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("输出带原文"), outputArea);
@@ -35,7 +35,7 @@ NJCfgPage::NJCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Base
 	mainLayout->addWidget(outputArea);
 
 	// 输出带引用信息
-	const bool outputWithRefInfo = toml::find_or(m_projectConfig, "plugins", "NormalJson", "outputWithRefInfo", false);
+	const bool outputWithRefInfo = tomlkit::findOr(m_projectConfig, "plugins", "NormalJson", "outputWithRefInfo", false);
 	ElaScrollPageArea* refInfoArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* refInfoLayout = new QHBoxLayout(refInfoArea);
 	ElaText* refInfoText = new ElaText(tr("输出带引用信息"), refInfoArea);

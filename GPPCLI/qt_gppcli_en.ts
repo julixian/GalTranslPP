@@ -4,22 +4,22 @@
 <context>
     <name>GPPCLI.GPPCLI</name>
     <message>
-        <location filename="GPPCLI.cpp" line="152"/>
+        <location filename="GPPCLI.cpp" line="151"/>
         <source>未设置 Python 环境，将无法使用需要 Python 环境的模块</source>
         <translation>Python environment is not set; modules requiring Python will be unavailable</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="156"/>
+        <location filename="GPPCLI.cpp" line="155"/>
         <source>Python 环境配置失败</source>
         <translation>Python environment setup failed</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="127"/>
+        <location filename="GPPCLI.cpp" line="126"/>
         <source>无法读取全局配置，请检查 BaseConfig/GlobalConfig.toml 是否存在</source>
         <translation>Cannot read global config; check whether BaseConfig/GlobalConfig.toml exists</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="159"/>
+        <location filename="GPPCLI.cpp" line="158"/>
         <source>检测到异常退出，请注意备份相关翻译缓存</source>
         <translation>Abnormal exit detected; back up related translation caches</translation>
     </message>
@@ -28,12 +28,12 @@
         <translation type="vanished">Cache check/create error: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="194"/>
+        <location filename="GPPCLI.cpp" line="193"/>
         <source>请输入项目文件夹或 Config.toml 的路径。</source>
         <translation>Enter the path to the project folder or Config.toml</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="196"/>
+        <location filename="GPPCLI.cpp" line="195"/>
         <source> (直接按 Enter 可再次处理: %1)</source>
         <translation> (Enter to rerun: %1)</translation>
     </message>
@@ -46,48 +46,48 @@
         <translation type="vanished">Rerun project: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="36"/>
+        <location filename="GPPCLI.cpp" line="35"/>
         <source>路径 &apos;%1&apos; 不存在或不是一个有效的文件夹，请重新输入</source>
         <translation>Path &apos;%1&apos; does not exist or is not a valid folder; please enter it again</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="49"/>
+        <location filename="GPPCLI.cpp" line="48"/>
         <source>按 Enter 开始翻译，输入 q 返回：</source>
         <translation>Press Enter to start translating, or enter q to go back:</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="56"/>
+        <location filename="GPPCLI.cpp" line="55"/>
         <source>输入 y 继续翻译，其它输入返回：</source>
         <translation>Enter y to continue translating, or anything else to go back: </translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="165"/>
+        <location filename="GPPCLI.cpp" line="164"/>
         <source>开始处理项目: %1</source>
         <translation>Start project: %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="170"/>
+        <location filename="GPPCLI.cpp" line="169"/>
         <source>创建翻译器实例失败，请检查项目配置</source>
         <translation>Translator creation failed; check project config</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="175"/>
+        <location filename="GPPCLI.cpp" line="174"/>
         <source>项目 &apos;%1&apos; 处理完成！</source>
         <translation>Project &apos;%1&apos; done!</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="190"/>
+        <location filename="GPPCLI.cpp" line="189"/>
         <source>按 Ctrl+Z 回车退出。</source>
         <oldsource>按 Ctrl+Z 退出。</oldsource>
         <translation>Press Ctrl+Z, then Enter to exit.</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="192"/>
+        <location filename="GPPCLI.cpp" line="191"/>
         <source>按 Ctrl+D 退出。</source>
         <translation>Press Ctrl+D to exit.</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="223"/>
+        <location filename="GPPCLI.cpp" line="222"/>
         <source>非交互终端请使用 --yes 执行翻译，或使用 --preview 查看配置</source>
         <translation>In a non-interactive terminal, use --yes to translate or --preview to inspect the configuration</translation>
     </message>
@@ -104,12 +104,12 @@
         <translation type="vanished">[Std error] %1</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="241"/>
+        <location filename="GPPCLI.cpp" line="240"/>
         <source>发生未知错误</source>
         <translation>Unknown error</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="254"/>
+        <location filename="GPPCLI.cpp" line="253"/>
         <source>缓存删除错误: %1</source>
         <translation>Cache delete error: %1</translation>
     </message>
@@ -139,8 +139,8 @@
 <context>
     <name>ProblemOverview</name>
     <message>
-        <location filename="GPPCLI.cpp" line="66"/>
-        <location filename="TerminalPreview.cpp" line="413"/>
+        <location filename="GPPCLI.cpp" line="65"/>
+        <location filename="TerminalPreview.cpp" line="418"/>
         <source>成功导入 %1 个句子至 transl_cache</source>
         <translation>Imported %1 sentences into transl_cache</translation>
     </message>
@@ -208,8 +208,8 @@
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="85"/>
-        <location filename="TerminalPreview.cpp" line="229"/>
-        <location filename="TerminalPreview.cpp" line="230"/>
+        <location filename="TerminalPreview.cpp" line="234"/>
+        <location filename="TerminalPreview.cpp" line="235"/>
         <source>Agent</source>
         <translation>Agent</translation>
     </message>
@@ -357,7 +357,7 @@
         <translation>Native automatic compaction</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="234"/>
+        <location filename="TerminalPreview.cpp" line="239"/>
         <source>上下文压缩按各 Api 的 token 阈值触发；响应无用量信息时按 4 倍字节数回退</source>
         <translation>Compaction triggers at each API&apos;s token threshold, falling back to 4x that count in bytes if usage info is absent</translation>
     </message>
@@ -372,7 +372,7 @@
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="177"/>
-        <location filename="TerminalPreview.cpp" line="264"/>
+        <location filename="TerminalPreview.cpp" line="269"/>
         <source>当前模式不使用 Api 和提示词</source>
         <translation>This mode does not use APIs or prompts</translation>
     </message>
@@ -383,7 +383,7 @@
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="192"/>
-        <location filename="TerminalPreview.cpp" line="244"/>
+        <location filename="TerminalPreview.cpp" line="249"/>
         <source>文件不存在，将忽略</source>
         <translation>File not found; ignored</translation>
     </message>
@@ -403,12 +403,12 @@
         <translation>Script base class</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="232"/>
+        <location filename="TerminalPreview.cpp" line="237"/>
         <source>允许运行 Python</source>
         <translation>Allow Python execution</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="233"/>
+        <location filename="TerminalPreview.cpp" line="238"/>
         <source>每批最大轮次</source>
         <translation>Maximum turns per batch</translation>
     </message>
@@ -421,68 +421,68 @@
         <translation type="vanished">APIs with native automatic compaction do not use the local threshold</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="235"/>
+        <location filename="TerminalPreview.cpp" line="240"/>
         <source>搜索结果上限</source>
         <translation>Search result limit</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="236"/>
+        <location filename="TerminalPreview.cpp" line="241"/>
         <source>读取行数上限</source>
         <translation>Read line limit</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="242"/>
+        <location filename="TerminalPreview.cpp" line="247"/>
         <source>项目笔记</source>
         <translation>Project note</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="248"/>
+        <location filename="TerminalPreview.cpp" line="253"/>
         <source>提示词</source>
         <translation>Prompts</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="300"/>
-        <location filename="TerminalPreview.cpp" line="332"/>
+        <location filename="TerminalPreview.cpp" line="305"/>
+        <location filename="TerminalPreview.cpp" line="337"/>
         <source>配置尚不可运行，请修正后重试</source>
         <translation>The configuration is not ready to run; fix it and try again</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="339"/>
+        <location filename="TerminalPreview.cpp" line="344"/>
         <source>检测到 %1 被修改但未导入。是否继续翻译？</source>
         <translation>%1 has been modified but not imported. Continue translating?</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="352"/>
+        <location filename="TerminalPreview.cpp" line="357"/>
         <source>开始翻译 [Enter]</source>
         <translation>Start [Enter]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="353"/>
+        <location filename="TerminalPreview.cpp" line="358"/>
         <source>导入问题清单 [I]</source>
         <translation>Import problems [I]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="370"/>
+        <location filename="TerminalPreview.cpp" line="375"/>
         <source>重新读取 [R]</source>
         <translation>Reload [R]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="447"/>
+        <location filename="TerminalPreview.cpp" line="452"/>
         <source>返回</source>
         <translation>Back</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="452"/>
+        <location filename="TerminalPreview.cpp" line="457"/>
         <source>继续翻译</source>
         <translation>Continue translating</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="463"/>
+        <location filename="TerminalPreview.cpp" line="468"/>
         <source>问题概览尚未导入</source>
         <translation>Problem overview has not been imported</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="363"/>
+        <location filename="TerminalPreview.cpp" line="368"/>
         <source>已重新读取配置</source>
         <translation>Configuration reloaded</translation>
     </message>
@@ -510,42 +510,42 @@
         <translation type="vanished">Uses each API&apos;s token compaction threshold first, falling back to bytes only when usage info is absent</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="371"/>
+        <location filename="TerminalPreview.cpp" line="376"/>
         <source>返回 [Esc]</source>
         <translation>Back [Esc]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="402"/>
+        <location filename="TerminalPreview.cpp" line="407"/>
         <source>左右切换分页 / 上下、滚轮滚动 / 仅预览，不修改配置</source>
         <translation>Left/right: tabs / Up/down or wheel: scroll / Read-only configuration preview</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="416"/>
+        <location filename="TerminalPreview.cpp" line="421"/>
         <source>导入中出现的问题记录在 import_problems.log 中</source>
         <translation>Import problems were recorded in import_problems.log</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="429"/>
+        <location filename="TerminalPreview.cpp" line="434"/>
         <source>导入</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="430"/>
+        <location filename="TerminalPreview.cpp" line="435"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="440"/>
+        <location filename="TerminalPreview.cpp" line="445"/>
         <source>导入问题清单</source>
         <translation>Import problem overview</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="441"/>
+        <location filename="TerminalPreview.cpp" line="446"/>
         <source>按文件名和 index 替换整条缓存记录，确认后写入 transl_cache</source>
         <translation>Replace entire cache records by filename and index; confirmation writes to transl_cache</translation>
     </message>
     <message>
-        <location filename="GPPCLI.cpp" line="140"/>
+        <location filename="GPPCLI.cpp" line="139"/>
         <location filename="TerminalPreview.cpp" line="76"/>
         <source>检测到 %1 被修改但未导入。</source>
         <translation>%1 has been modified but not imported.</translation>

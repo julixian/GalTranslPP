@@ -39,7 +39,7 @@ using namespace gpp;
 
 QSize ApiSettingsPage::s_configWidgetSize(980, 820);
 
-ApiSettingsPage::ApiSettingsPage(toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent)
+ApiSettingsPage::ApiSettingsPage(tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent)
     : BasePage(parent), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("Api 设置"));
@@ -85,8 +85,8 @@ void ApiSettingsPage::setupUi()
     connect(addApiButton, &ElaToolButton::clicked, this, &ApiSettingsPage::addApiInputRow);
     toolbar->addWidget(addApiButton);
     toolbar->addStretch();
-    m_layoutMode = toml::find_or(m_projectConfig, "GUIConfig", "apiLayoutMode",
-        toml::find_or(m_globalConfig, "defaultApiLayoutMode", 0)) == 1 ? 1 : 0;
+    m_layoutMode = tomlkit::findOr(m_projectConfig, "GUIConfig", "apiLayoutMode",
+        tomlkit::findOr(m_globalConfig, "defaultApiLayoutMode", 0)) == 1 ? 1 : 0;
     m_flowModeButton = new ElaToolButton(centerWidget);
     m_flowModeButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     m_flowModeButton->setElaIcon(ElaIconType::Grid2);
@@ -119,9 +119,9 @@ void ApiSettingsPage::setupUi()
             m_apiRows.move(from, to);
             refreshApiLayout();
         });
-    const auto apis = toml::find_or_default<toml::ordered_array>(m_projectConfig, "backend", "apis");
+    const auto apis = tomlkit::findArrayOrEmpty(m_projectConfig, "backend", "apis");
     for (const auto& api : apis) {
-        if (api.is_table()) {
+        if (api.isTable()) {
             createApiInputRowWidget(api);
         }
     }
@@ -131,7 +131,7 @@ void ApiSettingsPage::setupUi()
     refreshApiLayout();
 
     // Api 使用策略
-    const std::string strategy = toml::find_or(m_projectConfig, "backend", "apiStrategy", "random");
+    const std::string strategy = tomlkit::findOr(m_projectConfig, "backend", "apiStrategy", "random");
     bool isRandom = strategy == "random";
     ElaScrollPageArea* apiStrategyArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* apiStrategyLayout = new QHBoxLayout(apiStrategyArea);
@@ -154,7 +154,7 @@ void ApiSettingsPage::setupUi()
     apiStrategyGroup->addButton(apiStrategyFallback, 1);
 
     // Api 超时时间
-    int timeout = toml::find_or(m_projectConfig, "backend", "apiTimeout", 300);
+    int timeout = tomlkit::findOr(m_projectConfig, "backend", "apiTimeout", 300);
     ElaScrollPageArea* apiTimeoutArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* apiTimeoutLayout = new QHBoxLayout(apiTimeoutArea);
     apiTimeoutLayout->setSpacing(8);
@@ -170,9 +170,12 @@ void ApiSettingsPage::setupUi()
 
     m_applyFunc = [=, this]()
         {
-            toml::ordered_array apiArray;
+            tomlkit::Item apiArray = tomlkit::Item::arrayOfTables();
             if (!serializeApis(apiArray)) {
                 return;
+            }
+            if (apiArray.empty()) {
+                apiArray = tomlkit::Item::array();
             }
             apiStrategyGroup->button(0)->isChecked() ? insertToml(m_projectConfig, "backend.apiStrategy", "random")
                 : insertToml(m_projectConfig, "backend.apiStrategy", "fallback");
@@ -196,48 +199,56 @@ void ApiSettingsPage::addApiInputRow()
     refreshApiLayout();
 }
 
-ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_value& api)
+ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget()
+{
+    return createApiInputRowWidget(tomlkit::Item::table());
+}
+
+ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const tomlkit::Item& api)
 {
     constexpr int keyEditWidth = 560;
     constexpr int editWidth = 340;
     constexpr int protocolWidth = 130;
 
     std::vector<std::string> apiKeys;
-    if (api.contains("apikeys")) {
-        for (const toml::ordered_value& keyValue : api.at("apikeys").as_array()) {
-            const std::string& keyValueString = keyValue.as_string();
+    if (api.contains("apikeys") && api.at("apikeys").isArray()) {
+        for (const tomlkit::Item& keyValue : api.at("apikeys")) {
+            if (!keyValue.isString()) {
+                continue;
+            }
+            const std::string& keyValueString = keyValue.asString();
             if (!keyValueString.empty()) {
                 apiKeys.push_back(keyValueString);
             }
         }
     }
     const std::string key = apiKeys.empty() ? "" : apiKeys.front();
-    const std::string url = toml::find_or(api, "apiurl", "");
-    const std::string model = toml::find_or(api, "modelName", "");
-    const std::string protocol = toml::find_or(api, "protocol", "openai");
-    const std::string thinkingLevel = toml::find_or(api, "thinkingLevel", "off");
-    const bool useSystemProxy = toml::find_or(api, "useSystemProxy", true);
-    const bool stream = toml::find_or(api, "stream", false);
-    const bool fastPause = toml::find_or(api, "fastPause", false);
-    const bool enable = toml::find_or(api, "enable", true);
-    const bool extraHeadersEnable = toml::find_or(api, "extraHeadersEnable", false);
-    const bool extraBodyEnable = toml::find_or(api, "extraBodyEnable", false);
+    const std::string url = tomlkit::findOr(api, "apiurl", "");
+    const std::string model = tomlkit::findOr(api, "modelName", "");
+    const std::string protocol = tomlkit::findOr(api, "protocol", "openai");
+    const std::string thinkingLevel = tomlkit::findOr(api, "thinkingLevel", "off");
+    const bool useSystemProxy = tomlkit::findOr(api, "useSystemProxy", true);
+    const bool stream = tomlkit::findOr(api, "stream", false);
+    const bool fastPause = tomlkit::findOr(api, "fastPause", false);
+    const bool enable = tomlkit::findOr(api, "enable", true);
+    const bool extraHeadersEnable = tomlkit::findOr(api, "extraHeadersEnable", false);
+    const bool extraBodyEnable = tomlkit::findOr(api, "extraBodyEnable", false);
 
     std::optional<double> temperature;
     std::optional<double> topP;
     std::optional<double> frequencyPenalty;
     std::optional<double> presencePenalty;
-    if (api.contains("temperature") && api.at("temperature").is_floating()) {
-        temperature = api.at("temperature").as_floating();
+    if (api.contains("temperature") && api.at("temperature").isFloat()) {
+        temperature = api.at("temperature").asFloat();
     }
-    if (api.contains("topP") && api.at("topP").is_floating()) {
-        topP = api.at("topP").as_floating();
+    if (api.contains("topP") && api.at("topP").isFloat()) {
+        topP = api.at("topP").asFloat();
     }
-    if (api.contains("frequencyPenalty") && api.at("frequencyPenalty").is_floating()) {
-        frequencyPenalty = api.at("frequencyPenalty").as_floating();
+    if (api.contains("frequencyPenalty") && api.at("frequencyPenalty").isFloat()) {
+        frequencyPenalty = api.at("frequencyPenalty").asFloat();
     }
-    if (api.contains("presencePenalty") && api.at("presencePenalty").is_floating()) {
-        presencePenalty = api.at("presencePenalty").as_floating();
+    if (api.contains("presencePenalty") && api.at("presencePenalty").isFloat()) {
+        presencePenalty = api.at("presencePenalty").asFloat();
     }
 
     ElaScrollPageArea* container = new ElaScrollPageArea(this);
@@ -421,7 +432,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     ElaLineEdit* nameEdit = new ElaLineEdit(nameArea);
     nameEdit->setMinimumWidth(340);
     nameEdit->setPlaceholderText(tr("自定义 Api"));
-    nameEdit->setText(QString::fromStdString(toml::find_or(api, "name", tr("自定义 Api").toStdString())));
+    nameEdit->setText(QString::fromStdString(tomlkit::findOr(api, "name", tr("自定义 Api").toStdString())));
     nameLayout->addWidget(nameEdit);
     basicLayout->addWidget(nameArea);
     if (m_layoutMode == 0) {
@@ -518,7 +529,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             layout->addWidget(new GppDoubleText(title, 16, description, 10, toolTip, area));
             layout->addStretch();
             ElaToggleSwitch* toggle = new ElaToggleSwitch(area);
-            toggle->setIsToggled(toml::find_or(api, key_, defaultValue));
+            toggle->setIsToggled(tomlkit::findOr(api, key_, defaultValue));
             layout->addWidget(toggle);
             agentTabPage.layout->addWidget(area);
             return toggle;
@@ -535,7 +546,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     agentStrictToolsComboBox->addItem(tr("不严格"), "off");
     agentStrictToolsComboBox->addItem(tr("完全严格"), "all");
     agentStrictToolsComboBox->addItem(tr("仅 commit 严格"), "commit");
-    const std::string strictTools = toml::find_or(api, "agentStrictTools", "all");
+    const std::string strictTools = tomlkit::findOr(api, "agentStrictTools", "all");
     agentStrictToolsComboBox->setCurrentIndex(agentStrictToolsComboBox->findData(QString::fromStdString(strictTools)));
     agentStrictToolsLayout->addWidget(agentStrictToolsComboBox);
     agentTabPage.layout->addWidget(agentStrictToolsArea);
@@ -552,7 +563,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     ElaSpinBox* agentCompactTokensSpinBox = new ElaSpinBox(agentCompactTokensArea);
     agentCompactTokensSpinBox->setRange(0, 1000000000);
     agentCompactTokensSpinBox->setFixedWidth(180);
-    agentCompactTokensSpinBox->setValue(toml::find_or(api, "agentCompactThresholdTokens", 0));
+    agentCompactTokensSpinBox->setValue(tomlkit::findOr(api, "agentCompactThresholdTokens", 0));
     agentCompactTokensLayout->addWidget(agentCompactTokensSpinBox);
     agentTabPage.layout->addWidget(agentCompactTokensArea);
     ElaToggleSwitch* agentGeminiInteractionsSwitch = addAgentSwitch("agentGeminiInteractions",
@@ -626,12 +637,12 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
             if (!api.contains(key_)) {
                 return {};
             }
-            const toml::ordered_value& value = api.at(key_);
-            if (value.is_string()) {
-                return QString::fromStdString(value.as_string());
+            const tomlkit::Item& value = api.at(key_);
+            if (value.isString()) {
+                return QString::fromStdString(value.asString());
             }
-            if (value.is_table()) {
-                return QString::fromStdString(toml2Json(value).dump(2));
+            if (value.isTable()) {
+                return QString::fromStdString(toml2OrderedJson(value).dump(2));
             }
             return {};
         };
@@ -866,7 +877,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
 
     auto apiRequestTimeoutMs = [=, this]()
         {
-            const int timeoutSeconds = toml::find_or(m_projectConfig, "backend", "apiTimeout", 300);
+            const int timeoutSeconds = tomlkit::findOr(m_projectConfig, "backend", "apiTimeout", 300);
             return std::max(1, timeoutSeconds) * 1000;
         };
 
@@ -1020,14 +1031,14 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     newRowControls.flowCard = flowCard;
     newRowControls.moveUpButton = moveUpButton;
     newRowControls.moveDownButton = moveDownButton;
-    newRowControls.serializeFunc = [=](toml::ordered_array& apiArray)
+    newRowControls.serializeFunc = [=](tomlkit::Item& apiArray)
         {
-            toml::ordered_table apiTable;
-            apiTable.emplace("name", (nameEdit->text().trimmed().isEmpty()
+            tomlkit::Item apiTable = tomlkit::Item::table(tomlkit::TableStyle::ArrayOfTablesElement);
+            apiTable["name"] = (nameEdit->text().trimmed().isEmpty()
                 ? tr("自定义 Api")
-                : nameEdit->text().trimmed()).toStdString());
-            apiTable.emplace("protocol", protocolComboBox->currentText().toStdString());
-            toml::ordered_array apiKeysArray;
+                : nameEdit->text().trimmed()).toStdString();
+            apiTable["protocol"] = protocolComboBox->currentText().toStdString();
+            tomlkit::Item apiKeysArray = tomlkit::Item::array();
             const std::string primaryKey = keyEdit->text().toStdString();
             if (!primaryKey.empty()) {
                 apiKeysArray.push_back(primaryKey);
@@ -1039,46 +1050,46 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
                     apiKeysArray.push_back(extraKeyLine);
                 }
             }
-            apiTable.emplace("apikeys", apiKeysArray);
-            apiTable.emplace("apiurl", urlEdit->text().toStdString());
-            apiTable.emplace("modelName", modelEdit->text().toStdString());
-            apiTable.emplace("useSystemProxy", systemProxySwitch->getIsToggled());
-            apiTable.emplace("stream", streamSwitch->getIsToggled());
-            apiTable.emplace("fastPause", fastPauseSwitch->getIsToggled());
-            apiTable.emplace("enable", enableCheckBox->isChecked());
-            apiTable.emplace("thinkingLevel", thinkingComboBox->currentData().toString().toStdString());
-            apiTable.emplace("agentStateful", agentStatefulSwitch->getIsToggled());
-            apiTable.emplace("agentNativeAutoCompaction", agentNativeAutoCompactionSwitch->getIsToggled());
-            apiTable.emplace("agentGeminiInteractions", agentGeminiInteractionsSwitch->getIsToggled());
-            apiTable.emplace("agentStrictTools", agentStrictToolsComboBox->currentData().toString().toStdString());
-            apiTable.emplace("agentCompactThresholdTokens", agentCompactTokensSpinBox->value());
+            apiTable["apikeys"] = std::move(apiKeysArray);
+            apiTable["apiurl"] = urlEdit->text().toStdString();
+            apiTable["modelName"] = modelEdit->text().toStdString();
+            apiTable["useSystemProxy"] = systemProxySwitch->getIsToggled();
+            apiTable["stream"] = streamSwitch->getIsToggled();
+            apiTable["fastPause"] = fastPauseSwitch->getIsToggled();
+            apiTable["enable"] = enableCheckBox->isChecked();
+            apiTable["thinkingLevel"] = thinkingComboBox->currentData().toString().toStdString();
+            apiTable["agentStateful"] = agentStatefulSwitch->getIsToggled();
+            apiTable["agentNativeAutoCompaction"] = agentNativeAutoCompactionSwitch->getIsToggled();
+            apiTable["agentGeminiInteractions"] = agentGeminiInteractionsSwitch->getIsToggled();
+            apiTable["agentStrictTools"] = agentStrictToolsComboBox->currentData().toString().toStdString();
+            apiTable["agentCompactThresholdTokens"] = agentCompactTokensSpinBox->value();
             if (temperatureCheckBox->isChecked()) {
-                apiTable.emplace("temperature", temperatureSlider->value());
+                apiTable["temperature"] = temperatureSlider->value();
             }
             if (topPCheckBox->isChecked()) {
-                apiTable.emplace("topP", topPSlider->value());
+                apiTable["topP"] = topPSlider->value();
             }
             if (frequencyPenaltyCheckBox->isChecked()) {
-                apiTable.emplace("frequencyPenalty", frequencyPenaltySlider->value());
+                apiTable["frequencyPenalty"] = frequencyPenaltySlider->value();
             }
             if (presencePenaltyCheckBox->isChecked()) {
-                apiTable.emplace("presencePenalty", presencePenaltySlider->value());
+                apiTable["presencePenalty"] = presencePenaltySlider->value();
             }
-            apiTable.emplace("extraHeadersEnable", extraHeadersCheckBox->isChecked());
-            apiTable.emplace("extraBodyEnable", extraBodyCheckBox->isChecked());
+            apiTable["extraHeadersEnable"] = extraHeadersCheckBox->isChecked();
+            apiTable["extraBodyEnable"] = extraBodyCheckBox->isChecked();
             if (!extraHeadersEdit->toPlainText().trimmed().isEmpty()) {
                 ordered_json extraHeaders;
                 if (!parseJsonObjectForRequest(extraHeadersEdit, "extraHeaders", extraHeaders)) {
                     return false;
                 }
-                apiTable.emplace("extraHeaders", json2Toml(extraHeaders));
+                apiTable["extraHeaders"] = json2Toml(extraHeaders);
             }
             if (!extraBodyEdit->toPlainText().trimmed().isEmpty()) {
                 ordered_json extraBody;
                 if (!parseJsonObjectForRequest(extraBodyEdit, "extraBody", extraBody)) {
                     return false;
                 }
-                apiTable.emplace("extraBody", json2Toml(extraBody));
+                apiTable["extraBody"] = json2Toml(extraBody);
             }
             apiArray.push_back(std::move(apiTable));
             return true;
@@ -1088,7 +1099,7 @@ ElaScrollPageArea* ApiSettingsPage::createApiInputRowWidget(const toml::ordered_
     return container;
 }
 
-bool ApiSettingsPage::serializeApis(toml::ordered_array& apis) const
+bool ApiSettingsPage::serializeApis(tomlkit::Item& apis) const
 {
     for (const auto& row : m_apiRows) {
         if (!row.serializeFunc(apis)) {
@@ -1103,7 +1114,7 @@ void ApiSettingsPage::switchLayout(int mode)
     if (mode == m_layoutMode) {
         return;
     }
-    toml::ordered_array apis;
+    tomlkit::Item apis = tomlkit::Item::arrayOfTables();
     // 先读取当前控件和排序，成功后才销毁旧布局；无效 JSON 不会因切换而丢失。
     if (!serializeApis(apis)) {
         return;
@@ -1210,12 +1221,12 @@ void ApiSettingsPage::duplicateApiRow(ElaScrollPageArea* container)
         if (m_apiRows.at(i).container != container) {
             continue;
         }
-        toml::ordered_array apis;
+        tomlkit::Item apis = tomlkit::Item::arrayOfTables();
         if (!m_apiRows.at(i).serializeFunc(apis)) {
             return;
         }
         auto& api = apis.front();
-        api["name"] = tr("%1（副本）").arg(QString::fromStdString(api.at("name").as_string())).toStdString();
+        api["name"] = tr("%1（副本）").arg(QString::fromStdString(api.at("name").asString())).toStdString();
         createApiInputRowWidget(api);
         m_apiRows.move(m_apiRows.size() - 1, i + 1);
         refreshApiLayout();

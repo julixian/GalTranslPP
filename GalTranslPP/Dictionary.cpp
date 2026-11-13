@@ -131,11 +131,14 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
     int count = 0;
 
     try {
-        const auto dictData = gpp::uparseToml(filePath);
+        const auto dictData = parseToml(filePath);
         if (!dictData.contains("gptDict")) {
             return;
         }
-        const auto& dictTbls = dictData.at("gptDict").as_array();
+        const auto& dictTbls = dictData.at("gptDict");
+        if (!dictTbls.isArray()) {
+            throw tomlkit::TypeError("Expected TOML array for gptDict");
+        }
         for (const auto& el : dictTbls) {
             GptDictEntry entry;
             if (!el.contains("org")) {
@@ -145,18 +148,18 @@ void GptDictionary::loadFromFile(const fs::path& filePath) {
                 continue;
             }
 
-            entry.org = el.at("org").as_string();
+            entry.org = el.at("org").asString();
             if (entry.org.empty()) {
                 continue;
             }
-            entry.rep = el.at("rep").as_string();
-            entry.note = toml::find_or(el, "note", "");
-            entry.priority = toml::find_or(el, "priority", 0);
+            entry.rep = el.at("rep").asString();
+            entry.note = tomlkit::findOr(el, "note", "");
+            entry.priority = tomlkit::findOr(el, "priority", 0);
             m_entries.push_back(std::move(entry));
             ++count;
         }
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr("GptDictionary.loadFromFile", "GPT 字典文件 [%1] 解析错误: %2")
             .arg(wide2Ascii(filePath))
             .arg(e.what())
@@ -299,11 +302,14 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
 
     int count = 0;
     try {
-        const auto dictData = gpp::uparseToml(filePath);
+        const auto dictData = parseToml(filePath);
         if (!dictData.contains("normalDict")) {
             return;
         }
-        const auto& dicts = dictData.at("normalDict").as_array();
+        const auto& dicts = dictData.at("normalDict");
+        if (!dicts.isArray()) {
+            throw tomlkit::TypeError("Expected TOML array for normalDict");
+        }
         for (const auto& elem : dicts) {
             NormalDictEntry entry;
             if (!elem.contains("org")) {
@@ -313,14 +319,14 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                 continue;
             }
 
-            const std::string& str = elem.at("org").as_string();
+            const std::string& str = elem.at("org").asString();
             if (str.empty()) {
                 continue;
             }
 
-            entry.isReg = toml::find_or(elem, "isReg", false);
+            entry.isReg = tomlkit::findOr(elem, "isReg", false);
             if (entry.isReg) {
-                const std::string compileModifier = toml::find_or(elem, "compileModifier", defaultRegCompileModifier);
+                const std::string compileModifier = tomlkit::findOr(elem, "compileModifier", defaultRegCompileModifier);
                 entry.searchReg = std::make_unique<jpc::Regex>(str, compileModifier);
                 if (!*entry.searchReg) {
                     throw std::runtime_error(gppTr(
@@ -330,16 +336,16 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
                         .arg(str)
                         .toStdString());
                 }
-                entry.replaceModifier = std::make_unique<std::string>(toml::find_or(elem, "replaceModifier", defaultRegReplaceModifier));
+                entry.replaceModifier = std::make_unique<std::string>(tomlkit::findOr(elem, "replaceModifier", defaultRegReplaceModifier));
             }
             else {
                 entry.org = str;
             }
 
-            entry.rep = elem.at("rep").as_string();
-            entry.priority = toml::find_or(elem, "priority", 0);
+            entry.rep = elem.at("rep").asString();
+            entry.priority = tomlkit::findOr(elem, "priority", 0);
 
-            if (elem.contains("conditions") && elem.at("conditions").is_array()) {
+            if (elem.contains("conditions") && elem.at("conditions").isArray()) {
                 const auto& conditions = elem.at("conditions");
                 // 出于 常用性/GUI支持 等方面的考量
                 // 条件字典 只支持 gppCondition 而不像 retranslKeys/skipProblems 那样可以外接脚本
@@ -356,7 +362,7 @@ void NormalDictionary::loadFromFile(const fs::path& filePath) {
             ++count;
         }
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr("NormalDictionary.loadFromFile", "Normal 字典文件 [%1] 解析错误: %2")
             .arg(wide2Ascii(filePath))
             .arg(e.what())

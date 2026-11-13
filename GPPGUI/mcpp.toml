@@ -6,6 +6,7 @@ name = "gui"
 gpp.core = { path = "../GalTranslPP" }
 gpp.version = { path = "../GPPVersion" }
 gpp.updater = { path = "../Updater", artifacts = ["Updater"] }
+tomlkit.core = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 
 [build-dependencies]
 gpp.build = { path = "../mcpp-build-scripts/gpp-build" }

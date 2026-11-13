@@ -30,7 +30,7 @@ import Tool;
 
 using namespace gpp;
 
-CommonNormalDictsPage::CommonNormalDictsPage(const std::string& mode, toml::ordered_value& globalConfig, QWidget* parent) :
+CommonNormalDictsPage::CommonNormalDictsPage(const std::string& mode, tomlkit::Item& globalConfig, QWidget* parent) :
 	BasePage(parent), m_globalConfig(globalConfig)
 {
 	setWindowTitle(tr("默认译前字典设置"));
@@ -194,12 +194,12 @@ void CommonNormalDictsPage::setupUi()
 			model->loadData(normalData);
 			tableView->setModel(model);
 			stackedWidget->addWidget(tableView);
-			stackedWidget->setCurrentIndex(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "openMode", 1));
-			tableView->setColumnWidth(NormalDictModel::Original, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "0", 285));
-			tableView->setColumnWidth(NormalDictModel::Translation, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "1", 195));
-			tableView->setColumnWidth(NormalDictModel::Conditions, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "2", 350));
-			tableView->setColumnWidth(NormalDictModel::IsReg, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "3", 82));
-			tableView->setColumnWidth(NormalDictModel::Priority, toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "4", 65));
+			stackedWidget->setCurrentIndex(tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "openMode", 1));
+			tableView->setColumnWidth(NormalDictModel::Original, tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "0", 285));
+			tableView->setColumnWidth(NormalDictModel::Translation, tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "1", 195));
+			tableView->setColumnWidth(NormalDictModel::Conditions, tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "2", 350));
+			tableView->setColumnWidth(NormalDictModel::IsReg, tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "3", 82));
+			tableView->setColumnWidth(NormalDictModel::Priority, tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "columnWidth", "4", 65));
 			DictionarySearchBar* searchBar = new DictionarySearchBar(tableView, tr("条件"), pageMainWidget);
 			searchBar->setVisible(stackedWidget->currentIndex() == 1);
 			pageButtonLayout->insertWidget(3, searchBar);
@@ -212,7 +212,7 @@ void CommonNormalDictsPage::setupUi()
 				&& tableView->selectionModel()->hasSelection());
 			editEntryButton->setEnabled(stackedWidget->currentIndex() == 1
 				&& tableView->selectionModel()->hasSelection() && tableView->currentIndex().isValid());
-			defaultOnSwitch->setIsToggled(toml::find_or(m_globalConfig, m_modeConfigKey, "spec", initDictName, "defaultOn", true));
+			defaultOnSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, m_modeConfigKey, "spec", initDictName, "defaultOn", true));
 			insertToml(m_globalConfig, m_modeConfigKey + ".spec." + initDictName + ".defaultOn", defaultOnSwitch->getIsToggled());
 
 			connect(plainTextModeButton, &ElaToolButton::clicked, this, [=]()
@@ -261,27 +261,29 @@ void CommonNormalDictsPage::setupUi()
 									atomicOutputFile(currentNormalTabEntry->dictPath, plainTextEdit->toPlainText().toStdString());
 								}
 								else if (stackedWidget->currentIndex() == 1 || forceSaveInTableModeToInit) {
-						toml::ordered_value dictsArr = toml::array{};
-						for (const GuiNormalDictEntry& entry : model->getEntriesRef()) {
-							toml::ordered_table dictTable;
-							dictTable.emplace("org", entry.original.toStdString());
-							dictTable.emplace("rep", entry.translation.toStdString());
-							if (!entry.conditions.isEmpty()) {
-								toml::ordered_value conditions = toml::array{};
-								for (const NormalCondition& condition : entry.conditions) {
-									toml::ordered_table conditionTable;
-									conditionTable.emplace("conditionReg", condition.pattern.toStdString());
-									conditionTable.emplace("conditionTarget", serializeNormalConditionTarget(condition).toStdString());
-									conditions.push_back(std::move(conditionTable));
-								}
-								dictTable.emplace("conditions", std::move(conditions));
-							}
-							dictTable.emplace("isReg", entry.isReg);
-							dictTable.emplace("priority", entry.priority);
-							dictsArr.push_back(std::move(dictTable));
-						}
-						atomicOutputFile(currentNormalTabEntry->dictPath,
-							toml::format(toml::ordered_value{ toml::ordered_table{{ "normalDict", std::move(dictsArr) }} }));
+									const QList<GuiNormalDictEntry>& entries = model->getEntriesRef();
+									tomlkit::Item dictsArr = entries.isEmpty() ? tomlkit::Item::array() : tomlkit::Item::arrayOfTables();
+									for (const GuiNormalDictEntry& entry : entries) {
+										tomlkit::Item dictTable = tomlkit::Item::table();
+										dictTable["org"] = entry.original.toStdString();
+										dictTable["rep"] = entry.translation.toStdString();
+										if (!entry.conditions.isEmpty()) {
+											tomlkit::Item conditions = tomlkit::Item::array();
+											for (const NormalCondition& condition : entry.conditions) {
+												conditions.push_back(tomlkit::Item::inlineTable({
+													{ "conditionReg", condition.pattern.toStdString() },
+													{ "conditionTarget", serializeNormalConditionTarget(condition).toStdString() }
+												}));
+											}
+											dictTable["conditions"] = std::move(conditions);
+										}
+										dictTable["isReg"] = entry.isReg;
+										dictTable["priority"] = entry.priority;
+										dictsArr.push_back(std::move(dictTable));
+									}
+									toml doc = toml::document();
+									doc["normalDict"] = std::move(dictsArr);
+									atomicOutputFile(currentNormalTabEntry->dictPath, tomlkit::format(doc));
 								}
 							}
 							catch (...) {
@@ -306,11 +308,11 @@ void CommonNormalDictsPage::setupUi()
 					}
 
 					auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-					if (globalConfigDictNames.is_array()) {
+					if (globalConfigDictNames.isArray()) {
 						if (
-							!std::ranges::any_of(globalConfigDictNames.as_array(), [=](const auto& globalConfigDictName)
+							!std::ranges::any_of(globalConfigDictNames, [=](const auto& globalConfigDictName)
 								{
-									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
+									return globalConfigDictName.isString() && globalConfigDictName.asString() == currentDictName;
 								})
 							)
 						{
@@ -318,7 +320,7 @@ void CommonNormalDictsPage::setupUi()
 						}
 					}
 					else {
-						globalConfigDictNames = toml::array{ currentDictName };
+						globalConfigDictNames = tomlkit::Item::array({ currentDictName });
 					}
 
 					insertToml(m_globalConfig, m_modeConfigKey + ".spec." + currentDictName + ".openMode", stackedWidget->currentIndex());
@@ -493,18 +495,18 @@ void CommonNormalDictsPage::setupUi()
 						}
 						(*normalTabEntryIt)->dictPath = newDictPath;
 						auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-						if (globalConfigDictNames.is_array()) {
-							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
+						if (globalConfigDictNames.isArray()) {
+							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames,
 								[=](const auto& globalConfigDictName)
 								{
-									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == oldDictName;
+									return globalConfigDictName.isString() && globalConfigDictName.asString() == oldDictName;
 								});
-							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
+							if (globalConfigDictNameIt != globalConfigDictNames.end()) {
 								*globalConfigDictNameIt = newDictName.toStdString();
 							}
 						}
 						else {
-							globalConfigDictNames = toml::array{ newDictName.toStdString() };
+							globalConfigDictNames = tomlkit::Item::array({ newDictName.toStdString() });
 						}
 						tabWidget->setTabText(tabWidget->indexOf(pageMainWidget), newDictName);
 						Q_EMIT commonDictsChangedSignal();
@@ -562,18 +564,16 @@ void CommonNormalDictsPage::setupUi()
 						catch (...) { }
 						m_normalTabEntries.erase(normalTabEntryIt);
 						auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-						if (globalConfigDictNames.is_array()) {
-							const auto globalConfigDictNameIt = std::ranges::find_if(globalConfigDictNames.as_array(),
-								[=](const auto& globalConfigDictName)
-								{
-									return globalConfigDictName.is_string() && globalConfigDictName.as_string() == currentDictName;
-								});
-							if (globalConfigDictNameIt != globalConfigDictNames.as_array().end()) {
-								globalConfigDictNames.as_array().erase(globalConfigDictNameIt);
+						if (globalConfigDictNames.isArray()) {
+							for (size_t i = 0; i < globalConfigDictNames.size(); ++i) {
+								if (globalConfigDictNames[i].isString() && globalConfigDictNames[i].asString() == currentDictName) {
+									globalConfigDictNames.erase(i);
+									break;
+								}
 							}
 						}
 						else {
-							globalConfigDictNames = toml::array{};
+							globalConfigDictNames = tomlkit::Item::array();
 						}
 						Q_EMIT commonDictsChangedSignal();
 						ElaMessageBar::success(ElaMessageBarType::TopLeft, tr("删除成功"),
@@ -596,26 +596,26 @@ void CommonNormalDictsPage::setupUi()
 		};
 
 	auto& globalConfigDictNames = m_globalConfig[m_modeConfigKey]["dictNames"];
-	if (globalConfigDictNames.is_array()) {
-		auto& globalConfigDictNamesArr = globalConfigDictNames.as_array();
-		auto it = globalConfigDictNamesArr.begin();
-		while (it != globalConfigDictNamesArr.end()) {
-			if (!it->is_string()) {
-				it = globalConfigDictNamesArr.erase(it);
+	if (globalConfigDictNames.isArray()) {
+		size_t i = 0;
+		while (i < globalConfigDictNames.size()) {
+			if (!globalConfigDictNames[i].isString()) {
+				globalConfigDictNames.erase(i);
 				continue;
 			}
-			const fs::path dictPath = m_modeDictDir / (ascii2Wide(it->as_string()) + L".toml");
+			const std::string dictName = globalConfigDictNames[i].asString();
+			const fs::path dictPath = m_modeDictDir / (ascii2Wide(dictName) + L".toml");
 			if (!fs::exists(dictPath)) {
-				it = globalConfigDictNamesArr.erase(it);
+				globalConfigDictNames.erase(i);
 				continue;
 			}
 			QWidget* pageMainWidget = createNormalDictTabFunc(dictPath);
-			tabWidget->addTab(pageMainWidget, QString::fromStdString(it->as_string()));
-			++it;
+			tabWidget->addTab(pageMainWidget, QString::fromStdString(dictName));
+			++i;
 		}
 	}
 	else {
-		globalConfigDictNames = toml::array{};
+		globalConfigDictNames = tomlkit::Item::array();
 	}
 
 	tabWidget->setCurrentIndex(0);
@@ -634,7 +634,7 @@ void CommonNormalDictsPage::setupUi()
 	connect(importButton, &ElaToolButton::clicked, this, [=, this]()
 		{
 			const QString importDictPathQStr = QFileDialog::getOpenFileName(window(), tr("选择字典文件"),
-				QString::fromStdString(toml::find_or(m_globalConfig, "lastCommonNormalDictPath", "./")),
+				QString::fromStdString(tomlkit::findOr(m_globalConfig, "lastCommonNormalDictPath", "./")),
 				"TOML files (*.toml);;JSON files (*.json)");
 			if (importDictPathQStr.isEmpty()) {
 				return;
@@ -711,7 +711,7 @@ void CommonNormalDictsPage::setupUi()
 
 	m_applyFunc = [=, this]()
 		{
-			toml::array dictNamesArr;
+			tomlkit::Item dictNamesArr = tomlkit::Item::array();
 			std::vector<std::pair<std::string, QWidget*>> pageWidgets;
 			for (const QSharedPointer<NormalTabEntry>& entry : m_normalTabEntries) {
 				if (!entry->saveFunc(false)) {
@@ -731,25 +731,25 @@ void CommonNormalDictsPage::setupUi()
 			insertToml(m_globalConfig, m_modeConfigKey + ".dictNames", dictNamesArr);
 
 			auto& spec = m_globalConfig[m_modeConfigKey]["spec"];
-			if (spec.is_table()) {
-				auto& specTable = spec.as_table();
-				auto it = specTable.begin();
-				while (it != specTable.end()) {
+			if (spec.isTable()) {
+				std::vector<std::string> keysToErase;
+				for (const auto [key, val] : spec.tableItems()) {
 					if (
 						!std::ranges::any_of(dictNamesArr, [&](const auto& dictName)
 							{
-								return dictName.is_string() && dictName.as_string() == it->first;
+								return dictName.isString() && dictName.asString() == key.name();
 							})
 						)
 					{
-						it = specTable.erase(it);
-						continue;
+						keysToErase.push_back(key.name());
 					}
-					++it;
+				}
+				for (const auto& k : keysToErase) {
+					spec.erase(k);
 				}
 			}
 			else {
-				spec = toml::ordered_table{};
+				spec = tomlkit::Item::table();
 			}
 			Q_EMIT commonDictsChangedSignal();
 		};

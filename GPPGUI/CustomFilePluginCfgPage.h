@@ -1,7 +1,8 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -10,11 +11,11 @@ class CustomFilePluginCfgPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit CustomFilePluginCfgPage(fs::path& projectDir, toml::ordered_value& globalConfig,
-        toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit CustomFilePluginCfgPage(fs::path& projectDir, tomlkit::Item& globalConfig,
+        tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
 private:
     fs::path& m_projectDir;
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    tomlkit::Item& m_projectConfig;
 };

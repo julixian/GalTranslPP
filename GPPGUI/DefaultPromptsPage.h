@@ -1,7 +1,8 @@
 #pragma once
 
 #include "BasePage.h"
-#include <toml.hpp>
+#include "GppTomlFwd.h"
+#include <memory>
 
 class DefaultPromptsPage : public BasePage
 {
@@ -9,10 +10,11 @@ class DefaultPromptsPage : public BasePage
 public:
 
     explicit DefaultPromptsPage(QWidget* parent = nullptr);
+    ~DefaultPromptsPage() override;
 
 private:
 
-    toml::ordered_value m_promptConfig;
+    std::unique_ptr<tomlkit::Item> m_promptConfig;
 
     void setupUi();
 };

@@ -6,7 +6,61 @@ module ProblemOverview;
 
 NAMESPACE_BEGIN(gpp)
 
-std::optional<std::int64_t> ProblemOverviewTracker::lastWriteTime(const fs::path& path)
+bool ProblemOverviewTracker::usesJson(const toml& config)
+{
+    return tomlkit::findOr(config, "common", "problemOverviewFormat", "json") == "json";
+}
+
+fs::path ProblemOverviewTracker::overviewPath(const fs::path& projectDir, const toml& config)
+{
+    return projectDir / (usesJson(config) ? L"ProblemOverview.json" : L"ProblemOverview.toml");
+}
+
+std::string ProblemOverviewTracker::configKey(const toml& config)
+{
+    return usesJson(config)
+        ? "GUIConfig.problemOverviewJsonLastWriteTime"
+        : "GUIConfig.problemOverviewTomlLastWriteTime";
+}
+
+std::optional<tomlkit::OffsetDateTime> ProblemOverviewTracker::recordedLastWriteTime(const toml& config)
+{
+    const std::string_view key = usesJson(config)
+        ? "problemOverviewJsonLastWriteTime"
+        : "problemOverviewTomlLastWriteTime";
+    const toml* pVal = config.find("GUIConfig", key);
+    if (!pVal) {
+        return std::nullopt;
+    }
+    if (pVal->isOffsetDateTime()) {
+        return pVal->asOffsetDateTime();
+    }
+    // TODO: 未来大版本更新中移除旧版整数毫秒时间戳兼容
+    if (pVal->isInteger()) {
+        return tomlkit::OffsetDateTime::fromEpochMillisLocal(pVal->asInteger());
+    }
+    return std::nullopt;
+}
+
+bool ProblemOverviewTracker::hasUnimportedChanges(
+    const fs::path& projectDir, const fs::path& cacheDirName, const toml& config)
+{
+    if (!fs::is_directory(projectDir / cacheDirName)) {
+        return false;
+    }
+    const auto time = lastWriteTime(overviewPath(projectDir, config));
+    const auto recorded = recordedLastWriteTime(config);
+    return time && recorded && *time > *recorded;
+}
+
+bool ProblemOverviewTracker::isCurrentOverviewFile(
+    const fs::path& path, const fs::path& projectDir, const toml& config)
+{
+    std::error_code error;
+    return fs::equivalent(path, overviewPath(projectDir, config), error) && !error;
+}
+
+std::optional<tomlkit::OffsetDateTime> ProblemOverviewTracker::lastWriteTime(const fs::path& path)
 {
     std::error_code error;
     if (!fs::is_regular_file(path, error)) {
@@ -22,23 +76,33 @@ std::optional<std::int64_t> ProblemOverviewTracker::lastWriteTime(const fs::path
 #else
     const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(writeTime);
 #endif
-    return std::chrono::floor<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+    const std::int64_t epochMs = std::chrono::floor<std::chrono::milliseconds>(systemTime.time_since_epoch()).count();
+    return tomlkit::OffsetDateTime::fromEpochMillisLocal(epochMs);
+}
+
+bool ProblemOverviewTracker::recordLastWriteTime(
+    toml& config, const fs::path& projectDir, const std::optional<fs::path>& importedPath)
+{
+    if (importedPath && !isCurrentOverviewFile(*importedPath, projectDir, config)) {
+        return false;
+    }
+    const fs::path targetPath = importedPath ? *importedPath : overviewPath(projectDir, config);
+    const auto time = lastWriteTime(targetPath);
+    if (!time) {
+        return false;
+    }
+    insertToml(config, configKey(config), *time);
+    return true;
 }
 
 void ProblemOverviewTracker::recordLastWriteTime(
     const fs::path& projectDir, const std::optional<fs::path>& importedPath)
 {
     const auto configPath = projectDir / L"Config.toml";
-    auto config = uoparseToml(configPath);
-    if (importedPath && !isCurrentOverviewFile(*importedPath, projectDir, config)) {
-        return;
+    auto config = parseToml(configPath);
+    if (recordLastWriteTime(config, projectDir, importedPath)) {
+        atomicOutputFile(configPath, tomlkit::format(config));
     }
-    const auto time = lastWriteTime(overviewPath(projectDir, config));
-    if (!time) {
-        return;
-    }
-    insertToml(config, configKey(config), *time);
-    atomicOutputFile(configPath, toml::format(config));
 }
 
 ProblemOverviewImportResult importProblemOverview(const fs::path& projectDir, const fs::path& overviewPath)
@@ -49,12 +113,11 @@ ProblemOverviewImportResult importProblemOverview(const fs::path& projectDir, co
             gppTr("ProblemOverview", "找不到问题概览文件 [%1]").arg(wide2Ascii(overviewPath)).toStdString());
     }
     json overview;
-    const auto extension = str2Lower(overviewPath.extension().string());
-    if (extension == ".json") {
+    if (isSameExtension(overviewPath, L".json")) {
         overview = parseJson(overviewPath);
     }
-    else if (extension == ".toml") {
-        overview = toml2Json(uparseToml(overviewPath).at("problemOverview"));
+    else if (isSameExtension(overviewPath, L".toml")) {
+        overview = toml2Json(parseToml(overviewPath).at("problemOverview"));
     }
     else {
         throw std::invalid_argument(gppTr("ProblemOverview", "未知的问题概览文件类型").toStdString());
@@ -67,7 +130,7 @@ ProblemOverviewImportResult importProblemOverview(const fs::path& projectDir, co
     for (const auto& [filename, items] : files) {
         const fs::path relativePath = ascii2Wide(filename);
         // 概览允许引用子目录，但不能越过本项目的缓存目录。
-        if (relativePath.is_absolute() || std::ranges::find(relativePath, fs::path("..")) != relativePath.end()) {
+        if (relativePath.is_absolute() || std::ranges::find(relativePath, fs::path(L"..")) != relativePath.end()) {
             result.problems.push_back(
                 gppTr("ProblemOverview", "[文件 %1] 不是有效的缓存相对路径，跳过导入").arg(filename).toStdString());
             continue;

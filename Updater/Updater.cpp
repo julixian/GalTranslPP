@@ -15,7 +15,7 @@
 
 import boost;
 import GPPVersion;
-import toml11;
+import tomlkitpp;
 
 using namespace gpp;
 
@@ -246,9 +246,8 @@ int main(int argc, char* argv[])
         const fs::path globalConfigPath = parser.isSet("newActionFlag")
             ? L"../BaseConfig/GlobalConfig.toml"
             : L"BaseConfig/GlobalConfig.toml";
-        std::ifstream ifs(globalConfigPath, std::ios::binary);
-        const auto configData = toml::parse(ifs, wide2Ascii(globalConfigPath));
-        const std::string language = toml::find_or(configData, "language", "zh_CN");
+        const auto configData = tomlkit::parseFile(globalConfigPath);
+        const std::string language = tomlkit::findOr(configData, "language", "zh_CN");
         if (language == "zh_CN") {
             if (baseTranslator.load("qt_zh_CN.qm", "translations")) {
                 app.installTranslator(&baseTranslator);

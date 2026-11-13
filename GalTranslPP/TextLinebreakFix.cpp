@@ -19,7 +19,7 @@ TextLinebreakFix::~TextLinebreakFix() {
 	}
 }
 
-TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::value& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
+TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const tomlkit::Item& projectConfig, const std::shared_ptr<spdlog::logger>& logger, PluginRunTime runTime)
 	: m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_tlf.json"), m_logger(logger), m_runTime(runTime)
 {
 	try {
@@ -42,7 +42,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 				}
 				return ret;
 			}();
-		const auto pluginConfig = gpp::uparseToml(pluginConfigPath);
+		const auto pluginConfig = parseToml(pluginConfigPath);
 
 		const std::string linebreakMode = parsePluginToml<std::string>(projectConfig, pluginConfig,
 			"plugins.TextLinebreakFix.linebreakMode", reversePriority);
@@ -162,7 +162,7 @@ TextLinebreakFix::TextLinebreakFix(const fs::path& otherCacheDir, const toml::va
 			    .toStdString());
 		}
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr(
             "TextLinebreakFix.TextLinebreakFix",
             "TextLinebreakFix-%1 插件配置文件解析错误: %2")

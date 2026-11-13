@@ -24,7 +24,7 @@ import Tool;
 using namespace gpp;
 namespace fs = std::filesystem;
 
-AppSettingsPage::AppSettingsPage(toml::ordered_value& globalConfig, QWidget* parent)
+AppSettingsPage::AppSettingsPage(tomlkit::Item& globalConfig, QWidget* parent)
     : BasePage(parent), m_globalConfig(globalConfig)
 {
     setWindowTitle(tr("应用设置"));
@@ -46,7 +46,7 @@ void AppSettingsPage::setupUi()
     centerLayout->addWidget(themeText);
 
     // 主题切换
-    int themeMode = toml::find_or(m_globalConfig, "themeMode", 0);
+    int themeMode = tomlkit::findOr(m_globalConfig, "themeMode", 0);
     eTheme->setThemeMode((ElaThemeType::ThemeMode)themeMode);
     ElaScrollPageArea* themeSwitchArea = new ElaScrollPageArea(centralWidget);
     QHBoxLayout* themeSwitchLayout = new QHBoxLayout(themeSwitchArea);
@@ -103,7 +103,7 @@ void AppSettingsPage::setupUi()
     windowModeButtonGroup->addButton(micaAltButton, 3);
     windowModeButtonGroup->addButton(acrylicButton, 4);
     windowModeButtonGroup->addButton(dwmBlurnormalButton, 5);
-    int windowDisplayMode = toml::find_or(m_globalConfig, "windowDisplayMode", 1); // 不知道为什么3及以上的值会失效
+    int windowDisplayMode = tomlkit::findOr(m_globalConfig, "windowDisplayMode", 1); // 不知道为什么3及以上的值会失效
     QAbstractButton* abstractButton = windowModeButtonGroup->button(windowDisplayMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -146,7 +146,7 @@ void AppSettingsPage::setupUi()
     navigationGroup->addButton(minimumButton, 1);
     navigationGroup->addButton(compactButton, 2);
     navigationGroup->addButton(maximumButton, 3);
-    int navigationMode = toml::find_or(m_globalConfig, "navigationMode", 0);
+    int navigationMode = tomlkit::findOr(m_globalConfig, "navigationMode", 0);
     abstractButton = navigationGroup->button(navigationMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -182,7 +182,7 @@ void AppSettingsPage::setupUi()
     stackSwitchGroup->addButton(scaleButton, 2);
     stackSwitchGroup->addButton(flipButton, 3);
     stackSwitchGroup->addButton(blurButton, 4);
-    int stackSwitchMode = toml::find_or(m_globalConfig, "stackSwitchMode", 1);
+    int stackSwitchMode = tomlkit::findOr(m_globalConfig, "stackSwitchMode", 1);
     abstractButton = stackSwitchGroup->button(stackSwitchMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -217,7 +217,7 @@ void AppSettingsPage::setupUi()
     lazyProjectInitializationLayout->addWidget(lazyProjectInitializationText);
     lazyProjectInitializationLayout->addStretch();
     ElaToggleSwitch* lazyProjectInitializationSwitch = new ElaToggleSwitch(lazyProjectInitializationArea);
-    lazyProjectInitializationSwitch->setIsToggled(toml::find_or(m_globalConfig, "lazyProjectInitialization", true));
+    lazyProjectInitializationSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, "lazyProjectInitialization", true));
     connect(lazyProjectInitializationSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "lazyProjectInitialization", isChecked);
@@ -234,7 +234,7 @@ void AppSettingsPage::setupUi()
     autoRefreshLayout->addWidget(autoRefreshText);
     autoRefreshLayout->addStretch();
     ElaToggleSwitch* autoRefreshSwitch = new ElaToggleSwitch(autoRefreshArea);
-    autoRefreshSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoRefreshAfterTranslate", true));
+    autoRefreshSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, "autoRefreshAfterTranslate", true));
     connect(autoRefreshSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
             insertToml(m_globalConfig, "autoRefreshAfterTranslate", isChecked);
@@ -253,7 +253,7 @@ void AppSettingsPage::setupUi()
     ElaLineEdit* clearLogShortcutEdit = new ElaLineEdit(clearLogShortcutArea);
     clearLogShortcutEdit->setPlaceholderText("Ctrl+L");
     clearLogShortcutEdit->setText(
-        QString::fromStdString(toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L")));
+        QString::fromStdString(tomlkit::findOr(m_globalConfig, "clearLogShortcut", "Ctrl+L")));
     clearLogShortcutEdit->setIsClearButtonEnable(true);
     clearLogShortcutEdit->setFixedWidth(200);
     clearLogShortcutLayout->addWidget(clearLogShortcutEdit);
@@ -296,7 +296,7 @@ void AppSettingsPage::setupUi()
     QButtonGroup* nameTableOpenModeGroup = new QButtonGroup(nameTableOpenModeArea);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTextButton, 0);
     nameTableOpenModeGroup->addButton(nameTableOpenModeTableButton, 1);
-    int nameTableOpenMode = toml::find_or(m_globalConfig, "defaultNameTableOpenMode", 1);
+    int nameTableOpenMode = tomlkit::findOr(m_globalConfig, "defaultNameTableOpenMode", 1);
     abstractButton = nameTableOpenModeGroup->button(nameTableOpenMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -325,7 +325,7 @@ void AppSettingsPage::setupUi()
     QButtonGroup* dictOpenModeGroup = new QButtonGroup(dictOpenModeArea);
     dictOpenModeGroup->addButton(dictOpenModeTextButton, 0);
     dictOpenModeGroup->addButton(dictOpenModeTableButton, 1);
-    int dictOpenMode = toml::find_or(m_globalConfig, "defaultDictOpenMode", 1);
+    int dictOpenMode = tomlkit::findOr(m_globalConfig, "defaultDictOpenMode", 1);
     abstractButton = dictOpenModeGroup->button(dictOpenMode);
     if (abstractButton) {
         abstractButton->setChecked(true);
@@ -352,7 +352,7 @@ void AppSettingsPage::setupUi()
     QButtonGroup* apiLayoutModeGroup = new QButtonGroup(apiLayoutModeArea);
     apiLayoutModeGroup->addButton(apiFlowModeButton, 0);
     apiLayoutModeGroup->addButton(apiListModeButton, 1);
-    apiLayoutModeGroup->button(toml::find_or(m_globalConfig, "defaultApiLayoutMode", 0) == 1 ? 1 : 0)->setChecked(true);
+    apiLayoutModeGroup->button(tomlkit::findOr(m_globalConfig, "defaultApiLayoutMode", 0) == 1 ? 1 : 0)->setChecked(true);
     apiLayoutModeLayout->addWidget(apiFlowModeButton);
     apiLayoutModeLayout->addWidget(apiListModeButton);
     connect(apiLayoutModeGroup, &QButtonGroup::idClicked, this, [=, this](int mode) {
@@ -368,7 +368,7 @@ void AppSettingsPage::setupUi()
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningText);
     allowCloseWhenRunningLayout->addStretch();
     ElaToggleSwitch* allowCloseWhenRunningSwitch = new ElaToggleSwitch(allowCloseWhenRunningArea);
-    allowCloseWhenRunningSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false));
+    allowCloseWhenRunningSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, "allowCloseWhenRunning", false));
     allowCloseWhenRunningLayout->addWidget(allowCloseWhenRunningSwitch);
     connect(allowCloseWhenRunningSwitch, &ElaToggleSwitch::toggled, this, [=, this](bool isChecked)
         {
@@ -384,7 +384,7 @@ void AppSettingsPage::setupUi()
     allowMultiInstanceLayout->addWidget(allowMultiInstanceText);
     allowMultiInstanceLayout->addStretch();
     ElaToggleSwitch* allowMultiInstanceSwitch = new ElaToggleSwitch(allowMultiInstanceArea);
-    allowMultiInstanceSwitch->setIsToggled(toml::find_or(m_globalConfig, "allowMultiInstance", false));
+    allowMultiInstanceSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, "allowMultiInstance", false));
     allowMultiInstanceLayout->addWidget(allowMultiInstanceSwitch);
     centerLayout->addWidget(allowMultiInstanceArea);
 
@@ -397,7 +397,7 @@ void AppSettingsPage::setupUi()
     checkUpdateLayout->addWidget(checkUpdateText);
     checkUpdateLayout->addStretch();
     ElaToggleSwitch* checkUpdateSwitch = new ElaToggleSwitch(checkUpdateArea);
-    checkUpdateSwitch->setIsToggled(toml::find_or(m_globalConfig, "autoCheckUpdate", true));
+    checkUpdateSwitch->setIsToggled(tomlkit::findOr(m_globalConfig, "autoCheckUpdate", true));
     checkUpdateLayout->addWidget(checkUpdateSwitch);
     centerLayout->addWidget(checkUpdateArea);
 
@@ -411,7 +411,7 @@ void AppSettingsPage::setupUi()
     autoDownloadLayout->addStretch();
     ElaToggleSwitch* autoDownloadSwitch = new ElaToggleSwitch(autoDownloadArea);
     autoDownloadSwitch->setIsToggled(gppSupportsPackageUpdate
-        && toml::find_or(m_globalConfig, "autoDownloadUpdate", true));
+        && tomlkit::findOr(m_globalConfig, "autoDownloadUpdate", true));
     if constexpr (!gppSupportsPackageUpdate) {
         autoDownloadArea->setEnabled(false);
         autoDownloadArea->setToolTip(tr("macOS 仅提示新版本，不支持下载和自动安装"));
@@ -433,7 +433,7 @@ void AppSettingsPage::setupUi()
     GppNoWheelComboBox* languageComboBox = new GppNoWheelComboBox(languageArea);
     languageComboBox->addItem("zh_CN");
     languageComboBox->addItem("en");
-    if (int languageIndex = languageComboBox->findText(QString::fromStdString(toml::find_or(m_globalConfig, "language", "zh_CN")));
+    if (int languageIndex = languageComboBox->findText(QString::fromStdString(tomlkit::findOr(m_globalConfig, "language", "zh_CN")));
         languageIndex >= 0)
     {
         languageComboBox->setCurrentIndex(languageIndex);
@@ -450,7 +450,7 @@ void AppSettingsPage::setupUi()
     pythonEnvPathLayout->addStretch();
     ElaLineEdit* pythonEnvPathLineEdit = new ElaLineEdit(pythonEnvPathArea);
     pythonEnvPathLineEdit->setFixedWidth(400);
-    pythonEnvPathLineEdit->setText(QString::fromStdString(toml::find_or(m_globalConfig, "pythonEnvPath", defaultPythonEnvPath)));
+    pythonEnvPathLineEdit->setText(QString::fromStdString(tomlkit::findOr(m_globalConfig, "pythonEnvPath", defaultPythonEnvPath)));
     pythonEnvPathLayout->addWidget(pythonEnvPathLineEdit);
     ElaToolButton* pythonEnvPathButton = new ElaToolButton(pythonEnvPathArea);
     pythonEnvPathButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);

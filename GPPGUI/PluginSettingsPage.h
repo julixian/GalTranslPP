@@ -1,8 +1,9 @@
 #pragma once
 
 #include "BasePage.h"
+#include "GppTomlFwd.h"
 #include <QList>
-#include <toml.hpp>
+#include <filesystem>
 
 class QVBoxLayout;
 class PluginItemWidget;
@@ -17,7 +18,7 @@ class PluginSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent = nullptr);
+    explicit PluginSettingsPage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
 private Q_SLOTS:
     void onItemMoveUp(PluginItemWidget* item);
@@ -32,7 +33,7 @@ private:
     QList<PluginItemWidget*> m_pluginItems; // 按顺序存储所有项的指针
 
     fs::path& m_projectDir;
-    toml::ordered_value& m_projectConfig;
+    tomlkit::Item& m_projectConfig;
 
     // 以下为各个插件的设置页面
     TF2HCfgPage* m_tf2hCfgPage = nullptr;

@@ -5,6 +5,7 @@ name = "cli"
 [dependencies]
 gpp.core = { path = "../GalTranslPP" }
 gpp.version = { path = "../GPPVersion" }
+tomlkit.core = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 
 [build-dependencies]
 gpp.build = { path = "../mcpp-build-scripts/gpp-build" }

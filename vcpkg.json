@@ -22,7 +22,6 @@
     "pcre2",
     "proxy",
     "spdlog",
-    "toml11",
     "tree-sitter",
     "utfcpp",
     "vit-vit-ctpl"

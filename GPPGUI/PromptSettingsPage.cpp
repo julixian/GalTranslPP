@@ -19,17 +19,18 @@ import Tool;
 
 using namespace gpp;
 
-PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
-	BasePage(parent), m_projectConfig(projectConfig), m_projectDir(projectDir)
+PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent) :
+	BasePage(parent), m_promptConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document())), m_projectConfig(projectConfig), m_projectDir(projectDir)
 {
 	setWindowTitle(tr("项目提示词设置"));
 	setTitleVisible(false);
 
 	if (fs::exists(m_projectDir / L"Prompt.toml")) {
 		try {
-			m_promptConfig = gpp::uoparseToml(m_projectDir / L"Prompt.toml");
+			*m_promptConfig = parseToml(m_projectDir / L"Prompt.toml");
 		}
 		catch (...) {
+			*m_promptConfig = tomlkit::Item::document();
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"),
 				tr("项目 %1 的提示词配置文件不符合标准。")
 				.arg(QString::fromStdWString(m_projectDir.filename().wstring())), 3000);
@@ -37,9 +38,10 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 	}
 	else if (fs::exists(defaultPromptPath)) {
 		try {
-			m_promptConfig = gpp::uoparseToml(defaultPromptPath);
+			*m_promptConfig = parseToml(defaultPromptPath);
 		}
 		catch (...) {
+			*m_promptConfig = tomlkit::Item::document();
 			ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析失败"), tr("默认提示词文件不符合 toml 规范"), 3000);
 		}
 	}
@@ -49,6 +51,8 @@ PromptSettingsPage::PromptSettingsPage(fs::path& projectDir, toml::ordered_value
 
 	setupUi();
 }
+
+PromptSettingsPage::~PromptSettingsPage() = default;
 
 
 void PromptSettingsPage::setupUi()
@@ -89,7 +93,7 @@ void PromptSettingsPage::setupUi()
 					QFont plainTextFont = promptTextEdit->font();
 					plainTextFont.setPixelSize(15);
 					promptTextEdit->setFont(plainTextFont);
-					promptTextEdit->setPlainText(QString::fromStdString(toml::find_or(m_promptConfig, key, "")));
+					promptTextEdit->setPlainText(QString::fromStdString(tomlkit::findOr(*m_promptConfig, key, "")));
 					promptStackedWidget->addWidget(promptTextEdit);
 					promptEdits.emplace_back(key, promptTextEdit);
 				};
@@ -112,9 +116,9 @@ void PromptSettingsPage::setupUi()
 			auto resultApply2ConfigFunc = [=, this]()
 				{
 					for (const auto& [key, edit] : promptEdits) {
-						toml::ordered_value promptVal = edit->toPlainText().toStdString();
-						promptVal.as_string_fmt().fmt = toml::string_format::multiline_basic;
-						insertToml(m_promptConfig, key, promptVal);
+						tomlkit::Item promptVal(edit->toPlainText().toStdString());
+						promptVal.setStringStyle(tomlkit::StringStyle::MultilineBasic);
+						insertToml(*m_promptConfig, key, promptVal);
 					}
 				};
 
@@ -145,7 +149,7 @@ void PromptSettingsPage::setupUi()
 			sakuraApplyFunc();
 			gendictApplyFunc();
 			nametransApplyFunc();
-			atomicOutputFile(m_projectDir / L"Prompt.toml", toml::format(m_promptConfig));
+			atomicOutputFile(m_projectDir / L"Prompt.toml", tomlkit::format(*m_promptConfig));
 		};
 
 	mainLayout->addWidget(tabWidget);

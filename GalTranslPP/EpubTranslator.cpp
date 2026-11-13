@@ -64,24 +64,27 @@ EpubTranslator::EpubTranslator(const fs::path& projectDir, const std::shared_ptr
 void EpubTranslator::epubInit()
 {
     try {
-        const auto projectConfig = gpp::uparseToml(m_projectDir / L"Config.toml");
-        const auto pluginConfig = gpp::uparseToml(filePluginConfigPath / L"Epub.toml");
+        const auto projectConfig = parseToml(m_projectDir / L"Config.toml");
+        const auto pluginConfig = parseToml(filePluginConfigPath / L"Epub.toml");
 
         m_bilingualOutput = parsePluginToml<bool>(projectConfig, pluginConfig, "plugins.Epub.bilingualOutput");
         m_originalTextColor = parsePluginToml<std::string>(projectConfig, pluginConfig, "plugins.Epub.originalTextColor");
         m_originalTextScale = std::to_string(parsePluginToml<double>(projectConfig, pluginConfig, "plugins.Epub.originalTextScale"));
 
-        auto readRegexArr = [](const toml::array& regexArr, std::vector<RegexPattern>& patterns)
+        auto readRegexArr = [](const tomlkit::Item& regexArr, std::vector<RegexPattern>& patterns)
             {
+                if (!regexArr.isArray()) {
+                    throw tomlkit::TypeError("Expected TOML array for Epub regex list");
+                }
                 for (const auto& regexTbl : regexArr) {
-                    const std::string regexOrg = toml::find_or(regexTbl, "org", "");
+                    const std::string regexOrg = tomlkit::findOr(regexTbl, "org", "");
                     if (regexOrg.empty()) {
                         continue;
                     }
 
                     RegexPattern regexPattern;
-                    const std::string compileModifier = toml::find_or(regexTbl, "compileModifier", defaultRegCompileModifier);
-                    const std::string replaceModifier = toml::find_or(regexTbl, "replaceModifier", defaultRegReplaceModifier);
+                    const std::string compileModifier = tomlkit::findOr(regexTbl, "compileModifier", defaultRegCompileModifier);
+                    const std::string replaceModifier = tomlkit::findOr(regexTbl, "replaceModifier", defaultRegReplaceModifier);
                     regexPattern.org->setPattern(regexOrg).setModifier(compileModifier).compile();
                     regexPattern.rep->setModifier(replaceModifier);
                     if (!regexPattern.org) {
@@ -92,23 +95,26 @@ void EpubTranslator::epubInit()
                     regexPattern.isCallback = regexTbl.contains("callback");
 
                     if (regexPattern.isCallback) {
-                        const auto& callbackArr = toml::get<toml::array>(regexTbl.at("callback"));
+                        const auto& callbackArr = regexTbl.at("callback");
+                        if (!callbackArr.isArray()) {
+                            throw tomlkit::TypeError("Expected TOML array for callback");
+                        }
                         for (const auto& callbackTbl : callbackArr) {
-                            if (!callbackTbl.is_table()) {
+                            if (!callbackTbl.isTable()) {
                                 continue;
                             }
                             CallbackPattern callbackPattern;
-                            int group = toml::find_or(callbackTbl, "group", 0);
+                            int group = tomlkit::findOr(callbackTbl, "group", 0);
                             if (group == 0) {
                                 continue;
                             }
-                            const std::string callbackOrg = toml::find_or(callbackTbl, "org", "");
+                            const std::string callbackOrg = tomlkit::findOr(callbackTbl, "org", "");
                             if (callbackOrg.empty()) {
                                 continue;
                             }
-                            const std::string callbackRep = toml::find_or(callbackTbl, "rep", "");
-                            const std::string callbackCompileModifier = toml::find_or(callbackTbl, "compileModifier", defaultRegCompileModifier);
-                            const std::string callbackReplaceModifier = toml::find_or(callbackTbl, "replaceModifier", defaultRegReplaceModifier);
+                            const std::string callbackRep = tomlkit::findOr(callbackTbl, "rep", "");
+                            const std::string callbackCompileModifier = tomlkit::findOr(callbackTbl, "compileModifier", defaultRegCompileModifier);
+                            const std::string callbackReplaceModifier = tomlkit::findOr(callbackTbl, "replaceModifier", defaultRegReplaceModifier);
                             callbackPattern.org->setPattern(callbackOrg).setModifier(callbackCompileModifier).compile();
                             callbackPattern.rep->setModifier(callbackReplaceModifier);
                             if (!callbackPattern.org) {
@@ -123,7 +129,7 @@ void EpubTranslator::epubInit()
                         }
                     }
                     else {
-                        const std::string regexRep = toml::find_or(regexTbl, "rep", "");
+                        const std::string regexRep = tomlkit::findOr(regexTbl, "rep", "");
                         regexPattern.rep->setReplaceWith(regexRep);
                     }
 
@@ -131,12 +137,12 @@ void EpubTranslator::epubInit()
                 }
             };
 
-        const auto& preRegexArr = parsePluginToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.preprocRegex");
+        const auto& preRegexArr = parsePluginToml<tomlkit::Item>(projectConfig, pluginConfig, "plugins.Epub.preprocRegex");
         readRegexArr(preRegexArr, m_preRegexPatterns);
-        const auto& postRegexArr = parsePluginToml<toml::array>(projectConfig, pluginConfig, "plugins.Epub.postprocRegex");
+        const auto& postRegexArr = parsePluginToml<tomlkit::Item>(projectConfig, pluginConfig, "plugins.Epub.postprocRegex");
         readRegexArr(postRegexArr, m_postRegexPatterns);
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr("EpubTranslator.epubInit", "Epub 配置文件解析失败: %1")
             .arg(e.what())
             .toStdString());

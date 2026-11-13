@@ -21,7 +21,7 @@ import ProblemOverview;
 
 using namespace gpp;
 
-OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, toml::ordered_value& globalConfig, toml::ordered_value& projectConfig, QWidget* parent) :
+OtherSettingsPage::OtherSettingsPage(fs::path& projectDir, tomlkit::Item& globalConfig, tomlkit::Item& projectConfig, QWidget* parent) :
 	BasePage(parent), m_projectDir(projectDir), m_globalConfig(globalConfig), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("其它设置"));
@@ -62,7 +62,7 @@ void OtherSettingsPage::setupUi()
 	mainLayout->addWidget(pathArea);
 
 	// 问题概览输出格式
-	const std::string problemOverviewFormat = toml::find_or(m_projectConfig, "common", "problemOverviewFormat", "json");
+	const std::string problemOverviewFormat = tomlkit::findOr(m_projectConfig, "common", "problemOverviewFormat", "json");
 	ElaScrollPageArea* overviewFormatArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* overviewFormatLayout = new QHBoxLayout(overviewFormatArea);
 	GppDoubleText* overviewFormatLabel = new GppDoubleText(tr("问题概览输出格式"), 16,
@@ -112,13 +112,13 @@ void OtherSettingsPage::setupUi()
 	moveButton->setText(tr("移动项目"));
 	connect(moveButton, &ElaToolButton::clicked, this, [=, this]()
 		{
-			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("移动失败"), tr("项目仍在运行中，无法移动"), 3000);
 				return;
 			}
 
 			const QString newProjectParentPath = QFileDialog::getExistingDirectory(window(), tr("请选择要移动到的文件夹"),
-				QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectPath", "./Projects")));
+				QString::fromStdString(tomlkit::findOr(m_globalConfig, "lastProjectPath", "./Projects")));
 			if (newProjectParentPath.isEmpty()) {
 				return;
 			}
@@ -149,7 +149,7 @@ void OtherSettingsPage::setupUi()
 	renameButton->setText(tr("项目更名"));
 	connect(renameButton, &ElaToolButton::clicked, this, [=, this]()
 		{
-			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("更名失败"), tr("项目仍在运行中，无法更名"), 3000);
 				return;
 			}
@@ -202,7 +202,7 @@ void OtherSettingsPage::setupUi()
 	importButton->setText(tr("导入"));
 	connect(importButton, &ElaToolButton::clicked, this, [=, this]()
 		{
-			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入失败"), tr("项目仍在运行中，无法导入"), 3000);
 				return;
 			}
@@ -212,7 +212,8 @@ void OtherSettingsPage::setupUi()
 				return;
 			}
 			try {
-				const auto result = importProblemOverview(m_projectDir, fs::path(importOverviewPathQStr.toStdWString()));
+				const fs::path importedPath(importOverviewPathQStr.toStdWString());
+				const auto result = importProblemOverview(m_projectDir, importedPath);
 				const QString completeQStr = tr("成功导入 %1 个句子至 transl_cache").arg(QString::number(result.imported));
 				if (!result.problems.empty()) {
 					ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("导入完毕"), tr("导入中出现的问题记录在 import_problems.log 中"), 3000);
@@ -221,13 +222,8 @@ void OtherSettingsPage::setupUi()
 					ElaMessageBar::success(ElaMessageBarType::TopRight, tr("导入完毕"), completeQStr, 3000);
 				}
 
-				const fs::path importedPath(importOverviewPathQStr.toStdWString());
-				if (ProblemOverviewTracker::isCurrentOverviewFile(importedPath, m_projectDir, m_projectConfig)) {
-					const auto writeTime = ProblemOverviewTracker::lastWriteTime(importedPath);
-					if (writeTime) {
-						insertToml(m_projectConfig, ProblemOverviewTracker::configKey(m_projectConfig), *writeTime);
-						Q_EMIT saveConfigSignal();
-					}
+				if (ProblemOverviewTracker::recordLastWriteTime(m_projectConfig, m_projectDir, importedPath)) {
+					Q_EMIT saveConfigSignal();
 				}
 			}
 			catch (const std::exception& e) {
@@ -273,7 +269,7 @@ void OtherSettingsPage::setupUi()
 	refreshButton->setText(tr("刷新"));
 	connect(refreshButton, &ElaToolButton::clicked, this, [=, this]()
 		{
-			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("刷新失败"), tr("项目仍在运行中，无法刷新"), 3000);
 				return;
 			}
@@ -318,7 +314,7 @@ void OtherSettingsPage::setupUi()
 	cacheButton->setText(tr("删除"));
 	connect(cacheButton, &ElaToolButton::clicked, this, [=, this]()
 		{
-			if (toml::find_or(m_projectConfig, "GUIConfig", "isRunning", true)) {
+			if (tomlkit::findOr(m_projectConfig, "GUIConfig", "isRunning", true)) {
 				ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"), tr("项目仍在运行中，无法删除缓存"), 3000);
 				return;
 			}

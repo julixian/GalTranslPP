@@ -75,9 +75,9 @@ void NormalJsonTranslator::normalJsonInit()
 {
     const fs::path configPath = m_projectDir / L"Config.toml";
     try {
-        const auto configData = gpp::uparseToml(configPath);
+        const auto configData = parseToml(configPath);
 
-        const std::string& transEngineStr = configData.at("plugins").at("transEngine").as_string();
+        const std::string& transEngineStr = configData.at("plugins").at("transEngine").asString();
         if (const auto it = names2TransEngine.find(transEngineStr); it != names2TransEngine.end()) {
             m_transEngine = it->second;
         }
@@ -89,7 +89,7 @@ void NormalJsonTranslator::normalJsonInit()
                 .toStdString());
         }
 
-        const auto pluginConfigData = gpp::uparseToml(filePluginConfigPath / L"NormalJson.toml");
+        const auto pluginConfigData = parseToml(filePluginConfigPath / L"NormalJson.toml");
         m_outputWithSrc = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithSrc");
         m_outputWithRefInfo = parsePluginToml<bool>(configData, pluginConfigData, "plugins.NormalJson.outputWithRefInfo");
 
@@ -154,11 +154,11 @@ void NormalJsonTranslator::normalJsonInit()
 
         validateTranslationSettings(settings, m_agentEnabled);
 
-        m_usePreDictInName = toml::find_or(configData, "dictionary", "usePreDictInName", false);
-        m_usePostDictInName = toml::find_or(configData, "dictionary", "usePostDictInName", false);
-        m_usePreDictInMsg = toml::find_or(configData, "dictionary", "usePreDictInMsg", true);
-        m_usePostDictInMsg = toml::find_or(configData, "dictionary", "usePostDictInMsg", true);
-        m_useGptDictToReplaceName = toml::find_or(configData, "dictionary", "useGPTDictToReplaceName", false);
+        m_usePreDictInName = tomlkit::findOr(configData, "dictionary", "usePreDictInName", false);
+        m_usePostDictInName = tomlkit::findOr(configData, "dictionary", "usePostDictInName", false);
+        m_usePreDictInMsg = tomlkit::findOr(configData, "dictionary", "usePreDictInMsg", true);
+        m_usePostDictInMsg = tomlkit::findOr(configData, "dictionary", "usePostDictInMsg", true);
+        m_useGptDictToReplaceName = tomlkit::findOr(configData, "dictionary", "useGPTDictToReplaceName", false);
         auto resolveDictPathsFunc = [&](const std::string& dictType)
             {
                 std::vector<fs::path> paths;
@@ -198,14 +198,14 @@ void NormalJsonTranslator::normalJsonInit()
 
         // 这些模式需要初始化 Api 池和提示词。
         if (m_transEngine != TransEngine::Rebuild && m_transEngine != TransEngine::ShowNormal) {
-            m_apiStrategy = toml::find_or(configData, "backend", "apiStrategy", "random");
+            m_apiStrategy = tomlkit::findOr(configData, "backend", "apiStrategy", "random");
             if (m_apiStrategy != "random" && m_apiStrategy != "fallback") {
                 throw std::invalid_argument(gppTr(
                     "NormalJsonTranslator.normalJsonInit",
                     "apiStrategy 必须为 random 或 fallback")
                     .toStdString());
             }
-            int apiTimeOutSecond = toml::find_or(configData, "backend", "apiTimeout", 300);
+            int apiTimeOutSecond = tomlkit::findOr(configData, "backend", "apiTimeout", 300);
             m_apiTimeOutMs = apiTimeOutSecond * 1000;
 
             std::vector<TranslationApi> apis;
@@ -236,11 +236,21 @@ void NormalJsonTranslator::normalJsonInit()
             }
         }
 
+        std::vector<std::string> allTextPlugins;
         if (m_transEngine != TransEngine::NameTrans) {
+            // TODO: 未来大版本更新中可移除 textPlugins 内混写自定义脚本插件的兼容，仅允许内置插件在 textPlugins、脚本在 customTextPlugins
+            allTextPlugins = tomlkit::findOr(configData, "plugins", "textPlugins", std::vector<std::string>{});
+            if (const auto customTextPluginsOpt = tomlkit::findOptional<std::vector<std::string>>(
+                configData, "plugins", "customTextPlugins"))
+            {
+                allTextPlugins.insert(allTextPlugins.end(),
+                    customTextPluginsOpt->begin(), customTextPluginsOpt->end());
+            }
+
             // 普通翻译路径需要分词和文本插件。
-            const std::string tokenizerBackend = toml::find_or(configData, "common", "tokenize", "backend", "MeCab");
+            const std::string tokenizerBackend = tomlkit::findOr(configData, "common", "tokenize", "backend", "MeCab");
             if (tokenizerBackend == "MeCab") {
-                const std::string mecabDictDir = toml::find_or(configData, "common", "tokenize", "mecabDictDir",
+                const std::string mecabDictDir = tomlkit::findOr(configData, "common", "tokenize", "mecabDictDir",
                     "BaseConfig/mecab/mecab-ipadic-utf8");
                 m_logger->info(gppTr(
                     "NormalJsonTranslator.normalJsonInit",
@@ -249,7 +259,7 @@ void NormalJsonTranslator::normalJsonInit()
                 m_tokenizeSourceLangFunc = getMeCabTokenizeFunc(mecabDictDir, m_logger);
             }
             else if (tokenizerBackend == "spaCy") {
-                const std::string spaCyModelName = toml::find_or(configData, "common", "tokenize", "spaCyModelName",
+                const std::string spaCyModelName = tomlkit::findOr(configData, "common", "tokenize", "spaCyModelName",
                     "ja_core_news_lg");
                 m_logger->info(gppTr(
                     "NormalJsonTranslator.normalJsonInit",
@@ -259,7 +269,7 @@ void NormalJsonTranslator::normalJsonInit()
                     spaCyModelName, m_logger);
             }
             else if (tokenizerBackend == "Stanza") {
-                const std::string stanzaLang = toml::find_or(configData, "common", "tokenize", "stanzaLang", "ja");
+                const std::string stanzaLang = tomlkit::findOr(configData, "common", "tokenize", "stanzaLang", "ja");
                 m_logger->info(gppTr(
                     "NormalJsonTranslator.normalJsonInit",
                     "已配置 Stanza 分词器，首次使用时加载")
@@ -275,11 +285,8 @@ void NormalJsonTranslator::normalJsonInit()
                     .toStdString());
             }
 
-            const auto textPluginsOpt = toml::find<
-                std::optional<std::vector<std::string>>
-            >(configData, "plugins", "textPlugins");
-            if (textPluginsOpt.has_value()) {
-                registerPlugins(m_textPlugins, *textPluginsOpt, m_projectDir, m_otherCacheDir,
+            if (!allTextPlugins.empty()) {
+                registerPlugins(m_textPlugins, allTextPlugins, m_projectDir, m_otherCacheDir,
                     m_pythonManager, m_luaManager, m_logger, configData, true);
             }
         }
@@ -301,18 +308,15 @@ void NormalJsonTranslator::normalJsonInit()
             m_postDictionary = std::make_unique<NormalDictionary>(m_projectDir, m_luaManager, m_pythonManager, m_logger);
             loadDictsFunc("post", m_postDictionary);
 
-            const auto textPluginsOpt = toml::find<
-                std::optional<std::vector<std::string>>
-            >(configData, "plugins", "textPlugins");
-            if (textPluginsOpt.has_value()) {
-                registerPlugins(m_textPlugins, *textPluginsOpt, m_projectDir, m_otherCacheDir,
+            if (!allTextPlugins.empty()) {
+                registerPlugins(m_textPlugins, allTextPlugins, m_projectDir, m_otherCacheDir,
                     m_pythonManager, m_luaManager, m_logger, configData, false);
             }
 
-            const std::string punctSet = toml::find_or(configData, "problemAnalyze", "punctSet",
+            const std::string punctSet = tomlkit::findOr(configData, "problemAnalyze", "punctSet",
                 "（()）：:*[]{}<>『』「」“”;；'/\\");
-            const std::string codePage = toml::find_or(configData, "problemAnalyze", "codePage", "gbk");
-            const double langProbability = toml::find_or(configData, "problemAnalyze", "langProbability", 0.94);
+            const std::string codePage = tomlkit::findOr(configData, "problemAnalyze", "codePage", "gbk");
+            const double langProbability = tomlkit::findOr(configData, "problemAnalyze", "langProbability", 0.94);
             m_problemAnalyzer = std::make_unique<ProblemAnalyzer>(m_gptDictionary, m_targetLang, punctSet,
                 codePage, langProbability, m_logger);
             struct ProblemRuleDefault
@@ -340,25 +344,28 @@ void NormalJsonTranslator::normalJsonInit()
             {
                 m_problemAnalyzer->setProblemRule(
                     problemDefault.key,
-                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "enable", problemDefault.enabled),
-                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "base", problemDefault.base),
-                    toml::find_or(configData, "problemAnalyze", problemDefault.key, "check", problemDefault.check)
+                    tomlkit::findOr(configData, "problemAnalyze", problemDefault.key, "enable", problemDefault.enabled),
+                    tomlkit::findOr(configData, "problemAnalyze", problemDefault.key, "base", problemDefault.base),
+                    tomlkit::findOr(configData, "problemAnalyze", problemDefault.key, "check", problemDefault.check)
                 );
             }
 
             const auto retranslKeysOpt =
-                toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "retranslKeys");
+                tomlkit::findOptional<tomlkit::Item>(configData, "problemAnalyze", "retranslKeys");
             if (retranslKeysOpt.has_value()) {
+                if (!retranslKeysOpt->isArray()) {
+                    throw tomlkit::TypeError("Expected TOML array for problemAnalyze.retranslKeys");
+                }
                 for (const auto& elem : retranslKeysOpt.value()) {
-                    if (elem.is_string()) {
+                    if (elem.isString()) {
                         GppConditionPattern pattern;
                         pattern.conditionTarget = CachePart::Problems;
-                        pattern.conditionReg.setPattern(elem.as_string()).setModifier(defaultRegCompileModifier).compile();
+                        pattern.conditionReg.setPattern(elem.asString()).setModifier(defaultRegCompileModifier).compile();
                         if (!pattern.conditionReg) {
                             throw std::runtime_error(gppTr(
                                 "NormalJsonTranslator.normalJsonInit",
                                 "retranslKeys 正则表达式 `%1` 编译失败")
-                                .arg(elem.as_string())
+                                .arg(elem.asString())
                                 .toStdString());
                         }
                         GPPCondition cond{ std::move(pattern) };
@@ -368,7 +375,7 @@ void NormalJsonTranslator::normalJsonInit()
                         };
                         m_retranslKeys.push_back(std::move(checkFunc));
                     }
-                    else if (elem.is_array() || elem.is_table()) {
+                    else if (elem.isArray() || elem.isTable()) {
                         CheckSeCondNormalFunc checkFunc = getCheckSeCondFunc(elem, m_projectDir, m_pythonManager, m_luaManager, m_logger);
                         m_retranslKeys.push_back(std::move(checkFunc));
                     }
@@ -382,20 +389,23 @@ void NormalJsonTranslator::normalJsonInit()
             }
 
             const auto skipProblemsOpt =
-                toml::find<std::optional<toml::array>>(configData, "problemAnalyze", "skipProblems");
+                tomlkit::findOptional<tomlkit::Item>(configData, "problemAnalyze", "skipProblems");
             if (skipProblemsOpt.has_value()) {
+                if (!skipProblemsOpt->isArray()) {
+                    throw tomlkit::TypeError("Expected TOML array for problemAnalyze.skipProblems");
+                }
                 for (const auto& elem : skipProblemsOpt.value()) {
-                    if (elem.is_string()) {
-                        m_skipProblems.emplace_back(jpc::Regex(elem.as_string(), defaultRegCompileModifier), std::nullopt);
+                    if (elem.isString()) {
+                        m_skipProblems.emplace_back(jpc::Regex(elem.asString(), defaultRegCompileModifier), std::nullopt);
                     }
-                    else if (elem.is_array() && elem.size() > 0) {
-                        if (!elem[0].is_string()) {
+                    else if (elem.isArray() && elem.size() > 0) {
+                        if (!elem[0].isString()) {
                             throw std::invalid_argument(gppTr(
                                 "NormalJsonTranslator.normalJsonInit",
                                 "skipProblems 的内联表数组第一个元素必须是字符串")
                                 .toStdString());
                         }
-                        jpc::Regex pattern(elem[0].as_string(), defaultRegCompileModifier);
+                        jpc::Regex pattern(elem[0].asString(), defaultRegCompileModifier);
                         if (elem.size() == 1) {
                             m_skipProblems.push_back({ std::move(pattern), std::nullopt });
                         }
@@ -416,7 +426,7 @@ void NormalJsonTranslator::normalJsonInit()
 
         }
     }
-    catch (const toml::exception& e) {
+    catch (const tomlkit::Exception& e) {
         throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "项目配置文件解析失败: %1")
             .arg(e.what())
             .toStdString());

@@ -118,7 +118,7 @@ constexpr auto hKeysBase64Default =
 "4Gh44KT44GTCuOBiuOBoeOCk+OBvQrjgYrjg4Hjg7Pjg50K6ZuE44OB44Oz44OdCuOBoeOCk+OBkwrjgaHjgp"
 "Pjgb0K44GK44Gh44KT44G9CuOCquODnuODs+OCswrjg57jg7PjgrMK44Ki44OM44K5CuOCouODiuODqwrjgrbjg7zjg6Hjg7M=";
 
-SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* parent)
+SkipTransCfgPage::SkipTransCfgPage(tomlkit::Item& projectConfig, QWidget* parent)
     : BasePage(parent), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("跳过翻译设置"));
@@ -129,7 +129,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
     QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
     // skipH
-    bool skipH = toml::find_or(m_projectConfig, "plugins", "SkipTrans", "skipH", false);
+    bool skipH = tomlkit::findOr(m_projectConfig, "plugins", "SkipTrans", "skipH", false);
     ElaScrollPageArea* skipHArea = new ElaScrollPageArea(centerWidget);
     QHBoxLayout* skipHLayout = new QHBoxLayout(skipHArea);
     GppDoubleText* skipHText = new GppDoubleText(tr("跳过 H 关键字"), 16,
@@ -146,7 +146,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 
 	mainLayout->addSpacing(20);
 
-    const std::string hKeysBase64 = toml::find_or(m_projectConfig, "plugins", "SkipTrans", "hKeys", hKeysBase64Default);
+    const std::string hKeysBase64 = tomlkit::findOr(m_projectConfig, "plugins", "SkipTrans", "hKeys", hKeysBase64Default);
     m_hKeysWidget = new ElaWidget();
     ElaWidget* hKeysWidget = m_hKeysWidget;
     hKeysWidget->setWindowTitle(tr("编辑 H 关键词"));
@@ -178,7 +178,7 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
         });
 
     // skipKeys
-	toml::ordered_array skipKeysArr = toml::find_or_default<toml::ordered_array>(m_projectConfig, "plugins", "SkipTrans", "skipKeys");
+	tomlkit::Item skipKeysArr = tomlkit::findArrayOrEmpty(m_projectConfig, "plugins", "SkipTrans", "skipKeys");
 	ElaText* skipKeysHelperText = new ElaText("skipKeys", 18, centerWidget);
 	skipKeysHelperText->setWordWrap(false);
 	ElaToolTip* skipKeysHelperTip = new ElaToolTip(skipKeysHelperText);
@@ -191,7 +191,9 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
 	font.setPixelSize(14);
 	skipKeysEdit->setFont(font);
 	installTreeSitterHighlighter(skipKeysEdit->document(), SyntaxLanguage::Toml);
-	skipKeysEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ "skipKeys", skipKeysArr}}})));
+	tomlkit::Item skipKeysDoc = tomlkit::Item::document();
+	skipKeysDoc["skipKeys"] = std::move(skipKeysArr);
+	skipKeysEdit->setPlainText(QString::fromStdString(tomlkit::format(skipKeysDoc)));
 	skipKeysEdit->moveCursor(QTextCursor::Start);
 	mainLayout->addWidget(skipKeysEdit);
 
@@ -204,13 +206,13 @@ SkipTransCfgPage::SkipTransCfgPage(toml::ordered_value& projectConfig, QWidget* 
                 std::string(hKeysBase64Data.constData(), hKeysBase64Data.size()));
 
 			try {
-				toml::ordered_value newSkipKeysTbl = toml::parse_str<toml::ordered_type_config>(skipKeysEdit->toPlainText().toStdString());
+				toml newSkipKeysTbl = tomlkit::parse(skipKeysEdit->toPlainText().toStdString());
 				auto& newSkipKeysArr = newSkipKeysTbl["skipKeys"];
-				if (newSkipKeysArr.is_array()) {
+				if (newSkipKeysArr.isArray()) {
 					insertToml(m_projectConfig, "plugins.SkipTrans.skipKeys", newSkipKeysArr);
 				}
 				else {
-					insertToml(m_projectConfig, "plugins.SkipTrans.skipKeys", toml::array{});
+					insertToml(m_projectConfig, "plugins.SkipTrans.skipKeys", tomlkit::Item::array());
 				}
 			}
 			catch (...) {

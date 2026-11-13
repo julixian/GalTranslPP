@@ -1,8 +1,9 @@
 #pragma once
 
 #include "BasePage.h"
+#include "GppTomlFwd.h"
 #include <filesystem>
-#include <toml.hpp>
+#include <memory>
 
 namespace fs = std::filesystem;
 
@@ -25,7 +26,8 @@ class ProjectSettingsPage : public BasePage
     Q_OBJECT
 
 public:
-    explicit ProjectSettingsPage(const fs::path& projectDir, toml::ordered_value& globalConfig, QWidget* parent = nullptr);
+    explicit ProjectSettingsPage(const fs::path& projectDir, tomlkit::Item& globalConfig, QWidget* parent = nullptr);
+    ~ProjectSettingsPage() override;
 
     QString getProjectName();
     fs::path getProjectDir();
@@ -42,8 +44,8 @@ Q_SIGNALS:
 
 private:
     fs::path m_projectDir;
-    toml::ordered_value& m_globalConfig;
-    toml::ordered_value m_projectConfig;
+    tomlkit::Item& m_globalConfig;
+    std::unique_ptr<tomlkit::Item> m_projectConfig;
     bool m_fullPagesInitialized = false;
 
     // UI 控件

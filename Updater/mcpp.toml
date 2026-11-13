@@ -4,6 +4,7 @@ name = "updater"
 
 [dependencies]
 gpp.version = { path = "../GPPVersion" }
+tomlkit.core = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 
 [build-dependencies]
 gpp.build = { path = "../mcpp-build-scripts/gpp-build" }
@@ -16,7 +17,6 @@ gpp.runtime-stage = { path = "../mcpp-build-scripts/runtime-stage", tools = ["ru
 default-profile = "release"
 sources = [
   "../3rdParty/3rdModule/boost.ixx",
-  "../3rdParty/3rdModule/toml.ixx",
   "!x64/**",
   "!x86/**"
 ]

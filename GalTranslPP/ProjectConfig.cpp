@@ -103,37 +103,37 @@ void validateTranslationSettings(const TranslationSettings& config, bool agentEn
 
 #undef GPP_REQUIRE_CONFIG
 
-TranslationSettings readTranslationSettings(const toml::value& configData)
+TranslationSettings readTranslationSettings(const tomlkit::Item& configData)
 {
     TranslationSettings settings;
-    settings.batchSize = toml::find_or(configData, "common", "numPerRequestTranslate", 16);
-    settings.threadsNum = toml::find_or(configData, "common", "threadsNum", 5);
-    settings.nameTransBatchSize = toml::find_or(configData, "common", "numPerRequestNameTranslate", 50);
-    settings.sortMethod = toml::find_or(configData, "common", "sortMethod", "size");
-    settings.targetLang = toml::find_or(configData, "common", "targetLang", "zh-cn");
-    settings.splitFileMethod = toml::find_or(configData, "common", "split", "method", "No");
-    settings.problemOverviewFormat = toml::find_or(configData, "common", "problemOverviewFormat", "json");
-    settings.splitFileNum = toml::find_or(configData, "common", "split", "num", 10);
-    settings.reuseRepeatedBlocks = toml::find_or(configData, "common", "repeatedBlock", "enabled", false);
-    settings.repeatedBlockMinSize = toml::find_or(configData, "common", "repeatedBlock", "minSize", 5);
-    settings.cacheSearchDistance = toml::find_or(configData, "common", "split", "cacheSearchDistance", 5);
-    settings.saveCacheInterval = toml::find_or(configData, "common", "saveCacheInterval", 1);
-    settings.keepPreviousOtherInfo = toml::find_or(configData, "common", "keepPreviousOtherInfo", false);
-    settings.linebreakSymbol = toml::find_or(configData, "common", "linebreakSymbol", "auto");
-    settings.maxRequestCount = toml::find_or(configData, "common", "maxRequestCount", 4);
-    settings.inputBlockMaxLines = toml::find_or(configData, "common", "log", "inputBlockMaxLines", 10);
-    settings.problemMaxLines = toml::find_or(configData, "common", "log", "problemMaxLines", 3);
-    settings.glossaryMaxLines = toml::find_or(configData, "common", "log", "glossaryMaxLines", 5);
-    settings.smartRetry = toml::find_or(configData, "common", "smartRetry", false);
-    settings.enhanceJailbreak = toml::find_or(configData, "common", "enhanceJailbreak", 0);
-    settings.checkQuota = toml::find_or(configData, "common", "checkQuota", true);
-    settings.retransAllWhenFail = toml::find_or(configData, "common", "retransAllWhenFail", false);
-    settings.agentEnabled = toml::find_or(configData, "common", "agent", "enabled", false);
-    settings.agentAllowPython = toml::find_or(configData, "common", "agent", "allowPython", false);
-    settings.agentMaxTurnsPerChunk = toml::find_or(configData, "common", "agent", "maxTurnsPerChunk", 50);
-    settings.agentSearchResultLimit = toml::find_or(configData, "common", "agent", "searchResultLimit", 80);
-    settings.agentContextLinesLimit = toml::find_or(configData, "common", "agent", "contextLinesLimit", 20);
-    settings.projectNotePath = toml::find_or(configData, "common", "agent", "projectNotePath", "ProjectNote.md");
+    settings.batchSize = tomlkit::findOr(configData, "common", "numPerRequestTranslate", 16);
+    settings.threadsNum = tomlkit::findOr(configData, "common", "threadsNum", 5);
+    settings.nameTransBatchSize = tomlkit::findOr(configData, "common", "numPerRequestNameTranslate", 50);
+    settings.sortMethod = tomlkit::findOr(configData, "common", "sortMethod", "size");
+    settings.targetLang = tomlkit::findOr(configData, "common", "targetLang", "zh-cn");
+    settings.splitFileMethod = tomlkit::findOr(configData, "common", "split", "method", "No");
+    settings.problemOverviewFormat = tomlkit::findOr(configData, "common", "problemOverviewFormat", "json");
+    settings.splitFileNum = tomlkit::findOr(configData, "common", "split", "num", 10);
+    settings.reuseRepeatedBlocks = tomlkit::findOr(configData, "common", "repeatedBlock", "enabled", false);
+    settings.repeatedBlockMinSize = tomlkit::findOr(configData, "common", "repeatedBlock", "minSize", 5);
+    settings.cacheSearchDistance = tomlkit::findOr(configData, "common", "split", "cacheSearchDistance", 5);
+    settings.saveCacheInterval = tomlkit::findOr(configData, "common", "saveCacheInterval", 1);
+    settings.keepPreviousOtherInfo = tomlkit::findOr(configData, "common", "keepPreviousOtherInfo", false);
+    settings.linebreakSymbol = tomlkit::findOr(configData, "common", "linebreakSymbol", "auto");
+    settings.maxRequestCount = tomlkit::findOr(configData, "common", "maxRequestCount", 4);
+    settings.inputBlockMaxLines = tomlkit::findOr(configData, "common", "log", "inputBlockMaxLines", 10);
+    settings.problemMaxLines = tomlkit::findOr(configData, "common", "log", "problemMaxLines", 3);
+    settings.glossaryMaxLines = tomlkit::findOr(configData, "common", "log", "glossaryMaxLines", 5);
+    settings.smartRetry = tomlkit::findOr(configData, "common", "smartRetry", false);
+    settings.enhanceJailbreak = tomlkit::findOr(configData, "common", "enhanceJailbreak", 0);
+    settings.checkQuota = tomlkit::findOr(configData, "common", "checkQuota", true);
+    settings.retransAllWhenFail = tomlkit::findOr(configData, "common", "retransAllWhenFail", false);
+    settings.agentEnabled = tomlkit::findOr(configData, "common", "agent", "enabled", false);
+    settings.agentAllowPython = tomlkit::findOr(configData, "common", "agent", "allowPython", false);
+    settings.agentMaxTurnsPerChunk = tomlkit::findOr(configData, "common", "agent", "maxTurnsPerChunk", 50);
+    settings.agentSearchResultLimit = tomlkit::findOr(configData, "common", "agent", "searchResultLimit", 80);
+    settings.agentContextLinesLimit = tomlkit::findOr(configData, "common", "agent", "contextLinesLimit", 20);
+    settings.projectNotePath = tomlkit::findOr(configData, "common", "agent", "projectNotePath", "ProjectNote.md");
     return settings;
 }
 
@@ -148,24 +148,30 @@ bool usesTranslationApi(TransEngine engine)
     return engine != TransEngine::DumpName && engine != TransEngine::Rebuild && engine != TransEngine::ShowNormal;
 }
 
-std::vector<ProjectApi> readProjectApis(const toml::value& configData,
+std::vector<ProjectApi> readProjectApis(const tomlkit::Item& configData,
     TransEngine engine,
     bool agentEnabled,
     const std::function<void(const std::string&)>& warningFunc)
 {
-    const auto apisArr = toml::find<std::vector<toml::table>>(configData, "backend", "apis");
+    const auto& apisArr = configData.at("backend", "apis");
+    if (!apisArr.isArray()) {
+        throw tomlkit::TypeError("backend.apis must be an array");
+    }
 
     std::vector<ProjectApi> apis;
     for (const auto& [apiIndex, apiTbl] : apisArr | std::views::enumerate) {
-        if (apiTbl.contains("enable") && !apiTbl.at("enable").as_boolean()) {
+        if (!apiTbl.isTable()) {
+            continue;
+        }
+        if (apiTbl.contains("enable") && !apiTbl.at("enable").asBoolean()) {
             continue;
         }
         ProjectApi entry{
-            apiTbl.contains("name") ? apiTbl.at("name").as_string() : "自定义 Api", (size_t)apiIndex, {}
+            apiTbl.contains("name") ? apiTbl.at("name").asString() : "自定义 Api", (size_t)apiIndex, {}
         };
         TranslationApi api;
-        if (apiTbl.contains("protocol") && apiTbl.at("protocol").is_string()) {
-            api.protocol = parseApiProtocol(apiTbl.at("protocol").as_string());
+        if (apiTbl.contains("protocol") && apiTbl.at("protocol").isString()) {
+            api.protocol = parseApiProtocol(apiTbl.at("protocol").asString());
         }
         else {
             api.protocol = ApiProtocol::OpenAI;
@@ -175,11 +181,11 @@ std::vector<ProjectApi> readProjectApis(const toml::value& configData,
                     .toStdString());
         }
         if (agentEnabled && api.protocol == ApiProtocol::Gemini && apiTbl.contains("agentGeminiInteractions") &&
-            apiTbl.at("agentGeminiInteractions").as_boolean()) {
+            apiTbl.at("agentGeminiInteractions").asBoolean()) {
             api.protocol = ApiProtocol::GeminiInterAction;
         }
-        if (apiTbl.contains("apiurl") && !apiTbl.at("apiurl").as_string().empty()) {
-            api.apiurl = cvt2StdApiUrl(apiTbl.at("apiurl").as_string(), api.protocol);
+        if (apiTbl.contains("apiurl") && !apiTbl.at("apiurl").asString().empty()) {
+            api.apiurl = cvt2StdApiUrl(apiTbl.at("apiurl").asString(), api.protocol);
         }
         else {
             warningFunc(gppTr("NormalJsonTranslator.normalJsonInit", "backend.apis[%1] apiurl 为空，已忽略")
@@ -187,8 +193,8 @@ std::vector<ProjectApi> readProjectApis(const toml::value& configData,
                     .toStdString());
             continue;
         }
-        if (apiTbl.contains("modelName") && !apiTbl.at("modelName").as_string().empty()) {
-            api.modelName = apiTbl.at("modelName").as_string();
+        if (apiTbl.contains("modelName") && !apiTbl.at("modelName").asString().empty()) {
+            api.modelName = apiTbl.at("modelName").asString();
         }
         else if (engine == TransEngine::Sakura) {
             api.modelName = "sakura";
@@ -201,52 +207,60 @@ std::vector<ProjectApi> readProjectApis(const toml::value& configData,
             continue;
         }
         if (apiTbl.contains("agentStrictTools")) {
-            api.agentStrictTools = apiTbl.at("agentStrictTools").as_string();
+            api.agentStrictTools = apiTbl.at("agentStrictTools").asString();
         }
-        api.agentStateful = apiTbl.contains("agentStateful") && apiTbl.at("agentStateful").as_boolean();
+        api.agentStateful = apiTbl.contains("agentStateful") && apiTbl.at("agentStateful").asBoolean();
         api.agentNativeAutoCompaction =
-            apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").as_boolean();
+            apiTbl.contains("agentNativeAutoCompaction") && apiTbl.at("agentNativeAutoCompaction").asBoolean();
         if (apiTbl.contains("agentCompactThresholdTokens")) {
-            api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").as_integer();
+            api.agentCompactThresholdTokens = (int)apiTbl.at("agentCompactThresholdTokens").asInteger();
         }
-        api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").as_boolean();
-        api.stream = apiTbl.contains("stream") && apiTbl.at("stream").as_boolean();
-        api.fastPause = apiTbl.contains("fastPause") && apiTbl.at("fastPause").as_boolean();
+        api.useSystemProxy = !apiTbl.contains("useSystemProxy") || apiTbl.at("useSystemProxy").asBoolean();
+        api.stream = apiTbl.contains("stream") && apiTbl.at("stream").asBoolean();
+        api.fastPause = apiTbl.contains("fastPause") && apiTbl.at("fastPause").asBoolean();
         api.thinkingLevel = "off";
         if (apiTbl.contains("thinkingLevel")) {
-            api.thinkingLevel = apiTbl.at("thinkingLevel").as_string();
+            api.thinkingLevel = apiTbl.at("thinkingLevel").asString();
         }
-        if (apiTbl.contains("extraHeadersEnable") && apiTbl.at("extraHeadersEnable").as_boolean() &&
+        if (apiTbl.contains("extraHeadersEnable") && apiTbl.at("extraHeadersEnable").asBoolean() &&
             apiTbl.contains("extraHeaders")) {
-            for (const auto& [key, value] : apiTbl.at("extraHeaders").as_table()) {
-                if (value.is_string()) {
-                    api.extraHeaders[key] = value.as_string();
+            const auto& extraHeadersTbl = apiTbl.at("extraHeaders");
+            if (!extraHeadersTbl.isTable()) {
+                throw tomlkit::TypeError("extraHeaders must be a table");
+            }
+            for (const auto [key, value] : extraHeadersTbl.tableItems()) {
+                if (value.isString()) {
+                    api.extraHeaders[key.name()] = value.asString();
                 }
                 else {
-                    api.extraHeaders[key] = toml2Json(value).dump();
+                    api.extraHeaders[key.name()] = toml2Json(value).dump();
                 }
             }
         }
-        if (apiTbl.contains("extraBodyEnable") && apiTbl.at("extraBodyEnable").as_boolean() &&
-            apiTbl.contains("extraBody") && apiTbl.at("extraBody").is_table()) {
+        if (apiTbl.contains("extraBodyEnable") && apiTbl.at("extraBodyEnable").asBoolean() &&
+            apiTbl.contains("extraBody") && apiTbl.at("extraBody").isTable()) {
             api.extraBody = toml2Json(apiTbl.at("extraBody"));
         }
         if (apiTbl.contains("temperature")) {
-            api.temperature = apiTbl.at("temperature").as_floating();
+            api.temperature = apiTbl.at("temperature").asFloat();
         }
         if (apiTbl.contains("topP")) {
-            api.topP = apiTbl.at("topP").as_floating();
+            api.topP = apiTbl.at("topP").asFloat();
         }
         if (apiTbl.contains("frequencyPenalty")) {
-            api.frequencyPenalty = apiTbl.at("frequencyPenalty").as_floating();
+            api.frequencyPenalty = apiTbl.at("frequencyPenalty").asFloat();
         }
         if (apiTbl.contains("presencePenalty")) {
-            api.presencePenalty = apiTbl.at("presencePenalty").as_floating();
+            api.presencePenalty = apiTbl.at("presencePenalty").asFloat();
         }
         bool hasApiKey = false;
         if (apiTbl.contains("apikeys")) {
-            for (const auto& apiKeyValue : apiTbl.at("apikeys").as_array()) {
-                const std::string& apiKey = apiKeyValue.as_string();
+            const auto& apiKeysArr = apiTbl.at("apikeys");
+            if (!apiKeysArr.isArray()) {
+                throw tomlkit::TypeError("apikeys must be an array");
+            }
+            for (const auto& apiKeyValue : apiKeysArr) {
+                const std::string& apiKey = apiKeyValue.asString();
                 if (apiKey.empty()) {
                     continue;
                 }
@@ -269,14 +283,14 @@ std::vector<ProjectApi> readProjectApis(const toml::value& configData,
 }
 
 std::vector<ProjectDictionaryFile> resolveProjectDictionaries(
-    const fs::path& projectDir, const toml::value& config, const std::string& type)
+    const fs::path& projectDir, const tomlkit::Item& config, const std::string& type)
 {
     std::vector<ProjectDictionaryFile> result;
-    const auto names = toml::find<std::optional<std::vector<std::string>>>(config, "dictionary", type + "Dicts");
+    const auto names = tomlkit::findOptional<std::vector<std::string>>(config, "dictionary", type + "Dicts");
     if (!names) {
         return result;
     }
-    const fs::path defaults = ascii2Wide(toml::find_or(config, "dictionary", "defaultDictFolder", "BaseConfig/Dicts"));
+    const fs::path defaults = ascii2Wide(tomlkit::findOr(config, "dictionary", "defaultDictFolder", "BaseConfig/Dicts"));
     for (const auto& name : *names) {
         fs::path path = ascii2Wide(name);
         if (path.is_relative()) {
@@ -299,19 +313,19 @@ ProjectPrompts readProjectPrompts(const fs::path& projectDir, TransEngine engine
         throw std::runtime_error(gppTr("NormalJsonTranslator.normalJsonInit", "找不到 Prompt.toml 文件").toStdString());
     }
 
-    const auto projectPromptData = hasProjectPrompt ? gpp::uparseToml(projectPromptPath) : toml::value{};
-    const auto defaultPromptData = hasDefaultPrompt ? gpp::uparseToml(defaultPromptPath) : toml::value{};
+    const auto projectPromptData = hasProjectPrompt ? parseToml(projectPromptPath) : toml::document();
+    const auto defaultPromptData = hasDefaultPrompt ? parseToml(defaultPromptPath) : toml::document();
 
     const auto readPromptString = [&](const std::string& key) -> ProjectPrompt
         {
             std::string prompt;
             fs::path source;
             if (hasProjectPrompt && projectPromptData.contains(key)) {
-                prompt = projectPromptData.at(key).as_string();
+                prompt = projectPromptData.at(key).asString();
                 source = projectPromptPath;
             }
             else if (hasDefaultPrompt && defaultPromptData.contains(key)) {
-                prompt = defaultPromptData.at(key).as_string();
+                prompt = defaultPromptData.at(key).asString();
                 source = defaultPromptPath;
             }
             else {

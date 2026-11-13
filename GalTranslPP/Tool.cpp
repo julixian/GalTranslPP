@@ -1164,14 +1164,26 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 
 
 
-::toml::value uparseToml(const fs::path& path) {
-    std::ifstream ifs(path, std::ios::binary);
-    return ::toml::parse(ifs, wide2Ascii(path));
+toml parseToml(const fs::path& path) {
+    return tomlkit::parseFile(path);
 }
 
-::toml::ordered_value uoparseToml(const fs::path& path) {
-    std::ifstream ifs(path, std::ios::binary);
-    return ::toml::parse<::toml::ordered_type_config>(ifs, wide2Ascii(path));
+const toml* findValueByPath(const toml& table, std::span<const std::string_view> keyViews) {
+    const toml* pCurrentValue = &table;
+    for (const auto& keyView : keyViews) {
+        if (!pCurrentValue->isTable()) {
+            return nullptr;
+        }
+        pCurrentValue = pCurrentValue->find(keyView);
+        if (!pCurrentValue) {
+            return nullptr;
+        }
+    }
+    return pCurrentValue;
+}
+
+ordered_json toml2OrderedJson(const toml& value) {
+    return toml2Json<ordered_json>(value);
 }
 
 

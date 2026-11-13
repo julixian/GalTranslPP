@@ -21,7 +21,7 @@ import Tool;
 
 using namespace gpp;
 
-PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, toml::ordered_value& projectConfig, QWidget* parent) :
+PluginSettingsPage::PluginSettingsPage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent) :
     BasePage(parent), m_projectDir(projectDir), m_projectConfig(projectConfig)
 {
     setWindowTitle(tr("插件设置"));
@@ -55,14 +55,14 @@ void PluginSettingsPage::setupUi()
         { "TextFull2Half", PluginRunTime::DPost },
         { "TextLinebreakFix", PluginRunTime::DPost },
     };
-    toml::ordered_array customPlugins;
+    tomlkit::Item customPlugins = tomlkit::findArrayOrEmpty(m_projectConfig, "plugins", "customTextPlugins");
     // 先处理项目已经启用的插件
-    const auto pluginsArr = toml::find_or_default<toml::array>(m_projectConfig, "plugins", "textPlugins");
+    const auto pluginsArr = tomlkit::findArrayOrEmpty(m_projectConfig, "plugins", "textPlugins");
     for (const auto& pluginNameStr : pluginsArr) {
-        if (!pluginNameStr.is_string()) {
+        if (!pluginNameStr.isString()) {
             continue;
         }
-        QString logicalPluginName = QString::fromStdString(pluginNameStr.as_string());
+        QString logicalPluginName = QString::fromStdString(pluginNameStr.asString());
         bool isEnabled = true;
         if (logicalPluginName.startsWith('>')) {
             logicalPluginName = logicalPluginName.mid(1);
@@ -70,7 +70,9 @@ void PluginSettingsPage::setupUi()
         }
         QString pluginName = logicalPluginName.contains(':') ? logicalPluginName.split(':').last() : logicalPluginName;
         if (!pluginNamesMap.contains(pluginName)) {
-            customPlugins.push_back(pluginNameStr);
+            // TODO: 未来大版本更新中移除从 textPlugins 读取自定义插件的兼容逻辑
+            customPlugins.setMultilineArray(true);
+            customPlugins.push_back(pluginNameStr.asString());
             continue;
         }
         PluginRunTime runTime = choosePluginRunTime(logicalPluginName.toLower().toStdString(), pluginNamesMap[pluginName]);
@@ -104,7 +106,7 @@ void PluginSettingsPage::setupUi()
     updateMoveButtonStates();
 
     auto createCustomPluginsPlainTextEditFunc =
-        [=, this](const QString& title, const std::string& configKey, const toml::ordered_array& customPlugins_) -> std::function<void(toml::ordered_array&)>
+        [=, this](const QString& title, const std::string& configKey, tomlkit::Item customPlugins_) -> std::function<void()>
         {
             QHBoxLayout* customPluginsLayout = new QHBoxLayout(mainWidget);
             customPluginsLayout->setContentsMargins(0, 0, 0, 0);
@@ -128,16 +130,26 @@ void PluginSettingsPage::setupUi()
             QFont font = customPluginsEdit->font();
             font.setPixelSize(14);
             customPluginsEdit->setFont(font);
-            customPluginsEdit->setPlainText(QString::fromStdString(toml::format(toml::ordered_value{ toml::ordered_table{{ configKey, customPlugins_ }} })));
+            tomlkit::Item customPluginsDoc = tomlkit::Item::document();
+            customPluginsDoc[configKey] = std::move(customPlugins_);
+            customPluginsEdit->setPlainText(QString::fromStdString(tomlkit::format(customPluginsDoc)));
             customPluginsEdit->moveCursor(QTextCursor::Start);
             installTreeSitterHighlighter(customPluginsEdit->document(), SyntaxLanguage::Toml);
             mainLayout->addWidget(customPluginsEdit);
 
             connect(browserButton, &ElaToolButton::clicked, this, [=, this]()
                 {
-                    toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
+                    toml newCustomPluginsTbl;
+                    try {
+                        newCustomPluginsTbl = tomlkit::parse(customPluginsEdit->toPlainText().toStdString());
+                    }
+                    catch (...) {
+                        ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析错误"),
+                            tr("自定义文本处理插件不符合 toml 规范"), 3000);
+                        return;
+                    }
                     auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];
-                    if (!newCustomPluginsArr.is_array()) {
+                    if (!newCustomPluginsArr.isArray()) {
                         ElaMessageBar::error(ElaMessageBarType::TopRight, tr("解析错误"),
                             tr("自定义文本处理插件不符合 toml 规范"), 3000);
                         return;
@@ -146,22 +158,22 @@ void PluginSettingsPage::setupUi()
                     QString fileName = QFileDialog::getOpenFileName(window(), tr("选择自定义文本处理插件"),
                         QString::fromStdWString(m_projectDir.wstring()), "custom script (*.lua *.py)");
                     if (!fileName.isEmpty()) {
+                        newCustomPluginsArr.setMultilineArray(true);
                         newCustomPluginsArr.push_back(fileName.toStdString());
-                        customPluginsEdit->setPlainText(QString::fromStdString(toml::format(newCustomPluginsTbl)));
+                        customPluginsEdit->setPlainText(QString::fromStdString(tomlkit::format(newCustomPluginsTbl)));
                     }
                 });
 
-            std::function<void(toml::ordered_array&)> saveFunc = [=](toml::ordered_array& arr)
+            std::function<void()> saveFunc = [=, this]()
                 {
                     try {
-                        toml::ordered_value newCustomPluginsTbl = toml::parse_str<toml::ordered_type_config>(customPluginsEdit->toPlainText().toStdString());
+                        toml newCustomPluginsTbl = tomlkit::parse(customPluginsEdit->toPlainText().toStdString());
                         auto& newCustomPluginsArr = newCustomPluginsTbl[configKey];
-                        if (newCustomPluginsArr.is_array()) {
-                            for (const auto& newCustomPlugin : newCustomPluginsArr.as_array()
-                                | std::views::filter([](const auto& plugin) { return plugin.is_string(); }))
-                            {
-                                arr.push_back(newCustomPlugin);
-                            }
+                        if (newCustomPluginsArr.isArray()) {
+                            insertToml(m_projectConfig, "plugins." + configKey, newCustomPluginsArr);
+                        }
+                        else {
+                            insertToml(m_projectConfig, "plugins." + configKey, tomlkit::Item::array());
                         }
                     }
                     catch (...) {
@@ -173,7 +185,7 @@ void PluginSettingsPage::setupUi()
         };
 
     mainLayout->addSpacing(10);
-    auto saveCustomPluginsFunc = createCustomPluginsPlainTextEditFunc(tr("自定义文本处理插件"), "customTextPlugins", customPlugins);
+    auto saveCustomPluginsFunc = createCustomPluginsPlainTextEditFunc(tr("自定义文本处理插件"), "customTextPlugins", std::move(customPlugins));
     mainLayout->addStretch();
 
     addCentralWidget(mainWidget, true, false, 0);
@@ -194,7 +206,8 @@ void PluginSettingsPage::setupUi()
             m_tlfCfgPage->apply2Config();
             m_tf2hCfgPage->apply2Config();
 
-            toml::ordered_array pluginsToSave;
+            tomlkit::Item pluginsToSave = tomlkit::Item::array();
+            pluginsToSave.setMultilineArray(true);
             for (PluginItemWidget* item : m_pluginItems) {
                 std::string pluginNameToSave = item->getPluginName().toStdString();
                 if (!item->getIsToggled()) {
@@ -202,8 +215,8 @@ void PluginSettingsPage::setupUi()
                 }
                 pluginsToSave.push_back(pluginNameToSave);
             }
-            saveCustomPluginsFunc(pluginsToSave);
             insertToml(m_projectConfig, "plugins.textPlugins", pluginsToSave);
+            saveCustomPluginsFunc();
         };
 }
 

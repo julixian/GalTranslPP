@@ -144,14 +144,14 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         throw std::runtime_error(gppTr("createTranslator", "找不到配置文件 [%1]")
             .arg(wide2Ascii(configFilePath)).toStdString());
     }
-    const auto configData = gpp::uparseToml(configFilePath);
+    const auto configData = parseToml(configFilePath);
 
-    const std::string filePluginStr = toml::find_or(configData, "plugins", "filePlugin", "NormalJson");
-    const std::string transEngineStr = toml::find_or(configData, "plugins", "transEngine", "ForGalJson");
+    const std::string filePluginStr = tomlkit::findOr(configData, "plugins", "filePlugin", "NormalJson");
+    const std::string transEngineStr = tomlkit::findOr(configData, "plugins", "transEngine", "ForGalJson");
     // 日志配置
     spdlog::level::level_enum logLevel;
-    bool saveLog = toml::find_or(configData, "common", "log", "saveLog", true);
-    const std::string logLevelStr = toml::find_or(configData, "common", "log", "level", "info");
+    bool saveLog = tomlkit::findOr(configData, "common", "log", "saveLog", true);
+    const std::string logLevelStr = tomlkit::findOr(configData, "common", "log", "level", "info");
     if (logLevelStr == "trace") {
         logLevel = spdlog::level::trace;
     }
@@ -176,8 +176,8 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
             .toStdString());
     }
 
-    const size_t logFileMaxSize = toml::find_or(configData, "common", "log", "fileMaxSize", 1024 * 1024 * 10);
-    const size_t maxRotateFiles = toml::find_or(configData, "common", "log", "maxRotateFiles", 10);
+    const size_t logFileMaxSize = tomlkit::findOr(configData, "common", "log", "fileMaxSize", (size_t)(1024 * 1024 * 10));
+    const size_t maxRotateFiles = tomlkit::findOr(configData, "common", "log", "maxRotateFiles", (size_t)10);
 
     auto controllerSink = std::make_shared<ControllerSink<std::mutex>>(controller);
     std::vector<spdlog::sink_ptr> sinks = { controllerSink };
@@ -209,7 +209,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
 
     const std::string filePluginStrLower = str2Lower(filePluginStr);
     if (filePluginStrLower.ends_with(".lua")) {
-        const std::string baseClassName = toml::find_or(configData, "plugins", "baseClassName", "NormalJson");
+        const std::string baseClassName = tomlkit::findOr(configData, "plugins", "baseClassName", "NormalJson");
         const std::string scriptFileName = replaceStr(filePluginStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
         if (baseClassName == "NormalJson") {
             std::unique_ptr<ITranslator> translator = std::make_unique<LuaTranslator<NormalJsonTranslator>>(
@@ -233,7 +233,7 @@ std::unique_ptr<ITranslator> createTranslator(const fs::path& projectDir, const 
         }
     }
     else if (filePluginStrLower.ends_with(".py")) {
-        const std::string baseClassName = toml::find_or(configData, "plugins", "baseClassName", "NormalJson");
+        const std::string baseClassName = tomlkit::findOr(configData, "plugins", "baseClassName", "NormalJson");
         const std::string scriptFileName = replaceStr(filePluginStr, "%PROJECT_DIR%", wide2Ascii(projectDir));
         if (baseClassName == "NormalJson") {
             std::unique_ptr<ITranslator> translator = std::make_unique<PythonTranslator<NormalJsonTranslator>>(

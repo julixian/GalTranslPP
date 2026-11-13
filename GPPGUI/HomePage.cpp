@@ -19,6 +19,8 @@
 #include "ElaText.h"
 #include "ElaToolTip.h"
 
+import Tool;
+
 namespace
 {
     struct DefaultPopularCard {
@@ -168,23 +170,23 @@ namespace
         return backgroundCard;
     }
 
-    bool hasPopularCardsArray(toml::ordered_value& globalConfig)
+    bool hasPopularCardsArray(const tomlkit::Item& globalConfig)
     {
-        return globalConfig.contains("popularCards") && globalConfig["popularCards"].is_array();
+        return globalConfig.contains("popularCards") && globalConfig["popularCards"].isArray();
     }
 
-    std::optional<toml::ordered_value> getPopularCardConfig(toml::ordered_value& globalConfig, size_t index)
+    const tomlkit::Item* getPopularCardConfig(const tomlkit::Item& globalConfig, size_t index)
     {
         if (!hasPopularCardsArray(globalConfig) || index >= globalConfig["popularCards"].size()) {
-            return std::nullopt;
+            return nullptr;
         }
 
-        auto& popularCardsArr = globalConfig["popularCards"].as_array();
-        if (!popularCardsArr[index].is_table()) {
-            return std::nullopt;
+        const auto& popularCardsArr = globalConfig["popularCards"];
+        if (!popularCardsArr[index].isTable()) {
+            return nullptr;
         }
 
-        return popularCardsArr[index];
+        return &popularCardsArr[index];
     }
 
     void connectCardUrl(const ElaPopularCard* card, const QUrl& url, const QObject* receiver)
@@ -195,10 +197,10 @@ namespace
             });
     }
 
-    void applyPopularCardConfig(ElaPopularCard* homeCard, const toml::ordered_value& card, const QObject* receiver)
+    void applyPopularCardConfig(ElaPopularCard* homeCard, const tomlkit::Item& card, const QObject* receiver)
     {
-        const QString pathOrUrl = QString::fromStdString(toml::find_or(card, "pathOrUrl", ""));
-        const bool fromLocal = toml::find_or(card, "fromLocal", false);
+        const QString pathOrUrl = QString::fromStdString(tomlkit::findOr(card, "pathOrUrl", ""));
+        const bool fromLocal = tomlkit::findOr(card, "fromLocal", false);
         homeCard->setCardButtonText(fromLocal ? QObject::tr("启动") : QObject::tr("获取"));
 
         if (!pathOrUrl.isEmpty()) {
@@ -206,10 +208,10 @@ namespace
             connectCardUrl(homeCard, url, receiver);
         }
 
-        homeCard->setTitle(QString::fromStdString(toml::find_or(card, "title", "")));
-        homeCard->setSubTitle(QString::fromStdString(toml::find_or(card, "subTitle", "")));
+        homeCard->setTitle(QString::fromStdString(tomlkit::findOr(card, "title", "")));
+        homeCard->setSubTitle(QString::fromStdString(tomlkit::findOr(card, "subTitle", "")));
 
-        if (const QString pixmapPath = QString::fromStdString(toml::find_or(card, "cardPixmap", "")); !pixmapPath.isEmpty()) {
+        if (const QString pixmapPath = QString::fromStdString(tomlkit::findOr(card, "cardPixmap", "")); !pixmapPath.isEmpty()) {
             homeCard->setCardPixmap(QPixmap(pixmapPath));
         }
         else if (fromLocal) {
@@ -221,9 +223,9 @@ namespace
             }
         }
 
-        homeCard->setInteractiveTips(QString::fromStdString(toml::find_or(card, "interactiveTips", "")));
-        homeCard->setDetailedText(QString::fromStdString(toml::find_or(card, "detailedText", "")));
-        homeCard->setCardFloatPixmap(QPixmap(QString::fromStdString(toml::find_or(card, "cardFloatPixmap", ""))));
+        homeCard->setInteractiveTips(QString::fromStdString(tomlkit::findOr(card, "interactiveTips", "")));
+        homeCard->setDetailedText(QString::fromStdString(tomlkit::findOr(card, "detailedText", "")));
+        homeCard->setCardFloatPixmap(QPixmap(QString::fromStdString(tomlkit::findOr(card, "cardFloatPixmap", ""))));
     }
 
     void applyDefaultPopularCard(ElaPopularCard* homeCard, const DefaultPopularCard& card, const QObject* receiver)
@@ -237,11 +239,11 @@ namespace
         homeCard->setCardFloatPixmap(QPixmap(card.floatPixmap));
     }
 
-    ElaPopularCard* createPopularCard(size_t index, toml::ordered_value& globalConfig, QWidget* parent, const QObject* receiver)
+    ElaPopularCard* createPopularCard(size_t index, const tomlkit::Item& globalConfig, QWidget* parent, const QObject* receiver)
     {
         ElaPopularCard* homeCard = new ElaPopularCard(parent);
-        if (const auto cardOpt = getPopularCardConfig(globalConfig, index)) {
-            applyPopularCardConfig(homeCard, *cardOpt, receiver);
+        if (const auto* card = getPopularCardConfig(globalConfig, index)) {
+            applyPopularCardConfig(homeCard, *card, receiver);
         }
         else if (index < kDefaultPopularCards.size()) {
             applyDefaultPopularCard(homeCard, kDefaultPopularCards[index], receiver);
@@ -249,7 +251,7 @@ namespace
         return homeCard;
     }
 
-    ElaFlowLayout* createPopularCardsLayout(toml::ordered_value& globalConfig, QWidget* parent, QWidget* cardFloatArea, const QObject* receiver)
+    ElaFlowLayout* createPopularCardsLayout(const tomlkit::Item& globalConfig, QWidget* parent, QWidget* cardFloatArea, const QObject* receiver)
     {
         ElaFlowLayout* flowLayout = new ElaFlowLayout(0, 5, 5);
         flowLayout->setContentsMargins(18, 0, 0, 0);
@@ -267,9 +269,9 @@ namespace
 
         const auto& cards = globalConfig["popularCards"];
         for (size_t i = kDefaultPopularCards.size(); i < cards.size(); ++i) {
-            if (auto cardOpt = getPopularCardConfig(globalConfig, i)) {
+            if (const auto* card = getPopularCardConfig(globalConfig, i)) {
                 ElaPopularCard* popularCard = new ElaPopularCard(parent);
-                applyPopularCardConfig(popularCard, *cardOpt, receiver);
+                applyPopularCardConfig(popularCard, *card, receiver);
                 popularCard->setCardFloatArea(cardFloatArea);
                 flowLayout->addWidget(popularCard);
             }
@@ -279,7 +281,7 @@ namespace
     }
 }
 
-HomePage::HomePage(toml::ordered_value& globalConfig, QWidget* parent)
+HomePage::HomePage(tomlkit::Item& globalConfig, QWidget* parent)
     : BasePage(parent), m_globalConfig(globalConfig)
 {
     setWindowTitle(tr("主页"));

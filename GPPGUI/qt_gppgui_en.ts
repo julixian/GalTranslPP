@@ -78,7 +78,7 @@
         <translation>List layout</translation>
     </message>
     <message>
-        <location line="+169"/>
+        <location line="+180"/>
         <source>请输入 Api key(Sakura引擎或有Extra keys时可不填)</source>
         <translation>API key (optional for Sakura or Extra keys)</translation>
     </message>
@@ -841,7 +841,7 @@ sk-...</translation>
         <translation>Note</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+77"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -852,12 +852,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+47"/>
-        <location line="+293"/>
+        <location line="+290"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-292"/>
+        <location line="-289"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
@@ -889,27 +889,27 @@ sk-...</translation>
     </message>
     <message>
         <location line="-45"/>
-        <location line="+208"/>
+        <location line="+205"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation>Dictionary names cannot be empty or contain dots, slashes, or backslashes!</translation>
     </message>
     <message>
-        <location line="-199"/>
-        <location line="+199"/>
+        <location line="-196"/>
+        <location line="+196"/>
         <location line="+9"/>
         <location line="+10"/>
         <source>新建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-217"/>
-        <location line="+168"/>
+        <location line="-214"/>
+        <location line="+165"/>
         <location line="+40"/>
         <source>字典 %1 已存在</source>
         <translation>Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-177"/>
+        <location line="-174"/>
         <source>重命名成功</source>
         <translation>Renamed successfully</translation>
     </message>
@@ -949,7 +949,7 @@ sk-...</translation>
         <translation>This deletes the dictionary file. Back up first.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -959,7 +959,7 @@ sk-...</translation>
         <translation>Dict %1 removed from list and disk!</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+50"/>
         <source>所有默认字典配置均已保存</source>
         <translation>All default dictionary settings have been saved</translation>
     </message>
@@ -1110,7 +1110,7 @@ sk-...</translation>
         <translation>Rules</translation>
     </message>
     <message>
-        <location line="+85"/>
+        <location line="+87"/>
         <source>保存失败</source>
         <translation>Fail to save</translation>
     </message>
@@ -1121,12 +1121,12 @@ sk-...</translation>
     </message>
     <message>
         <location line="+49"/>
-        <location line="+293"/>
+        <location line="+291"/>
         <source>保存成功</source>
         <translation>Saved successfully</translation>
     </message>
     <message>
-        <location line="-292"/>
+        <location line="-290"/>
         <source>字典 %1 已保存</source>
         <translation>Dict %1 saved</translation>
     </message>
@@ -1158,27 +1158,27 @@ sk-...</translation>
     </message>
     <message>
         <location line="-47"/>
-        <location line="+210"/>
+        <location line="+208"/>
         <source>字典名称不能为空，且不能包含点号、斜杠或反斜杠！</source>
         <translation>Dictionary names cannot be empty or contain dots, slashes, or backslashes!</translation>
     </message>
     <message>
-        <location line="-201"/>
-        <location line="+201"/>
+        <location line="-199"/>
+        <location line="+199"/>
         <location line="+10"/>
         <location line="+9"/>
         <source>新建失败</source>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-219"/>
-        <location line="+170"/>
+        <location line="-217"/>
+        <location line="+168"/>
         <location line="+41"/>
         <source>字典 %1 已存在</source>
         <translation>Dict %1 exists</translation>
     </message>
     <message>
-        <location line="-180"/>
+        <location line="-178"/>
         <source>重命名成功</source>
         <translation>Renamed successfully</translation>
     </message>
@@ -1218,7 +1218,7 @@ sk-...</translation>
         <translation>This deletes the dictionary file. Back up first.</translation>
     </message>
     <message>
-        <location line="+30"/>
+        <location line="+28"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -1473,12 +1473,12 @@ sk-...</translation>
         <translation>When disabled, retry only missing lines. Enable to tolerate parse failures from misaligned lines; ignored in Agent mode.</translation>
     </message>
     <message>
-        <location line="+254"/>
+        <location line="+256"/>
         <source>将换行符统一规范为 &amp;lt;br&amp;gt; 以方便检错和修复，也可以让如全角半角转化等插件方便忽略换行。具体替换时机详见使用说明，auto 为自动检测</source>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-508"/>
+        <location line="-510"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1685,12 +1685,12 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+114"/>
+        <location line="+116"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-153"/>
+        <location line="-155"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1707,7 +1707,7 @@ sk-...</translation>
         <translation>Less accurate than spaCy</translation>
     </message>
     <message>
-        <location line="+34"/>
+        <location line="+36"/>
         <source>本项目所使用的换行符</source>
         <translation>Linebreak symbol used in this project</translation>
     </message>
@@ -1754,7 +1754,7 @@ sk-...</translation>
         <translation>Default prompts</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -1764,7 +1764,7 @@ sk-...</translation>
         <translation>Default prompts config file is nonconforming</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+54"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
@@ -1951,7 +1951,7 @@ sk-...</translation>
         <translation>Failed to delete the generated dictionary</translation>
     </message>
     <message>
-        <location line="+68"/>
+        <location line="+72"/>
         <source>选择字典文件</source>
         <translation>Choose dict file</translation>
     </message>
@@ -2148,11 +2148,11 @@ sk-...</translation>
 <context>
     <name>DictionaryReader</name>
     <message>
-        <location filename="DictionaryReader.cpp" line="+46"/>
+        <location filename="DictionaryReader.cpp" line="+45"/>
         <location line="+9"/>
         <location line="+17"/>
         <location line="+29"/>
-        <location line="+108"/>
+        <location line="+119"/>
         <location line="+9"/>
         <location line="+21"/>
         <location line="+6"/>
@@ -2160,26 +2160,26 @@ sk-...</translation>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-198"/>
-        <location line="+163"/>
+        <location line="-209"/>
+        <location line="+174"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
     </message>
     <message>
-        <location line="-154"/>
-        <location line="+163"/>
+        <location line="-165"/>
+        <location line="+174"/>
         <source>%1 不是预期的 json 格式</source>
         <translation>%1 is not expected JSON</translation>
     </message>
     <message>
-        <location line="-146"/>
-        <location line="+167"/>
+        <location line="-157"/>
+        <location line="+178"/>
         <source>%1 不符合 json 规范</source>
         <translation>%1 is invalid JSON</translation>
     </message>
     <message>
-        <location line="-138"/>
-        <location line="+144"/>
+        <location line="-149"/>
+        <location line="+155"/>
         <source>%1 不是支持的格式</source>
         <translation>%1 is unsupported</translation>
     </message>
@@ -2222,12 +2222,12 @@ sk-...</translation>
     <name>EpubCfgPage</name>
     <message>
         <location filename="EpubCfgPage.cpp" line="+25"/>
-        <location line="+158"/>
+        <location line="+170"/>
         <source>Epub 输出配置</source>
         <translation>Epub output settings</translation>
     </message>
     <message>
-        <location line="-147"/>
+        <location line="-159"/>
         <source>双语显示</source>
         <translation>Bilingual display</translation>
     </message>
@@ -2257,7 +2257,7 @@ sk-...</translation>
         <translation>Regex before translation</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+22"/>
         <source>后处理正则</source>
         <translation>PostProcess Regex</translation>
     </message>
@@ -2267,23 +2267,23 @@ sk-...</translation>
         <translation>Regex after translation</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+20"/>
         <source>说明</source>
         <translation>Description</translation>
     </message>
     <message>
-        <location line="+25"/>
-        <location line="+13"/>
+        <location line="+30"/>
+        <location line="+4"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="+4"/>
         <source>Epub 预处理正则不符合 toml 规范</source>
         <translation>Invalid Epub preprocess TOML</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+1"/>
         <source>Epub 后处理正则不符合 toml 规范</source>
         <translation>Invalid Epub postprocess TOML</translation>
     </message>
@@ -2291,7 +2291,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+138"/>
+        <location filename="GPPGUI.cpp" line="+136"/>
         <source>Updater 更新错误</source>
         <translation>Updater update error</translation>
     </message>
@@ -2392,7 +2392,7 @@ Issue summary:</translation>
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="HomePage.cpp" line="+285"/>
+        <location filename="HomePage.cpp" line="+287"/>
         <location line="+10"/>
         <source>主页</source>
         <translation>Home Page</translation>
@@ -2401,7 +2401,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+51"/>
+        <location filename="Mainwindow.cpp" line="+52"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2825,7 +2825,7 @@ Issue summary:</translation>
 <context>
     <name>NameTableSettingsPage</name>
     <message>
-        <location filename="NameTableSettingsPage.cpp" line="+277"/>
+        <location filename="NameTableSettingsPage.cpp" line="+279"/>
         <source>人名替换表</source>
         <translation>NameTable</translation>
     </message>
@@ -3042,7 +3042,7 @@ Issue summary:</translation>
         <translation>Choose issue summary file</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+32"/>
         <source>保存项目配置</source>
         <translation>Save project settings</translation>
     </message>
@@ -3104,7 +3104,7 @@ Issue summary:</translation>
         <translation>No</translation>
     </message>
     <message>
-        <location line="-223"/>
+        <location line="-219"/>
         <source>项目移动/更名</source>
         <translation>Move/Rename project</translation>
     </message>
@@ -3125,12 +3125,12 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+28"/>
+        <location line="+24"/>
         <source>导入失败</source>
         <translation>Fail to import</translation>
     </message>
     <message>
-        <location line="-28"/>
+        <location line="-24"/>
         <source>项目仍在运行中，无法导入</source>
         <translation>Project is still running</translation>
     </message>
@@ -3159,7 +3159,7 @@ Cache: %4</translation>
         <translation type="vanished">[File %1] cannot write; import skipped</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+11"/>
         <source>成功导入 %1 个句子至 transl_cache</source>
         <translation>Imported %1 sentences to transl_cache</translation>
     </message>
@@ -3175,7 +3175,7 @@ Cache: %4</translation>
         <translation>Problems during importing saved to import_problems.log</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+23"/>
         <source>开始翻译或关闭程序时会自动保存所有项目的配置，一般无需手动保存</source>
         <translation>All project settings auto-save on translation start or exit</translation>
     </message>
@@ -3315,7 +3315,7 @@ Cache: %4</translation>
         <translation>Problem List</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+45"/>
         <source>标点查错</source>
         <translation>Punctuations to check</translation>
     </message>
@@ -3371,7 +3371,7 @@ Cache: %4</translation>
         <translation>Open settings</translation>
     </message>
     <message>
-        <location line="+54"/>
+        <location line="+56"/>
         <source>%1 不符合 toml 规范</source>
         <translation>%1 is invalid TOML</translation>
     </message>
@@ -3391,12 +3391,12 @@ Cache: %4</translation>
         <translation>Skip problems keys setting</translation>
     </message>
     <message>
-        <location line="-40"/>
+        <location line="-42"/>
         <source>正则表达式数组，具体规则见下方语法示例</source>
         <translation>Regex array; see examples below</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+50"/>
         <source>语法示例</source>
         <translation>Grammars examples</translation>
     </message>
@@ -3461,18 +3461,20 @@ Cache: %4</translation>
         <translation>Text plugin settings</translation>
     </message>
     <message>
-        <location line="+78"/>
+        <location line="+80"/>
         <source>浏览</source>
         <translation>Browse</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+25"/>
+        <location line="+6"/>
         <location line="+27"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-26"/>
+        <location line="-32"/>
+        <location line="+6"/>
         <source>自定义文本处理插件不符合 toml 规范</source>
         <translation>Custom text plugin is nonconforming</translation>
     </message>
@@ -3716,7 +3718,7 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+20"/>
-        <location filename="ProjectCachePageActions.cpp" line="+89"/>
+        <location filename="ProjectCachePageActions.cpp" line="+91"/>
         <source>删除选中条目</source>
         <translation>Delete Selected Entries</translation>
     </message>
@@ -3946,13 +3948,13 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+38"/>
+        <location filename="ProjectSettingsPage.cpp" line="+39"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+274"/>
+        <location line="+276"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -3967,12 +3969,12 @@ Cache: %4</translation>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-57"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+55"/>
+        <location line="+57"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
@@ -4087,19 +4089,19 @@ Cache: %4</translation>
         <translation>Project prompt settings</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <location line="+10"/>
+        <location line="+9"/>
+        <location line="+11"/>
         <location line="+4"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-13"/>
+        <location line="-14"/>
         <source>项目 %1 的提示词配置文件不符合标准。</source>
         <translation>Project %1 prompt config is invalid.</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>默认提示词文件不符合 toml 规范</source>
         <translation>Default prompts file is nonconforming</translation>
     </message>
@@ -4109,7 +4111,7 @@ Cache: %4</translation>
         <translation>Prompt file not found</translation>
     </message>
     <message>
-        <location line="+49"/>
+        <location line="+51"/>
         <source>用户提示词</source>
         <translation>User prompt</translation>
     </message>
@@ -4220,12 +4222,12 @@ Cache: %4</translation>
     <name>SkipTransCfgPage</name>
     <message>
         <location filename="SkipTransCfgPage.cpp" line="+124"/>
-        <location line="+99"/>
+        <location line="+101"/>
         <source>跳过翻译设置</source>
         <translation>SkipTrans settings</translation>
     </message>
     <message>
-        <location line="-88"/>
+        <location line="-90"/>
         <source>跳过 H 关键字</source>
         <translation>Skip H keys</translation>
     </message>
@@ -4260,7 +4262,7 @@ Cache: %4</translation>
         <translation>The grammars is completely same as retranslKeys&apos;</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+34"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -4487,12 +4489,12 @@ Issue summary:</translation>
     <name>TF2HCfgPage</name>
     <message>
         <location filename="TF2HCfgPage.cpp" line="+22"/>
-        <location line="+90"/>
+        <location line="+88"/>
         <source>全角半角转换设置</source>
         <translation>Convert settings</translation>
     </message>
     <message>
-        <location line="-79"/>
+        <location line="-77"/>
         <source>转换标点符号</source>
         <translation>Convert punctuations</translation>
     </message>
@@ -4512,7 +4514,7 @@ Issue summary:</translation>
         <translation>Exclude chars</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+45"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

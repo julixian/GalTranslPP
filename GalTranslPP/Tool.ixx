@@ -203,8 +203,7 @@ void extractFilesFromZip(const fs::path& zipPath, const fs::path& outputDir, con
 void extractZipInclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& includePrefixes);
 void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const std::set<std::string>& excludePrefixes);
 
-::toml::value uparseToml(const fs::path& path);
-::toml::ordered_value uoparseToml(const fs::path& path);
+toml parseToml(const fs::path& path);
 
 json parseJson(const fs::path& path, std::ifstream& ifs);
 json parseJson(const fs::path& path);
@@ -248,28 +247,11 @@ T calculateAbs(T a, T b) {
 }
 
 // 辅助函数：在一个 TOML 表中，根据一个由键组成的路径向量来查找值
-template<typename TC>
-const toml::basic_value<TC>* findValueByPath(const toml::basic_value<TC>& table, std::span<const std::string_view> keyViews) {
-    const toml::basic_value<TC>* pCurrentValue = &table;
-    for (const auto& keyView : keyViews) {
-        // 确保当前值是一个表 (table) 或有序表 (ordered_value)
-        if (!pCurrentValue->is_table()) {
-            return nullptr; // 路径中间部分不是一个表，无法继续查找
-        }
-        const std::string key(keyView);
-        // 检查表中是否包含下一个键
-        if (!pCurrentValue->contains(key)) {
-            return nullptr; // 键不存在
-        }
-        // 移动到下一层
-        pCurrentValue = &pCurrentValue->at(key);
-    }
-    return pCurrentValue;
-}
+const toml* findValueByPath(const toml& table, std::span<const std::string_view> keyViews);
 
-template<typename T, typename TC, typename TC2>
-auto parsePluginToml(const toml::basic_value<TC>& config, const toml::basic_value<TC2>& backup, std::string_view path,
-    bool reversePriority = false) -> decltype(auto)
+template<typename T>
+decltype(auto) parsePluginToml(const toml& config, const toml& backup, std::string_view path,
+    bool reversePriority = false)
 {
     const std::vector<std::string_view> keyViews = splitStringView(path, '.');
     if (
@@ -279,129 +261,139 @@ auto parsePluginToml(const toml::basic_value<TC>& config, const toml::basic_valu
     {
         throw std::runtime_error(gppTr("parsePluginToml", "无效的 TOML 路径: %1").arg(path).toStdString());
     }
+    auto extractVal = [](const toml& item) -> decltype(auto)
+        {
+            if constexpr (std::is_same_v<std::remove_cvref_t<T>, toml>) {
+                return (const toml&)item;
+            }
+            else {
+                return item.get<T>();
+            }
+        };
     if (!reversePriority) {
         if (auto pValue = findValueByPath(config, keyViews)) {
-            return toml::get<T>(*pValue);
+            return extractVal(*pValue);
         }
         if (auto pValue = findValueByPath(backup, keyViews)) {
-            return toml::get<T>(*pValue);
+            return extractVal(*pValue);
         }
     }
     else {
         if (auto pValue = findValueByPath(backup, keyViews)) {
-            return toml::get<T>(*pValue);
+            return extractVal(*pValue);
         }
         if (auto pValue = findValueByPath(config, keyViews)) {
-            return toml::get<T>(*pValue);
+            return extractVal(*pValue);
         }
     }
     throw std::runtime_error(gppTr("parsePluginToml", "无法在 TOML 中找到值: %1").arg(path).toStdString());
 }
 
-template<typename TC, typename T>
-toml::basic_value<TC>& insertToml(toml::basic_value<TC>& table, std::span<const std::string_view> keyViews, const T& value)
+template<typename T>
+toml& insertToml(toml& table, std::span<const std::string_view> keyViews, const T& value)
 {
     if (
         keyViews.empty() ||
         std::ranges::any_of(keyViews, [](const std::string_view keyView) { return keyView.empty(); }) ||
-        !table.is_table()
+        !table.isTable()
         )
     {
         return table;
     }
-    auto* pCurrentTable = &table.as_table();
+    toml* pCurrentTable = &table;
     for (size_t i = 0; i < keyViews.size() - 1; i++) {
-        auto& subValue = (*pCurrentTable)[std::string(keyViews[i])];
-        if (!subValue.is_table()) {
-            subValue = toml::table{};
+        toml& subValue = (*pCurrentTable)[keyViews[i]];
+        if (!subValue.isTable()) {
+            subValue = toml::table();
         }
-        pCurrentTable = &subValue.as_table();
+        pCurrentTable = &subValue;
     }
-    auto& lastVal = (*pCurrentTable)[std::string(keyViews.back())];
-    const auto orgComments = lastVal.comments();
-    lastVal = toml::basic_value<TC>{ value };
-    lastVal.comments() = orgComments;
+    // toml::operator= 自动保留原有前置注释、行尾注释及键空白格式
+    (*pCurrentTable)[keyViews.back()] = value;
     return table;
 }
 
-template<typename TC,typename T>
-toml::basic_value<TC>& insertToml(toml::basic_value<TC>& table, std::string_view path, const T& value)
+template<typename T>
+toml& insertToml(toml& table, std::string_view path, const T& value)
 {
     const std::vector<std::string_view> keyViews = splitStringView(path, '.');
     return insertToml(table, keyViews, value);
 }
 
 
-template<typename TC>
-auto toml2Json(const toml::basic_value<TC>& value)
-    -> std::conditional_t<std::is_same_v<TC, toml::ordered_type_config>, ordered_json, json>
+template<typename RetJsonType = json>
+RetJsonType toml2Json(const toml& value)
 {
-    using RetJsonType = std::conditional_t<std::is_same_v<TC, toml::ordered_type_config>, ordered_json, json>;
-    if (value.is_table()) {
+    if (value.isTable()) {
         RetJsonType resultMap = RetJsonType::object();
-        for (const auto& [key, val] : value.as_table()) {
-            resultMap[key] = toml2Json(val);
+        for (const auto [key, val] : value.tableItems()) {
+            resultMap[key.name()] = toml2Json<RetJsonType>(val);
         }
         return resultMap;
     }
-    else if (value.is_array()) {
+    else if (value.isArray()) {
         RetJsonType resultVec = RetJsonType::array();
-        for (const auto& elem : value.as_array()) {
-            resultVec.push_back(toml2Json(elem));
+        for (const auto& elem : value) {
+            resultVec.push_back(toml2Json<RetJsonType>(elem));
         }
         return resultVec;
     }
-    else if (value.is_boolean()) {
-        return value.as_boolean();
+    else if (value.isBoolean()) {
+        return value.asBoolean();
     }
-    else if (value.is_integer()) {
-        return value.as_integer();
+    else if (value.isInteger()) {
+        return value.asInteger();
     }
-    else if (value.is_floating()) {
-        return value.as_floating();
+    else if (value.isFloat()) {
+        return value.asFloat();
     }
-    else if (value.is_string()) {
-        return value.as_string();
+    else if (value.isString()) {
+        return value.asString();
     }
     throw std::runtime_error(gppTr("toml2Json", "不支持的 TOML 数据类型: %1")
-        .arg(toml::to_string(value.type()))
+        .arg(value.kindName())
         .toStdString());
 }
 
+ordered_json toml2OrderedJson(const toml& value);
+
 template<typename JsonType>
-auto json2Toml(const JsonType& value)
-    -> std::conditional_t<std::is_same_v<JsonType, ordered_json>, toml::ordered_value, toml::value>
+toml json2Toml(const JsonType& value, tomlkit::TableStyle objectTableStyle = tomlkit::TableStyle::Inline)
 {
-    using RetTomlType = std::conditional_t<std::is_same_v<JsonType, ordered_json>, toml::ordered_value, toml::value>;
     if (value.is_object()) {
-        typename RetTomlType::table_type table;
+        toml table = (objectTableStyle == tomlkit::TableStyle::Inline)
+            ? toml::inlineTable()
+            : toml::table(objectTableStyle);
         for (auto it = value.cbegin(); it != value.cend(); ++it) {
             if (!it.value().is_null()) {
-                table.emplace(it.key(), json2Toml(it.value()));
+                table[it.key()] = json2Toml(it.value(), tomlkit::TableStyle::Inline);
             }
         }
-        return RetTomlType{ std::move(table) };
+        return table;
     }
     else if (value.is_array()) {
-        typename RetTomlType::array_type array;
+        toml array = toml::array();
         for (const auto& child : value) {
             if (!child.is_null()) {
-                array.push_back(json2Toml(child));
+                array.push_back(json2Toml(child, tomlkit::TableStyle::Inline));
             }
         }
-        return RetTomlType{ std::move(array) };
+        return array;
     }
     else if (value.is_boolean()) {
-        return value.template get<bool>();
+        return toml(value.template get<bool>());
     }
     else if (value.is_number_integer()) {
-        return value.template get<std::int64_t>();
+        return toml(value.template get<std::int64_t>());
+    }
+    else if (value.is_number_unsigned()) {
+        return toml(value.template get<std::uint64_t>());
     }
     else if (value.is_number_float()) {
-        return value.template get<double>();
+        return toml(value.template get<double>());
     }
     else if (value.is_string()) {
-        return value.template get<std::string>();
+        return toml(value.template get<std::string>());
     }
     throw std::runtime_error(gppTr("json2Toml", "不支持的 JSON 数据类型: %1")
         .arg(value.type_name())

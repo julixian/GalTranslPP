@@ -40,13 +40,14 @@ import PythonManager;
 using namespace gpp;
 
 MainWindow::MainWindow(QWidget* parent)
-    : ElaWindow(parent)
+    : ElaWindow(parent), m_globalConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document()))
 {
     if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
-            m_globalConfig = gpp::uoparseToml(fs::path(L"BaseConfig/GlobalConfig.toml"));
+            *m_globalConfig = parseToml(fs::path(L"BaseConfig/GlobalConfig.toml"));
         }
         catch (...) {
+            *m_globalConfig = tomlkit::Item::document();
 #ifdef Q_OS_WIN
             MessageBoxW(nullptr, tr("解析错误").toStdWString().c_str(), tr("基本配置文件不符合 toml 规范！").toStdWString().c_str(), MB_ICONERROR);
 #endif
@@ -101,7 +102,7 @@ MainWindow::MainWindow(QWidget* parent)
     auto closeCallback = [=, this](bool closeByMessageCard)
         {
             if (
-                !(toml::find_or(m_globalConfig, "allowCloseWhenRunning", false)) &&
+                !(tomlkit::findOr(*m_globalConfig, "allowCloseWhenRunning", false)) &&
                 std::ranges::any_of(m_projectPages, [](const auto& page)
                     {
 						if (page->getIsRunning()) {
@@ -149,13 +150,13 @@ MainWindow::MainWindow(QWidget* parent)
 
 ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)
 {
-    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(projectDir, m_globalConfig, this));
+    QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(projectDir, *m_globalConfig, this));
     connect(newPage.get(), &ProjectSettingsPage::finishTranslatingSignal, this, &MainWindow::onFinishTranslating);
     connect(newPage.get(), &ProjectSettingsPage::changeProjectNameSignal, this, [=, this](const QString& nodeKey, const QString& newProjectName)
         {
             setNavigationNodeTitle(nodeKey, newProjectName);
         });
-    if (!toml::find_or(m_globalConfig, "lazyProjectInitialization", true)) {
+    if (!tomlkit::findOr(*m_globalConfig, "lazyProjectInitialization", true)) {
         newPage->initialize();
     }
     m_projectPages.push_back(newPage);
@@ -193,12 +194,12 @@ void MainWindow::initWindow()
     setFocusPolicy(Qt::StrongFocus);
     setWindowIcon(QIcon(":/GPPGUI/Resource/images/julixian_s.jpeg"));
 
-    const int width = toml::find_or(m_globalConfig, "windowWidth", 1308);
-    const int height = toml::find_or(m_globalConfig, "windowHeight", 676);
+    const int width = tomlkit::findOr(*m_globalConfig, "windowWidth", 1308);
+    const int height = tomlkit::findOr(*m_globalConfig, "windowHeight", 676);
     m_windowSize = QSize(width, height);
     resize(m_windowSize);
-    int x = toml::find_or(m_globalConfig, "windowPosX", 84);
-    int y = toml::find_or(m_globalConfig, "windowPosY", 53);
+    int x = tomlkit::findOr(*m_globalConfig, "windowPosX", 84);
+    int y = tomlkit::findOr(*m_globalConfig, "windowPosY", 53);
     if (x < 0)x = 0;
     if (y < 0)y = 0;
     move(x, y);
@@ -223,7 +224,7 @@ void MainWindow::initEdgeLayout()
     menuBar->setFixedHeight(30);
     QWidget* customWidget = new QWidget(this);
     int customWidgetWidth = 595;
-    if (const std::string language = toml::find_or(m_globalConfig, "language", "zh_CN"); language == "en") {
+    if (const std::string language = tomlkit::findOr(*m_globalConfig, "language", "zh_CN"); language == "en") {
         customWidgetWidth = 490;
     }
     customWidget->setFixedWidth(customWidgetWidth);
@@ -252,7 +253,7 @@ void MainWindow::initEdgeLayout()
     statusBar->addWidget(statusText);
     this->setStatusBar(statusBar);
 
-    m_updateChecker = new UpdateChecker(m_globalConfig, statusText, this);
+    m_updateChecker = new UpdateChecker(*m_globalConfig, statusText, this);
 
     //停靠窗口
     ElaDockWidget* updateDockWidget = new ElaDockWidget(tr("更新内容"), this);
@@ -261,13 +262,13 @@ void MainWindow::initEdgeLayout()
     resizeDocks({ updateDockWidget }, { 200 }, Qt::Horizontal);
     std::string gppversion(GPPVERSION);
     std::erase_if(gppversion, [](char ch) { return ch == '.'; });
-    updateDockWidget->setVisible(toml::find_or(m_globalConfig, "showDockWidget", gppversion, true));
-    insertToml(m_globalConfig, "showDockWidget", toml::ordered_table{});
-    insertToml(m_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
+    updateDockWidget->setVisible(tomlkit::findOr(*m_globalConfig, "showDockWidget", gppversion, true));
+    insertToml(*m_globalConfig, "showDockWidget", tomlkit::Item::table());
+    insertToml(*m_globalConfig, "showDockWidget." + gppversion, updateDockWidget->isVisible());
     connect(updateDockWidget, &ElaDockWidget::visibilityChanged, this, [=, this](bool visible)
         {
-            insertToml(m_globalConfig, "showDockWidget", toml::ordered_table{});
-            insertToml(m_globalConfig, "showDockWidget." + gppversion, visible);
+            insertToml(*m_globalConfig, "showDockWidget", tomlkit::Item::table());
+            insertToml(*m_globalConfig, "showDockWidget." + gppversion, visible);
         });
 
     // 右键菜单
@@ -297,14 +298,14 @@ void MainWindow::initEdgeLayout()
 
 void MainWindow::initContent()
 {
-    m_homePage = new HomePage(m_globalConfig, this);
+    m_homePage = new HomePage(*m_globalConfig, this);
     m_defaultPromptPage = new DefaultPromptsPage(this);
 
-    m_commonPreDictsPage = new CommonNormalDictsPage("pre", m_globalConfig, this);
-    m_commonGptDictsPage = new CommonGptDictsPage(m_globalConfig, this);
-    m_commonPostDictsPage = new CommonNormalDictsPage("post", m_globalConfig, this);
+    m_commonPreDictsPage = new CommonNormalDictsPage("pre", *m_globalConfig, this);
+    m_commonGptDictsPage = new CommonGptDictsPage(*m_globalConfig, this);
+    m_commonPostDictsPage = new CommonNormalDictsPage("post", *m_globalConfig, this);
 
-    m_appSettingsPage = new AppSettingsPage(m_globalConfig, this);
+    m_appSettingsPage = new AppSettingsPage(*m_globalConfig, this);
 
     addPageNode(tr("主页"), m_homePage, ElaIconType::House);
 
@@ -325,10 +326,10 @@ void MainWindow::initContent()
     connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
 
     addExpanderNode(tr("项目管理"), m_projectExpanderKey, ElaIconType::BriefcaseBlank);
-    const auto projects = toml::find_or_default<toml::array>(m_globalConfig, "projects");
+    const auto projects = tomlkit::findArrayOrEmpty(*m_globalConfig, "projects");
     for (const auto& project : projects) {
-            if (project.is_string()) {
-                const fs::path projectDir(ascii2Wide(project.as_string()));
+            if (project.isString()) {
+                const fs::path projectDir(ascii2Wide(project.asString()));
                 if (!fs::exists(projectDir / L"Config.toml")) {
                     continue;
                 }
@@ -369,7 +370,7 @@ void MainWindow::initContent()
         });
 
     m_clearLogShortcut = new QShortcut(this);
-    const std::string clearLogShortcut = toml::find_or(m_globalConfig, "clearLogShortcut", "Ctrl+L");
+    const std::string clearLogShortcut = tomlkit::findOr(*m_globalConfig, "clearLogShortcut", "Ctrl+L");
     if (const QKeySequence keySequence = QKeySequence::fromString(QString::fromStdString(clearLogShortcut), QKeySequence::PortableText);
         !keySequence.isEmpty())
     {
@@ -400,12 +401,12 @@ void MainWindow::onClearLog(bool forceClear) {
 void MainWindow::onNewProjectTriggered()
 {
     const QString parentPathQStr = QFileDialog::getExistingDirectory(this, tr("选择新项目的存放位置"),
-        QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectPath", "./Projects")));
+        QString::fromStdString(tomlkit::findOr(*m_globalConfig, "lastProjectPath", "./Projects")));
     if (parentPathQStr.isEmpty()) {
         return;
     }
 
-    insertToml(m_globalConfig, "lastProjectPath", parentPathQStr.toStdString());
+    insertToml(*m_globalConfig, "lastProjectPath", parentPathQStr.toStdString());
 
     QString projectName;
     GppInputDialog inputDialog(tr("请输入项目名称"), tr("新建项目"), projectName, this);
@@ -467,29 +468,29 @@ void MainWindow::onNewProjectTriggered()
             fs::copy(L"BaseConfig/Prompt.toml", newProjectDir / L"Prompt.toml", fs::copy_options::overwrite_existing);
         }
 
-        toml::ordered_value configData = gpp::uoparseToml(newProjectDir / L"Config.toml");
+        toml configData = parseToml(newProjectDir / L"Config.toml");
 
         auto addCommonDictsToProjectConfig = [&](const std::string& projectDictStdName, const std::string& globalConfigKey, const std::string& projectConfigKey)
             {
-                auto& globalConfigDictNames = m_globalConfig[globalConfigKey]["dictNames"];
+                auto& globalConfigDictNames = (*m_globalConfig)[globalConfigKey]["dictNames"];
                 auto& projectDictFileNames = configData["dictionary"][projectConfigKey];
-                if (!globalConfigDictNames.is_array()) {
-                    globalConfigDictNames = toml::array{};
+                if (!globalConfigDictNames.isArray()) {
+                    globalConfigDictNames = tomlkit::Item::array();
                 }
 
-                projectDictFileNames = toml::array{};
+                projectDictFileNames = tomlkit::Item::array();
                 projectDictFileNames.push_back(projectDictStdName);
-                for (const auto& globalConfigDictName : globalConfigDictNames.as_array()) {
-                    if (!globalConfigDictName.is_string()) {
+                for (const auto& globalConfigDictName : globalConfigDictNames) {
+                    if (!globalConfigDictName.isString()) {
                         continue;
                     }
-                    if (!toml::find_or(m_globalConfig, globalConfigKey, "spec", globalConfigDictName.as_string(), "defaultOn", true)) {
+                    if (!tomlkit::findOr(*m_globalConfig, globalConfigKey, "spec", globalConfigDictName.asString(), "defaultOn", true)) {
                         continue;
                     }
-                    const std::string globalConfigDictFileName = globalConfigDictName.as_string() + ".toml";
-                    if (std::ranges::any_of(projectDictFileNames.as_array(), [&](const auto& projectDictFileName)
+                    const std::string globalConfigDictFileName = globalConfigDictName.asString() + ".toml";
+                    if (std::ranges::any_of(projectDictFileNames, [&](const auto& projectDictFileName)
 	                    {
-                            return projectDictFileName.is_string() && projectDictFileName.as_string() == globalConfigDictFileName;
+                            return projectDictFileName.isString() && projectDictFileName.asString() == globalConfigDictFileName;
 	                    }))
                     {
                         continue;
@@ -502,7 +503,7 @@ void MainWindow::onNewProjectTriggered()
         addCommonDictsToProjectConfig("ProjGptDict.toml", "commonGptDicts", "gptDicts");
         addCommonDictsToProjectConfig("ProjPostDict.toml", "commonPostDicts", "postDicts");
 
-        atomicOutputFile(newProjectDir / L"Config.toml", toml::format(configData));
+        atomicOutputFile(newProjectDir / L"Config.toml", tomlkit::format(configData));
     }
     catch (...) {
         ElaMessageBar::error(ElaMessageBarType::TopRight, tr("创建失败"), tr("无法写入配置文件！"), 3000);
@@ -520,11 +521,11 @@ void MainWindow::onNewProjectTriggered()
 void MainWindow::onOpenProjectTriggered()
 {
     const QString projectPath = QFileDialog::getExistingDirectory(this, tr("选择已有项目的文件夹路径"),
-        QString::fromStdString(toml::find_or(m_globalConfig, "lastProjectPath", "./Projects")));
+        QString::fromStdString(tomlkit::findOr(*m_globalConfig, "lastProjectPath", "./Projects")));
     if (projectPath.isEmpty()) {
         return;
     }
-    insertToml(m_globalConfig, "lastProjectPath", projectPath.toStdString());
+    insertToml(*m_globalConfig, "lastProjectPath", projectPath.toStdString());
     const fs::path projectDir(projectPath.toStdWString());
     if (!fs::exists(projectDir / L"Config.toml")) {
         ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("打开失败"), tr("目录下不存在 Config.toml 文件！"), 3000);
@@ -693,18 +694,18 @@ void MainWindow::onCloseWindowClicked(bool restart)
     m_commonGptDictsPage->apply2Config();
     m_commonPostDictsPage->apply2Config();
 
-    toml::array projects;
+    tomlkit::Item projects = tomlkit::Item::array();
     for (const auto& projectPage : m_projectPages) {
         projectPage->apply2Config();
         projects.push_back(wide2Ascii(projectPage->getProjectDir()));
     }
-    insertToml(m_globalConfig, "projects", projects);
+    insertToml(*m_globalConfig, "projects", projects);
 
     m_appSettingsPage->apply2Config();
-    insertToml(m_globalConfig, "clearLogShortcut",
+    insertToml(*m_globalConfig, "clearLogShortcut",
         m_clearLogShortcut->key().toString(QKeySequence::PortableText).toStdString());
 
-    atomicOutputFile(L"BaseConfig/GlobalConfig.toml", toml::format(m_globalConfig));
+    atomicOutputFile(L"BaseConfig/GlobalConfig.toml", tomlkit::format(*m_globalConfig));
 
     if (m_updateChecker->shouldStartUpdater()) {
         QStringList arguments;

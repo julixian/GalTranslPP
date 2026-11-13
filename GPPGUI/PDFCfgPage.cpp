@@ -14,7 +14,7 @@ import Tool;
 
 using namespace gpp;
 
-PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
+PDFCfgPage::PDFCfgPage(tomlkit::Item& projectConfig, QWidget* parent) : BasePage(parent), m_projectConfig(projectConfig)
 {
 	setWindowTitle(tr("PDF 输出配置"));
 	setContentsMargins(30, 15, 15, 0);
@@ -24,7 +24,7 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	QVBoxLayout* mainLayout = new QVBoxLayout(centerWidget);
 
 	// 输出双语翻译文件
-	bool outputDual = toml::find_or(m_projectConfig, "plugins", "PDF", "bilingualOutput", true);
+	bool outputDual = tomlkit::findOr(m_projectConfig, "plugins", "PDF", "bilingualOutput", true);
 	ElaScrollPageArea* outputArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* outputLayout = new QHBoxLayout(outputArea);
 	ElaText* outputText = new ElaText(tr("输出双语翻译文件"), outputArea);
@@ -38,7 +38,7 @@ PDFCfgPage::PDFCfgPage(toml::ordered_value& projectConfig, QWidget* parent) : Ba
 	mainLayout->addWidget(outputArea);
 
 	// BabelDOC 目标语言码，影响 PDF 回注时的字体和排版。
-	const std::string babeldocLangOut = toml::find_or(m_projectConfig, "plugins", "PDF", "babeldocLangOut", "zh-CN");
+	const std::string babeldocLangOut = tomlkit::findOr(m_projectConfig, "plugins", "PDF", "babeldocLangOut", "zh-CN");
 	ElaScrollPageArea* babeldocLangOutArea = new ElaScrollPageArea(centerWidget);
 	QHBoxLayout* babeldocLangOutLayout = new QHBoxLayout(babeldocLangOutArea);
 	GppDoubleText* babeldocLangOutText = new GppDoubleText(tr("BabelDOC 目标语言码"), 16,

@@ -53,20 +53,23 @@ transEngine = "ForGalJson"
 # "SkipTrans"，有 dprerun 和 prerun 阶段，区别仅在于执行时机不同，默认开启为 prerun 阶段
 # "TextFull2Half"，有 dprerun、prerun、postrun、dpostrun 阶段，区别在于 prerun 和 postrun 会跳过 <br> 和 <tab> 标签，默认开启为 dpostrun 阶段
 # "TextLinebreakFix"，只有 dpostrun 阶段模式，默认开启为 dpostrun 阶段模式
-# 使用 lua/py 脚本作为自定义扩展插件的加载格式为 "path/to/script.lua" / "path/to/script.py"
-# 如 "Lua/SampleTextPlugin.lua"
-# %PROJECT_DIR% 为代表当前项目路径字符串的宏
-# 插件中必须定义 init 函数，具体示例详见 git 仓库中的 Example 文件夹中的 SampleTextPlugin
 textPlugins = [
   # 以 '>' 开头表示此插件不生效，和注释掉一个效果
   ">SkipTrans",                # 等效于 ">prerun:SkipTrans"
-  #">dpostrun:%PROJECT_DIR%/CheckTranslationMixup.py", # 复制 PythonSample 中的同名脚本到项目目录，检查疑似串行
   #">TextLinebreakFix",        # 等效于 "dpostrun:TextLinebreakFix"
   #">postrun:TextFull2Half",   # 改到执行译后字典替换之前的时机转换
   # 这里虽然 TextLinebreakFix 在 TextFull2Half 之前
   # 但由于 postrun 阶段早于 dpostrun 阶段，所以还是 TextFull2Half 先执行，译后格式化完毕后再执行 TextLinebreakFix
   #">dpostrun:TextFull2Half"   # 如果有特殊原因也可以把插件在不同时机再执行一遍
   # 那么此时 dpostrun 阶段的两个插件会按顺序执行，即先执行 TextLinebreakFix，再执行 TextFull2Half
+]
+
+# 使用 lua/py 脚本作为自定义扩展插件的加载格式为 "path/to/script.lua" / "path/to/script.py"
+# 如 "Lua/SampleTextPlugin.lua"
+# %PROJECT_DIR% 为代表当前项目路径字符串的宏
+# 插件中必须定义 init 函数，具体示例详见 git 仓库中的 Example 文件夹中的 SampleTextPlugin
+customTextPlugins = [
+  #"%PROJECT_DIR%/CheckTranslationMixup.py", # 复制 PythonSample 中的同名脚本到项目目录，检查疑似串行
 ]
 
 [plugins.NormalJson]

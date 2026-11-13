@@ -1,13 +1,13 @@
 [package]
-namespace = "gpp"
-name = "core"
+namespace = "julixian"
+name = "gpp-core"
 description = "GalTransl++ core library"
 
 [dependencies]
-tomlkit.core = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
+julixian.tomlkitpp = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 
 [build-dependencies]
-gpp.build = { path = "../mcpp-build-scripts/gpp-build" }
+julixian.gpp-build = { path = "../mcpp-build-scripts/gpp-build" }
 
 [build]
 default-profile = "release"

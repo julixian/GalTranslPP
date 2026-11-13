@@ -1,19 +1,19 @@
 [package]
-namespace = "gpp"
-name = "gui"
+namespace = "julixian"
+name = "gpp-gui"
 
 [dependencies]
-gpp.core = { path = "../GalTranslPP" }
-gpp.version = { path = "../GPPVersion" }
-gpp.updater = { path = "../Updater", artifacts = ["Updater"] }
-tomlkit.core = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
+julixian.gpp-core = { path = "../GalTranslPP" }
+julixian.gpp-version = { path = "../GPPVersion" }
+julixian.gpp-updater = { path = "../Updater", artifacts = ["Updater"] }
+julixian.tomlkitpp = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 
 [build-dependencies]
-gpp.build = { path = "../mcpp-build-scripts/gpp-build" }
+julixian.gpp-build = { path = "../mcpp-build-scripts/gpp-build" }
 
 [target.windows.build-dependencies]
-gpp.vcpkg-link-libs = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
-gpp.runtime-stage = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
+julixian.gpp-vcpkg-link-libs = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
+julixian.gpp-runtime-stage = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
 
 [build]
 default-profile = "release"

@@ -1,6 +1,6 @@
 [package]
-namespace = "gpp"
-name = "runtime-stage"
+namespace = "julixian"
+name = "gpp-runtime-stage"
 version = "1.0.0"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"

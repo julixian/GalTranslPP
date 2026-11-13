@@ -1,6 +1,6 @@
 [package]
-namespace = "gpp"
-name = "vcpkg-link-libs"
+namespace = "julixian"
+name = "gpp-vcpkg-link-libs"
 version = "1.0.0"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"

@@ -79,7 +79,7 @@ gpp::deps::vcpkg::Prefix configureVcpkg(const char* linkTarget = nullptr) {
     mcpp::include_dir(dependencies.include.c_str());
     if (linkTarget) {
         // 安装完成后收集所有库，不再维护库名列表；只加入最终程序的链接输入。
-        const fs::path collector = mcpp::dep_bin("gpp.vcpkg-link-libs", "vcpkg-link-libs");
+        const fs::path collector = mcpp::dep_bin("julixian.gpp-vcpkg-link-libs", "vcpkg-link-libs");
         const fs::path librarian = dependencies.librarian;
         const auto output = fs::path(mcpp::out_dir()) / "vcpkg-libs.lib";
         mcpp::action action;
@@ -216,7 +216,7 @@ struct ReleasePublisher {
 
     void copyRuntimeLibraries(std::string_view member, const fs::path& destinationDirectory,
                                 std::string_view destinationName) {
-        const std::string runtimeStageExecutable = mcpp::dep_bin("gpp.runtime-stage", "runtime-stage");
+        const std::string runtimeStageExecutable = mcpp::dep_bin("julixian.gpp-runtime-stage", "runtime-stage");
         if (runtimeStageExecutable.empty()) throw std::runtime_error("未声明 runtime-stage 宿主工具");
         const auto manifestFile = (releaseDirectory / ".mcpp-runtime" /
             (std::string(member) + "-" + std::string(destinationName) + ".txt")).generic_string();
@@ -262,7 +262,7 @@ struct ReleasePublisher {
 
     void copyOpenccShare(std::string_view member, std::string_view destinationName,
                            const fs::path& releaseDestinationDirectory) {
-        const std::string runtimeStageExecutable = mcpp::dep_bin("gpp.runtime-stage", "runtime-stage");
+        const std::string runtimeStageExecutable = mcpp::dep_bin("julixian.gpp-runtime-stage", "runtime-stage");
         if (runtimeStageExecutable.empty()) throw std::runtime_error("未声明 runtime-stage 宿主工具");
         const fs::path sourceDirectory = vcpkgInstallationDirectory / "share" / "opencc";
         const fs::path destinationDirectory = releaseDestinationDirectory / "BaseConfig" / "opencc";

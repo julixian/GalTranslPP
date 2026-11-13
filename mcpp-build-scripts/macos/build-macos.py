@@ -300,7 +300,7 @@ def main():
         writeLocalConfig(qt, pythonRoot, dependencies, ela)
     if args.prepareOnly:
         return
-    for member in ("GPPGUI", "GPPCLI"):
+    for member in ("julixian.gpp-gui", "julixian.gpp-cli"):
         try:
             run([mcpp, "build", "-p", member, "--profile", kConfig["build"]["profile"],
                  "--toolchain", "llvm@" + kConfig["tools"]["llvm"],

@@ -1,6 +1,6 @@
 [package]
-namespace = "gpp"
-name = "version"
+namespace = "julixian"
+name = "gpp-version"
 
 [build]
 default-profile = "release"

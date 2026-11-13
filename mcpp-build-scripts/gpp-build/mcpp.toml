@@ -1,6 +1,6 @@
 [package]
-namespace = "gpp"
-name = "build"
+namespace = "julixian"
+name = "gpp-build"
 version = "1.0.0"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"

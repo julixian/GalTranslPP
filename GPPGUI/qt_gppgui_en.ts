@@ -2291,7 +2291,7 @@ sk-...</translation>
 <context>
     <name>GPPGUI.GPPGUI</name>
     <message>
-        <location filename="GPPGUI.cpp" line="+136"/>
+        <location filename="GPPGUI.cpp" line="+137"/>
         <source>Updater 更新错误</source>
         <translation>Updater update error</translation>
     </message>
@@ -2302,7 +2302,7 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <location line="+74"/>
+        <location line="+87"/>
         <location line="+44"/>
         <source>错误</source>
         <translation>Error</translation>
@@ -2392,7 +2392,7 @@ Issue summary:</translation>
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="HomePage.cpp" line="+287"/>
+        <location filename="HomePage.cpp" line="+353"/>
         <location line="+10"/>
         <source>主页</source>
         <translation>Home Page</translation>
@@ -2456,7 +2456,7 @@ Issue summary:</translation>
         <translation>Project %1 is running; stop it first!</translation>
     </message>
     <message>
-        <location line="+31"/>
+        <location filename="GPPGUI.cpp" line="-90"/>
         <source>成功</source>
         <translation>Success</translation>
     </message>
@@ -2476,7 +2476,7 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location line="+92"/>
+        <location filename="Mainwindow.cpp" line="+116"/>
         <location line="+176"/>
         <source>新建项目</source>
         <translation>New</translation>

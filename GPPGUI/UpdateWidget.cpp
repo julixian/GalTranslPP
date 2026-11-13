@@ -21,6 +21,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
         "1. 将 toml 解析器换为自研的 tomlkitpp，大幅优化了格式保留。"
         "现在对于 GUI，只要是在数组/表内部的注释，即使后方没有非注释的项也能保留了。"
         "对于 CLI，写入问题概览的文件时间不会再修改设置文件的其余部分格式了。",
+        "2. [GUI] 修复『初始化成功』提示被截断的 bug，修正了一下主页图片位置",
     };
 
     mainLayout->addWidget(updateTitle);

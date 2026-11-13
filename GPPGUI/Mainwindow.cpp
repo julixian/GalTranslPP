@@ -136,16 +136,6 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_aboutDialog->setDownloadButtonEnabled(hasNewVersion && m_updateChecker->shouldDownloadButtonEnabled());
         });
-
-    // 初始化提示
-    ElaMessageBar::success(ElaMessageBarType::BottomRight, tr("成功"), tr("初始化成功!"), 2000);
-    if (fs::exists(L"cache")) {
-        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("检测到异常退出"),
-            tr("请注意备份相关翻译缓存"), 3000);
-    }
-    else {
-        fs::create_directories(L"cache");
-    }
 }
 
 ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)

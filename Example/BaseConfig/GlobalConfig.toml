@@ -129,6 +129,16 @@ openMode = 1
 
 [[popularCards]]
 cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
+cardPixmap = ':/GPPGUI/Resource/images/lep.png'
+detailedText = 'Windows 区域、代码页与时区模拟工具（支持 x86/x64）'
+fromLocal = false
+interactiveTips = 'julixian'
+pathOrUrl = 'https://github.com/julixian/LocaleEmulatorPlus'
+subTitle = '转区工具'
+title = 'LocaleEmulatorPlus'
+
+[[popularCards]]
+cardFloatPixmap = ':/GPPGUI/Resource/images/IARC_7+.svg.png'
 cardPixmap = ':/GPPGUI/Resource/images/satan53x.jpg'
 detailedText = '从GalGame脚本提取和导入文本'
 fromLocal = false

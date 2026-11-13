@@ -9,11 +9,13 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QIcon>
+#include <QImage>
+#include <QPainter>
+#include <QPainterPath>
 #include <QUrl>
 
 #include "ElaAcrylicUrlCard.h"
 #include "ElaFlowLayout.h"
-#include "ElaImageCard.h"
 #include "ElaPopularCard.h"
 #include "ElaScrollArea.h"
 #include "ElaText.h"
@@ -33,7 +35,16 @@ namespace
         const char* floatPixmap;
     };
 
-    constexpr std::array<DefaultPopularCard, 6> kDefaultPopularCards = {
+    constexpr std::array<DefaultPopularCard, 7> kDefaultPopularCards = {
+        DefaultPopularCard{
+            "https://github.com/julixian/LocaleEmulatorPlus",
+            "LocaleEmulatorPlus",
+            "转区工具",
+            ":/GPPGUI/Resource/images/lep.png",
+            "julixian",
+            "Windows 区域、代码页与时区模拟工具（支持 x86/x64）",
+            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
+        },
         DefaultPopularCard{
             "https://github.com/satan53x/SExtractor",
             "SExTractor",
@@ -109,7 +120,63 @@ namespace
         return card;
     }
 
-    ElaImageCard* createHeroCard(QWidget* parent)
+    class HeroImageCard final : public QWidget
+    {
+    public:
+        explicit HeroImageCard(QImage image, QWidget* parent = nullptr)
+            : QWidget(parent), m_image(std::move(image))
+        {
+            setMinimumSize(350, 260);
+        }
+
+        void setBorderRadius(int borderRadius) noexcept
+        {
+            m_borderRadius = borderRadius;
+            update();
+        }
+
+    protected:
+        void paintEvent(QPaintEvent* event) override
+        {
+            Q_UNUSED(event);
+            if (m_image.isNull() || width() <= 0 || height() <= 0) {
+                return;
+            }
+
+            QPainter painter(this);
+            painter.save();
+            painter.setPen(Qt::NoPen);
+            painter.setRenderHints(QPainter::SmoothPixmapTransform | QPainter::Antialiasing);
+
+            QPainterPath path;
+            path.addRoundedRect(rect(), m_borderRadius, m_borderRadius);
+            painter.setClipPath(path);
+
+            const qreal cardAspect = static_cast<qreal>(width()) / height();
+            const qreal imageAspect = static_cast<qreal>(m_image.width()) / m_image.height();
+            int srcWidth = m_image.width();
+            int srcHeight = m_image.height();
+            if (cardAspect < imageAspect) {
+                srcWidth = qRound(m_image.width() * cardAspect / imageAspect);
+            }
+            else {
+                srcHeight = qRound(m_image.height() * imageAspect / cardAspect);
+            }
+
+            const int srcX = (m_image.width() - srcWidth) / 2;
+            // 原图少女头部紧贴顶端，ElaImageCard 固定 50% 垂直居中裁剪会在宽屏下切掉上半张脸；偏上取景以完整露出头部与面部。
+            constexpr qreal kVerticalCropRatio = 0.06;
+            const int srcY = qRound((m_image.height() - srcHeight) * kVerticalCropRatio);
+            painter.drawImage(rect(), m_image, QRect(srcX, srcY, srcWidth, srcHeight));
+            painter.restore();
+        }
+
+    private:
+        QImage m_image;
+        int m_borderRadius = 10;
+    };
+
+    QWidget* createHeroCard(QWidget* parent)
     {
         ElaText* titleText = new ElaText("GalTransl++ GUI", parent);
         titleText->setTextPixelSize(35);
@@ -123,10 +190,9 @@ namespace
         titleLayout->addWidget(titleText);
         titleLayout->addWidget(descriptionText);
 
-        ElaImageCard* backgroundCard = new ElaImageCard(parent);
+        HeroImageCard* backgroundCard = new HeroImageCard(QImage(":/GPPGUI/Resource/images/homebackground.png"), parent);
         backgroundCard->setBorderRadius(10);
         backgroundCard->setFixedHeight(400);
-        backgroundCard->setCardImage(QImage(":/GPPGUI/Resource/images/homebackground.png"));
 
         ElaScrollArea* cardScrollArea = new ElaScrollArea(parent);
         cardScrollArea->setWidgetResizable(true);

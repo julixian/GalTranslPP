@@ -12,6 +12,7 @@
 
 #include "ElaActionCommander.h"
 #include "ElaApplication.h"
+#include "ElaMessageBar.h"
 #include "Mainwindow.h"
 
 #ifdef Q_OS_WIN
@@ -221,7 +222,20 @@ int main(int argc, char* argv[])
         app.setFont(uiFont);
 
         MainWindow w;
+        const bool hasAbnormalExit = fs::exists(L"cache");
+        if (!hasAbnormalExit) {
+            fs::create_directories(L"cache");
+        }
         w.show();
+        // 排到首轮事件循环、窗口完成边框样式与客户区尺寸结算后再弹出提示条，避免底部被裁切。
+        QTimer::singleShot(0, &w, [&w, hasAbnormalExit]()
+            {
+                ElaMessageBar::success(ElaMessageBarType::BottomRight, MainWindow::tr("成功"), MainWindow::tr("初始化成功!"), 2000, &w);
+                if (hasAbnormalExit) {
+                    ElaMessageBar::warning(ElaMessageBarType::TopRight, MainWindow::tr("检测到异常退出"),
+                        MainWindow::tr("请注意备份相关翻译缓存"), 3000, &w);
+                }
+            });
         if (checkUpdate) {
             QTimer::singleShot(2000, &w, &MainWindow::checkUpdate);
         }

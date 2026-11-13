@@ -18,7 +18,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 支持向 gemini 模型原生传递 xhigh 思考以支持 gemini-4-hydrogen 的新思考挡位",
+        "1. 将 toml 解析器换为自研的 tomlkitpp，大幅优化了格式保留。"
+        "现在对于 GUI，只要是在数组/表内部的注释，即使后方没有非注释的项也能保留了。"
+        "对于 CLI，写入问题概览的文件时间不会再修改设置文件的其余部分格式了。",
     };
 
     mainLayout->addWidget(updateTitle);

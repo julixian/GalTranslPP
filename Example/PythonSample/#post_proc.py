@@ -18,7 +18,7 @@ def waitForExit(sec):
 
 def main():
     sextractorPath = Path(r"D:\GALGAME\GALGAMETOOLS\AIGC\GalTransl\GalTransl\useful_tools\SExtractor\run.py")
-    patchPackPath = Path("#g4ar补丁")
+    patchPackPath = Path("#g4c补丁")
     projectPackPath = Path(r"D:\VSProj\JLXHP\x86\Release\PrincessStyle")
     projectName = projectPackPath.name
     packScriptPath = projectPackPath / "pack.py"

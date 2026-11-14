@@ -26,6 +26,8 @@
 
 #include "ProjectCachePage_p.h"
 
+import Tool;
+
 using namespace ProjectCachePagePrivate;
 
 ProjectCachePage::ProjectCachePage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent)

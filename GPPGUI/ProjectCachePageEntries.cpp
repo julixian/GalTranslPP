@@ -16,6 +16,8 @@
 #include "ElaText.h"
 #include "ElaToolButton.h"
 
+import Tool;
+
 using namespace ProjectCachePagePrivate;
 
 void ProjectCachePage::renderEntries()

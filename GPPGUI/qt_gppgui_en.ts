@@ -3497,7 +3497,7 @@ Cache: %4</translation>
 <context>
     <name>ProjectCachePage</name>
     <message>
-        <location filename="ProjectCachePage.cpp" line="+34"/>
+        <location filename="ProjectCachePage.cpp" line="+36"/>
         <source>缓存管理</source>
         <translation>Cache</translation>
     </message>
@@ -3706,7 +3706,7 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+321"/>
-        <location filename="ProjectCachePageEntries.cpp" line="+44"/>
+        <location filename="ProjectCachePageEntries.cpp" line="+46"/>
         <location line="+44"/>
         <source>未选择缓存文件</source>
         <translation>No cache file selected</translation>

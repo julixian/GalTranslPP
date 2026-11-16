@@ -41,6 +41,7 @@ public:
 Q_SIGNALS:
     void startTranslatingSignal();  // 让 ProjectSettings 去保存配置
     void finishTranslatingSignal(const QString& transEngine, int exitCode); // 让 MainWindow 加点
+    void progressUpdatedSignal(int completed, int total);
 
 
 private Q_SLOTS:
@@ -99,6 +100,7 @@ private:
     QSystemTrayIcon* m_trayIcon = nullptr;
     EtaEstimator m_estimator;
     std::chrono::high_resolution_clock::time_point m_startTime;
+    std::chrono::steady_clock::time_point m_lastProgressEmitTime{};
 
     // 文件格式输出配置页
     NJCfgPage* m_njCfgPage = nullptr;

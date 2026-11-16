@@ -204,6 +204,9 @@
     <ClCompile Include="TranslationWorkbenchPage.cpp">
       <Filter>Source Files\ToolWidgetsImpl</Filter>
     </ClCompile>
+    <ClCompile Include="TaskbarController.cpp">
+      <Filter>Source Files\ToolWidgetsImpl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Mainwindow.h">
@@ -381,6 +384,9 @@
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
     <ClInclude Include="GppRadioButton.h">
+      <Filter>Header Files\ToolWidgetsH</Filter>
+    </ClInclude>
+    <ClInclude Include="TaskbarController.h">
       <Filter>Header Files\ToolWidgetsH</Filter>
     </ClInclude>
   </ItemGroup>

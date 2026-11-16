@@ -7,7 +7,10 @@
 #include <QProcess>
 #include <QApplication>
 #include <QDesktopServices>
+#include <QEvent>
+#include <QFontMetrics>
 #include <QShortcut>
+#include <algorithm>
 #ifdef Q_OS_WIN
 #include <Windows.h>
 #endif
@@ -25,6 +28,7 @@
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
 #include "UpdateChecker.h"
+#include "TaskbarController.h"
 
 #include "HomePage.h"
 #include "DefaultPromptsPage.h"
@@ -40,7 +44,8 @@ import PythonManager;
 using namespace gpp;
 
 MainWindow::MainWindow(QWidget* parent)
-    : ElaWindow(parent), m_globalConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document()))
+    : ElaWindow(parent), m_globalConfig(std::make_unique<tomlkit::Item>(tomlkit::Item::document())),
+    m_taskbarController(std::make_unique<TaskbarController>(this))
 {
     if (fs::exists(L"BaseConfig/GlobalConfig.toml")) {
         try {
@@ -136,6 +141,72 @@ MainWindow::MainWindow(QWidget* parent)
         {
             m_aboutDialog->setDownloadButtonEnabled(hasNewVersion && m_updateChecker->shouldDownloadButtonEnabled());
         });
+
+    connect(this, &ElaWindow::navigationNodeKeyPointsChanged, this, [this](const QString&, int)
+        {
+            updateTaskbarBadge();
+        });
+    connect(this, &ElaWindow::navigationNodeMoved, this, [this](const QString& nodeKey, int fromIndex, int toIndex)
+        {
+            Q_UNUSED(fromIndex);
+            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
+                {
+                    return page->property("ElaPageKey").toString() == nodeKey;
+                });
+            if (it == m_projectPages.end()) {
+                return;
+            }
+            const int actualFrom = static_cast<int>(std::distance(m_projectPages.begin(), it));
+            const int clampedTo = std::clamp(toIndex, 0, static_cast<int>(m_projectPages.size()) - 1);
+            if (actualFrom != clampedTo) {
+                m_projectPages.move(actualFrom, clampedTo);
+                syncProjectsToGlobalConfig();
+            }
+        });
+    connect(this, &ElaWindow::navigationNodeContextMenuRequested, this, [this](const QString& nodeKey, const QPoint& globalPos)
+        {
+            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
+                {
+                    return page->property("ElaPageKey").toString() == nodeKey;
+                });
+            if (it == m_projectPages.end()) {
+                return;
+            }
+            const int idx = static_cast<int>(std::distance(m_projectPages.begin(), it));
+            const int count = static_cast<int>(m_projectPages.size());
+            ElaMenu menu(this);
+            menu.setMenuItemHeight(27);
+            QAction* moveTopAction = menu.addElaIconAction(ElaIconType::ArrowUpToLine, tr("置顶"));
+            QAction* moveUpAction = menu.addElaIconAction(ElaIconType::ArrowUp, tr("上移"));
+            QAction* moveDownAction = menu.addElaIconAction(ElaIconType::ArrowDown, tr("下移"));
+            QAction* moveBottomAction = menu.addElaIconAction(ElaIconType::ArrowDownToLine, tr("置底"));
+            moveTopAction->setEnabled(idx > 0);
+            moveUpAction->setEnabled(idx > 0);
+            moveDownAction->setEnabled(idx + 1 < count);
+            moveBottomAction->setEnabled(idx + 1 < count);
+            connect(moveTopAction, &QAction::triggered, this, [this, nodeKey]() { moveNavigationNode(nodeKey, 0); });
+            connect(moveUpAction, &QAction::triggered, this, [this, nodeKey, idx]() { moveNavigationNode(nodeKey, idx - 1); });
+            connect(moveDownAction, &QAction::triggered, this, [this, nodeKey, idx]() { moveNavigationNode(nodeKey, idx + 1); });
+            connect(moveBottomAction, &QAction::triggered, this, [this, nodeKey, count]() { moveNavigationNode(nodeKey, count - 1); });
+            menu.addSeparator();
+            QAction* openDirAction = menu.addElaIconAction(ElaIconType::FolderOpen, tr("打开项目文件夹"));
+            const fs::path projectDir = (*it)->getProjectDir();
+            connect(openDirAction, &QAction::triggered, this, [projectDir]()
+                {
+                    QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring())));
+                });
+            QFont menuFont = menu.font();
+            menuFont.setPixelSize(eApp->getFontPixelSize());
+            const QFontMetrics fm(menuFont);
+            int menuWidth = 190;
+            for (const QAction* action : menu.actions()) {
+                if (!action->isSeparator()) {
+                    menuWidth = std::max(menuWidth, fm.horizontalAdvance(action->text()) + 72);
+                }
+            }
+            menu.setFixedWidth(menuWidth);
+            menu.exec(globalPos);
+        });
 }
 
 ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)
@@ -151,6 +222,18 @@ ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& proje
     }
     m_projectPages.push_back(newPage);
     addPageNode(QString::fromStdWString(projectDir.filename().wstring()), newPage.get(), m_projectExpanderKey, ElaIconType::Projector);
+    const QString nodeKey = newPage->property("ElaPageKey").toString();
+    setNodeReorderable(nodeKey, true);
+    connect(newPage.get(), &ProjectSettingsPage::runningStateChangedSignal, this,
+        [this](const QString& changedKey, bool isRunning, int completed, int total)
+        {
+            if (isRunning && getNodeKeyPoints(changedKey) > 0) {
+                setNodeKeyPoints(changedKey, 0);
+            }
+            const qreal progress = total > 0 ? static_cast<qreal>(completed) / static_cast<qreal>(total) : -1.0;
+            setNodeRunningState(changedKey, isRunning, progress);
+            updateTaskbarProgress();
+        });
     ProjectSettingsPage* page = newPage.get();
     connect(this, &MainWindow::navigationNodeClicked, page, [page](ElaNavigationType::NavigationNodeType nodeType, const QString& nodeKey)
         {
@@ -176,6 +259,84 @@ void MainWindow::hideEvent(QHideEvent* event)
 {
     m_windowSize = size();
     ElaWindow::hideEvent(event);
+}
+
+#ifdef Q_OS_WIN
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+bool MainWindow::nativeEvent(const QByteArray& eventType, void* message, qintptr* result)
+#else
+bool MainWindow::nativeEvent(const QByteArray& eventType, void* message, long* result)
+#endif
+{
+    if (m_taskbarController) {
+        m_taskbarController->handleNativeEvent(message);
+    }
+    return ElaWindow::nativeEvent(eventType, message, result);
+}
+#endif
+
+void MainWindow::changeEvent(QEvent* event)
+{
+    ElaWindow::changeEvent(event);
+    if (event && event->type() == QEvent::ActivationChange && isActiveWindow() && !isMinimized() && !m_projectPages.isEmpty()) {
+        const QString currentKey = getCurrentNavigationPageKey();
+        if (!currentKey.isEmpty() && getNodeKeyPoints(currentKey) > 0) {
+            setNodeKeyPoints(currentKey, 0);
+        }
+    }
+}
+
+void MainWindow::updateTaskbarProgress()
+{
+    if (!m_taskbarController) {
+        return;
+    }
+    int runningCount = 0;
+    unsigned long long sumCompleted = 0;
+    unsigned long long sumTotal = 0;
+    for (const auto& page : m_projectPages) {
+        if (page->getIsRunning()) {
+            ++runningCount;
+            const int total = page->getTotalLines();
+            if (total > 0) {
+                sumCompleted += static_cast<unsigned long long>(std::clamp(page->getCompletedLines(), 0, total));
+                sumTotal += static_cast<unsigned long long>(total);
+            }
+        }
+    }
+    if (runningCount == 0) {
+        m_taskbarController->setProgress(TaskbarController::ProgressState::NoProgress);
+    }
+    else if (sumTotal == 0) {
+        m_taskbarController->setProgress(TaskbarController::ProgressState::Indeterminate);
+    }
+    else {
+        m_taskbarController->setProgress(TaskbarController::ProgressState::Normal, sumCompleted, sumTotal);
+    }
+}
+
+void MainWindow::updateTaskbarBadge()
+{
+    if (!m_taskbarController) {
+        return;
+    }
+    int totalKeyPoints = 0;
+    for (const auto& page : m_projectPages) {
+        const int kp = getNodeKeyPoints(page->property("ElaPageKey").toString());
+        if (kp > 0) {
+            totalKeyPoints += kp;
+        }
+    }
+    m_taskbarController->setBadgeNumber(totalKeyPoints);
+}
+
+void MainWindow::syncProjectsToGlobalConfig()
+{
+    tomlkit::Item projects = tomlkit::Item::array();
+    for (const auto& projectPage : m_projectPages) {
+        projects.push_back(wide2Ascii(projectPage->getProjectDir()));
+    }
+    insertToml(*m_globalConfig, "projects", projects);
 }
 
 void MainWindow::initWindow()
@@ -582,6 +743,9 @@ void MainWindow::onRemoveProjectTriggered()
         it->get()->apply2Config();
         removeNavigationNode(currentPageKey);
         m_projectPages.erase(it);
+        syncProjectsToGlobalConfig();
+        updateTaskbarProgress();
+        updateTaskbarBadge();
         if (getCurrentNavigationPageKey() == m_appSettingsPage->property("ElaPageKey").toString()) {
             if (m_projectPages.empty()) {
                 this->navigation(m_homePage->property("ElaPageKey").toString());
@@ -642,6 +806,9 @@ void MainWindow::onDeleteProjectTriggered()
         }
         removeNavigationNode(currentPageKey);
         m_projectPages.erase(it);
+        syncProjectsToGlobalConfig();
+        updateTaskbarProgress();
+        updateTaskbarBadge();
         if (getCurrentNavigationPageKey() == m_appSettingsPage->property("ElaPageKey").toString()) {
             if (m_projectPages.empty()) {
                 this->navigation(m_homePage->property("ElaPageKey").toString());
@@ -674,6 +841,9 @@ void MainWindow::onSaveProjectTriggered()
 
 void MainWindow::onFinishTranslating(const QString& nodeKey)
 {
+    if (isActiveWindow() && !isMinimized() && getCurrentNavigationPageKey() == nodeKey) {
+        return;
+    }
     setNodeKeyPoints(nodeKey, getNodeKeyPoints(nodeKey) + 1);
 }
 
@@ -684,12 +854,10 @@ void MainWindow::onCloseWindowClicked(bool restart)
     m_commonGptDictsPage->apply2Config();
     m_commonPostDictsPage->apply2Config();
 
-    tomlkit::Item projects = tomlkit::Item::array();
     for (const auto& projectPage : m_projectPages) {
         projectPage->apply2Config();
-        projects.push_back(wide2Ascii(projectPage->getProjectDir()));
     }
-    insertToml(*m_globalConfig, "projects", projects);
+    syncProjectsToGlobalConfig();
 
     m_appSettingsPage->apply2Config();
     insertToml(*m_globalConfig, "clearLogShortcut",

@@ -109,6 +109,8 @@ void StartSettingsPage::ensureWorkerThread()
 			m_usedTimeLabel->display("00:00:00");
 			m_remainTimeLabel->display("--:--");
 			m_estimator.reset();
+			m_lastProgressEmitTime = {};
+			Q_EMIT progressUpdatedSignal(0, totalSentences);
 			if (m_translationWorkbenchPage && m_workerTransEngine != "Rebuild") {
 				m_translationWorkbenchPage->updateStage(tr("翻译中"), QString());
 			}
@@ -136,7 +138,14 @@ void StartSettingsPage::ensureWorkerThread()
 		{
 			const int previousProgress = m_progressBar->value();
 			m_progressBar->setValue(previousProgress + ticks);
-			const int progressDelta = m_progressBar->value() - previousProgress;
+			const int currentProgress = m_progressBar->value();
+			const int totalProgress = m_progressBar->maximum();
+			const auto now = std::chrono::steady_clock::now();
+			if (currentProgress >= totalProgress || now - m_lastProgressEmitTime >= std::chrono::milliseconds(50)) {
+				m_lastProgressEmitTime = now;
+				Q_EMIT progressUpdatedSignal(currentProgress, totalProgress);
+			}
+			const int progressDelta = currentProgress - previousProgress;
 			const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - m_startTime);
 			m_usedTimeLabel->display(QString::fromStdString(
 				std::format("{:%T}", elapsedSeconds)

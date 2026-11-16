@@ -292,6 +292,12 @@ void ProjectSettingsPage::createPages()
     if (m_startSettingsPage && m_otherSettingsPage) {
         connect(m_startSettingsPage, &StartSettingsPage::startTranslatingSignal, this, &ProjectSettingsPage::onStartTranslating);
         connect(m_startSettingsPage, &StartSettingsPage::finishTranslatingSignal, this, &ProjectSettingsPage::onFinishTranslating);
+        connect(m_startSettingsPage, &StartSettingsPage::progressUpdatedSignal, this, [=, this](int completed, int total)
+            {
+                m_completedLines = completed;
+                m_totalLines = total;
+                Q_EMIT runningStateChangedSignal(this->property("ElaPageKey").toString(), m_isRunning, m_completedLines, m_totalLines);
+            });
         connect(m_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, &ProjectSettingsPage::apply2Config);
         connect(m_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::onRefreshProjectConfig);
         connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [=, this](const QString& newProjectName)
@@ -349,8 +355,12 @@ void ProjectSettingsPage::onRefreshProjectConfig()
 
 void ProjectSettingsPage::onStartTranslating()
 {
+    m_isRunning = true;
+    m_completedLines = 0;
+    m_totalLines = 0;
     insertToml(*m_projectConfig, "GUIConfig.isRunning", true);
     this->apply2Config();
+    Q_EMIT runningStateChangedSignal(this->property("ElaPageKey").toString(), true, 0, 0);
 }
 
 void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int exitCode)
@@ -366,15 +376,30 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
             m_dictSettingsPage->refreshGptDict();
         }
     }
+    m_isRunning = false;
+    m_completedLines = 0;
+    m_totalLines = 0;
     insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
     if (exitCode >= 0) {
         ProblemOverviewTracker::recordLastWriteTime(*m_projectConfig, m_projectDir);
     }
     saveProjectConfig();
-    Q_EMIT finishTranslatingSignal(this->property("ElaPageKey").toString());
+    const QString nodeKey = this->property("ElaPageKey").toString();
+    Q_EMIT runningStateChangedSignal(nodeKey, false, 0, 0);
+    Q_EMIT finishTranslatingSignal(nodeKey);
 }
 
 bool ProjectSettingsPage::getIsRunning()
 {
-    return tomlkit::findOr(*m_projectConfig, "GUIConfig", "isRunning", true);
+    return m_isRunning;
+}
+
+int ProjectSettingsPage::getCompletedLines() const
+{
+    return m_completedLines;
+}
+
+int ProjectSettingsPage::getTotalLines() const
+{
+    return m_totalLines;
 }

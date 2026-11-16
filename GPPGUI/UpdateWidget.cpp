@@ -18,10 +18,9 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. 将 toml 解析器换为自研的 tomlkitpp，大幅优化了格式保留。"
-        "现在对于 GUI，只要是在数组/表内部的注释，即使后方没有非注释的项也能保留了。"
-        "对于 CLI，写入问题概览的文件时间不会再修改设置文件的其余部分格式了。",
-        "2. [GUI] 修复『初始化成功』提示被截断的 bug，修正了一下主页图片位置",
+        "1. [GUI] 项目管理现在可通过左键拖拽或右键单机调出菜单来调序",
+        "2. [GUI] 项目在运行任务时会在项目管理菜单中和底部任务栏图标处增加进度提示",
+        "3. [GUI] 项目运行完成后为底部任务栏图标增加角标提示",
     };
 
     mainLayout->addWidget(updateTitle);

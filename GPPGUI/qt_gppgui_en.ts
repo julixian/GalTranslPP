@@ -2401,7 +2401,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+52"/>
+        <location filename="Mainwindow.cpp" line="+57"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2476,7 +2476,7 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location filename="Mainwindow.cpp" line="+116"/>
+        <location filename="Mainwindow.cpp" line="+272"/>
         <location line="+176"/>
         <source>新建项目</source>
         <translation>New</translation>
@@ -2672,7 +2672,7 @@ Issue summary:</translation>
         <translation>%1 added to projects!</translation>
     </message>
     <message>
-        <location line="+112"/>
+        <location line="+118"/>
         <source>项目 %1 已从项目管理和磁盘中移除！</source>
         <translation>Project %1 removed from list and disk!</translation>
     </message>
@@ -2686,7 +2686,7 @@ Issue summary:</translation>
         <translation type="vanished">Failed to start the updater</translation>
     </message>
     <message>
-        <location line="-119"/>
+        <location line="-125"/>
         <location line="+4"/>
         <source>移除失败</source>
         <translation>Fail to remove</translation>
@@ -2697,43 +2697,68 @@ Issue summary:</translation>
         <translation>Invalid project name!</translation>
     </message>
     <message>
-        <location line="+100"/>
+        <location line="-403"/>
+        <source>置顶</source>
+        <translation>Move to top</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>上移</source>
+        <translation>Move up</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>下移</source>
+        <translation>Move down</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>置底</source>
+        <translation>Move to bottom</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>打开项目文件夹</source>
+        <translation>Open project folder</translation>
+    </message>
+    <message>
+        <location line="+490"/>
         <source>目录下不存在 Config.toml 文件！</source>
         <translation>No Config.toml file exists in this directory!</translation>
     </message>
     <message>
         <location line="+32"/>
-        <location line="+53"/>
-        <location line="+60"/>
+        <location line="+56"/>
+        <location line="+63"/>
         <source>当前页面不是项目页面！</source>
         <translation>Current page is not a project page!</translation>
     </message>
     <message>
-        <location line="-109"/>
-        <location line="+53"/>
+        <location line="-115"/>
+        <location line="+56"/>
         <source>当前项目正在运行，请先停止运行！</source>
         <translation>Current project is still running, please stop it first!</translation>
     </message>
     <message>
-        <location line="-48"/>
-        <location line="+53"/>
+        <location line="-51"/>
+        <location line="+56"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+53"/>
+        <location line="-55"/>
+        <location line="+56"/>
         <source>思考人生</source>
         <translation>Reflect on life</translation>
     </message>
     <message>
-        <location line="-52"/>
-        <location line="+53"/>
+        <location line="-55"/>
+        <location line="+56"/>
         <source>否</source>
         <translation>No</translation>
     </message>
     <message>
-        <location line="-48"/>
+        <location line="-51"/>
         <source>你确定要移除当前项目吗？</source>
         <translation>Are you sure to remove current project?</translation>
     </message>
@@ -2743,7 +2768,7 @@ Issue summary:</translation>
         <translation>Remove from project management, but won&apos;t delete its project dir</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+22"/>
         <source>移除成功</source>
         <translation>Removed successfully</translation>
     </message>
@@ -2770,7 +2795,7 @@ Issue summary:</translation>
         <translation>Delete project dir of this project, you will lost all translation cache!</translation>
     </message>
     <message>
-        <location line="+26"/>
+        <location line="+29"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -3954,12 +3979,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+276"/>
+        <location line="+282"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-243"/>
+        <location line="-249"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
@@ -4056,7 +4081,7 @@ Cache: %4</translation>
         <translation>Others</translation>
     </message>
     <message>
-        <location line="+82"/>
+        <location line="+88"/>
         <source>项目仍在运行中，无法刷新配置</source>
         <translation>Project is still running</translation>
     </message>
@@ -4275,18 +4300,18 @@ Cache: %4</translation>
 <context>
     <name>StartSettingsPage</name>
     <message>
-        <location filename="StartSettingsPage.cpp" line="+375"/>
+        <location filename="StartSettingsPage.cpp" line="+384"/>
         <location line="+46"/>
         <source>回到底部并继续输出</source>
         <translation>Back to bottom and resume</translation>
     </message>
     <message>
-        <location line="-381"/>
+        <location line="-390"/>
         <source>启动设置</source>
         <translation>Start settings</translation>
     </message>
     <message>
-        <location line="+172"/>
+        <location line="+181"/>
         <location line="+73"/>
         <source>```
 问题概览:</source>
@@ -4389,12 +4414,12 @@ Issue summary:</translation>
         <translation>Details</translation>
     </message>
     <message>
-        <location line="-463"/>
+        <location line="-470"/>
         <source>翻译中</source>
         <translation>Translating</translation>
     </message>
     <message>
-        <location line="+333"/>
+        <location line="+340"/>
         <source>文件处理器:</source>
         <translation>File plugin:</translation>
     </message>

@@ -184,6 +184,7 @@
     <ClCompile Include="AppSettingsPage.cpp" />
     <ClCompile Include="SkipTransCfgPage.cpp" />
     <ClCompile Include="StartSettingsPage.cpp" />
+    <ClCompile Include="TaskbarController.cpp" />
     <ClCompile Include="TranslationWorkbenchPage.cpp" />
     <ClCompile Include="TreeSitterHighlighter.cpp" />
     <ClCompile Include="TranslatorWorker.cpp" />
@@ -328,6 +329,7 @@
     <ClInclude Include="GppRadioButton.h" />
     <ClInclude Include="NormalTabEntry.h" />
     <ClInclude Include="ProjectCachePage_p.h" />
+    <ClInclude Include="TaskbarController.h" />
     <QtMoc Include="ReorderableTableView.h" />
     <QtMoc Include="TreeSitterHighlighter.h" />
   </ItemGroup>

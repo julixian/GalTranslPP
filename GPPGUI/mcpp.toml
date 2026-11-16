@@ -26,7 +26,7 @@ sources = [
 ]
 
 [target.windows.build]
-ldflags = ["-ldbghelp"]
+ldflags = ["-ldbghelp", "-lole32", "-luser32"]
 
 [resources]
 files = ["GPPGUI.rc"]

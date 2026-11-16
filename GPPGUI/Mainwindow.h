@@ -17,9 +17,11 @@ class AppSettingsPage;
 class ProjectSettingsPage;
 class ElaContentDialog;
 class UpdateChecker;
+class TaskbarController;
 class QShortcut;
 class QShowEvent;
 class QHideEvent;
+class QEvent;
 
 namespace fs = std::filesystem;
 
@@ -35,9 +37,11 @@ public Q_SLOTS:
     void checkUpdate();
 
 protected:
+    Q_TAKEOVER_NATIVEEVENT_H
 	void mouseReleaseEvent(QMouseEvent* event) override;
     void showEvent(QShowEvent* event) override;
     void hideEvent(QHideEvent* event) override;
+    void changeEvent(QEvent* event) override;
 
 private Q_SLOTS:
     void onNewProjectTriggered();
@@ -55,6 +59,9 @@ private:
     void initEdgeLayout();
     void initContent();
     ProjectSettingsPage* createProjectSettingsPage(const fs::path& projectDir);
+    void updateTaskbarProgress();
+    void updateTaskbarBadge();
+    void syncProjectsToGlobalConfig();
 
     HomePage* m_homePage = nullptr;
     AboutDialog* m_aboutDialog = nullptr;
@@ -77,6 +84,7 @@ private:
 
     ElaContentDialog* m_closeDialog = nullptr;
     UpdateChecker* m_updateChecker = nullptr;
+    std::unique_ptr<TaskbarController> m_taskbarController;
 
     QSize m_windowSize;
     std::unique_ptr<tomlkit::Item> m_globalConfig;

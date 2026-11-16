@@ -32,6 +32,8 @@ public:
     QString getProjectName();
     fs::path getProjectDir();
     bool getIsRunning();
+    int getCompletedLines() const;
+    int getTotalLines() const;
     void initialize();
 
 	void apply2Config() override;
@@ -40,6 +42,7 @@ public:
 
 Q_SIGNALS:
     void finishTranslatingSignal(const QString& nodeKey); // 用于加红点提示翻译完成
+    void runningStateChangedSignal(const QString& nodeKey, bool isRunning, int completed, int total);
     void changeProjectNameSignal(const QString& nodeKey, const QString& newProjectName); // 改变项目名
 
 private:
@@ -47,6 +50,9 @@ private:
     tomlkit::Item& m_globalConfig;
     std::unique_ptr<tomlkit::Item> m_projectConfig;
     bool m_fullPagesInitialized = false;
+    bool m_isRunning = false;
+    int m_completedLines = 0;
+    int m_totalLines = 0;
 
     // UI 控件
     QStackedWidget* m_stackedWidget = nullptr;

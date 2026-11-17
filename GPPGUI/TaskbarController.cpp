@@ -248,9 +248,9 @@ void TaskbarController::setBadgeNumber(int count)
 #ifdef _WIN32
     applyBadge(false);
 #elif defined(__APPLE__)
-    if (normalized != m_lastAppliedBadgeCount)
+    if (normalized != m_lastAppliedBadgeCount && qGuiApp)
     {
-        QGuiApplication::setBadgeNumber(normalized);
+        qGuiApp->setBadgeNumber(normalized);
         m_lastAppliedBadgeCount = normalized;
     }
 #endif

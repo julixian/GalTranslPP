@@ -18,9 +18,7 @@ UpdateWidget::UpdateWidget(QWidget* parent)
 
     ElaText* updateTitle = new ElaText("v" + QString::fromUtf8(GPPVERSION) + " 更新", 15, this);
     QStringList updateList = {
-        "1. [GUI] 项目管理现在可通过左键拖拽或右键单机调出菜单来调序",
-        "2. [GUI] 项目在运行任务时会在项目管理菜单中和底部任务栏图标处增加进度提示",
-        "3. [GUI] 项目运行完成后为底部任务栏图标增加角标提示",
+        "1. 修复 Windows 下 Agent 模式调用 run_python 时因句柄列表悬垂指针导致启动 Python 子进程报错（The parameter is incorrect.）的 bug",
     };
 
     mainLayout->addWidget(updateTitle);

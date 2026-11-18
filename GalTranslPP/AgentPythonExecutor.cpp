@@ -62,10 +62,12 @@ void check(BOOL success, const char* operation)
 }
 
 struct AttributeList {
+    std::array<HANDLE, 3> handles;
     std::vector<std::byte> storage;
     LPPROC_THREAD_ATTRIBUTE_LIST value;
 
-    explicit AttributeList(const std::array<HANDLE, 3>& handles)
+    explicit AttributeList(const std::array<HANDLE, 3>& inHandles)
+        : handles(inHandles)
     {
         SIZE_T bytes = 0;
         InitializeProcThreadAttributeList(nullptr, 1, 0, &bytes);
@@ -74,13 +76,16 @@ struct AttributeList {
         check(InitializeProcThreadAttributeList(value, 1, 0, &bytes), "InitializeProcThreadAttributeList");
         if (!UpdateProcThreadAttribute(
             value, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
-            const_cast<HANDLE*>(handles.data()), sizeof(handles), nullptr, nullptr))
+            this->handles.data(), sizeof(this->handles), nullptr, nullptr))
         {
             const auto error = GetLastError();
             DeleteProcThreadAttributeList(value);
             throw std::system_error(error, std::system_category(), "UpdateProcThreadAttribute");
         }
     }
+
+    AttributeList(const AttributeList&) = delete;
+    AttributeList& operator=(const AttributeList&) = delete;
 
     ~AttributeList()
     {

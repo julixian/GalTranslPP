@@ -2,7 +2,7 @@
 members = ["GalTranslPP", "GPPVersion", "GPPCLI", "GPPGUI", "Updater"]
 
 [workspace.package]
-version = "3.3.3"
+version = "3.3.4"
 standard = "c++23"
 license = "LicenseRef-GalTranslPP"
 

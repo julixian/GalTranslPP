@@ -153,32 +153,32 @@
 <context>
     <name>ConditionTool.getCheckSeCondFunc</name>
     <message>
-        <location filename="ConditionTool.ixx" line="81"/>
+        <location filename="ConditionTool.ixx" line="89"/>
         <source>执行 Lua 条件函数 %1 时发生错误: %2</source>
         <translation>Error while running Lua condition function %1: %2</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="91"/>
+        <location filename="ConditionTool.ixx" line="99"/>
         <source>注册 Lua 脚本 [%1] 中的条件函数 %2 成功</source>
         <translation>Registered condition function %2 from Lua script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="99"/>
+        <location filename="ConditionTool.ixx" line="107"/>
         <source>注册 Lua 脚本 [%1] 中的条件函数 %2 失败</source>
         <translation>Failed to register condition function %2 from Lua script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="128"/>
+        <location filename="ConditionTool.ixx" line="136"/>
         <source>执行 Python 条件函数 %1 时发生错误: %2</source>
         <translation>Error while running Python condition function %1: %2</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="139"/>
+        <location filename="ConditionTool.ixx" line="147"/>
         <source>注册 Python 脚本 [%1] 中的条件函数 %2 成功</source>
         <translation>Registered condition function %2 from Python script [%1]</translation>
     </message>
     <message>
-        <location filename="ConditionTool.ixx" line="147"/>
+        <location filename="ConditionTool.ixx" line="155"/>
         <source>注册 Python 脚本 [%1] 中的条件函数 %2 失败</source>
         <translation>Failed to register condition function %2 from Python script [%1]</translation>
     </message>

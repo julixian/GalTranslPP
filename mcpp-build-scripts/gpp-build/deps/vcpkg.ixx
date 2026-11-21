@@ -158,7 +158,7 @@ void configureEnvironment(mcpp::action& action, const Toolchain& selected) {
     if (!selected.clangCl) return;
     for (const auto& [name, value] : selected.tools.env) action.env(name.c_str(), value.c_str());
     std::string path;
-    for (const auto& directory : selected.tools.path_dirs) path += fs::path(directory).string() + ";";
+    for (const auto& directory : selected.tools.path_dirs) path += fs::path(directory).make_preferred().string() + ";";
     const char* systemRoot = std::getenv("SystemRoot");
     const fs::path windows = systemRoot ? systemRoot : R"(C:\Windows)";
     for (const auto& directory : {windows / "System32", windows, windows / "System32/Wbem",

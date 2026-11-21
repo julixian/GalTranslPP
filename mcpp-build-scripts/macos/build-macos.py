@@ -65,6 +65,7 @@ def prepareTools():
     mcpp = next(path for path in mcppRoot.rglob("mcpp") if path.is_file())
     os.environ["PATH"] = str(mcpp.parent) + os.pathsep + os.environ["PATH"]
     run([mcpp, "toolchain", "install", "llvm", kConfig["tools"]["llvm"]])
+    run([mcpp, "index", "update"])
     run([mcpp, "self", "env"])
 
     qt = kToolsDir / "Qt" / kConfig["tools"]["qt"] / "macos"
@@ -284,6 +285,7 @@ def main():
         writeLocalConfig(qt, pythonRoot, dependencies)
     if args.prepareOnly:
         return
+    run([mcpp, "index", "update"])
     for member in ("julixian.gpp-gui", "julixian.gpp-cli"):
         try:
             run([mcpp, "build", "-p", member, "--profile", kConfig["build"]["profile"],

@@ -24,6 +24,14 @@ struct GppConditionPattern {
     CachePart conditionTarget = CachePart::None;
     int sentenceOffset = 0;
 };
+// 规避 Clang 23.1.3 在 Reduced BMI（-fmodule-output）+ mcpp 拆分 module :private; 后，
+// 导入方（ConditionTool.private.cpp / SkipTrans.cpp）编译 `GppConditionPattern pattern;`
+// 时跨 PCM 反序列化模板特化成员 jpc::Regex 触发前端崩溃（0xC0000005）。
+// 在接口段保留一个构造并返回 GppConditionPattern 的内联函数，迫使 Reduced BMI 保留其完整可达定义。
+[[maybe_unused]] inline GppConditionPattern gppConditionPatternReducedBmiWorkaround() {
+    GppConditionPattern p;
+    return p;
+}
 using GPPCondition = std::vector<GppConditionPattern>;
 
 bool checkString(const jpc::Regex& conditionReg, const std::string& str);

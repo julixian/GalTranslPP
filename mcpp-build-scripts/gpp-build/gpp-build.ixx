@@ -2,9 +2,7 @@ export module gpp.build;
 
 import std;
 import mcpp.core;
-import tomlplusplus;
-import mcpp.deps;
-import mcpp.plugins.fs;
+import tomlkitpp;
 import gpp.deps.vcpkg;
 import gpp.rules.qt;
 export import gpp.build.macos;
@@ -20,16 +18,16 @@ fs::path workspaceDirectory() {
 }
 
 // 本机工具配置按宿主系统分表，修改后重新执行构建脚本。
-const toml::table& localTools() {
+const tomlkit::Item& localTools() {
     const auto file = workspaceDirectory() / "build-local.toml";
     mcpp::rerun_if_changed(file.generic_string().c_str());
-    static const auto config = toml::parse_file(file.string());
+    static const auto config = tomlkit::parseFile(file);
     return config;
 }
 
 fs::path localToolPath(std::string_view key) {
     // 当前为 Windows 宿主入口；mcpp::host() 返回完整 triple，不能直接作为系统表名。
-    return localTools()["windows"][key].value_or(std::string{});
+    return tomlkit::findOr(localTools(), "windows", key, std::string{});
 }
 
 bool isReleaseProfile() {
@@ -120,55 +118,13 @@ fs::path configureTranslation(gpp::rules::qt::Options& qtOptions, const char* tr
     return projectDirectory / (fs::path(translationSourceFilename).stem().string() + ".qm");
 }
 
-fs::path useElaWidgetTools(const gpp::rules::qt::Options& qtOptions) {
-    const auto source = workspaceDirectory() / "3rdParty" / "ElaWidgetTools";
-    const auto install = source / "target" / "mcpp-install" / mcpp::target() / mcpp::profile();
-    const auto sourceDirectory = source.generic_string();
-    const auto installDirectory = install.generic_string();
-    const auto stamp = (fs::path(mcpp::out_dir()) / "ela-build.stamp").generic_string();
-    // Ela 独立于 GPP 的依赖图，在自己的目录下构建；Qt、编译器和 profile 沿用本次 GPP 构建。
-    mcpp::action build;
-    build.id = "ela-mcpp-build";
-    build.role = mcpp::roles::prepare;
-    build.description = "mcpp build ElaWidgetTools";
-    build.arg("${mcpp.self}").arg("build")
-        .arg("-p").arg("ElaWidgetTools")
-        .arg("--toolchain").arg(("path:" + std::string(mcpp::toolchain_dir())).c_str())
-        .arg("--profile").arg(mcpp::profile())
-        .cwd(sourceDirectory.c_str()).env("QT_ROOT_DIR", qtOptions.root.generic_string().c_str())
-        .env("ELAWIDGETTOOLS_INSTALL_DIR", installDirectory.c_str())
-        .output(stamp.c_str()).output_dir(installDirectory.c_str());
-    mcpp::deps::watch_tree(source / "ElaWidgetTools");
-    for (const auto& file : mcpp::deps::files_under(source / "ElaWidgetTools")) build.input(file.c_str());
-    for (const char* file : {"mcpp.toml", "mcpp-qt.hpp"}) {
-        const auto path = (source / file).generic_string();
-        mcpp::rerun_if_changed(path.c_str());
-        if (fs::is_regular_file(path)) build.input(path.c_str());
-    }
-    // 子构建会重写 mcpp.lock，不能直接作为 Ninja 输入，否则动作会反复失效。
-    // 监视原锁文件，只在内容变化时更新快照，让依赖变更仍能触发 Ela 构建。
-    const auto lock = source / "mcpp.lock";
-    mcpp::rerun_if_changed(lock.generic_string().c_str());
-    std::ifstream lockInput(lock, std::ios::binary);
-    const std::string lockContent{std::istreambuf_iterator<char>(lockInput), {}};
-    const auto lockSnapshot = fs::path(mcpp::out_dir()) / "ela-dependencies.lock";
-    fs::create_directories(lockSnapshot.parent_path());
-    mcpp::plugins::fs::write_if_changed(lockSnapshot, lockContent);
-    build.input(lockSnapshot.generic_string().c_str());
-    build.submit();
-    mcpp::include_dir((source / "ElaWidgetTools").generic_string().c_str());
-    const std::vector<std::string> libraries = {"ElaWidgetTools"};
-    mcpp::deps::link_libraries(install, libraries, true);
-    return install;
-}
-
 // 自定义 Release 发布不读取可能尚未部署完成的 bin 目录。
-// runtime-stage 从 vcpkg/Python/Ela 源目录收集非 Qt DLL；Qt 由用户另外部署。
+// runtime-stage 从 vcpkg/Python 源目录收集非 Qt DLL；额外运行库由 additionalRuntimeFiles 分发；Qt 由用户另外部署。
 struct ReleasePublisher {
     fs::path releaseDirectory = workspaceDirectory() / "Release";
     fs::path vcpkgInstallationDirectory;
     fs::path vcpkgInstallStamp;
-    std::vector<fs::path> additionalRuntimeDirectories;
+    std::vector<std::pair<std::string, std::string>> additionalRuntimeFiles;
     std::string targetName;
     std::string executableFile;
     unsigned nextActionNumber = 0;
@@ -239,10 +195,8 @@ struct ReleasePublisher {
             workspaceDirectory() / "3rdParty" / "pybind11" / "bin",
             workspaceDirectory() / "3rdParty"
         };
-        runtimeSearchDirectories.insert(runtimeSearchDirectories.end(),
-            additionalRuntimeDirectories.begin(), additionalRuntimeDirectories.end());
         for (const auto& searchDirectory : runtimeSearchDirectories) {
-            // Ela 首次构建时尚未安装，搜索目录也必须传入；exe 的链接已依赖 prepare。
+            // 搜索目录即使首次配置时尚未生成也要传入；exe 的链接已依赖 prepare。
             copyAction.arg("--search").arg(searchDirectory.generic_string().c_str());
             if (!fs::is_directory(searchDirectory)) continue;
             for (const auto& entry : fs::directory_iterator(searchDirectory))
@@ -327,6 +281,8 @@ struct ReleasePublisher {
                 ? "Updater_new.exe" : targetName + ".exe";
             copyFile(executableFile, destinationDirectory / executableFilename);
             copyRuntimeLibraries(member, destinationDirectory, destinationName);
+            for (const auto& [sourceFile, filename] : additionalRuntimeFiles)
+                copyFile(sourceFile, destinationDirectory / filename);
             copyFile(translationFile.generic_string(),
                       destinationDirectory / "translations" / translationFile.filename());
             if (member != "Updater")

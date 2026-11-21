@@ -14,10 +14,9 @@ int main() {
             qtOptions.resources = {"GPPGUI.qrc"};
             const auto translationFile = gpp::win::configureTranslation(qtOptions, "qt_gppgui_en.ts");
             gpp::rules::qt::use(qtOptions);
-            const auto elaWidgetTools = gpp::win::useElaWidgetTools(qtOptions);
 
             gpp::win::ReleasePublisher publisher("GalTranslPP_GUI", vcpkgDirectory);
-            publisher.additionalRuntimeDirectories.emplace_back(elaWidgetTools);
+            publisher.additionalRuntimeFiles.emplace_back("${mcpp.target_file:ElaWidgetTools}", "ElaWidgetTools.dll");
             publisher.publishRelease("GPPGUI", translationFile);
             return 0;
         });

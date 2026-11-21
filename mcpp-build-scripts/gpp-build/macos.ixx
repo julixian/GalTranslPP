@@ -2,7 +2,7 @@ export module gpp.build.macos;
 
 import std;
 import mcpp.core;
-import tomlplusplus;
+import tomlkitpp;
 import gpp.rules.qt;
 
 export namespace gpp::macos {
@@ -16,10 +16,10 @@ int configure(std::string_view member) {
     const auto workspace = fs::path(__FILE__).parent_path().parent_path().parent_path();
     const auto settings = workspace / "build-local.toml";
     mcpp::rerun_if_changed(settings.generic_string().c_str());
-    const auto config = toml::parse_file(settings.string());
+    const auto config = tomlkit::parseFile(settings);
     const auto pathFunc = [&](const char* key)
         {
-            const fs::path value = config["macos"][key].value_or(std::string{});
+            const fs::path value = tomlkit::findOr(config, "macos", key, std::string{});
             if (value.empty()) {
                 throw std::runtime_error(std::string("build-local.toml 缺少 macos.") + key);
             }
@@ -27,7 +27,6 @@ int configure(std::string_view member) {
         };
     const auto dependencies = pathFunc("dependencies_root");
     const auto python = pathFunc("python_root");
-    const auto ela = pathFunc("ela_root");
     mcpp::include_dir((dependencies / "include").generic_string().c_str());
     mcpp::include_dir((python / "include/python3.12").generic_string().c_str());
     if (std::string_view(mcpp::profile()) == "release" ||
@@ -52,10 +51,6 @@ int configure(std::string_view member) {
     qt.i18n.ts = {translation};
     qt.i18n.outDir = mcpp::manifest_dir();
     gpp::rules::qt::use(qt);
-    if (gui) {
-        mcpp::include_dir((workspace / "3rdParty/ElaWidgetTools/ElaWidgetTools").generic_string().c_str());
-        mcpp::link_flag((ela / "libElaWidgetTools.dylib").generic_string().c_str());
-    }
     if (!core) {
         // 应用自己的可执行文件为打包时修改 dylib 引用预留空间。
         mcpp::link_flag("-Wl,-headerpad_max_install_names");

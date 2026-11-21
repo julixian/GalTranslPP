@@ -109,27 +109,7 @@ def prepareDependencies(qt):
     text = original.replace("static const char* VarintParseSlowArm(", "inline const char* VarintParseSlowArm(")
     if text != original:
         parseContext.write_text(text, encoding="utf-8")
-
-    # 单独使用 Ela 的库目录，避开其顶层示例及 Linux 链接参数。
-    elaSource = kToolsDir / "ela-config"
-    elaSource.mkdir(exist_ok=True)
-    (elaSource / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.24)
-project(GppEla LANGUAGES CXX)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
-find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets)
-find_package(Qt6 REQUIRED COMPONENTS Widgets WidgetsPrivate)
-add_subdirectory("${ELA_SOURCE}" ElaWidgetTools)
-''', encoding="utf-8")
-    elaBuild = kToolsDir / "ela-build"
-    run(["cmake", "-S", elaSource, "-B", elaBuild, "-G", "Ninja",
-         "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_PREFIX_PATH=" + str(qt),
-         "-DCMAKE_OSX_DEPLOYMENT_TARGET=" + kConfig["build"]["deployment_target"],
-         "-DELA_SOURCE=" + str(kScriptRoot / "3rdParty/ElaWidgetTools/ElaWidgetTools")])
-    run(["cmake", "--build", elaBuild, "--parallel", str(kConfig["build"]["jobs"])])
-    return kScriptRoot / "vcpkg_installed/macos" / triplet, elaBuild / "ElaWidgetTools"
+    return kScriptRoot / "vcpkg_installed/macos" / triplet
 
 
 def prepareArchiveLibrary():
@@ -143,11 +123,11 @@ def prepareArchiveLibrary():
     return next(bundle.rglob("7z.so"))
 
 
-def writeLocalConfig(qt, pythonRoot, dependencies, ela):
+def writeLocalConfig(qt, pythonRoot, dependencies):
     path = kScriptRoot / "build-local.toml"
     original = path.read_text(encoding="utf-8")
     text = re.sub(r"(?ms)^\[macos\].*?(?=^\[|\Z)", "", original).rstrip()
-    values = dict(qt_root=qt, python_root=pythonRoot, dependencies_root=dependencies, ela_root=ela)
+    values = dict(qt_root=qt, python_root=pythonRoot, dependencies_root=dependencies)
     text += "\n[macos]\n" + "".join(f"{key} = {json.dumps(str(value))}\n" for key, value in values.items())
     if text != original:
         path.write_text(text, encoding="utf-8")
@@ -211,7 +191,7 @@ def deployLibraries(directory, searchRoots):
             run(["install_name_tool", "-change", dependency, relative, binary])
 
 
-def stagePackage(qt, pythonRoot, dependencies, ela, archiveLibrary):
+def stagePackage(qt, pythonRoot, dependencies, archiveLibrary):
     release = kScriptRoot / "Release"
     package = release / kConfig["package"]["name"]
     # 每次重新组装发布目录，升级 Qt/Python 后不沿用上一版的动态库。
@@ -266,6 +246,10 @@ def stagePackage(qt, pythonRoot, dependencies, ela, archiveLibrary):
                           CFBundleName="GalTransl++", CFBundlePackageType="APPL", NSHighResolutionCapable=True,
                           CFBundleVersion=version, CFBundleShortVersionString=version, CFBundleIconFile="GalTranslPP.icns",
                           LSMinimumSystemVersion=kConfig["build"]["deployment_target"]), output)
+    elaLibraries = [p for p in (kScriptRoot / "target/aarch64-macos").rglob("libElaWidgetTools.dylib") if p.is_file()]
+    if not elaLibraries:
+        raise FileNotFoundError("No built library: libElaWidgetTools.dylib")
+    ela = max(elaLibraries, key=lambda p: p.stat().st_mtime).parent
     llvmLibraries = list((Path.home() / ".mcpp").rglob("libc++.1.dylib"))
     search = [qt / "lib", ela, pythonRoot / "lib", dependencies / "lib"]
     search.extend(path.parent for path in llvmLibraries)
@@ -289,15 +273,15 @@ def main():
     os.environ["MACOSX_DEPLOYMENT_TARGET"] = kConfig["build"]["deployment_target"]
     if args.buildOnly:
         settings = tomllib.loads((kScriptRoot / "build-local.toml").read_text(encoding="utf-8"))["macos"]
-        qt, pythonRoot, dependencies, ela = (Path(settings[key]) for key in
-            ("qt_root", "python_root", "dependencies_root", "ela_root"))
+        qt, pythonRoot, dependencies = (Path(settings[key]) for key in
+            ("qt_root", "python_root", "dependencies_root"))
         mcpp = next(path for path in (kToolsDir / ("mcpp-" + kConfig["tools"]["mcpp"])).rglob("mcpp") if path.is_file())
         archiveLibrary = next((kToolsDir / ("7zip-" + kConfig["tools"]["sevenzip"])).rglob("7z.so"))
     else:
         mcpp, qt, pythonRoot = prepareTools()
-        dependencies, ela = prepareDependencies(qt)
+        dependencies = prepareDependencies(qt)
         archiveLibrary = prepareArchiveLibrary()
-        writeLocalConfig(qt, pythonRoot, dependencies, ela)
+        writeLocalConfig(qt, pythonRoot, dependencies)
     if args.prepareOnly:
         return
     for member in ("julixian.gpp-gui", "julixian.gpp-cli"):
@@ -313,7 +297,7 @@ def main():
                 subprocess.run(["ninja", "-C", str(graph.parent), "-k", "0", "-j", str(kConfig["build"]["jobs"])],
                                cwd=kScriptRoot, check=False)
             raise
-    package = stagePackage(qt, pythonRoot, dependencies, ela, archiveLibrary)
+    package = stagePackage(qt, pythonRoot, dependencies, archiveLibrary)
     print("Portable package:", package)
     run([sys.executable, Path(__file__).with_name("make-dmg.py"), package])
 

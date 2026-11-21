@@ -8,7 +8,7 @@ license = "LicenseRef-GalTranslPP"
 [dependencies]
 # 将插件依赖重新导出给使用 gpp.build 的构建脚本，各成员无需重复声明。
 mcpp.plugins = { version = "0.18.1", features = ["deps"], reexport = true }
-marzer.tomlplusplus = "3.4.0"
+julixian.tomlkitpp = "1.0.2"
 
 [features]
 default = ["rules-qt"]

@@ -7,6 +7,7 @@ julixian.gpp-core = { path = "../GalTranslPP" }
 julixian.gpp-version = { path = "../GPPVersion" }
 julixian.gpp-updater = { path = "../Updater", artifacts = ["Updater"] }
 julixian.tomlkitpp = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
+ElaWidgetTools = { path = "../3rdParty/ElaWidgetTools/ElaWidgetTools", linkage = "shared" }
 
 [build-dependencies]
 julixian.gpp-build = { path = "../mcpp-build-scripts/gpp-build" }

@@ -9,6 +9,9 @@ julixian.tomlkitpp = { path = "../3rdParty/tomlkitpp/tomlkitpp" }
 [build-dependencies]
 julixian.gpp-build = { path = "../mcpp-build-scripts/gpp-build" }
 
+[target.windows.build-dependencies]
+julixian.gpp-vcpkg-runner = { path = "../mcpp-build-scripts/vcpkg-runner", tools = ["vcpkg-runner"] }
+
 [build]
 default-profile = "release"
 sources = [

@@ -11,6 +11,7 @@ julixian.gpp-build = { path = "../mcpp-build-scripts/gpp-build" }
 
 [target.windows.build-dependencies]
 julixian.gpp-vcpkg-link-libs = { path = "../mcpp-build-scripts/vcpkg-link-libs", tools = ["vcpkg-link-libs"] }
+julixian.gpp-vcpkg-runner = { path = "../mcpp-build-scripts/vcpkg-runner", tools = ["vcpkg-runner"] }
 julixian.gpp-runtime-stage = { path = "../mcpp-build-scripts/runtime-stage", tools = ["runtime-stage"] }
 
 [build]

@@ -205,12 +205,19 @@ Prefix use(const Options& opt) {
     if (selected.clangCl)
         mcpp::plugins::fs::write_if_changed(chainFile, clangToolchain(selected, vcpkg));
 
+    const fs::path runner = mcpp::dep_bin("julixian.gpp-vcpkg-runner", "vcpkg-runner");
+    const std::string_view packageName = mcpp::package_name();
+    const auto logFile = manifest / "target" / "vcpkg-logs" /
+        ((packageName.empty() ? std::string("vcpkg") : std::string(packageName)) + "-" + triplet + ".log");
     const auto description = "vcpkg install " + triplet;
     mcpp::action action;
     action.id = "vcpkg-install";
     action.role = mcpp::roles::prepare;
     action.description = description.c_str();
-    action.arg(executable.generic_string().c_str()).arg("install")
+    action.arg(runner.generic_string().c_str())
+        .arg("--log").arg(logFile.generic_string().c_str())
+        .arg("--")
+        .arg(executable.generic_string().c_str()).arg("install")
         .arg(("--vcpkg-root=" + vcpkg.generic_string()).c_str())
         .arg("--x-wait-for-lock") // 多个成员共用 vcpkg，等待其他安装进程释放锁。
         .arg("--triplet").arg(triplet.c_str())
@@ -224,7 +231,8 @@ Prefix use(const Options& opt) {
         mcpp::rerun_if_changed(file.generic_string().c_str());
         if (fs::exists(file)) action.input(file.generic_string().c_str());
     }
-    action.input(executable.generic_string().c_str()).input(tripletFile.generic_string().c_str());
+    action.input(runner.generic_string().c_str())
+        .input(executable.generic_string().c_str()).input(tripletFile.generic_string().c_str());
     if (selected.clangCl) action.input(chainFile.generic_string().c_str());
     for (const auto& tool : {tools.cxx, tools.ld, tools.ar, tools.rc, tools.mt, selected.assembler.generic_string()}) {
         mcpp::rerun_if_changed(tool.c_str());

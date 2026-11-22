@@ -1,0 +1,16 @@
+[package]
+namespace = "julixian"
+name = "gpp-vcpkg-runner"
+version = "1.0.0"
+standard = "c++23"
+license = "LicenseRef-GalTranslPP"
+
+[build]
+sources = []
+
+[target.windows.build]
+ldflags = ["-lshell32"]
+
+[targets.vcpkg-runner]
+kind = "bin"
+main = "main.cpp"

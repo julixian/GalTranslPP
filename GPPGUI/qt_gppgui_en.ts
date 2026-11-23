@@ -1428,7 +1428,7 @@ sk-...</translation>
         <translation>Keep metadata when a cache entry matches; current metadata can overwrite values with the same key</translation>
     </message>
     <message>
-        <location line="+27"/>
+        <location line="+29"/>
         <source>智能重试</source>
         <translation>Smart retry</translation>
     </message>
@@ -1452,11 +1452,16 @@ sk-...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>留空自动选择系统字体；可填系统字体名（如 Leelawadee UI、Noto Sans Thai），或选择本地 .ttf/.otf/.ttc 字体文件（支持相对项目目录路径）</source>
-        <translation>Leave blank to auto-select a system font; enter a system font family name (e.g., Leelawadee UI, Noto Sans Thai) or choose a local .ttf/.otf/.ttc font file (relative to project directory supported).</translation>
+        <source>留空自动选择，可填系统字体名或本地字体文件路径</source>
+        <translation>Auto if blank; enter system font name or local font file</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+1"/>
+        <source>支持系统字体名（如 Leelawadee UI）或 .ttf/.otf/.ttc 文件（支持相对项目目录）</source>
+        <translation>Supports system font family (e.g., Leelawadee UI) or .ttf/.otf/.ttc file (relative to project dir supported)</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>留空自动选择</source>
         <translation>Leave blank for auto</translation>
     </message>
@@ -1483,7 +1488,7 @@ sk-...</translation>
         <translation type="vanished">Level 2</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+17"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1498,7 +1503,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-543"/>
+        <location line="-551"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1537,7 +1542,7 @@ sk-...</translation>
         <translation type="vanished">Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
     </message>
     <message>
-        <location line="+76"/>
+        <location line="+84"/>
         <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
@@ -1547,7 +1552,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-384"/>
+        <location line="-392"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1583,36 +1588,36 @@ sk-...</translation>
     </message>
     <message>
         <location line="+109"/>
-        <source>开启智能重试时建议 &gt;= 4（开启图片替换输入时建议 &gt;= 5）；普通模式：关闭图片时第 3 次拆分、第 4 次清空上下文，开启图片时第 3 次图片替换、第 4 次拆分、第 5 次清空上下文</source>
-        <translation>Recommended &gt;= 4 with smart retry (&gt;= 5 with image input). Normal mode: split on 3rd and clear context on 4th when image input is off; image input on 3rd, split on 4th, and clear context on 5th when on.</translation>
+        <source>开启智能重试建议 &gt;= 4，开启图片替换建议 &gt;= 5</source>
+        <translation>Recommended &gt;= 4 for smart retry, &gt;= 5 with image input</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）</source>
-        <translation>To avoid clearing context in Normal mode, keep this at 3 (or 4 when image input is enabled).</translation>
+        <source>关闭图片替换：第 3 次拆分、第 4 次清上下文；开启图片替换：第 3 次图片、第 4 次拆分、第 5 次清上下文</source>
+        <translation>Image off: split on 3rd, clear context on 4th. Image on: image on 3rd, split on 4th, clear context on 5th.</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>前 2 次常规请求失败后，默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启下方图片替换输入时，第 3 次先切图片输入、第 4 次拆分、普通模式第 5 次清空上下文</source>
-        <translation>After 2 normal attempts fail, splits in half on the 3rd and clears context on the 4th (Normal mode). With image input enabled below, switches to image input on the 3rd, splits on the 4th, and clears context on the 5th.</translation>
+        <location line="+16"/>
+        <source>失败时尝试对半拆分重翻，普通模式还会清空上下文重试</source>
+        <translation>Split batch on failure; Normal mode also clears context</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>如果用的打野 key 其实不建议开这个；开启图片替换输入时建议最大请求次数 &gt;= 5</source>
-        <translation>Not recommended for unreliable free API keys; set max request attempts &gt;= 5 when image input is enabled.</translation>
+        <source>如果用的打野 key 其实不建议开这个</source>
+        <translation>Not recommended for unreliable free API keys</translation>
     </message>
     <message>
         <location line="+13"/>
-        <source>在开启智能重试时生效：第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入，普通与 Agent 模式均支持</source>
-        <translation>Takes effect when smart retry is enabled: renders input text as images starting on the 3rd attempt (before splitting) and keeps image input on the 5th cleared-context retry in Normal mode. Supported in both Normal and Agent modes.</translation>
+        <source>智能重试第 3 次起将文本渲染为图片发送，需模型支持视觉</source>
+        <translation>Render input as images from 3rd retry (vision model required)</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败</source>
-        <translation>Requires a vision-capable model; model capability is not auto-detected and unsupported models may fail.</translation>
+        <source>普通与 Agent 模式均支持，不自动检测模型是否支持图片</source>
+        <translation>Supported in Normal and Agent modes; vision support is not auto-detected</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+63"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1734,13 +1739,13 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+117"/>
+        <location line="+118"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-368"/>
-        <location line="+212"/>
+        <location line="-375"/>
+        <location line="+218"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1762,7 +1767,7 @@ sk-...</translation>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+80"/>
+        <location line="+81"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -3747,7 +3752,7 @@ Cache: %4</translation>
         <translation>Cache</translation>
     </message>
     <message>
-        <location line="+37"/>
+        <location line="+30"/>
         <source>打开缓存文件夹</source>
         <translation>Open Cache Folder</translation>
     </message>
@@ -3978,7 +3983,7 @@ Cache: %4</translation>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="+132"/>
+        <location filename="ProjectCachePageFiles.cpp" line="+131"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>
@@ -4199,12 +4204,12 @@ Cache: %4</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+353"/>
+        <location line="+350"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-319"/>
+        <location line="-316"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
@@ -4297,7 +4302,7 @@ Cache: %4</translation>
     <message>
         <location line="-50"/>
         <location line="+54"/>
-        <location line="+219"/>
+        <location line="+216"/>
         <source>其他设置</source>
         <translation>Others</translation>
     </message>

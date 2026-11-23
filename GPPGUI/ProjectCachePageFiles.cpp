@@ -22,7 +22,6 @@ void ProjectCachePage::loadCacheFiles(bool discardDirty)
     // 首次进入页面会保守保留脏文件内存副本；用户主动刷新时 discardDirty=true，
     // 表示放弃未保存编辑并以磁盘内容为准，文件名前的 * 也会随之清掉。
     m_cacheFiles.clear();
-    m_cacheFilesLoaded = true;
     m_problemsLoaded = false;
     const QString previousFile = m_currentFile;
     if (discardDirty) {

@@ -36,13 +36,6 @@ ProjectCachePage::ProjectCachePage(fs::path& projectDir, tomlkit::Item& projectC
     setWindowTitle(tr("缓存管理"));
     setTitleVisible(false);
     setupUi();
-}
-
-void ProjectCachePage::ensureCacheFilesLoaded()
-{
-    if (m_cacheFilesLoaded) {
-        return;
-    }
     loadCacheFiles();
 }
 

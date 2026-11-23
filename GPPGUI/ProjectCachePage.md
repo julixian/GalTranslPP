@@ -17,13 +17,10 @@
 
 ## 创建与懒加载
 
-构造函数只调用 `_setupUI()`，不会立刻扫描缓存目录。这样项目页创建和添加项目时不再因为缓存管理页解析大量 JSON 而明显卡顿。
+`ProjectCachePage` 由 `ProjectSettingsPage` 在用户首次点击“缓存管理”菜单时按需创建，避免项目页初始化时提前解析大量缓存 JSON。
 
-缓存文件第一次加载发生在用户进入“缓存管理”页面时：
-
-- `ProjectSettingsPage` 的“缓存管理”菜单被触发后，会调用 `ensureCacheFilesLoaded()`。
-- `ensureCacheFilesLoaded()` 只在 `_cacheFilesLoaded == false` 时调用 `_loadCacheFiles()`。
-- 页面右上角的“刷新”图标和公开方法 `refreshCacheFiles()` 会调用 `_loadCacheFiles(true)`，用于放弃未保存的缓存编辑并按磁盘状态重新加载。
+- 构造函数依次调用 `setupUi()` 和 `loadCacheFiles()`，首次进入页面时直接加载缓存文件列表。
+- 页面右上角的“刷新”图标和公开方法 `refreshCacheFiles()` 会调用 `loadCacheFiles(true)`，用于放弃未保存的缓存编辑并按磁盘状态重新加载。
 
 `_setupUI()` 创建一个紧凑的双栏工作区：
 

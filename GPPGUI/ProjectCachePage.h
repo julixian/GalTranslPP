@@ -36,7 +36,6 @@ class ProjectCachePage : public BasePage
 public:
     explicit ProjectCachePage(fs::path& projectDir, tomlkit::Item& projectConfig, QWidget* parent = nullptr);
 
-    void ensureCacheFilesLoaded();
     void refreshCacheFiles();
 
 private:
@@ -156,7 +155,6 @@ private:
     QString m_currentFile;
     json m_entries = json::array();
 
-    bool m_cacheFilesLoaded{};
     bool m_problemsLoaded{};
     bool m_renderingEntries{};
     QSet<int> m_selectedEntryRows;

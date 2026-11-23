@@ -320,8 +320,8 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* maxRequestArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* maxRequestLayout = new QHBoxLayout(maxRequestArea);
 	GppDoubleText* requestText = new GppDoubleText(tr("最大请求次数"), 16,
-		tr("开启智能重试时建议 >= 4（开启图片替换输入时建议 >= 5）；普通模式：关闭图片时第 3 次拆分、第 4 次清空上下文，开启图片时第 3 次图片替换、第 4 次拆分、第 5 次清空上下文"), 10,
-		tr("若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）"), maxRequestArea);
+		tr("开启智能重试建议 >= 4，开启图片替换建议 >= 5"), 10,
+		tr("关闭图片替换：第 3 次拆分、第 4 次清上下文；开启图片替换：第 3 次图片、第 4 次拆分、第 5 次清上下文"), maxRequestArea);
 	maxRequestLayout->addWidget(requestText);
 	maxRequestLayout->addStretch();
 	ElaSpinBox* requestSpinBox = new ElaSpinBox(maxRequestArea);
@@ -332,43 +332,45 @@ void CommonSettingsPage::setupUi()
 
 	// 智能重试
 	bool useSmartRetry = tomlkit::findOr(m_projectConfig, "common", "smartRetry", false);
-	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
+	ElaDrawerArea* smartRetryDrawerArea = new ElaDrawerArea(mainWidget);
+	QWidget* smartRetryArea = new QWidget(smartRetryDrawerArea);
+	smartRetryDrawerArea->setDrawerHeader(smartRetryArea);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
 	GppDoubleText* smartRetryTextWidget = new GppDoubleText(tr("智能重试"), 16,
-		tr("前 2 次常规请求失败后，默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启下方图片替换输入时，第 3 次先切图片输入、第 4 次拆分、普通模式第 5 次清空上下文"), 10,
-		tr("如果用的打野 key 其实不建议开这个；开启图片替换输入时建议最大请求次数 >= 5"), smartRetryArea);
+		tr("失败时尝试对半拆分重翻，普通模式还会清空上下文重试"), 10,
+		tr("如果用的打野 key 其实不建议开这个"), smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();
 	ElaToggleSwitch* smartRetryToggle = new ElaToggleSwitch(smartRetryArea);
 	smartRetryToggle->setIsToggled(useSmartRetry);
 	smartRetryLayout->addWidget(smartRetryToggle);
-	mainLayout->addWidget(smartRetryArea);
+	mainLayout->addWidget(smartRetryDrawerArea);
 
 	// 图片替换输入（改善拒答）
 	const bool smartRetryImageInput = tomlkit::findOr(m_projectConfig, "common", "smartRetryImageInput", false);
-	ElaScrollPageArea* smartRetryImageInputArea = new ElaScrollPageArea(mainWidget);
+	ElaScrollPageArea* smartRetryImageInputArea = new ElaScrollPageArea(smartRetryDrawerArea);
 	QHBoxLayout* smartRetryImageInputLayout = new QHBoxLayout(smartRetryImageInputArea);
 	GppDoubleText* smartRetryImageInputText = new GppDoubleText(tr("图片替换输入（改善拒答）"), 16,
-		tr("在开启智能重试时生效：第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入，普通与 Agent 模式均支持"), 10,
-		tr("需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败"), smartRetryImageInputArea);
+		tr("智能重试第 3 次起将文本渲染为图片发送，需模型支持视觉"), 10,
+		tr("普通与 Agent 模式均支持，不自动检测模型是否支持图片"), smartRetryImageInputArea);
 	smartRetryImageInputLayout->addWidget(smartRetryImageInputText);
 	smartRetryImageInputLayout->addStretch();
 	ElaToggleSwitch* smartRetryImageInputToggle = new ElaToggleSwitch(smartRetryImageInputArea);
 	smartRetryImageInputToggle->setIsToggled(smartRetryImageInput);
 	smartRetryImageInputLayout->addWidget(smartRetryImageInputToggle);
-	mainLayout->addWidget(smartRetryImageInputArea);
+	smartRetryDrawerArea->addDrawer(smartRetryImageInputArea);
 
 	// 图片替换字体
 	const std::string smartRetryImageFont = tomlkit::findOr(m_projectConfig, "common", "smartRetryImageFont", "");
-	ElaScrollPageArea* smartRetryImageFontArea = new ElaScrollPageArea(mainWidget);
+	ElaScrollPageArea* smartRetryImageFontArea = new ElaScrollPageArea(smartRetryDrawerArea);
 	QHBoxLayout* smartRetryImageFontLayout = new QHBoxLayout(smartRetryImageFontArea);
 	GppDoubleText* smartRetryImageFontText = new GppDoubleText(tr("图片替换字体"), 16,
-		tr("留空自动选择系统字体；可填系统字体名（如 Leelawadee UI、Noto Sans Thai），或选择本地 .ttf/.otf/.ttc 字体文件（支持相对项目目录路径）"), 10,
-		"", smartRetryImageFontArea);
+		tr("留空自动选择，可填系统字体名或本地字体文件路径"), 10,
+		tr("支持系统字体名（如 Leelawadee UI）或 .ttf/.otf/.ttc 文件（支持相对项目目录）"), smartRetryImageFontArea);
 	smartRetryImageFontLayout->addWidget(smartRetryImageFontText);
 	smartRetryImageFontLayout->addStretch();
 	ElaLineEdit* smartRetryImageFontLineEdit = new ElaLineEdit(smartRetryImageFontArea);
-	smartRetryImageFontLineEdit->setFixedWidth(320);
+	smartRetryImageFontLineEdit->setFixedWidth(240);
 	smartRetryImageFontLineEdit->setPlaceholderText(tr("留空自动选择"));
 	smartRetryImageFontLineEdit->setText(QString::fromStdString(smartRetryImageFont));
 	smartRetryImageFontLayout->addWidget(smartRetryImageFontLineEdit);
@@ -388,7 +390,13 @@ void CommonSettingsPage::setupUi()
 				smartRetryImageFontLineEdit->setText(file);
 			}
 		});
-	mainLayout->addWidget(smartRetryImageFontArea);
+	smartRetryDrawerArea->addDrawer(smartRetryImageFontArea);
+	if (tomlkit::findOr(m_projectConfig, "GUIConfig", "commonSmartRetrySettingsExpanded", useSmartRetry)) {
+		smartRetryDrawerArea->expand();
+	}
+	else {
+		smartRetryDrawerArea->collapse();
+	}
 
 	// 额度检测
 	bool shouldCheckQuota = tomlkit::findOr(m_projectConfig, "common", "checkQuota", true);
@@ -714,6 +722,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.smartRetryImageInput", smartRetryImageInputToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.smartRetryImageFont", smartRetryImageFontLineEdit->text().trimmed().toStdString());
+			insertToml(m_projectConfig, "GUIConfig.commonSmartRetrySettingsExpanded", smartRetryDrawerArea->getIsExpand());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 

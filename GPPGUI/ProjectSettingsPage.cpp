@@ -364,9 +364,6 @@ void ProjectSettingsPage::switchToPage(int index, const QString& title, bool res
     if (m_settingsTitle) {
         m_settingsTitle->setText(title);
     }
-    if (index == ProjectCachePageIndex && m_projectCachePage) {
-        m_projectCachePage->ensureCacheFilesLoaded();
-    }
 }
 
 void ProjectSettingsPage::initialize()

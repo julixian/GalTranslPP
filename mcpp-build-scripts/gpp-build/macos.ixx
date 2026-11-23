@@ -67,7 +67,7 @@ int configure(std::string_view member) {
             mcpp::link_flag(library.generic_string().c_str());
         }
         mcpp::link_flag((python / "lib/libpython3.12.dylib").generic_string().c_str());
-        for (const char* framework : {"CoreFoundation", "SystemConfiguration", "Security"}) {
+        for (const char* framework : {"CoreFoundation", "SystemConfiguration", "Security", "CoreText", "CoreGraphics", "ImageIO"}) {
             mcpp::link_flag((std::string("-Wl,-framework,") + framework).c_str());
         }
         mcpp::link_flag("-liconv");

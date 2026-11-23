@@ -50,8 +50,8 @@ public:
         int problemMaxLines,
         int glossaryMaxLines,
         bool smartRetry,
+        bool smartRetryImageInput,
         bool checkQuota,
-        int enhanceJailbreak,
         std::shared_mutex& transCacheMutex,
         absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
         const std::vector<fs::path>& knownRelFiles,
@@ -145,8 +145,8 @@ private:
     int m_problemMaxLines;
     int m_glossaryMaxLines;
     bool m_smartRetry;
+    bool m_smartRetryImageInput;
     bool m_checkQuota;
-    int m_enhanceJailbreak;
     std::shared_mutex& m_transCacheMutex;
     absl::flat_hash_map<fs::path, json>& m_savedTranslCacheMap;
     std::mutex m_stateMutex;
@@ -218,8 +218,9 @@ private:
     std::string buildLogBlock(const fs::path& relInputPath, std::span<Sentence*> pending, const std::string& rollingContext);
 
     // 替换当前批次的原文、术语和备注占位符，追加到 worker 会话。
-    // 压缩摘要仅在重建会话时单独注入，不放入每批提示词。
-    std::string buildUserPrompt(const fs::path& relInputPath, std::span<Sentence*> pending, const std::string& rollingContext);
+    // 压缩摘要仅在重建会话时单独注入，不放入每批提示词；imagePageCount 有值时使用图片占位符并附加读图说明。
+    std::string buildUserPrompt(const fs::path& relInputPath, std::span<Sentence*> pending,
+        const std::string& rollingContext, std::optional<size_t> imagePageCount = std::nullopt);
 
     // 校验 commit_translations 参数并写入译文，再更新术语账本、备注和建议。
     // 缺句或空译文通过工具 error 回填；附加信息写入失败只记录警告，不重试已提交译文。

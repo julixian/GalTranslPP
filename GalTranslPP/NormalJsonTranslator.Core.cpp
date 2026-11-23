@@ -113,7 +113,7 @@ void NormalJsonTranslator::normalJsonInit()
         m_problemMaxLines = settings.problemMaxLines;
         m_glossaryMaxLines = settings.glossaryMaxLines;
         m_smartRetry = settings.smartRetry;
-        m_enhanceJailbreak = settings.enhanceJailbreak;
+        m_smartRetryImageInput = settings.smartRetryImageInput;
         m_checkQuota = settings.checkQuota;
         m_retransAllWhenFail = settings.retransAllWhenFail;
         m_agentEnabled = settings.agentEnabled;

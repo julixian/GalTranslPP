@@ -149,15 +149,18 @@ threadsNum = 5                  # 最大线程数
 sortMethod = "size"             # 翻译顺序，name 为文件名，size 为大文件优先，多线程时大文件优先可以提高整体速度[name/size]
 targetLang = "zh-cn"            # 翻译到的目标语言，包括但不限于[zh-cn/zh-tw/en/ja/ko/ru/fr/...]
 saveCacheInterval = 1           # 每翻译 n 次保存一次缓存
-keepPreviousOtherInfo = false   # 命中缓存时保留上一次的 otherinfo，本轮生成的同名信息可覆盖旧值
+keepPreviousOtherInfo = true    # 命中缓存时保留上一次的 otherinfo，本轮生成的同名信息可覆盖旧值
 linebreakSymbol = "auto"        # 这个项目文本所使用的换行符
-maxRequestCount = 4             # 最大请求次数
+# 最大请求次数；开启智能重试时建议 >= 4（开启图片替换输入时建议 >= 5）
+# 普通模式：关闭图片替换时为 1-2 次常规 -> 3 次对半拆分 -> 4 次清空上下文；开启图片替换时为 1-2 次常规 -> 3 次图片替换 -> 4 次对半拆分 -> 5 次清空上下文
+# 若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）
+maxRequestCount = 5
 problemOverviewFormat = "json"  # 问题概览输出格式: json/toml
-smartRetry = false              # 失败时尝试对半拆分重翻；普通模式还会清空上下文重试；如果用的打野 key 其实不建议开这个
-# 改善拒答（回复预填充）：0 无，1 一级填充，2 二级填充
-# 仅少量模型支持。一级填充：以 assistant 预填充结尾；二级填充：再追加用户消息要求继续。
-# 不检查模型支持，误用可能导致请求失败
-enhanceJailbreak = 0
+smartRetry = false              # 前 2 次常规请求失败后：默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启图片替换时第 3 次先切图片、第 4 次拆分、第 5 次清空上下文；打野 key 不建议开
+# 图片替换输入（改善拒答），在开启 smartRetry 时生效（普通模式与 Agent 模式均支持）
+# 第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入
+# 需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败
+smartRetryImageInput = false
 checkQuota = true               # 运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key
 
 # 解析不完整时重翻整段而非仅重翻漏掉的部分，增加模型因串行而导致解析失败时的容错
@@ -195,8 +198,8 @@ spaCyModelName = "ja_core_news_lg" # sm 模型的效果有点一言难尽，有�
 stanzaLang = "ja"
 
 [common.agent]
-enabled = false # 启用原生工具调用，并按 worker 保留跨文件会话
-allowPython = false # 仅 Agent：允许运行 Python 代码；只读由工具提示约束，不会限制进程的文件权限；不聪明的模型可能会吃掉你的电脑！
+enabled = false          # 启用原生工具调用，并按 worker 保留跨文件会话
+allowPython = false      # 仅 Agent：允许运行 Python 代码；只读由工具提示约束，不会限制进程的文件权限；不聪明的模型可能会吃掉你的电脑！
 maxTurnsPerChunk = 50
 searchResultLimit = 80
 contextLinesLimit = 20
@@ -263,8 +266,8 @@ langProbability = 0.94 # 语言不通检测的语言置信度，设置越高则�
 defaultDictFolder = "BaseConfig/Dicts" 
 usePreDictInName = false   # 将译前字典用在 name 字段，可用于翻译 name 字段，会发送给翻译引擎替换后的 name [true/false]
 usePostDictInName = false  # 将译后字典用在 name 字段，可用于翻译 name 字段 [true/false]
-usePreDictInMsg = true   # 将译前字典用在 message 字段，可用于翻译 message 字段，会发送给翻译引擎替换后的 message [true/false]
-usePostDictInMsg = true  # 将译后字典用在 message 字段，可用于翻译 message 字段 [true/false]
+usePreDictInMsg = true     # 将译前字典用在 message 字段，可用于翻译 message 字段，会发送给翻译引擎替换后的 message [true/false]
+usePostDictInMsg = true    # 将译后字典用在 message 字段，可用于翻译 message 字段 [true/false]
 
 useGPTDictToReplaceName = false   # 将 GPT字典 用在 name 字段，可用于翻译 name 字段(直接搜索替换) [true/false]
 

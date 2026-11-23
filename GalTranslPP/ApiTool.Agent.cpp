@@ -8,20 +8,53 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
-void appendAgentUserMessage(AgentApiSession& session, const std::string& text)
+void appendAgentUserMessage(AgentApiSession& session, const std::string& text,
+    std::span<const std::vector<std::uint8_t>> pngPages)
 {
-    switch (session.api.protocol)
-    {
-    case ApiProtocol::GeminiInterAction:
-        session.history.push_back({{"type", "user_input"}, {"content", json::array({{{"type", "text"}, {"text", text}}})}});
-        break;
-    case ApiProtocol::Gemini:
-        session.history.push_back({{"role", "user"}, {"parts", json::array({{{"text", text}}})}});
-        break;
-    default:
-        session.history.push_back({{"role", "user"}, {"content", text}});
-        break;
+    session.history.push_back(makeApiUserMessage(text, session.api.protocol, pngPages));
+}
+
+namespace {
+
+std::size_t estimateJsonBytesWithoutImagePayload(const json& value)
+{
+    constexpr std::size_t kImagePlaceholderBytes = 10; // "\"[image]\""
+    if (value.is_string()) {
+        const auto& s = value.get_ref<const std::string&>();
+        if (s.starts_with("data:image/")) {
+            return kImagePlaceholderBytes;
+        }
+        return s.size() + 2;
     }
+    if (value.is_array()) {
+        std::size_t total = 2; // []
+        for (const auto& elem : value) {
+            total += estimateJsonBytesWithoutImagePayload(elem) + 1;
+        }
+        return total;
+    }
+    if (value.is_object()) {
+        const bool isImagePayloadContainer = value.contains("media_type") || value.contains("mime_type");
+        std::size_t total = 2; // {}
+        for (const auto& item : value.items()) {
+            total += item.key().size() + 4; // "key":...,
+            if (isImagePayloadContainer && item.key() == "data" && item.value().is_string()) {
+                total += kImagePlaceholderBytes;
+            }
+            else {
+                total += estimateJsonBytesWithoutImagePayload(item.value());
+            }
+        }
+        return total;
+    }
+    return value.dump().size();
+}
+
+} // namespace
+
+std::size_t estimateAgentHistoryBytes(const json& history)
+{
+    return estimateJsonBytesWithoutImagePayload(history);
 }
 
 void appendAgentToolResults(AgentApiSession& session, const json& results)
@@ -78,13 +111,10 @@ json pendingAgentInput(const AgentApiSession& session, json history)
 // performAgentApiRequest 将统一工具 schema、system 和历史转为各协议请求，应用严格工具档位与原生压缩声明。
 // Responses/Interactions 可按 previousId 续接；其它路径发完整历史。不发送请求或修改会话。
 // tools 由 configureWorkers 生成，直接按内部约定的字段转换。
-json buildAgentPayload(const AgentApiSession& session, const json& tools, int enhanceJailbreak)
+json buildAgentPayload(const AgentApiSession& session, const json& tools)
 {
     const auto& api = session.api;
     json history = session.history;
-    // 预填充及用户继续消息只追加到本次请求，不写入会话，不检查模型或协议支持情况。
-    appendApiPrefill(history, "Understood. I will translate this batch according to the translation requirements.",
-        enhanceJailbreak, api.protocol);
     json payload;
     json nativeTools = json::array();
     const auto isStrictTool = [&](const json& tool)
@@ -453,7 +483,7 @@ AgentApiReply parseAgentReply(const json& parsed, AgentApiSession& session)
     return reply;
 }
 
-AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools, int enhanceJailbreak,
+AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs)
 {
@@ -461,7 +491,7 @@ AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& to
     std::string responseBody;
     try {
         auto api = session.api;
-        json payload = buildAgentPayload(session, tools, enhanceJailbreak);
+        json payload = buildAgentPayload(session, tools);
         // 按实际协议应用选项，extraBody 最后覆盖。
         const json extraBody = api.extraBody;
         api.extraBody = json::object();

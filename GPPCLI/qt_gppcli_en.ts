@@ -265,8 +265,9 @@
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="104"/>
-        <source>改善拒答档位</source>
-        <translation>Response prefill level</translation>
+        <source>图片替换输入</source>
+        <oldsource>改善拒答档位</oldsource>
+        <translation type="unfinished">Response prefill level</translation>
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="105"/>

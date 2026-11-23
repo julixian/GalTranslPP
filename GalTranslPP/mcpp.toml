@@ -39,10 +39,16 @@ include_dirs = [
 [target.windows.build]
 defines = ["_LIB"]
 include_dirs = ["../3rdParty/pybind11/Python/include"]
-ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi"]
+ldflags = ["-luser32", "-loleaut32", "-lwinhttp", "-lshlwapi", "-ld2d1", "-ldwrite", "-lwindowscodecs", "-lole32"]
 
 [target.macos.build]
-ldflags = ["-Wl,-framework,CoreFoundation", "-Wl,-framework,SystemConfiguration"]
+ldflags = [
+  "-Wl,-framework,CoreFoundation",
+  "-Wl,-framework,SystemConfiguration",
+  "-Wl,-framework,CoreText",
+  "-Wl,-framework,CoreGraphics",
+  "-Wl,-framework,ImageIO"
+]
 
 [targets.GalTranslPP]
 kind = "lib"

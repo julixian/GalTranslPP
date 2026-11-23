@@ -101,7 +101,7 @@ ProjectPreview readPreview(const fs::path& projectDir)
     addRow(general, gppTr("TerminalPreview", "缓存保存间隔"), std::to_string(settings.saveCacheInterval));
     addRow(general, gppTr("TerminalPreview", "最大请求次数"), std::to_string(settings.maxRequestCount));
     addRow(general, gppTr("TerminalPreview", "智能重试"), enabledText(settings.smartRetry));
-    addRow(general, gppTr("TerminalPreview", "改善拒答档位"), std::to_string(settings.enhanceJailbreak));
+    addRow(general, gppTr("TerminalPreview", "图片替换输入"), enabledText(settings.smartRetryImageInput));
     addRow(general, gppTr("TerminalPreview", "额度检测"), enabledText(settings.checkQuota));
     addRow(general,
         gppTr("TerminalPreview", "整批重翻"),

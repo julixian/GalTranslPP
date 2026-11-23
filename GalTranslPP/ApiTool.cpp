@@ -8,6 +8,7 @@ module;
 #include <SystemConfiguration/SystemConfiguration.h>
 #endif
 #include <cpr/cpr.h>
+#include <cpp-base64/base64.h>
 
 module ApiTool;
 
@@ -15,34 +16,239 @@ import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
-void appendApiPrefill(json& messages, const std::string& prefill, int enhanceJailbreak, ApiProtocol protocol)
+namespace {
+
+std::string encodePngBase64(std::span<const std::uint8_t> png)
 {
-    if (enhanceJailbreak == 0 || prefill.empty()) {
-        return;
-    }
+    return base64_encode(reinterpret_cast<const unsigned char*>(png.data()), png.size());
+}
 
-    const auto appendMessage = [&](bool assistant, const std::string& text)
-        {
-            switch (protocol)
-            {
-            case ApiProtocol::GeminiInterAction:
-                messages.push_back({{"type", assistant ? "model_output" : "user_input"},
-                    {"content", json::array({{{"type", "text"}, {"text", text}}})}});
-                break;
-            case ApiProtocol::Gemini:
-                messages.push_back({{"role", assistant ? "model" : "user"},
-                    {"parts", json::array({{{"text", text}}})}});
-                break;
-            default:
-                messages.push_back({{"role", assistant ? "assistant" : "user"}, {"content", text}});
-                break;
+std::pair<std::string, std::string> parseBase64DataUrl(std::string_view url)
+{
+    constexpr std::string_view kPrefix = "data:";
+    constexpr std::string_view kBase64Marker = ";base64,";
+    if (url.starts_with(kPrefix)) {
+        if (const size_t markerPos = url.find(kBase64Marker, kPrefix.size()); markerPos != std::string_view::npos) {
+            std::string mime(url.substr(kPrefix.size(), markerPos - kPrefix.size()));
+            std::string data(url.substr(markerPos + kBase64Marker.size()));
+            if (mime.empty()) {
+                mime = "image/png";
             }
-        };
-
-    appendMessage(true, prefill);
-    if (enhanceJailbreak == 2) {
-        appendMessage(false, "Continue.");
+            return { std::move(mime), std::move(data) };
+        }
     }
+    return { "image/png", std::string(url) };
+}
+
+bool extractImageBlockData(const json& block, std::string& mimeType, std::string& rawBase64, std::string& dataUrl, std::string& detail)
+{
+    const std::string type = block.value("type", std::string{});
+    detail = "high";
+    if (type == "image_url" && block.contains("image_url")) {
+        const auto& imgField = block.at("image_url");
+        if (imgField.is_string()) {
+            dataUrl = imgField.get<std::string>();
+        }
+        else if (imgField.is_object()) {
+            dataUrl = imgField.value("url", std::string{});
+            detail = imgField.value("detail", std::string("high"));
+        }
+        else {
+            return false;
+        }
+        std::tie(mimeType, rawBase64) = parseBase64DataUrl(dataUrl);
+        return true;
+    }
+    if (type == "input_image" && block.contains("image_url") && block.at("image_url").is_string()) {
+        dataUrl = block.at("image_url").get<std::string>();
+        detail = block.value("detail", std::string("high"));
+        std::tie(mimeType, rawBase64) = parseBase64DataUrl(dataUrl);
+        return true;
+    }
+    if (type == "image") {
+        if (block.contains("source") && block.at("source").is_object()) {
+            const auto& source = block.at("source");
+            mimeType = source.value("media_type", std::string("image/png"));
+            rawBase64 = source.value("data", std::string{});
+            dataUrl = "data:" + mimeType + ";base64," + rawBase64;
+            return true;
+        }
+        if (block.contains("data") && block.at("data").is_string()) {
+            mimeType = block.value("mime_type", std::string("image/png"));
+            rawBase64 = block.at("data").get<std::string>();
+            dataUrl = "data:" + mimeType + ";base64," + rawBase64;
+            return true;
+        }
+    }
+    if (block.contains("inline_data") && block.at("inline_data").is_object()) {
+        const auto& inlineData = block.at("inline_data");
+        mimeType = inlineData.value("mime_type", std::string("image/png"));
+        rawBase64 = inlineData.value("data", std::string{});
+        dataUrl = "data:" + mimeType + ";base64," + rawBase64;
+        return true;
+    }
+    return false;
+}
+
+json convertContentToGeminiParts(const json& content)
+{
+    json parts = json::array();
+    if (content.is_string()) {
+        parts.push_back({ {"text", content} });
+        return parts;
+    }
+    if (!content.is_array()) {
+        return parts;
+    }
+    for (const auto& block : content) {
+        if (!block.is_object()) {
+            continue;
+        }
+        const std::string type = block.value("type", std::string{});
+        if ((type == "text" || type == "input_text" || type == "output_text") && block.contains("text")) {
+            parts.push_back({ {"text", block.at("text")} });
+            continue;
+        }
+        std::string mimeType, rawBase64, dataUrl, detail;
+        if (extractImageBlockData(block, mimeType, rawBase64, dataUrl, detail)) {
+            parts.push_back({
+                {"inline_data", {
+                    {"mime_type", std::move(mimeType)},
+                    {"data", std::move(rawBase64)}
+                }}
+            });
+            continue;
+        }
+        if (block.contains("text") && block.at("text").is_string()) {
+            parts.push_back({ {"text", block.at("text")} });
+        }
+    }
+    return parts;
+}
+
+json convertContentToGeminiInteractionBlocks(const json& content)
+{
+    json blocks = json::array();
+    if (content.is_string()) {
+        blocks.push_back({ {"type", "text"}, {"text", content} });
+        return blocks;
+    }
+    if (!content.is_array()) {
+        return blocks;
+    }
+    for (const auto& block : content) {
+        if (!block.is_object()) {
+            continue;
+        }
+        const std::string type = block.value("type", std::string{});
+        if ((type == "text" || type == "input_text" || type == "output_text") && block.contains("text")) {
+            blocks.push_back({ {"type", "text"}, {"text", block.at("text")} });
+            continue;
+        }
+        std::string mimeType, rawBase64, dataUrl, detail;
+        if (extractImageBlockData(block, mimeType, rawBase64, dataUrl, detail)) {
+            blocks.push_back({
+                {"type", "image"},
+                {"data", std::move(rawBase64)},
+                {"mime_type", std::move(mimeType)}
+            });
+            continue;
+        }
+        blocks.push_back(block);
+    }
+    return blocks;
+}
+
+} // namespace
+
+json makeApiUserMessage(const std::string& text, ApiProtocol protocol, std::span<const std::vector<std::uint8_t>> pngPages)
+{
+    if (pngPages.empty()) {
+        switch (protocol)
+        {
+        case ApiProtocol::GeminiInterAction:
+            return { {"type", "user_input"}, {"content", json::array({{{"type", "text"}, {"text", text}}})} };
+        case ApiProtocol::Gemini:
+            return { {"role", "user"}, {"parts", json::array({{{"text", text}}})} };
+        default:
+            return { {"role", "user"}, {"content", text} };
+        }
+    }
+
+    switch (protocol)
+    {
+    case ApiProtocol::OpenAI:
+    {
+        json content = json::array({ {{"type", "text"}, {"text", text}} });
+        for (const auto& png : pngPages) {
+            content.push_back({
+                {"type", "image_url"},
+                {"image_url", {
+                    {"url", "data:image/png;base64," + encodePngBase64(png)},
+                    {"detail", "high"}
+                }}
+            });
+        }
+        return { {"role", "user"}, {"content", std::move(content)} };
+    }
+
+    case ApiProtocol::OpenAIRes:
+    {
+        json content = json::array({ {{"type", "input_text"}, {"text", text}} });
+        for (const auto& png : pngPages) {
+            content.push_back({
+                {"type", "input_image"},
+                {"image_url", "data:image/png;base64," + encodePngBase64(png)},
+                {"detail", "high"}
+            });
+        }
+        return { {"role", "user"}, {"content", std::move(content)} };
+    }
+
+    case ApiProtocol::Claude:
+    {
+        json content = json::array({ {{"type", "text"}, {"text", text}} });
+        for (const auto& png : pngPages) {
+            content.push_back({
+                {"type", "image"},
+                {"source", {
+                    {"type", "base64"},
+                    {"media_type", "image/png"},
+                    {"data", encodePngBase64(png)}
+                }}
+            });
+        }
+        return { {"role", "user"}, {"content", std::move(content)} };
+    }
+
+    case ApiProtocol::Gemini:
+    {
+        json parts = json::array({ {{"text", text}} });
+        for (const auto& png : pngPages) {
+            parts.push_back({
+                {"inline_data", {
+                    {"mime_type", "image/png"},
+                    {"data", encodePngBase64(png)}
+                }}
+            });
+        }
+        return { {"role", "user"}, {"parts", std::move(parts)} };
+    }
+
+    case ApiProtocol::GeminiInterAction:
+    {
+        json content = json::array({ {{"type", "text"}, {"text", text}} });
+        for (const auto& png : pngPages) {
+            content.push_back({
+                {"type", "image"},
+                {"data", encodePngBase64(png)},
+                {"mime_type", "image/png"}
+            });
+        }
+        return { {"type", "user_input"}, {"content", std::move(content)} };
+    }
+    }
+    return { {"role", "user"}, {"content", text} };
 }
 
 bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs)
@@ -323,15 +529,41 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         for (auto message = messages.begin(); message != messages.end();) {
             if (message->at("role") == "system") {
                 auto& content = message->at("content");
-                if (content.is_string() && !content.get_ref<const std::string&>().empty()) {
-                    systemBlocks.push_back({ {"type", "text"}, {"text", content} });
+                if (content.is_string()) {
+                    if (!content.get_ref<const std::string&>().empty()) {
+                        systemBlocks.push_back({ {"type", "text"}, {"text", content} });
+                    }
                 }
-                else {
+                else if (content.is_array()) {
                     systemBlocks.insert(systemBlocks.end(), content.begin(), content.end());
                 }
                 message = messages.erase(message);
             }
             else {
+                if (message->contains("content") && message->at("content").is_array()) {
+                    for (auto& block : message->at("content")) {
+                        if (!block.is_object()) {
+                            continue;
+                        }
+                        const std::string type = block.value("type", std::string{});
+                        if (type == "input_text" && block.contains("text")) {
+                            block = { {"type", "text"}, {"text", block.at("text")} };
+                        }
+                        else if (type == "image_url" || type == "input_image") {
+                            std::string mimeType, rawBase64, dataUrl, detail;
+                            if (extractImageBlockData(block, mimeType, rawBase64, dataUrl, detail)) {
+                                block = {
+                                    {"type", "image"},
+                                    {"source", {
+                                        {"type", "base64"},
+                                        {"media_type", std::move(mimeType)},
+                                        {"data", std::move(rawBase64)}
+                                    }}
+                                };
+                            }
+                        }
+                    }
+                }
                 ++message;
             }
         }
@@ -341,7 +573,36 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
     }
 
     if (api.protocol == ApiProtocol::OpenAIRes && payload.contains("messages")) {
-        payload["input"] = std::move(payload.at("messages"));
+        json inputItems = std::move(payload.at("messages"));
+        for (auto& message : inputItems) {
+            if (!message.is_object() || !message.contains("content") || !message.at("content").is_array()) {
+                continue;
+            }
+            const bool isAssistant = message.value("role", std::string{}) == "assistant";
+            for (auto& block : message.at("content")) {
+                if (!block.is_object()) {
+                    continue;
+                }
+                const std::string type = block.value("type", std::string{});
+                if (type == "text" && block.contains("text")) {
+                    block = {
+                        {"type", isAssistant ? "output_text" : "input_text"},
+                        {"text", block.at("text")}
+                    };
+                }
+                else if (type == "image_url" || type == "image") {
+                    std::string mimeType, rawBase64, dataUrl, detail;
+                    if (extractImageBlockData(block, mimeType, rawBase64, dataUrl, detail)) {
+                        block = {
+                            {"type", "input_image"},
+                            {"image_url", std::move(dataUrl)},
+                            {"detail", std::move(detail)}
+                        };
+                    }
+                }
+            }
+        }
+        payload["input"] = std::move(inputItems);
         payload.erase("messages");
         payload["store"] = false;
     }
@@ -353,11 +614,11 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
             payload["contents"] = json::array();
             for (const auto& message : payload.at("messages")) {
                 if (message.at("role") == "system") {
-                    payload["systemInstruction"] = {{"parts", json::array({{{"text", message.at("content")}}})}};
+                    payload["systemInstruction"] = {{"parts", convertContentToGeminiParts(message.at("content"))}};
                 }
                 else {
                     payload["contents"].push_back({{"role", message.at("role") == "assistant" ? "model" : "user"},
-                        {"parts", json::array({{{"text", message.at("content")}}})}});
+                        {"parts", convertContentToGeminiParts(message.at("content"))}});
                 }
             }
             payload.erase("messages");
@@ -378,6 +639,38 @@ void applyApiPayloadOptions(json& payload, const TranslationApi& api)
         break;
 
     case ApiProtocol::GeminiInterAction:
+        if (payload.contains("messages")) {
+            json inputItems = json::array();
+            std::string systemInstruction;
+            for (const auto& message : payload.at("messages")) {
+                if (message.at("role") == "system") {
+                    const auto& content = message.at("content");
+                    if (content.is_string()) {
+                        if (!systemInstruction.empty()) systemInstruction += '\n';
+                        systemInstruction += content.get_ref<const std::string&>();
+                    }
+                    else if (content.is_array()) {
+                        for (const auto& block : content) {
+                            if (block.is_object() && block.contains("text") && block.at("text").is_string()) {
+                                if (!systemInstruction.empty()) systemInstruction += '\n';
+                                systemInstruction += block.at("text").get_ref<const std::string&>();
+                            }
+                        }
+                    }
+                }
+                else {
+                    inputItems.push_back({
+                        {"type", message.at("role") == "assistant" ? "model_output" : "user_input"},
+                        {"content", convertContentToGeminiInteractionBlocks(message.at("content"))}
+                    });
+                }
+            }
+            if (!systemInstruction.empty()) {
+                payload["system_instruction"] = std::move(systemInstruction);
+            }
+            payload["input"] = std::move(inputItems);
+            payload.erase("messages");
+        }
         payload["model"] = api.modelName;
         payload["generation_config"]["thinking_summaries"] = "auto";
         break;

@@ -5,11 +5,33 @@ module;
 module NormalJsonTranslator;
 
 import NormalJsonTranslatorHelperTool;
+import TextImageRenderer;
 import Tool;
 
 NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
+
+namespace {
+
+void appendTaggedImageSection(std::string& dst, std::string_view tag, std::string_view body)
+{
+    if (!dst.empty()) {
+        dst += "\n\n";
+    }
+    dst += '<';
+    dst += tag;
+    dst += ">\n";
+    dst += body;
+    if (!body.ends_with('\n')) {
+        dst += '\n';
+    }
+    dst += "</";
+    dst += tag;
+    dst += '>';
+}
+
+} // namespace
 
 bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
     int& recursionIndex, int& recursionCount, int threadId, int batchIndex)
@@ -40,7 +62,10 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             return true;
         }
 
-        if (m_smartRetry && requestCount == 2 && batchToTransThisRound.size() > 1) {
+        const int splitRequestCount = m_smartRetryImageInput ? 3 : 2;
+        const int clearContextRequestCount = m_smartRetryImageInput ? 4 : 3;
+
+        if (m_smartRetry && requestCount == splitRequestCount && batchToTransThisRound.size() > 1) {
             m_logger->warn(gppTr(
                 "NormalJsonTranslator.translateBatch",
                 "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 开始对半拆分句子重新请求...")
@@ -65,7 +90,7 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
 
             return firstOk && secondOk;
         }
-        else if (m_smartRetry && requestCount == 3) {
+        else if (m_smartRetry && requestCount == clearContextRequestCount) {
             m_logger->warn(gppTr(
                 "NormalJsonTranslator.translateBatch",
                 "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 清空上下文后再次尝试...")
@@ -118,35 +143,77 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
             .toStdString());
 
 
+        const bool useImageInput = m_smartRetry && m_smartRetryImageInput && requestCount >= 2;
+        const bool hasRollingContext = !rollingContext.empty();
+        std::vector<std::vector<std::uint8_t>> pngPages;
+        bool imageInputActive = false;
+        if (useImageInput) {
+            std::string imageText;
+            if (hasRollingContext) {
+                appendTaggedImageSection(imageText, "rolling_context", rollingContext);
+            }
+            appendTaggedImageSection(imageText, "input", inputBlock);
+            if (auto rendered = renderTextToPngPages(imageText); rendered && !rendered->empty()) {
+                pngPages = std::move(*rendered);
+                imageInputActive = true;
+                m_logger->info(gppTr(
+                    "NormalJsonTranslator.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 智能重试已启用图片替换输入，共渲染 %5 张图片")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(requestCount + 1)
+                    .arg(pngPages.size())
+                    .toStdString());
+            }
+            else {
+                m_logger->warn(gppTr(
+                    "NormalJsonTranslator.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 图片替换输入渲染失败，本次回退为纯文本发送: %5")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(requestCount + 1)
+                    .arg(rendered ? std::string("empty page list") : rendered.error())
+                    .toStdString());
+            }
+        }
+
+        constexpr std::string_view kImagePlaceholder = "(provided in the attached image)";
+        const std::string rollingContextValue = !hasRollingContext
+            ? "None"
+            : (imageInputActive ? std::string(kImagePlaceholder) : rollingContext);
+        const std::string inputValue = imageInputActive ? std::string(kImagePlaceholder) : inputBlock;
+
         std::string systemPrompt = m_systemPrompt;
         std::string promptReq = m_userPrompt;
         // 普通 batch 的两种提示词共用批次占位符，使用副本避免改写下一批的模板。
         for (std::string* prompt : {&systemPrompt, &promptReq}) {
             replaceStrInplace(*prompt, "[Problem Description]", inputProblems.empty() ? "None" : inputProblems);
-            replaceStrInplace(*prompt, "[RollingContext]", rollingContext.empty() ? "None" : rollingContext);
-            replaceStrInplace(*prompt, "[Input]", inputBlock);
+            replaceStrInplace(*prompt, "[RollingContext]", rollingContextValue);
+            replaceStrInplace(*prompt, "[Input]", inputValue);
             replaceStrInplace(*prompt, "[TargetLang]", m_targetLang);
             replaceStrInplace(*prompt, "[Glossary]", glossary.empty() ? "None" : glossary);
         }
 
-        json messages = json::array({ {{"role", "system"}, {"content", systemPrompt}} });
-        messages.push_back({ {"role", "user"}, {"content", promptReq} });
-
-        std::string assistantPrefill;
-        switch (m_transEngine)
-        {
-        case TransEngine::ForGalJson:
-        case TransEngine::ForNovelJson:
-            assistantPrefill = "```jsonline\n";
-            break;
-        case TransEngine::ForGalTsv:
-        case TransEngine::ForNovelTsv:
-            assistantPrefill = "```TSV\n";
-            break;
-        default:
-            break;
+        if (imageInputActive) {
+            const std::string_view partsDesc = hasRollingContext
+                ? "the <rolling_context> and <input> contents are"
+                : "the <input> content is";
+            while (!promptReq.empty() && (promptReq.back() == '\n' || promptReq.back() == '\r' || promptReq.back() == ' ')) {
+                promptReq.pop_back();
+            }
+            promptReq += std::format(
+                "\n\nNote: {} provided as {} attached image(s), in reading order. "
+                "Read them carefully, preserve every ID, tag, and symbol verbatim as shown, "
+                "and reply in plain text in the required output format.",
+                partsDesc, pngPages.size());
         }
-        appendApiPrefill(messages, assistantPrefill, m_enhanceJailbreak);
+
+        json messages = json::array({
+            {{"role", "system"}, {"content", systemPrompt}},
+            makeApiUserMessage(promptReq, ApiProtocol::OpenAI, pngPages)
+        });
 
         const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
         if (!apiOpt.has_value()) {

@@ -4,6 +4,7 @@
 
 #include <QMainWindow>
 #include <QSize>
+#include <QStringList>
 #include "GppTomlFwd.h"
 #include <filesystem>
 #include <memory>
@@ -58,7 +59,19 @@ private:
     void initWindow();
     void initEdgeLayout();
     void initContent();
-    ProjectSettingsPage* createProjectSettingsPage(const fs::path& projectDir);
+    ProjectSettingsPage* createProjectSettingsPage(const fs::path& projectDir, const QString& targetParentKey = {});
+    ProjectSettingsPage* findProjectPageByKey(const QString& nodeKey) const;
+    QStringList getOrderedProjectCategoryKeys() const;
+    bool isProjectCategoryKey(const QString& nodeKey) const;
+    bool hasCategoryName(const QString& name, const QString& excludeCategoryKey = {}) const;
+    bool promptCategoryName(const QString& dialogTitle, const QString& initialText, const QString& placeholder, QString& outName);
+    QString createProjectCategory(const QString& name);
+    void handleNewProjectCategory(const QString& moveProjectKey = {});
+    void handleRenameProjectCategory(const QString& categoryKey);
+    void handleDeleteProjectCategory(const QString& categoryKey);
+    void showProjectRootContextMenu(const QPoint& globalPos);
+    void showProjectCategoryContextMenu(const QString& categoryKey, const QPoint& globalPos);
+    void showProjectNodeContextMenu(const QString& nodeKey, const QPoint& globalPos);
     void updateTaskbarProgress();
     void updateTaskbarBadge();
     void syncProjectsToGlobalConfig();
@@ -73,6 +86,8 @@ private:
 
     QString m_commonDictExpanderKey;
     QString m_projectExpanderKey;
+    QStringList m_projectCategoryKeys;
+    bool m_projectsLoaded = false;
 
     QString m_aboutKey;
     QString m_illustrationKey;

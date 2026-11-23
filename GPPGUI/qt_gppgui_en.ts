@@ -1428,42 +1428,38 @@ sk-...</translation>
         <translation>Keep metadata when a cache entry matches; current metadata can overwrite values with the same key</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+27"/>
         <source>智能重试</source>
         <translation>Smart retry</translation>
     </message>
     <message>
-        <location line="+14"/>
         <source>改善拒答（回复预填充）</source>
-        <translation>Reduce refusals (assistant prefill)</translation>
+        <translation type="vanished">Reduce refusals (assistant prefill)</translation>
     </message>
     <message>
-        <location line="+1"/>
         <source>仅少量模型支持。一级填充：以 assistant 预填充结尾；二级填充：再追加用户消息要求继续。</source>
-        <translation>Only a few models support this. Level 1: end with an assistant prefill. Level 2: append a user message asking the model to continue.</translation>
+        <translation type="vanished">Only a few models support this. Level 1: end with an assistant prefill. Level 2: append a user message asking the model to continue.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>不检查模型支持，误用可能导致请求失败</source>
-        <translation>Model support is not checked; an unsupported mode may cause requests to fail</translation>
+        <location line="+14"/>
+        <source>图片替换输入（改善拒答）</source>
+        <oldsource>不检查模型支持，误用可能导致请求失败</oldsource>
+        <translation type="unfinished">Model support is not checked; an unsupported mode may cause requests to fail</translation>
     </message>
     <message>
-        <location line="+4"/>
         <source>无</source>
-        <translation>None</translation>
+        <translation type="vanished">None</translation>
     </message>
     <message>
-        <location line="+0"/>
         <source>一级填充</source>
-        <translation>Level 1</translation>
+        <translation type="vanished">Level 1</translation>
     </message>
     <message>
-        <location line="+0"/>
         <source>二级填充</source>
-        <translation>Level 2</translation>
+        <translation type="vanished">Level 2</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+14"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1478,7 +1474,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-510"/>
+        <location line="-511"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1513,12 +1509,11 @@ sk-...</translation>
         <translation>Max request count</translation>
     </message>
     <message>
-        <location line="+14"/>
         <source>失败时尝试对半拆分重翻；普通模式还会清空上下文重试</source>
-        <translation>Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
+        <translation type="vanished">Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="+44"/>
         <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
@@ -1528,7 +1523,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-351"/>
+        <location line="-352"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1563,7 +1558,42 @@ sk-...</translation>
         <translation>Use native tools to retrieve context and keep cross-file conversations per worker; configure protocol capabilities in API settings.</translation>
     </message>
     <message>
-        <location line="+163"/>
+        <location line="+109"/>
+        <source>开启智能重试时建议 &gt;= 4（开启图片替换输入时建议 &gt;= 5）；普通模式：关闭图片时第 3 次拆分、第 4 次清空上下文，开启图片时第 3 次图片替换、第 4 次拆分、第 5 次清空上下文</source>
+        <oldsource>开启智能重试时建议 &gt;= 4（普通模式依次为：常规请求 -&gt; 图片替换重试 -&gt; 对半拆分 -&gt; 清空上下文重试）</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）</source>
+        <oldsource>若不想在普通模式下清空上下文重试，可将此值保持为 3</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>前 2 次常规请求失败后，默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启下方图片替换输入时，第 3 次先切图片输入、第 4 次拆分、普通模式第 5 次清空上下文</source>
+        <oldsource>失败时依次尝试图片替换输入（开启下方选项时）、对半拆分重翻，普通模式第 4 次还会清空上下文重试；建议最大请求次数 &gt;= 4</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>如果用的打野 key 其实不建议开这个；开启图片替换输入时建议最大请求次数 &gt;= 5</source>
+        <oldsource>如果用的打野 key 其实不建议开这个；不想清空上下文重试可将最大请求次数保持为 3</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>在开启智能重试时生效：第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入，普通与 Agent 模式均支持</source>
+        <oldsource>在开启智能重试时生效：第 2 次请求（拆分前）及普通模式清空上下文重试时，将输入文本渲染为图片发送，普通与 Agent 模式均支持</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+25"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -2392,7 +2422,7 @@ Issue summary:</translation>
 <context>
     <name>HomePage</name>
     <message>
-        <location filename="HomePage.cpp" line="+353"/>
+        <location filename="HomePage.cpp" line="+344"/>
         <location line="+10"/>
         <source>主页</source>
         <translation>Home Page</translation>
@@ -2401,7 +2431,7 @@ Issue summary:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="Mainwindow.cpp" line="+57"/>
+        <location filename="Mainwindow.cpp" line="+60"/>
         <source>解析错误</source>
         <translation>Fail to analyze</translation>
     </message>
@@ -2422,11 +2452,13 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+16"/>
+        <location line="+175"/>
+        <location line="+132"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-306"/>
         <source>最小化</source>
         <translation>Minimum</translation>
     </message>
@@ -2476,13 +2508,13 @@ Issue summary:</translation>
         <translation>Please back up the related translation cache</translation>
     </message>
     <message>
-        <location filename="Mainwindow.cpp" line="+272"/>
-        <location line="+176"/>
+        <location filename="Mainwindow.cpp" line="+799"/>
+        <location line="+230"/>
         <source>新建项目</source>
         <translation>New</translation>
     </message>
     <message>
-        <location line="-175"/>
+        <location line="-229"/>
         <source>打开项目</source>
         <translation>Open</translation>
     </message>
@@ -2518,12 +2550,12 @@ Issue summary:</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+62"/>
+        <location line="+116"/>
         <source>应用设置</source>
         <translation>App settings</translation>
     </message>
     <message>
-        <location line="-58"/>
+        <location line="-112"/>
         <source>更改程序主题</source>
         <translation>Change theme</translation>
     </message>
@@ -2568,7 +2600,7 @@ Issue summary:</translation>
         <translation>Projects</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+67"/>
         <source>使用说明</source>
         <translation>Instructions</translation>
     </message>
@@ -2604,7 +2636,9 @@ Issue summary:</translation>
         <translation>Please type in project name</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="-831"/>
+        <location line="+4"/>
+        <location line="+837"/>
         <location line="+9"/>
         <location line="+4"/>
         <location line="+6"/>
@@ -2615,13 +2649,166 @@ Issue summary:</translation>
         <translation>Fail to create</translation>
     </message>
     <message>
-        <location line="-87"/>
-        <location line="+120"/>
+        <location line="-986"/>
+        <source>重置</source>
+        <translation type="unfinished">Reset</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <location line="+132"/>
+        <source>确定</source>
+        <translation type="unfinished">OK</translation>
+    </message>
+    <message>
+        <location line="-79"/>
+        <location line="+303"/>
+        <location line="+21"/>
+        <source>新建分类</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-324"/>
+        <source>请输入分类名称</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+30"/>
+        <source>分类名称不能为空！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-26"/>
+        <location line="+33"/>
+        <source>已存在同名分类！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-11"/>
+        <location line="+295"/>
+        <source>重命名分类</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-295"/>
+        <source>请输入新的分类名称</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <location line="+7"/>
+        <source>重命名失败</source>
+        <translation type="unfinished">Fail to rename</translation>
+    </message>
+    <message>
+        <location line="+44"/>
+        <source>确定要删除分类「%1」吗？</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-24"/>
+        <location line="+79"/>
+        <source>分类「%1」已删除！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-47"/>
+        <source>仅删除分类（将下属 %1 个项目移回未分类）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>删除分类并移除下属所有项目（不删除项目文件夹）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>删除分类并彻底删除下属所有项目（同时删除磁盘上的项目文件夹）</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+18"/>
+        <source>分类下存在正在运行的项目，无法连带移除或删除项目。</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+31"/>
+        <source>操作失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>分类下存在正在运行的项目，无法连带移除或删除项目！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+38"/>
+        <source>分类「%1」及其下 %2 个项目已从项目管理中移除！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+13"/>
+        <source>你确定要彻底删除分类「%1」下的所有项目吗？</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>将永久删除该分类下 %1 个项目的项目文件夹，如果不备份，再次翻译将必须从头开始！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+16"/>
+        <source>分类下存在正在运行的项目，无法连带删除项目！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+51"/>
+        <source>分类「%1」及其下 %2 个项目已从项目管理和磁盘中移除！</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>部分删除失败</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>分类「%1」已删除（成功删除 %2 个项目）；以下项目文件夹删除失败，已移回未分类：%3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>、</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+68"/>
+        <source>删除分类</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+42"/>
+        <source>移动到分类</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>未分类</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+26"/>
+        <source>新建分类并移入...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+429"/>
+        <location line="+121"/>
         <source>已存在同名项目！</source>
         <translation>Project name exists!</translation>
     </message>
     <message>
-        <location line="-107"/>
+        <location line="-108"/>
         <source>目录下存在同名文件或文件夹！</source>
         <translation>File/dir with the same name has already existed!</translation>
     </message>
@@ -2641,7 +2828,7 @@ Issue summary:</translation>
         <translation>Can not write into config file!</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>创建成功</source>
         <translation>Created successfully</translation>
     </message>
@@ -2662,7 +2849,7 @@ Issue summary:</translation>
         <translation>Fail to open</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+10"/>
         <source>打开成功</source>
         <translation>Opened successfully</translation>
     </message>
@@ -2692,42 +2879,46 @@ Issue summary:</translation>
         <translation>Fail to remove</translation>
     </message>
     <message>
-        <location line="-136"/>
+        <location line="-138"/>
         <source>非法的项目名！</source>
         <translation>Invalid project name!</translation>
     </message>
     <message>
-        <location line="-403"/>
+        <location line="-524"/>
+        <location line="+42"/>
         <source>置顶</source>
         <translation>Move to top</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
+        <location line="+42"/>
         <source>上移</source>
         <translation>Move up</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
+        <location line="+42"/>
         <source>下移</source>
         <translation>Move down</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="-41"/>
+        <location line="+42"/>
         <source>置底</source>
         <translation>Move to bottom</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+49"/>
         <source>打开项目文件夹</source>
         <translation>Open project folder</translation>
     </message>
     <message>
-        <location line="+490"/>
+        <location line="+531"/>
         <source>目录下不存在 Config.toml 文件！</source>
         <translation>No Config.toml file exists in this directory!</translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+33"/>
         <location line="+56"/>
         <location line="+63"/>
         <source>当前页面不是项目页面！</source>
@@ -2740,19 +2931,23 @@ Issue summary:</translation>
         <translation>Current project is still running, please stop it first!</translation>
     </message>
     <message>
-        <location line="-51"/>
+        <location line="-855"/>
+        <location line="+804"/>
         <location line="+56"/>
         <source>是</source>
         <translation>Yes</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-975"/>
+        <location line="+114"/>
+        <location line="+806"/>
         <location line="+56"/>
         <source>思考人生</source>
         <translation>Reflect on life</translation>
     </message>
     <message>
-        <location line="-55"/>
+        <location line="-863"/>
+        <location line="+808"/>
         <location line="+56"/>
         <source>否</source>
         <translation>No</translation>
@@ -2768,7 +2963,8 @@ Issue summary:</translation>
         <translation>Remove from project management, but won&apos;t delete its project dir</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="-825"/>
+        <location line="+847"/>
         <source>移除成功</source>
         <translation>Removed successfully</translation>
     </message>
@@ -2778,7 +2974,8 @@ Issue summary:</translation>
         <translation>Project %1 removed from list!</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="-813"/>
+        <location line="+825"/>
         <location line="+4"/>
         <location line="+30"/>
         <source>删除失败</source>
@@ -2795,7 +2992,10 @@ Issue summary:</translation>
         <translation>Delete project dir of this project, you will lost all translation cache!</translation>
     </message>
     <message>
-        <location line="+29"/>
+        <location line="-1004"/>
+        <location line="+79"/>
+        <location line="+130"/>
+        <location line="+824"/>
         <source>删除成功</source>
         <translation>Deleted successfully</translation>
     </message>
@@ -3973,115 +4173,116 @@ Cache: %4</translation>
 <context>
     <name>ProjectSettingsPage</name>
     <message>
-        <location filename="ProjectSettingsPage.cpp" line="+39"/>
+        <location filename="ProjectSettingsPage.cpp" line="+41"/>
         <source>项目设置主页</source>
         <translation>Project settings home</translation>
     </message>
     <message>
         <location line="+9"/>
-        <location line="+282"/>
+        <location line="+353"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>
     <message>
-        <location line="-249"/>
+        <location line="-319"/>
         <source>Toml 格式化错误</source>
         <translation>TOML formatting error</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+30"/>
         <source>清理成功</source>
         <translation>Clear successfully</translation>
     </message>
     <message>
-        <location line="-57"/>
+        <location line="-64"/>
         <source>项目 %1 的配置文件不符合 toml 规范</source>
         <translation>Project %1 config is invalid TOML</translation>
     </message>
     <message>
-        <location line="+57"/>
+        <location line="+64"/>
         <source>已清空项目 %1 的日志输出窗口</source>
         <translation>Cleared log view for project %1</translation>
     </message>
     <message>
         <location line="+12"/>
         <location line="+9"/>
-        <location line="+51"/>
+        <location line="+43"/>
         <source>Api设置</source>
         <translation>Api</translation>
     </message>
     <message>
-        <location line="-50"/>
-        <location line="+55"/>
+        <location line="-42"/>
+        <location line="+46"/>
         <source>一般设置</source>
         <translation>Common</translation>
     </message>
     <message>
-        <location line="-54"/>
-        <location line="+59"/>
+        <location line="-45"/>
+        <location line="+49"/>
         <source>问题分析</source>
         <translation>Problems</translation>
     </message>
     <message>
-        <location line="-54"/>
+        <location line="-44"/>
         <source>基本设置</source>
         <translation>Base</translation>
     </message>
     <message>
         <location line="+7"/>
-        <location line="+52"/>
+        <location line="+41"/>
         <source>人名表</source>
         <translation>NameTable</translation>
     </message>
     <message>
-        <location line="-51"/>
-        <location line="+56"/>
+        <location line="-40"/>
+        <location line="+44"/>
         <source>项目字典</source>
         <translation>ProjectDicts</translation>
     </message>
     <message>
-        <location line="-55"/>
-        <location line="+60"/>
+        <location line="-43"/>
+        <location line="+47"/>
         <source>字典设置</source>
         <translation>DictSettings</translation>
     </message>
     <message>
-        <location line="-59"/>
-        <location line="+64"/>
+        <location line="-46"/>
+        <location line="+50"/>
         <source>提示词</source>
         <translation>Prompts</translation>
     </message>
     <message>
-        <location line="-59"/>
+        <location line="-45"/>
         <source>翻译设置</source>
         <translation>Trans</translation>
     </message>
     <message>
         <location line="+4"/>
-        <location line="+63"/>
+        <location line="+45"/>
         <source>插件管理</source>
         <translation>Plugins</translation>
     </message>
     <message>
-        <location line="-62"/>
-        <location line="+68"/>
+        <location line="-44"/>
+        <location line="+48"/>
         <source>缓存管理</source>
         <translation>Cache</translation>
     </message>
     <message>
-        <location line="-67"/>
-        <location line="+75"/>
+        <location line="-47"/>
+        <location line="+51"/>
         <source>开始翻译</source>
         <translation>Start</translation>
     </message>
     <message>
-        <location line="-74"/>
-        <location line="+79"/>
+        <location line="-50"/>
+        <location line="+54"/>
+        <location line="+219"/>
         <source>其他设置</source>
         <translation>Others</translation>
     </message>
     <message>
-        <location line="+88"/>
+        <location line="-42"/>
         <source>项目仍在运行中，无法刷新配置</source>
         <translation>Project is still running</translation>
     </message>
@@ -4096,7 +4297,7 @@ Cache: %4</translation>
         <translation>Project %1 config is invalid</translation>
     </message>
     <message>
-        <location line="+23"/>
+        <location line="+36"/>
         <source>刷新成功</source>
         <translation>Refreshed successfully</translation>
     </message>

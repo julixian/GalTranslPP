@@ -29,7 +29,7 @@ struct TranslationSettings {
     int problemMaxLines;
     int glossaryMaxLines;
     bool smartRetry;
-    int enhanceJailbreak;
+    bool smartRetryImageInput;
     bool checkQuota;
     bool retransAllWhenFail;
     bool agentEnabled;

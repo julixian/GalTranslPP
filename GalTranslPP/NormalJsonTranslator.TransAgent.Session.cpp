@@ -5,6 +5,7 @@ module;
 module NormalJsonTranslator;
 
 import NormalJsonTranslatorHelperTool;
+import TextImageRenderer;
 import Tool;
 import AgentPythonExecutor;
 
@@ -221,14 +222,41 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
     selectApi(true);
 
     AgentApiSession sessionBeforeBatch;
-    const auto appendBatch = [&]()
+    bool imageRetryAttempted = false;
+    const auto appendBatch = [&](bool useImageInput, const std::string& imageLogPrefix, bool saveSnapshot = true)
         {
-            if (m_smartRetry && pending.size() > 1) {
+            if (saveSnapshot && m_smartRetry) {
                 sessionBeforeBatch = *worker.session;
+            }
+            imageRetryAttempted = useImageInput;
+            if (useImageInput) {
+                std::string inputBlock = buildInputBlock(pending);
+                std::string imageText = "<input>\n" + inputBlock;
+                if (!imageText.ends_with('\n')) {
+                    imageText += '\n';
+                }
+                imageText += "</input>";
+                if (auto rendered = renderTextToPngPages(imageText); rendered && !rendered->empty()) {
+                    const auto& pngPages = *rendered;
+                    appendAgentUserMessage(*worker.session,
+                        buildUserPrompt(relInputPath, pending, rollingContext, pngPages.size()),
+                        pngPages);
+                    m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                        "%1 智能重试已启用图片替换输入，共渲染 %2 张图片")
+                        .arg(imageLogPrefix).arg(pngPages.size()).toStdString());
+                    return;
+                }
+                else {
+                    m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                        "%1 图片替换输入渲染失败，本次回退为纯文本发送: %2")
+                        .arg(imageLogPrefix)
+                        .arg(rendered ? std::string("empty page list") : rendered.error())
+                        .toStdString());
+                }
             }
             appendAgentUserMessage(*worker.session, buildUserPrompt(relInputPath, pending, rollingContext));
         };
-    appendBatch();
+    appendBatch(false, logPrefix);
 
     const json compactSchema = agentObjectSchema({{"rolling_context", {{"type", "string"}}}});
     const json compactTools = json::array({
@@ -254,7 +282,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             // 有效摘要仅在重建时注入；压缩失败传入空摘要，旧记忆、历史和续接位置全部清除。
             rollingContext = std::move(memory);
             rebuildSession(api);
-            appendBatch();
+            appendBatch(false, logPrefix);
             compactedMessageCount = worker.session->history.size();
             compacting = false;
             noToolCallCount = 0;
@@ -277,7 +305,8 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             const std::size_t fallbackThresholdBytes = (std::size_t)thresholdTokens * kAgentFallbackBytesPerToken;
             const bool exceedTokens = currentSession.lastContextTokens.has_value() &&
                 *currentSession.lastContextTokens > thresholdTokens;
-            const std::size_t historyBytes = currentSession.lastContextTokens.has_value() ? 0 : currentSession.history.dump().size();
+            const std::size_t historyBytes = currentSession.lastContextTokens.has_value()
+                ? 0 : estimateAgentHistoryBytes(currentSession.history);
             const bool exceedBytes = !currentSession.lastContextTokens.has_value() &&
                 historyBytes > fallbackThresholdBytes;
             if (exceedTokens || exceedBytes) {
@@ -299,6 +328,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             }
         }
         requestCount = 0;
+        const int splitRequestCount = m_smartRetryImageInput ? 3 : 2;
         AgentApiResponse response;
         while (requestCount < m_maxRequestCount) {
             if (m_controller->shouldStop()) {
@@ -310,11 +340,15 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             }
             if (!m_apiPool->containsApi(worker.session->api)) {
                 selectApi(false);
-                appendBatch();
                 compacting = false;
                 compactedMessageCount = 0;
+                const bool willSplitNow = m_smartRetry && requestCount == splitRequestCount && pending.size() > 1;
+                const bool useImageNow = m_smartRetry && m_smartRetryImageInput && requestCount >= 2 && !willSplitNow;
+                const std::string switchLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
+                    .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
+                appendBatch(useImageNow, switchLogPrefix);
             }
-            if (m_smartRetry && !compacting && requestCount == 2 && pending.size() > 1) {
+            if (m_smartRetry && !compacting && requestCount == splitRequestCount && pending.size() > 1) {
                 m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [请求 %2] 开始对半拆分句子重新请求...")
                     .arg(logPrefix).arg(requestCount + 1).toStdString());
 
@@ -332,9 +366,16 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     recursionIndex, recursionCount, threadId, batchIndex);
                 return firstOk && secondOk;
             }
+            if (m_smartRetry && !compacting && m_smartRetryImageInput && requestCount >= 2 && !imageRetryAttempted) {
+                // 撤回失败批次及其工具轮次，保留 sessionBeforeBatch 供可能的第 4 次对半拆分继续回滚。
+                worker.session = sessionBeforeBatch;
+                const std::string retryLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
+                    .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
+                appendBatch(true, retryLogPrefix, false);
+            }
             requestLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
                 .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
-            const size_t currentHistoryBytes = worker.session->history.dump().size();
+            const size_t currentHistoryBytes = estimateAgentHistoryBytes(worker.session->history);
             if (worker.session->lastContextTokens.has_value()) {
                 m_logger->info(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
                     "%1 开始请求，剩余 %2 句，上次上下文 %3 tokens，本地历史 %4 字节")
@@ -346,7 +387,7 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     .arg(requestLogPrefix).arg(pending.size()).arg(currentHistoryBytes).toStdString());
             }
             response = performAgentApiRequest(*worker.session, compacting ? compactTools : m_nativeTools,
-                m_enhanceJailbreak, m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
+                m_onPerformApi, m_controller, m_logger, m_apiTimeOutMs);
             if (response.content) {
                 break;
             }
@@ -359,9 +400,13 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
             const auto previousApi = worker.session->api;
             selectApi(true);
             if (!isSameApi(previousApi, worker.session->api)) {
-                appendBatch();
                 compacting = false;
                 compactedMessageCount = 0;
+                const bool willSplitNext = m_smartRetry && requestCount == splitRequestCount && pending.size() > 1;
+                const bool useImageNext = m_smartRetry && m_smartRetryImageInput && requestCount >= 2 && !willSplitNext;
+                const std::string nextLogPrefix = gppTr("NormalJsonTranslatorTransAgent.translateBatch", "%1 [轮次 %2] [请求 %3]")
+                    .arg(logPrefix).arg(turn + 1).arg(requestCount + 1).toStdString();
+                appendBatch(useImageNext, nextLogPrefix);
             }
         }
 

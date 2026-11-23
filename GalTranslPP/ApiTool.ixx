@@ -87,10 +87,9 @@ struct ApiResponse {
 // ApiPool 的身份匹配与 Agent 的会话复用共用：比较端点、凭据、模型及请求选项，不比较健康计数。
 bool isSameApi(const TranslationApi& lhs, const TranslationApi& rhs);
 
-// 改善拒答档位：0 无；1 一级填充，以模型预填充结尾；2 二级填充，再追加用户 Continue.。
-// 普通请求使用 assistant/user 消息，Agent 按原生协议追加；只修改传入的本次请求消息。
-void appendApiPrefill(json& messages, const std::string& prefill, int enhanceJailbreak,
-    ApiProtocol protocol = ApiProtocol::OpenAI);
+// 按协议构造单条 user 消息；pngPages 非空时构造包含文本与 PNG 图片的多模态消息。
+json makeApiUserMessage(const std::string& text, ApiProtocol protocol = ApiProtocol::OpenAI,
+    std::span<const std::vector<std::uint8_t>> pngPages = {});
 
 // 以下类型和会话操作供 Agent 的原生工具流程使用。
 struct AgentApiToolCall {
@@ -118,17 +117,19 @@ struct AgentApiSession {
     std::optional<std::int64_t> lastContextTokens;
 };
 
-// translateBatch 按协议向本地历史追加用户输入。
-void appendAgentUserMessage(AgentApiSession& session, const std::string& text);
+// translateBatch 按协议向本地历史追加用户输入（支持附带 PNG 图片页）。
+void appendAgentUserMessage(AgentApiSession& session, const std::string& text,
+    std::span<const std::vector<std::uint8_t>> pngPages = {});
 // translateBatch 将 {id, name, result} 工具结果转成各协议的回填消息，追加到本地历史。
 void appendAgentToolResults(AgentApiSession& session, const json& results);
+// 估算 Agent 本地历史的字节数（用于无 token 用量时的回退压缩判断），将图片 base64 负载替换为短占位符避免误触发压缩。
+std::size_t estimateAgentHistoryBytes(const json& history);
 // Agent 的单次请求入口，由 translateBatch 调用：构造原生工具请求 -> 应用 API 选项/插件
 // -> sendApiHttpRequest -> parseApiResponse -> parseAgentReply；响应解析成功后更新会话历史和续接位置。
-// enhanceJailbreak 按档位追加自然语言预填充及用户 Continue.，不写入会话、不检查协议兼容性。
 // 允许纯工具响应正文为空，不在这里解析工具参数或提交译文。std::exception 转为 ApiError：
 // 拿到 HTTP 200 原始响应后归为 ResponseParse，此前归为 Unknown；已有传输/协议错误直接返回。
 // 本函数不重试，调用方通过 handleApiError 处理失败并决定下一次请求。
-AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools, int enhanceJailbreak,
+AgentApiResponse performAgentApiRequest(AgentApiSession& session, const json& tools,
     const std::function<std::string(std::string_view)>& onPerformApi,
     const std::shared_ptr<IController>& controller, const std::shared_ptr<spdlog::logger>& logger, int apiTimeOutMs);
 
@@ -150,7 +151,7 @@ std::string cvt2StdApiUrl(const std::string& url, ApiProtocol protocol);
 
 std::string cvt2RequestApiUrl(const TranslationApi& api);
 // 普通/Agent 请求入口及连接测试共用：原地转换协议字段，应用模型、采样、思考和流式选项，再合并 extraBody。
-// 请求结构由调用方构造；不干预预填充，不检查随后插件返回的最终 JSON。
+// 请求结构由调用方构造；支持将多模态 user 消息转换到各目标协议，不检查随后插件返回的最终 JSON。
 void applyApiPayloadOptions(json& payload, const TranslationApi& api);
 // 流式回复聚合为原协议的完整 JSON，保留工具调用、签名及会话字段；不完整的流返回 Incomplete。
 std::expected<std::string, ApiError> collectApiStreamResponse(const std::string& rawResponse, ApiProtocol protocol);

@@ -2,6 +2,7 @@
 #include "Mainwindow.h"
 
 #include <QHBoxLayout>
+#include <QButtonGroup>
 #include <QMouseEvent>
 #include <QFileDialog>
 #include <QProcess>
@@ -17,6 +18,7 @@
 
 #include "ElaContentDialog.h"
 #include "ElaDockWidget.h"
+#include "ElaLineEdit.h"
 #include "ElaMenu.h"
 #include "ElaMenuBar.h"
 #include "ElaStatusBar.h"
@@ -25,6 +27,7 @@
 #include "ElaMessageBar.h"
 #include "ElaApplication.h"
 #include "GppInputDialog.h"
+#include "GppRadioButton.h"
 #include "AboutDialog.h"
 #include "UpdateWidget.h"
 #include "UpdateChecker.h"
@@ -146,70 +149,35 @@ MainWindow::MainWindow(QWidget* parent)
         {
             updateTaskbarBadge();
         });
-    connect(this, &ElaWindow::navigationNodeMoved, this, [this](const QString& nodeKey, int fromIndex, int toIndex)
+    connect(this, &ElaWindow::navigationBarWidthDragFinished, this, [this](int width)
         {
-            Q_UNUSED(fromIndex);
-            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
-                {
-                    return page->property("ElaPageKey").toString() == nodeKey;
-                });
-            if (it == m_projectPages.end()) {
-                return;
-            }
-            const int actualFrom = static_cast<int>(std::distance(m_projectPages.begin(), it));
-            const int clampedTo = std::clamp(toIndex, 0, static_cast<int>(m_projectPages.size()) - 1);
-            if (actualFrom != clampedTo) {
-                m_projectPages.move(actualFrom, clampedTo);
+            insertToml(*m_globalConfig, "navigationBarWidth", width);
+        });
+    connect(this, &ElaWindow::navigationNodeReparented, this, [this](const QString&, const QString&, const QString&, int, int)
+        {
+            syncProjectsToGlobalConfig();
+        });
+    connect(this, &ElaWindow::navigationNodeExpandedChanged, this, [this](const QString& expanderKey, bool)
+        {
+            if (isProjectCategoryKey(expanderKey)) {
                 syncProjectsToGlobalConfig();
             }
         });
     connect(this, &ElaWindow::navigationNodeContextMenuRequested, this, [this](const QString& nodeKey, const QPoint& globalPos)
         {
-            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
-                {
-                    return page->property("ElaPageKey").toString() == nodeKey;
-                });
-            if (it == m_projectPages.end()) {
-                return;
+            if (nodeKey == m_projectExpanderKey) {
+                showProjectRootContextMenu(globalPos);
             }
-            const int idx = static_cast<int>(std::distance(m_projectPages.begin(), it));
-            const int count = static_cast<int>(m_projectPages.size());
-            ElaMenu menu(this);
-            menu.setMenuItemHeight(27);
-            QAction* moveTopAction = menu.addElaIconAction(ElaIconType::ArrowUpToLine, tr("置顶"));
-            QAction* moveUpAction = menu.addElaIconAction(ElaIconType::ArrowUp, tr("上移"));
-            QAction* moveDownAction = menu.addElaIconAction(ElaIconType::ArrowDown, tr("下移"));
-            QAction* moveBottomAction = menu.addElaIconAction(ElaIconType::ArrowDownToLine, tr("置底"));
-            moveTopAction->setEnabled(idx > 0);
-            moveUpAction->setEnabled(idx > 0);
-            moveDownAction->setEnabled(idx + 1 < count);
-            moveBottomAction->setEnabled(idx + 1 < count);
-            connect(moveTopAction, &QAction::triggered, this, [this, nodeKey]() { moveNavigationNode(nodeKey, 0); });
-            connect(moveUpAction, &QAction::triggered, this, [this, nodeKey, idx]() { moveNavigationNode(nodeKey, idx - 1); });
-            connect(moveDownAction, &QAction::triggered, this, [this, nodeKey, idx]() { moveNavigationNode(nodeKey, idx + 1); });
-            connect(moveBottomAction, &QAction::triggered, this, [this, nodeKey, count]() { moveNavigationNode(nodeKey, count - 1); });
-            menu.addSeparator();
-            QAction* openDirAction = menu.addElaIconAction(ElaIconType::FolderOpen, tr("打开项目文件夹"));
-            const fs::path projectDir = (*it)->getProjectDir();
-            connect(openDirAction, &QAction::triggered, this, [projectDir]()
-                {
-                    QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring())));
-                });
-            QFont menuFont = menu.font();
-            menuFont.setPixelSize(eApp->getFontPixelSize());
-            const QFontMetrics fm(menuFont);
-            int menuWidth = 190;
-            for (const QAction* action : menu.actions()) {
-                if (!action->isSeparator()) {
-                    menuWidth = std::max(menuWidth, fm.horizontalAdvance(action->text()) + 72);
-                }
+            else if (isProjectCategoryKey(nodeKey)) {
+                showProjectCategoryContextMenu(nodeKey, globalPos);
             }
-            menu.setFixedWidth(menuWidth);
-            menu.exec(globalPos);
+            else if (findProjectPageByKey(nodeKey) != nullptr) {
+                showProjectNodeContextMenu(nodeKey, globalPos);
+            }
         });
 }
 
-ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir)
+ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& projectDir, const QString& targetParentKey)
 {
     QSharedPointer<ProjectSettingsPage> newPage(new ProjectSettingsPage(projectDir, *m_globalConfig, this));
     connect(newPage.get(), &ProjectSettingsPage::finishTranslatingSignal, this, &MainWindow::onFinishTranslating);
@@ -221,7 +189,8 @@ ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& proje
         newPage->initialize();
     }
     m_projectPages.push_back(newPage);
-    addPageNode(QString::fromStdWString(projectDir.filename().wstring()), newPage.get(), m_projectExpanderKey, ElaIconType::Projector);
+    const QString parentKey = targetParentKey.isEmpty() ? m_projectExpanderKey : targetParentKey;
+    addPageNode(QString::fromStdWString(projectDir.filename().wstring()), newPage.get(), parentKey, ElaIconType::Projector);
     const QString nodeKey = newPage->property("ElaPageKey").toString();
     setNodeReorderable(nodeKey, true);
     connect(newPage.get(), &ProjectSettingsPage::runningStateChangedSignal, this,
@@ -242,6 +211,537 @@ ProjectSettingsPage* MainWindow::createProjectSettingsPage(const fs::path& proje
             }
         });
     return newPage.get();
+}
+
+ProjectSettingsPage* MainWindow::findProjectPageByKey(const QString& nodeKey) const
+{
+    const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
+        {
+            return page->property("ElaPageKey").toString() == nodeKey;
+        });
+    return it == m_projectPages.end() ? nullptr : it->get();
+}
+
+QStringList MainWindow::getOrderedProjectCategoryKeys() const
+{
+    QStringList ordered;
+    for (const QString& childKey : getNavigationNodeChildrenKeys(m_projectExpanderKey)) {
+        if (m_projectCategoryKeys.contains(childKey)) {
+            ordered.append(childKey);
+        }
+    }
+    return ordered;
+}
+
+bool MainWindow::isProjectCategoryKey(const QString& nodeKey) const
+{
+    return !nodeKey.isEmpty() && m_projectCategoryKeys.contains(nodeKey);
+}
+
+bool MainWindow::hasCategoryName(const QString& name, const QString& excludeCategoryKey) const
+{
+    for (const QString& catKey : m_projectCategoryKeys) {
+        if (catKey == excludeCategoryKey) {
+            continue;
+        }
+        if (getNavigationNodeTitle(catKey) == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MainWindow::promptCategoryName(const QString& dialogTitle, const QString& initialText, const QString& placeholder, QString& outName)
+{
+    ElaContentDialog dialog(this);
+    dialog.setLeftButtonText(tr("取消"));
+    dialog.setMiddleButtonText(tr("重置"));
+    dialog.setRightButtonText(tr("确定"));
+
+    QWidget* centerWidget = new QWidget(&dialog);
+    QVBoxLayout* layout = new QVBoxLayout(centerWidget);
+    layout->setContentsMargins(15, 25, 15, 10);
+
+    ElaText* titleText = new ElaText(dialogTitle, centerWidget);
+    titleText->setTextStyle(ElaTextType::Title);
+    titleText->setWordWrap(false);
+    layout->addWidget(titleText);
+    layout->addSpacing(8);
+
+    ElaLineEdit* lineEdit = new ElaLineEdit(centerWidget);
+    lineEdit->setPlaceholderText(placeholder);
+    lineEdit->setText(initialText);
+    lineEdit->selectAll();
+    layout->addStretch();
+    layout->addWidget(lineEdit);
+    dialog.setCentralWidget(centerWidget);
+
+    connect(&dialog, &ElaContentDialog::middleButtonClicked, lineEdit, [lineEdit, initialText]()
+        {
+            lineEdit->setText(initialText);
+            lineEdit->selectAll();
+        });
+    connect(lineEdit, &ElaLineEdit::returnPressed, &dialog, [&dialog]()
+        {
+            dialog.accept();
+        });
+    lineEdit->setFocus();
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return false;
+    }
+    outName = lineEdit->text().trimmed();
+    return true;
+}
+
+QString MainWindow::createProjectCategory(const QString& name)
+{
+    const int insertIdx = getOrderedProjectCategoryKeys().size();
+    QString categoryKey;
+    if (insertExpanderNode(name, categoryKey, m_projectExpanderKey, insertIdx, ElaIconType::Folder) != ElaNavigationType::Success) {
+        return {};
+    }
+    setNodeReorderable(categoryKey, true);
+    m_projectCategoryKeys.append(categoryKey);
+    return categoryKey;
+}
+
+void MainWindow::handleNewProjectCategory(const QString& moveProjectKey)
+{
+    QString name;
+    if (!promptCategoryName(tr("新建分类"), QString(), tr("请输入分类名称"), name)) {
+        return;
+    }
+    if (name.isEmpty()) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("分类名称不能为空！"), 3000);
+        return;
+    }
+    if (hasCategoryName(name)) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("创建失败"), tr("已存在同名分类！"), 3000);
+        return;
+    }
+    const QString categoryKey = createProjectCategory(name);
+    if (categoryKey.isEmpty()) {
+        return;
+    }
+    expandNavigationNode(m_projectExpanderKey);
+    if (!moveProjectKey.isEmpty()) {
+        moveNavigationNode(moveProjectKey, categoryKey, 0);
+    }
+    expandNavigationNode(categoryKey);
+    syncProjectsToGlobalConfig();
+}
+
+void MainWindow::handleRenameProjectCategory(const QString& categoryKey)
+{
+    if (!isProjectCategoryKey(categoryKey)) {
+        return;
+    }
+    const QString oldName = getNavigationNodeTitle(categoryKey);
+    QString newName;
+    if (!promptCategoryName(tr("重命名分类"), oldName, tr("请输入新的分类名称"), newName)) {
+        return;
+    }
+    if (newName.isEmpty()) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("重命名失败"), tr("分类名称不能为空！"), 3000);
+        return;
+    }
+    if (newName == oldName) {
+        return;
+    }
+    if (hasCategoryName(newName, categoryKey)) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("重命名失败"), tr("已存在同名分类！"), 3000);
+        return;
+    }
+    setNavigationNodeTitle(categoryKey, newName);
+    syncProjectsToGlobalConfig();
+}
+
+void MainWindow::handleDeleteProjectCategory(const QString& categoryKey)
+{
+    if (!isProjectCategoryKey(categoryKey)) {
+        return;
+    }
+    const QString catName = getNavigationNodeTitle(categoryKey);
+    const QStringList childKeys = getNavigationNodeChildrenKeys(categoryKey);
+
+    // Empty category: delete directly without unnecessary choices.
+    if (childKeys.isEmpty()) {
+        m_projectCategoryKeys.removeAll(categoryKey);
+        removeNavigationNode(categoryKey);
+        syncProjectsToGlobalConfig();
+        ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("分类「%1」已删除！").arg(catName), 3000);
+        return;
+    }
+
+    auto hasRunningChild = [this](const QStringList& keys) -> bool
+        {
+            return std::ranges::any_of(keys, [this](const QString& key)
+                {
+                    ProjectSettingsPage* page = findProjectPageByKey(key);
+                    return page && page->getIsRunning();
+                });
+        };
+
+    const bool anyRunning = hasRunningChild(childKeys);
+
+    ElaContentDialog confirmDialog(this);
+    confirmDialog.setLeftButtonText(tr("取消"));
+    confirmDialog.setMiddleButtonText(tr("思考人生"));
+    confirmDialog.setRightButtonText(tr("确定"));
+
+    QWidget* dialogWidget = new QWidget(&confirmDialog);
+    QVBoxLayout* dialogLayout = new QVBoxLayout(dialogWidget);
+    dialogLayout->setContentsMargins(15, 25, 15, 10);
+
+    ElaText* titleText = new ElaText(tr("确定要删除分类「%1」吗？").arg(catName), dialogWidget);
+    titleText->setTextStyle(ElaTextType::Title);
+    titleText->setWordWrap(false);
+    dialogLayout->addWidget(titleText);
+    dialogLayout->addSpacing(10);
+
+    QButtonGroup* optionGroup = new QButtonGroup(&confirmDialog);
+    GppRadioButton* keepOnlyRadio = new GppRadioButton(
+        tr("仅删除分类（将下属 %1 个项目移回未分类）").arg(childKeys.size()), dialogWidget);
+    GppRadioButton* removeProjectsRadio = new GppRadioButton(
+        tr("删除分类并移除下属所有项目（不删除项目文件夹）"), dialogWidget);
+    GppRadioButton* deleteProjectsRadio = new GppRadioButton(
+        tr("删除分类并彻底删除下属所有项目（同时删除磁盘上的项目文件夹）"), dialogWidget);
+
+    keepOnlyRadio->setChecked(true);
+    removeProjectsRadio->setEnabled(!anyRunning);
+    deleteProjectsRadio->setEnabled(!anyRunning);
+
+    optionGroup->addButton(keepOnlyRadio, 0);
+    optionGroup->addButton(removeProjectsRadio, 1);
+    optionGroup->addButton(deleteProjectsRadio, 2);
+
+    dialogLayout->addWidget(keepOnlyRadio);
+    dialogLayout->addSpacing(6);
+    dialogLayout->addWidget(removeProjectsRadio);
+    dialogLayout->addSpacing(6);
+    dialogLayout->addWidget(deleteProjectsRadio);
+
+    if (anyRunning) {
+        dialogLayout->addSpacing(8);
+        ElaText* runningHint = new ElaText(tr("分类下存在正在运行的项目，无法连带移除或删除项目。"), dialogWidget);
+        runningHint->setTextStyle(ElaTextType::Caption);
+        runningHint->setWordWrap(true);
+        dialogLayout->addWidget(runningHint);
+    }
+
+    dialogLayout->addStretch();
+    confirmDialog.setCentralWidget(dialogWidget);
+    confirmDialog.resize(560, std::max(confirmDialog.sizeHint().height(), anyRunning ? 290 : 260));
+
+    if (confirmDialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    const int selectedOption = optionGroup->checkedId();
+    const QStringList currentChildKeys = getNavigationNodeChildrenKeys(categoryKey);
+
+    if (selectedOption == 0) {
+        for (const QString& childKey : currentChildKeys) {
+            const int appendIdx = getNavigationNodeChildrenKeys(m_projectExpanderKey).size();
+            moveNavigationNode(childKey, m_projectExpanderKey, appendIdx);
+        }
+        m_projectCategoryKeys.removeAll(categoryKey);
+        removeNavigationNode(categoryKey);
+        syncProjectsToGlobalConfig();
+        ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"), tr("分类「%1」已删除！").arg(catName), 3000);
+        return;
+    }
+
+    // Re-check running state right before executing option 1 or 2.
+    if (hasRunningChild(currentChildKeys)) {
+        ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("操作失败"),
+            tr("分类下存在正在运行的项目，无法连带移除或删除项目！"), 3000);
+        return;
+    }
+
+    if (selectedOption == 1) {
+        const QString activeKeyBefore = getCurrentNavigationPageKey();
+        const bool activeWasInCategory = currentChildKeys.contains(activeKeyBefore);
+        if (activeWasInCategory) {
+            this->navigation(m_homePage->property("ElaPageKey").toString());
+        }
+        int removedCount = 0;
+
+        for (const QString& childKey : currentChildKeys) {
+            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
+                {
+                    return page->property("ElaPageKey").toString() == childKey;
+                });
+            if (it == m_projectPages.end()) {
+                const int appendIdx = getNavigationNodeChildrenKeys(m_projectExpanderKey).size();
+                moveNavigationNode(childKey, m_projectExpanderKey, appendIdx);
+                continue;
+            }
+            it->get()->apply2Config();
+            removeNavigationNode(childKey);
+            m_projectPages.erase(it);
+            ++removedCount;
+        }
+
+        m_projectCategoryKeys.removeAll(categoryKey);
+        removeNavigationNode(categoryKey);
+        syncProjectsToGlobalConfig();
+        updateTaskbarProgress();
+        updateTaskbarBadge();
+
+        if (activeWasInCategory && !m_projectPages.empty()) {
+            this->navigation(m_projectPages.back()->property("ElaPageKey").toString());
+        }
+        ElaMessageBar::success(ElaMessageBarType::TopRight, tr("移除成功"),
+            tr("分类「%1」及其下 %2 个项目已从项目管理中移除！").arg(catName).arg(removedCount), 3000);
+        return;
+    }
+
+    if (selectedOption == 2) {
+        ElaContentDialog secondConfirm(this);
+        secondConfirm.setLeftButtonText(tr("否"));
+        secondConfirm.setMiddleButtonText(tr("思考人生"));
+        secondConfirm.setRightButtonText(tr("是"));
+
+        QWidget* secondWidget = new QWidget(&secondConfirm);
+        QVBoxLayout* secondLayout = new QVBoxLayout(secondWidget);
+        secondLayout->setContentsMargins(15, 25, 15, 10);
+        ElaText* secondTitle = new ElaText(tr("你确定要彻底删除分类「%1」下的所有项目吗？").arg(catName), secondWidget);
+        secondTitle->setTextStyle(ElaTextType::Title);
+        secondTitle->setWordWrap(true);
+        secondLayout->addWidget(secondTitle);
+        secondLayout->addSpacing(4);
+        ElaText* secondBody = new ElaText(
+            tr("将永久删除该分类下 %1 个项目的项目文件夹，如果不备份，再次翻译将必须从头开始！").arg(currentChildKeys.size()),
+            secondWidget);
+        secondBody->setTextStyle(ElaTextType::Body);
+        secondBody->setWordWrap(true);
+        secondLayout->addWidget(secondBody);
+        secondLayout->addStretch();
+        secondConfirm.setCentralWidget(secondWidget);
+        secondConfirm.resize(520, std::max(secondConfirm.sizeHint().height(), 210));
+
+        if (secondConfirm.exec() != QDialog::Accepted) {
+            return;
+        }
+
+        const QStringList finalChildKeys = getNavigationNodeChildrenKeys(categoryKey);
+        if (hasRunningChild(finalChildKeys)) {
+            ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("删除失败"),
+                tr("分类下存在正在运行的项目，无法连带删除项目！"), 3000);
+            return;
+        }
+
+        const QString activeKeyBefore = getCurrentNavigationPageKey();
+        bool activeWasDeleted = false;
+        int deletedCount = 0;
+        QStringList failedProjects;
+
+        for (const QString& childKey : finalChildKeys) {
+            const auto it = std::ranges::find_if(m_projectPages, [&](const auto& page)
+                {
+                    return page->property("ElaPageKey").toString() == childKey;
+                });
+            if (it == m_projectPages.end()) {
+                const int appendIdx = getNavigationNodeChildrenKeys(m_projectExpanderKey).size();
+                moveNavigationNode(childKey, m_projectExpanderKey, appendIdx);
+                continue;
+            }
+            const fs::path projectDir = it->get()->getProjectDir();
+            const QString projectName = it->get()->getProjectName();
+            try {
+                fs::remove_all(projectDir);
+            }
+            catch (const std::exception&) {
+                const int appendIdx = getNavigationNodeChildrenKeys(m_projectExpanderKey).size();
+                moveNavigationNode(childKey, m_projectExpanderKey, appendIdx);
+                failedProjects.append(projectName);
+                continue;
+            }
+            if (childKey == activeKeyBefore) {
+                activeWasDeleted = true;
+                this->navigation(m_homePage->property("ElaPageKey").toString());
+            }
+            removeNavigationNode(childKey);
+            m_projectPages.erase(it);
+            ++deletedCount;
+        }
+
+        m_projectCategoryKeys.removeAll(categoryKey);
+        removeNavigationNode(categoryKey);
+        syncProjectsToGlobalConfig();
+        updateTaskbarProgress();
+        updateTaskbarBadge();
+
+        if (activeWasDeleted && !m_projectPages.empty()) {
+            this->navigation(m_projectPages.back()->property("ElaPageKey").toString());
+        }
+
+        if (failedProjects.isEmpty()) {
+            ElaMessageBar::success(ElaMessageBarType::TopRight, tr("删除成功"),
+                tr("分类「%1」及其下 %2 个项目已从项目管理和磁盘中移除！").arg(catName).arg(deletedCount), 3000);
+        }
+        else {
+            ElaMessageBar::warning(ElaMessageBarType::TopRight, tr("部分删除失败"),
+                tr("分类「%1」已删除（成功删除 %2 个项目）；以下项目文件夹删除失败，已移回未分类：%3")
+                .arg(catName).arg(deletedCount).arg(failedProjects.join(tr("、"))), 6000);
+        }
+    }
+}
+
+namespace
+{
+    void adjustElaMenuWidth(ElaMenu* menu, int minWidth = 190)
+    {
+        QFont menuFont = menu->font();
+        menuFont.setPixelSize(eApp->getFontPixelSize());
+        const QFontMetrics fm(menuFont);
+        int menuWidth = minWidth;
+        const int extraPadding = menu->isHasChildMenu() ? 92 : 72;
+        for (const QAction* action : menu->actions()) {
+            if (!action->isSeparator()) {
+                menuWidth = std::max(menuWidth, fm.horizontalAdvance(action->text()) + extraPadding);
+            }
+        }
+        menu->setFixedWidth(menuWidth);
+    }
+}
+
+void MainWindow::showProjectRootContextMenu(const QPoint& globalPos)
+{
+    ElaMenu menu(this);
+    menu.setMenuItemHeight(27);
+    QAction* newCategoryAction = menu.addElaIconAction(ElaIconType::FolderPlus, tr("新建分类"));
+    connect(newCategoryAction, &QAction::triggered, this, [this]()
+        {
+            handleNewProjectCategory();
+        });
+    adjustElaMenuWidth(&menu);
+    menu.exec(globalPos);
+}
+
+void MainWindow::showProjectCategoryContextMenu(const QString& categoryKey, const QPoint& globalPos)
+{
+    const QStringList categories = getOrderedProjectCategoryKeys();
+    const int idx = categories.indexOf(categoryKey);
+    const int count = categories.size();
+    if (idx < 0) {
+        return;
+    }
+
+    ElaMenu menu(this);
+    menu.setMenuItemHeight(27);
+
+    QAction* newCategoryAction = menu.addElaIconAction(ElaIconType::FolderPlus, tr("新建分类"));
+    QAction* renameAction = menu.addElaIconAction(ElaIconType::PenToSquare, tr("重命名分类"));
+    connect(newCategoryAction, &QAction::triggered, this, [this]() { handleNewProjectCategory(); });
+    connect(renameAction, &QAction::triggered, this, [this, categoryKey]() { handleRenameProjectCategory(categoryKey); });
+
+    menu.addSeparator();
+    QAction* moveTopAction = menu.addElaIconAction(ElaIconType::ArrowUpToLine, tr("置顶"));
+    QAction* moveUpAction = menu.addElaIconAction(ElaIconType::ArrowUp, tr("上移"));
+    QAction* moveDownAction = menu.addElaIconAction(ElaIconType::ArrowDown, tr("下移"));
+    QAction* moveBottomAction = menu.addElaIconAction(ElaIconType::ArrowDownToLine, tr("置底"));
+    moveTopAction->setEnabled(idx > 0);
+    moveUpAction->setEnabled(idx > 0);
+    moveDownAction->setEnabled(idx + 1 < count);
+    moveBottomAction->setEnabled(idx + 1 < count);
+    connect(moveTopAction, &QAction::triggered, this, [this, categoryKey]() { moveNavigationNode(categoryKey, m_projectExpanderKey, 0); });
+    connect(moveUpAction, &QAction::triggered, this, [this, categoryKey, idx]() { moveNavigationNode(categoryKey, m_projectExpanderKey, idx - 1); });
+    connect(moveDownAction, &QAction::triggered, this, [this, categoryKey, idx]() { moveNavigationNode(categoryKey, m_projectExpanderKey, idx + 1); });
+    connect(moveBottomAction, &QAction::triggered, this, [this, categoryKey, count]() { moveNavigationNode(categoryKey, m_projectExpanderKey, count - 1); });
+
+    menu.addSeparator();
+    QAction* deleteAction = menu.addElaIconAction(ElaIconType::TrashCan, tr("删除分类"));
+    connect(deleteAction, &QAction::triggered, this, [this, categoryKey]() { handleDeleteProjectCategory(categoryKey); });
+
+    adjustElaMenuWidth(&menu);
+    menu.exec(globalPos);
+}
+
+void MainWindow::showProjectNodeContextMenu(const QString& nodeKey, const QPoint& globalPos)
+{
+    ProjectSettingsPage* page = findProjectPageByKey(nodeKey);
+    if (!page) {
+        return;
+    }
+
+    const QString parentKey = getNavigationNodeParentKey(nodeKey);
+    const QStringList siblings = getNavigationNodeChildrenKeys(parentKey);
+    const int actualIdx = siblings.indexOf(nodeKey);
+    if (actualIdx < 0) {
+        return;
+    }
+
+    const QStringList categories = getOrderedProjectCategoryKeys();
+    const bool isUncategorized = (parentKey == m_projectExpanderKey);
+    const int minIdx = isUncategorized ? categories.size() : 0;
+    const int maxIdx = siblings.size() - 1;
+
+    ElaMenu menu(this);
+    menu.setMenuItemHeight(27);
+    QAction* moveTopAction = menu.addElaIconAction(ElaIconType::ArrowUpToLine, tr("置顶"));
+    QAction* moveUpAction = menu.addElaIconAction(ElaIconType::ArrowUp, tr("上移"));
+    QAction* moveDownAction = menu.addElaIconAction(ElaIconType::ArrowDown, tr("下移"));
+    QAction* moveBottomAction = menu.addElaIconAction(ElaIconType::ArrowDownToLine, tr("置底"));
+    moveTopAction->setEnabled(actualIdx > minIdx);
+    moveUpAction->setEnabled(actualIdx > minIdx);
+    moveDownAction->setEnabled(actualIdx < maxIdx);
+    moveBottomAction->setEnabled(actualIdx < maxIdx);
+    connect(moveTopAction, &QAction::triggered, this, [this, nodeKey, parentKey, minIdx]() { moveNavigationNode(nodeKey, parentKey, minIdx); });
+    connect(moveUpAction, &QAction::triggered, this, [this, nodeKey, parentKey, actualIdx]() { moveNavigationNode(nodeKey, parentKey, actualIdx - 1); });
+    connect(moveDownAction, &QAction::triggered, this, [this, nodeKey, parentKey, actualIdx]() { moveNavigationNode(nodeKey, parentKey, actualIdx + 1); });
+    connect(moveBottomAction, &QAction::triggered, this, [this, nodeKey, parentKey, maxIdx]() { moveNavigationNode(nodeKey, parentKey, maxIdx); });
+
+    menu.addSeparator();
+    ElaMenu* moveToCategoryMenu = menu.addMenu(ElaIconType::ArrowsTurnRight, tr("移动到分类"));
+    moveToCategoryMenu->setMenuItemHeight(27);
+
+    QAction* uncategorizedAction = moveToCategoryMenu->addElaIconAction(
+        isUncategorized ? ElaIconType::Check : ElaIconType::BriefcaseBlank, tr("未分类"));
+    uncategorizedAction->setEnabled(!isUncategorized);
+    connect(uncategorizedAction, &QAction::triggered, this, [this, nodeKey]()
+        {
+            const int appendIdx = getNavigationNodeChildrenKeys(m_projectExpanderKey).size();
+            moveNavigationNode(nodeKey, m_projectExpanderKey, appendIdx);
+        });
+
+    if (!categories.isEmpty()) {
+        moveToCategoryMenu->addSeparator();
+        for (const QString& catKey : categories) {
+            const bool isCurrent = (parentKey == catKey);
+            QAction* catAction = moveToCategoryMenu->addElaIconAction(
+                isCurrent ? ElaIconType::Check : ElaIconType::Folder, getNavigationNodeTitle(catKey));
+            catAction->setEnabled(!isCurrent);
+            connect(catAction, &QAction::triggered, this, [this, nodeKey, catKey]()
+                {
+                    const int appendIdx = getNavigationNodeChildrenKeys(catKey).size();
+                    if (moveNavigationNode(nodeKey, catKey, appendIdx)) {
+                        expandNavigationNode(catKey);
+                    }
+                });
+        }
+    }
+
+    moveToCategoryMenu->addSeparator();
+    QAction* newCategoryAndMoveAction = moveToCategoryMenu->addElaIconAction(ElaIconType::FolderPlus, tr("新建分类并移入..."));
+    connect(newCategoryAndMoveAction, &QAction::triggered, this, [this, nodeKey]()
+        {
+            handleNewProjectCategory(nodeKey);
+        });
+    adjustElaMenuWidth(moveToCategoryMenu, 180);
+
+    menu.addSeparator();
+    QAction* openDirAction = menu.addElaIconAction(ElaIconType::FolderOpen, tr("打开项目文件夹"));
+    const fs::path projectDir = page->getProjectDir();
+    connect(openDirAction, &QAction::triggered, this, [projectDir]()
+        {
+            QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring())));
+        });
+
+    adjustElaMenuWidth(&menu);
+    menu.exec(globalPos);
 }
 
 MainWindow::~MainWindow()
@@ -332,11 +832,39 @@ void MainWindow::updateTaskbarBadge()
 
 void MainWindow::syncProjectsToGlobalConfig()
 {
-    tomlkit::Item projects = tomlkit::Item::array();
-    for (const auto& projectPage : m_projectPages) {
-        projects.push_back(wide2Ascii(projectPage->getProjectDir()));
+    if (!m_projectsLoaded) {
+        return;
     }
-    insertToml(*m_globalConfig, "projects", projects);
+
+    tomlkit::Item uncategorizedProjects = tomlkit::Item::array();
+    tomlkit::Item categoriesArray = tomlkit::Item::arrayOfTables();
+
+    const QStringList rootChildren = getNavigationNodeChildrenKeys(m_projectExpanderKey);
+    for (const QString& childKey : rootChildren) {
+        if (isProjectCategoryKey(childKey)) {
+            tomlkit::Item catTable = tomlkit::Item::table(tomlkit::TableStyle::ArrayOfTablesElement);
+            catTable["name"] = getNavigationNodeTitle(childKey).toStdString();
+            catTable["expanded"] = getNavigationNodeIsExpanded(childKey);
+            tomlkit::Item catProjects = tomlkit::Item::array();
+            for (const QString& projKey : getNavigationNodeChildrenKeys(childKey)) {
+                if (ProjectSettingsPage* page = findProjectPageByKey(projKey)) {
+                    catProjects.push_back(wide2Ascii(page->getProjectDir()));
+                }
+            }
+            catTable["projects"] = std::move(catProjects);
+            categoriesArray.push_back(std::move(catTable));
+        }
+        else if (ProjectSettingsPage* page = findProjectPageByKey(childKey)) {
+            uncategorizedProjects.push_back(wide2Ascii(page->getProjectDir()));
+        }
+    }
+
+    if (categoriesArray.empty()) {
+        categoriesArray.push_back(tomlkit::Item::table(tomlkit::TableStyle::ArrayOfTablesElement));
+    }
+
+    insertToml(*m_globalConfig, "projects", uncategorizedProjects);
+    insertToml(*m_globalConfig, "projectCategories", categoriesArray);
 }
 
 void MainWindow::initWindow()
@@ -365,7 +893,9 @@ void MainWindow::initWindow()
 
     setWindowTitle("Galtransl++");
 
-    setNavigationBarWidth(250);
+    setNavigationBarMinimumWidth(255);
+    const int savedNavBarWidth = tomlkit::findOr(*m_globalConfig, "navigationBarWidth", 255);
+    setNavigationBarWidth(savedNavBarWidth);
 }
 
 void MainWindow::initEdgeLayout()
@@ -477,17 +1007,71 @@ void MainWindow::initContent()
     connect(m_commonPostDictsPage, &CommonNormalDictsPage::commonDictsChangedSignal, this, refreshCommonDictsFunc);
 
     addExpanderNode(tr("项目管理"), m_projectExpanderKey, ElaIconType::BriefcaseBlank);
+    setNavigationNodeCrossContainerDragEnabled(m_projectExpanderKey, true);
+
+    auto isProjectAlreadyLoaded = [&](const fs::path& projectDir) -> bool
+        {
+            return std::ranges::any_of(m_projectPages, [&](const auto& page)
+                {
+                    std::error_code ec;
+                    if (fs::equivalent(page->getProjectDir(), projectDir, ec) && !ec) {
+                        return true;
+                    }
+                    return page->getProjectDir().lexically_normal() == projectDir.lexically_normal();
+                });
+        };
+
+    QList<QPair<QString, bool>> categoryExpandStates;
+    const auto categories = tomlkit::findArrayOrEmpty(*m_globalConfig, "projectCategories");
+    for (const auto& categoryItem : categories) {
+        if (!categoryItem.isTable()) {
+            continue;
+        }
+        const QString catName = QString::fromStdString(tomlkit::findOr(categoryItem, "name", "")).trimmed();
+        if (catName.isEmpty() || hasCategoryName(catName)) {
+            continue;
+        }
+        const bool expanded = tomlkit::findOr(categoryItem, "expanded", true);
+        const QString catKey = createProjectCategory(catName);
+        if (catKey.isEmpty()) {
+            continue;
+        }
+        const auto catProjects = tomlkit::findArrayOrEmpty(categoryItem, "projects");
+        for (const auto& project : catProjects) {
+            if (!project.isString()) {
+                continue;
+            }
+            const fs::path projectDir(ascii2Wide(project.asString()));
+            if (!fs::exists(projectDir / L"Config.toml") || isProjectAlreadyLoaded(projectDir)) {
+                continue;
+            }
+            createProjectSettingsPage(projectDir, catKey);
+        }
+        categoryExpandStates.append({ catKey, expanded });
+    }
+
     const auto projects = tomlkit::findArrayOrEmpty(*m_globalConfig, "projects");
     for (const auto& project : projects) {
-            if (project.isString()) {
-                const fs::path projectDir(ascii2Wide(project.asString()));
-                if (!fs::exists(projectDir / L"Config.toml")) {
-                    continue;
-                }
-                createProjectSettingsPage(projectDir);
-            }
+        if (!project.isString()) {
+            continue;
+        }
+        const fs::path projectDir(ascii2Wide(project.asString()));
+        if (!fs::exists(projectDir / L"Config.toml") || isProjectAlreadyLoaded(projectDir)) {
+            continue;
+        }
+        createProjectSettingsPage(projectDir, m_projectExpanderKey);
     }
+
     expandNavigationNode(m_projectExpanderKey);
+    for (const auto& [catKey, expanded] : categoryExpandStates) {
+        if (expanded) {
+            expandNavigationNode(catKey);
+        }
+        else {
+            collapseNavigationNode(catKey);
+        }
+    }
+    m_projectsLoaded = true;
 
     addFooterNode(tr("使用说明"), nullptr, m_illustrationKey, 0, ElaIconType::BookOpen);
     addFooterNode(tr("关于"), nullptr, m_aboutKey, 0, ElaIconType::User);
@@ -662,6 +1246,7 @@ void MainWindow::onNewProjectTriggered()
     }
 
     ProjectSettingsPage* newPage = createProjectSettingsPage(newProjectDir);
+    syncProjectsToGlobalConfig();
     this->navigation(newPage->property("ElaPageKey").toString());
 
     const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(newProjectDir.wstring()));
@@ -695,6 +1280,7 @@ void MainWindow::onOpenProjectTriggered()
     }
 
     ProjectSettingsPage* newPage = createProjectSettingsPage(projectDir);
+    syncProjectsToGlobalConfig();
     this->navigation(newPage->property("ElaPageKey").toString());
 
 	const QUrl dirUrl = QUrl::fromLocalFile(QString::fromStdWString(projectDir.wstring()));
@@ -860,6 +1446,7 @@ void MainWindow::onCloseWindowClicked(bool restart)
     syncProjectsToGlobalConfig();
 
     m_appSettingsPage->apply2Config();
+    insertToml(*m_globalConfig, "navigationBarWidth", getNavigationBarWidth());
     insertToml(*m_globalConfig, "clearLogShortcut",
         m_clearLogShortcut->key().toString(QKeySequence::PortableText).toStdString());
 

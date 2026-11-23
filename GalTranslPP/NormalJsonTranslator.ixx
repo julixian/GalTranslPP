@@ -71,7 +71,7 @@ protected:
     bool m_keepPreviousOtherInfo{};
     bool m_checkQuota{};
     bool m_smartRetry{};
-    int m_enhanceJailbreak{};
+    bool m_smartRetryImageInput{};
     bool m_retransAllWhenFail{};
     bool m_usePreDictInName{};
     bool m_usePostDictInName{};

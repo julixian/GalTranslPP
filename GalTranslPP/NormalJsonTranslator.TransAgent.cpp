@@ -38,8 +38,8 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     int problemMaxLines,
     int glossaryMaxLines,
     bool smartRetry,
+    bool smartRetryImageInput,
     bool checkQuota,
-    int enhanceJailbreak,
     std::shared_mutex& transCacheMutex,
     absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
     const std::vector<fs::path>& knownRelFiles,
@@ -69,8 +69,8 @@ NormalJsonTranslatorTransAgent::NormalJsonTranslatorTransAgent(
     m_problemMaxLines(problemMaxLines),
     m_glossaryMaxLines(glossaryMaxLines),
     m_smartRetry(smartRetry),
+    m_smartRetryImageInput(smartRetryImageInput),
     m_checkQuota(checkQuota),
-    m_enhanceJailbreak(enhanceJailbreak),
     m_transCacheMutex(transCacheMutex),
     m_savedTranslCacheMap(savedTranslCacheMap),
     m_knownRelFiles(knownRelFiles),
@@ -402,7 +402,8 @@ std::string NormalJsonTranslatorTransAgent::buildLogBlock(
 std::string NormalJsonTranslatorTransAgent::buildUserPrompt(
     const fs::path& relInputPath,
     std::span<Sentence*> pending,
-    const std::string& rollingContext
+    const std::string& rollingContext,
+    std::optional<size_t> imagePageCount
 ) {
     const std::string inputBlock = buildInputBlock(pending);
     const std::string inputProblems = buildProblemSummary(pending);
@@ -417,9 +418,23 @@ std::string NormalJsonTranslatorTransAgent::buildUserPrompt(
     replaceStrInplace(prompt, "[AgentProblemDescription]", inputProblems.empty() ? "None" : inputProblems);
     replaceStrInplace(prompt, "[AgentGlossary]", glossary.empty() ? "None" : glossary);
     replaceStrInplace(prompt, "[AgentKnownTerms]", knownTerms.empty() ? "None" : knownTerms);
-    replaceStrInplace(prompt,
+    const std::string_view chunkPlaceholder =
         m_transEngine == TransEngine::ForGalTsv || m_transEngine == TransEngine::ForNovelTsv
-            ? "[AgentCurrentChunkTsv]" : "[AgentCurrentChunkJson]", inputBlock);
+            ? "[AgentCurrentChunkTsv]" : "[AgentCurrentChunkJson]";
+    if (imagePageCount.has_value()) {
+        replaceStrInplace(prompt, chunkPlaceholder, "(provided in the attached image)");
+        while (!prompt.empty() && (prompt.back() == '\n' || prompt.back() == '\r' || prompt.back() == ' ')) {
+            prompt.pop_back();
+        }
+        prompt += std::format(
+            "\n\nNote: the <input> content is provided as {} attached image(s), in reading order. "
+            "Read them carefully, preserve every ID, tag, and symbol verbatim as shown, "
+            "and submit translations via commit_translations (or call read/search tools first if needed) as usual.",
+            *imagePageCount);
+    }
+    else {
+        replaceStrInplace(prompt, chunkPlaceholder, inputBlock);
+    }
     return prompt;
 }
 

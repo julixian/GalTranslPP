@@ -3,7 +3,9 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QPointer>
 #include <QStackedWidget>
+#include <QTimer>
 
 #ifdef Q_OS_WIN
 #include <Windows.h>
@@ -50,6 +52,7 @@ ProjectSettingsPage::ProjectSettingsPage(const fs::path& projectDir, tomlkit::It
     }
     insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
     m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, this);
+    m_dictExSettingsPage->hide();
 }
 
 ProjectSettingsPage::~ProjectSettingsPage() = default;
@@ -84,7 +87,9 @@ void ProjectSettingsPage::saveProjectConfig()
 
 void ProjectSettingsPage::refreshCommonDicts()
 {
-    m_dictExSettingsPage->refreshCommonDictsList();
+    if (m_dictExSettingsPage) {
+        m_dictExSettingsPage->refreshCommonDictsList();
+    }
 }
 
 QString ProjectSettingsPage::getProjectName()
@@ -97,7 +102,11 @@ fs::path ProjectSettingsPage::getProjectDir()
     return m_projectDir;
 }
 
-void ProjectSettingsPage::clearLog(bool forceClear) {
+void ProjectSettingsPage::clearLog(bool forceClear)
+{
+    if (!m_stackedWidget || !m_startSettingsPage) {
+        return;
+    }
     if (forceClear ||
         (m_stackedWidget->currentWidget() == m_startSettingsPage && m_startSettingsPage->isMainPageVisible())) {
         m_startSettingsPage->clearLog();
@@ -162,76 +171,51 @@ void ProjectSettingsPage::setupUi()
 
     m_stackedWidget = new QStackedWidget(centralWidget);
 
-    createPages();
+    initPagePlaceholders();
 
-    auto pageNavigation = [=, this]()
+    connect(apiSettingAction, &QAction::triggered, this, [this]()
         {
-            if (BasePage* page = qobject_cast<BasePage*>(m_stackedWidget->currentWidget())) {
-                page->navigation(0);
-            }
-        };
-
-    connect(apiSettingAction, &QAction::triggered, this, [=, this]()
-        {
-            m_stackedWidget->setCurrentIndex(0);
-            m_settingsTitle->setText(tr("Api设置"));
+            switchToPage(ApiPageIndex, tr("Api设置"));
         });
-    connect(commonSettingAction, &QAction::triggered, this, [=, this]()
+    connect(commonSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(1);
-            m_settingsTitle->setText(tr("一般设置"));
+            switchToPage(CommonPageIndex, tr("一般设置"));
         });
-    connect(paSettingAction, &QAction::triggered, this, [=, this]()
+    connect(paSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(2);
-            m_settingsTitle->setText(tr("问题分析"));
+            switchToPage(PAPageIndex, tr("问题分析"));
         });
-    connect(nameTableSettingAction, &QAction::triggered, this, [=, this]()
+    connect(nameTableSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(3);
-            m_settingsTitle->setText(tr("人名表"));
+            switchToPage(NameTablePageIndex, tr("人名表"));
         });
-    connect(dictSettingAction, &QAction::triggered, this, [=, this]()
+    connect(dictSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(4);
-            m_settingsTitle->setText(tr("项目字典"));
+            switchToPage(DictPageIndex, tr("项目字典"));
         });
-    connect(dictExSettingAction, &QAction::triggered, this, [=, this]()
+    connect(dictExSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(5);
-            m_settingsTitle->setText(tr("字典设置"));
+            switchToPage(DictExPageIndex, tr("字典设置"));
         });
-    connect(promptSettingAction, &QAction::triggered, this, [=, this]()
+    connect(promptSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(6);
-            m_settingsTitle->setText(tr("提示词"));
+            switchToPage(PromptPageIndex, tr("提示词"));
         });
-    connect(pluginSettingAction, &QAction::triggered, this, [=, this]()
+    connect(pluginSettingAction, &QAction::triggered, this, [this]()
         {
-            if (m_stackedWidget->currentIndex() == 7) {
-                pageNavigation();
-            }
-            m_stackedWidget->setCurrentIndex(7);
-            m_settingsTitle->setText(tr("插件管理"));
+            switchToPage(PluginPageIndex, tr("插件管理"), true);
         });
-    connect(cacheProblemAction, &QAction::triggered, this, [=, this]()
+    connect(cacheProblemAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(8);
-            m_projectCachePage->ensureCacheFilesLoaded();
-            m_settingsTitle->setText(tr("缓存管理"));
+            switchToPage(ProjectCachePageIndex, tr("缓存管理"));
         });
-    connect(startTransAction, &QAction::triggered, this, [=, this]()
+    connect(startTransAction, &QAction::triggered, this, [this]()
         {
-            if (m_stackedWidget->currentIndex() == 9) {
-                pageNavigation();
-            }
-            m_stackedWidget->setCurrentIndex(9);
-            m_settingsTitle->setText(tr("开始翻译"));
+            switchToPage(StartPageIndex, tr("开始翻译"), true);
         });
-    connect(otherSettingAction, &QAction::triggered, this, [=, this]()
+    connect(otherSettingAction, &QAction::triggered, this, [this]()
         {
-            m_stackedWidget->setCurrentIndex(10);
-            m_settingsTitle->setText(tr("其他设置"));
+            switchToPage(OtherPageIndex, tr("其他设置"));
         });
 
     mainLayout->addLayout(navigationLayout);
@@ -241,69 +225,147 @@ void ProjectSettingsPage::setupUi()
     addCentralWidget(centralWidget, true, false, 0);
 }
 
-void ProjectSettingsPage::createPages()
+void ProjectSettingsPage::initPagePlaceholders()
 {
-    if (!m_apiSettingsPage) {
-        m_apiSettingsPage = new ApiSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
+    if (!m_stackedWidget) {
+        return;
     }
-    if (!m_commonSettingsPage) {
-        m_commonSettingsPage = new CommonSettingsPage(*m_projectConfig, m_stackedWidget);
+    for (int i = 0; i < PageCount; ++i) {
+        m_stackedWidget->addWidget(new QWidget(m_stackedWidget));
     }
-    if (!m_paSettingsPage) {
-        m_paSettingsPage = new PASettingsPage(*m_projectConfig, m_stackedWidget);
-    }
-    if (!m_nameTableSettingsPage) {
-        m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_dictSettingsPage) {
-        m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_dictExSettingsPage) {
-        m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_promptSettingsPage) {
-        m_promptSettingsPage = new PromptSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_pluginSettingsPage) {
-        m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_projectCachePage) {
-        m_projectCachePage = new ProjectCachePage(m_projectDir, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_startSettingsPage) {
-        m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
-    }
-    if (!m_otherSettingsPage) {
-        m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
+}
+
+void ProjectSettingsPage::ensurePageCreated(int index)
+{
+    if (!m_stackedWidget || index < 0 || index >= PageCount) {
+        return;
     }
 
-    m_stackedWidget->addWidget(m_apiSettingsPage);
-    m_stackedWidget->addWidget(m_commonSettingsPage);
-    m_stackedWidget->addWidget(m_paSettingsPage);
-    m_stackedWidget->addWidget(m_nameTableSettingsPage);
-    m_stackedWidget->addWidget(m_dictSettingsPage);
-    m_stackedWidget->addWidget(m_dictExSettingsPage);
-    m_stackedWidget->addWidget(m_promptSettingsPage);
-    m_stackedWidget->addWidget(m_pluginSettingsPage);
-    m_stackedWidget->addWidget(m_projectCachePage);
-    m_stackedWidget->addWidget(m_startSettingsPage);
-    m_stackedWidget->addWidget(m_otherSettingsPage);
+    QWidget* page = nullptr;
+    switch (index) {
+    case ApiPageIndex:
+        if (!m_apiSettingsPage) {
+            m_apiSettingsPage = new ApiSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_apiSettingsPage;
+        break;
+    case CommonPageIndex:
+        if (!m_commonSettingsPage) {
+            m_commonSettingsPage = new CommonSettingsPage(*m_projectConfig, m_stackedWidget);
+        }
+        page = m_commonSettingsPage;
+        break;
+    case PAPageIndex:
+        if (!m_paSettingsPage) {
+            m_paSettingsPage = new PASettingsPage(*m_projectConfig, m_stackedWidget);
+        }
+        page = m_paSettingsPage;
+        break;
+    case NameTablePageIndex:
+        if (!m_nameTableSettingsPage) {
+            m_nameTableSettingsPage = new NameTableSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_nameTableSettingsPage;
+        break;
+    case DictPageIndex:
+        if (!m_dictSettingsPage) {
+            m_dictSettingsPage = new DictSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_dictSettingsPage;
+        break;
+    case DictExPageIndex:
+        if (!m_dictExSettingsPage) {
+            m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_dictExSettingsPage;
+        break;
+    case PromptPageIndex:
+        if (!m_promptSettingsPage) {
+            m_promptSettingsPage = new PromptSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_promptSettingsPage;
+        break;
+    case PluginPageIndex:
+        if (!m_pluginSettingsPage) {
+            m_pluginSettingsPage = new PluginSettingsPage(m_projectDir, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_pluginSettingsPage;
+        break;
+    case ProjectCachePageIndex:
+        if (!m_projectCachePage) {
+            m_projectCachePage = new ProjectCachePage(m_projectDir, *m_projectConfig, m_stackedWidget);
+        }
+        page = m_projectCachePage;
+        break;
+    case StartPageIndex:
+        if (!m_startSettingsPage) {
+            m_startSettingsPage = new StartSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
+            connect(m_startSettingsPage, &StartSettingsPage::startTranslatingSignal, this, &ProjectSettingsPage::onStartTranslating);
+            connect(m_startSettingsPage, &StartSettingsPage::finishTranslatingSignal, this, &ProjectSettingsPage::onFinishTranslating);
+            connect(m_startSettingsPage, &StartSettingsPage::progressUpdatedSignal, this, [this](int completed, int total)
+                {
+                    m_completedLines = completed;
+                    m_totalLines = total;
+                    Q_EMIT runningStateChangedSignal(this->property("ElaPageKey").toString(), m_isRunning, m_completedLines, m_totalLines);
+                });
+        }
+        page = m_startSettingsPage;
+        break;
+    case OtherPageIndex:
+        if (!m_otherSettingsPage) {
+            m_otherSettingsPage = new OtherSettingsPage(m_projectDir, m_globalConfig, *m_projectConfig, m_stackedWidget);
+            connect(m_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, &ProjectSettingsPage::apply2Config);
+            connect(m_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::onRefreshProjectConfig);
+            connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [this](const QString& newProjectName)
+                {
+                    Q_EMIT this->changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
+                });
+        }
+        page = m_otherSettingsPage;
+        break;
+    default:
+        return;
+    }
 
-    if (m_startSettingsPage && m_otherSettingsPage) {
-        connect(m_startSettingsPage, &StartSettingsPage::startTranslatingSignal, this, &ProjectSettingsPage::onStartTranslating);
-        connect(m_startSettingsPage, &StartSettingsPage::finishTranslatingSignal, this, &ProjectSettingsPage::onFinishTranslating);
-        connect(m_startSettingsPage, &StartSettingsPage::progressUpdatedSignal, this, [=, this](int completed, int total)
-            {
-                m_completedLines = completed;
-                m_totalLines = total;
-                Q_EMIT runningStateChangedSignal(this->property("ElaPageKey").toString(), m_isRunning, m_completedLines, m_totalLines);
-            });
-        connect(m_otherSettingsPage, &OtherSettingsPage::saveConfigSignal, this, &ProjectSettingsPage::apply2Config);
-        connect(m_otherSettingsPage, &OtherSettingsPage::refreshProjectConfigSignal, this, &ProjectSettingsPage::onRefreshProjectConfig);
-        connect(m_otherSettingsPage, &OtherSettingsPage::changeProjectNameSignal, this, [=, this](const QString& newProjectName)
-            {
-                Q_EMIT this->changeProjectNameSignal(this->property("ElaPageKey").toString(), newProjectName);
-            });
+    if (!page) {
+        return;
+    }
+
+    QWidget* currentSlotWidget = m_stackedWidget->widget(index);
+    if (currentSlotWidget == page) {
+        return;
+    }
+
+    const bool wasCurrent = (m_stackedWidget->currentWidget() == currentSlotWidget);
+    m_stackedWidget->insertWidget(index, page);
+    if (wasCurrent) {
+        m_stackedWidget->setCurrentWidget(page);
+    }
+    if (currentSlotWidget) {
+        m_stackedWidget->removeWidget(currentSlotWidget);
+        currentSlotWidget->deleteLater();
+    }
+}
+
+void ProjectSettingsPage::switchToPage(int index, const QString& title, bool resetSubNavigationOnReselect)
+{
+    if (!m_stackedWidget || index < 0 || index >= PageCount) {
+        return;
+    }
+
+    const bool alreadyCurrent = (m_stackedWidget->currentIndex() == index);
+    ensurePageCreated(index);
+    if (alreadyCurrent && resetSubNavigationOnReselect) {
+        if (BasePage* page = qobject_cast<BasePage*>(m_stackedWidget->widget(index))) {
+            page->navigation(0);
+        }
+    }
+    m_stackedWidget->setCurrentIndex(index);
+    if (m_settingsTitle) {
+        m_settingsTitle->setText(title);
+    }
+    if (index == ProjectCachePageIndex && m_projectCachePage) {
+        m_projectCachePage->ensureCacheFilesLoaded();
     }
 }
 
@@ -314,6 +376,17 @@ void ProjectSettingsPage::initialize()
     }
     m_fullPagesInitialized = true;
     setupUi();
+
+    QPointer<ProjectSettingsPage> guard(this);
+    QTimer::singleShot(0, this, [guard]()
+        {
+            if (!guard || !guard->m_stackedWidget) {
+                return;
+            }
+            if (guard->m_stackedWidget->currentIndex() == ApiPageIndex && !guard->m_apiSettingsPage) {
+                guard->ensurePageCreated(ApiPageIndex);
+            }
+        });
 }
 
 void ProjectSettingsPage::onRefreshProjectConfig()
@@ -332,11 +405,18 @@ void ProjectSettingsPage::onRefreshProjectConfig()
         return;
     }
     insertToml(*m_projectConfig, "GUIConfig.isRunning", false);
-    while (m_stackedWidget->count() > 0) {
-        QWidget* widget = m_stackedWidget->currentWidget();
-        m_stackedWidget->removeWidget(widget);
-        widget->deleteLater();
+
+    if (m_dictExSettingsPage && (!m_stackedWidget || m_stackedWidget->indexOf(m_dictExSettingsPage) < 0)) {
+        m_dictExSettingsPage->deleteLater();
     }
+    if (m_stackedWidget) {
+        while (m_stackedWidget->count() > 0) {
+            QWidget* widget = m_stackedWidget->widget(0);
+            m_stackedWidget->removeWidget(widget);
+            widget->deleteLater();
+        }
+    }
+
     m_apiSettingsPage = nullptr;
     m_pluginSettingsPage = nullptr;
     m_commonSettingsPage = nullptr;
@@ -348,8 +428,14 @@ void ProjectSettingsPage::onRefreshProjectConfig()
     m_otherSettingsPage = nullptr;
     m_promptSettingsPage = nullptr;
     m_projectCachePage = nullptr;
-    createPages();
-    m_stackedWidget->setCurrentIndex(10);
+
+    m_dictExSettingsPage = new DictExSettingsPage(m_globalConfig, *m_projectConfig, this);
+    m_dictExSettingsPage->hide();
+
+    if (m_stackedWidget) {
+        initPagePlaceholders();
+        switchToPage(OtherPageIndex, tr("其他设置"));
+    }
     ElaMessageBar::success(ElaMessageBarType::TopRight, tr("刷新成功"), tr("项目配置刷新成功"), 3000);
 }
 
@@ -370,10 +456,14 @@ void ProjectSettingsPage::onFinishTranslating(const QString& transEngine, int ex
         )
     {
         if (transEngine == "DumpName" || transEngine == "NameTrans") {
-            m_nameTableSettingsPage->refreshTable();
+            if (m_nameTableSettingsPage) {
+                m_nameTableSettingsPage->refreshTable();
+            }
         }
         else if (transEngine == "GenDict") {
-            m_dictSettingsPage->refreshGptDict();
+            if (m_dictSettingsPage) {
+                m_dictSettingsPage->refreshGptDict();
+            }
         }
     }
     m_isRunning = false;

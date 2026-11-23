@@ -28,15 +28,14 @@ NameTranslator::NameTranslator(
     int glossaryMaxLines,
     int maxRequestCount,
     int apiTimeoutMs,
-    bool checkQuota,
-    int enhanceJailbreak
+    bool checkQuota
 )
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool), m_gptDictionary(gptDictionary),
     m_onPerformApi(onPerformApi), m_systemPrompt(systemPrompt), m_userPrompt(userPrompt),
     m_apiStrategy(apiStrategy), m_targetLang(targetLang), m_threadsNum(threadsNum),
     m_batchSize(batchSize), m_inputBlockMaxLines(inputBlockMaxLines), m_glossaryMaxLines(glossaryMaxLines),
     m_maxRequestCount(maxRequestCount), m_apiTimeoutMs(apiTimeoutMs),
-    m_checkQuota(checkQuota), m_enhanceJailbreak(enhanceJailbreak)
+    m_checkQuota(checkQuota)
 {
 
 }
@@ -94,7 +93,6 @@ void NameTranslator::translateBatch(std::span<const std::string> batchNames, int
             {{"role", "system"}, {"content", systemPrompt}},
             {{"role", "user"}, {"content", userPrompt}}
             });
-        appendApiPrefill(messages, "```TSV\n", m_enhanceJailbreak);
 
         const std::optional<TranslationApi> apiOpt = m_apiPool->getApi(m_apiStrategy);
         if (!apiOpt) {

@@ -70,8 +70,26 @@ private:
     ProjectCachePage* m_projectCachePage = nullptr;
     ElaText* m_settingsTitle = nullptr;
 
+    enum PageIndex : int
+    {
+        ApiPageIndex = 0,
+        CommonPageIndex = 1,
+        PAPageIndex = 2,
+        NameTablePageIndex = 3,
+        DictPageIndex = 4,
+        DictExPageIndex = 5,
+        PromptPageIndex = 6,
+        PluginPageIndex = 7,
+        ProjectCachePageIndex = 8,
+        StartPageIndex = 9,
+        OtherPageIndex = 10,
+        PageCount = 11
+    };
+
     void setupUi();
-    void createPages();
+    void initPagePlaceholders();
+    void ensurePageCreated(int index);
+    void switchToPage(int index, const QString& title, bool resetSubNavigationOnReselect = false);
     void saveProjectConfig();
 
 private Q_SLOTS:

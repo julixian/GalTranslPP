@@ -35,7 +35,7 @@ namespace
         const char* floatPixmap;
     };
 
-    constexpr std::array<DefaultPopularCard, 7> kDefaultPopularCards = {
+    constexpr std::array<DefaultPopularCard, 6> kDefaultPopularCards = {
         DefaultPopularCard{
             "https://github.com/julixian/LocaleEmulatorPlus",
             "LocaleEmulatorPlus",
@@ -88,15 +88,6 @@ namespace
             ":/GPPGUI/Resource/images/sublime.png",
             "Sublime HQ",
             "高亮很好使，但编码转换不如emeditor",
-            ":/GPPGUI/Resource/images/IARC_7+.svg.png"
-        },
-        DefaultPopularCard{
-            "https://github.com/ZQF-ReVN",
-            "ReVN",
-            "拜见祖师爷",
-            ":/GPPGUI/Resource/images/revn.png",
-            "Dir-A",
-            "别说你是搞机翻的",
             ":/GPPGUI/Resource/images/IARC_7+.svg.png"
         },
     };

@@ -118,14 +118,14 @@ TranslationSettings readTranslationSettings(const tomlkit::Item& configData)
     settings.repeatedBlockMinSize = tomlkit::findOr(configData, "common", "repeatedBlock", "minSize", 5);
     settings.cacheSearchDistance = tomlkit::findOr(configData, "common", "split", "cacheSearchDistance", 5);
     settings.saveCacheInterval = tomlkit::findOr(configData, "common", "saveCacheInterval", 1);
-    settings.keepPreviousOtherInfo = tomlkit::findOr(configData, "common", "keepPreviousOtherInfo", false);
+    settings.keepPreviousOtherInfo = tomlkit::findOr(configData, "common", "keepPreviousOtherInfo", true);
     settings.linebreakSymbol = tomlkit::findOr(configData, "common", "linebreakSymbol", "auto");
-    settings.maxRequestCount = tomlkit::findOr(configData, "common", "maxRequestCount", 4);
+    settings.maxRequestCount = tomlkit::findOr(configData, "common", "maxRequestCount", 5);
     settings.inputBlockMaxLines = tomlkit::findOr(configData, "common", "log", "inputBlockMaxLines", 10);
     settings.problemMaxLines = tomlkit::findOr(configData, "common", "log", "problemMaxLines", 3);
     settings.glossaryMaxLines = tomlkit::findOr(configData, "common", "log", "glossaryMaxLines", 5);
     settings.smartRetry = tomlkit::findOr(configData, "common", "smartRetry", false);
-    settings.enhanceJailbreak = tomlkit::findOr(configData, "common", "enhanceJailbreak", 0);
+    settings.smartRetryImageInput = tomlkit::findOr(configData, "common", "smartRetryImageInput", false);
     settings.checkQuota = tomlkit::findOr(configData, "common", "checkQuota", true);
     settings.retransAllWhenFail = tomlkit::findOr(configData, "common", "retransAllWhenFail", false);
     settings.agentEnabled = tomlkit::findOr(configData, "common", "agent", "enabled", false);

@@ -20,7 +20,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     const NLPTokenizeFunc& tokenizeSourceLangFunc, const fs::path& otherCacheDir,
     const std::function<void(Sentence*)>& preProcessFunc, const std::function<std::string(std::string_view)>& onPerformApi, const std::function<DictList(const DictList&)>& onDictProcessed,
     const std::string& systemPrompt, const std::string& userPrompt, const std::string& apiStrategy, const std::string& targetLang,
-    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota, int enhanceJailbreak,
+    int threadsNum, int inputBlockMaxLines, int maxRequestCount, int apiTimeOutMs, bool checkQuota,
     const absl::flat_hash_map<fs::path, ordered_json>& inputJsonMap,
     const std::vector<fs::path>& relJsonPaths)
     : m_controller(controller), m_logger(logger), m_apiPool(apiPool),
@@ -28,7 +28,7 @@ DictionaryGenerator::DictionaryGenerator(const std::shared_ptr<IController>& con
     m_tokenizeSourceLangFunc(tokenizeSourceLangFunc),
     m_systemPrompt(systemPrompt), m_userPrompt(userPrompt), m_apiStrategy(apiStrategy), m_targetLang(targetLang),
     m_threadsNum(threadsNum), m_inputBlockMaxLines(inputBlockMaxLines), m_maxRequestCount(maxRequestCount),
-    m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota), m_enhanceJailbreak(enhanceJailbreak),
+    m_apiTimeOutMs(apiTimeOutMs), m_checkQuota(checkQuota),
     m_inputJsonMap(inputJsonMap),
     m_relJsonPaths(relJsonPaths),
     m_tokenizeCachePath(otherCacheDir / L"tokenizeCache_dictgen.json")
@@ -182,7 +182,6 @@ void DictionaryGenerator::callLLMToGenerate(int segmentIndex, int batchIndex, in
         {{"role", "system"}, {"content", systemPrompt}},
         {{"role", "user"}, {"content", userPrompt}}
         });
-    appendApiPrefill(messages, "```TSV\n", m_enhanceJailbreak);
 
     int requestCount = 0;
     while (requestCount < m_maxRequestCount) {

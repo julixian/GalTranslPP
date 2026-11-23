@@ -303,7 +303,7 @@ void CommonSettingsPage::setupUi()
 	cacheSaveIntervalLayout->addWidget(cacheSaveIntervalSpinBox);
 	mainLayout->addWidget(cacheSaveIntervalArea);
 
-	bool keepPreviousOtherInfo = tomlkit::findOr(m_projectConfig, "common", "keepPreviousOtherInfo", false);
+	bool keepPreviousOtherInfo = tomlkit::findOr(m_projectConfig, "common", "keepPreviousOtherInfo", true);
 	ElaScrollPageArea* keepPreviousOtherInfoArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* keepPreviousOtherInfoLayout = new QHBoxLayout(keepPreviousOtherInfoArea);
 	GppDoubleText* keepPreviousOtherInfoText = new GppDoubleText(tr("保留上一次的 otherinfo"), 16,
@@ -316,10 +316,12 @@ void CommonSettingsPage::setupUi()
 	mainLayout->addWidget(keepPreviousOtherInfoArea);
 
 	// 最大请求次数
-	int maxRequestCount = tomlkit::findOr(m_projectConfig, "common", "maxRequestCount", 4);
+	int maxRequestCount = tomlkit::findOr(m_projectConfig, "common", "maxRequestCount", 5);
 	ElaScrollPageArea* maxRequestArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* maxRequestLayout = new QHBoxLayout(maxRequestArea);
-	ElaText* requestText = new ElaText(tr("最大请求次数"), 16, maxRequestArea);
+	GppDoubleText* requestText = new GppDoubleText(tr("最大请求次数"), 16,
+		tr("开启智能重试时建议 >= 4（开启图片替换输入时建议 >= 5）；普通模式：关闭图片时第 3 次拆分、第 4 次清空上下文，开启图片时第 3 次图片替换、第 4 次拆分、第 5 次清空上下文"), 10,
+		tr("若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）"), maxRequestArea);
 	maxRequestLayout->addWidget(requestText);
 	maxRequestLayout->addStretch();
 	ElaSpinBox* requestSpinBox = new ElaSpinBox(maxRequestArea);
@@ -333,8 +335,8 @@ void CommonSettingsPage::setupUi()
 	ElaScrollPageArea* smartRetryArea = new ElaScrollPageArea(mainWidget);
 	QHBoxLayout* smartRetryLayout = new QHBoxLayout(smartRetryArea);
 	GppDoubleText* smartRetryTextWidget = new GppDoubleText(tr("智能重试"), 16,
-		tr("失败时尝试对半拆分重翻；普通模式还会清空上下文重试"), 10,
-		"如果用的打野 key 其实不建议开这个", smartRetryArea);
+		tr("前 2 次常规请求失败后，默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启下方图片替换输入时，第 3 次先切图片输入、第 4 次拆分、普通模式第 5 次清空上下文"), 10,
+		tr("如果用的打野 key 其实不建议开这个；开启图片替换输入时建议最大请求次数 >= 5"), smartRetryArea);
 	smartRetryLayout->addWidget(smartRetryTextWidget);
 	smartRetryLayout->addStretch();
 	ElaToggleSwitch* smartRetryToggle = new ElaToggleSwitch(smartRetryArea);
@@ -342,20 +344,19 @@ void CommonSettingsPage::setupUi()
 	smartRetryLayout->addWidget(smartRetryToggle);
 	mainLayout->addWidget(smartRetryArea);
 
-	// 改善拒答（回复预填充）
-	const int enhanceJailbreak = tomlkit::findOr(m_projectConfig, "common", "enhanceJailbreak", 0);
-	ElaScrollPageArea* enhanceJailbreakArea = new ElaScrollPageArea(mainWidget);
-	QHBoxLayout* enhanceJailbreakLayout = new QHBoxLayout(enhanceJailbreakArea);
-	GppDoubleText* enhanceJailbreakText = new GppDoubleText(tr("改善拒答（回复预填充）"), 16,
-		tr("仅少量模型支持。一级填充：以 assistant 预填充结尾；二级填充：再追加用户消息要求继续。"), 10,
-		tr("不检查模型支持，误用可能导致请求失败"), enhanceJailbreakArea);
-	enhanceJailbreakLayout->addWidget(enhanceJailbreakText);
-	enhanceJailbreakLayout->addStretch();
-	GppNoWheelComboBox* enhanceJailbreakComboBox = new GppNoWheelComboBox(enhanceJailbreakArea);
-	enhanceJailbreakComboBox->addItems({tr("无"), tr("一级填充"), tr("二级填充")});
-	enhanceJailbreakComboBox->setCurrentIndex(enhanceJailbreak);
-	enhanceJailbreakLayout->addWidget(enhanceJailbreakComboBox);
-	mainLayout->addWidget(enhanceJailbreakArea);
+	// 图片替换输入（改善拒答）
+	const bool smartRetryImageInput = tomlkit::findOr(m_projectConfig, "common", "smartRetryImageInput", false);
+	ElaScrollPageArea* smartRetryImageInputArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* smartRetryImageInputLayout = new QHBoxLayout(smartRetryImageInputArea);
+	GppDoubleText* smartRetryImageInputText = new GppDoubleText(tr("图片替换输入（改善拒答）"), 16,
+		tr("在开启智能重试时生效：第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入，普通与 Agent 模式均支持"), 10,
+		tr("需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败"), smartRetryImageInputArea);
+	smartRetryImageInputLayout->addWidget(smartRetryImageInputText);
+	smartRetryImageInputLayout->addStretch();
+	ElaToggleSwitch* smartRetryImageInputToggle = new ElaToggleSwitch(smartRetryImageInputArea);
+	smartRetryImageInputToggle->setIsToggled(smartRetryImageInput);
+	smartRetryImageInputLayout->addWidget(smartRetryImageInputToggle);
+	mainLayout->addWidget(smartRetryImageInputArea);
 
 	// 额度检测
 	bool shouldCheckQuota = tomlkit::findOr(m_projectConfig, "common", "checkQuota", true);
@@ -679,7 +680,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.keepPreviousOtherInfo", keepPreviousOtherInfoToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
-			insertToml(m_projectConfig, "common.enhanceJailbreak", enhanceJailbreakComboBox->currentIndex());
+			insertToml(m_projectConfig, "common.smartRetryImageInput", smartRetryImageInputToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 

@@ -1038,6 +1038,7 @@ void LuaManager::registerCustomTypes(const std::shared_ptr<LuaStateInstance>& lu
 		"m_checkQuota", &NormalJsonTranslator::m_checkQuota,
 		"m_smartRetry", &NormalJsonTranslator::m_smartRetry,
 		"m_smartRetryImageInput", &NormalJsonTranslator::m_smartRetryImageInput,
+		"m_smartRetryImageFont", &NormalJsonTranslator::m_smartRetryImageFont,
 		"m_retransAllWhenFail", &NormalJsonTranslator::m_retransAllWhenFail,
 		"m_usePreDictInName", &NormalJsonTranslator::m_usePreDictInName,
 		"m_usePostDictInName", &NormalJsonTranslator::m_usePostDictInName,

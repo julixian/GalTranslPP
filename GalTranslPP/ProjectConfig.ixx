@@ -30,6 +30,7 @@ struct TranslationSettings {
     int glossaryMaxLines;
     bool smartRetry;
     bool smartRetryImageInput;
+    std::string smartRetryImageFont;
     bool checkQuota;
     bool retransAllWhenFail;
     bool agentEnabled;

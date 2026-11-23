@@ -102,6 +102,8 @@ ProjectPreview readPreview(const fs::path& projectDir)
     addRow(general, gppTr("TerminalPreview", "最大请求次数"), std::to_string(settings.maxRequestCount));
     addRow(general, gppTr("TerminalPreview", "智能重试"), enabledText(settings.smartRetry));
     addRow(general, gppTr("TerminalPreview", "图片替换输入"), enabledText(settings.smartRetryImageInput));
+    addRow(general, gppTr("TerminalPreview", "图片替换字体"),
+        settings.smartRetryImageFont.empty() ? gppTr("TerminalPreview", "自动").toStdString() : settings.smartRetryImageFont);
     addRow(general, gppTr("TerminalPreview", "额度检测"), enabledText(settings.checkQuota));
     addRow(general,
         gppTr("TerminalPreview", "整批重翻"),

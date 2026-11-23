@@ -72,6 +72,8 @@ protected:
     bool m_checkQuota{};
     bool m_smartRetry{};
     bool m_smartRetryImageInput{};
+    std::string m_smartRetryImageFont;
+    std::atomic<bool> m_smartRetryImageFontWarned{ false };
     bool m_retransAllWhenFail{};
     bool m_usePreDictInName{};
     bool m_usePostDictInName{};

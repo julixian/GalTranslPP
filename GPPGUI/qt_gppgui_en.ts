@@ -1443,8 +1443,32 @@ sk-...</translation>
     <message>
         <location line="+14"/>
         <source>图片替换输入（改善拒答）</source>
-        <oldsource>不检查模型支持，误用可能导致请求失败</oldsource>
-        <translation type="unfinished">Model support is not checked; an unsupported mode may cause requests to fail</translation>
+        <translation>Image-replacement input (reduce refusals)</translation>
+    </message>
+    <message>
+        <location line="+14"/>
+        <source>图片替换字体</source>
+        <translation>Image-replacement font</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>留空自动选择系统字体；可填系统字体名（如 Leelawadee UI、Noto Sans Thai），或选择本地 .ttf/.otf/.ttc 字体文件（支持相对项目目录路径）</source>
+        <translation>Leave blank to auto-select a system font; enter a system font family name (e.g., Leelawadee UI, Noto Sans Thai) or choose a local .ttf/.otf/.ttc font file (relative to project directory supported).</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>留空自动选择</source>
+        <translation>Leave blank for auto</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>选择字体文件</source>
+        <translation>Select font file</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>字体文件 (*.ttf *.otf *.ttc *.otc);;所有文件 (*.*)</source>
+        <translation>Font files (*.ttf *.otf *.ttc *.otc);;All files (*.*)</translation>
     </message>
     <message>
         <source>无</source>
@@ -1459,7 +1483,7 @@ sk-...</translation>
         <translation type="vanished">Level 2</translation>
     </message>
     <message>
-        <location line="+14"/>
+        <location line="+11"/>
         <source>额度检测</source>
         <translation>Check quota</translation>
     </message>
@@ -1474,7 +1498,7 @@ sk-...</translation>
         <translation>Use &lt;br&gt; for checks/plugins. See docs for timing; auto detects.</translation>
     </message>
     <message>
-        <location line="-511"/>
+        <location line="-543"/>
         <source>Num: 每n条分割一次，Equal: 每个文件均分n份，No: 关闭单文件分割</source>
         <translation>Num: split every n sentences; Equal: split every file to n parts equally</translation>
     </message>
@@ -1513,7 +1537,7 @@ sk-...</translation>
         <translation type="vanished">Retry failures by splitting the batch in half; normal mode also retries with cleared context</translation>
     </message>
     <message>
-        <location line="+44"/>
+        <location line="+76"/>
         <source>运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key</source>
         <translation>Monitor key quota and remove depleted keys from the API pool</translation>
     </message>
@@ -1523,7 +1547,7 @@ sk-...</translation>
         <translation>Log level</translation>
     </message>
     <message>
-        <location line="-352"/>
+        <location line="-384"/>
         <source>单次请求翻译人名数量</source>
         <translation>Names per NameTrans request</translation>
     </message>
@@ -1560,40 +1584,35 @@ sk-...</translation>
     <message>
         <location line="+109"/>
         <source>开启智能重试时建议 &gt;= 4（开启图片替换输入时建议 &gt;= 5）；普通模式：关闭图片时第 3 次拆分、第 4 次清空上下文，开启图片时第 3 次图片替换、第 4 次拆分、第 5 次清空上下文</source>
-        <oldsource>开启智能重试时建议 &gt;= 4（普通模式依次为：常规请求 -&gt; 图片替换重试 -&gt; 对半拆分 -&gt; 清空上下文重试）</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>Recommended &gt;= 4 with smart retry (&gt;= 5 with image input). Normal mode: split on 3rd and clear context on 4th when image input is off; image input on 3rd, split on 4th, and clear context on 5th when on.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>若不想在普通模式下清空上下文重试，可将此值保持为 3（开启图片替换输入时保持为 4）</source>
-        <oldsource>若不想在普通模式下清空上下文重试，可将此值保持为 3</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>To avoid clearing context in Normal mode, keep this at 3 (or 4 when image input is enabled).</translation>
     </message>
     <message>
         <location line="+14"/>
         <source>前 2 次常规请求失败后，默认第 3 次对半拆分、普通模式第 4 次清空上下文；开启下方图片替换输入时，第 3 次先切图片输入、第 4 次拆分、普通模式第 5 次清空上下文</source>
-        <oldsource>失败时依次尝试图片替换输入（开启下方选项时）、对半拆分重翻，普通模式第 4 次还会清空上下文重试；建议最大请求次数 &gt;= 4</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>After 2 normal attempts fail, splits in half on the 3rd and clears context on the 4th (Normal mode). With image input enabled below, switches to image input on the 3rd, splits on the 4th, and clears context on the 5th.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>如果用的打野 key 其实不建议开这个；开启图片替换输入时建议最大请求次数 &gt;= 5</source>
-        <oldsource>如果用的打野 key 其实不建议开这个；不想清空上下文重试可将最大请求次数保持为 3</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>Not recommended for unreliable free API keys; set max request attempts &gt;= 5 when image input is enabled.</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>在开启智能重试时生效：第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入，普通与 Agent 模式均支持</source>
-        <oldsource>在开启智能重试时生效：第 2 次请求（拆分前）及普通模式清空上下文重试时，将输入文本渲染为图片发送，普通与 Agent 模式均支持</oldsource>
-        <translation type="unfinished"></translation>
+        <translation>Takes effect when smart retry is enabled: renders input text as images starting on the 3rd attempt (before splitting) and keeps image input on the 5th cleared-context retry in Normal mode. Supported in both Normal and Agent modes.</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败</source>
-        <translation type="unfinished"></translation>
+        <translation>Requires a vision-capable model; model capability is not auto-detected and unsupported models may fail.</translation>
     </message>
     <message>
-        <location line="+25"/>
+        <location line="+57"/>
         <source>解析不完整时重翻整段</source>
         <translation>Retry whole batch on incomplete parse</translation>
     </message>
@@ -1715,12 +1734,13 @@ sk-...</translation>
         <translation>Stanza lang id</translation>
     </message>
     <message>
-        <location line="+116"/>
+        <location line="+117"/>
         <source>linebreakSymbol 不符合 toml 规范</source>
         <translation>linebreakSymbol is nonconforming</translation>
     </message>
     <message>
-        <location line="-155"/>
+        <location line="-368"/>
+        <location line="+212"/>
         <location line="+27"/>
         <location line="+24"/>
         <source>浏览</source>
@@ -1742,7 +1762,7 @@ sk-...</translation>
         <translation>Linebreak symbol used in this project</translation>
     </message>
     <message>
-        <location line="+79"/>
+        <location line="+80"/>
         <source>解析失败</source>
         <translation>Fail to analyze</translation>
     </message>

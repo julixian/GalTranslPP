@@ -126,12 +126,12 @@
         <translation>Invalid TransEngine: %1</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="118"/>
+        <location filename="TerminalPreview.cpp" line="120"/>
         <source>apiStrategy 必须为 random 或 fallback</source>
         <translation>apiStrategy must be random or fallback</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="173"/>
+        <location filename="TerminalPreview.cpp" line="175"/>
         <source>找不到可用的 Api key</source>
         <translation>No available Api key found</translation>
     </message>
@@ -140,7 +140,7 @@
     <name>ProblemOverview</name>
     <message>
         <location filename="GPPCLI.cpp" line="65"/>
-        <location filename="TerminalPreview.cpp" line="418"/>
+        <location filename="TerminalPreview.cpp" line="420"/>
         <source>成功导入 %1 个句子至 transl_cache</source>
         <translation>Imported %1 sentences into transl_cache</translation>
     </message>
@@ -208,8 +208,8 @@
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="85"/>
-        <location filename="TerminalPreview.cpp" line="234"/>
-        <location filename="TerminalPreview.cpp" line="235"/>
+        <location filename="TerminalPreview.cpp" line="236"/>
+        <location filename="TerminalPreview.cpp" line="237"/>
         <source>Agent</source>
         <translation>Agent</translation>
     </message>
@@ -266,99 +266,108 @@
     <message>
         <location filename="TerminalPreview.cpp" line="104"/>
         <source>图片替换输入</source>
-        <oldsource>改善拒答档位</oldsource>
-        <translation type="unfinished">Response prefill level</translation>
+        <translation>Image-replacement input</translation>
     </message>
     <message>
         <location filename="TerminalPreview.cpp" line="105"/>
+        <source>图片替换字体</source>
+        <translation>Image-replacement font</translation>
+    </message>
+    <message>
+        <location filename="TerminalPreview.cpp" line="106"/>
+        <source>自动</source>
+        <translation>Auto</translation>
+    </message>
+    <message>
+        <location filename="TerminalPreview.cpp" line="107"/>
         <source>额度检测</source>
         <translation>Quota detection</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="107"/>
+        <location filename="TerminalPreview.cpp" line="109"/>
         <source>整批重翻</source>
         <translation>Retry the entire batch</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="108"/>
-        <location filename="TerminalPreview.cpp" line="143"/>
-        <location filename="TerminalPreview.cpp" line="149"/>
-        <location filename="TerminalPreview.cpp" line="188"/>
+        <location filename="TerminalPreview.cpp" line="110"/>
+        <location filename="TerminalPreview.cpp" line="145"/>
+        <location filename="TerminalPreview.cpp" line="151"/>
+        <location filename="TerminalPreview.cpp" line="190"/>
         <source>当前模式不使用</source>
         <translation>Not used in this mode</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="110"/>
+        <location filename="TerminalPreview.cpp" line="112"/>
         <source>问题清单格式</source>
         <translation>Problem overview format</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="113"/>
+        <location filename="TerminalPreview.cpp" line="115"/>
         <source>Api</source>
         <translation>Api</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="120"/>
+        <location filename="TerminalPreview.cpp" line="122"/>
         <source>令牌策略</source>
         <translation>Key selection strategy</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="122"/>
+        <location filename="TerminalPreview.cpp" line="124"/>
         <source>请求超时（秒）</source>
         <translation>Request timeout (seconds)</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="135"/>
+        <location filename="TerminalPreview.cpp" line="137"/>
         <source>协议</source>
         <translation>Protocol</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="136"/>
+        <location filename="TerminalPreview.cpp" line="138"/>
         <source>模型</source>
         <translation>Model</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="137"/>
+        <location filename="TerminalPreview.cpp" line="139"/>
         <source>地址</source>
         <translation>URL</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="138"/>
+        <location filename="TerminalPreview.cpp" line="140"/>
         <source>可用 Key 数量</source>
         <translation>Available keys</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="139"/>
+        <location filename="TerminalPreview.cpp" line="141"/>
         <source>思考等级</source>
         <translation>Thinking level</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="140"/>
+        <location filename="TerminalPreview.cpp" line="142"/>
         <source>系统代理</source>
         <translation>System proxy</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="142"/>
+        <location filename="TerminalPreview.cpp" line="144"/>
         <source>流式输出</source>
         <translation>Streaming</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="148"/>
+        <location filename="TerminalPreview.cpp" line="150"/>
         <source>严格工具参数</source>
         <translation>Strict tool arguments</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="152"/>
+        <location filename="TerminalPreview.cpp" line="154"/>
         <source>服务端会话接续</source>
         <translation>Server-side conversation continuation</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="156"/>
+        <location filename="TerminalPreview.cpp" line="158"/>
         <source>原生自动压缩</source>
         <translation>Native automatic compaction</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="239"/>
+        <location filename="TerminalPreview.cpp" line="241"/>
         <source>上下文压缩按各 Api 的 token 阈值触发；响应无用量信息时按 4 倍字节数回退</source>
         <translation>Compaction triggers at each API&apos;s token threshold, falling back to 4x that count in bytes if usage info is absent</translation>
     </message>
@@ -367,49 +376,49 @@
         <translation type="vanished">Native compaction threshold (tokens)</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="162"/>
+        <location filename="TerminalPreview.cpp" line="164"/>
         <source>服务端默认</source>
         <translation>Server default</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="177"/>
-        <location filename="TerminalPreview.cpp" line="269"/>
+        <location filename="TerminalPreview.cpp" line="179"/>
+        <location filename="TerminalPreview.cpp" line="271"/>
         <source>当前模式不使用 Api 和提示词</source>
         <translation>This mode does not use APIs or prompts</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="181"/>
+        <location filename="TerminalPreview.cpp" line="183"/>
         <source>字典与规则</source>
         <translation>Dictionaries and rules</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="192"/>
-        <location filename="TerminalPreview.cpp" line="249"/>
+        <location filename="TerminalPreview.cpp" line="194"/>
+        <location filename="TerminalPreview.cpp" line="251"/>
         <source>文件不存在，将忽略</source>
         <translation>File not found; ignored</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="216"/>
+        <location filename="TerminalPreview.cpp" line="218"/>
         <source>插件</source>
         <translation>Plugins</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="217"/>
+        <location filename="TerminalPreview.cpp" line="219"/>
         <source>文件插件</source>
         <translation>File plugin</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="219"/>
+        <location filename="TerminalPreview.cpp" line="221"/>
         <source>脚本基类</source>
         <translation>Script base class</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="237"/>
+        <location filename="TerminalPreview.cpp" line="239"/>
         <source>允许运行 Python</source>
         <translation>Allow Python execution</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="238"/>
+        <location filename="TerminalPreview.cpp" line="240"/>
         <source>每批最大轮次</source>
         <translation>Maximum turns per batch</translation>
     </message>
@@ -422,68 +431,68 @@
         <translation type="vanished">APIs with native automatic compaction do not use the local threshold</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="240"/>
+        <location filename="TerminalPreview.cpp" line="242"/>
         <source>搜索结果上限</source>
         <translation>Search result limit</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="241"/>
+        <location filename="TerminalPreview.cpp" line="243"/>
         <source>读取行数上限</source>
         <translation>Read line limit</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="247"/>
+        <location filename="TerminalPreview.cpp" line="249"/>
         <source>项目笔记</source>
         <translation>Project note</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="253"/>
+        <location filename="TerminalPreview.cpp" line="255"/>
         <source>提示词</source>
         <translation>Prompts</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="305"/>
-        <location filename="TerminalPreview.cpp" line="337"/>
+        <location filename="TerminalPreview.cpp" line="307"/>
+        <location filename="TerminalPreview.cpp" line="339"/>
         <source>配置尚不可运行，请修正后重试</source>
         <translation>The configuration is not ready to run; fix it and try again</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="344"/>
+        <location filename="TerminalPreview.cpp" line="346"/>
         <source>检测到 %1 被修改但未导入。是否继续翻译？</source>
         <translation>%1 has been modified but not imported. Continue translating?</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="357"/>
+        <location filename="TerminalPreview.cpp" line="359"/>
         <source>开始翻译 [Enter]</source>
         <translation>Start [Enter]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="358"/>
+        <location filename="TerminalPreview.cpp" line="360"/>
         <source>导入问题清单 [I]</source>
         <translation>Import problems [I]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="375"/>
+        <location filename="TerminalPreview.cpp" line="377"/>
         <source>重新读取 [R]</source>
         <translation>Reload [R]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="452"/>
+        <location filename="TerminalPreview.cpp" line="454"/>
         <source>返回</source>
         <translation>Back</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="457"/>
+        <location filename="TerminalPreview.cpp" line="459"/>
         <source>继续翻译</source>
         <translation>Continue translating</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="468"/>
+        <location filename="TerminalPreview.cpp" line="470"/>
         <source>问题概览尚未导入</source>
         <translation>Problem overview has not been imported</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="368"/>
+        <location filename="TerminalPreview.cpp" line="370"/>
         <source>已重新读取配置</source>
         <translation>Configuration reloaded</translation>
     </message>
@@ -498,7 +507,7 @@
         <translation>Off</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="167"/>
+        <location filename="TerminalPreview.cpp" line="169"/>
         <source>压缩阈值（tokens）</source>
         <translation>Compaction threshold (tokens)</translation>
     </message>
@@ -511,37 +520,37 @@
         <translation type="vanished">Uses each API&apos;s token compaction threshold first, falling back to bytes only when usage info is absent</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="376"/>
+        <location filename="TerminalPreview.cpp" line="378"/>
         <source>返回 [Esc]</source>
         <translation>Back [Esc]</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="407"/>
+        <location filename="TerminalPreview.cpp" line="409"/>
         <source>左右切换分页 / 上下、滚轮滚动 / 仅预览，不修改配置</source>
         <translation>Left/right: tabs / Up/down or wheel: scroll / Read-only configuration preview</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="421"/>
+        <location filename="TerminalPreview.cpp" line="423"/>
         <source>导入中出现的问题记录在 import_problems.log 中</source>
         <translation>Import problems were recorded in import_problems.log</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="434"/>
+        <location filename="TerminalPreview.cpp" line="436"/>
         <source>导入</source>
         <translation>Import</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="435"/>
+        <location filename="TerminalPreview.cpp" line="437"/>
         <source>取消</source>
         <translation>Cancel</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="445"/>
+        <location filename="TerminalPreview.cpp" line="447"/>
         <source>导入问题清单</source>
         <translation>Import problem overview</translation>
     </message>
     <message>
-        <location filename="TerminalPreview.cpp" line="446"/>
+        <location filename="TerminalPreview.cpp" line="448"/>
         <source>按文件名和 index 替换整条缓存记录，确认后写入 transl_cache</source>
         <translation>Replace entire cache records by filename and index; confirmation writes to transl_cache</translation>
     </message>

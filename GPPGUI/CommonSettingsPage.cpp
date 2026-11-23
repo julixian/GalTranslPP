@@ -358,6 +358,38 @@ void CommonSettingsPage::setupUi()
 	smartRetryImageInputLayout->addWidget(smartRetryImageInputToggle);
 	mainLayout->addWidget(smartRetryImageInputArea);
 
+	// 图片替换字体
+	const std::string smartRetryImageFont = tomlkit::findOr(m_projectConfig, "common", "smartRetryImageFont", "");
+	ElaScrollPageArea* smartRetryImageFontArea = new ElaScrollPageArea(mainWidget);
+	QHBoxLayout* smartRetryImageFontLayout = new QHBoxLayout(smartRetryImageFontArea);
+	GppDoubleText* smartRetryImageFontText = new GppDoubleText(tr("图片替换字体"), 16,
+		tr("留空自动选择系统字体；可填系统字体名（如 Leelawadee UI、Noto Sans Thai），或选择本地 .ttf/.otf/.ttc 字体文件（支持相对项目目录路径）"), 10,
+		"", smartRetryImageFontArea);
+	smartRetryImageFontLayout->addWidget(smartRetryImageFontText);
+	smartRetryImageFontLayout->addStretch();
+	ElaLineEdit* smartRetryImageFontLineEdit = new ElaLineEdit(smartRetryImageFontArea);
+	smartRetryImageFontLineEdit->setFixedWidth(320);
+	smartRetryImageFontLineEdit->setPlaceholderText(tr("留空自动选择"));
+	smartRetryImageFontLineEdit->setText(QString::fromStdString(smartRetryImageFont));
+	smartRetryImageFontLayout->addWidget(smartRetryImageFontLineEdit);
+	ElaToolButton* smartRetryImageFontButton = new ElaToolButton(smartRetryImageFontArea);
+	smartRetryImageFontButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+	smartRetryImageFontButton->setElaIcon(ElaIconType::FolderOpen);
+	smartRetryImageFontButton->setText(tr("浏览"));
+	smartRetryImageFontLayout->addWidget(smartRetryImageFontButton);
+	connect(smartRetryImageFontButton, &ElaToolButton::clicked, this, [=, this]()
+		{
+			const QString file = QFileDialog::getOpenFileName(
+				window(),
+				tr("选择字体文件"),
+				smartRetryImageFontLineEdit->text(),
+				tr("字体文件 (*.ttf *.otf *.ttc *.otc);;所有文件 (*.*)"));
+			if (!file.isEmpty()) {
+				smartRetryImageFontLineEdit->setText(file);
+			}
+		});
+	mainLayout->addWidget(smartRetryImageFontArea);
+
 	// 额度检测
 	bool shouldCheckQuota = tomlkit::findOr(m_projectConfig, "common", "checkQuota", true);
 	ElaScrollPageArea* checkQuotaArea = new ElaScrollPageArea(mainWidget);
@@ -681,6 +713,7 @@ void CommonSettingsPage::setupUi()
 			insertToml(m_projectConfig, "common.maxRequestCount", requestSpinBox->value());
 			insertToml(m_projectConfig, "common.smartRetry", smartRetryToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.smartRetryImageInput", smartRetryImageInputToggle->getIsToggled());
+			insertToml(m_projectConfig, "common.smartRetryImageFont", smartRetryImageFontLineEdit->text().trimmed().toStdString());
 			insertToml(m_projectConfig, "common.checkQuota", checkQuotaToggle->getIsToggled());
 			insertToml(m_projectConfig, "common.retransAllWhenFail", retransAllWhenFailToggle->getIsToggled());
 

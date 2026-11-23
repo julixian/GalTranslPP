@@ -126,6 +126,7 @@ TranslationSettings readTranslationSettings(const tomlkit::Item& configData)
     settings.glossaryMaxLines = tomlkit::findOr(configData, "common", "log", "glossaryMaxLines", 5);
     settings.smartRetry = tomlkit::findOr(configData, "common", "smartRetry", false);
     settings.smartRetryImageInput = tomlkit::findOr(configData, "common", "smartRetryImageInput", false);
+    settings.smartRetryImageFont = tomlkit::findOr(configData, "common", "smartRetryImageFont", "");
     settings.checkQuota = tomlkit::findOr(configData, "common", "checkQuota", true);
     settings.retransAllWhenFail = tomlkit::findOr(configData, "common", "retransAllWhenFail", false);
     settings.agentEnabled = tomlkit::findOr(configData, "common", "agent", "enabled", false);

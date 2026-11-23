@@ -51,6 +51,7 @@ public:
         int glossaryMaxLines,
         bool smartRetry,
         bool smartRetryImageInput,
+        const std::string& smartRetryImageFont,
         bool checkQuota,
         std::shared_mutex& transCacheMutex,
         absl::flat_hash_map<fs::path, json>& savedTranslCacheMap,
@@ -146,6 +147,8 @@ private:
     int m_glossaryMaxLines;
     bool m_smartRetry;
     bool m_smartRetryImageInput;
+    std::string m_smartRetryImageFont;
+    std::atomic<bool> m_smartRetryImageFontWarned{ false };
     bool m_checkQuota;
     std::shared_mutex& m_transCacheMutex;
     absl::flat_hash_map<fs::path, json>& m_savedTranslCacheMap;

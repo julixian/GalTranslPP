@@ -161,6 +161,9 @@ smartRetry = false              # 前 2 次常规请求失败后：默认第 3 �
 # 第 3 次请求（拆分前）起将输入文本渲染为图片发送，普通模式第 5 次清空上下文重试时也保持图片输入
 # 需使用支持视觉/图片输入的模型；不做模型能力自动检测，误用可能导致请求失败
 smartRetryImageInput = false
+# 图片替换输入使用的自定义字体；留空自动选择系统字体
+# 可填系统字体名（如 "Leelawadee UI"、"Noto Sans Thai"），或本地 .ttf/.otf/.ttc/.otc 字体文件路径（支持相对项目目录路径）
+smartRetryImageFont = ""
 checkQuota = true               # 运行时动态检测 key 额度，自动从 Api 池中删除额度不足的 key
 
 # 解析不完整时重翻整段而非仅重翻漏掉的部分，增加模型因串行而导致解析失败时的容错

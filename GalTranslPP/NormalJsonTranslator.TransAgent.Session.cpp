@@ -13,6 +13,35 @@ NAMESPACE_BEGIN(gpp)
 
 namespace fs = std::filesystem;
 
+namespace {
+
+std::string resolveAgentImageFont(const fs::path& projectDir, std::string_view configuredFont)
+{
+    while (!configuredFont.empty() && (configuredFont.front() == ' ' || configuredFont.front() == '\t'
+        || configuredFont.front() == '\r' || configuredFont.front() == '\n')) {
+        configuredFont.remove_prefix(1);
+    }
+    while (!configuredFont.empty() && (configuredFont.back() == ' ' || configuredFont.back() == '\t'
+        || configuredFont.back() == '\r' || configuredFont.back() == '\n')) {
+        configuredFont.remove_suffix(1);
+    }
+    if (configuredFont.empty()) {
+        return {};
+    }
+    const fs::path candidate(ascii2Wide(configuredFont));
+    if (candidate.is_relative()) {
+        std::error_code ec;
+        const fs::path underProject = projectDir / candidate;
+        if (fs::is_regular_file(underProject, ec) && !ec) {
+            const fs::path absPath = fs::absolute(underProject, ec);
+            return wide2Ascii(ec ? underProject : absPath);
+        }
+    }
+    return std::string(configuredFont);
+}
+
+} // namespace
+
 json agentObjectSchema(json properties)
 {
     json required = json::array();
@@ -236,7 +265,16 @@ bool NormalJsonTranslatorTransAgent::translateBatch(const fs::path& relInputPath
                     imageText += '\n';
                 }
                 imageText += "</input>";
-                if (auto rendered = renderTextToPngPages(imageText); rendered && !rendered->empty()) {
+                TextImageRenderOptions renderOptions;
+                renderOptions.preferredFont = resolveAgentImageFont(m_projectDir, m_smartRetryImageFont);
+                std::string fontWarning;
+                auto rendered = renderTextToPngPages(imageText, renderOptions, &fontWarning);
+                if (!fontWarning.empty() && !m_smartRetryImageFontWarned.exchange(true)) {
+                    m_logger->warn(gppTr("NormalJsonTranslatorTransAgent.translateBatch",
+                        "%1 图片替换字体警告（后续同类提示不再重复）: %2")
+                        .arg(imageLogPrefix).arg(fontWarning).toStdString());
+                }
+                if (rendered && !rendered->empty()) {
                     const auto& pngPages = *rendered;
                     appendAgentUserMessage(*worker.session,
                         buildUserPrompt(relInputPath, pending, rollingContext, pngPages.size()),

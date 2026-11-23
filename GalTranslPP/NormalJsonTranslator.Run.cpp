@@ -493,6 +493,7 @@ void NormalJsonTranslator::normalJsonBeforeRun()
             m_glossaryMaxLines,
             m_smartRetry,
             m_smartRetryImageInput,
+            m_smartRetryImageFont,
             m_checkQuota,
             m_transCacheMutex,
             m_savedTranslCacheMap,

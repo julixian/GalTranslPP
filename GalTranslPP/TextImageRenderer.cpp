@@ -13,6 +13,7 @@ module;
 #include <objbase.h>
 #include <d2d1.h>
 #include <dwrite.h>
+#include <dwrite_3.h>
 #include <wincodec.h>
 #elif defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -47,6 +48,15 @@ struct SanitizedOptions {
     int linesPerPage = 43;
     std::string preferredFont;
 };
+
+std::string trimAsciiWhitespace(std::string_view sv) {
+    const std::size_t first = sv.find_first_not_of(" \t\r\n");
+    if (first == std::string_view::npos) {
+        return {};
+    }
+    const std::size_t last = sv.find_last_not_of(" \t\r\n");
+    return std::string(sv.substr(first, last - first + 1));
+}
 
 std::expected<SanitizedOptions, std::string> sanitizeOptions(const TextImageRenderOptions& options) {
     if (options.pageWidth <= 0) {
@@ -86,7 +96,7 @@ std::expected<SanitizedOptions, std::string> sanitizeOptions(const TextImageRend
     );
     sanitized.continuationTextWidth = std::max(1, textWidth - sanitized.continuationIndent);
     sanitized.linesPerPage = std::max(1, (options.maxPageHeight - 2 * options.padding) / options.lineHeight);
-    sanitized.preferredFont = options.preferredFont;
+    sanitized.preferredFont = trimAsciiWhitespace(options.preferredFont);
     return sanitized;
 }
 
@@ -134,16 +144,86 @@ std::uint32_t decodeUtf8Codepoint(std::string_view text, std::size_t& pos) noexc
 }
 
 bool isExtendingCodepoint(std::uint32_t cp) noexcept {
-    // Combining marks, Japanese combining dakuten/handakuten, variation selectors, ZWJ
-    return (cp >= 0x0300u && cp <= 0x036Fu)
+    // General combining diacritical marks (Latin/Vietnamese NFD, Cyrillic, Greek, symbols, half marks)
+    if ((cp >= 0x0300u && cp <= 0x036Fu)
         || (cp >= 0x1AB0u && cp <= 0x1AFFu)
         || (cp >= 0x1DC0u && cp <= 0x1DFFu)
         || (cp >= 0x20D0u && cp <= 0x20FFu)
-        || cp == 0x200Du
+        || (cp >= 0xFE20u && cp <= 0xFE2Fu))
+    {
+        return true;
+    }
+
+    // ZWNJ, ZWJ, Japanese combining dakuten/handakuten, variation selectors
+    if (cp == 0x200Cu || cp == 0x200Du
         || (cp >= 0x3099u && cp <= 0x309Au)
         || (cp >= 0xFE00u && cp <= 0xFE0Fu)
-        || (cp >= 0xFE20u && cp <= 0xFE2Fu)
-        || (cp >= 0xE0100u && cp <= 0xE01EFu);
+        || (cp >= 0xE0100u && cp <= 0xE01EFu))
+    {
+        return true;
+    }
+
+    // Hebrew & Arabic combining marks
+    if ((cp >= 0x0591u && cp <= 0x05BDu) || cp == 0x05BFu
+        || (cp >= 0x05C1u && cp <= 0x05C2u) || (cp >= 0x05C4u && cp <= 0x05C5u) || cp == 0x05C7u
+        || (cp >= 0x0610u && cp <= 0x061Au) || (cp >= 0x064Bu && cp <= 0x065Fu) || cp == 0x0670u
+        || (cp >= 0x06D6u && cp <= 0x06DCu) || (cp >= 0x06DFu && cp <= 0x06E4u)
+        || (cp >= 0x06E7u && cp <= 0x06E8u) || (cp >= 0x06EAu && cp <= 0x06EDu)
+        || (cp >= 0x08D3u && cp <= 0x08E1u) || (cp >= 0x08E3u && cp <= 0x08FFu))
+    {
+        return true;
+    }
+
+    // Thai & Lao stacked vowels / tone marks / sara am
+    if (cp == 0x0E31u || cp == 0x0E33u || (cp >= 0x0E34u && cp <= 0x0E3Au)
+        || (cp >= 0x0E47u && cp <= 0x0E4Eu)
+        || cp == 0x0EB1u || cp == 0x0EB3u || (cp >= 0x0EB4u && cp <= 0x0EBCu)
+        || (cp >= 0x0EC8u && cp <= 0x0ECDu))
+    {
+        return true;
+    }
+
+    // Myanmar & Khmer combining marks / vowel signs / virama / coeng
+    if ((cp >= 0x102Bu && cp <= 0x103Eu) || (cp >= 0x1056u && cp <= 0x1059u)
+        || (cp >= 0x105Eu && cp <= 0x1060u) || (cp >= 0x1062u && cp <= 0x1064u)
+        || (cp >= 0x1067u && cp <= 0x106Du) || (cp >= 0x1071u && cp <= 0x1074u)
+        || (cp >= 0x1082u && cp <= 0x108Du) || cp == 0x108Fu || (cp >= 0x109Au && cp <= 0x109Du)
+        || (cp >= 0x17B4u && cp <= 0x17D3u) || cp == 0x17DDu)
+    {
+        return true;
+    }
+
+    // Devanagari & major Indic combining marks / vowel signs / viramas / Tibetan
+    if ((cp >= 0x0900u && cp <= 0x0903u) || (cp >= 0x093Au && cp <= 0x094Fu)
+        || (cp >= 0x0951u && cp <= 0x0957u) || (cp >= 0x0962u && cp <= 0x0963u)
+        || (cp >= 0x0981u && cp <= 0x0983u) || cp == 0x09BCu || (cp >= 0x09BEu && cp <= 0x09CDu)
+        || cp == 0x09D7u || (cp >= 0x09E2u && cp <= 0x09E3u)
+        || (cp >= 0x0A01u && cp <= 0x0A03u) || cp == 0x0A3Cu || (cp >= 0x0A3Eu && cp <= 0x0A51u)
+        || (cp >= 0x0A70u && cp <= 0x0A71u) || cp == 0x0A75u
+        || (cp >= 0x0A81u && cp <= 0x0A83u) || cp == 0x0ABCu || (cp >= 0x0ABEu && cp <= 0x0ACDu)
+        || (cp >= 0x0AE2u && cp <= 0x0AE3u) || (cp >= 0x0AFAu && cp <= 0x0AFFu)
+        || cp == 0x0B82u || (cp >= 0x0BBEu && cp <= 0x0BCDu) || cp == 0x0BD7u
+        || (cp >= 0x0C00u && cp <= 0x0C04u) || cp == 0x0C3Cu || (cp >= 0x0C3Eu && cp <= 0x0C56u)
+        || (cp >= 0x0C62u && cp <= 0x0C63u)
+        || (cp >= 0x0C81u && cp <= 0x0C83u) || cp == 0x0CBCu || (cp >= 0x0CBEu && cp <= 0x0CD6u)
+        || (cp >= 0x0CE2u && cp <= 0x0CE3u)
+        || (cp >= 0x0D00u && cp <= 0x0D03u) || (cp >= 0x0D3Bu && cp <= 0x0D4Eu)
+        || cp == 0x0D57u || (cp >= 0x0D62u && cp <= 0x0D63u)
+        || (cp >= 0x0D81u && cp <= 0x0D83u) || cp == 0x0DCAu || (cp >= 0x0DCFu && cp <= 0x0DDFu)
+        || (cp >= 0x0DF2u && cp <= 0x0DF3u)
+        || (cp >= 0x0F18u && cp <= 0x0F19u) || cp == 0x0F35u || cp == 0x0F37u || cp == 0x0F39u
+        || (cp >= 0x0F71u && cp <= 0x0F84u) || (cp >= 0x0F86u && cp <= 0x0F87u)
+        || (cp >= 0x0F8Du && cp <= 0x0FBCu) || cp == 0x0FC6u)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isClusterJoiner(std::uint32_t cp) noexcept {
+    // ZWJ, Devanagari Virama, Myanmar Virama, Khmer Coeng
+    return cp == 0x200Du || cp == 0x094Du || cp == 0x1039u || cp == 0x17D2u;
 }
 
 // Tokenize a single logical line into atomic wrap units:
@@ -178,8 +258,7 @@ std::vector<std::string_view> tokenizeForWrap(std::string_view line) {
                 break;
             }
             pos = peek;
-            // If ZWJ, also attach the following codepoint if present.
-            if (nextCp == 0x200Du && pos < line.size()) {
+            if (isClusterJoiner(nextCp) && pos < line.size()) {
                 (void)decodeUtf8Codepoint(line, pos);
             }
         }
@@ -431,26 +510,136 @@ std::wstring utf8ToUtf16(std::string_view utf8) {
     return wide;
 }
 
-std::wstring selectWindowsFontFamily(IDWriteFactory* dwriteFactory, std::string_view preferredFont) {
-    ComPtr<IDWriteFontCollection> collection;
-    if (FAILED(dwriteFactory->GetSystemFontCollection(collection.put(), FALSE)) || !collection) {
-        return preferredFont.empty() ? L"Microsoft YaHei" : utf8ToUtf16(preferredFont);
+struct WindowsFontSelection {
+    std::wstring familyName;
+    ComPtr<IDWriteFontCollection> customCollection; // nullptr means system font collection
+};
+
+std::expected<WindowsFontSelection, std::string> loadWindowsCustomFontFile(
+    IDWriteFactory* dwriteFactory,
+    const std::wstring& widePath)
+{
+    ComPtr<IDWriteFactory5> factory5;
+    HRESULT hr = dwriteFactory->QueryInterface(__uuidof(IDWriteFactory5), factory5.putVoid());
+    if (FAILED(hr) || !factory5) {
+        return std::unexpected(formatHResult("IDWriteFactory5 not available", hr));
     }
 
-    auto familyExists = [&](const std::wstring& name) -> bool {
-        if (name.empty()) {
+    ComPtr<IDWriteFontFile> fontFile;
+    hr = factory5->CreateFontFileReference(widePath.c_str(), nullptr, fontFile.put());
+    if (FAILED(hr) || !fontFile) {
+        return std::unexpected(formatHResult("CreateFontFileReference failed", hr));
+    }
+
+    ComPtr<IDWriteFontSetBuilder1> builder;
+    hr = factory5->CreateFontSetBuilder(builder.put());
+    if (FAILED(hr) || !builder) {
+        return std::unexpected(formatHResult("CreateFontSetBuilder failed", hr));
+    }
+
+    hr = builder->AddFontFile(fontFile.get());
+    if (FAILED(hr)) {
+        return std::unexpected(formatHResult("IDWriteFontSetBuilder1::AddFontFile failed", hr));
+    }
+
+    ComPtr<IDWriteFontSet> fontSet;
+    hr = builder->CreateFontSet(fontSet.put());
+    if (FAILED(hr) || !fontSet) {
+        return std::unexpected(formatHResult("IDWriteFontSetBuilder1::CreateFontSet failed", hr));
+    }
+
+    if (fontSet->GetFontCount() == 0) {
+        return std::unexpected("font file contains no usable DirectWrite faces");
+    }
+
+    ComPtr<IDWriteFontCollection1> collection1;
+    hr = factory5->CreateFontCollectionFromFontSet(fontSet.get(), collection1.put());
+    if (FAILED(hr) || !collection1 || collection1->GetFontFamilyCount() == 0) {
+        return std::unexpected(formatHResult("CreateFontCollectionFromFontSet failed", hr));
+    }
+
+    ComPtr<IDWriteFontFamily> family;
+    hr = collection1->GetFontFamily(0, family.put());
+    if (FAILED(hr) || !family) {
+        return std::unexpected(formatHResult("GetFontFamily(0) failed", hr));
+    }
+
+    ComPtr<IDWriteLocalizedStrings> familyNames;
+    hr = family->GetFamilyNames(familyNames.put());
+    if (FAILED(hr) || !familyNames || familyNames->GetCount() == 0) {
+        return std::unexpected(formatHResult("GetFamilyNames failed", hr));
+    }
+
+    UINT32 nameIndex = 0;
+    BOOL exists = FALSE;
+    if (FAILED(familyNames->FindLocaleName(L"en-us", &nameIndex, &exists)) || !exists) {
+        nameIndex = 0;
+    }
+
+    UINT32 length = 0;
+    hr = familyNames->GetStringLength(nameIndex, &length);
+    if (FAILED(hr) || length == 0) {
+        return std::unexpected(formatHResult("GetStringLength failed", hr));
+    }
+
+    std::wstring familyName(length + 1, L'\0');
+    hr = familyNames->GetString(nameIndex, familyName.data(), length + 1);
+    if (FAILED(hr)) {
+        return std::unexpected(formatHResult("GetString failed", hr));
+    }
+    familyName.resize(length);
+
+    WindowsFontSelection result;
+    result.familyName = std::move(familyName);
+    hr = collection1->QueryInterface(__uuidof(IDWriteFontCollection), result.customCollection.putVoid());
+    if (FAILED(hr) || !result.customCollection) {
+        return std::unexpected(formatHResult("QueryInterface(IDWriteFontCollection) failed", hr));
+    }
+    return result;
+}
+
+WindowsFontSelection selectWindowsFont(
+    IDWriteFactory* dwriteFactory,
+    std::string_view preferredFont,
+    std::string* warningOut)
+{
+    ComPtr<IDWriteFontCollection> systemCollection;
+    const bool hasSystemCollection =
+        SUCCEEDED(dwriteFactory->GetSystemFontCollection(systemCollection.put(), FALSE)) && systemCollection;
+
+    auto systemFamilyExists = [&](const std::wstring& name) -> bool {
+        if (!hasSystemCollection || name.empty()) {
             return false;
         }
         UINT32 index = 0;
         BOOL exists = FALSE;
-        const HRESULT hr = collection->FindFamilyName(name.c_str(), &index, &exists);
+        const HRESULT hr = systemCollection->FindFamilyName(name.c_str(), &index, &exists);
         return SUCCEEDED(hr) && exists == TRUE;
     };
 
     if (!preferredFont.empty()) {
-        std::wstring preferredWide = utf8ToUtf16(preferredFont);
-        if (familyExists(preferredWide)) {
-            return preferredWide;
+        const std::wstring preferredWide = utf8ToUtf16(preferredFont);
+        std::error_code ec;
+        const std::filesystem::path fontPath(preferredWide);
+        if (std::filesystem::is_regular_file(fontPath, ec)) {
+            auto loaded = loadWindowsCustomFontFile(dwriteFactory, preferredWide);
+            if (loaded) {
+                return std::move(*loaded);
+            }
+            if (warningOut) {
+                *warningOut = std::format(
+                    "Failed to load font file '{}' ({}); falling back to default system font.",
+                    preferredFont,
+                    loaded.error()
+                );
+            }
+        } else if (systemFamilyExists(preferredWide)) {
+            return WindowsFontSelection{preferredWide, {}};
+        } else if (warningOut) {
+            *warningOut = std::format(
+                "Preferred font '{}' was not found as a font file or installed system font; falling back to default system font.",
+                preferredFont
+            );
         }
     }
 
@@ -466,14 +655,16 @@ std::wstring selectWindowsFontFamily(IDWriteFactory* dwriteFactory, std::string_
         L"Segoe UI",
     };
 
-    for (const wchar_t* candidate : kFallbackFonts) {
-        std::wstring name(candidate);
-        if (familyExists(name)) {
-            return name;
+    if (hasSystemCollection) {
+        for (const wchar_t* candidate : kFallbackFonts) {
+            std::wstring name(candidate);
+            if (systemFamilyExists(name)) {
+                return WindowsFontSelection{std::move(name), {}};
+            }
         }
     }
 
-    return L"";
+    return WindowsFontSelection{hasSystemCollection ? L"" : L"Microsoft YaHei", {}};
 }
 
 std::expected<std::vector<std::uint8_t>, std::string> encodeWicBitmapToGrayPng(
@@ -592,7 +783,7 @@ std::expected<std::vector<std::uint8_t>, std::string> encodeWicBitmapToGrayPng(
 }
 
 std::expected<std::vector<std::vector<std::uint8_t>>, std::string>
-renderWindows(std::string_view text, const SanitizedOptions& options) {
+renderWindows(std::string_view text, const SanitizedOptions& options, std::string* warningOut) {
     ComInitGuard comGuard;
     if (FAILED(comGuard.result)) {
         return std::unexpected(formatHResult("CoInitializeEx failed", comGuard.result));
@@ -630,12 +821,12 @@ renderWindows(std::string_view text, const SanitizedOptions& options) {
         return std::unexpected(formatHResult("DWriteCreateFactory failed", hr));
     }
 
-    const std::wstring fontFamily = selectWindowsFontFamily(dwriteFactory.get(), options.preferredFont);
+    WindowsFontSelection fontSelection = selectWindowsFont(dwriteFactory.get(), options.preferredFont, warningOut);
 
     ComPtr<IDWriteTextFormat> textFormat;
     hr = dwriteFactory->CreateTextFormat(
-        fontFamily.c_str(),
-        nullptr,
+        fontSelection.familyName.c_str(),
+        fontSelection.customCollection.get(),
         DWRITE_FONT_WEIGHT_REGULAR,
         DWRITE_FONT_STYLE_NORMAL,
         DWRITE_FONT_STRETCH_NORMAL,
@@ -645,6 +836,19 @@ renderWindows(std::string_view text, const SanitizedOptions& options) {
     );
     if (FAILED(hr)) {
         return std::unexpected(formatHResult("IDWriteFactory::CreateTextFormat failed", hr));
+    }
+
+    // Ensure system font fallback remains active when using a custom font collection.
+    if (fontSelection.customCollection) {
+        ComPtr<IDWriteFactory2> factory2;
+        ComPtr<IDWriteTextFormat1> textFormat1;
+        ComPtr<IDWriteFontFallback> systemFallback;
+        if (SUCCEEDED(dwriteFactory->QueryInterface(__uuidof(IDWriteFactory2), factory2.putVoid())) && factory2
+            && SUCCEEDED(textFormat->QueryInterface(__uuidof(IDWriteTextFormat1), textFormat1.putVoid())) && textFormat1
+            && SUCCEEDED(factory2->GetSystemFontFallback(systemFallback.put())) && systemFallback)
+        {
+            (void)textFormat1->SetFontFallback(systemFallback.get());
+        }
     }
 
     textFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
@@ -876,6 +1080,35 @@ CFPtr<CFStringRef> createCFString(std::string_view utf8) {
     ));
 }
 
+CFPtr<CTFontRef> tryCreateMacFontFromFile(std::string_view path, CGFloat size) {
+    if (path.empty()) {
+        return {};
+    }
+    const CFPtr<CFURLRef> url(CFURLCreateFromFileSystemRepresentation(
+        kCFAllocatorDefault,
+        reinterpret_cast<const UInt8*>(path.data()),
+        static_cast<CFIndex>(path.size()),
+        false
+    ));
+    if (!url) {
+        return {};
+    }
+
+    const CFPtr<CFArrayRef> descriptors(CTFontManagerCreateFontDescriptorsFromURL(url.get()));
+    if (!descriptors || CFArrayGetCount(descriptors.get()) <= 0) {
+        return {};
+    }
+
+    const auto descriptor = static_cast<CTFontDescriptorRef>(
+        CFArrayGetValueAtIndex(descriptors.get(), 0)
+    );
+    if (!descriptor) {
+        return {};
+    }
+
+    return CFPtr<CTFontRef>(CTFontCreateWithFontDescriptor(descriptor, size, nullptr));
+}
+
 CFPtr<CTFontRef> tryCreateMacFont(std::string_view name, CGFloat size, CFStringRef attributeKey) {
     if (name.empty()) {
         return {};
@@ -914,13 +1147,33 @@ CFPtr<CTFontRef> tryCreateMacFont(std::string_view name, CGFloat size, CFStringR
     return CFPtr<CTFontRef>(CTFontCreateWithFontDescriptor(matched.get(), size, nullptr));
 }
 
-CFPtr<CTFontRef> selectMacFont(std::string_view preferredFont, CGFloat size) {
+CFPtr<CTFontRef> selectMacFont(std::string_view preferredFont, CGFloat size, std::string* warningOut) {
     if (!preferredFont.empty()) {
-        if (auto font = tryCreateMacFont(preferredFont, size, kCTFontFamilyNameAttribute)) {
-            return font;
-        }
-        if (auto font = tryCreateMacFont(preferredFont, size, kCTFontNameAttribute)) {
-            return font;
+        std::error_code ec;
+        const std::filesystem::path fontPath(preferredFont);
+        if (std::filesystem::is_regular_file(fontPath, ec)) {
+            if (auto font = tryCreateMacFontFromFile(preferredFont, size)) {
+                return font;
+            }
+            if (warningOut) {
+                *warningOut = std::format(
+                    "Failed to load font file '{}'; falling back to default system font.",
+                    preferredFont
+                );
+            }
+        } else {
+            if (auto font = tryCreateMacFont(preferredFont, size, kCTFontFamilyNameAttribute)) {
+                return font;
+            }
+            if (auto font = tryCreateMacFont(preferredFont, size, kCTFontNameAttribute)) {
+                return font;
+            }
+            if (warningOut) {
+                *warningOut = std::format(
+                    "Preferred font '{}' was not found as a font file or installed system font; falling back to default system font.",
+                    preferredFont
+                );
+            }
         }
     }
 
@@ -943,8 +1196,12 @@ CFPtr<CTFontRef> selectMacFont(std::string_view preferredFont, CGFloat size) {
 }
 
 std::expected<std::vector<std::vector<std::uint8_t>>, std::string>
-renderMacOS(std::string_view text, const SanitizedOptions& options) {
-    const CFPtr<CTFontRef> font = selectMacFont(options.preferredFont, static_cast<CGFloat>(options.fontSize));
+renderMacOS(std::string_view text, const SanitizedOptions& options, std::string* warningOut) {
+    const CFPtr<CTFontRef> font = selectMacFont(
+        options.preferredFont,
+        static_cast<CGFloat>(options.fontSize),
+        warningOut
+    );
     if (!font) {
         return std::unexpected("Failed to create CoreText font");
     }
@@ -1109,16 +1366,20 @@ renderMacOS(std::string_view text, const SanitizedOptions& options) {
 } // namespace
 
 std::expected<std::vector<std::vector<std::uint8_t>>, std::string>
-renderTextToPngPages(std::string_view text, const TextImageRenderOptions& options) {
+renderTextToPngPages(std::string_view text, const TextImageRenderOptions& options, std::string* warningOut) {
+    if (warningOut) {
+        warningOut->clear();
+    }
+
     auto sanitized = sanitizeOptions(options);
     if (!sanitized) {
         return std::unexpected(sanitized.error());
     }
 
 #ifdef _WIN32
-    return renderWindows(text, *sanitized);
+    return renderWindows(text, *sanitized, warningOut);
 #elif defined(__APPLE__)
-    return renderMacOS(text, *sanitized);
+    return renderMacOS(text, *sanitized, warningOut);
 #else
     return std::unexpected("renderTextToPngPages is not supported on this platform");
 #endif

@@ -31,6 +31,31 @@ void appendTaggedImageSection(std::string& dst, std::string_view tag, std::strin
     dst += '>';
 }
 
+std::string resolveSmartRetryImageFont(const fs::path& projectDir, std::string_view configuredFont)
+{
+    while (!configuredFont.empty() && (configuredFont.front() == ' ' || configuredFont.front() == '\t'
+        || configuredFont.front() == '\r' || configuredFont.front() == '\n')) {
+        configuredFont.remove_prefix(1);
+    }
+    while (!configuredFont.empty() && (configuredFont.back() == ' ' || configuredFont.back() == '\t'
+        || configuredFont.back() == '\r' || configuredFont.back() == '\n')) {
+        configuredFont.remove_suffix(1);
+    }
+    if (configuredFont.empty()) {
+        return {};
+    }
+    const fs::path candidate(ascii2Wide(configuredFont));
+    if (candidate.is_relative()) {
+        std::error_code ec;
+        const fs::path underProject = projectDir / candidate;
+        if (fs::is_regular_file(underProject, ec) && !ec) {
+            const fs::path absPath = fs::absolute(underProject, ec);
+            return wide2Ascii(ec ? underProject : absPath);
+        }
+    }
+    return std::string(configuredFont);
+}
+
 } // namespace
 
 bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::span<Sentence*> batch, std::string& rollingContext,
@@ -153,7 +178,22 @@ bool NormalJsonTranslator::translateBatch(const fs::path& relInputPath, std::spa
                 appendTaggedImageSection(imageText, "rolling_context", rollingContext);
             }
             appendTaggedImageSection(imageText, "input", inputBlock);
-            if (auto rendered = renderTextToPngPages(imageText); rendered && !rendered->empty()) {
+            TextImageRenderOptions renderOptions;
+            renderOptions.preferredFont = resolveSmartRetryImageFont(m_projectDir, m_smartRetryImageFont);
+            std::string fontWarning;
+            auto rendered = renderTextToPngPages(imageText, renderOptions, &fontWarning);
+            if (!fontWarning.empty() && !m_smartRetryImageFontWarned.exchange(true)) {
+                m_logger->warn(gppTr(
+                    "NormalJsonTranslator.translateBatch",
+                    "[线程 %1] [文件 %2] [批次 %3] [请求 %4] 图片替换字体警告（后续同类提示不再重复）: %5")
+                    .arg(threadId)
+                    .arg(wide2Ascii(relInputPath))
+                    .arg(batchIndexLog)
+                    .arg(requestCount + 1)
+                    .arg(fontWarning)
+                    .toStdString());
+            }
+            if (rendered && !rendered->empty()) {
                 pngPages = std::move(*rendered);
                 imageInputActive = true;
                 m_logger->info(gppTr(

@@ -30,23 +30,36 @@ void ProjectCachePage::loadCacheFiles(bool discardDirty)
     }
     const bool keepPreviousFromMemory = !discardDirty && !previousFile.isEmpty() && m_dirtyFiles.contains(previousFile);
     const fs::path cacheDir = getCacheDir();
-    if (!fs::exists(cacheDir)) {
-        std::error_code ec;
-        fs::create_directories(cacheDir, ec);
+    std::error_code dirEc;
+    if (!fs::exists(cacheDir, dirEc) || dirEc) {
+        dirEc.clear();
+        fs::create_directories(cacheDir, dirEc);
     }
 
-    if (fs::exists(cacheDir)) {
-        for (const auto& entry : fs::recursive_directory_iterator(cacheDir)) {
-            if (!entry.is_regular_file() || !isSameExtension(entry.path(), L".json")) {
+    dirEc.clear();
+    if (fs::exists(cacheDir, dirEc) && !dirEc) {
+        for (fs::recursive_directory_iterator it(cacheDir, fs::directory_options::skip_permission_denied, dirEc), end;
+             !dirEc && it != end;
+             it.increment(dirEc))
+        {
+            const auto& entry = *it;
+            std::error_code entryEc;
+            if (!entry.is_regular_file(entryEc) || entryEc || !isSameExtension(entry.path(), L".json")) {
+                continue;
+            }
+            const fs::path relPath = fs::relative(entry.path(), cacheDir, entryEc);
+            if (entryEc || relPath.empty()) {
                 continue;
             }
             CacheFileInfo info;
-            info.relativeName = QString::fromStdWString(fs::relative(entry.path(), cacheDir).wstring());
+            info.relativeName = QString::fromStdWString(relPath.wstring());
             if (discardDirty || !m_dirtyFiles.contains(info.relativeName)) {
                 m_loadedEntriesByFile.remove(info.relativeName);
             }
-            std::error_code ec;
-            info.size = entry.file_size(ec);
+            info.size = entry.file_size(entryEc);
+            if (entryEc) {
+                info.size = 0;
+            }
             QFileInfo fileInfo(QString::fromStdWString(entry.path().wstring()));
             info.modified = fileInfo.lastModified();
 

@@ -1164,7 +1164,36 @@ void extractZipExclude(const fs::path& zipPath, const fs::path& outputDir, const
 
 
 
+std::shared_ptr<std::shared_mutex> acquireFileMutex(const fs::path& path) {
+    std::error_code ec;
+    fs::path normalized = fs::absolute(path, ec);
+    if (ec) {
+        normalized = path;
+    }
+    normalized = normalized.lexically_normal();
+
+    std::string key = wide2Ascii(normalized);
+#ifdef _WIN32
+    str2LowerInplace(key);
+#endif
+
+    static std::mutex tableMutex;
+    static std::unordered_map<std::string, std::weak_ptr<std::shared_mutex>> table;
+
+    std::lock_guard<std::mutex> guard(tableMutex);
+    if (const auto it = table.find(key); it != table.end()) {
+        if (auto sp = it->second.lock()) {
+            return sp;
+        }
+    }
+    std::erase_if(table, [](const auto& kv) { return kv.second.expired(); });
+    auto sp = std::make_shared<std::shared_mutex>();
+    table.insert_or_assign(std::move(key), sp);
+    return sp;
+}
+
 toml parseToml(const fs::path& path) {
+    FileReadLock fileLock(path);
     return tomlkit::parseFile(path);
 }
 
@@ -1189,6 +1218,7 @@ ordered_json toml2OrderedJson(const toml& value) {
 
 
 json parseJson(const fs::path& path, std::ifstream& ifs) {
+    FileReadLock fileLock(path);
     ifs.open(path, std::ios::binary);
     struct CloseGuard {
         std::ifstream& stream;
@@ -1203,6 +1233,7 @@ json parseJson(const fs::path& path) {
 }
 
 ordered_json parseOrderedJson(const fs::path& path, std::ifstream& ifs) {
+    FileReadLock fileLock(path);
     ifs.open(path, std::ios::binary);
     struct CloseGuard {
         std::ifstream& stream;

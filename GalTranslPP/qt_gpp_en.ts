@@ -2252,7 +2252,7 @@ Cache source: %4</translation>
 <context>
     <name>json2Toml</name>
     <message>
-        <location filename="Tool.ixx" line="398"/>
+        <location filename="Tool.ixx" line="417"/>
         <source>不支持的 JSON 数据类型: %1</source>
         <translation>Unsupported JSON data type: %1</translation>
     </message>
@@ -2260,12 +2260,12 @@ Cache source: %4</translation>
 <context>
     <name>loadTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1228"/>
+        <location filename="Tool.cpp" line="1259"/>
         <source>未找到分词缓存 [%1]</source>
         <translation>Tokenize cache [%1] not found</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1234"/>
+        <location filename="Tool.cpp" line="1265"/>
         <source>读取分词缓存 [%1] 失败: %2</source>
         <translation>Failed to read tokenize cache [%1]: %2</translation>
     </message>
@@ -2289,12 +2289,12 @@ Cache source: %4</translation>
 <context>
     <name>parsePluginToml</name>
     <message>
-        <location filename="Tool.ixx" line="262"/>
+        <location filename="Tool.ixx" line="281"/>
         <source>无效的 TOML 路径: %1</source>
         <translation>Invalid TOML path: %1</translation>
     </message>
     <message>
-        <location filename="Tool.ixx" line="289"/>
+        <location filename="Tool.ixx" line="308"/>
         <source>无法在 TOML 中找到值: %1</source>
         <translation>Value not found in TOML: %1</translation>
     </message>
@@ -2302,12 +2302,12 @@ Cache source: %4</translation>
 <context>
     <name>saveTokenizeCache</name>
     <message>
-        <location filename="Tool.cpp" line="1246"/>
+        <location filename="Tool.cpp" line="1277"/>
         <source>分词缓存已保存到 [%1]</source>
         <translation>Tokenize cache saved to [%1]</translation>
     </message>
     <message>
-        <location filename="Tool.cpp" line="1251"/>
+        <location filename="Tool.cpp" line="1282"/>
         <source>分词缓存 [%1] 保存失败</source>
         <translation>Failed to save tokenize cache [%1]</translation>
     </message>
@@ -2357,7 +2357,7 @@ Cache source: %4</translation>
 <context>
     <name>toml2Json</name>
     <message>
-        <location filename="Tool.ixx" line="353"/>
+        <location filename="Tool.ixx" line="372"/>
         <source>不支持的 TOML 数据类型: %1</source>
         <translation>Unsupported TOML data type: %1</translation>
     </message>

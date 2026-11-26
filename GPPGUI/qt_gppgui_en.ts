@@ -2676,155 +2676,155 @@ Issue summary:</translation>
     <message>
         <location line="-986"/>
         <source>重置</source>
-        <translation type="unfinished">Reset</translation>
+        <translation>Reset</translation>
     </message>
     <message>
         <location line="+1"/>
         <location line="+132"/>
         <source>确定</source>
-        <translation type="unfinished">OK</translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location line="-79"/>
         <location line="+303"/>
         <location line="+21"/>
         <source>新建分类</source>
-        <translation type="unfinished"></translation>
+        <translation>New category</translation>
     </message>
     <message>
         <location line="-324"/>
         <source>请输入分类名称</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter category name</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+30"/>
         <source>分类名称不能为空！</source>
-        <translation type="unfinished"></translation>
+        <translation>Category name cannot be empty!</translation>
     </message>
     <message>
         <location line="-26"/>
         <location line="+33"/>
         <source>已存在同名分类！</source>
-        <translation type="unfinished"></translation>
+        <translation>Category name already exists!</translation>
     </message>
     <message>
         <location line="-11"/>
         <location line="+295"/>
         <source>重命名分类</source>
-        <translation type="unfinished"></translation>
+        <translation>Rename category</translation>
     </message>
     <message>
         <location line="-295"/>
         <source>请输入新的分类名称</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter new category name</translation>
     </message>
     <message>
         <location line="+4"/>
         <location line="+7"/>
         <source>重命名失败</source>
-        <translation type="unfinished">Fail to rename</translation>
+        <translation>Failed to rename</translation>
     </message>
     <message>
         <location line="+44"/>
         <source>确定要删除分类「%1」吗？</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete category &quot;%1&quot;?</translation>
     </message>
     <message>
         <location line="-24"/>
         <location line="+79"/>
         <source>分类「%1」已删除！</source>
-        <translation type="unfinished"></translation>
+        <translation>Category &quot;%1&quot; has been deleted!</translation>
     </message>
     <message>
         <location line="-47"/>
         <source>仅删除分类（将下属 %1 个项目移回未分类）</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete category only (move %1 project(s) back to Uncategorized)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>删除分类并移除下属所有项目（不删除项目文件夹）</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete category and remove all projects in it (keep folders on disk)</translation>
     </message>
     <message>
         <location line="+2"/>
         <source>删除分类并彻底删除下属所有项目（同时删除磁盘上的项目文件夹）</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete category and permanently delete all projects in it (delete folders on disk)</translation>
     </message>
     <message>
         <location line="+18"/>
         <source>分类下存在正在运行的项目，无法连带移除或删除项目。</source>
-        <translation type="unfinished"></translation>
+        <translation>Cannot remove or delete projects while a project in this category is running.</translation>
     </message>
     <message>
         <location line="+31"/>
         <source>操作失败</source>
-        <translation type="unfinished"></translation>
+        <translation>Operation failed</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>分类下存在正在运行的项目，无法连带移除或删除项目！</source>
-        <translation type="unfinished"></translation>
+        <translation>Cannot remove or delete projects while a project in this category is running!</translation>
     </message>
     <message>
         <location line="+38"/>
         <source>分类「%1」及其下 %2 个项目已从项目管理中移除！</source>
-        <translation type="unfinished"></translation>
+        <translation>Category &quot;%1&quot; and its %2 project(s) have been removed from project management!</translation>
     </message>
     <message>
         <location line="+13"/>
         <source>你确定要彻底删除分类「%1」下的所有项目吗？</source>
-        <translation type="unfinished"></translation>
+        <translation>Permanently delete all projects in category &quot;%1&quot;?</translation>
     </message>
     <message>
         <location line="+6"/>
         <source>将永久删除该分类下 %1 个项目的项目文件夹，如果不备份，再次翻译将必须从头开始！</source>
-        <translation type="unfinished"></translation>
+        <translation>This will permanently delete the folders of %1 project(s) in this category. Without a backup, you will have to translate from scratch!</translation>
     </message>
     <message>
         <location line="+16"/>
         <source>分类下存在正在运行的项目，无法连带删除项目！</source>
-        <translation type="unfinished"></translation>
+        <translation>Cannot delete projects while a project in this category is running!</translation>
     </message>
     <message>
         <location line="+51"/>
         <source>分类「%1」及其下 %2 个项目已从项目管理和磁盘中移除！</source>
-        <translation type="unfinished"></translation>
+        <translation>Category &quot;%1&quot; and its %2 project(s) have been deleted from project management and disk!</translation>
     </message>
     <message>
         <location line="+3"/>
         <source>部分删除失败</source>
-        <translation type="unfinished"></translation>
+        <translation>Partial deletion failed</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>分类「%1」已删除（成功删除 %2 个项目）；以下项目文件夹删除失败，已移回未分类：%3</source>
-        <translation type="unfinished"></translation>
+        <translation>Category &quot;%1&quot; deleted (%2 project(s) deleted); failed to delete the following project folder(s), moved back to Uncategorized: %3</translation>
     </message>
     <message>
         <location line="+1"/>
         <source>、</source>
-        <translation type="unfinished"></translation>
+        <translation>, </translation>
     </message>
     <message>
         <location line="+68"/>
         <source>删除分类</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete category</translation>
     </message>
     <message>
         <location line="+42"/>
         <source>移动到分类</source>
-        <translation type="unfinished"></translation>
+        <translation>Move to category</translation>
     </message>
     <message>
         <location line="+4"/>
         <source>未分类</source>
-        <translation type="unfinished"></translation>
+        <translation>Uncategorized</translation>
     </message>
     <message>
         <location line="+26"/>
         <source>新建分类并移入...</source>
-        <translation type="unfinished"></translation>
+        <translation>New category and move...</translation>
     </message>
     <message>
         <location line="+429"/>
@@ -3983,7 +3983,7 @@ Cache: %4</translation>
         <translation>Delete %1 selected cache entries?</translation>
     </message>
     <message>
-        <location filename="ProjectCachePageFiles.cpp" line="+131"/>
+        <location filename="ProjectCachePageFiles.cpp" line="+144"/>
         <source>文件 (%1)</source>
         <translation>Files (%1)</translation>
     </message>

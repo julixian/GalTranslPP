@@ -220,8 +220,27 @@ std::string currentTimestampString();
 std::uint64_t calculateFileCRC64(const fs::path& filePath);
 int compareVersion(std::string_view latestVer, std::string_view currentVer);
 
+std::shared_ptr<std::shared_mutex> acquireFileMutex(const fs::path& path);
+
+struct FileReadLock {
+    std::shared_ptr<std::shared_mutex> mutex;
+    std::shared_lock<std::shared_mutex> lock;
+
+    explicit FileReadLock(const fs::path& path)
+        : mutex(acquireFileMutex(path)), lock(*mutex) {}
+};
+
+struct FileWriteLock {
+    std::shared_ptr<std::shared_mutex> mutex;
+    std::unique_lock<std::shared_mutex> lock;
+
+    explicit FileWriteLock(const fs::path& path)
+        : mutex(acquireFileMutex(path)), lock(*mutex) {}
+};
+
 template<typename DataType>
 void atomicOutputFile(std::ofstream& ofs, const fs::path& path, DataType&& data) {
+    FileWriteLock fileLock(path);
     const fs::path tempPath = path.wstring() + L".__GPP_TEMP__";
     createParent(tempPath);
     ofs.open(tempPath, std::ios::binary);
